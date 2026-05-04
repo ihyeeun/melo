@@ -3,14 +3,12 @@ import { ChevronDown, Minus, Plus } from "lucide-react";
 import { useMemo, useState } from "react";
 
 import styles from "@/features/chat/styles/ChatMealRecordBottomSheet.module.css";
-import {
-  formatQuantityText,
-  parseRecommendationServingContext,
-} from "@/features/chat/utils/chatMeal";
+import { parseRecommendationServingContext } from "@/features/chat/utils/chatMeal";
 import type { ChatRecommendItemResponseDto, MealType } from "@/shared/api/types/api.dto";
 import { MEAL_TYPE_OPTIONS } from "@/shared/api/types/api.dto";
 import BottomSheet from "@/shared/commons/bottomSheet/BottomSheet";
 import { Button } from "@/shared/commons/button/Button";
+import NumberField from "@/shared/commons/input/NumberField";
 
 type SelectedMenuItem = {
   id: number;
@@ -99,7 +97,11 @@ function toConsumedWeight(
   );
 }
 
-function getScaledCalories(baseCalories: number, consumedWeight: number, servingContext: ServingContext) {
+function getScaledCalories(
+  baseCalories: number,
+  consumedWeight: number,
+  servingContext: ServingContext,
+) {
   return baseCalories * (consumedWeight / servingContext.baseWeight);
 }
 
@@ -143,7 +145,9 @@ export function ChatMealRecordBottomSheet({
   }, [modeByMenuId, recommendationById, selectedMenus]);
 
   const totalCalories = selectedItems.reduce((sum, item) => {
-    return sum + getScaledCalories(item.recommendation.calories, item.quantity, item.servingContext);
+    return (
+      sum + getScaledCalories(item.recommendation.calories, item.quantity, item.servingContext)
+    );
   }, 0);
 
   return (
@@ -210,50 +214,51 @@ export function ChatMealRecordBottomSheet({
 
                   <div className={styles.quantityControlRow}>
                     <div className={styles.quantityStepper}>
-                      <button
-                        type="button"
-                        className={styles.quantityStepperButton}
-                        aria-label={`${item.recommendation.menu} 수량 감소`}
-                        onClick={() => {
-                          const nextDisplayValue = roundDecimal(displayValue - QUANTITY_STEP, 1);
-                          const nextConsumedWeight = toConsumedWeight(
-                            nextDisplayValue,
-                            item.mode,
-                            item.servingContext,
-                          );
+                      <NumberField
+                        value={displayValue}
+                        onChange={(nextValue) => {
+                          if (nextValue === undefined) {
+                            return;
+                          }
 
-                          if (nextDisplayValue < MIN_QUANTITY) {
+                          if (nextValue < MIN_QUANTITY) {
                             onRemoveMenu(item.id);
                             return;
                           }
 
-                          onQuantityChange(item.id, nextConsumedWeight);
-                        }}
-                      >
-                        <Minus size={24} />
-                      </button>
-
-                      <span className={`${styles.quantityValue} typo-body1`}>
-                        {formatQuantityText(displayValue)}
-                      </span>
-
-                      <button
-                        type="button"
-                        className={styles.quantityStepperButton}
-                        aria-label={`${item.recommendation.menu} 수량 증가`}
-                        onClick={() => {
-                          const nextDisplayValue = roundDecimal(displayValue + QUANTITY_STEP, 1);
                           const nextConsumedWeight = toConsumedWeight(
-                            nextDisplayValue,
+                            nextValue,
                             item.mode,
                             item.servingContext,
                           );
-
                           onQuantityChange(item.id, nextConsumedWeight);
                         }}
-                      >
-                        <Plus size={24} />
-                      </button>
+                        min={0}
+                        step={QUANTITY_STEP}
+                        snapOnStep
+                        decrementAriaLabel={`${item.recommendation.menu} 수량 감소`}
+                        incrementAriaLabel={`${item.recommendation.menu} 수량 증가`}
+                        decrementIcon={<Minus size={24} />}
+                        incrementIcon={<Plus size={24} />}
+                        normalizeValue={(value) => roundDecimal(value, 1)}
+                        unstyled
+                        classNames={{
+                          group: styles.quantityNumberFieldGroup,
+                          decrement: styles.quantityNumberFieldButton,
+                          increment: styles.quantityNumberFieldButton,
+                          inputWrapper: styles.quantityNumberFieldInputWrapper,
+                          input: `typo-body1 ${styles.quantityNumberFieldInput}`,
+                        }}
+                        format={{
+                          minimumFractionDigits: 0,
+                          maximumFractionDigits: 1,
+                          useGrouping: false,
+                        }}
+                        inputProps={{
+                          inputMode: "decimal",
+                          "aria-label": `${item.recommendation.menu} 수량 입력`,
+                        }}
+                      />
                     </div>
 
                     <Select.Root

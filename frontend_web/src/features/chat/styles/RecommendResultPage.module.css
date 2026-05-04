@@ -139,3 +139,8 @@
   padding: 0 20px;
   padding-bottom: var(--safe-area-bottom);
 }
+
+.characterImage {
+  width: 80px;
+  height: 80px;
+}
