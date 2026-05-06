@@ -20,6 +20,9 @@ const config: ExpoConfig = {
     config: {
       usesNonExemptEncryption: false,
     },
+    infoPlist: {
+      CFBundleAllowMixedLocalizations: true,
+    },
   },
   android: {
     adaptiveIcon: {
@@ -38,19 +41,25 @@ const config: ExpoConfig = {
     output: "static",
     favicon: "./assets/logo/melo-logo.svg",
   },
+  locales: {
+    en: "./locales/en.json",
+    ko: "./locales/ko.json",
+  },
   plugins: [
     "expo-router",
     [
       "react-native-vision-camera",
       {
-        cameraPermissionText: "음식과 영양성분표를 촬영하기 위해 카메라 접근 권한이 필요합니다.",
+        cameraPermissionText:
+          "Melo uses your camera for diet management. For example, you can scan nutrition labels to analyze data, or take photos of food and menus to check calories and log your meals.",
         enableMicrophonePermission: false,
       },
     ],
     [
       "expo-image-picker",
       {
-        photosPermission: "갤러리에서 사진을 선택하기 위해 사진 접근 권한이 필요합니다.",
+        photosPermission:
+          "Melo uses your photo library for diet management. You can select photos of food, menus, or nutrition labels to analyze nutrition data, check calories, and log your meals.",
       },
     ],
     [
