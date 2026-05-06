@@ -44,6 +44,15 @@ export type WebToAppFeatureGuardSyncMessage = {
   context?: BridgeMessageContext;
 };
 
+export type WebToAppBottomSheetSyncMessage = {
+  id: string;
+  type: "BOTTOM_SHEET_SYNC";
+  payload: {
+    isOpen: boolean;
+  };
+  context?: BridgeMessageContext;
+};
+
 export type CameraCaptureRequestPayload = {
   quality?: number;
   mode?: "NUTRITION_LABEL" | "MENU_BOARD" | "FOOD" | "GENERAL";
@@ -90,6 +99,7 @@ export type WebToAppMessage =
   | WebToAppTabSyncMessage
   | WebToAppNavigationBackMessage
   | WebToAppFeatureGuardSyncMessage
+  | WebToAppBottomSheetSyncMessage
   | WebToAppCameraCaptureMessage
   | WebToAppGalleryPickMessage
   | WebToAppImageUploadMessage;

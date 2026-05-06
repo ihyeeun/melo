@@ -1,4 +1,7 @@
+import { useEffect } from "react";
 import { Sheet } from "react-modal-sheet";
+
+import { beginBottomSheetVisibilitySync } from "@/shared/api/bridge/nativeBridge";
 
 type BottomSheetProps = {
   isOpen: boolean;
@@ -17,6 +20,11 @@ export default function BottomSheet({
   disableContentDrag = false,
   children,
 }: BottomSheetProps) {
+  useEffect(() => {
+    if (!isOpen) return;
+    return beginBottomSheetVisibilitySync();
+  }, [isOpen]);
+
   return (
     <Sheet isOpen={isOpen} onClose={onClose} detent="content" className={className}>
       <Sheet.Container
