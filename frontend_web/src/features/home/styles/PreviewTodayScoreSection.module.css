@@ -1,7 +1,7 @@
 .content {
   display: flex;
   flex-direction: column;
-  background-color: var(--bg-normal-primary2);
+  background-color: var(--bg-primary-2);
   gap: 10px;
   padding: 24px 20px;
 }
@@ -27,11 +27,11 @@
 }
 
 .score {
-  color: var(--text-primary);
+  color: var(--label-primary);
 }
 
 .calorieText {
-  color: var(--text-normal);
+  color: var(--label-normal);
   align-items: center;
   display: flex;
   gap: 4px;
@@ -39,14 +39,14 @@
 
 .dividerContainer {
   height: 24px;
-  background-color: var(--bg-normal-white);
+  background-color: var(--static-white);
   width: 1px;
 }
 
 .badgeContentContainer {
-  background-color: var(--bg-normal-white);
+  background-color: var(--bg-white);
   border-radius: 100px;
-  color: var(--text-assistive1);
+  color: var(--label-alternative);
   padding: 6px 16px;
   white-space: nowrap;
   width: fit-content;
@@ -54,4 +54,5 @@
 
 .icon {
   margin-left: auto;
+  color: var(--interaction-normal);
 }

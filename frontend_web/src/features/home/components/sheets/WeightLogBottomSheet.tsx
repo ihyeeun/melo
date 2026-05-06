@@ -94,7 +94,7 @@ export default function WeightLogBottomSheet({
             onClick={handleSubmit}
             fullWidth
             size="large"
-            state={draftWeight !== undefined && draftWeight !== 0 ? "default" : "disabled"}
+            interaction={draftWeight !== undefined && draftWeight !== 0 ? "normal" : "disable"}
             disabled={draftWeight === undefined || draftWeight === 0}
           >
             기록하기

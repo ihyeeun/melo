@@ -133,7 +133,7 @@ export default function NutrientAddPage() {
           color="primary"
           fullWidth
           onClick={handleNext}
-          state={isNextDisabled ? "disabled" : "default"}
+          interaction={isNextDisabled ? "disable" : "normal"}
           disabled={isNextDisabled}
         >
           다음

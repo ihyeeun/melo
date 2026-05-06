@@ -1,5 +1,6 @@
 import type {
   ApiRequestPayload,
+  AppDeviceInfoPayload,
   AppTabName,
   AppToWebMessage,
   CameraCaptureRequestPayload,
@@ -16,6 +17,7 @@ type PendingRequest = {
 };
 
 const pendingRequests = new Map<string, PendingRequest>();
+const openedBottomSheetIds = new Set<string>();
 const MESSAGE_TYPES_REQUIRING_NAV_CONTEXT = new Set<WebToAppMessage["type"]>([
   "TAB_SYNC",
   "NAVIGATION_BACK",
@@ -182,6 +184,33 @@ export function syncAppFeatureGuardEnabled(enabled: boolean) {
   });
 }
 
+export function syncBottomSheetStateToApp(isOpen: boolean) {
+  if (!isNativeApp()) return;
+
+  postMessageToApp({
+    id: generateRequestId(),
+    type: "BOTTOM_SHEET_SYNC",
+    payload: {
+      isOpen,
+    },
+  });
+}
+
+export function beginBottomSheetVisibilitySync() {
+  if (!isNativeApp()) {
+    return () => {};
+  }
+
+  const syncId = generateRequestId();
+  openedBottomSheetIds.add(syncId);
+  syncBottomSheetStateToApp(true);
+
+  return () => {
+    openedBottomSheetIds.delete(syncId);
+    syncBottomSheetStateToApp(openedBottomSheetIds.size > 0);
+  };
+}
+
 export function requestAppBack() {
   if (!isNativeApp()) return;
 
@@ -189,6 +218,13 @@ export function requestAppBack() {
     id: generateRequestId(),
     type: "NAVIGATION_BACK",
   });
+}
+
+export function requestNativeAppDeviceInfo() {
+  return sendRequestToApp<AppDeviceInfoPayload>((id) => ({
+    id,
+    type: "APP_DEVICE_INFO_REQUEST",
+  }));
 }
 
 export function requestNativeCameraCapture(payload?: CameraCaptureRequestPayload) {

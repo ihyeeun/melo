@@ -13,7 +13,7 @@
 }
 
 .homeContainer {
-  background-color: var(--bg-normal-normal);
+  background-color: var(--bg-normal);
   display: flex;
   flex: 1;
   flex-direction: column;

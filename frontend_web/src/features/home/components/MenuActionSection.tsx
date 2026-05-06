@@ -5,44 +5,50 @@ import TodayBodyLogSection from "@/features/home/components/TodayBodyLogSection"
 import style from "@/features/home/styles/MenuActionSection.module.css";
 import { PATH } from "@/router/path";
 import { syncAppTab } from "@/shared/api/bridge/nativeBridge";
-import {
-  FEATURE_GUARD,
-  isFeatureBlocked,
-} from "@/shared/guards/featureGuard";
 
-export default function MenuActionSection({ selectedDate }: { selectedDate: string }) {
+export default function MenuActionSection({
+  selectedDate,
+  showChatCard,
+  showMenuBoardCameraCard,
+}: {
+  selectedDate: string;
+  showChatCard: boolean;
+  showMenuBoardCameraCard: boolean;
+}) {
   const navigate = useNavigate();
-  const showMenuBoardCameraCard = !isFeatureBlocked(FEATURE_GUARD.MENU_BOARD_CAMERA);
-  const showChatCard = !isFeatureBlocked(FEATURE_GUARD.CHAT);
 
   return (
     <div className={style.content}>
       <div className={style.menuContainer}>
         {showMenuBoardCameraCard ? (
-          <MenuCard
-            title={"메뉴판 촬영하기"}
-            description="식당 메뉴판이나 배달 앱 스크린샷도 좋아요"
-            iconSrc="/icons/camera-icon.svg"
-            onClick={() => {
-              navigate(PATH.MENU_BOARD_CAMERA, {
-                state: {
-                  autoOpenCamera: true,
-                },
-              });
-            }}
-            type="camera"
-          />
+          <div data-home-onboarding-target="menu-board-camera">
+            <MenuCard
+              title={"메뉴판 촬영하기"}
+              description="식당 메뉴판이나 배달 앱 스크린샷도 좋아요"
+              iconSrc="/icons/camera-icon.svg"
+              onClick={() => {
+                navigate(PATH.MENU_BOARD_CAMERA, {
+                  state: {
+                    autoOpenCamera: true,
+                  },
+                });
+              }}
+              type="camera"
+            />
+          </div>
         ) : null}
         {showChatCard ? (
-          <MenuCard
-            title={"AI 코치"}
-            description="오늘의 식단 고민을 해결해드려요"
-            iconSrc="/icons/chat-icon.svg"
-            onClick={() => {
-              syncAppTab("chat");
-              navigate(PATH.CHAT);
-            }}
-          />
+          <div data-home-onboarding-target="chat">
+            <MenuCard
+              title={"AI 코치"}
+              description="오늘의 식단 고민을 해결해드려요"
+              iconSrc="/icons/chat-icon.svg"
+              onClick={() => {
+                syncAppTab("chat");
+                navigate(PATH.CHAT);
+              }}
+            />
+          </div>
         ) : null}
       </div>
 

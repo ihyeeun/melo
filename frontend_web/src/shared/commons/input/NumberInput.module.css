@@ -16,7 +16,7 @@
 }
 
 input::placeholder {
-  color: var(--text-assistive2);
+  color: var(--label-assistive);
 }
 
 /* Chrome / Safari / Edge spinner 제거 */
@@ -27,11 +27,11 @@ input::placeholder {
 }
 
 .unit {
-  color: var(--text-assistive2);
+  color: var(--label-assistive);
   font-size: 40px;
   margin-left: 4px;
 }
 
 .inputBox:has(input:not(:placeholder-shown)) .unit {
-  color: var(--text-normal);
+  color: var(--label-normal);
 }

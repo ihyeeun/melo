@@ -101,11 +101,14 @@ button,
 input,
 textarea,
 select {
-  color: var(--text-normal);
+  color: var(--label-normal);
   font-family: var(--font-family-base);
+  caret-color: var(--primary-normal);
 }
 
-input:focus {
+input:focus,
+textarea:focus,
+select:focus {
   outline: 1px solid var(--border-primary);
 }
 

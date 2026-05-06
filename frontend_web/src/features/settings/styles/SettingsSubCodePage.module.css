@@ -1,5 +1,5 @@
 .page {
-  background-color: var(--bg-normal-white);
+  background-color: var(--bg-white);
   display: flex;
   flex-direction: column;
   min-height: 100dvh;
@@ -16,7 +16,7 @@
 }
 
 .title {
-  color: var(--text-normal);
+  color: var(--label-normal);
   word-break: keep-all;
 }
 
@@ -25,17 +25,17 @@
 }
 
 .input {
-  background: var(--bg-normal-white);
-  border: 1px solid var(--border-normal);
+  background: var(--bg-white);
+  border: 1px solid var(--border-neutral);
   border-radius: 8px;
-  color: var(--text-normal);
+  color: var(--label-normal);
   padding: 12px 20px;
   text-align: right;
   width: 100%;
 }
 
 .input::placeholder {
-  color: var(--text-assistive2);
+  color: var(--label-assistive);
 }
 
 .footer {

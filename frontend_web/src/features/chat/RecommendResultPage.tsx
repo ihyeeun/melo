@@ -227,17 +227,20 @@ export default function RecommendResultPage() {
 
   return (
     <section className={styles.page}>
-      <PageHeader title="메뉴 추천 결과" onBack={() => navigateBackOrFallback(navigate, PATH.CHAT)} />
+      <PageHeader
+        title="메뉴 추천 결과"
+        onBack={() => navigateBackOrFallback(navigate, PATH.CHAT)}
+      />
 
       <main className={styles.main}>
         <section className={styles.content}>
           <div className={styles.intro}>
             <p className={`${styles.introMessage} typo-title2`}>
-              <span className={styles.primaryText}>{profile?.nickname ?? ""}님</span>을 위한 메뉴를
+              <span className={styles.primaryText}>{profile?.nickname ?? ""}</span>님을 위한 메뉴를
               추천해드려요!
             </p>
 
-            <img src="/icons/recommend-icon.svg" />
+            <img src="/icons/character-love.svg" className={styles.characterImage} />
           </div>
 
           <ul className={styles.resultList}>
@@ -301,10 +304,10 @@ export default function RecommendResultPage() {
       <footer className={styles.footer}>
         <Button
           variant="filled"
-          size="medium"
+          size="normal"
           color="primary"
           fullWidth
-          state={selectedCount > 0 && !isRecordPending ? "default" : "disabled"}
+          interaction={selectedCount > 0 && !isRecordPending ? "normal" : "disable"}
           disabled={selectedCount === 0 || isRecordPending}
           onClick={() => setIsBottomSheetOpen(true)}
         >

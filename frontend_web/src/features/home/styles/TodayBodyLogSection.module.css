@@ -26,7 +26,7 @@
 }
 
 .highlightValue {
-  color: var(--text-primary);
+  color: var(--label-primary);
 }
 
 .sheetContainer {
@@ -36,7 +36,7 @@
 }
 
 .sheetTitle {
-  color: var(--text-normal);
+  color: var(--label-normal);
   padding-bottom: 16px;
 }
 
@@ -45,7 +45,7 @@
 }
 
 .sheetFieldLabel {
-  color: var(--text-normal);
+  color: var(--label-normal);
   margin: 0;
 }
 
@@ -67,7 +67,7 @@
 .weightNumberInput {
   background: transparent;
   border: 0;
-  color: var(--text-normal);
+  color: var(--label-normal);
   margin: 0;
   padding: 0;
   text-align: center;
@@ -75,7 +75,7 @@
 }
 
 .weightNumberInput::placeholder {
-  color: var(--text-assistive2);
+  color: var(--label-assistive);
 }
 
 .weightNumberInput:focus,
@@ -86,10 +86,10 @@
 
 .weightAdjustButton {
   align-items: center;
-  background: var(--bg-shadow-3);
+  background: var(--interaction-alternative);
   border: none;
   border-radius: 100px;
-  color: var(--text-white);
+  color: var(--static-white);
   cursor: pointer;
   display: inline-flex;
   height: 32px;
@@ -112,7 +112,7 @@
 }
 
 .weightUnit {
-  color: var(--text-normal);
+  color: var(--label-normal);
 }
 
 .stepsNumberFieldGroup {
@@ -127,16 +127,16 @@
 
 .stepsNumberInput {
   background: transparent;
-  border: 1px solid var(--border-normal);
+  border: 1px solid var(--border-neutral);
   border-radius: 6px;
-  color: var(--text-normal);
+  color: var(--label-normal);
   flex: 1;
   padding: 14px 12px;
   width: 100%;
 }
 
 .stepsNumberInput::placeholder {
-  color: var(--text-assistive2);
+  color: var(--label-assistive);
 }
 
 .stepsNumberInput:focus,
@@ -152,6 +152,6 @@
 }
 
 .stepsUnit {
-  color: var(--text-normal);
+  color: var(--label-normal);
   padding-bottom: 4px;
 }

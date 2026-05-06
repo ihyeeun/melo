@@ -57,7 +57,7 @@ export function ConfirmModal({
               });
             }}
             variant="outlined"
-            state="default"
+            interaction="normal"
             size="small"
             color="primary"
           >
@@ -78,7 +78,7 @@ export function ConfirmModal({
                 void onConfirm(); // 로직 실행
               }}
               variant="filled"
-              state="default"
+              interaction="normal"
               size="small"
               color="primary"
             >
@@ -100,7 +100,7 @@ export function ConfirmModal({
             }
           }}
           variant="filled"
-          state="default"
+          interaction="normal"
           size="small"
           color="primary"
         >

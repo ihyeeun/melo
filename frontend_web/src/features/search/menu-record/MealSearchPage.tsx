@@ -27,10 +27,7 @@ import { FloatingCameraButton } from "@/shared/commons/button/FloatingCameraButt
 import { MealMenuCard } from "@/shared/commons/card/MealMenuCard";
 import { SearchInputHeader } from "@/shared/commons/header/SearchInputHeader";
 import { toast } from "@/shared/commons/toast/toast";
-import {
-  FEATURE_GUARD,
-  isFeatureBlocked,
-} from "@/shared/guards/featureGuard";
+import { FEATURE_GUARD, isFeatureBlocked } from "@/shared/guards/featureGuard";
 import { navigateBackOrFallback } from "@/shared/navigation/backNavigation";
 
 import styles from "../styles/MealSearch.module.css";
@@ -216,9 +213,9 @@ export default function MealSearchPage() {
                   <div className={styles.bottomTextContainer}>
                     <Button
                       variant="text"
-                      state="default"
+                      interaction="normal"
                       size="small"
-                      color="assistive"
+                      color="normal"
                       onClick={() => {
                         setIsDirectInputSheetOpen(true);
                       }}
@@ -239,9 +236,9 @@ export default function MealSearchPage() {
                     <div className={styles.buttonContainer}>
                       <Button
                         variant="text"
-                        state="default"
+                        interaction="normal"
                         size="small"
-                        color="assistive"
+                        color="normal"
                         onClick={() => {
                           setIsDirectInputSheetOpen(true);
                         }}
@@ -295,9 +292,9 @@ export default function MealSearchPage() {
 
               <Button
                 variant="text"
-                state="default"
+                interaction="normal"
                 size="small"
-                color="assistive"
+                color="normal"
                 onClick={() => {
                   setIsDirectInputSheetOpen(true);
                 }}
@@ -317,7 +314,7 @@ export default function MealSearchPage() {
         <Button
           onClick={handleApplySelectedMenus}
           variant="filled"
-          state={selectedCount > 0 ? "default" : "disabled"}
+          interaction={selectedCount > 0 ? "normal" : "disable"}
           size="large"
           color="primary"
           fullWidth

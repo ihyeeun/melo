@@ -1,5 +1,5 @@
 .page {
-  background-color: var(--bg-normal-white);
+  background-color: var(--bg-white);
   min-height: 100dvh;
   width: 100%;
 }
@@ -12,13 +12,13 @@
 }
 
 .accordionContainer {
-  background: var(--bg-normal-normal);
+  background: var(--bg-normal);
   border-radius: 8px;
 }
 
 .accordion {
   box-sizing: border-box;
-  color: var(--text-normal);
+  color: var(--label-normal);
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -26,7 +26,7 @@
 }
 
 .item {
-  border-bottom: 1px solid var(--border-normal);
+  border-bottom: 1px solid var(--border-neutral);
 }
 
 .header {
@@ -36,7 +36,7 @@
 .trigger {
   border: none;
   box-sizing: border-box;
-  color: var(--text-normal);
+  color: var(--label-normal);
   display: flex;
   outline: none;
   padding: 16px 20px;
@@ -61,7 +61,7 @@
 
 .panel {
   box-sizing: border-box;
-  color: var(--text-assistive1);
+  color: var(--label-alternative);
   height: var(--accordion-panel-height);
   overflow: hidden;
   transition: height 150ms ease-out;
@@ -84,7 +84,7 @@
 }
 
 .link {
-  color: var(--text-assistive1);
+  color: var(--label-alternative);
   text-decoration: underline;
   text-underline-offset: 2px;
   word-break: break-all;

@@ -1,5 +1,5 @@
 .page {
-  background-color: var(--bg-normal-normal);
+  background-color: var(--bg-normal);
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -40,18 +40,18 @@
   align-items: center;
   background: none;
   border: 0;
-  color: var(--text-normal);
+  color: var(--label-normal);
   display: inline-flex;
   justify-content: center;
   padding: 0;
 }
 
 .nickname {
-  color: var(--text-normal);
+  color: var(--label-normal);
 }
 
 .highlight {
-  color: var(--text-primary);
+  color: var(--label-primary);
 }
 
 .textButton {
@@ -60,14 +60,14 @@
 
 .inlineIconButton {
   align-items: center;
-  color: var(--text-normal);
+  color: var(--label-normal);
   display: inline-flex;
   flex-shrink: 0;
   justify-content: center;
 }
 
 .goalText {
-  color: var(--text-normal);
+  color: var(--label-normal);
   word-break: keep-all;
 }
 
@@ -96,7 +96,7 @@
 }
 
 .activeCardTitle {
-  color: var(--text-normal);
+  color: var(--label-normal);
   flex-shrink: 0;
 }
 
@@ -109,16 +109,16 @@
 }
 
 .activeCardValue {
-  color: var(--text-primary);
+  color: var(--label-primary);
 }
 
 .activeCardUnit {
-  color: var(--text-normal);
+  color: var(--label-normal);
 }
 
 .weeklySection {
-  background-color: var(--bg-normal-white);
-  border: 1px solid var(--border-normal);
+  background-color: var(--bg-white);
+  border: 1px solid var(--border-neutral);
   border-radius: 8px;
   display: flex;
   flex-direction: column;
@@ -133,7 +133,7 @@
 }
 
 .weeklyTitle {
-  color: var(--text-normal);
+  color: var(--label-normal);
 }
 
 .legendRow {
@@ -145,7 +145,7 @@
 
 .legendItem {
   align-items: center;
-  color: var(--text-normal);
+  color: var(--label-normal);
   display: flex;
   gap: 6px;
 }
@@ -166,7 +166,7 @@
 }
 
 .weeklyStatusText {
-  color: var(--text-assistive1);
+  color: var(--label-alternative);
   text-align: center;
   padding: 24px 0;
 }
@@ -187,11 +187,11 @@
 
 .input {
   padding: 14px 12px;
-  border: 1px solid var(--border-normal);
+  border: 1px solid var(--border-neutral);
 }
 
 .input::placeholder {
-  color: var(--text-assistive2);
+  color: var(--label-assistive);
 }
 
 .icon {
@@ -206,6 +206,6 @@
 }
 
 .weeklyYLabel {
-  color: var(--text-assistive2);
+  color: var(--label-assistive);
   padding-left: 22px;
 }

@@ -1,5 +1,5 @@
 .root {
-  background-color: var(--bg-normal-white);
+  background-color: var(--bg-white);
   width: 100%;
 }
 
@@ -18,7 +18,7 @@
 
 .backButton {
   align-items: center;
-  color: var(--text-normal);
+  color: var(--label-normal);
   display: inline-flex;
   justify-content: flex-start;
 }
@@ -34,17 +34,17 @@
 }
 
 .input {
-  background-color: var(--bg-normal-normal);
-  border: 1px solid var(--border-normal);
+  background-color: var(--bg-normal);
+  border: 1px solid var(--border-neutral);
   border-radius: 8px;
-  color: var(--text-normal);
+  color: var(--label-normal);
   height: 42px;
   padding: 0 44px 0 14px;
   width: 100%;
 }
 
 .input::placeholder {
-  color: var(--text-assistive2);
+  color: var(--label-assistive);
 }
 
 .input:focus {

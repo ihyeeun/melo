@@ -234,7 +234,7 @@ export default function NutrientRegisterPage() {
           color="primary"
           fullWidth
           onClick={handleSubmit}
-          state={isSubmitDisabled ? "disabled" : "default"}
+          interaction={isSubmitDisabled ? "disable" : "normal"}
           disabled={isSubmitDisabled}
         >
           등록하기

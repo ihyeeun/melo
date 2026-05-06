@@ -50,18 +50,16 @@
   /* =========================
    * Colors - Primary (orange)
    * ========================= */
-  --orange-50: #fffbf8;
   --orange-100: #fff7f0;
-  --orange-200: #fff0e2;
-  --orange-300: #ffe9d5;
-  --orange-400: #ffd9b6;
-  --orange-500: #ffc997;
-  --orange-600: #ffbf83;
-  --orange-700: #ffb26c;
-  --orange-800: #ff9f4a;
-  --orange-900: #ff8519;
-  --orange-950: #f70;
-  --orange-980: #ff6a00;
+  --orange-200: #ffe9d5;
+  --orange-300: #ffd9b6;
+  --orange-400: #ffc793;
+  --orange-500: #ffb36e;
+  --orange-600: #ff9d46;
+  --orange-700: #ff8e00;
+  --orange-800: #ff8000;
+  --orange-900: #d96c00;
+  --orange-1000: #a65300;
 
   /* =========================
    * Gray Scale
@@ -81,16 +79,16 @@
   /* =========================
    * Color - Red
    * ========================= */
-  --red-100: #ffeadd;
+  --red-100: #ffeaed;
   --red-200: #ffcad0;
   --red-300: #f79495;
   --red-400: #ef696b;
   --red-500: #fa4145;
-  --red-600: #ff2626;
-  --red-700: #f01427;
-  --red-800: #de0021;
-  --red-900: #d20019;
-  --red-1000: #c40008;
+  --red-600: #dd0021;
+  --red-700: #ad0216;
+  --red-800: #81060b;
+  --red-900: #530004;
+  --red-1000: #3b0003;
 
   /* =========================
    * Color - Green
@@ -98,27 +96,27 @@
   --green-100: #e7faeb;
   --green-200: #c6f2cd;
   --green-300: #9feaad;
-  --green-400: #72e28a;
-  --green-500: #47da6e;
-  --green-600: #00d251;
-  --green-700: #00c147;
-  --green-800: #00ae3a;
-  --green-900: #009c2d;
-  --green-1000: #007c19;
+  --green-400: #6fe087;
+  --green-500: #3ad564;
+  --green-600: #00c147;
+  --green-700: #009c2d;
+  --green-800: #007c19;
+  --green-900: #005110;
+  --green-1000: #002f09;
 
   /* =========================
    * Color - Yellow
    * ========================= */
   --yellow-100: #fff8e0;
-  --yellow-200: #ffebc2;
-  --yellow-300: #ffe07f;
-  --yellow-400: #ffd54a;
+  --yellow-200: #fff0c2;
+  --yellow-300: #ffe386;
+  --yellow-400: #ffd038;
   --yellow-500: #ffca1d;
-  --yellow-600: #ffc100;
-  --yellow-700: #ffb200;
-  --yellow-800: #ff9f00;
-  --yellow-900: #ff8e00;
-  --yellow-1000: #ff6d00;
+  --yellow-600: #ffbb00;
+  --yellow-700: #d79d00;
+  --yellow-800: #a87b00;
+  --yellow-900: #825f00;
+  --yellow-1000: #4a3600;
 
   /* =========================
    * Color - Blue
@@ -128,32 +126,43 @@
   --blue-300: #94d0ff;
   --blue-400: #6abdff;
   --blue-500: #4aaeff;
-  --blue-600: #2fa0ff;
-  --blue-700: #2b91f0;
-  --blue-800: #267fdd;
-  --blue-900: #226dcb;
-  --blue-1000: #1b4fab;
+  --blue-600: #2b91f0;
+  --blue-700: #0072dd;
+  --blue-800: #005baf;
+  --blue-900: #003c73;
+  --blue-1000: #001931;
 
   /* =========================
    * Interaction
    * ========================= */
-  --interaction-primary: #ff85191a;
+  --interaction-primary: rgba(255, 133, 25, 0.1);
+  --interaction-normal: var(--gray-900);
+  --interaction-alternative: var(--gray-400);
+  --interaction-white-1: var(--common-0);
+  --interaction-white-2: rgba(255, 255, 255, 0.5);
 
   /* =========================
    * Shadow Opacity
    * ========================= */
-
-  --shadow-1: rgb(0 0 0 / 10%);
-  --shadow-2: rgb(0 0 0 / 15%);
-  --shadow-3: rgb(0 0 0 / 20%);
-  --shadow-4: rgb(0 0 0 / 25%);
+  --shadow-normal: 3px 3px 5px 0 rgb(0 0 0 / 5%);
+  --shadow-emphasize: 4px 4px 5px 0 rgb(0 0 0 / 8%);
+  --shadow-strong: 4px 4px 5px 0 rgb(0 0 0 / 12%);
 
   /* =========================
  * Semantic - Color / Primary
  * ========================= */
-  --primary-normal: var(--yellow-900);
-  --primary-strong: var(--orange-950);
-  --primary-heavy: var(--orange-980);
+  --primary-normal: var(--orange-700);
+  --primary-strong: var(--orange-800);
+
+  /* =========================
+ * Semantic - Color / Label
+ * ========================= */
+  --label-primary: var(--orange-800);
+  --label-normal: var(--gray-1000);
+  --label-alternative: var(--gray-800);
+  --label-assistive: var(--gray-600);
+  --label-disable: var(--gray-400);
+  --label-white: var(--common-0);
 
   /* =========================
  * Semantic - Color / Static
@@ -164,18 +173,10 @@
   /* =========================
  * Semantic - Color / Background / Normal
  * ========================= */
-  --bg-normal-primary1: var(--orange-800);
-  --bg-normal-primary2: var(--orange-300);
-  --bg-normal-normal: var(--gray-200);
-  --bg-normal-white: var(--common-0);
-
-  /* =========================
- * Semantic - Color / Background / Shadow
- * ========================= */
-  --bg-shadow-1: var(--shadow-1);
-  --bg-shadow-2: var(--shadow-2);
-  --bg-shadow-3: var(--shadow-3);
-  --bg-shadow-4: var(--shadow-4);
+  --bg-primary-1: var(--orange-600);
+  --bg-primary-2: var(--orange-200);
+  --bg-normal: var(--gray-200);
+  --bg-white: var(--common-0);
 
   /* =========================
  * Semantic - Color / Status
@@ -188,22 +189,14 @@
   /* =========================
  * Semantic - Color / Border
  * ========================= */
-  --border-primary: var(--orange-800);
-  --border-normal: var(--gray-300);
+  --border-primary: var(--orange-600);
+  --border-normal: var(--gray-500);
+  --border-neutral: var(--gray-300);
 
   /* =========================
- * Semantic - Color / Etc
+ * Semantic - Color / Dimmer
  * ========================= */
-  --etc-1: #4b311a;
-
-  /* =========================
- * Semantic - Color / Text
- * ========================= */
-  --text-primary: var(--orange-950);
-  --text-normal: var(--gray-1100);
-  --text-assistive1: var(--gray-800);
-  --text-assistive2: var(--gray-600);
-  --text-white: var(--common-0);
+  --dimmer-dimmer: rgba(0, 0, 0, 0.5);
 }
 
 /* =========================
@@ -349,7 +342,7 @@ body {
 }
 
 .divider {
-  background-color: var(--gray-400);
+  background-color: var(--border-neutral);
   height: 1px;
   width: 100%;
 }

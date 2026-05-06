@@ -214,7 +214,7 @@ export default function ProfilePage() {
                 onClick={() => navigate(PATH.GOAL_EDIT, { state: { goalEditFlow: true } })}
                 variant="text"
                 size="small"
-                color="assistive"
+                color="normal"
               >
                 목표 재설정
                 <ChevronRightIcon size={20} className={styles.icon} />
@@ -326,7 +326,7 @@ export default function ProfilePage() {
 
               <Button
                 variant="filled"
-                state={nickName.trim() === "" ? "disabled" : "default"}
+                interaction={nickName.trim() === "" ? "disable" : "normal"}
                 size="large"
                 color="primary"
                 fullWidth

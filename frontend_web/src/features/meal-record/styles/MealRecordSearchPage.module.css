@@ -1,5 +1,5 @@
 .page {
-  background-color: var(--bg-normal-normal);
+  background-color: var(--bg-normal);
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -30,8 +30,8 @@
 
 .brandItem {
   align-items: center;
-  background-color: var(--bg-normal-white);
-  border: 1px solid var(--border-normal);
+  background-color: var(--bg-white);
+  border: 1px solid var(--border-neutral);
   border-radius: 8px;
   display: inline-flex;
   justify-content: space-between;
@@ -42,7 +42,7 @@
 }
 
 .brandName {
-  color: var(--text-normal);
+  color: var(--label-normal);
 }
 
 .brandItemChevron {
@@ -51,10 +51,10 @@
 
 .emptyResult {
   align-items: center;
-  background-color: var(--bg-normal-white);
-  border: 1px solid var(--border-normal);
+  background-color: var(--bg-white);
+  border: 1px solid var(--border-neutral);
   border-radius: 12px;
-  color: var(--text-normal);
+  color: var(--label-normal);
   display: flex;
   flex-direction: column;
   gap: 20px;
@@ -69,15 +69,15 @@
 }
 
 .placeholder {
-  background-color: var(--bg-normal-white);
-  border: 1px solid var(--border-normal);
+  background-color: var(--bg-white);
+  border: 1px solid var(--border-neutral);
   border-radius: 12px;
   padding: 30px 20px;
   text-align: center;
 }
 
 .placeholderText {
-  color: var(--text-assistive2);
+  color: var(--label-assistive);
 }
 
 .footer {
@@ -86,7 +86,7 @@
 }
 
 .directInputText {
-  color: var(--text-assistive2);
+  color: var(--label-assistive);
 }
 
 .brandRequestSheetContent {
@@ -102,24 +102,24 @@
 }
 
 .brandRequestSheetDescription {
-  color: var(--text-assistive1);
+  color: var(--label-alternative);
 }
 
 .brandRequestInputLabel {
-  color: var(--text-assistive1);
+  color: var(--label-alternative);
 }
 
 .brandRequestInput {
-  background-color: var(--bg-normal-white);
-  border: 1px solid var(--border-normal);
+  background-color: var(--bg-white);
+  border: 1px solid var(--border-neutral);
   border-radius: 6px;
-  color: var(--text-normal);
+  color: var(--label-normal);
   padding: 14px 12px;
   width: 100%;
 }
 
 .brandRequestInput::placeholder {
-  color: var(--text-assistive2);
+  color: var(--label-assistive);
 }
 
 .brandRequestInput:focus {

@@ -1,6 +1,6 @@
 .card {
-  background-color: var(--bg-normal-white);
-  border: 1px solid var(--border-normal);
+  background-color: var(--bg-white);
+  border: 1px solid var(--border-neutral);
   border-radius: 8px;
   display: flex;
   flex-direction: column;
@@ -37,7 +37,7 @@
 }
 
 .description {
-  color: var(--text-assistive2);
+  color: var(--label-assistive);
 }
 
 .chipList {
@@ -55,14 +55,14 @@
 }
 
 .personalChipLabel {
-  background-color: var(--bg-normal-normal);
-  color: var(--text-assistive2);
+  background-color: var(--bg-normal);
+  color: var(--label-assistive);
 }
 
 .suggestionChipLabel {
   background-color: var(--interaction-primary);
   border: 1px solid var(--border-primary);
-  color: var(--text-primary);
+  color: var(--label-primary);
 }
 
 .iconButton {
@@ -86,7 +86,7 @@
 }
 
 .title {
-  color: var(--text-normal);
+  color: var(--label-normal);
 }
 
 .meta {
@@ -103,13 +103,13 @@
 }
 
 .calories {
-  color: var(--text-normal);
+  color: var(--label-normal);
 }
 
 .brand {
-  color: var(--text-assistive2);
+  color: var(--label-assistive);
 }
 
 .unitAmount {
-  color: var(--text-assistive1);
+  color: var(--label-alternative);
 }

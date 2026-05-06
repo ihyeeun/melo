@@ -1,4 +1,13 @@
-import { Check, ChevronDown, ChevronRight, ChevronUp, CircleAlert, Plus } from "lucide-react";
+import {
+  Camera,
+  Check,
+  ChevronDown,
+  ChevronRight,
+  ChevronUp,
+  CircleAlert,
+  Plus,
+  X,
+} from "lucide-react";
 import type { FormEvent } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -20,7 +29,7 @@ import {
   useMenuDraftInit,
 } from "@/features/meal-record/stores/menuDraft.store";
 import { PATH } from "@/router/path";
-import { getMealRecordPath, getMealSearchPath } from "@/router/pathHelpers";
+import { getMealRecordPath, getMealSearchPath, getPathWithMeal } from "@/router/pathHelpers";
 import { AppApiError } from "@/shared/api/appApi";
 import {
   type ChatHistoryItemResponseDto,
@@ -28,11 +37,9 @@ import {
   DEFAULT_MEAL_TYPE,
   type MealType,
 } from "@/shared/api/types/api.dto";
-import { FloatingCameraButton } from "@/shared/commons/button/FloatingCameraButton";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
 import { ConfirmModal } from "@/shared/commons/modals/ConfirmModal";
 import { toast } from "@/shared/commons/toast/toast";
-import { FEATURE_GUARD, isFeatureBlocked } from "@/shared/guards/featureGuard";
 import { useSelectedDateKey } from "@/shared/stores/selectedDate.store";
 import {
   CHAT_TO_MEAL_RECORD_SOURCE,
@@ -40,7 +47,7 @@ import {
   type MealRecordTransferState,
 } from "@/shared/types/mealRecordTransfer";
 
-const QUICK_CHIP_LIST = ["지금 먹기 좋은 메뉴를 추천해줘", "고지방 식단 추천해줘"];
+const QUICK_CHIP_LIST = ["지금 먹기 좋은 메뉴를 추천해줘"];
 
 type RecordedMenuItem = {
   id: number;
@@ -54,13 +61,10 @@ export default function ChatPage() {
   const navigate = useNavigate();
   const selectedDateKey = useSelectedDateKey();
   const endAnchorRef = useRef<HTMLDivElement>(null);
-  const footerRef = useRef<HTMLElement>(null);
 
   const [inputValue, setInputValue] = useState("");
   const [isInputFocused, setIsInputFocused] = useState(false);
   const [pendingInput, setPendingInput] = useState<string | null>(null);
-  const showMenuBoardCameraButton = !isFeatureBlocked(FEATURE_GUARD.MENU_BOARD_CAMERA);
-  const [floatingBottomOffset, setFloatingBottomOffset] = useState(0);
   const [isAwaitingHistory, setIsAwaitingHistory] = useState(false);
   const [expandedCompleteCardByChatId, setExpandedCompleteCardByChatId] = useState<
     Record<number, boolean>
@@ -69,6 +73,7 @@ export default function ChatPage() {
   const [sheetMenus, setSheetMenus] = useState<Array<{ id: number; quantity: number }>>([]);
   const [sheetMealType, setSheetMealType] = useState<MealType>(DEFAULT_MEAL_TYPE);
   const [cancelTargetChatId, setCancelTargetChatId] = useState<number | null>(null);
+  const [isCameraActionMenuOpen, setIsCameraActionMenuOpen] = useState(false);
 
   const committedByChatId = useChatMealDraftStore((state) => state.committedByChatId);
   const ensureDraft = useChatMealDraftStore((state) => state.ensureDraft);
@@ -124,34 +129,24 @@ export default function ChatPage() {
   }, [activeSheetChatId, committedByChatId]);
 
   useEffect(() => {
+    if (!isQuickActionVisible) {
+      setIsCameraActionMenuOpen(false);
+    }
+  }, [isQuickActionVisible]);
+
+  useEffect(() => {
+    endAnchorRef.current?.scrollIntoView({
+      behavior: "instant",
+      block: "end",
+    });
+  }, [chatList]);
+
+  useEffect(() => {
     endAnchorRef.current?.scrollIntoView({
       behavior: "smooth",
       block: "end",
     });
-  }, [chatList, isTypingPending, pendingInput]);
-
-  useEffect(() => {
-    const footerElement = footerRef.current;
-
-    if (!footerElement || typeof ResizeObserver === "undefined") {
-      return;
-    }
-
-    const updateOffset = () => {
-      const nextOffset = footerElement.offsetHeight - 25;
-      setFloatingBottomOffset((prev) => (prev === nextOffset ? prev : nextOffset));
-    };
-
-    const observer = new ResizeObserver(updateOffset);
-    observer.observe(footerElement);
-
-    const initialFrameId = window.requestAnimationFrame(updateOffset);
-
-    return () => {
-      observer.disconnect();
-      window.cancelAnimationFrame(initialFrameId);
-    };
-  }, []);
+  }, [isTypingPending, pendingInput]);
 
   const sendChatMessage = async (rawInput: string) => {
     const text = rawInput.trim();
@@ -366,9 +361,47 @@ export default function ChatPage() {
     navigate(getMealSearchPath(selectedDateKey, mealType));
   };
 
+  const handleToggleCameraActionMenu = () => {
+    if (!isQuickActionVisible) {
+      return;
+    }
+
+    setIsCameraActionMenuOpen((prev) => !prev);
+  };
+
+  const handleCloseCameraActionMenu = () => {
+    setIsCameraActionMenuOpen(false);
+  };
+
+  // TODO 카메라 기능 연동
+  const handleNavigateMenuBoardCamera = () => {
+    handleCloseCameraActionMenu();
+    navigate(PATH.MENU_BOARD_CAMERA, {
+      state: {
+        autoOpenCamera: true,
+      },
+    });
+  };
+
+  const handleNavigateFoodCamera = () => {
+    const mealType = getMealTypeFromCurrentTime(new Date());
+
+    handleCloseCameraActionMenu();
+    navigate(getPathWithMeal(PATH.FOOD_CAMERA, selectedDateKey, mealType));
+  };
+
   return (
     <div className={styles.page}>
       <PageHeader onBack={() => navigate(PATH.HOME, { replace: true })} />
+
+      {isCameraActionMenuOpen ? (
+        <button
+          type="button"
+          className={styles.floatingCameraBackdrop}
+          onClick={handleCloseCameraActionMenu}
+          aria-label="촬영 메뉴 닫기"
+        />
+      ) : null}
 
       <main className={styles.main}>
         {!hasAnyConversation && !isHistoryPending ? <EmptySection /> : null}
@@ -460,32 +493,90 @@ export default function ChatPage() {
                 ) : null}
               </section>
             ) : null}
-
-            <div ref={endAnchorRef} />
           </div>
         ) : null}
-      </main>
 
-      <footer ref={footerRef} className={styles.footer}>
-        {showMenuBoardCameraButton ? (
+        {!isInputFocused && (
           <div
-            className={`${styles.floatingCameraButtonWrapper} ${isQuickActionVisible ? styles.floatingCameraButtonVisible : styles.floatingCameraButtonHidden}`}
+            className={`${styles.floatingCameraButtonWrapper} `}
             aria-hidden={!isQuickActionVisible}
           >
-            <FloatingCameraButton
-              onClick={() =>
-                navigate(PATH.MENU_BOARD_CAMERA, {
-                  state: {
-                    autoOpenCamera: true,
-                  },
-                })
-              }
-              ariaLabel="메뉴판 사진 찍기"
-              tone="primary"
-              bottomOffset={floatingBottomOffset}
-            />
+            <div className={styles.floatingCameraActionContainer}>
+              {isCameraActionMenuOpen ? (
+                <div className={styles.floatingCameraActionList}>
+                  <button
+                    type="button"
+                    className={styles.floatingCameraActionItem}
+                    onClick={handleNavigateMenuBoardCamera}
+                  >
+                    <span className={`${styles.floatingCameraActionLabel} typo-label3`}>
+                      메뉴판 찍기
+                    </span>
+                    <span className={styles.floatingCameraActionIcon}>
+                      <img
+                        src="/icons/menu.svg"
+                        alt=""
+                        aria-hidden="true"
+                        className={styles.floatingCameraActionIconImage}
+                      />
+                    </span>
+                  </button>
+
+                  <button
+                    type="button"
+                    className={styles.floatingCameraActionItem}
+                    onClick={handleNavigateFoodCamera}
+                  >
+                    <span className={`${styles.floatingCameraActionLabel} typo-label3`}>
+                      음식 찍기
+                    </span>
+                    <span className={styles.floatingCameraActionIcon}>
+                      <img
+                        src="/icons/food.svg"
+                        alt=""
+                        aria-hidden="true"
+                        className={styles.floatingCameraActionIconImage}
+                      />
+                    </span>
+                  </button>
+                </div>
+              ) : null}
+
+              {!isCameraActionMenuOpen && (
+                <div className={`${styles.fabBubble} typo-caption`}>메뉴 찍기</div>
+              )}
+              <button
+                type="button"
+                className={`${styles.cameraButton}`}
+                onClick={handleToggleCameraActionMenu}
+                aria-label={isCameraActionMenuOpen ? "촬영 메뉴 닫기" : "촬영 메뉴 열기"}
+                aria-expanded={isCameraActionMenuOpen}
+              >
+                {isCameraActionMenuOpen ? <X size={24} /> : <Camera size={24} />}
+              </button>
+            </div>
           </div>
-        ) : null}
+        )}
+
+        <div ref={endAnchorRef} />
+      </main>
+
+      <footer className={styles.footer}>
+        {!hasAnyConversation && (
+          <section className={`${styles.chipSection}`}>
+            {QUICK_CHIP_LIST.map((chip) => (
+              <button
+                key={chip}
+                type="button"
+                className={styles.chipContainer}
+                onClick={() => sendChatMessage(chip)}
+                disabled={isSendPending}
+              >
+                <p className="typo-body3">{chip}</p>
+              </button>
+            ))}
+          </section>
+        )}
 
         <ChatInput
           value={inputValue}
@@ -496,9 +587,6 @@ export default function ChatPage() {
           onInputFocusChange={setIsInputFocused}
           onSubmit={handleSubmit}
           onDirectMenuRecordClick={handleNavigateDirectMenuRecord}
-          onSelectChip={(chip) => {
-            void sendChatMessage(chip);
-          }}
         />
       </footer>
 
@@ -548,11 +636,11 @@ export default function ChatPage() {
 function EmptySection() {
   return (
     <div className={styles.emptySection}>
-      <img src="/icons/chat-face.svg" />
+      <img src="/icons/character-cool.svg" />
       <p className={`typo-title1 ${styles.emptyTitle}`}>
-        상황에 맞는
+        식단 고민,
         <br />
-        메뉴를 추천해드릴게요
+        무엇이든 물어보세요
       </p>
       <p className={`${styles.emptyText} typo-body4`}>
         <CircleAlert size={20} />
@@ -565,13 +653,11 @@ function EmptySection() {
 function ChatInput({
   value,
   isInputEmpty,
-  isInputFocused,
   isSendPending,
   onChange,
   onInputFocusChange,
   onSubmit,
   onDirectMenuRecordClick,
-  onSelectChip,
 }: {
   value: string;
   isInputEmpty: boolean;
@@ -581,11 +667,9 @@ function ChatInput({
   onInputFocusChange: (isFocused: boolean) => void;
   onSubmit: (event?: FormEvent<HTMLFormElement>) => void | Promise<void>;
   onDirectMenuRecordClick: () => void;
-  onSelectChip: (chip: string) => void;
 }) {
   const [isAddActionOpen, setIsAddActionOpen] = useState(false);
   const isSendDisabled = isInputEmpty || isSendPending;
-  const isQuickChipVisible = isInputEmpty && !isInputFocused;
 
   const handleInputChange = (nextValue: string) => {
     if (isAddActionOpen && nextValue.trim().length > 0) {
@@ -596,29 +680,12 @@ function ChatInput({
 
   return (
     <div className={styles.chatInputContainer}>
-      <section
-        className={`${styles.chipSection} ${isQuickChipVisible ? styles.chipSectionVisible : styles.chipSectionHidden}`}
-        aria-hidden={!isQuickChipVisible}
-      >
-        {QUICK_CHIP_LIST.map((chip) => (
-          <button
-            key={chip}
-            type="button"
-            className={styles.chipContainer}
-            onClick={() => onSelectChip(chip)}
-            disabled={isSendPending || !isQuickChipVisible}
-          >
-            <p className="typo-body3">{chip}</p>
-          </button>
-        ))}
-      </section>
-
       <form className={styles.textInputContainer} onSubmit={onSubmit}>
         <button
           type="button"
           className={`${styles.plusIconContainer} ${isAddActionOpen ? styles.plusIconContainerActive : ""}`}
           onClick={() => setIsAddActionOpen((prev) => !prev)}
-          aria-label="첨부 기능 준비 중"
+          aria-label={isAddActionOpen ? "추가 기능 닫기" : "추가 기능 열기"}
         >
           <Plus
             size={24}
@@ -627,7 +694,8 @@ function ChatInput({
         </button>
 
         <div className={styles.textInputWrapper}>
-          <input
+          <textarea
+            rows={1}
             value={value}
             className={`${styles.textInput} typo-body3`}
             placeholder="맥도날드에 왔는데 뭐 먹을까?"
@@ -728,14 +796,14 @@ function RecommendationSection({
 
         {!topIsSelected ? (
           <div className={styles.addAction}>
-            <span className={`${styles.addActionText} typo-label3`}>오늘의 식사에 추가</span>
+            <span className={`${styles.addActionText} typo-label3`}>식사 기록</span>
             <span>
               <Plus size={20} />
             </span>
           </div>
         ) : (
           <div className={styles.addActionSelected}>
-            <span className="typo-label3">오늘의 식사에 추가 완료</span>
+            <span className="typo-label3">식사 기록 완료</span>
             <span>
               <Check size={20} />
             </span>

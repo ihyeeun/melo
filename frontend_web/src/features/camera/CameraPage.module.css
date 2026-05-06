@@ -43,7 +43,7 @@
 }
 
 .previewFrame {
-  border: 1px solid var(--border-normal);
+  border: 1px solid var(--border-neutral);
   border-radius: 12px;
   box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
   isolation: isolate;

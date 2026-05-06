@@ -1,5 +1,5 @@
 .page {
-  background-color: var(--bg-normal-white);
+  background-color: var(--bg-white);
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -44,9 +44,9 @@
 }
 
 .menuLabel {
-  color: var(--text-normal);
+  color: var(--label-normal);
 }
 
 .menuChevron {
-  color: var(--text-normal);
+  color: var(--label-normal);
 }

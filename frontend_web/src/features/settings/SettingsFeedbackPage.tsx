@@ -1,7 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { useRegisterInquiryMutation } from "@/features/settings/hooks/mutations/useInquiryMutation";
+import { isNativeApp, requestNativeAppDeviceInfo } from "@/shared/api/bridge/nativeBridge";
+import type { AppDeviceInfoPayload } from "@/shared/api/bridge/nativeBridge.types";
 import { Button } from "@/shared/commons/button/Button";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
 import { toast } from "@/shared/commons/toast/toast";
@@ -13,10 +15,40 @@ const MAX_FEEDBACK_LENGTH = 1000;
 export default function SettingsFeedbackPage() {
   const navigate = useNavigate();
   const [feedback, setFeedback] = useState("");
+  const [appDeviceInfo, setAppDeviceInfo] = useState<AppDeviceInfoPayload | null>(null);
   const { mutate } = useRegisterInquiryMutation();
 
   const trimmedFeedback = feedback.trim();
   const canSubmit = trimmedFeedback.length > 0;
+  const appInfoLabel = !isNativeApp()
+    ? "앱 환경이 아니어서 앱/OS 정보를 표시하지 않습니다."
+    : appDeviceInfo === null
+      ? "앱/OS 정보를 불러오는 중이에요."
+      : `앱 버전 ${appDeviceInfo.appVersion}${appDeviceInfo.appBuild ? ` (${appDeviceInfo.appBuild})` : ""} · ${appDeviceInfo.osName} ${appDeviceInfo.osVersion ?? "-"}`;
+
+  useEffect(() => {
+    let isActive = true;
+
+    if (!isNativeApp()) {
+      return () => {
+        isActive = false;
+      };
+    }
+
+    void requestNativeAppDeviceInfo()
+      .then((deviceInfo) => {
+        if (!isActive) return;
+        setAppDeviceInfo(deviceInfo);
+      })
+      .catch(() => {
+        if (!isActive) return;
+        setAppDeviceInfo(null);
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
 
   const handleSubmit = () => {
     if (!canSubmit) {
@@ -66,6 +98,7 @@ export default function SettingsFeedbackPage() {
               />
             </div>
             <p className={`${styles.lengthText} typo-label4`}>최대 {MAX_FEEDBACK_LENGTH}자 이내</p>
+            <p className={`${styles.lengthText} typo-caption`}>{appInfoLabel}</p>
           </section>
         </div>
       </main>
@@ -76,7 +109,7 @@ export default function SettingsFeedbackPage() {
           disabled={!canSubmit}
           fullWidth
           size="large"
-          state={canSubmit ? "default" : "disabled"}
+          interaction={canSubmit ? "normal" : "disable"}
         >
           보내기
         </Button>

@@ -35,7 +35,7 @@ export function CheckButtonModal({
             variant="filled"
             color="primary"
             size="small"
-            state="default"
+            interaction="normal"
             disabled={confirmDisabled}
             onClick={(e) => {
               onConfirm?.();

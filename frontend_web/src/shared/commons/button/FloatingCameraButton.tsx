@@ -1,27 +1,63 @@
 import { Camera } from "lucide-react";
+import * as React from "react";
 
 import styles from "./FloatingCameraButton.module.css";
+
+const INTERACTION_CLASS = {
+  normal: "",
+  hover: "interactionHover",
+  focused: "interactionFocused",
+  pressed: "interactionPressed",
+  disable: "interactionDisable",
+} as const;
+
+type Interaction = keyof typeof INTERACTION_CLASS;
 
 type FloatingCameraButtonProps = {
   onClick: () => void;
   ariaLabel: string;
   tone?: "primary" | "light";
+  interaction?: Interaction;
   bottomOffset?: number;
-};
+} & Omit<React.ComponentPropsWithoutRef<"button">, "children" | "onClick" | "aria-label">;
 
 export function FloatingCameraButton({
   onClick,
   ariaLabel,
   tone = "primary",
+  interaction,
   bottomOffset = 70,
+  disabled,
+  type,
+  className,
+  style,
+  ...props
 }: FloatingCameraButtonProps) {
+  const resolvedInteraction = interaction ?? (disabled ? "disable" : "normal");
+  const isDisabled = disabled || resolvedInteraction === "disable";
+
+  const classes = [
+    styles.button,
+    tone === "primary" ? styles.primary : styles.light,
+    resolvedInteraction ? styles[INTERACTION_CLASS[resolvedInteraction]] : "",
+    interaction ? styles.interactionForced : "",
+    className,
+  ]
+    .filter(Boolean)
+    .join(" ");
+
   return (
     <button
-      type="button"
-      className={`${styles.button} ${tone === "primary" ? styles.primary : styles.light}`}
+      {...props}
+      type={type ?? "button"}
+      className={classes}
       onClick={onClick}
       aria-label={ariaLabel}
-      style={{ bottom: `calc(var(--safe-area-bottom) + ${bottomOffset}px)` }}
+      disabled={isDisabled}
+      style={{
+        ...style,
+        bottom: `calc(var(--safe-area-bottom) + ${bottomOffset}px)`,
+      }}
     >
       <Camera size={24} />
     </button>

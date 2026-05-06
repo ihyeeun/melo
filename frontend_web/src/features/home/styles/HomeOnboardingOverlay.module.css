@@ -1,0 +1,75 @@
+.overlayRoot {
+  inset: 0;
+  pointer-events: auto;
+  position: fixed;
+  z-index: 10;
+}
+
+.spotlight {
+  border: 2px dashed var(--dimmer-dimmer);
+  border-radius: 8px;
+  box-shadow: 0 0 0 200vmax var(--dimmer-dimmer);
+  position: fixed;
+}
+
+.closeButton {
+  align-items: center;
+  color: var(--static-white);
+  display: inline-flex;
+  height: 44px;
+  justify-content: center;
+  pointer-events: auto;
+  position: fixed;
+  right: 16px;
+  top: max(12px, var(--safe-area-top));
+  width: 44px;
+  z-index: 10;
+}
+
+.bubble {
+  background-color: var(--bg-white);
+  border-radius: 8px;
+  box-shadow: var(--shadow-strong);
+  max-width: calc(100vw - 24px);
+  padding: 14px 16px;
+  pointer-events: auto;
+  position: fixed;
+  width: fit-content;
+}
+
+.bubble::after {
+  border-top: 10px solid var(--bg-white);
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  content: "";
+  left: var(--tail-left, 40px);
+  position: absolute;
+  top: 100%;
+  transform: translateX(-50%);
+}
+
+.title {
+  color: var(--label-normal);
+  width: fit-content;
+}
+
+.description {
+  color: var(--label-alternative);
+  margin-top: 4px;
+  width: fit-content;
+}
+
+.bubbleFooter {
+  align-items: center;
+  display: flex;
+  margin-top: 12px;
+}
+
+.nextButton {
+  color: var(--label-assistive);
+}
+
+.stepCount {
+  color: var(--label-assistive);
+  margin-left: auto;
+}

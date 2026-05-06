@@ -1,5 +1,5 @@
 .calendar-root {
-  background-color: var(--bg-normal-primary1);
+  background-color: var(--bg-primary-1);
   display: flex;
   flex-direction: column;
   padding-top: var(--safe-area-top);
@@ -66,7 +66,7 @@
 }
 
 .calendar-nav-button:active {
-  background: rgb(255 255 255 / 20%);
+  background-color: var(--interaction-white-2);
 }
 
 .calendar-body {
@@ -104,7 +104,7 @@
 
 .monthly-calendar-weekday {
   align-items: center;
-  color: var(--text-white);
+  color: var(--static-white);
   display: flex;
   height: 48px;
   justify-content: center;
@@ -153,25 +153,25 @@
 }
 
 .calendar-day-cell--month.is-selected .calendar-day-number-container {
-  background-color: var(--bg-normal-white);
+  background-color: var(--bg-white);
   padding: 0 5px;
 }
 
 .calendar-day-cell--month.is-selected .calendar-day-number {
-  color: var(--text-primary);
+  color: var(--label-primary);
 }
 
 .calendar-day-cell--week.is-selected .calendar-day-weekday,
 .calendar-day-cell--week.is-selected .calendar-day-number {
-  color: var(--text-primary);
+  color: var(--label-primary);
 }
 
 .calendar-day-cell.is-today .calendar-day-weekday-container {
-  background-color: var(--bg-normal-white);
+  background-color: var(--bg-white);
 }
 
 .calendar-day-cell.is-today .calendar-day-weekday {
-  color: var(--text-primary);
+  color: var(--label-primary);
 }
 
 .calendar-day-cell--week .calendar-day-weekday-container {
@@ -199,5 +199,5 @@
 }
 
 .calendar-text-white {
-  color: var(--text-white);
+  color: var(--static-white);
 }

@@ -1,5 +1,5 @@
 .page {
-  background-color: var(--bg-normal-white);
+  background-color: var(--bg-white);
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -24,7 +24,7 @@
 }
 
 .title {
-  color: var(--text-normal);
+  color: var(--label-normal);
   word-break: keep-all;
 }
 
@@ -39,10 +39,10 @@
 }
 
 .textarea {
-  background: var(--bg-normal-white);
-  border: 1px solid var(--border-normal);
+  background: var(--bg-white);
+  border: 1px solid var(--border-neutral);
   border-radius: 8px;
-  color: var(--text-normal);
+  color: var(--label-normal);
   min-height: 160px;
   padding: 16px 20px;
   resize: none;
@@ -55,12 +55,12 @@
 }
 
 .textarea::placeholder {
-  color: var(--text-assistive1);
+  color: var(--label-alternative);
   white-space: pre-line;
 }
 
 .textareaPlaceholder {
-  color: var(--text-assistive1);
+  color: var(--label-alternative);
   left: 20px;
   margin: 0;
   pointer-events: none;
@@ -76,7 +76,7 @@
 }
 
 .lengthText {
-  color: var(--text-assistive2);
+  color: var(--label-assistive);
   text-align: right;
 }
 

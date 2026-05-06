@@ -1,5 +1,5 @@
 .page {
-  background-color: var(--bg-normal-normal);
+  background-color: var(--bg-normal);
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -21,8 +21,8 @@
 
 .mealScoreCard {
   padding: 20px;
-  background-color: var(--bg-normal-white);
-  border: 1px solid var(--border-normal);
+  background-color: var(--bg-white);
+  border: 1px solid var(--border-neutral);
   border-radius: 8px;
   display: flex;
   align-items: center;
@@ -30,7 +30,7 @@
 }
 
 .score {
-  color: var(--text-primary);
+  color: var(--label-primary);
 }
 
 .scoreDescription {
@@ -40,7 +40,7 @@
 }
 
 .feedbackText {
-  color: var(--text-assistive1);
+  color: var(--label-alternative);
 }
 
 .scoreValue {
@@ -48,10 +48,10 @@
 }
 
 .nutrientSection {
-  background-color: var(--bg-normal-white);
-  border: 1px solid var(--border-normal);
+  background-color: var(--bg-white);
+  border: 1px solid var(--border-neutral);
   border-radius: 8px;
-  color: var(--text-normal);
+  color: var(--label-normal);
   display: flex;
   flex-direction: column;
   gap: 20px;
@@ -59,7 +59,7 @@
 }
 
 .calorieCard {
-  color: var(--text-normal);
+  color: var(--label-normal);
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -111,13 +111,12 @@
   flex-direction: column;
 }
 
-.nutrientAmount {
-  color: var(--text-assistive1);
+.textAlternative {
+  color: var(--label-alternative);
 }
 
 .footer {
-  background-color: var(--bg-normal-normal);
-  border-top: 1px solid var(--border-normal);
+  background-color: var(--bg-normal);
   padding: 0 20px;
   padding-bottom: var(--safe-area-bottom);
   position: sticky;
@@ -125,7 +124,7 @@
 }
 
 .progressTrack {
-  background-color: var(--gray-300);
+  background-color: var(--bg-normal);
   border-radius: 100px;
   height: 12px;
   overflow: hidden;
@@ -150,7 +149,7 @@
 }
 
 .progressCaution {
-  background-color: var(--primary-heavy);
+  background-color: var(--primary-normal);
 }
 
 .progressExcess {
@@ -181,7 +180,7 @@
 }
 
 .badgeCaution .nutrientBadgeDot {
-  background-color: var(--primary-heavy);
+  background-color: var(--primary-normal);
 }
 
 .badgeExcess .nutrientBadgeDot {

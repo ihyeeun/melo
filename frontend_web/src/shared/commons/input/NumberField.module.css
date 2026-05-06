@@ -56,7 +56,7 @@
   padding: 0;
   user-select: none;
   background-color: var(--shadow-3);
-  color: var(--text-white);
+  color: var(--static-white);
   border-radius: 100px;
   @media (hover: hover) {
     &:hover {

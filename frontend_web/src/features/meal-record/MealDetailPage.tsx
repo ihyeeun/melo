@@ -343,7 +343,7 @@ export default function MealDetailPage() {
           color="primary"
           fullWidth
           onClick={handleAddMenu}
-          state={selection ? "default" : "disabled"}
+          interaction={selection ? "normal" : "disable"}
           disabled={!selection}
         >
           {isAlreadyQueued ? "수정하기" : "담기"}

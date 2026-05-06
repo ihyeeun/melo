@@ -153,9 +153,9 @@ export default function BrandSearch() {
                     </p>
                     <Button
                       variant="text"
-                      state={isDirectRegisterDisabled ? "disabled" : "default"}
+                      interaction={isDirectRegisterDisabled ? "disable" : "normal"}
                       size="small"
-                      color="assistive"
+                      color="normal"
                       onClick={() => handleBrandRegister()}
                       disabled={isDirectRegisterDisabled}
                     >
@@ -176,9 +176,9 @@ export default function BrandSearch() {
           {hasKeyword && hasResults && (
             <Button
               variant="text"
-              state={isDirectRegisterDisabled ? "disabled" : "default"}
+              interaction={isDirectRegisterDisabled ? "disable" : "normal"}
               size="small"
-              color="assistive"
+              color="normal"
               onClick={() => handleBrandRegister()}
               disabled={isDirectRegisterDisabled}
             >

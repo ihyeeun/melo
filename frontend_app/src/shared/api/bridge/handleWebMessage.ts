@@ -1,15 +1,18 @@
 import type { RefObject } from "react";
 import type { WebView, WebViewMessageEvent } from "react-native-webview";
 import { isAxiosError } from "axios";
+import Constants from "expo-constants";
 import { router } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
 import * as FileSystem from "expo-file-system/legacy";
+import { Platform } from "react-native";
 import { clearTokens } from "@/features/auth/store/tokenStore";
 import { apiClient } from "@/src/shared/api/apiClient";
 import { emitAuthExpired } from "@/src/shared/auth/authSessionEvents";
 import { BridgeHandledError, isBridgeHandledError } from "./bridgeError";
 import { beginCameraCaptureSession } from "./cameraCaptureSession";
 import type {
+  BridgeAppDeviceInfoPayload,
   BridgeCameraCaptureRequestPayload,
   BridgeGalleryPickRequestPayload,
   BridgeImageUploadRequestPayload,
@@ -18,8 +21,8 @@ import type {
 import { sendToWeb } from "./sendToWeb";
 import { requestFromWeb } from "./requestFromWeb";
 
-const ALLOWED_IMAGE_MIME_TYPES = new Set(["image/jpeg", "image/png"]);
-const ALLOWED_IMAGE_EXTENSIONS = new Set(["jpg", "jpeg", "png"]);
+const ALLOWED_IMAGE_MIME_TYPES = new Set(["image/jpeg", "image/png", "image/heic", "image/heif"]);
+const ALLOWED_IMAGE_EXTENSIONS = new Set(["jpg", "jpeg", "png", "heic", "heif"]);
 const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024;
 const DEFAULT_UPLOAD_FIELD_NAME = "file";
 const SESSION_TERMINATION_ENDPOINTS = new Set(["/commonAuth/signout", "/commonAuth/delete"]);
@@ -46,17 +49,26 @@ function resolveLowerCaseExtension(value: string | null | undefined) {
   return matched[1].toLowerCase();
 }
 
+function resolveImageMimeTypeFromExtension(extension: string | null | undefined) {
+  if (!extension) return null;
+  if (extension === "png") return "image/png";
+  if (extension === "jpg" || extension === "jpeg") return "image/jpeg";
+  if (extension === "heic") return "image/heic";
+  if (extension === "heif") return "image/heif";
+  return null;
+}
+
 function resolveImageMimeType(source: ImageFileSource) {
   const normalizedMime = source.mimeType?.toLowerCase().trim();
   if (normalizedMime) return normalizedMime;
 
   const extensionFromName = resolveLowerCaseExtension(source.fileName);
-  if (extensionFromName === "png") return "image/png";
-  if (extensionFromName === "jpg" || extensionFromName === "jpeg") return "image/jpeg";
+  const mimeTypeFromName = resolveImageMimeTypeFromExtension(extensionFromName);
+  if (mimeTypeFromName) return mimeTypeFromName;
 
   const extensionFromUri = resolveLowerCaseExtension(source.uri);
-  if (extensionFromUri === "png") return "image/png";
-  if (extensionFromUri === "jpg" || extensionFromUri === "jpeg") return "image/jpeg";
+  const mimeTypeFromUri = resolveImageMimeTypeFromExtension(extensionFromUri);
+  if (mimeTypeFromUri) return mimeTypeFromUri;
 
   return null;
 }
@@ -93,7 +105,7 @@ async function normalizeCapturedImageSource(source: CapturedImageSource) {
 
   if (!isAllowedMimeType && !isAllowedExtension) {
     throw new BridgeHandledError(
-      "JPG 또는 PNG 형식의 이미지만 첨부할 수 있어요.",
+      "JPG, PNG, HEIC, HEIF 형식의 이미지만 첨부할 수 있어요.",
       400,
       "IMAGE_FORMAT_NOT_ALLOWED",
     );
@@ -156,7 +168,10 @@ function resolveUploadFileName(source: ImageFileSource, mimeType: string) {
   const extensionFromUri = resolveLowerCaseExtension(source.uri);
   if (extensionFromUri) return `upload.${extensionFromUri}`;
 
-  return mimeType === "image/png" ? "upload.png" : "upload.jpg";
+  if (mimeType === "image/png") return "upload.png";
+  if (mimeType === "image/heic") return "upload.heic";
+  if (mimeType === "image/heif") return "upload.heif";
+  return "upload.jpg";
 }
 
 async function normalizeUploadImageSource(payload: BridgeImageUploadRequestPayload) {
@@ -175,7 +190,7 @@ async function normalizeUploadImageSource(payload: BridgeImageUploadRequestPaylo
 
   if (!isAllowedMimeType && !isAllowedExtension) {
     throw new BridgeHandledError(
-      "JPG 또는 PNG 형식의 이미지만 첨부할 수 있어요.",
+      "JPG, PNG, HEIC, HEIF 형식의 이미지만 첨부할 수 있어요.",
       400,
       "IMAGE_FORMAT_NOT_ALLOWED",
     );
@@ -198,13 +213,7 @@ async function normalizeUploadImageSource(payload: BridgeImageUploadRequestPaylo
     );
   }
 
-  const normalizedMimeType =
-    mimeType ??
-    (extension === "png"
-      ? "image/png"
-      : extension === "jpg" || extension === "jpeg"
-        ? "image/jpeg"
-        : null);
+  const normalizedMimeType = mimeType ?? resolveImageMimeTypeFromExtension(extension);
   if (!normalizedMimeType) {
     throw new BridgeHandledError("이미지 형식을 확인하지 못했어요.", 400, "IMAGE_FORMAT_UNKNOWN");
   }
@@ -300,6 +309,58 @@ function shouldTerminateSession(endpoint: string) {
   return SESSION_TERMINATION_ENDPOINTS.has(endpoint);
 }
 
+function resolveAppVersion() {
+  const appVersion = Constants.expoConfig?.version;
+  if (typeof appVersion === "string" && appVersion.trim().length > 0) {
+    return appVersion.trim();
+  }
+
+  return "unknown";
+}
+
+function resolveBuildVersion() {
+  const platformManifest = Constants.platform;
+  const iosBuildNumber =
+    platformManifest &&
+    "ios" in platformManifest &&
+    platformManifest.ios &&
+    typeof platformManifest.ios.buildNumber === "string"
+      ? platformManifest.ios.buildNumber.trim()
+      : "";
+  if (iosBuildNumber.length > 0) return iosBuildNumber;
+
+  const androidVersionCode =
+    platformManifest &&
+    "android" in platformManifest &&
+    platformManifest.android &&
+    typeof platformManifest.android.versionCode === "number"
+      ? platformManifest.android.versionCode
+      : null;
+  if (typeof androidVersionCode === "number" && Number.isFinite(androidVersionCode)) {
+    return String(androidVersionCode);
+  }
+
+  return null;
+}
+
+function resolveOsVersion() {
+  if (typeof Platform.Version === "string") return Platform.Version;
+  if (typeof Platform.Version === "number" && Number.isFinite(Platform.Version)) {
+    return String(Platform.Version);
+  }
+
+  return null;
+}
+
+function resolveAppDeviceInfo(): BridgeAppDeviceInfoPayload {
+  return {
+    appVersion: resolveAppVersion(),
+    appBuild: resolveBuildVersion(),
+    osName: Platform.OS === "android" ? "android" : "ios",
+    osVersion: resolveOsVersion(),
+  };
+}
+
 function isBridgePrimitiveValue(value: unknown): value is string | number | boolean | undefined {
   return (
     value === undefined ||
@@ -339,6 +400,10 @@ function isWebToAppMessage(value: unknown): value is WebToAppMessage {
   }
 
   if (value.type === "NAVIGATION_BACK") {
+    return true;
+  }
+
+  if (value.type === "APP_DEVICE_INFO_REQUEST") {
     return true;
   }
 
@@ -426,6 +491,17 @@ export async function handleWebMessage(
 
     if (message.type === "NAVIGATION_BACK") {
       router.back();
+      return;
+    }
+
+    if (message.type === "APP_DEVICE_INFO_REQUEST") {
+      const result = resolveAppDeviceInfo();
+
+      sendToWeb(webViewRef, {
+        id: requestId,
+        type: "API_RESPONSE",
+        payload: result,
+      });
       return;
     }
 

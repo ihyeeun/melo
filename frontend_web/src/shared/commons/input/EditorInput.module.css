@@ -4,7 +4,7 @@
 }
 
 .input {
-  border: var(--border-normal) 1px solid;
+  border: var(--border-neutral) 1px solid;
   border-radius: 6px;
   flex: 1;
   outline: none;
@@ -13,11 +13,11 @@
 }
 
 .input::placeholder {
-  color: var(--text-assistive2);
+  color: var(--label-assistive);
 }
 
 .unit {
-  color: var(--text-normal);
+  color: var(--label-normal);
   margin-left: 12px;
   padding-bottom: 2px;
 }

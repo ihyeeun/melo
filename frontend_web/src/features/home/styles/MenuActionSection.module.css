@@ -21,7 +21,7 @@
 }
 
 .description {
-  color: var(--text-assistive1);
+  color: var(--label-alternative);
 }
 
 .iconContainer {
@@ -66,8 +66,8 @@
 .mealInner {
   align-items: center;
   aspect-ratio: 1 / 1;
-  background-color: var(--bg-normal-white);
-  border: 1px solid var(--border-normal);
+  background-color: var(--bg-white);
+  border: 1px solid var(--border-neutral);
   border-radius: 8px;
   display: flex;
   justify-content: center;
@@ -80,7 +80,7 @@
 }
 
 .mealValue {
-  color: var(--text-primary);
+  color: var(--label-primary);
 }
 
 .mealIcon {
@@ -90,7 +90,7 @@
 }
 
 .mealLabel {
-  color: var(--text-assistive1);
+  color: var(--label-alternative);
   text-align: center;
 }
 
@@ -99,5 +99,5 @@
 }
 
 .textWhite {
-  color: var(--text-white);
+  color: var(--static-white);
 }

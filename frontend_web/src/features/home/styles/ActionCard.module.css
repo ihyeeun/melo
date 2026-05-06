@@ -1,6 +1,6 @@
 .cardContainer {
-  background-color: var(--bg-normal-white);
-  border: 1px solid var(--border-normal);
+  background-color: var(--bg-white);
+  border: 1px solid var(--border-neutral);
   border-radius: 8px;
   box-shadow: 3px 3px 5px 0 rgb(0 0 0 / 5%);
   box-sizing: border-box;

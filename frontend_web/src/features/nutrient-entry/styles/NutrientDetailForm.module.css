@@ -20,11 +20,11 @@
 }
 
 .titleText {
-  color: var(--text-normal);
+  color: var(--label-normal);
 }
 
 .titleUnit {
-  color: var(--text-assistive2);
+  color: var(--label-assistive);
 }
 
 .requiredText {
@@ -38,17 +38,17 @@
 }
 
 .valueInput {
-  background-color: var(--bg-normal-white);
-  border: 1px solid var(--border-normal);
+  background-color: var(--bg-white);
+  border: 1px solid var(--border-neutral);
   border-radius: 8px;
-  color: var(--text-normal);
+  color: var(--label-normal);
   padding: 10px 14px;
   text-align: right;
   width: 100%;
 }
 
 .valueInput::placeholder {
-  color: var(--text-assistive2);
+  color: var(--label-assistive);
 }
 
 .valueInput:focus {
@@ -78,10 +78,10 @@
 }
 
 .selectPopup {
-  background-color: var(--bg-normal-white);
-  border: 1px solid var(--border-normal);
+  background-color: var(--bg-white);
+  border: 1px solid var(--border-neutral);
   border-radius: 10px;
-  box-shadow: 0 6px 16px var(--bg-shadow-2);
+  box-shadow: var(--shadow-strong);
   min-width: var(--anchor-width);
   overflow: hidden;
 }
@@ -92,7 +92,7 @@
 }
 
 .selectItem {
-  color: var(--text-normal);
+  color: var(--label-normal);
   cursor: pointer;
   padding: 10px 14px;
   text-align: right;
@@ -104,11 +104,11 @@
 }
 
 .selectItem[data-selected] {
-  color: var(--text-primary);
+  color: var(--label-primary);
 }
 
 .selectIcon {
-  color: var(--text-normal);
+  color: var(--label-normal);
   align-items: center;
   display: flex;
   justify-content: center;
@@ -135,27 +135,27 @@
 }
 
 .fieldLabel {
-  color: var(--text-normal);
+  color: var(--label-normal);
   min-width: 0;
 }
 
 .fieldLabelMain {
-  color: var(--text-normal);
+  color: var(--label-normal);
 }
 
 .fieldLabelSub {
-  color: var(--text-assistive1);
+  color: var(--label-alternative);
 }
 
 .unitText {
-  color: var(--text-assistive2);
+  color: var(--label-assistive);
 }
 
 .nutrientInput {
-  background-color: var(--bg-normal-white);
-  border: 1px solid var(--border-normal);
+  background-color: var(--bg-white);
+  border: 1px solid var(--border-neutral);
   border-radius: 8px;
-  color: var(--text-normal);
+  color: var(--label-normal);
   flex-shrink: 0;
   max-width: 190px;
   min-width: 164px;
@@ -165,7 +165,7 @@
 }
 
 .nutrientInput::placeholder {
-  color: var(--text-assistive2);
+  color: var(--label-assistive);
 }
 
 .nutrientInput:focus {

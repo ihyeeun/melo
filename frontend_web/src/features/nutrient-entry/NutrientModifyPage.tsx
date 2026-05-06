@@ -61,7 +61,11 @@ function buildInitialFormState(
   };
 }
 
-function scaleCaloriesByConsumedWeight(baseCalories: number, baseWeight: number, consumedWeight?: number) {
+function scaleCaloriesByConsumedWeight(
+  baseCalories: number,
+  baseWeight: number,
+  consumedWeight?: number,
+) {
   if (
     typeof baseCalories !== "number" ||
     !Number.isFinite(baseCalories) ||
@@ -330,7 +334,7 @@ export default function NutrientModifyPage() {
       <main className={styles.main}>
         <div className={styles.content}>
           <section className={styles.topSection}>
-            <p className={`typo-title2 ${styles.foodNameText}`}>
+            <p className={`typo-title1 ${styles.textNormal}`}>
               {foodName || "메뉴 정보를 확인해주세요"}
             </p>
             {brandName && <p className={`typo-label4 ${styles.brandText}`}>{brandName}</p>}
@@ -338,12 +342,12 @@ export default function NutrientModifyPage() {
 
           <section className={styles.nutrientSection}>
             <div className={styles.nutrientHeader}>
-              <p className={`typo-title3 ${styles.labelText}`}>영양정보</p>
+              <p className={`typo-title3 ${styles.textNormal}`}>영양정보</p>
               <Button
                 variant="text"
-                state="default"
+                interaction="normal"
                 size="small"
-                color="assistive"
+                color="normal"
                 onClick={handleResetForm}
               >
                 전체 삭제
@@ -390,7 +394,7 @@ export default function NutrientModifyPage() {
           color="primary"
           fullWidth
           onClick={handleSubmit}
-          state={isSubmitDisabled ? "disabled" : "default"}
+          interaction={isSubmitDisabled ? "disable" : "normal"}
           disabled={isSubmitDisabled}
         >
           수정하기

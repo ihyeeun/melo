@@ -130,7 +130,7 @@ export default function OnboardingPage() {
           variant="filled"
           size="large"
           color="primary"
-          state={canGoNext ? "default" : "disabled"}
+          interaction={canGoNext ? "normal" : "disable"}
         >
           {step.nextText ?? "다음"}
         </Button>

@@ -471,7 +471,9 @@ export default function MealRecordPage() {
             </div>
           ) : (
             <button type="button" className={styles.emptyState} onClick={handleMealSearchNavigate}>
-              <PlusIcon size={24} />
+              <div className={styles.emptyStateIcon}>
+                <PlusIcon size={24} />
+              </div>
               <p className="typo-title2">기록하러 가볼까요?</p>
             </button>
           )}
@@ -482,8 +484,8 @@ export default function MealRecordPage() {
         <Button
           onClick={handleMealSearchNavigate}
           variant="outlined"
-          state="default"
-          size="medium"
+          interaction="normal"
+          size="normal"
           color="primary"
           fullWidth
         >
@@ -495,8 +497,8 @@ export default function MealRecordPage() {
             void handleComplete();
           }}
           variant="filled"
-          state={hasUnsavedChanges && !isSavePending ? "default" : "disabled"}
-          size="medium"
+          interaction={hasUnsavedChanges && !isSavePending ? "normal" : "disable"}
+          size="normal"
           color="primary"
           fullWidth
           disabled={!hasUnsavedChanges || isSavePending}

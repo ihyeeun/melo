@@ -19,15 +19,35 @@
   outline-offset: 1px;
 }
 
+.btn--interaction-focused {
+  outline: 2px solid var(--primary-strong);
+  outline-offset: 1px;
+}
+
 .btn:disabled,
 .btn[aria-disabled="true"] {
   box-shadow: none;
   cursor: not-allowed;
 }
 
+.btn:active {
+  transform: scale(0.98);
+}
+
 /* Filled/Outlined size tokens: height + padding */
 .btn--variant-filled.btn--size-small,
 .btn--variant-outlined.btn--size-small {
+  border-radius: 6px;
+  height: 36px;
+  padding: 8px 20px;
+  font-size: var(--fs-label4);
+  font-weight: var(--fw-medium);
+  letter-spacing: var(--letter-spacing-tight);
+  line-height: var(--line-height-140);
+}
+
+.btn--variant-filled.btn--size-normal,
+.btn--variant-outlined.btn--size-normal {
   border-radius: 6px;
   font-size: var(--fs-label2);
   font-weight: var(--fw-bold);
@@ -37,30 +57,19 @@
   padding: 10px 20px;
 }
 
-.btn--variant-filled.btn--size-medium,
-.btn--variant-outlined.btn--size-medium {
-  border-radius: 8px;
-  font-size: var(--fs-label2);
-  font-weight: var(--fw-bold);
-  height: 54px;
-  letter-spacing: var(--letter-spacing-normal);
-  line-height: var(--line-height-140);
-  padding: 16px 42px;
-}
-
 .btn--variant-filled.btn--size-large,
 .btn--variant-outlined.btn--size-large {
   border-radius: 8px;
+  height: 54px;
+  padding: 16px 42px;
   font-size: var(--fs-label2);
   font-weight: var(--fw-bold);
-  height: 51px;
   letter-spacing: var(--letter-spacing-normal);
   line-height: var(--line-height-140);
-  padding: 16px 42px;
 }
 
-.btn--variant-filled.btn--state-disabled,
-.btn--variant-outlined.btn--state-disabled {
+.btn--variant-filled.btn--state-disabled.btn--size-normal,
+.btn--variant-filled.btn--state-disabled.btn--size-large {
   font-size: var(--fs-label3);
   font-weight: var(--fw-medium);
   letter-spacing: var(--letter-spacing-label);
@@ -70,91 +79,94 @@
 /* Filled */
 .btn--variant-filled.btn--color-primary.btn--state-default {
   background: var(--primary-normal);
-  color: var(--text-white);
+  color: var(--static-white);
 }
 
 .btn--variant-filled.btn--color-primary:hover,
 .btn--variant-filled.btn--color-primary.btn--state-hover {
   background: var(--primary-strong);
-  color: var(--text-white);
+  color: var(--static-white);
+}
+
+.btn--variant-filled.btn--color-primary:focus,
+.btn--variant-filled.btn--color-primary.btn--state-focused {
+  background: var(--primary-strong);
+  color: var(--static-white);
 }
 
 .btn--variant-filled.btn--color-primary:active,
 .btn--variant-filled.btn--color-primary.btn--state-pressed {
   background: var(--primary-strong);
-  color: var(--text-white);
+  color: var(--static-white);
 }
 
 .btn--variant-filled.btn--color-primary.btn--state-disabled {
-  background: var(--gray-300);
-  color: var(--gray-800);
-}
-
-.btn--variant-filled.btn--color-assistive.btn--state-default {
-  background: var(--gray-900);
-  color: var(--text-white);
-}
-
-.btn--variant-filled.btn--color-assistive:hover,
-.btn--variant-filled.btn--color-assistive.btn--state-hover {
-  background: var(--gray-1000);
-  color: var(--text-white);
-}
-
-.btn--variant-filled.btn--color-assistive:active,
-.btn--variant-filled.btn--color-assistive.btn--state-pressed {
-  background: var(--gray-1100);
-  color: var(--text-white);
-}
-
-.btn--variant-filled.btn--color-assistive.btn--state-disabled {
-  background: var(--gray-300);
-  color: var(--gray-800);
+  background: var(--label-disable);
+  color: var(--label-assistive);
 }
 
 /* Outlined */
 .btn--variant-outlined.btn--color-primary.btn--state-default {
-  border: 1px solid var(--primary-strong);
-  color: var(--primary-strong);
+  border: 1px solid var(--primary-normal);
+  color: var(--primary-normal);
 }
 
 .btn--variant-outlined.btn--color-primary:hover,
 .btn--variant-outlined.btn--color-primary.btn--state-hover {
   border: 1px solid var(--primary-strong);
-  color: var(--primary-heavy);
+  color: var(--primary-strong);
+  background-color: var(--interaction-primary);
+}
+
+.btn--variant-outlined.btn--color-primary:focus,
+.btn--variant-outlined.btn--color-primary.btn--state-focused {
+  border: 1px solid var(--primary-strong);
+  color: var(--primary-strong);
+  background-color: var(--interaction-primary);
 }
 
 .btn--variant-outlined.btn--color-primary:active,
 .btn--variant-outlined.btn--color-primary.btn--state-pressed {
-  border: 1px solid var(--primary-heavy);
-  color: var(--primary-heavy);
+  border: 1px solid var(--primary-strong);
+  color: var(--primary-strong);
+  background-color: var(--interaction-primary);
 }
 
 .btn--variant-outlined.btn-color-primary.btn--state-disabled {
-  border: 1px solid var(--gray-500);
-  color: var(--gray-500);
+  border: 1px solid var(--label-disable);
+  color: var(--label-disable);
 }
 
-.btn--variant-outlined.btn--color-assistive.btn--state-default {
-  border: 1px solid var(--gray-700);
-  color: var(--gray-800);
+.btn--variant-outlined.btn--color-normal.btn--state-default {
+  border: 1px solid var(--border-normal);
+  color: var(--label-assistive);
+  background-color: var(--interaction-alternative);
 }
 
-.btn--variant-outlined.btn--color-assistive:hover,
-.btn--variant-outlined.btn--color-assistive.btn--state-hover {
-  border: 1px solid var(--gray-800);
-  color: var(--gray-900);
+.btn--variant-outlined.btn--color-normal:hover,
+.btn--variant-outlined.btn--color-normal.btn--state-hover {
+  border: 1px solid var(--border-normal);
+  color: var(--label-assistive);
+  background-color: var(--interaction-alternative);
 }
 
-.btn--variant-outlined.btn--color-assistive:active,
-.btn--variant-outlined.btn--color-assistive.btn--state-pressed {
-  border: 1px solid var(--gray-900);
-  color: var(--static-black);
+.btn--variant-outlined.btn--color-normal:focus,
+.btn--variant-outlined.btn--color-normal.btn--state-focused {
+  border: 1px solid var(--border-normal);
+  color: var(--label-assistive);
+  background-color: var(--interaction-alternative);
 }
 
-.btn--variant-outlined.btn-color-assistive.btn--state-disabled {
-  border: 1px solid var(--gray-500);
-  color: var(--gray-500);
+.btn--variant-outlined.btn--color-normal:active,
+.btn--variant-outlined.btn--color-normal.btn--state-pressed {
+  border: 1px solid var(--border-normal);
+  color: var(--label-assistive);
+  background-color: var(--interaction-alternative);
+}
+
+.btn--variant-outlined.btn-color-normal.btn--state-disabled {
+  border: 1px solid var(--label-disable);
+  color: var(--label-disable);
 }
 
 /* Text */
@@ -167,20 +179,8 @@
   width: auto;
 }
 
-.btn--variant-text.btn--size-small {
-  font-size: var(--fs-label3);
-  font-weight: var(--fw-medium);
-  letter-spacing: var(--letter-spacing-label);
-  line-height: var(--line-height-140);
-}
-
-.btn--variant-text.btn--size-medium {
-  font-size: var(--fs-label3);
-  font-weight: var(--fw-medium);
-  letter-spacing: var(--letter-spacing-label);
-  line-height: var(--line-height-140);
-}
-
+.btn--variant-text.btn--size-small,
+.btn--variant-text.btn--size-normal,
 .btn--variant-text.btn--size-large {
   font-size: var(--fs-label3);
   font-weight: var(--fw-medium);
@@ -188,40 +188,25 @@
   line-height: var(--line-height-140);
 }
 
-.btn--variant-text.btn--color-primary {
-  color: var(--primary-heavy);
-}
-
+.btn--variant-text.btn--color-primary,
 .btn--variant-text.btn--color-primary:hover,
-.btn--variant-text.btn--color-primary.btn--state-hover {
-  color: var(--primary-heavy);
-}
-
+.btn--variant-text.btn--color-primary.btn--state-hover,
 .btn--variant-text.btn--color-primary:active,
 .btn--variant-text.btn--color-primary.btn--state-pressed {
-  color: var(--primary-heavy);
+  color: var(--label-primary);
+}
+
+.btn--variant-text.btn--color-normal,
+.btn--variant-text.btn--color-normal:hover,
+.btn--variant-text.btn--color-normal.btn--state-hover,
+.btn--variant-text.btn--color-normal:active,
+.btn--variant-text.btn--color-normal.btn--state-pressed,
+.btn--variant-text.btn--color-normal.btn--state-disabled {
+  color: var(--label-assistive);
 }
 
 .btn--variant-text.btn--color-primary.btn--state-disabled {
-  color: var(--gray-500);
-}
-
-.btn--variant-text.btn--color-assistive {
-  color: var(--gray-600);
-}
-
-.btn--variant-text.btn--color-assistive:hover,
-.btn--variant-text.btn--color-assistive.btn--state-hover {
-  color: var(--gray-700);
-}
-
-.btn--variant-text.btn--color-assistive:active,
-.btn--variant-text.btn--color-assistive.btn--state-pressed {
-  color: var(--gray-800);
-}
-
-.btn--variant-text.btn--color-assistive.btn--state-disabled {
-  color: var(--gray-500);
+  color: var(--label-disable);
 }
 
 .btn--full {

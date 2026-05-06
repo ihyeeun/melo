@@ -1,6 +1,6 @@
 .chartContainer {
   --chart-current: var(--primary-strong);
-  --chart-grid: var(--border-normal);
+  --chart-grid: var(--border-neutral);
   --chart-target: var(--status-error);
   --chart-tick: #2b2b2b;
   width: 100%;
@@ -30,8 +30,8 @@
 }
 
 .tooltip {
-  background-color: var(--bg-normal-white);
-  border: 1px solid var(--border-normal);
+  background-color: var(--bg-white);
+  border: 1px solid var(--border-neutral);
   border-radius: 8px;
   box-shadow: 3px 3px 5px 0 rgb(0 0 0 / 5%);
   min-width: 92px;
@@ -39,14 +39,14 @@
 }
 
 .tooltipLabel {
-  color: var(--text-normal);
+  color: var(--label-normal);
   font-size: 12px;
   line-height: 1.2;
   margin: 0;
 }
 
 .tooltipValue {
-  color: var(--text-primary);
+  color: var(--label-primary);
   font-size: 13px;
   font-weight: 600;
   line-height: 1.3;

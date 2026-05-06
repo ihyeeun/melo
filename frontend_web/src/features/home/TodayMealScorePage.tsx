@@ -170,7 +170,9 @@ export default function TodayMealScorePage() {
                     value={calorieProgress}
                     status={isCalorieExceeded ? "excess" : undefined}
                   />
-                  <p className={`${styles.nutrientAmount} typo-label3`}>{calorieSummary.message}</p>
+                  <p className={`${styles.textAlternative} typo-label3`}>
+                    {calorieSummary.message}
+                  </p>
                 </div>
               </div>
             </div>
@@ -183,7 +185,7 @@ export default function TodayMealScorePage() {
                   <div className={styles.nutrientHeader}>
                     <p className={styles.nutrientTitle}>
                       <span className="typo-title4">{item.name}</span>
-                      <span className={`${styles.nutrientAmount} typo-label4`}>
+                      <span className={`${styles.textAlternative} typo-label4`}>
                         {item.current.toLocaleString("ko-KR")}g /{" "}
                         {item.target.toLocaleString("ko-KR")}g
                       </span>
@@ -203,7 +205,7 @@ export default function TodayMealScorePage() {
         <Button
           onClick={() => navigate(-1)}
           variant="filled"
-          state="default"
+          interaction="normal"
           size="large"
           color="primary"
           fullWidth

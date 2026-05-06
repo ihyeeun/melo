@@ -14,7 +14,7 @@
 }
 
 .content {
-  background-color: var(--bg-normal-normal);
+  background-color: var(--bg-normal);
   display: flex;
   flex-direction: column;
   gap: 20px;
@@ -27,7 +27,7 @@
   gap: 10px;
   padding: 24px 20px;
   border-radius: 8px;
-  background-color: var(--bg-normal-white);
+  background-color: var(--bg-white);
 }
 
 .scoreCard {
@@ -58,7 +58,7 @@
 }
 
 .scoreCurrent {
-  color: var(--text-primary);
+  color: var(--label-primary);
 }
 
 .scoreDivider {
@@ -68,14 +68,10 @@
   width: 1px;
 }
 
-.scorePoint {
-  color: var(--text-assistive1);
-}
-
 .calorieMessage {
-  color: var(--text-assistive1);
+  color: var(--label-alternative);
   padding: 6px 16px;
-  background-color: var(--bg-normal-primary2);
+  background-color: var(--bg-primary-2);
   border-radius: 100px;
   width: fit-content;
 }
@@ -95,9 +91,9 @@
 .mealCardEmpty {
   position: relative;
   border: 0;
-  box-shadow: none;
-  background-color: transparent;
+  background-color: var(--bg-normal);
   padding: 16px;
+  box-shadow: none;
 }
 
 .mealCardEmpty::before {
@@ -110,7 +106,7 @@
   --dash: 10px; /* 대시 길이 */
   --gap: 7px; /* 대시 간격 */
   --stroke: 1px; /* 선 두께 */
-  --color: var(--gray-500);
+  --color: var(--border-normal);
 
   background:
     repeating-linear-gradient(
@@ -161,7 +157,7 @@
 
 .navigateButton {
   align-items: center;
-  color: var(--text-assistive1);
+  color: var(--static-black);
   display: inline-flex;
   justify-content: center;
 }
@@ -174,14 +170,13 @@
 
 .emptyStatusButton {
   align-items: center;
-  color: var(--text-assistive1);
   display: inline-flex;
   gap: 6px;
 }
 
 .emptyStatusIcon {
   color: var(--static-white);
-  background-color: var(--bg-shadow-3);
+  background-color: var(--interaction-alternative);
   border-radius: 100px;
   height: 20px;
   width: 20px;
@@ -191,15 +186,15 @@
 }
 
 .emptyStatusText {
-  color: var(--text-assistive2);
+  color: var(--label-assistive);
 }
 
 .emptyPlusIcon {
-  color: var(--text-normal);
+  color: var(--static-black);
 }
 
 .mealSummaryCard {
-  background-color: var(--bg-normal-normal);
+  background-color: var(--bg-normal);
   border-radius: 8px;
   display: flex;
   flex-direction: column;
@@ -219,6 +214,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  color: var(--label-normal);
 }
 
 .mealSummaryMeta {
@@ -229,11 +225,12 @@
 }
 
 .score {
-  color: var(--text-primary);
+  color: var(--label-primary);
 }
 
 .mealSummaryArrow {
   transition: transform 0.2s ease;
+  color: var(--interaction-normal);
 }
 
 .mealSummaryArrowExpanded {
@@ -241,7 +238,7 @@
 }
 
 .mealDetailList {
-  border-top: 1px solid var(--gray-400);
+  border-top: 1px solid var(--border-neutral);
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -257,20 +254,8 @@
   justify-content: space-between;
 }
 
-.mealDetailCalories {
-  color: var(--text-assistive1);
-}
-
-.extraMealCard {
-  align-items: center;
-  background-color: var(--bg-shadow-1);
-  border: 1px solid var(--border-normal);
-  border-radius: 8px;
-  color: var(--text-assistive2);
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  justify-content: center;
+.textAlternative {
+  color: var(--label-alternative);
 }
 
 .bodyCardList {

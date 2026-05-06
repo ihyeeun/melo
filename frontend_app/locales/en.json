@@ -1,0 +1,6 @@
+{
+  "ios": {
+    "NSCameraUsageDescription": "Melo uses your camera for diet management. For example, you can scan nutrition labels to analyze data, or take photos of food and menus to check calories and log your meals.",
+    "NSPhotoLibraryUsageDescription": "Melo uses your photo library for diet management. You can select photos of food, menus, or nutrition labels to analyze nutrition data, check calories, and log your meals."
+  }
+}

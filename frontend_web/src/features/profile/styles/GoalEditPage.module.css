@@ -1,5 +1,5 @@
 .page {
-  background-color: var(--bg-normal-normal);
+  background-color: var(--bg-normal);
   display: flex;
   flex-direction: column;
   min-height: 100dvh;
@@ -7,7 +7,7 @@
 }
 
 .pageWhite {
-  background-color: var(--bg-normal-white);
+  background-color: var(--bg-white);
 }
 
 .main {
@@ -17,7 +17,7 @@
 }
 
 .loadingText {
-  color: var(--text-assistive1);
+  color: var(--label-alternative);
   text-align: center;
 }
 
@@ -40,7 +40,7 @@
 }
 
 .summaryLabel {
-  color: var(--text-normal);
+  color: var(--label-normal);
 }
 
 .summaryValueRow {
@@ -50,11 +50,11 @@
 }
 
 .summaryValue {
-  color: var(--text-assistive1);
+  color: var(--label-alternative);
 }
 
 .summaryChevron {
-  color: var(--text-normal);
+  color: var(--label-normal);
 }
 
 .stageSection {
@@ -69,8 +69,6 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
-  max-height: min(82dvh, 620px);
-  min-height: 320px;
   padding: 0 20px;
 }
 
@@ -78,14 +76,10 @@
   min-height: 460px;
 }
 
-.sheetContent[data-editor-field="activity"],
-.sheetContent[data-editor-field="goal"] {
-  min-height: 500px;
-}
-
 .sheetBody {
   flex: 1;
   min-height: 0;
+  padding-bottom: 30px;
 }
 
 .sheetActions {
@@ -100,7 +94,7 @@
 }
 
 .editorTitle {
-  color: var(--text-normal);
+  color: var(--label-normal);
   font-size: var(--fs-title2);
   font-weight: var(--fw-semibold);
   letter-spacing: var(--letter-spacing-tight);
@@ -117,10 +111,10 @@
 }
 
 .selectableCard {
-  background: var(--bg-normal-white);
-  border: 1px solid var(--border-normal);
+  background: var(--bg-white);
+  border: 1px solid var(--border-neutral);
   border-radius: 8px;
-  color: var(--text-normal);
+  color: var(--label-normal);
   cursor: pointer;
   transition:
     background-color 120ms ease,
@@ -169,11 +163,11 @@
 }
 
 .optionTitle {
-  color: var(--text-normal);
+  color: var(--label-normal);
 }
 
 .optionDescription {
-  color: var(--text-assistive1);
+  color: var(--label-alternative);
 }
 
 .birthYearPicker {

@@ -15,7 +15,7 @@
 
 .calorieCard {
   align-items: center;
-  background-color: var(--bg-normal-primary2);
+  background-color: var(--bg-primary-2);
   border-radius: 8px;
   display: flex;
   justify-content: space-between;
@@ -23,11 +23,11 @@
 }
 
 .calorieValue {
-  color: var(--text-normal);
+  color: var(--label-normal);
 }
 
 .sectionTitle {
-  color: var(--text-normal);
+  color: var(--label-normal);
   margin-bottom: 8px;
 }
 
@@ -47,8 +47,8 @@
 .mealTypeButton {
   align-items: center;
   aspect-ratio: 1 / 1;
-  background-color: var(--bg-normal-white);
-  border: 1px solid var(--border-normal);
+  background-color: var(--bg-white);
+  border: 1px solid var(--border-neutral);
   border-radius: 8px;
   display: inline-flex;
   justify-content: center;
@@ -58,7 +58,7 @@
 .mealTypeButtonActive {
   background-color: var(--interaction-primary);
   border-color: var(--border-primary);
-  color: var(--text-primary);
+  color: var(--label-primary);
 }
 
 .menuSection {
@@ -87,43 +87,72 @@
 
 .quantityStepper {
   align-items: center;
-  background-color: var(--bg-normal-white);
-  border: 1px solid var(--border-normal);
+  background-color: var(--bg-white);
+  border: 1px solid var(--border-neutral);
   border-radius: 8px;
-  display: grid;
+  display: flex;
   flex: 1;
-  grid-template-columns: 24px 1fr 24px;
-  padding: 16px;
+  padding: 12px 16px;
 }
 
-.quantityStepperButton {
+.quantityNumberFieldGroup {
   align-items: center;
-  color: var(--text-normal);
-  display: inline-flex;
-  height: 100%;
-  justify-content: center;
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr) 24px;
+  flex: 1;
+  gap: 10px;
   width: 100%;
 }
 
-.quantityValue {
-  color: var(--text-normal);
+.quantityNumberFieldButton {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  color: var(--label-normal);
+  cursor: pointer;
+  display: inline-flex;
+  height: 24px;
+  justify-content: center;
+  margin: 0;
+  outline: none;
+  padding: 0;
+  width: 24px;
+}
+
+.quantityNumberFieldInputWrapper {
+  flex: 1;
+}
+
+.quantityNumberFieldInput {
+  background-color: transparent;
+  border: 0;
+  color: var(--label-normal);
   text-align: center;
+  width: 100%;
+}
+
+.quantityNumberFieldInput:focus {
+  outline: none;
 }
 
 .unitSelectTrigger {
   align-items: center;
-  background-color: var(--bg-normal-white);
-  border: 1px solid var(--border-normal);
+  background-color: var(--bg-white);
+  border: 1px solid var(--border-neutral);
   border-radius: 8px;
-  color: var(--text-normal);
+  color: var(--label-normal);
   display: inline-flex;
   gap: 10px;
   justify-content: space-between;
   padding: 16px;
 }
 
+.unitSelectTrigger:focus {
+  outline: 1px solid var(--border-primary);
+}
+
 .selectIcon {
-  color: var(--text-normal);
+  color: var(--label-normal);
   display: inline-flex;
 }
 
@@ -132,10 +161,10 @@
 }
 
 .selectPopup {
-  background-color: var(--bg-normal-white);
-  border: 1px solid var(--border-normal);
+  background-color: var(--bg-white);
+  border: 1px solid var(--border-neutral);
   border-radius: 10px;
-  box-shadow: 0 4px 10px rgb(0 0 0 / 10%);
+  box-shadow: var(--shadow-strong);
   overflow: hidden;
   width: 100px;
 }
@@ -146,7 +175,7 @@
 }
 
 .selectItem {
-  color: var(--text-normal);
+  color: var(--label-normal);
   padding: 10px 14px;
 }
 
@@ -155,15 +184,15 @@
 }
 
 .primaryText {
-  color: var(--text-primary);
+  color: var(--label-primary);
 }
 
 .secondaryText {
-  color: var(--text-assistive1);
+  color: var(--label-alternative);
 }
 
 .tertiaryText {
-  color: var(--text-assistive2);
+  color: var(--label-assistive);
 }
 
 .actionBar {

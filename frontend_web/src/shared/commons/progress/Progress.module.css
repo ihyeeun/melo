@@ -1,5 +1,5 @@
 .Progress {
-  --progress-track-color: var(--bg-normal-white);
+  --progress-track-color: var(--bg-white);
   --progress-indicator-color: var(--primary-normal);
 
   display: grid;
@@ -10,17 +10,17 @@
 }
 
 .Progress[data-variant="primary-gray"] {
-  --progress-track-color: var(--bg-normal-normal);
+  --progress-track-color: var(--bg-normal);
   --progress-indicator-color: var(--primary-normal);
 }
 
 .Progress[data-variant="black-gray"] {
   --progress-track-color: var(--gray-400);
-  --progress-indicator-color: var(--etc-1);
+  --progress-indicator-color: var(--statick-black);
 }
 
 .Progress[data-variant="danger-white"] {
-  --progress-track-color: var(--bg-normal-white);
+  --progress-track-color: var(--bg-white);
   --progress-indicator-color: var(--status-error);
 }
 

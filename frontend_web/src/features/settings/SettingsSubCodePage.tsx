@@ -66,7 +66,7 @@ export default function SettingsSubCodePage() {
           disabled={!canSubmit}
           fullWidth
           size="large"
-          state={canSubmit ? "default" : "disabled"}
+          interaction={canSubmit ? "normal" : "disable"}
         >
           {isSubmitting ? "확인 중..." : "확인"}
         </Button>

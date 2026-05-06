@@ -15,8 +15,8 @@
 }
 
 .onboardingOptionCard {
-  background: var(--bg-normal-white);
-  border: 1px solid var(--border-normal);
+  background: var(--bg-white);
+  border: 1px solid var(--border-neutral);
   border-radius: 8px;
   color: var(--gray-1100);
   cursor: pointer;
@@ -45,7 +45,7 @@
 }
 
 .onboardingOptionCardDescription {
-  color: var(--text-assistive1);
+  color: var(--label-alternative);
   font-size: 15px;
   font-weight: var(--fw-medium);
   line-height: var(--line-height-145);
@@ -59,8 +59,8 @@
 }
 
 .onboardingInputCard {
-  background: var(--bg-normal-white);
-  border: 1px solid var(--border-normal);
+  background: var(--bg-white);
+  border: 1px solid var(--border-neutral);
   border-radius: 8px;
   display: flex;
   flex-direction: column;
@@ -82,8 +82,8 @@
 }
 
 .onboardingGenderCard {
-  background: var(--bg-normal-white);
-  border: 1px solid var(--border-normal);
+  background: var(--bg-white);
+  border: 1px solid var(--border-neutral);
   border-radius: 8px;
   color: var(--gray-1100);
   cursor: pointer;
@@ -121,7 +121,7 @@
 }
 
 .onboardingSubtitle {
-  color: var(--text-assistive1);
+  color: var(--label-alternative);
   font-size: 16px;
   font-weight: var(--fw-medium);
   line-height: var(--line-height-145);
@@ -141,12 +141,12 @@
 }
 
 .onboardingGoalKcalValue {
-  color: var(--text-normal);
+  color: var(--label-normal);
   text-decoration: underline;
 }
 
 .onboardingGoalKcalHelper {
-  color: var(--text-normal);
+  color: var(--label-normal);
   text-align: center;
 }
 
@@ -162,8 +162,8 @@
 }
 
 .onboardingGoalWeightCard {
-  background: var(--bg-normal-white);
-  border: 1px solid var(--border-normal);
+  background: var(--bg-white);
+  border: 1px solid var(--border-neutral);
   border-radius: 8px;
   display: flex;
   flex-direction: column;
@@ -192,8 +192,8 @@
 }
 
 .onboardingNutrientCard {
-  background: var(--bg-normal-white);
-  border: 1px solid var(--border-normal);
+  background: var(--bg-white);
+  border: 1px solid var(--border-neutral);
   border-radius: 8px;
   color: var(--gray-1100);
   display: flex;
@@ -204,7 +204,7 @@
 }
 
 .onboardingNutrientLabel {
-  color: var(--text-normal);
+  color: var(--label-normal);
 }
 
 .onboardingNutrientDivider {
@@ -219,7 +219,7 @@
 }
 
 .onboardingSubscribeInput {
-  border: 1px solid var(--border-normal);
+  border: 1px solid var(--border-neutral);
   border-radius: 8px;
   font-size: 40px;
   padding: 16px 20px;

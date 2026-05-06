@@ -28,9 +28,9 @@ export default function DirectInputBottomSheet({
         <div className={styles.sheetActions}>
           <Button
             variant="text"
-            state="default"
+            interaction="normal"
             size="large"
-            color="assistive"
+            color="normal"
             fullWidth
             onClick={onSelectNumberInput}
           >
@@ -41,9 +41,9 @@ export default function DirectInputBottomSheet({
 
           <Button
             variant="text"
-            state="default"
+            interaction="normal"
             size="large"
-            color="assistive"
+            color="normal"
             fullWidth
             onClick={onSelectCameraInput}
           >

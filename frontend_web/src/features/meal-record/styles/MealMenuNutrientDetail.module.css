@@ -1,40 +1,27 @@
 .summarySection {
-  background-color: var(--bg-normal-primary2);
+  background-color: var(--bg-primary-2);
   border-radius: 8px;
   display: flex;
   flex-direction: column;
   gap: 8px;
   overflow: hidden;
-  padding: 20px;
-}
-
-.summaryHead {
-  align-items: top;
-  display: flex;
-  gap: 8px;
-  justify-content: space-between;
+  padding: 16px 20px;
 }
 
 .summaryContent {
   display: flex;
   flex-direction: column;
-  gap: 2px;
-}
-
-.foodName {
-  color: var(--text-normal);
-}
-
-.brandName {
-  color: var(--text-assistive1);
-}
-
-.calorieText {
-  align-items: baseline;
-  color: var(--text-normal);
-  display: inline-flex;
   gap: 4px;
-  white-space: nowrap;
+}
+
+.summarySecond {
+  align-items: top;
+  display: flex;
+  gap: 16px;
+}
+
+.calories {
+  margin-left: auto;
 }
 
 .macroRow {
@@ -44,8 +31,8 @@
 }
 
 .macroItem {
-  background-color: var(--bg-normal-white);
-  border: 1px solid var(--border-normal);
+  background-color: var(--bg-white);
+  border: 1px solid var(--border-neutral);
   border-radius: 8px;
   display: flex;
   flex-direction: column;
@@ -53,13 +40,9 @@
   padding: 16px;
 }
 
-.macroLabel {
-  color: var(--text-assistive1);
-}
-
 .macroValue {
   align-items: baseline;
-  color: var(--text-primary);
+  color: var(--label-primary);
   display: flex;
   flex-wrap: wrap;
   gap: 2px;
@@ -74,7 +57,7 @@
 }
 
 .macroUnit {
-  color: var(--text-primary);
+  color: var(--label-primary);
   flex: 0 0 auto;
 }
 
@@ -98,8 +81,8 @@
 }
 
 .TabsList {
-  background-color: var(--bg-normal-white);
-  border: 1px solid var(--border-normal);
+  background-color: var(--bg-white);
+  border: 1px solid var(--border-neutral);
   border-radius: 8px;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -107,15 +90,11 @@
 }
 
 .TabsTab {
-  background: var(--bg-normal-white);
+  background: var(--bg-white);
   border: 0;
   border-radius: 6px;
-  color: var(--text-assistive2);
+  color: var(--label-assistive);
   cursor: pointer;
-  font-size: var(--fs-title4);
-  font-weight: var(--fw-semibold);
-  letter-spacing: var(--letter-spacing-tight);
-  line-height: var(--line-height-145);
   margin: 0;
   outline: none;
   padding: 14px 8px;
@@ -123,7 +102,7 @@
 
   &[data-active] {
     background: var(--interaction-primary);
-    color: var(--text-primary);
+    color: var(--label-primary);
   }
 }
 
@@ -132,8 +111,8 @@
 }
 
 .FieldGroup {
-  background-color: var(--bg-normal-white);
-  border: 1px solid var(--border-normal);
+  background-color: var(--bg-white);
+  border: 1px solid var(--border-neutral);
   border-radius: 8px;
   display: flex;
   gap: 10px;
@@ -164,7 +143,7 @@
 }
 
 .FieldInput::placeholder {
-  color: var(--text-assistive2);
+  color: var(--label-assistive);
 }
 
 .FieldInput:focus {
@@ -175,7 +154,7 @@
   align-items: center;
   background: transparent;
   border: 0;
-  color: var(--text-normal);
+  color: var(--label-normal);
   cursor: pointer;
   display: inline-flex;
   height: 24px;
@@ -193,7 +172,7 @@
 
 .detailToggleButton {
   align-items: center;
-  color: var(--text-normal);
+  color: var(--label-normal);
   display: flex;
   justify-content: space-between;
   width: 100%;
@@ -212,7 +191,7 @@
 }
 
 .groupDivider {
-  background-color: var(--gray-400);
+  background-color: var(--border-neutral);
   height: 1px;
   margin: 12px 0;
   width: 100%;
@@ -225,39 +204,31 @@
 
 .detailRow {
   align-items: center;
-  color: var(--text-normal);
+  color: var(--label-normal);
   display: flex;
   gap: 8px;
   justify-content: space-between;
   padding: 8px 0;
 }
 
-.detailLabelMain {
-  color: var(--text-normal);
-}
-
 .detailLabelSub {
-  color: var(--text-assistive1);
+  color: var(--label-alternative);
   padding-left: 4px;
 }
 
 .detailValue {
-  align-items: baseline;
+  align-items: center;
   display: inline-flex;
-  gap: 4px;
+  gap: 8px;
   position: relative;
-}
-
-.detailUnit {
-  color: var(--text-assistive1);
 }
 
 .warningButton {
   align-items: center;
-  background: var(--gray-300);
+  background: var(--interaction-alternative);
   border: 0;
   border-radius: 50%;
-  color: var(--text-assistive1);
+  color: var(--label-alternative);
   cursor: pointer;
   display: inline-flex;
   height: 26px;
@@ -265,13 +236,8 @@
   margin-right: 8px;
   outline: none;
   padding: 0;
-  width: 26px;
-}
-
-.warningIcon {
-  font-size: 16px;
-  font-weight: 700;
-  line-height: 1;
+  width: 20px;
+  height: 20px;
 }
 
 .warningPositioner {
@@ -279,9 +245,9 @@
 }
 
 .warningTooltip {
-  background: var(--bg-normal-primary1);
+  background: var(--primary-normal);
   border-radius: 6px;
-  color: var(--text-white);
+  color: var(--static-white);
   max-width: min(360px, calc(100vw - 96px));
   padding: 10px 14px;
   white-space: normal;
@@ -290,13 +256,26 @@
 
 .editSection {
   align-items: center;
-  background-color: var(--bg-normal-white);
+  background-color: var(--bg-white);
   border-radius: 6px;
   display: flex;
   justify-content: space-between;
   padding: 10px 14px;
 }
 
-.editDescription {
-  color: var(--text-assistive1);
+.textNormal {
+  color: var(--label-normal);
+}
+
+.textAlternative {
+  color: var(--label-alternative);
+}
+
+.arrowIcon {
+  transition: transform 0.2s ease;
+  color: var(--interaction-normal);
+}
+
+.arrowIconExpanded {
+  transform: rotate(180deg);
 }

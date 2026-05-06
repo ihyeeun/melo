@@ -1,5 +1,5 @@
 .page {
-  background-color: var(--bg-normal-normal);
+  background-color: var(--bg-normal);
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -26,7 +26,7 @@
 }
 
 .summaryText {
-  color: var(--text-assistive2);
+  color: var(--label-assistive);
   margin-bottom: 2px;
 }
 
@@ -44,11 +44,11 @@
 }
 
 .menuName {
-  color: var(--text-normal);
+  color: var(--label-normal);
 }
 
 .caloriesText {
-  color: var(--text-normal);
+  color: var(--label-normal);
   flex-shrink: 0;
 }
 
@@ -59,9 +59,9 @@
 
 .tag {
   align-items: center;
-  background-color: var(--bg-normal-white);
+  background-color: var(--bg-white);
   border-radius: 4px;
-  color: var(--text-assistive2);
+  color: var(--label-assistive);
   display: inline-flex;
   padding: 2px 6px;
 }
@@ -73,15 +73,15 @@
 }
 
 .scoreText {
-  color: var(--text-normal);
+  color: var(--label-normal);
 }
 
 .scoreText strong {
-  color: var(--text-primary);
+  color: var(--label-primary);
 }
 
 .reasonText {
-  color: var(--text-normal);
+  color: var(--label-normal);
   white-space: pre-wrap;
 }
 
@@ -91,18 +91,18 @@
 }
 
 .loadingText {
-  color: var(--text-assistive2);
+  color: var(--label-assistive);
   text-align: center;
 }
 
 .primaryText {
-  color: var(--text-primary);
+  color: var(--label-primary);
 }
 
 .secondaryText {
-  color: var(--text-assistive1);
+  color: var(--label-alternative);
 }
 
 .tertiaryText {
-  color: var(--text-assistive2);
+  color: var(--label-assistive);
 }

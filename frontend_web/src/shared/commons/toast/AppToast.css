@@ -13,11 +13,11 @@
 
 .app-toast {
   align-items: flex-start;
-  background: var(--bg-normal-white);
+  background: var(--bg-white);
   border: 1px solid transparent;
   border-radius: 12px;
-  box-shadow: 0 8px 20px var(--bg-shadow-2);
-  color: var(--text-normal);
+  box-shadow: var(--shadow-normal);
+  color: var(--label-normal);
   display: flex;
   gap: 10px;
   padding: 20px;
@@ -47,12 +47,12 @@
 .app-toast-description {
   margin: 4px 0 0;
   word-break: keep-all;
-  color: var(--text-assistive1);
+  color: var(--label-alternative);
 }
 
 .app-toast-action {
   border-radius: 6px;
-  color: var(--text-primary);
+  color: var(--label-primary);
   font-size: var(--fs-label5);
   font-weight: var(--fw-bold);
   letter-spacing: var(--letter-spacing-body);
@@ -63,7 +63,7 @@
 
 .app-toast-close {
   border-radius: 6px;
-  color: var(--text-assistive1);
+  color: var(--label-alternative);
   height: 24px;
   line-height: 24px;
   margin-right: -2px;

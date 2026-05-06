@@ -1,6 +1,6 @@
 import { Tabs } from "@base-ui/react";
 import { Popover } from "@base-ui/react/popover";
-import { ChevronDown, ChevronUp, MinusIcon, PlusIcon } from "lucide-react";
+import { ChevronDown, MinusIcon, PlusIcon } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
 import { NUTRIENT_FORM_CONFIG } from "@/features/nutrient-entry/constants/nutrientDetailForm";
@@ -182,12 +182,14 @@ const SUMMARY_MACROS: ReadonlyArray<{ key: MainNutrientKey; label: string }> = [
   { key: "protein", label: "단백질" },
   { key: "fat", label: "지방" },
 ];
-const CHILD_NUTRIENT_KEYS_BY_PARENT: Record<MainNutrientKey, ReadonlyArray<MenuNutrientFieldKey>> =
-  {
-    carbs: ["sugars", "sugar_alchol", "dietary_fiber"],
-    protein: [],
-    fat: ["sat_fat", "trans_fat", "un_sat_fat"],
-  };
+const CHILD_NUTRIENT_KEYS_BY_PARENT: Record<
+  MainNutrientKey,
+  ReadonlyArray<MenuNutrientFieldKey>
+> = {
+  carbs: ["sugars", "sugar_alchol", "dietary_fiber"],
+  protein: [],
+  fat: ["sat_fat", "trans_fat", "un_sat_fat"],
+};
 
 function isMainNutrientKey(key: MenuNutrientFieldKey): key is MainNutrientKey {
   return MAIN_NUTRIENT_KEY_SET.has(key);
@@ -350,12 +352,7 @@ export function MealMenuNutrientDetail({
     }
 
     return servingContext.baseWeight;
-  }, [
-    initialQuantity,
-    menu.serving_input_mode,
-    menu.serving_input_value,
-    servingContext,
-  ]);
+  }, [initialQuantity, menu.serving_input_mode, menu.serving_input_value, servingContext]);
 
   const menuInitialMode: MealServingInputMode =
     menu.serving_input_mode === "weight" ? "weight" : "unit";
@@ -538,23 +535,22 @@ export function MealMenuNutrientDetail({
   return (
     <>
       <section className={styles.summarySection}>
-        <div className={styles.summaryHead}>
-          <div className={styles.summaryContent}>
-            <p className={`typo-title2 ${styles.foodName}`}>{previewMenu.name}</p>
+        <div className={styles.summaryContent}>
+          <p className={`typo-title2 ${styles.textNormal}`}>{previewMenu.name}</p>
+          <div className={styles.summarySecond}>
             {previewMenu.brand && (
-              <p className={`typo-label4 ${styles.brandName}`}>{previewMenu.brand}</p>
+              <p className={`typo-label4 ${styles.textAlternative}`}>{previewMenu.brand}</p>
             )}
-          </div>
-          <div className={styles.calorieText}>
-            <span className="typo-h3">{formatNutrientValue(previewMenu.calories)}</span>
-            <span className="typo-label1">kcal</span>
+            <p className={`${(styles.textNormal, styles.calories)} typo-title1`}>
+              {formatNutrientValue(previewMenu.calories)} kcal
+            </p>
           </div>
         </div>
 
         <div className={styles.macroRow}>
           {summaryMacroItems.map((macro) => (
             <article key={macro.key} className={styles.macroItem}>
-              <p className={`typo-label3 ${styles.macroLabel}`}>{macro.label}</p>
+              <p className={`typo-label3 ${styles.textAlternative}`}>{macro.label}</p>
               <p className={`typo-body1 ${styles.macroValue}`}>
                 <span className={styles.macroNumber}>{formatNutrientValue(macro.value)}</span>
                 <span className={`typo-body1 ${styles.macroUnit}`}>g</span>
@@ -573,11 +569,11 @@ export function MealMenuNutrientDetail({
           }}
         >
           <Tabs.List className={styles.TabsList}>
-            <Tabs.Tab value="unit" className={styles.TabsTab}>
+            <Tabs.Tab value="unit" className={`${styles.TabsTab} typo-title4`}>
               1{menu.unit_quantity} ({menu.weight}
               {menu.unit === MENU_UNIT.GRAM ? "g" : "ml"})
             </Tabs.Tab>
-            <Tabs.Tab value="weight" className={styles.TabsTab}>
+            <Tabs.Tab value="weight" className={`${styles.TabsTab} typo-title4`}>
               {menu.unit === MENU_UNIT.GRAM ? "g" : "ml"}
             </Tabs.Tab>
           </Tabs.List>
@@ -689,7 +685,10 @@ export function MealMenuNutrientDetail({
           aria-controls={detailListId}
         >
           <span className="typo-title3">상세 영양성분 보기</span>
-          {isDetailOpen ? <ChevronUp size={24} /> : <ChevronDown size={24} />}
+          <ChevronDown
+            size={24}
+            className={`${styles.arrowIcon} ${isDetailOpen ? styles.arrowIconExpanded : ""}`}
+          />
         </button>
 
         {isDetailOpen && (
@@ -698,12 +697,12 @@ export function MealMenuNutrientDetail({
 
             {showEditSection && (
               <section className={styles.editSection}>
-                <p className={`typo-label3 ${styles.editDescription}`}>영양성분이 잘못되었나요?</p>
+                <p className={`typo-label3 ${styles.textNormal}`}>영양성분이 잘못되었나요?</p>
                 <Button
                   variant="text"
-                  state={isEditAndAddEnabled ? "default" : "disabled"}
+                  interaction={isEditAndAddEnabled ? "normal" : "disable"}
                   size="small"
-                  color="assistive"
+                  color="normal"
                   onClick={handleEditAndAddClick}
                   disabled={!isEditAndAddEnabled}
                 >
@@ -720,8 +719,9 @@ export function MealMenuNutrientDetail({
                 </p>
 
                 <div className={styles.detailValue}>
-                  <span className="typo-body1">{formatNutrientValue(previewMenu.calories)}</span>
-                  <span className={`${styles.detailUnit} typo-label3`}>kcal</span>
+                  <span className={`${styles.textNormal} typo-body1`}>
+                    {formatNutrientValue(previewMenu.calories)} kcal
+                  </span>
                 </div>
               </div>
               {detailGroups.map((group, groupIndex) => (
@@ -737,9 +737,7 @@ export function MealMenuNutrientDetail({
                           <article className={styles.detailRow}>
                             <p
                               className={`${row.variant === "sub" ? "typo-body4" : "typo-title4"} ${
-                                row.variant === "sub"
-                                  ? styles.detailLabelSub
-                                  : styles.detailLabelMain
+                                row.variant === "sub" ? styles.detailLabelSub : styles.textNormal
                               }`}
                             >
                               {row.label}
@@ -753,7 +751,7 @@ export function MealMenuNutrientDetail({
                                     className={styles.warningButton}
                                     aria-label="영양성분 주의 안내"
                                   >
-                                    <span className={styles.warningIcon}>!</span>
+                                    <img src="/icons/info-icon.svg" />
                                   </Popover.Trigger>
 
                                   <Popover.Portal>
@@ -779,9 +777,8 @@ export function MealMenuNutrientDetail({
                               )}
 
                               <span className={row.variant === "sub" ? "typo-body3" : "typo-body1"}>
-                                {formatNutrientValue(row.value)}
+                                {formatNutrientValue(row.value)} {row.unit}
                               </span>
-                              <span className={`${styles.detailUnit} typo-label3`}>{row.unit}</span>
                             </div>
                           </article>
                         </div>

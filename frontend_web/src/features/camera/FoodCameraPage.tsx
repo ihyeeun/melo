@@ -122,7 +122,7 @@ export default function FoodCameraPage() {
           <div className={styles.actionButtons}>
             <Button
               variant="filled"
-              state="default"
+              interaction="normal"
               size="small"
               color="primary"
               onClick={handleCameraActions}

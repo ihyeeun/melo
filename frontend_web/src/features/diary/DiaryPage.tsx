@@ -278,7 +278,7 @@ function MealRecordCard({
               {menus.map((menu) => (
                 <li key={menu.id} className={styles.mealDetailItem}>
                   <span className="typo-body4">{menu.name}</span>
-                  <span className={`${styles.mealDetailCalories} typo-body4`}>
+                  <span className={`${styles.textAlternative} typo-body4`}>
                     {formatCalories(menu.calories)} kcal
                   </span>
                 </li>

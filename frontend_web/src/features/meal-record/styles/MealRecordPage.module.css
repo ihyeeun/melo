@@ -1,5 +1,5 @@
 .page {
-  background-color: var(--bg-normal-normal);
+  background-color: var(--bg-normal);
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -14,10 +14,9 @@
 }
 
 .summaryCard {
-  background-color: var(--bg-normal-primary2);
+  background-color: var(--bg-primary-2);
   border-radius: 8px;
-  box-shadow: 3px 3px 5px 0 rgb(0 0 0 / 5%);
-  color: var(--text-normal);
+  color: var(--label-normal);
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -33,7 +32,7 @@
 }
 
 .currentCalorie {
-  color: var(--text-primary);
+  color: var(--label-primary);
 }
 
 .mealTypeButtonGroup {
@@ -43,16 +42,17 @@
 }
 
 .mealTypeButton {
-  background-color: var(--bg-normal-white);
-  border: 1px solid var(--border-normal);
+  background-color: var(--bg-white);
+  border: 1px solid var(--border-neutral);
   border-radius: 100px;
-  color: var(--text-normal);
+  color: var(--label-normal);
   padding: 6px 14px;
 }
 
 .mealTypeActive {
-  background-color: var(--primary-strong);
-  color: var(--text-white);
+  background-color: var(--primary-normal);
+  color: var(--static-white);
+  border: none;
 }
 
 .menuSection {
@@ -88,10 +88,10 @@
 }
 
 .emptyState {
-  background-color: var(--bg-normal-white);
-  border: 1px dashed var(--border-normal);
+  background-color: var(--bg-white);
+  border: 1px dashed var(--border-neutral);
   border-radius: 8px;
-  color: var(--text-assistive1);
+  color: var(--label-alternative);
   padding: 20px;
   text-align: center;
   width: 100%;
@@ -109,4 +109,15 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
   padding: 0 20px;
   padding-bottom: var(--safe-area-bottom);
+}
+
+.emptyStateIcon {
+  background-color: var(--interaction-alternative);
+  color: var(--static-white);
+  border-radius: 100px;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  width: 32px;
+  height: 32px;
 }

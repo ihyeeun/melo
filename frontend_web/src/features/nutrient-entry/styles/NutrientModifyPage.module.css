@@ -1,5 +1,5 @@
 .page {
-  background-color: var(--bg-normal-normal);
+  background-color: var(--bg-normal);
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -21,16 +21,12 @@
 
 .topSection {
   display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.foodNameText {
-  color: var(--text-normal);
+  align-items: center;
+  gap: 8px;
 }
 
 .brandText {
-  color: var(--text-assistive1);
+  color: var(--label-alternative);
 }
 
 .nutrientSection {
@@ -46,10 +42,6 @@
   padding-top: 20px;
 }
 
-.labelText {
-  color: var(--text-normal);
-}
-
 .nutrientFormWrap {
   display: flex;
   flex: 1;
@@ -58,4 +50,8 @@
 .footer {
   padding: 0 20px;
   padding-bottom: var(--safe-area-bottom);
+}
+
+.textNormal {
+  color: var(--label-normal);
 }

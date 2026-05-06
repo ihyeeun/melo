@@ -14,7 +14,7 @@
 
 .wheelPicker__item {
   align-items: center;
-  color: var(--text-normal);
+  color: var(--label-normal);
   display: flex;
   font-size: 40px;
   font-weight: var(--fw-medium);

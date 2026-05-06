@@ -1,5 +1,5 @@
 .page {
-  background-color: var(--bg-normal-normal);
+  background-color: var(--bg-normal);
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -31,12 +31,12 @@
 }
 
 .menuPositioner {
-  background-color: var(--bg-normal-white);
+  background-color: var(--bg-white);
   padding: 4px 10px;
   border-radius: 6px;
 }
 
 .menuItem {
   padding: 10px 100px 10px 12px;
-  color: var(--text-assistive1);
+  color: var(--label-alternative);
 }

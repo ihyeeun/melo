@@ -33,6 +33,19 @@ export type BridgeNavigationBackMessage = {
   context?: BridgeMessageContext;
 };
 
+export type BridgeAppDeviceInfoPayload = {
+  appVersion: string;
+  appBuild: string | null;
+  osName: "ios" | "android";
+  osVersion: string | null;
+};
+
+export type BridgeAppDeviceInfoRequestMessage = {
+  id: string;
+  type: "APP_DEVICE_INFO_REQUEST";
+  context?: BridgeMessageContext;
+};
+
 export type BridgeCameraCaptureRequestPayload = {
   quality?: number;
   mode?: "NUTRITION_LABEL" | "MENU_BOARD" | "FOOD" | "GENERAL";
@@ -78,6 +91,7 @@ export type WebToAppMessage =
   | BridgeApiRequestMessage
   | BridgeTabSyncMessage
   | BridgeNavigationBackMessage
+  | BridgeAppDeviceInfoRequestMessage
   | BridgeCameraCaptureRequestMessage
   | BridgeGalleryPickRequestMessage
   | BridgeImageUploadRequestMessage;

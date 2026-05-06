@@ -11,55 +11,68 @@ const MODERN_VARIANT_CLASS = {
 
 const COLOR_CLASS = {
   primary: "btn--color-primary",
-  assistive: "btn--color-assistive",
+  normal: "btn--color-normal",
 } as const;
 
 const SIZE_CLASS = {
   small: "btn--size-small",
-  medium: "btn--size-medium",
+  normal: "btn--size-normal",
   large: "btn--size-large",
 } as const;
 
-const FORCED_STATE_CLASS = {
-  default: "btn--state-default",
+const INTERACTION_CLASS = {
+  normal: "btn--state-default",
   hover: "btn--state-hover",
+  focused: "btn--state-focused",
   pressed: "btn--state-pressed",
-  disabled: "btn--state-disabled",
+  disable: "btn--state-disabled",
 } as const;
 
 type Variant = keyof typeof MODERN_VARIANT_CLASS;
 type Color = keyof typeof COLOR_CLASS;
 type Size = keyof typeof SIZE_CLASS;
-type PreviewState = keyof typeof FORCED_STATE_CLASS;
+type Interaction = keyof typeof INTERACTION_CLASS;
 
 type Props = React.ComponentProps<typeof BaseButton> & {
   variant?: Variant;
   color?: Color;
   size?: Size;
-  state?: PreviewState;
+  interaction?: Interaction;
   fullWidth?: boolean;
 };
 
 export function Button({
   variant = "filled",
   color,
-  size = "medium",
-  state = "default",
+  size = "normal",
+  interaction,
+  disabled,
   fullWidth = false,
   className,
   ...props
 }: Props) {
+  const resolvedInteraction = interaction ?? (disabled ? "disable" : "normal");
+  const isDisabled = disabled || resolvedInteraction === "disable";
+
   const classes = [
     "btn",
     MODERN_VARIANT_CLASS[variant],
     COLOR_CLASS[color ?? "primary"],
     SIZE_CLASS[size],
-    FORCED_STATE_CLASS[state],
+    INTERACTION_CLASS[isDisabled ? "disable" : resolvedInteraction],
+    resolvedInteraction === "focused" && "btn--interaction-focused",
     fullWidth && "btn--full",
     typeof className === "string" ? className : "",
   ]
     .filter(Boolean)
     .join(" ");
 
-  return <BaseButton {...props} type={props.type ?? "button"} className={classes} />;
+  return (
+    <BaseButton
+      {...props}
+      disabled={isDisabled}
+      type={props.type ?? "button"}
+      className={classes}
+    />
+  );
 }

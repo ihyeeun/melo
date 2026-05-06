@@ -1,5 +1,5 @@
 .page {
-  background-color: var(--bg-normal-normal);
+  background-color: var(--bg-normal);
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -20,15 +20,15 @@
 }
 
 .primaryText {
-  color: var(--text-primary);
+  color: var(--label-primary);
 }
 
 .secondaryText {
-  color: var(--text-assistive1);
+  color: var(--label-alternative);
 }
 
 .tertiaryText {
-  color: var(--text-assistive2);
+  color: var(--label-assistive);
 }
 
 .intro {
@@ -38,7 +38,7 @@
 }
 
 .introMessage {
-  color: var(--text-normal);
+  color: var(--label-normal);
   white-space: pre-wrap;
 }
 
@@ -53,10 +53,10 @@
 
 .resultCard {
   align-items: stretch;
-  background-color: var(--bg-normal-white);
-  border: 1px solid var(--border-normal);
+  background-color: var(--bg-white);
+  border: 1px solid var(--border-neutral);
   border-radius: 8px;
-  color: var(--text-normal);
+  color: var(--label-normal);
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -72,7 +72,7 @@
   align-items: center;
   background-color: var(--primary-normal);
   border-radius: 4px;
-  color: var(--text-white);
+  color: var(--static-white);
   display: inline-flex;
   padding: 2px 6px;
   width: fit-content;
@@ -100,11 +100,11 @@
 }
 
 .menuName {
-  color: var(--text-normal);
+  color: var(--label-normal);
 }
 
 .summary {
-  color: var(--text-assistive2);
+  color: var(--label-assistive);
 }
 
 .metaRow {
@@ -114,7 +114,7 @@
 }
 
 .calories {
-  color: var(--text-normal);
+  color: var(--label-normal);
   margin-left: auto;
 }
 
@@ -127,15 +127,20 @@
 
 .addButtonSelected {
   border-color: var(--border-primary);
-  color: var(--text-primary);
+  color: var(--label-primary);
 }
 
 .loadingText {
-  color: var(--text-assistive2);
+  color: var(--label-assistive);
   text-align: center;
 }
 
 .footer {
   padding: 0 20px;
   padding-bottom: var(--safe-area-bottom);
+}
+
+.characterImage {
+  width: 80px;
+  height: 80px;
 }
