@@ -30,11 +30,14 @@
   background-color: var(--bg-white);
   border-radius: 8px;
   box-shadow: var(--shadow-strong);
+  display: inline-flex;
+  flex-direction: column;
   max-width: calc(100vw - 24px);
+  overflow: visible;
   padding: 14px 16px;
   pointer-events: auto;
   position: fixed;
-  width: fit-content;
+  width: auto;
 }
 
 .bubble::after {
@@ -50,13 +53,11 @@
 
 .title {
   color: var(--label-normal);
-  width: fit-content;
 }
 
 .description {
   color: var(--label-alternative);
   margin-top: 4px;
-  width: fit-content;
 }
 
 .bubbleFooter {

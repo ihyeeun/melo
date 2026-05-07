@@ -1,5 +1,5 @@
 import { X } from "lucide-react";
-import { type CSSProperties, useEffect, useMemo, useState } from "react";
+import { type CSSProperties, useEffect, useMemo, useRef, useState } from "react";
 
 import styles from "@/features/home/styles/HomeOnboardingOverlay.module.css";
 import { Button } from "@/shared/commons/button/Button";
@@ -69,6 +69,8 @@ export default function HomeOnboardingOverlay({
 
   const [stepIndex, setStepIndex] = useState(0);
   const [metrics, setMetrics] = useState<SpotlightMetrics | null>(null);
+  const [bubbleWidth, setBubbleWidth] = useState(0);
+  const bubbleRef = useRef<HTMLElement | null>(null);
   const currentStep = onboardingSteps[stepIndex] ?? null;
 
   useEffect(() => {
@@ -116,6 +118,46 @@ export default function HomeOnboardingOverlay({
     };
   }, [currentStep]);
 
+  useEffect(() => {
+    setBubbleWidth(0);
+  }, [stepIndex]);
+
+  useEffect(() => {
+    if (!currentStep || !metrics) return;
+    const bubbleElement = bubbleRef.current;
+    if (!bubbleElement) return;
+
+    const updateBubbleWidth = () => {
+      const nextWidth = bubbleElement.getBoundingClientRect().width;
+      if (nextWidth <= 0) return;
+
+      setBubbleWidth((previous) => {
+        if (Math.abs(previous - nextWidth) < 0.5) return previous;
+        return nextWidth;
+      });
+    };
+
+    updateBubbleWidth();
+
+    let animationFrameId = 0;
+    const scheduleUpdate = () => {
+      cancelAnimationFrame(animationFrameId);
+      animationFrameId = requestAnimationFrame(updateBubbleWidth);
+    };
+
+    const resizeObserver =
+      typeof ResizeObserver === "undefined" ? null : new ResizeObserver(scheduleUpdate);
+
+    resizeObserver?.observe(bubbleElement);
+    window.addEventListener("resize", scheduleUpdate);
+
+    return () => {
+      cancelAnimationFrame(animationFrameId);
+      resizeObserver?.disconnect();
+      window.removeEventListener("resize", scheduleUpdate);
+    };
+  }, [currentStep, metrics, stepIndex]);
+
   if (!currentStep || !metrics) return null;
 
   const isLastStep = stepIndex === onboardingSteps.length - 1;
@@ -132,9 +174,10 @@ export default function HomeOnboardingOverlay({
     metrics.viewportWidth - bubbleMaxWidth - 12,
   );
   const bubbleBottom = Math.max(metrics.viewportHeight - metrics.targetTop + 12, 20);
+  const measuredBubbleWidth = bubbleWidth > 0 ? bubbleWidth : bubbleMaxWidth;
   const tailLeft = prefersRightAlignedBubble
     ? "calc(100% - 60px)"
-    : `${clamp(metrics.targetCenterX - bubbleLeft, 20, bubbleMaxWidth - 20)}px`;
+    : `${clamp(metrics.targetCenterX - bubbleLeft, 20, measuredBubbleWidth - 20)}px`;
   const bubbleStyle: CSSProperties & Record<"--tail-left", string> = {
     bottom: bubbleBottom,
     maxWidth: bubbleMaxWidth,
@@ -179,7 +222,7 @@ export default function HomeOnboardingOverlay({
         }}
       />
 
-      <section className={styles.bubble} style={bubbleStyle}>
+      <section ref={bubbleRef} className={styles.bubble} style={bubbleStyle}>
         <p className={`${styles.title} typo-label2`}>{currentStep.title}</p>
         {currentStep.description ? (
           <p className={`${styles.description} typo-label4`}>{currentStep.description}</p>
