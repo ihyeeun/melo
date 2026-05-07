@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 
 import styles from "@/features/camera/CameraPage.module.css";
 import { CameraLoading } from "@/features/camera/components/CameraLoading";
@@ -27,13 +27,19 @@ import { PageHeader } from "@/shared/commons/header/PageHeader";
 import { CheckButtonModal } from "@/shared/commons/modals/CheckButtonModal";
 import { toast } from "@/shared/commons/toast/toast";
 
+type FoodCameraLocationState = {
+  autoOpenCamera?: boolean;
+};
+
 export default function FoodCameraPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams] = useSearchParams();
   const [isUploading, setIsUploading] = useState(false);
   const [capturedPreviewSrc, setCapturedPreviewSrc] = useState<string | null>(null);
   const [captureErrorFeedback, setCaptureErrorFeedback] =
     useState<CameraCaptureErrorFeedback | null>(null);
+  const autoTriggeredRef = useRef(false);
 
   const { mutateAsync: uploadImage } = useFoodImageMutation();
   const { mutateAsync: mealRegisterAsync } = useTodayMealRecordRegisterMutation();
@@ -43,8 +49,10 @@ export default function FoodCameraPage() {
   const draftKey = formatMenuDraftKey(dateKey, mealType);
 
   const upsertMenu = useMenuDraftUpsert();
+  const locationState = (location.state ?? {}) as FoodCameraLocationState;
+  const shouldAutoOpenCamera = locationState.autoOpenCamera === true;
 
-  const handleCameraActions = async () => {
+  const handleCameraActions = useCallback(async () => {
     if (isUploading) return;
     setCaptureErrorFeedback(null);
 
@@ -101,7 +109,25 @@ export default function FoodCameraPage() {
     } finally {
       setIsUploading(false);
     }
-  };
+  }, [
+    dateKey,
+    draftKey,
+    isUploading,
+    mealRegisterAsync,
+    mealType,
+    navigate,
+    upsertMenu,
+    uploadImage,
+  ]);
+
+  useEffect(() => {
+    if (!shouldAutoOpenCamera || autoTriggeredRef.current) {
+      return;
+    }
+
+    autoTriggeredRef.current = true;
+    void handleCameraActions();
+  }, [handleCameraActions, shouldAutoOpenCamera]);
 
   return (
     <section className={styles.page}>

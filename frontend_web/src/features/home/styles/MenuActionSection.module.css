@@ -101,3 +101,21 @@
 .textWhite {
   color: var(--static-white);
 }
+
+.cameraActionSheetContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 0 20px calc(var(--safe-area-bottom) + 20px);
+}
+
+.cameraActionSheetTitle {
+  color: var(--label-normal);
+}
+
+.cameraActionSheetButton {
+  color: var(--label-alternative);
+  padding: 12px;
+  text-align: start;
+  width: 100%;
+}
