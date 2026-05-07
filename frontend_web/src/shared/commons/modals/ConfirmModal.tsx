@@ -58,7 +58,7 @@ export function ConfirmModal({
             }}
             variant="outlined"
             interaction="normal"
-            size="small"
+            size="normal"
             color="primary"
           >
             {cancelText}
@@ -79,7 +79,7 @@ export function ConfirmModal({
               }}
               variant="filled"
               interaction="normal"
-              size="small"
+              size="normal"
               color="primary"
             >
               {confirmText}
@@ -101,7 +101,7 @@ export function ConfirmModal({
           }}
           variant="filled"
           interaction="normal"
-          size="small"
+          size="normal"
           color="primary"
         >
           {confirmText}

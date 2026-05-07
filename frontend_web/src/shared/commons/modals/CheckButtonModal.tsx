@@ -34,7 +34,7 @@ export function CheckButtonModal({
             {...props}
             variant="filled"
             color="primary"
-            size="small"
+            size="normal"
             interaction="normal"
             disabled={confirmDisabled}
             onClick={(e) => {

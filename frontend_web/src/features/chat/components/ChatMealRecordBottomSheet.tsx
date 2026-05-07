@@ -325,7 +325,7 @@ export function ChatMealRecordBottomSheet({
           <Button
             variant="filled"
             interaction={selectedItems.length > 0 && !isSubmitPending ? "normal" : "disable"}
-            size="normal"
+            size="large"
             color="primary"
             fullWidth
             disabled={selectedItems.length === 0 || isSubmitPending}

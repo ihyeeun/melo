@@ -485,7 +485,7 @@ export default function MealRecordPage() {
           onClick={handleMealSearchNavigate}
           variant="outlined"
           interaction="normal"
-          size="normal"
+          size="large"
           color="primary"
           fullWidth
         >
@@ -498,7 +498,7 @@ export default function MealRecordPage() {
           }}
           variant="filled"
           interaction={hasUnsavedChanges && !isSavePending ? "normal" : "disable"}
-          size="normal"
+          size="large"
           color="primary"
           fullWidth
           disabled={!hasUnsavedChanges || isSavePending}

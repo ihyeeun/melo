@@ -304,7 +304,7 @@ export default function RecommendResultPage() {
       <footer className={styles.footer}>
         <Button
           variant="filled"
-          size="normal"
+          size="large"
           color="primary"
           fullWidth
           interaction={selectedCount > 0 && !isRecordPending ? "normal" : "disable"}

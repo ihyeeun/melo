@@ -234,6 +234,7 @@ export default function SteptargetCalories({ data, update }: StepComponentProps)
               fullWidth
               interaction={drafttargetCalories ? "normal" : "disable"}
               disabled={drafttargetCalories === undefined || drafttargetCalories === 0}
+              size="large"
             >
               수정하기
             </Button>
