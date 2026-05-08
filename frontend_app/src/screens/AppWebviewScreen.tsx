@@ -2,10 +2,15 @@ import { handleWebMessage } from "@/src/shared/api/bridge/handleWebMessage";
 import { subscribeAuthExpired } from "@/src/shared/auth/authSessionEvents";
 import { router } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef } from "react";
-import { BackHandler, Platform, StyleSheet } from "react-native";
+import { BackHandler, Linking, Platform, StyleSheet } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
-import { WebView, WebViewMessageEvent, WebViewNavigation } from "react-native-webview";
+import {
+  WebView,
+  WebViewMessageEvent,
+  WebViewNavigation,
+  WebViewOpenWindowEvent,
+} from "react-native-webview";
 
 const devWebUrl =
   Platform.select({
@@ -500,6 +505,13 @@ export default function AppWebViewScreen({
     flushPendingTabPathSync();
   }, [flushPendingTabPathSync, isTabWebView, safeAreaSyncScript]);
 
+  const onOpenWindow = useCallback((event: WebViewOpenWindowEvent) => {
+    const targetUrl = event.nativeEvent.targetUrl?.trim();
+    if (!targetUrl) return;
+
+    void Linking.openURL(targetUrl);
+  }, []);
+
   return (
     <SafeAreaView style={styles.container} edges={["left", "right"]}>
       <WebView
@@ -517,6 +529,7 @@ export default function AppWebViewScreen({
         webviewDebuggingEnabled={true}
         showsHorizontalScrollIndicator={false}
         showsVerticalScrollIndicator={false}
+        onOpenWindow={onOpenWindow}
       />
     </SafeAreaView>
   );
