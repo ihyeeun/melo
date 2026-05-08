@@ -505,11 +505,22 @@ export default function AppWebViewScreen({
     flushPendingTabPathSync();
   }, [flushPendingTabPathSync, isTabWebView, safeAreaSyncScript]);
 
-  const onOpenWindow = useCallback((event: WebViewOpenWindowEvent) => {
+  const onOpenWindow = useCallback(async (event: WebViewOpenWindowEvent) => {
     const targetUrl = event.nativeEvent.targetUrl?.trim();
     if (!targetUrl) return;
 
-    void Linking.openURL(targetUrl);
+    try {
+      const parsed = new URL(targetUrl);
+      if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return;
+
+      const href = parsed.toString();
+      const canOpen = await Linking.canOpenURL(href);
+      if (!canOpen) return;
+
+      await Linking.openURL(href);
+    } catch (error) {
+      console.warn("Failed to open window targetUrl", targetUrl, error);
+    }
   }, []);
 
   return (
