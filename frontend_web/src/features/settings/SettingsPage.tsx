@@ -13,6 +13,8 @@ import { toast } from "@/shared/commons/toast/toast";
 
 import styles from "./styles/SettingsPage.module.css";
 
+const NUTRITION_ANALYSIS_INFO_URL = "https://third-princess-d57.notion.site/info";
+
 function resolveErrorMessage(error: unknown, fallbackMessage: string) {
   if (error instanceof Error && error.message.trim().length > 0) {
     return error.message;
@@ -67,6 +69,15 @@ export default function SettingsPage() {
             <span className={`${styles.menuLabel} typo-title3`}>
               서비스이용약관 / 개인정보처리방침
             </span>
+            <ChevronRight size={24} className={styles.menuChevron} />
+          </button>
+
+          <button
+            type="button"
+            className={styles.menuItem}
+            onClick={() => window.open(NUTRITION_ANALYSIS_INFO_URL, "_blank", "noopener,noreferrer")}
+          >
+            <span className={`${styles.menuLabel} typo-title3`}>영양 분석 및 산출 근거</span>
             <ChevronRight size={24} className={styles.menuChevron} />
           </button>
 
