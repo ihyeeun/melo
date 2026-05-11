@@ -351,6 +351,13 @@ function getBackStackDepth(stack: Stack) {
   return stack.activities.filter((activity) => !activity.exitedBy).length;
 }
 
+function getActiveStackActivities() {
+  return stackflowActions
+    .getStack()
+    .activities.filter((activity) => !activity.exitedBy)
+    .sort((prev, next) => prev.enteredBy.eventDate - next.enteredBy.eventDate);
+}
+
 function getActiveActivity() {
   return stackflowActions.getStack().activities.find((activity) => activity.isActive);
 }
@@ -722,6 +729,13 @@ export function navigateBack({
 
 export function canGoBackWithStack() {
   return getBackStackDepth(stackflowActions.getStack()) > 1;
+}
+
+export function isPreviousStackActivity(activityName: string) {
+  const activities = getActiveStackActivities();
+  const previousActivity = activities.at(-2);
+
+  return previousActivity?.name === activityName;
 }
 
 export function syncStackflowWithCurrentBrowserPath({ animate = true }: { animate?: boolean } = {}) {

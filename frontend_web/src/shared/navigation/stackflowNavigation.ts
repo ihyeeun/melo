@@ -7,6 +7,7 @@ export type {
 } from "./stackflowRouter";
 export {
   canGoBackWithStack,
+  isPreviousStackActivity,
   navigate,
   navigateBack,
   syncStackflowWithCurrentBrowserPath,

@@ -28,7 +28,12 @@ import { MealMenuCard } from "@/shared/commons/card/MealMenuCard";
 import { SearchInputHeader } from "@/shared/commons/header/SearchInputHeader";
 import { toast } from "@/shared/commons/toast/toast";
 import { FEATURE_GUARD, isFeatureBlocked } from "@/shared/guards/featureGuard";
-import { navigateBack, useNavigate, useSearchParams } from "@/shared/navigation/stackflowNavigation";
+import {
+  isPreviousStackActivity,
+  navigateBack,
+  useNavigate,
+  useSearchParams,
+} from "@/shared/navigation/stackflowNavigation";
 
 import styles from "../styles/MealSearch.module.css";
 
@@ -136,7 +141,13 @@ export default function MealSearchPage() {
     if (selectedMenus.length === 0) return;
 
     resetSearchState();
-    navigateBack({ fallbackTo: getMealRecordPath(dateKey, mealType) });
+    const nextPath = getMealRecordPath(dateKey, mealType);
+    if (isPreviousStackActivity("MealRecord")) {
+      navigateBack({ fallbackTo: nextPath });
+      return;
+    }
+
+    navigate(nextPath, { replace: true, animate: false });
   };
 
   const handleClearKeyword = () => {
