@@ -1,5 +1,5 @@
 import { Search } from "lucide-react";
-import { type ChangeEvent, useState } from "react";
+import { type ChangeEvent, useEffect, useState } from "react";
 
 import {
   getMealType,
@@ -14,6 +14,11 @@ import {
   buildNutrientFormFields,
   hasChildNutrientOverflow,
 } from "@/features/nutrient-entry/utils/nutrientFields";
+import {
+  createBrandSearchSelectionKey,
+  useBrandSearchSelectedBrand,
+  useClearBrandSearchSelection,
+} from "@/features/search/brand/stores/brandSearchSelection.store";
 import { PATH } from "@/router/path";
 import { getMealDetailPath, getMealSearchPath, getPathWithMeal } from "@/router/pathHelpers";
 import type {
@@ -36,6 +41,7 @@ type NutrientRegisterLocationState = Partial<RegisterMenuRequestDto> & {
   mealType?: MealType;
   keyword?: string;
   entrySource?: "camera" | "manual";
+  brandSearchReturnKey?: string;
 };
 
 export default function NutrientRegisterPage() {
@@ -54,11 +60,22 @@ export default function NutrientRegisterPage() {
     name: (locationState.name ?? "").trim(),
     brand: (locationState.brand ?? locationState.brandName ?? "").trim(),
   }));
+  const [brandSearchReturnKey] = useState(
+    locationState.brandSearchReturnKey ?? createBrandSearchSelectionKey(),
+  );
+  const selectedBrandName = useBrandSearchSelectedBrand(brandSearchReturnKey);
+  const clearBrandSearchSelection = useClearBrandSearchSelection();
   const { mutate: registerManualMenu, isPending: isSubmitting } = useRegisterMenuMutation();
   const isCameraEntry = locationState.entrySource === "camera";
 
-  const brandName = (formState.brand ?? "").trim();
+  const brandName = (selectedBrandName ?? formState.brand ?? "").trim();
   const nutrientForm = buildNutrientFormFields(formState);
+
+  useEffect(() => {
+    return () => {
+      clearBrandSearchSelection(brandSearchReturnKey);
+    };
+  }, [brandSearchReturnKey, clearBrandSearchSelection]);
 
   const handleFieldChange = (key: keyof MenuNutrientFields, nextValue: string) => {
     const parsedValue = nextValue === "" ? undefined : Number(nextValue);
@@ -80,6 +97,11 @@ export default function NutrientRegisterPage() {
     navigation(PATH.BRAND_SEARCH, {
       state: {
         ...formState,
+        brand: brandName,
+        dateKey,
+        mealType,
+        keyword: searchKeyword,
+        brandSearchReturnKey,
         returnPath: getPathWithMeal(PATH.NUTRIENT_ADD_REGISTER, dateKey, mealType, searchKeyword),
       },
     });
@@ -107,7 +129,7 @@ export default function NutrientRegisterPage() {
     }
 
     const name = (formState.name ?? "").trim();
-    const brand = (formState.brand ?? "").trim();
+    const brand = brandName;
     const weight = formState.weight ?? 0;
     const calories = formState.calories ?? 0;
     const unit: MenuUnit = formState.unit === 1 ? 1 : 0;

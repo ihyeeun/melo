@@ -1,11 +1,16 @@
 import { Search } from "lucide-react";
-import { type ChangeEvent, useState } from "react";
+import { type ChangeEvent, useEffect, useState } from "react";
 
 import {
   getMealType,
   getSafeDateKey,
   getSafeKeyword,
 } from "@/features/meal-record/utils/mealRecord.queryParams";
+import {
+  createBrandSearchSelectionKey,
+  useBrandSearchSelectedBrand,
+  useClearBrandSearchSelection,
+} from "@/features/search/brand/stores/brandSearchSelection.store";
 import { PATH } from "@/router/path";
 import { getMealSearchPath } from "@/router/pathHelpers";
 import { getPathWithMeal } from "@/router/pathHelpers";
@@ -23,6 +28,7 @@ type NutrientAddLocationState = Partial<RegisterMenuRequestDto> & {
   brandName?: string;
   returnPath?: string;
   keyword?: string;
+  brandSearchReturnKey?: string;
 };
 
 export default function NutrientAddPage() {
@@ -35,7 +41,18 @@ export default function NutrientAddPage() {
   const mealType = getMealType(searchParams.get("mealType") ?? locationState.mealType ?? null);
   const searchKeyword = getSafeKeyword(searchParams.get("keyword") ?? locationState.keyword ?? null);
   const [foodName, setFoodName] = useState(locationState.name ?? "");
-  const brandName = (locationState.brand ?? locationState.brandName ?? "").trim();
+  const [brandSearchReturnKey] = useState(
+    locationState.brandSearchReturnKey ?? createBrandSearchSelectionKey(),
+  );
+  const selectedBrandName = useBrandSearchSelectedBrand(brandSearchReturnKey);
+  const clearBrandSearchSelection = useClearBrandSearchSelection();
+  const brandName = (selectedBrandName ?? locationState.brand ?? locationState.brandName ?? "").trim();
+
+  useEffect(() => {
+    return () => {
+      clearBrandSearchSelection(brandSearchReturnKey);
+    };
+  }, [brandSearchReturnKey, clearBrandSearchSelection]);
 
   const handleFoodNameChange = (event: ChangeEvent<HTMLInputElement>) => {
     setFoodName(event.target.value);
@@ -50,6 +67,7 @@ export default function NutrientAddPage() {
         dateKey,
         mealType,
         keyword: searchKeyword,
+        brandSearchReturnKey,
         returnPath: getPathWithMeal(PATH.NUTRIENT_ADD, dateKey, mealType, searchKeyword),
       },
     });
