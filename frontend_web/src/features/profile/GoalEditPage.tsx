@@ -3,6 +3,8 @@ import { ChevronRight } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
+import { registerWeight } from "@/features/home/api/health";
+import { queryKeys as homeQueryKeys } from "@/features/home/hooks/queries/queryKey";
 import StepGoalCalories from "@/features/onboarding/components/steps/StepGoalCalories";
 import StepNutrient from "@/features/onboarding/components/steps/StepNutrient";
 import {
@@ -26,7 +28,7 @@ import { queryKeys } from "@/features/profile/hooks/queries/queryKey";
 import { useGetProfileQuery } from "@/features/profile/hooks/queries/useProfileQuery";
 import styles from "@/features/profile/styles/GoalEditPage.module.css";
 import { PATH } from "@/router/path";
-import type { ProfileResponseDto } from "@/shared/api/types/api.dto";
+import type { ProfileResponseDto, WeightStepsResponseDto } from "@/shared/api/types/api.dto";
 import BottomSheet from "@/shared/commons/bottomSheet/BottomSheet";
 import { Button } from "@/shared/commons/button/Button";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
@@ -40,6 +42,7 @@ import {
 } from "@/shared/commons/picker/yearOptions";
 import { toast } from "@/shared/commons/toast/toast";
 import { useSetTargets } from "@/shared/stores/targetNutrient.store";
+import { getTodayFormatDateKey } from "@/shared/utils/dateFormat";
 
 type GoalEditStage = "summary" | "targetCalories" | "nutrient";
 type GoalEditNavigationState = {
@@ -467,6 +470,7 @@ export default function GoalEditPage() {
       return;
     }
 
+    const today = getTodayFormatDateKey();
     const updateTasks: Array<() => Promise<ProfileResponseDto>> = [];
 
     if (draft.gender !== undefined && draft.gender !== initialDraft.gender) {
@@ -482,7 +486,23 @@ export default function GoalEditPage() {
     }
 
     if (draft.weight !== undefined && draft.weight !== initialDraft.weight) {
-      updateTasks.push(() => updateWeight(draft.weight!));
+      updateTasks.push(async () => {
+        const nextWeight = draft.weight!;
+        const [updatedProfile] = await Promise.all([
+          updateWeight(nextWeight),
+          registerWeight({ date: today, weight: nextWeight }),
+        ]);
+
+        queryClient.setQueryData<WeightStepsResponseDto>(
+          homeQueryKeys.bodyStats(today),
+          (previous) => ({
+            weight: nextWeight,
+            steps: previous?.steps ?? 0,
+          }),
+        );
+
+        return updatedProfile;
+      });
     }
 
     if (draft.activity !== undefined && draft.activity !== initialDraft.activity) {
@@ -543,6 +563,10 @@ export default function GoalEditPage() {
         navigate(backStepsByStage[stage]);
         return;
       }
+
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.profile,
+      });
 
       navigate(PATH.PROFILE, { replace: true });
     } catch (error) {
