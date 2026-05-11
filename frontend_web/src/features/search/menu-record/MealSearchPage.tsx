@@ -62,7 +62,16 @@ export default function MealSearchPage() {
     [selectedMenus],
   );
 
-  const { mutate: mealSearchMutation, data: searchResults } = useMealSearchMutation();
+  const {
+    mutate: mealSearchMutation,
+    data: searchResults,
+    reset: resetMealSearch,
+  } = useMealSearchMutation();
+
+  const resetSearchState = () => {
+    setSubmittedKeyword("");
+    resetMealSearch();
+  };
 
   useEffect(() => {
     if (!isTop || hasDraft) {
@@ -126,11 +135,13 @@ export default function MealSearchPage() {
   const handleApplySelectedMenus = () => {
     if (selectedMenus.length === 0) return;
 
+    resetSearchState();
     navigateBack({ fallbackTo: getMealRecordPath(dateKey, mealType) });
   };
 
   const handleClearKeyword = () => {
     setSubmittedKeyword("");
+    resetMealSearch();
     searchInputRef.current?.focus();
   };
 
@@ -161,10 +172,11 @@ export default function MealSearchPage() {
     navigate(getPathWithMeal(PATH.FOOD_CAMERA, dateKey, mealType));
   };
 
-  const handleMealSearch = () => {
-    if (submittedKeyword.trim() === "") return;
+  const handleMealSearch = (keyword = submittedKeyword) => {
+    const normalizedKeyword = keyword.trim();
+    if (normalizedKeyword === "") return;
 
-    mealSearchMutation(submittedKeyword);
+    mealSearchMutation(normalizedKeyword);
   };
 
   if (!hasDraft) {
@@ -181,7 +193,10 @@ export default function MealSearchPage() {
         inputRef={searchInputRef}
         placeholder="메뉴를 검색해보세요"
         inputAriaLabel="메뉴 검색"
-        onBack={() => navigateBack({ fallbackTo: getMealRecordPath(dateKey, mealType) })}
+        onBack={() => {
+          resetSearchState();
+          navigateBack({ fallbackTo: getMealRecordPath(dateKey, mealType) });
+        }}
       />
 
       <main className={styles.main}>

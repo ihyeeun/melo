@@ -42,6 +42,7 @@ export function SearchInputHeader({
   enterKeyHint = "search",
 }: Props) {
   const [isComposing, setIsComposing] = useState(false);
+  const didMountRef = useRef(false);
   const onEnterRef = useRef(onEnter);
 
   useEffect(() => {
@@ -51,6 +52,10 @@ export function SearchInputHeader({
   useEffect(() => {
     if (!onEnterRef.current) return;
     if (isComposing) return;
+    if (!didMountRef.current) {
+      didMountRef.current = true;
+      return;
+    }
 
     const timeoutId = window.setTimeout(() => {
       onEnterRef.current?.(value);
