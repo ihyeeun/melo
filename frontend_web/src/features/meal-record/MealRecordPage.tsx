@@ -316,7 +316,7 @@ export default function MealRecordPage() {
     const nextParams = new URLSearchParams(searchParams);
     nextParams.set("date", dateKey);
     nextParams.set("mealType", String(nextMealType));
-    setSearchParams(nextParams);
+    setSearchParams(nextParams, { animate: false });
   };
 
   const handleRemoveMenu = (menuId: number) => {

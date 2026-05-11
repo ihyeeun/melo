@@ -40,6 +40,7 @@ export type To =
     };
 
 export type NavigateOptions = {
+  animate?: boolean;
   replace?: boolean;
   state?: unknown;
 };
@@ -650,9 +651,10 @@ export function navigate(toOrDelta: To | number, options?: NavigateOptions) {
     return;
   }
 
+  const actionOptions = options?.animate == null ? undefined : { animate: options.animate };
   const result = options?.replace
-    ? stackflowActions.replace(resolved.activityName, resolved.params)
-    : stackflowActions.push(resolved.activityName, resolved.params);
+    ? stackflowActions.replace(resolved.activityName, resolved.params, actionOptions)
+    : stackflowActions.push(resolved.activityName, resolved.params, actionOptions);
 
   setActivityNavigationState(result.activityId, options?.state);
 }
@@ -766,6 +768,7 @@ export function useSearchParams(): [
       const query = nextSearchParams.toString();
 
       navigate(`${location.pathname}${query ? `?${query}` : ""}${location.hash}`, {
+        animate: navigateOptions?.animate,
         replace: navigateOptions?.replace ?? true,
         state: navigateOptions?.state ?? location.state,
       });
