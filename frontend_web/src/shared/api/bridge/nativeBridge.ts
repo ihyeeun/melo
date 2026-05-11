@@ -202,10 +202,14 @@ export function beginBottomSheetVisibilitySync() {
   }
 
   const syncId = generateRequestId();
+  let isSyncing = true;
   openedBottomSheetIds.add(syncId);
   syncBottomSheetStateToApp(true);
 
   return () => {
+    if (!isSyncing) return;
+
+    isSyncing = false;
     openedBottomSheetIds.delete(syncId);
     syncBottomSheetStateToApp(openedBottomSheetIds.size > 0);
   };

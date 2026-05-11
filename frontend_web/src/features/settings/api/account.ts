@@ -1,3 +1,4 @@
+import { HOME_ONBOARDING_STORAGE_KEY } from "@/features/home/constants/homeOnboarding";
 import { appApiData } from "@/shared/api/appApi";
 
 export async function logout() {
@@ -6,6 +7,8 @@ export async function logout() {
     method: "POST",
     body: {},
   });
+
+  window.localStorage.removeItem(HOME_ONBOARDING_STORAGE_KEY);
 }
 
 export async function withdraw() {
@@ -13,4 +16,6 @@ export async function withdraw() {
     endpoint: "/commonAuth/delete",
     method: "POST",
   });
+
+  window.localStorage.removeItem(HOME_ONBOARDING_STORAGE_KEY);
 }
