@@ -3,6 +3,7 @@
   height: 100%;
   isolation: isolate;
   overflow: hidden;
+  overscroll-behavior-x: none;
   position: relative;
   width: 100%;
 }
@@ -13,6 +14,7 @@
   inset: 0;
   overflow-x: hidden;
   overflow-y: auto;
+  overscroll-behavior-x: none;
   position: absolute;
   touch-action: pan-y;
   transform: translateX(0);
@@ -34,10 +36,17 @@
   pointer-events: none;
 }
 
-.activityFrame[data-dragging="true"] {
+.activityFrame[data-top="true"][data-transition-state="enter-done"][data-dragging="true"] {
   box-shadow: -16px 0 32px rgba(0, 0, 0, 0.14);
   transform: translateX(var(--stackflow-drag-x));
   transition: none;
+}
+
+.activityFrame[data-top="true"][data-transition-state="enter-done"][data-resetting="true"] {
+  box-shadow: -16px 0 32px rgba(0, 0, 0, 0);
+  transition:
+    transform 180ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 180ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 @keyframes stackflow-slide-in {

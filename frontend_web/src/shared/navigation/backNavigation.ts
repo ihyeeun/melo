@@ -10,10 +10,7 @@ export function navigateBackOrFallback(
   fallbackTo: To,
   fallbackOptions?: NavigateOptions,
 ) {
-  if (canGoBackWithLocalHistory()) {
-    navigate(-1);
-    return;
-  }
+  void navigate;
 
   navigateBack({
     fallbackOptions,

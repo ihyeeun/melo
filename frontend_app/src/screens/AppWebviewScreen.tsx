@@ -206,10 +206,10 @@ function createTabPathSyncScript(absoluteHref: string, appOrigin: string | null)
       history.replaceState(history.state, "", nextPath);
 
       try {
-        window.dispatchEvent(new PopStateEvent("popstate"));
+        window.dispatchEvent(new CustomEvent("MELO_NATIVE_PATH_SYNC"));
       } catch {
         var event = document.createEvent("Event");
-        event.initEvent("popstate", true, true);
+        event.initEvent("MELO_NATIVE_PATH_SYNC", true, true);
         window.dispatchEvent(event);
       }
 
@@ -532,7 +532,7 @@ export default function AppWebViewScreen({
         onMessage={onMessage}
         onLoadEnd={onLoadEnd}
         onNavigationStateChange={onNavigationStateChange}
-        allowsBackForwardNavigationGestures
+        allowsBackForwardNavigationGestures={false}
         javaScriptEnabled
         domStorageEnabled
         originWhitelist={["*"]}

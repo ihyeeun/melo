@@ -1,5 +1,5 @@
 import { PlusIcon } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { useDayMealsQuery } from "@/features/home/hooks/queries/useDayMealsQuery";
 import {
@@ -32,7 +32,13 @@ import { MealMenuCard } from "@/shared/commons/card/MealMenuCard";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
 import { ConfirmModal } from "@/shared/commons/modals/ConfirmModal";
 import { toast } from "@/shared/commons/toast/toast";
-import { useLocation, useNavigate, useSearchParams } from "@/shared/navigation/stackflowNavigation";
+import {
+  navigateBack,
+  useLocation,
+  useNavigate,
+  useSearchParams,
+  useStackflowBackHandler,
+} from "@/shared/navigation/stackflowNavigation";
 import { parseMealRecordTransferState } from "@/shared/types/mealRecordTransfer";
 
 import styles from "./styles/MealRecordPage.module.css";
@@ -300,11 +306,11 @@ export default function MealRecordPage() {
     }, 0);
   }, [displayMenuItems]);
 
-  const clearAllDrafts = () => {
+  const clearAllDrafts = useCallback(() => {
     MEAL_TYPE_OPTIONS.forEach((option) => {
       clearDraft(formatMenuDraftKey(dateKey, option.key));
     });
-  };
+  }, [clearDraft, dateKey]);
 
   const handleChangeMealType = (nextMealType: MealType) => {
     const nextParams = new URLSearchParams(searchParams);
@@ -363,19 +369,25 @@ export default function MealRecordPage() {
     navigate(getMealDetailPath(dateKey, mealType, menuId, "MEAL_RECORD"));
   };
 
-  const handleBack = () => {
+  const handleBackGuard = useCallback(() => {
     if (hasUnsavedChanges) {
       setIsExitConfirmOpen(true);
-      return;
+      return true;
     }
 
     clearAllDrafts();
-    navigate(PATH.DIARY, { replace: true });
+    return false;
+  }, [clearAllDrafts, hasUnsavedChanges]);
+
+  useStackflowBackHandler(handleBackGuard);
+
+  const handleBack = () => {
+    navigateBack({ fallbackTo: PATH.DIARY });
   };
 
   const handleExit = () => {
     clearAllDrafts();
-    navigate(PATH.DIARY, { replace: true });
+    navigateBack({ fallbackTo: PATH.DIARY, skipBackHandler: true });
   };
 
   const handleMealSearchNavigate = () => {

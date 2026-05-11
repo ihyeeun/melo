@@ -12,6 +12,7 @@ import {
   type PointerEvent as ReactPointerEvent,
   type ReactNode,
   Suspense,
+  type TransitionEvent as ReactTransitionEvent,
   useCallback,
   useEffect,
   useMemo,
@@ -72,6 +73,8 @@ type RenderableStack = Stack & {
     activities: RenderedActivity[];
   };
 };
+
+type StackflowBackHandler = () => boolean | void;
 
 const HomePage = createLazyActivity(() => import("@/features/home/HomePage"));
 const TodayMealScorePage = createLazyActivity(() => import("@/features/home/TodayMealScorePage"));
@@ -169,11 +172,10 @@ type ActivityName = keyof typeof ACTIVITY_ROUTES;
 const EDGE_SWIPE_WIDTH = 28;
 const SWIPE_CANCEL_DISTANCE = -8;
 const SWIPE_START_DISTANCE = 8;
-const SWIPE_TRIGGER_DISTANCE = 96;
-const SWIPE_TRIGGER_RATIO = 0.33;
-const SWIPE_TRIGGER_VELOCITY = 0.45;
+const SWIPE_TRIGGER_RATIO = 0.2;
 
 const activityNavigationStateMap = new Map<string, unknown>();
+const stackflowBackHandlerMap = new Map<string, StackflowBackHandler>();
 const stackDepthListeners = new Set<() => void>();
 
 let currentStackDepth = 0;
@@ -299,6 +301,15 @@ function splitPath(path: string) {
   };
 }
 
+function getComparablePath(path: string) {
+  const { pathname, search, hash } = splitPath(path);
+  return `${normalizePathname(pathname)}${search}${hash}`;
+}
+
+function getCurrentBrowserPath() {
+  return `${window.location.pathname}${window.location.search}${window.location.hash}`;
+}
+
 function getActivityPath(activity: Activity) {
   const contextPath = (activity.context as { path?: string } | undefined)?.path;
   if (contextPath) return contextPath;
@@ -334,11 +345,21 @@ function setStackDepth(depth: number) {
   stackDepthListeners.forEach((listener) => listener());
 }
 
-function getActiveStackDepth(stack: Stack) {
-  return stack.activities.filter(
-    (activity) =>
-      activity.transitionState === "exit-active" || activity.transitionState === "enter-done",
-  ).length;
+function getBackStackDepth(stack: Stack) {
+  return stack.activities.filter((activity) => !activity.exitedBy).length;
+}
+
+function getActiveActivity() {
+  return stackflowActions.getStack().activities.find((activity) => activity.isActive);
+}
+
+function runActiveBackHandler(skipBackHandler: boolean | undefined) {
+  if (skipBackHandler) return false;
+
+  const activeActivity = getActiveActivity();
+  if (!activeActivity) return false;
+
+  return stackflowBackHandlerMap.get(activeActivity.id)?.() === true;
 }
 
 function subscribeStackDepth(listener: () => void) {
@@ -415,17 +436,41 @@ function StackActivityFrame({ activity }: { activity: RenderedActivity }) {
   } | null>(null);
   const [dragX, setDragX] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
   const canSwipeBack =
     activity.isTop &&
     !activity.isRoot &&
-    activity.transitionState !== "exit-active" &&
+    activity.transitionState === "enter-done" &&
     canGoBackWithStack();
 
-  const resetSwipe = useCallback(() => {
+  const clearSwipe = useCallback(() => {
     swipeRef.current = null;
     setDragX(0);
     setIsDragging(false);
+    setIsResetting(false);
   }, []);
+
+  const snapBackSwipe = useCallback(() => {
+    swipeRef.current = null;
+    setIsDragging(false);
+    setIsResetting(true);
+    setDragX(0);
+  }, []);
+
+  useEffect(() => {
+    if (activity.transitionState === "enter-done") return;
+    swipeRef.current = null;
+
+    const frameId = window.requestAnimationFrame(() => {
+      setDragX(0);
+      setIsDragging(false);
+      setIsResetting(false);
+    });
+
+    return () => {
+      window.cancelAnimationFrame(frameId);
+    };
+  }, [activity.key, activity.transitionState]);
 
   const handlePointerDown = useCallback(
     (event: ReactPointerEvent<HTMLDivElement>) => {
@@ -444,6 +489,9 @@ function StackActivityFrame({ activity }: { activity: RenderedActivity }) {
         velocity: 0,
         width: rect.width,
       };
+      setDragX(0);
+      setIsDragging(false);
+      setIsResetting(false);
       event.currentTarget.setPointerCapture(event.pointerId);
     },
     [canSwipeBack],
@@ -458,7 +506,7 @@ function StackActivityFrame({ activity }: { activity: RenderedActivity }) {
 
     if (!swipe.dragging) {
       if (dx < SWIPE_CANCEL_DISTANCE || Math.abs(dy) > Math.max(dx, SWIPE_START_DISTANCE) * 1.4) {
-        resetSwipe();
+        clearSwipe();
         return;
       }
 
@@ -476,34 +524,64 @@ function StackActivityFrame({ activity }: { activity: RenderedActivity }) {
 
     setDragX(Math.max(0, Math.min(dx, swipe.width)));
     event.preventDefault();
-  }, [resetSwipe]);
+  }, [clearSwipe]);
 
   const handlePointerUp = useCallback(
     (event: ReactPointerEvent<HTMLDivElement>) => {
       const swipe = swipeRef.current;
       if (!swipe || swipe.pointerId !== event.pointerId) return;
 
+      const finalDragX = Math.max(0, Math.min(event.clientX - swipe.startX, swipe.width));
       const shouldPop =
-        swipe.dragging &&
-        (dragX >= Math.min(SWIPE_TRIGGER_DISTANCE, swipe.width * SWIPE_TRIGGER_RATIO) ||
-          swipe.velocity >= SWIPE_TRIGGER_VELOCITY);
+        swipe.dragging && finalDragX >= swipe.width * SWIPE_TRIGGER_RATIO;
 
-      resetSwipe();
+      swipeRef.current = null;
+      setIsDragging(false);
 
       if (shouldPop) {
-        navigateBack({ animate: true });
+        const didNavigateBack = navigateBack({ animate: true });
+
+        setDragX(0);
+        setIsResetting(!didNavigateBack);
+        return;
       }
+
+      if (!swipe.dragging) {
+        clearSwipe();
+        return;
+      }
+
+      setIsResetting(true);
+      setDragX(0);
     },
-    [dragX, resetSwipe],
+    [clearSwipe],
   );
 
   const handlePointerCancel = useCallback(
     (event: ReactPointerEvent<HTMLDivElement>) => {
       const swipe = swipeRef.current;
       if (!swipe || swipe.pointerId !== event.pointerId) return;
-      resetSwipe();
+      snapBackSwipe();
     },
-    [resetSwipe],
+    [snapBackSwipe],
+  );
+
+  const handleLostPointerCapture = useCallback(
+    (event: ReactPointerEvent<HTMLDivElement>) => {
+      const swipe = swipeRef.current;
+      if (!swipe || swipe.pointerId !== event.pointerId) return;
+      snapBackSwipe();
+    },
+    [snapBackSwipe],
+  );
+
+  const handleTransitionEnd = useCallback(
+    (event: ReactTransitionEvent<HTMLDivElement>) => {
+      if (event.propertyName !== "transform") return;
+      if (!isResetting) return;
+      setIsResetting(false);
+    },
+    [isResetting],
   );
 
   const frameStyle = {
@@ -516,13 +594,16 @@ function StackActivityFrame({ activity }: { activity: RenderedActivity }) {
       ref={frameRef}
       className={styles.activityFrame}
       data-dragging={isDragging ? "true" : undefined}
+      data-resetting={isResetting ? "true" : undefined}
       data-root={activity.isRoot ? "true" : undefined}
       data-top={activity.isTop ? "true" : undefined}
       data-transition-state={activity.transitionState}
+      onLostPointerCapture={handleLostPointerCapture}
       onPointerCancel={handlePointerCancel}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
+      onTransitionEnd={handleTransitionEnd}
       style={frameStyle}
     >
       {activity.render()}
@@ -581,20 +662,21 @@ export function navigateBack({
   count = 1,
   fallbackOptions,
   fallbackTo,
+  skipBackHandler = false,
 }: {
   animate?: boolean;
   count?: number;
   fallbackOptions?: NavigateOptions;
   fallbackTo?: To;
+  skipBackHandler?: boolean;
 } = {}) {
-  if (canGoBackWithStack()) {
-    stackflowActions.pop(count, { animate });
-    return;
+  if (runActiveBackHandler(skipBackHandler)) {
+    return false;
   }
 
-  if (isNativeApp()) {
-    requestAppBack();
-    return;
+  if (canGoBackWithStack()) {
+    stackflowActions.pop(count, { animate });
+    return true;
   }
 
   if (fallbackTo) {
@@ -602,11 +684,36 @@ export function navigateBack({
       ...fallbackOptions,
       replace: true,
     });
+    return true;
   }
+
+  if (isNativeApp()) {
+    requestAppBack();
+    return true;
+  }
+
+  return false;
 }
 
 export function canGoBackWithStack() {
-  return getActiveStackDepth(stackflowActions.getStack()) > 1;
+  return getBackStackDepth(stackflowActions.getStack()) > 1;
+}
+
+export function syncStackflowWithCurrentBrowserPath({ animate = true }: { animate?: boolean } = {}) {
+  const currentPath = getCurrentBrowserPath();
+  const activeActivity = stackflowActions.getStack().activities.find((activity) => activity.isActive);
+
+  if (activeActivity && getComparablePath(getActivityPath(activeActivity)) === getComparablePath(currentPath)) {
+    return;
+  }
+
+  const resolved = resolveActivityForPath(currentPath);
+  if (!resolved) {
+    stackflowActions.replace("Home", {}, { animate });
+    return;
+  }
+
+  stackflowActions.replace(resolved.activityName, resolved.params, { animate });
 }
 
 export function useNavigate(): NavigateFunction {
@@ -671,6 +778,28 @@ export function useSearchParams(): [
 
 export function useStackDepth() {
   return useSyncExternalStore(subscribeStackDepth, getStackDepthSnapshot, getStackDepthSnapshot);
+}
+
+export function useStackflowBackHandler(handler: StackflowBackHandler | null | undefined) {
+  const activity = useActivity();
+  const handlerRef = useRef(handler);
+
+  useEffect(() => {
+    handlerRef.current = handler;
+  }, [handler]);
+
+  useEffect(() => {
+    if (!handler) return;
+
+    const backHandler = () => handlerRef.current?.();
+    stackflowBackHandlerMap.set(activity.id, backHandler);
+
+    return () => {
+      if (stackflowBackHandlerMap.get(activity.id) === backHandler) {
+        stackflowBackHandlerMap.delete(activity.id);
+      }
+    };
+  }, [activity.id, handler]);
 }
 
 export function getStackflowStackComponent() {

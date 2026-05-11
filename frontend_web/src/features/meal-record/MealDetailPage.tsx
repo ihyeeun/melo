@@ -26,7 +26,12 @@ import { PageHeader } from "@/shared/commons/header/PageHeader";
 import { ConfirmModal } from "@/shared/commons/modals/ConfirmModal";
 import { toast } from "@/shared/commons/toast/toast";
 import { navigateBackOrFallback } from "@/shared/navigation/backNavigation";
-import { useLocation, useNavigate, useSearchParams } from "@/shared/navigation/stackflowNavigation";
+import {
+  navigateBack,
+  useLocation,
+  useNavigate,
+  useSearchParams,
+} from "@/shared/navigation/stackflowNavigation";
 
 import { MAX_MEAL_RECORD_MENUS } from "./constants/menu.constants";
 import { getMealRecordAddSearchPath, getMealRecordPath } from "./utils/mealRecord.paths";
@@ -218,14 +223,7 @@ export default function MealDetailPage() {
   };
 
   const handleGoBack = () => {
-    const fallbackPath = getBackFallbackPath();
-
-    if (fallbackPath === PATH.HOME) {
-      navigate(PATH.HOME, { replace: true });
-      return;
-    }
-
-    navigate(fallbackPath, { replace: true });
+    navigateBack({ fallbackTo: getBackFallbackPath() });
   };
 
   const handleHeaderBack = () => {

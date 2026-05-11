@@ -1,3 +1,4 @@
+import { useActivity, useEnterDoneEffect } from "@stackflow/react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { MAX_MEAL_RECORD_MENUS } from "@/features/meal-record/constants/menu.constants";
@@ -27,8 +28,7 @@ import { MealMenuCard } from "@/shared/commons/card/MealMenuCard";
 import { SearchInputHeader } from "@/shared/commons/header/SearchInputHeader";
 import { toast } from "@/shared/commons/toast/toast";
 import { FEATURE_GUARD, isFeatureBlocked } from "@/shared/guards/featureGuard";
-import { navigateBackOrFallback } from "@/shared/navigation/backNavigation";
-import { useNavigate, useSearchParams } from "@/shared/navigation/stackflowNavigation";
+import { navigateBack, useNavigate, useSearchParams } from "@/shared/navigation/stackflowNavigation";
 
 import styles from "../styles/MealSearch.module.css";
 
@@ -38,6 +38,7 @@ function getDefaultConsumedWeight(weight: number) {
 
 export default function MealSearchPage() {
   const navigate = useNavigate();
+  const { isTop } = useActivity();
   const [searchParams] = useSearchParams();
 
   const dateKey = getSafeDateKey(searchParams.get("date"));
@@ -64,15 +65,15 @@ export default function MealSearchPage() {
   const { mutate: mealSearchMutation, data: searchResults } = useMealSearchMutation();
 
   useEffect(() => {
-    if (hasDraft) {
+    if (!isTop || hasDraft) {
       return;
     }
 
     toast.warning("올바르지 않은 접근이에요");
     navigate(getMealRecordPath(dateKey, mealType), { replace: true });
-  }, [dateKey, hasDraft, mealType, navigate]);
+  }, [dateKey, hasDraft, isTop, mealType, navigate]);
 
-  useEffect(() => {
+  useEnterDoneEffect(() => {
     const frameId = window.requestAnimationFrame(() => {
       searchInputRef.current?.focus();
     });
@@ -125,7 +126,7 @@ export default function MealSearchPage() {
   const handleApplySelectedMenus = () => {
     if (selectedMenus.length === 0) return;
 
-    navigate(getMealRecordPath(dateKey, mealType));
+    navigateBack({ fallbackTo: getMealRecordPath(dateKey, mealType) });
   };
 
   const handleClearKeyword = () => {
@@ -180,7 +181,7 @@ export default function MealSearchPage() {
         inputRef={searchInputRef}
         placeholder="메뉴를 검색해보세요"
         inputAriaLabel="메뉴 검색"
-        onBack={() => navigateBackOrFallback(navigate, getMealRecordPath(dateKey, mealType))}
+        onBack={() => navigateBack({ fallbackTo: getMealRecordPath(dateKey, mealType) })}
       />
 
       <main className={styles.main}>

@@ -1,34 +1,16 @@
 import { Accordion } from "@base-ui/react/accordion";
 import { ChevronDown } from "lucide-react";
-import { useCallback } from "react";
 
 import { PATH } from "@/router/path";
-import { isNativeApp, requestAppBack } from "@/shared/api/bridge/nativeBridge";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
-import { canGoBackWithLocalHistory } from "@/shared/navigation/backNavigation";
-import { useNavigate } from "@/shared/navigation/stackflowNavigation";
+import { navigateBack } from "@/shared/navigation/stackflowNavigation";
 
 import styles from "./TermsPage.module.css";
 
 export default function TermsPage() {
-  const navigate = useNavigate();
-  const handleBack = useCallback(() => {
-    if (canGoBackWithLocalHistory()) {
-      window.history.back();
-      return;
-    }
-
-    if (isNativeApp()) {
-      requestAppBack();
-      return;
-    }
-
-    navigate(PATH.HOME, { replace: true });
-  }, [navigate]);
-
   return (
     <div className={styles.page}>
-      <PageHeader title="약관" onBack={handleBack} />
+      <PageHeader title="약관" onBack={() => navigateBack({ fallbackTo: PATH.HOME })} />
 
       <section className={styles.container}>
         <div className={styles.accordionContainer}>

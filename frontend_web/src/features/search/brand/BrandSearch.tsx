@@ -1,5 +1,6 @@
+import { useEnterDoneEffect } from "@stackflow/react";
 import { ChevronRight } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 
 import { useGetBrandSearchQuery } from "@/features/search/brand/hooks/queries/useBrandSearchQuery";
 import styles from "@/features/search/styles/BrandSearch.module.css";
@@ -7,7 +8,7 @@ import { PATH } from "@/router/path";
 import type { RegisterMenuRequestDto } from "@/shared/api/types/api.dto";
 import { Button } from "@/shared/commons/button/Button";
 import { SearchInputHeader } from "@/shared/commons/header/SearchInputHeader";
-import { useLocation, useNavigate } from "@/shared/navigation/stackflowNavigation";
+import { navigateBack, useLocation, useNavigate } from "@/shared/navigation/stackflowNavigation";
 
 type BrandSearchResult = {
   id: string;
@@ -45,7 +46,7 @@ export default function BrandSearch() {
   const [selectedBrandId, setSelectedBrandId] = useState("");
   const searchInputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
+  useEnterDoneEffect(() => {
     const frameId = window.requestAnimationFrame(() => {
       searchInputRef.current?.focus();
     });
@@ -76,9 +77,11 @@ export default function BrandSearch() {
   };
 
   const handleBack = () => {
-    navigate(returnPath, {
-      replace: true,
-      state: formState,
+    navigateBack({
+      fallbackTo: returnPath,
+      fallbackOptions: {
+        state: formState,
+      },
     });
   };
 

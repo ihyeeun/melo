@@ -8,9 +8,10 @@ import {
   useTargetsState,
 } from "@/shared/stores/targetNutrient.store";
 
-import { getStackflowStackComponent } from "./stackflowRouter";
+import { getStackflowStackComponent, syncStackflowWithCurrentBrowserPath } from "./stackflowRouter";
 
 const StackComponent = getStackflowStackComponent();
+const NATIVE_PATH_SYNC_EVENT = "MELO_NATIVE_PATH_SYNC";
 
 function useSyncTargetsFromProfile() {
   const hasTargetsLoaded = useTargetsLoadedState();
@@ -33,6 +34,24 @@ function useSyncTargetsFromProfile() {
 
 export function StackflowRuntime() {
   useSyncTargetsFromProfile();
+
+  useEffect(() => {
+    const handleNativePathSync = () => {
+      window.setTimeout(() => syncStackflowWithCurrentBrowserPath({ animate: false }), 0);
+    };
+
+    const handlePopState = () => {
+      window.setTimeout(syncStackflowWithCurrentBrowserPath, 0);
+    };
+
+    window.addEventListener(NATIVE_PATH_SYNC_EVENT, handleNativePathSync);
+    window.addEventListener("popstate", handlePopState);
+
+    return () => {
+      window.removeEventListener(NATIVE_PATH_SYNC_EVENT, handleNativePathSync);
+      window.removeEventListener("popstate", handlePopState);
+    };
+  }, []);
 
   return <StackComponent />;
 }

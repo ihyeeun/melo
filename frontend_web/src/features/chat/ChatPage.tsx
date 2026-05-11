@@ -39,7 +39,7 @@ import {
 import { PageHeader } from "@/shared/commons/header/PageHeader";
 import { ConfirmModal } from "@/shared/commons/modals/ConfirmModal";
 import { toast } from "@/shared/commons/toast/toast";
-import { useNavigate } from "@/shared/navigation/stackflowNavigation";
+import { navigateBack, useNavigate } from "@/shared/navigation/stackflowNavigation";
 import { useSelectedDateKey } from "@/shared/stores/selectedDate.store";
 import {
   CHAT_TO_MEAL_RECORD_SOURCE,
@@ -392,7 +392,7 @@ export default function ChatPage() {
 
   return (
     <div className={styles.page}>
-      <PageHeader onBack={() => navigate(PATH.HOME, { replace: true })} />
+      <PageHeader onBack={() => navigateBack({ fallbackTo: PATH.HOME })} />
 
       {isCameraActionMenuOpen ? (
         <button

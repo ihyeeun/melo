@@ -9,8 +9,10 @@ export {
   canGoBackWithStack,
   navigate,
   navigateBack,
+  syncStackflowWithCurrentBrowserPath,
   useLocation,
   useNavigate,
   useSearchParams,
   useStackDepth,
+  useStackflowBackHandler,
 } from "./stackflowRouter";
