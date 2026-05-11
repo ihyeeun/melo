@@ -1,5 +1,6 @@
 /* eslint-disable react-refresh/only-export-components */
 import type { Activity, Stack } from "@stackflow/core";
+import { id as createStackflowActivityId } from "@stackflow/core";
 import { devtoolsPlugin } from "@stackflow/plugin-devtools";
 import { historySyncPlugin } from "@stackflow/plugin-history-sync";
 import { stackDepthChangePlugin } from "@stackflow/plugin-stack-depth-change";
@@ -414,6 +415,10 @@ function stackflowRendererPlugin(): StackflowReactPlugin<typeof ACTIVITIES> {
 function StackRenderer({ stack }: { stack: RenderableStack }) {
   const { activities } = stack.render();
 
+  if (activities.length === 0) {
+    return <EmptyStackFallback />;
+  }
+
   return (
     <div className={styles.stackRoot}>
       {activities.map((activity) => (
@@ -421,6 +426,14 @@ function StackRenderer({ stack }: { stack: RenderableStack }) {
       ))}
     </div>
   );
+}
+
+function EmptyStackFallback() {
+  useEffect(() => {
+    syncStackflowWithCurrentBrowserPath({ animate: false });
+  }, []);
+
+  return null;
 }
 
 function StackActivityFrame({ activity }: { activity: RenderedActivity }) {
@@ -653,7 +666,14 @@ export function navigate(toOrDelta: To | number, options?: NavigateOptions) {
 
   const actionOptions = options?.animate == null ? undefined : { animate: options.animate };
   const result = options?.replace
-    ? stackflowActions.replace(resolved.activityName, resolved.params, actionOptions)
+    ? (() => {
+        const activityId = createStackflowActivityId();
+
+        return stackflowActions.replace(resolved.activityName, resolved.params, {
+          ...actionOptions,
+          activityId,
+        });
+      })()
     : stackflowActions.push(resolved.activityName, resolved.params, actionOptions);
 
   setActivityNavigationState(result.activityId, options?.state);
@@ -676,8 +696,11 @@ export function navigateBack({
     return false;
   }
 
-  if (canGoBackWithStack()) {
-    stackflowActions.pop(count, { animate });
+  const backStackDepth = getBackStackDepth(stackflowActions.getStack());
+  const safeCount = Math.min(Math.max(1, count), Math.max(0, backStackDepth - 1));
+
+  if (safeCount > 0) {
+    stackflowActions.pop(safeCount, { animate });
     return true;
   }
 

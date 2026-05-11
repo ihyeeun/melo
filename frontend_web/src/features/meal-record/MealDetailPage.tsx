@@ -69,7 +69,8 @@ export default function MealDetailPage() {
   const upsertPreviews = useMenuDraftUpsertPreviews();
   const removeMenu = useMenuDraftRemove();
   const selectedMenus = useMenuDraftMenus(dateKey, mealType);
-  const replaceMenuIdCandidate = (location.state as MealDetailLocationState | null)?.replaceMenuId;
+  const locationState = location.state as MealDetailLocationState | null;
+  const replaceMenuIdCandidate = locationState?.replaceMenuId;
   const replaceMenuId =
     typeof replaceMenuIdCandidate === "number" &&
     Number.isInteger(replaceMenuIdCandidate) &&
