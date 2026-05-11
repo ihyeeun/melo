@@ -40,23 +40,19 @@ type CustomTooltipProps = TooltipContentProps & {
 
 function XAxisTick({ payload, x = 0, y = 0 }: AxisTickProps) {
   const rawValue = String(payload?.value ?? "");
-  const [dateLabel, weekdayLabel] = rawValue.includes("\n")
+  const [dateLabel, statusLabel] = rawValue.includes("\n")
     ? rawValue.split("\n", 2)
     : [rawValue, ""];
-  const today = new Date();
-  const todayDateLabel = `${today.getMonth() + 1}/${today.getDate()}`;
-  const todayWeekdayLabel = ["일", "월", "화", "수", "목", "금", "토"][today.getDay()];
-  const normalizedWeekdayLabel = weekdayLabel.replaceAll("(", "").replaceAll(")", "").trim();
-  const isTodayTick = dateLabel === todayDateLabel && normalizedWeekdayLabel === todayWeekdayLabel;
+  const isTodayTick = statusLabel.trim() === "오늘";
   const tickClassName =
     `${styles.xAxisTick} ${isTodayTick ? styles.xAxisTickToday : ""} typo-caption`.trim();
 
   return (
     <text className={tickClassName} textAnchor="middle" x={x} y={y + 12}>
       <tspan x={x}>{dateLabel}</tspan>
-      {weekdayLabel ? (
+      {statusLabel ? (
         <tspan x={x} dy="1.2em">
-          {weekdayLabel}
+          {statusLabel}
         </tspan>
       ) : null}
     </text>

@@ -45,11 +45,11 @@ function formatDateKey(date: Date) {
   return `${year}-${month}-${day}`;
 }
 
-function formatChartLabel(dateKey: string) {
+function formatChartLabel(dateKey: string, today: string) {
   const date = parseDateKey(dateKey);
-  const weekdayLabel = ["일", "월", "화", "수", "목", "금", "토"][date.getDay()];
+  const dateLabel = `${date.getMonth() + 1}/${date.getDate()}`;
 
-  return `${date.getMonth() + 1}/${date.getDate()}\n${weekdayLabel}`;
+  return dateKey === today ? `${dateLabel}\n오늘` : dateLabel;
 }
 
 function getRecentWeekDateKeys(today: string) {
@@ -126,7 +126,7 @@ export function useWeeklyRecordQuery({
 
     return {
       dateKey,
-      label: formatChartLabel(dateKey),
+      label: formatChartLabel(dateKey, today),
       weight: typeof rawWeight === "number" && rawWeight > 0 ? rawWeight : null,
       calories: dayMeal?.totalCalories ?? 0,
       steps: typeof rawSteps === "number" && rawSteps >= 0 ? rawSteps : null,
