@@ -36,7 +36,7 @@
   position: fixed;
   top: 0;
   touch-action: none;
-  width: var(--stackflow-edge-swipe-width);
+  width: var(--stackflow-edge-swipe-width, 24px);
   z-index: 2147483647;
 }
 
