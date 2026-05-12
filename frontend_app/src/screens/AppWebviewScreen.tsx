@@ -5,11 +5,10 @@ import { useCallback, useEffect, useMemo, useRef } from "react";
 import { BackHandler, Linking, Platform, StyleSheet } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
-import {
-  WebView,
-  WebViewMessageEvent,
-  WebViewNavigation,
-  WebViewOpenWindowEvent,
+import WebView, {
+  type WebViewMessageEvent,
+  type WebViewNavigation,
+  type WebViewProps,
 } from "react-native-webview";
 
 const devWebUrl =
@@ -31,6 +30,7 @@ type AppWebViewScreenProps = {
 };
 
 export type AppTabName = "home" | "chat" | "diary" | "profile";
+type WebViewOpenWindowEvent = Parameters<NonNullable<WebViewProps["onOpenWindow"]>>[0];
 
 function buildWebAppUrl(path?: string) {
   if (!path) return webAppUrl;
@@ -257,7 +257,7 @@ export default function AppWebViewScreen({
   const pendingTabPathRef = useRef<string | null>(null);
   const latestWebPathRef = useRef<string | null>(null);
   const tabBarHiddenByPathRef = useRef(false);
-  const tabBarHiddenByBottomSheetRef = useRef(false);
+  const tabBarHiddenByWebRef = useRef(false);
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
   const isTabWebView = Boolean(currentTab);
@@ -297,18 +297,18 @@ export default function AppWebViewScreen({
   );
 
   const syncTabBarVisibility = useCallback(
-    ({ hideByPath, hideByBottomSheet }: { hideByPath?: boolean; hideByBottomSheet?: boolean }) => {
+    ({ hideByPath, hideByWeb }: { hideByPath?: boolean; hideByWeb?: boolean }) => {
       if (!isTabWebView) return;
 
       if (hideByPath !== undefined) {
         tabBarHiddenByPathRef.current = hideByPath;
       }
 
-      if (hideByBottomSheet !== undefined) {
-        tabBarHiddenByBottomSheetRef.current = hideByBottomSheet;
+      if (hideByWeb !== undefined) {
+        tabBarHiddenByWebRef.current = hideByWeb;
       }
 
-      applyTabBarVisibility(tabBarHiddenByPathRef.current || tabBarHiddenByBottomSheetRef.current);
+      applyTabBarVisibility(tabBarHiddenByPathRef.current || tabBarHiddenByWebRef.current);
     },
     [applyTabBarVisibility, isTabWebView],
   );
@@ -411,12 +411,12 @@ export default function AppWebViewScreen({
     if (!isTabWebView) return;
 
     tabBarHiddenByPathRef.current = false;
-    tabBarHiddenByBottomSheetRef.current = false;
+    tabBarHiddenByWebRef.current = false;
     applyTabBarVisibility(false);
 
     return () => {
       tabBarHiddenByPathRef.current = false;
-      tabBarHiddenByBottomSheetRef.current = false;
+      tabBarHiddenByWebRef.current = false;
       applyTabBarVisibility(false);
     };
   }, [applyTabBarVisibility, isTabWebView]);
@@ -426,7 +426,7 @@ export default function AppWebViewScreen({
       try {
         const rawData = JSON.parse(event.nativeEvent.data) as {
           type?: string;
-          payload?: { href?: string; enabled?: boolean; isOpen?: boolean };
+          payload?: { href?: string; enabled?: boolean; isHidden?: boolean };
           context?: { href?: string };
         };
 
@@ -447,8 +447,11 @@ export default function AppWebViewScreen({
           return;
         }
 
-        if (rawData.type === "BOTTOM_SHEET_SYNC" && typeof rawData.payload?.isOpen === "boolean") {
-          syncTabBarVisibility({ hideByBottomSheet: rawData.payload.isOpen });
+        if (
+          rawData.type === "TAB_BAR_VISIBILITY_SYNC" &&
+          typeof rawData.payload?.isHidden === "boolean"
+        ) {
+          syncTabBarVisibility({ hideByWeb: rawData.payload.isHidden });
           return;
         }
       } catch {

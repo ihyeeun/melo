@@ -57,11 +57,11 @@ export type WebToAppFeatureGuardSyncMessage = {
   context?: BridgeMessageContext;
 };
 
-export type WebToAppBottomSheetSyncMessage = {
+export type WebToAppTabBarVisibilitySyncMessage = {
   id: string;
-  type: "BOTTOM_SHEET_SYNC";
+  type: "TAB_BAR_VISIBILITY_SYNC";
   payload: {
-    isOpen: boolean;
+    isHidden: boolean;
   };
   context?: BridgeMessageContext;
 };
@@ -113,7 +113,7 @@ export type WebToAppMessage =
   | WebToAppNavigationBackMessage
   | WebToAppAppDeviceInfoRequestMessage
   | WebToAppFeatureGuardSyncMessage
-  | WebToAppBottomSheetSyncMessage
+  | WebToAppTabBarVisibilitySyncMessage
   | WebToAppCameraCaptureMessage
   | WebToAppGalleryPickMessage
   | WebToAppImageUploadMessage;

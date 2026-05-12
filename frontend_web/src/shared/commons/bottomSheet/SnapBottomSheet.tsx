@@ -1,7 +1,7 @@
-import { useEffect, useMemo } from "react";
+import { useMemo } from "react";
 import { Sheet } from "react-modal-sheet";
 
-import { beginBottomSheetVisibilitySync } from "@/shared/api/bridge/nativeBridge";
+import { useTabBarVisibilitySync } from "@/shared/api/bridge/useTabBarVisibilitySync";
 
 type SnapBottomSheetProps = {
   isOpen: boolean;
@@ -53,10 +53,7 @@ export default function SnapBottomSheet({
     [initialSnap, normalizedSnapPoints],
   );
 
-  useEffect(() => {
-    if (!isOpen) return;
-    return beginBottomSheetVisibilitySync();
-  }, [isOpen]);
+  useTabBarVisibilitySync(isOpen);
 
   return (
     <Sheet
