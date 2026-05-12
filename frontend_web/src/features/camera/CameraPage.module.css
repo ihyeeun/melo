@@ -49,8 +49,9 @@
   isolation: isolate;
   overflow: hidden;
   position: relative;
-  width: 85%;
-  max-height: 100%;
+  width: min(85%, 320px);
+  aspect-ratio: 3 / 4;
+  flex-shrink: 0;
 }
 
 .previewImage {
