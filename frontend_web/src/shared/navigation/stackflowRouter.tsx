@@ -189,6 +189,7 @@ const ACTIVITY_ROUTES: Record<keyof typeof ACTIVITIES, RoutePath> = {
 
 type ActivityName = keyof typeof ACTIVITY_ROUTES;
 
+const STACK_TRANSITION_DURATION = 270;
 const EDGE_SWIPE_WIDTH = 44;
 const SWIPE_CANCEL_DISTANCE = -12;
 const SWIPE_START_DISTANCE = 4;
@@ -200,6 +201,7 @@ const SWIPE_VERTICAL_CANCEL_RATIO = 2.4;
 
 const activityNavigationStateMap = new Map<string, unknown>();
 const stackflowBackHandlerMap = new Map<string, StackflowBackHandler>();
+let pruneActivityNavigationStateTimeoutId: number | null = null;
 
 function createLazyActivity(loader: () => Promise<{ default: ComponentType }>) {
   const LazyPage = lazy(loader);
@@ -362,7 +364,7 @@ function pruneActivityNavigationStateMap() {
   const activeIds = new Set(
     stackflowActions
       .getStack()
-      .activities.filter((activity) => !activity.exitedBy)
+      .activities.filter((activity) => activity.transitionState !== "exit-done")
       .map((activity) => activity.id),
   );
 
@@ -371,6 +373,19 @@ function pruneActivityNavigationStateMap() {
       activityNavigationStateMap.delete(activityId);
     }
   });
+}
+
+function scheduleActivityNavigationStatePrune() {
+  if (typeof window === "undefined") return;
+
+  if (pruneActivityNavigationStateTimeoutId !== null) {
+    window.clearTimeout(pruneActivityNavigationStateTimeoutId);
+  }
+
+  pruneActivityNavigationStateTimeoutId = window.setTimeout(() => {
+    pruneActivityNavigationStateTimeoutId = null;
+    pruneActivityNavigationStateMap();
+  }, STACK_TRANSITION_DURATION + 50);
 }
 
 function setStackDepth(depth: number) {
@@ -748,7 +763,7 @@ function StackActivityFrame({
 }
 
 const { Stack: InternalStackflowStack, actions: stackflowActions } = stackflow({
-  transitionDuration: 270,
+  transitionDuration: STACK_TRANSITION_DURATION,
   activities: ACTIVITIES,
   plugins: [
     stackflowRendererPlugin(),
@@ -853,6 +868,9 @@ export function navigateBackAndPush({
   } finally {
     stackflowActions.dispatchEvent("Resumed", {});
     pruneActivityNavigationStateMap();
+    if (animate) {
+      scheduleActivityNavigationStatePrune();
+    }
   }
 
   return true;
@@ -881,6 +899,9 @@ export function navigateBack({
   if (safeCount > 0) {
     stackflowActions.pop(safeCount, { animate });
     pruneActivityNavigationStateMap();
+    if (animate) {
+      scheduleActivityNavigationStatePrune();
+    }
     return true;
   }
 
