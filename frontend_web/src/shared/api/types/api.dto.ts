@@ -294,7 +294,7 @@ export interface ChatFeedbackMenuResponseDto {
 }
 
 export interface ChatMenuBoardRecommendResponseDto {
-  chat_category: string;
+  chat_category: ChatCategory;
   intro_message: string;
   recommendations: ChatRecommendItemResponseDto[];
   recognized_candidates: ChatRecognizedCandidateResponseDto[];

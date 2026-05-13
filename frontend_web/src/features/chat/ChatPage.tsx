@@ -140,12 +140,13 @@ export default function ChatPage() {
 
   const handleNavigateFoodCamera = () => {
     handleCloseCameraActionMenu();
-    navigate(PATH.FOOD_CAMERA, {
-      state: {
-        autoOpenCamera: true,
-      },
-    });
-    // TODO : 촬영결과 가지고 추천결과를 받아올 수 있도록 해야할 거 같은데
+    toast.warning("음식 촬영 기능은 아직 준비 중이에요.");
+    return;
+    // navigate(PATH.FOOD_CAMERA, {
+    //   state: {
+    //     autoOpenCamera: true,
+    //   },
+    // });
   };
 
   // + 버튼의 직접 메뉴 기록하기시 draft 초기화

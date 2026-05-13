@@ -1,13 +1,12 @@
 import { useState } from "react";
 
-import { getMealTypeFromCurrentTime } from "@/features/chat/utils/chatMeal";
 import ActionCard from "@/features/home/components/cards/ActionCard";
 import TodayBodyLogSection from "@/features/home/components/TodayBodyLogSection";
 import style from "@/features/home/styles/MenuActionSection.module.css";
 import { PATH } from "@/router/path";
-import { getPathWithMeal } from "@/router/pathHelpers";
 import { isNativeApp, syncAppTab } from "@/shared/api/bridge/nativeBridge";
 import BottomSheet from "@/shared/commons/bottomSheet/BottomSheet";
+import { toast } from "@/shared/commons/toast/toast";
 import { useNavigate } from "@/shared/navigation/stackflowNavigation";
 
 export default function MenuActionSection({
@@ -40,14 +39,9 @@ export default function MenuActionSection({
   };
 
   const handleNavigateFoodCamera = () => {
-    const mealType = getMealTypeFromCurrentTime(new Date());
-
     handleCloseCameraActionSheet();
-    navigate(getPathWithMeal(PATH.FOOD_CAMERA, selectedDate, mealType), {
-      state: {
-        autoOpenCamera: true,
-      },
-    });
+    toast.warning("음식 촬영 채팅 기능은 아직 준비 중이에요.");
+    return;
   };
 
   return (

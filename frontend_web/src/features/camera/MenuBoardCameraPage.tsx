@@ -14,7 +14,7 @@ import {
 import { PATH } from "@/router/path";
 import { syncAppTab } from "@/shared/api/bridge/nativeBridge";
 import { requestNativeCameraCapture } from "@/shared/api/bridge/nativeBridge";
-import type { ChatRecommendResponseDto } from "@/shared/api/types/api.dto";
+import type { ChatMenuBoardRecommendResponseDto } from "@/shared/api/types/api.dto";
 import { Button } from "@/shared/commons/button/Button";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
 import { CheckButtonModal } from "@/shared/commons/modals/CheckButtonModal";
@@ -27,7 +27,7 @@ type MenuBoardCameraLocationState = {
 
 type MenuBoardToChatLocationState = {
   source: "menu-board-camera";
-  menuBoardResponse: ChatRecommendResponseDto;
+  menuBoardResponse: ChatMenuBoardRecommendResponseDto;
 };
 
 export default function MenuBoardCameraPage() {
