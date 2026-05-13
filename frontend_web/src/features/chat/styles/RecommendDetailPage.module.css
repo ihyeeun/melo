@@ -33,7 +33,6 @@
 .titleRow {
   align-items: baseline;
   display: flex;
-  justify-content: space-between;
   gap: 12px;
 }
 
@@ -50,20 +49,13 @@
 .caloriesText {
   color: var(--label-normal);
   flex-shrink: 0;
+  margin-left: auto;
 }
 
 .tagRow {
   align-items: center;
   display: flex;
-}
-
-.tag {
-  align-items: center;
-  background-color: var(--bg-white);
-  border-radius: 4px;
-  color: var(--label-assistive);
-  display: inline-flex;
-  padding: 2px 6px;
+  gap: 4px;
 }
 
 .detailSection {
@@ -86,6 +78,9 @@
 }
 
 .footer {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   padding: 0 20px;
   padding-bottom: var(--safe-area-bottom);
 }

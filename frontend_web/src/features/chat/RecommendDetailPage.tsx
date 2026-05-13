@@ -1,25 +1,15 @@
 import { useEffect, useMemo } from "react";
 
 import { useGetChatHistoryQuery } from "@/features/chat/hooks/queries/useGetChatQuery";
-import { useClearChatDraftOnFlowExit } from "@/features/chat/hooks/useClearChatDraftOnFlowExit";
 import styles from "@/features/chat/styles/RecommendDetailPage.module.css";
-import {
-  getRecommendResultPath,
-  getSafeChatId,
-  getSafeMenuId,
-} from "@/features/chat/utils/recommendNavigation";
+import { getSafeChatId, getSafeMenuId } from "@/features/chat/utils/recommendNavigation";
 import { PATH } from "@/router/path";
+import { DataSourceBadge } from "@/shared/commons/badge/DataSourceBadge";
 import { Button } from "@/shared/commons/button/Button";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
-import {
-  navigateBack,
-  useNavigate,
-  useSearchParams,
-} from "@/shared/navigation/stackflowNavigation";
+import { useNavigate, useSearchParams } from "@/shared/navigation/stackflowNavigation";
 
 export default function RecommendDetailPage() {
-  useClearChatDraftOnFlowExit();
-
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const chatId = getSafeChatId(searchParams.get("chatId"));
@@ -60,10 +50,7 @@ export default function RecommendDetailPage() {
   if (isPending && !recommendation) {
     return (
       <section className={styles.page}>
-        <PageHeader
-          title="추천 상세"
-          onBack={() => navigateBack({ fallbackTo: getRecommendResultPath(chatId) })}
-        />
+        <PageHeader title="추천 상세" onBack={() => navigate(-1)} />
         <main className={styles.main}>
           <p className={`${styles.loadingText} typo-body4`}>추천 상세를 불러오는 중이에요</p>
         </main>
@@ -77,15 +64,7 @@ export default function RecommendDetailPage() {
 
   return (
     <section className={styles.page}>
-      <PageHeader
-        title="추천 상세"
-        onBack={() =>
-          navigateBack({
-            fallbackOptions: { replace: true },
-            fallbackTo: getRecommendResultPath(chatId),
-          })
-        }
-      />
+      <PageHeader title="추천 상세" onBack={() => navigate(-1)} />
 
       <main className={styles.main}>
         <div className={styles.content}>
@@ -95,7 +74,7 @@ export default function RecommendDetailPage() {
                 {recommendation.one_line_summary}
               </p>
 
-              <p className={`${styles.menuName} typo-h3`}>{recommendation.menu}</p>
+              <p className={`${styles.menuName} typo-title1`}>{recommendation.menu_name}</p>
               <div className={styles.titleRow}>
                 <div className={styles.titleGroup}>
                   {recommendation.brand && (
@@ -103,7 +82,10 @@ export default function RecommendDetailPage() {
                       {recommendation.brand}
                     </span>
                   )}
-                  <p className={`${styles.secondaryText} typo-label4`}>1{recommendation.amount}</p>
+                  <p className={`${styles.secondaryText} typo-label4`}>
+                    1{recommendation.unit_quantity} ({recommendation.weight}
+                    {recommendation.unit === 0 ? "g" : "ml"})
+                  </p>
                 </div>
                 <p className={`${styles.caloriesText} typo-title1`}>
                   {formatCalories(recommendation.calories)} kcal
@@ -112,7 +94,7 @@ export default function RecommendDetailPage() {
             </div>
 
             <div className={styles.tagRow}>
-              <span className={`${styles.tag} typo-caption`}>개인용</span>
+              {recommendation.data_source === 1 && <DataSourceBadge variant="personal" />}
             </div>
           </section>
 
@@ -132,12 +114,15 @@ export default function RecommendDetailPage() {
       </main>
 
       <footer className={styles.footer}>
+        <Button variant="outlined" size="large" color="primary" fullWidth onClick={() => {}}>
+          영양소 상세
+        </Button>
         <Button
           variant="filled"
           size="large"
           color="primary"
           fullWidth
-          onClick={() => navigate(getRecommendResultPath(chatId), { replace: true })}
+          onClick={() => navigate(-1)}
         >
           확인했어요
         </Button>
