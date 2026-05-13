@@ -21,6 +21,10 @@
   background-color: var(--bg-white);
 }
 
+.footerKeyboardOpen {
+  padding-bottom: 0;
+}
+
 .floatingCameraButtonWrapper {
   bottom: 20px;
   display: flex;

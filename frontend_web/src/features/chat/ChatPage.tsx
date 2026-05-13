@@ -316,7 +316,7 @@ export default function ChatPage() {
         <div ref={endAnchorRef} />
       </main>
 
-      <footer className={styles.footer}>
+      <footer className={`${styles.footer} ${isInputFocused ? styles.footerKeyboardOpen : ""}`}>
         {!hasAnyConversation && (
           <section className={`${styles.chipSection}`}>
             {QUICK_CHIP_LIST.map((chip) => (
