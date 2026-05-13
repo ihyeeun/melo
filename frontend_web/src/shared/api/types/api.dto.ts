@@ -237,7 +237,7 @@ export interface ChatHistoryItemResponseDto {
 
 export type amount_preference_level = "light" | "regular" | "hearty";
 
-export interface ChatRecommendItemResponseDto {
+export interface ChatRecommendItemResponseDto extends NullableMenuNutrientFields {
   menu_id: number;
   menu_name: string; //메뉴명
   brand?: string;
@@ -252,11 +252,24 @@ export interface ChatRecommendItemResponseDto {
   recommendation_reason: string;
 }
 
-export interface ChatRecommendResponseDto {
-  chat_category: string; //채팅 분류 ("feedback" or "recommendation")
-  intro_message: string; //추천 결과 전체를 소개하는 도입 문구
+export type ChatCategory = "recommendation" | "feedback";
+interface ChatResponseBaseDto {
+  chat_category: ChatCategory;
+  intro_message: string;
+}
+
+export type ChatRecommendResponseDto = ChatRecommendationResponseDto | ChatFeedbackResponseDto;
+
+export interface ChatRecommendationResponseDto extends ChatResponseBaseDto {
+  chat_category: "recommendation";
   recommendations: ChatRecommendItemResponseDto[];
+  feedback?: never;
+}
+
+export interface ChatFeedbackResponseDto extends ChatResponseBaseDto {
+  chat_category: "feedback";
   feedback: FeedbackDto;
+  recommendations?: never;
 }
 
 export interface FeedbackDto {
