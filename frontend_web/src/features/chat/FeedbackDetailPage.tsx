@@ -6,7 +6,7 @@ import {
   MealMenuNutrientDetail,
   type MealMenuNutrientSelection,
 } from "@/features/meal-record/components/MealMenuNutrientDetail";
-import { useMealDetatilQuery } from "@/features/meal-record/hooks/queries/useMealDetailQuery";
+import { useMealDetailQuery } from "@/features/meal-record/hooks/queries/useMealDetailQuery";
 import { Button } from "@/shared/commons/button/Button";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
 import { useNavigate, useSearchParams } from "@/shared/navigation/stackflowNavigation";
@@ -18,7 +18,7 @@ export default function FeedbackDetailPage() {
   const [searchParams] = useSearchParams();
   const menuId = getSafeMenuId(searchParams.get("menuId"));
 
-  const { data: meal, isPending } = useMealDetatilQuery(menuId);
+  const { data: meal, isPending } = useMealDetailQuery(menuId);
 
   if (isPending) {
     return <p>로딩 중..</p>;

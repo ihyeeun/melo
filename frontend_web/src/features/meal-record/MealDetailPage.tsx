@@ -7,7 +7,7 @@ import {
   type MealMenuNutrientSelection,
 } from "@/features/meal-record/components/MealMenuNutrientDetail";
 import { useMealDeleteMutation } from "@/features/meal-record/hooks/mutations/useMealDetailMutation";
-import { useMealDetatilQuery } from "@/features/meal-record/hooks/queries/useMealDetailQuery";
+import { useMealDetailQuery } from "@/features/meal-record/hooks/queries/useMealDetailQuery";
 import {
   formatMenuDraftKey,
   useMenuDraftInit,
@@ -74,7 +74,7 @@ export default function MealDetailPage() {
       ? replaceMenuIdCandidate
       : null;
 
-  const { data: meal, isPending, isError } = useMealDetatilQuery(menuId);
+  const { data: meal, isPending, isError } = useMealDetailQuery(menuId);
   const { mutate: deleteMealMutation, isPending: isDeletePending } = useMealDeleteMutation({
     onSuccess: () => {
       toast.success("삭제되었어요");

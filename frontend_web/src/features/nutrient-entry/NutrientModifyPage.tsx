@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 
-import { useMealDetatilQuery } from "@/features/meal-record/hooks/queries/useMealDetailQuery";
+import { useMealDetailQuery } from "@/features/meal-record/hooks/queries/useMealDetailQuery";
 import {
   formatMenuDraftKey,
   useMenuDraftUpsertPreviews,
@@ -106,7 +106,7 @@ export default function NutrientModifyPage() {
     data: fetchedMenu,
     isPending: isMenuPending,
     isError: isMenuError,
-  } = useMealDetatilQuery(menuId);
+  } = useMealDetailQuery(menuId);
 
   const resolvedMenu = useMemo<MealMenuItem | null>(() => {
     if (menuInState && fetchedMenu) {
@@ -313,12 +313,7 @@ export default function NutrientModifyPage() {
         }
 
         toast.success("개인 메뉴로 등록했어요");
-        const detailPath = getMealDetailPath(
-          dateKey,
-          mealType,
-          createdMenuId,
-          searchKeyword,
-        );
+        const detailPath = getMealDetailPath(dateKey, mealType, createdMenuId, searchKeyword);
         const detailPageState: MealDetailLocationState | undefined =
           menuId !== null && menuId !== createdMenuId ? { replaceMenuId: menuId } : undefined;
 

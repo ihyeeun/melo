@@ -4,7 +4,7 @@ import { useGetChatHistoryQuery } from "@/features/chat/hooks/queries/useGetChat
 import styles from "@/features/chat/styles/RecommendDetailPage.module.css";
 import { getSafeChatId, getSafeMenuId } from "@/features/chat/utils/recommendNavigation";
 import { NutrientDetailList } from "@/features/meal-record/components/NutrientDetailList";
-import { useMealDetatilQuery } from "@/features/meal-record/hooks/queries/useMealDetailQuery";
+import { useMealDetailQuery } from "@/features/meal-record/hooks/queries/useMealDetailQuery";
 import type { NutrientValues } from "@/features/meal-record/utils/nutrientDetail";
 import { PATH } from "@/router/path";
 import { MENU_NUTRIENT_FIELD_KEYS, MENU_UNIT } from "@/shared/api/types/api.dto";
@@ -21,7 +21,7 @@ export default function RecommendDetailPage() {
   const chatId = getSafeChatId(searchParams.get("chatId"));
   const menuId = getSafeMenuId(searchParams.get("menuId"));
   const { data, isPending } = useGetChatHistoryQuery();
-  const { data: menuDetail } = useMealDetatilQuery(menuId);
+  const { data: menuDetail } = useMealDetailQuery(menuId);
 
   const chatItem = useMemo(() => {
     if (chatId === null) return null;
