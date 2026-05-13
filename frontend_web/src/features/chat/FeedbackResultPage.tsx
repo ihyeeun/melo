@@ -3,9 +3,14 @@ import { useMemo } from "react";
 import { useGetChatHistoryQuery } from "@/features/chat/hooks/queries/useGetChatQuery";
 import styles from "@/features/chat/styles/RecommendResultPage.module.css";
 import { getFeedbackDetailPath, getSafeChatId } from "@/features/chat/utils/recommendNavigation";
+import { PATH } from "@/router/path";
 import { MealMenuCard } from "@/shared/commons/card/MealMenuCard";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
-import { useNavigate, useSearchParams } from "@/shared/navigation/stackflowNavigation";
+import {
+  navigateBack,
+  useNavigate,
+  useSearchParams,
+} from "@/shared/navigation/stackflowNavigation";
 
 export default function FeedbackResultPage() {
   const navigate = useNavigate();
@@ -28,7 +33,12 @@ export default function FeedbackResultPage() {
   if (isPending && !chatItem) {
     return (
       <section className={styles.page}>
-        <PageHeader title="메뉴 추천 결과" onBack={() => navigate(-1)} />
+        <PageHeader
+          title="메뉴 추천 결과"
+          onBack={() => {
+            navigateBack({ fallbackTo: PATH.CHAT });
+          }}
+        />
         <main className={styles.main}>
           <p className={`${styles.loadingText} typo-body4`}>추천 결과를 불러오는 중이에요</p>
         </main>
@@ -42,7 +52,12 @@ export default function FeedbackResultPage() {
 
   return (
     <section className={styles.page}>
-      <PageHeader title="메뉴 추천 결과" onBack={() => navigate(-1)} />
+      <PageHeader
+        title="메뉴 추천 결과"
+        onBack={() => {
+          navigateBack({ fallbackTo: PATH.CHAT });
+        }}
+      />
 
       <main className={styles.main}>
         <section className={styles.content}>

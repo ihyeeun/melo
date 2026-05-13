@@ -7,12 +7,12 @@ import {
   type MealMenuNutrientSelection,
 } from "@/features/meal-record/components/MealMenuNutrientDetail";
 import { useMealDetailQuery } from "@/features/meal-record/hooks/queries/useMealDetailQuery";
+import { PATH } from "@/router/path";
 import { Button } from "@/shared/commons/button/Button";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
-import { useNavigate, useSearchParams } from "@/shared/navigation/stackflowNavigation";
+import { navigateBack, useSearchParams } from "@/shared/navigation/stackflowNavigation";
 
 export default function FeedbackDetailPage() {
-  const navigate = useNavigate();
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [selection, setSelection] = useState<MealMenuNutrientSelection | null>(null);
   const [searchParams] = useSearchParams();
@@ -27,7 +27,12 @@ export default function FeedbackDetailPage() {
 
   return (
     <section className={styles.page}>
-      <PageHeader title="영양성분 상세" onBack={() => navigate(-1)} />
+      <PageHeader
+        title="영양성분 상세"
+        onBack={() => {
+          navigateBack({ fallbackTo: PATH.CHAT });
+        }}
+      />
 
       <main className={styles.main}>
         <div className={styles.content}>

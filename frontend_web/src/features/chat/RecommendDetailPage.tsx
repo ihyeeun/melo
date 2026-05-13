@@ -12,7 +12,11 @@ import { DataSourceBadge } from "@/shared/commons/badge/DataSourceBadge";
 import BottomSheet from "@/shared/commons/bottomSheet/BottomSheet";
 import { Button } from "@/shared/commons/button/Button";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
-import { useNavigate, useSearchParams } from "@/shared/navigation/stackflowNavigation";
+import {
+  navigateBack,
+  useNavigate,
+  useSearchParams,
+} from "@/shared/navigation/stackflowNavigation";
 
 export default function RecommendDetailPage() {
   const navigate = useNavigate();
@@ -28,7 +32,7 @@ export default function RecommendDetailPage() {
     return data?.chat_list.find((item) => item.id === chatId) ?? null;
   }, [chatId, data?.chat_list]);
   const recommendationPayload =
-    chatItem?.response_payload.chat_category === "recommendation"
+    chatItem?.response_payload?.chat_category === "recommendation"
       ? chatItem.response_payload
       : null;
 
@@ -52,7 +56,7 @@ export default function RecommendDetailPage() {
 
   useEffect(() => {
     if (chatId === null || menuId === null) {
-      navigate(PATH.CHAT, { replace: true });
+      navigateBack({ fallbackTo: PATH.CHAT });
       return;
     }
 
@@ -61,7 +65,7 @@ export default function RecommendDetailPage() {
     }
 
     if (!chatItem || !recommendation) {
-      navigate(PATH.CHAT, { replace: true });
+      navigateBack({ fallbackTo: PATH.CHAT });
     }
   }, [chatId, chatItem, isPending, menuId, navigate, recommendation]);
 
@@ -72,7 +76,12 @@ export default function RecommendDetailPage() {
   if (isPending && !recommendation) {
     return (
       <section className={styles.page}>
-        <PageHeader title="추천 상세" onBack={() => navigate(-1)} />
+        <PageHeader
+          title="추천 상세"
+          onBack={() => {
+            navigateBack({ fallbackTo: PATH.CHAT });
+          }}
+        />
         <main className={styles.main}>
           <p className={`${styles.loadingText} typo-body4`}>추천 상세를 불러오는 중이에요</p>
         </main>
@@ -88,7 +97,7 @@ export default function RecommendDetailPage() {
 
   return (
     <section className={styles.page}>
-      <PageHeader title="추천 상세" onBack={() => navigate(-1)} />
+      <PageHeader title="추천 상세" onBack={() => navigateBack({ fallbackTo: PATH.CHAT })} />
 
       <main className={styles.main}>
         <div className={styles.content}>
@@ -152,7 +161,7 @@ export default function RecommendDetailPage() {
           size="large"
           color="primary"
           fullWidth
-          onClick={() => navigate(-1)}
+          onClick={() => navigateBack({ fallbackTo: PATH.CHAT })}
         >
           확인했어요
         </Button>
