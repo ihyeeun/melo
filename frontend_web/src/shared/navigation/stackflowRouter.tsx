@@ -126,6 +126,7 @@ const ChatPage = createGuardedLazyActivity(
 const DiaryPage = createLazyActivity(() => import("@/features/diary/DiaryPage"));
 const RecommendResultPage = createLazyActivity(() => import("@/features/chat/RecommendResultPage"));
 const RecommendDetailPage = createLazyActivity(() => import("@/features/chat/RecommendDetailPage"));
+const FeedbackResultPage = createLazyActivity(() => import("@/features/chat/FeedbackResultPage"));
 
 const ACTIVITIES = {
   Home: HomePage,
@@ -155,6 +156,7 @@ const ACTIVITIES = {
   GoalEditTargetCalories: GoalEditPage,
   GoalEditNutrient: GoalEditPage,
   AccountDelete: createStaticActivity(AccountDeletePage),
+  FeedbackResult: FeedbackResultPage,
 };
 
 const ACTIVITY_ROUTES: Record<keyof typeof ACTIVITIES, RoutePath> = {
@@ -185,6 +187,7 @@ const ACTIVITY_ROUTES: Record<keyof typeof ACTIVITIES, RoutePath> = {
   GoalEditTargetCalories: PATH.GOAL_EDIT_TARGET_CALORIES,
   GoalEditNutrient: PATH.GOAL_EDIT_NUTRIENT,
   AccountDelete: "/account-delete",
+  FeedbackResult: PATH.FEEDBACK_RESULT,
 };
 
 type ActivityName = keyof typeof ACTIVITY_ROUTES;
@@ -513,9 +516,7 @@ function StackRenderer({ stack }: { stack: RenderableStack }) {
         <StackActivityFrame
           activity={activity}
           key={activity.key}
-          shouldAnimateEnter={
-            activity.transitionState === "enter-active" && !isBackTransition
-          }
+          shouldAnimateEnter={activity.transitionState === "enter-active" && !isBackTransition}
         />
       ))}
     </div>
@@ -674,8 +675,7 @@ function StackActivityFrame({
       const shouldPop =
         swipe.dragging &&
         (finalDragX >= swipe.width * SWIPE_TRIGGER_RATIO ||
-          (finalDragX >= SWIPE_VELOCITY_MIN_DISTANCE &&
-            swipe.velocity >= SWIPE_VELOCITY_TRIGGER));
+          (finalDragX >= SWIPE_VELOCITY_MIN_DISTANCE && swipe.velocity >= SWIPE_VELOCITY_TRIGGER));
 
       swipeRef.current = null;
       setIsSwipePending(false);
