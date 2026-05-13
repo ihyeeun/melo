@@ -1,10 +1,15 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { useGetChatHistoryQuery } from "@/features/chat/hooks/queries/useGetChatQuery";
 import styles from "@/features/chat/styles/RecommendDetailPage.module.css";
 import { getSafeChatId, getSafeMenuId } from "@/features/chat/utils/recommendNavigation";
+import { NutrientDetailList } from "@/features/meal-record/components/NutrientDetailList";
+import { useMealDetatilQuery } from "@/features/meal-record/hooks/queries/useMealDetailQuery";
+import type { NutrientValues } from "@/features/meal-record/utils/nutrientDetail";
 import { PATH } from "@/router/path";
+import { MENU_NUTRIENT_FIELD_KEYS, MENU_UNIT } from "@/shared/api/types/api.dto";
 import { DataSourceBadge } from "@/shared/commons/badge/DataSourceBadge";
+import BottomSheet from "@/shared/commons/bottomSheet/BottomSheet";
 import { Button } from "@/shared/commons/button/Button";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
 import { useNavigate, useSearchParams } from "@/shared/navigation/stackflowNavigation";
@@ -12,9 +17,11 @@ import { useNavigate, useSearchParams } from "@/shared/navigation/stackflowNavig
 export default function RecommendDetailPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const [isNutrientSheetOpen, setIsNutrientSheetOpen] = useState(false);
   const chatId = getSafeChatId(searchParams.get("chatId"));
   const menuId = getSafeMenuId(searchParams.get("menuId"));
   const { data, isPending } = useGetChatHistoryQuery();
+  const { data: menuDetail } = useMealDetatilQuery(menuId);
 
   const chatItem = useMemo(() => {
     if (chatId === null) return null;
@@ -27,6 +34,19 @@ export default function RecommendDetailPage() {
       chatItem.response_payload.recommendations.find((item) => item.menu_id === menuId) ?? null
     );
   }, [chatItem, menuId]);
+
+  const nutrientSource = menuDetail ?? recommendation;
+
+  const recommendationNutrientValues = useMemo<NutrientValues>(() => {
+    if (!nutrientSource) {
+      return {};
+    }
+
+    return MENU_NUTRIENT_FIELD_KEYS.reduce<NutrientValues>((acc, key) => {
+      acc[key] = nutrientSource[key] ?? null;
+      return acc;
+    }, {});
+  }, [nutrientSource]);
 
   useEffect(() => {
     if (chatId === null || menuId === null) {
@@ -61,6 +81,8 @@ export default function RecommendDetailPage() {
   if (!chatItem || !recommendation) {
     return null;
   }
+
+  const visibleNutrientSource = nutrientSource ?? recommendation;
 
   return (
     <section className={styles.page}>
@@ -114,7 +136,13 @@ export default function RecommendDetailPage() {
       </main>
 
       <footer className={styles.footer}>
-        <Button variant="outlined" size="large" color="primary" fullWidth onClick={() => {}}>
+        <Button
+          variant="outlined"
+          size="large"
+          color="primary"
+          fullWidth
+          onClick={() => setIsNutrientSheetOpen(true)}
+        >
           영양소 상세
         </Button>
         <Button
@@ -127,6 +155,24 @@ export default function RecommendDetailPage() {
           확인했어요
         </Button>
       </footer>
+
+      <BottomSheet
+        isOpen={isNutrientSheetOpen}
+        onClose={() => setIsNutrientSheetOpen(false)}
+        className={styles.nutrientBottomSheet}
+        disableContentDrag
+      >
+        <section className={styles.nutrientSheetContent}>
+          <h2 className={`${styles.nutrientSheetTitle} typo-title2`}>영양 정보</h2>
+          <NutrientDetailList
+            detailListId="recommend-nutrient-detail-list"
+            weight={visibleNutrientSource.weight}
+            weightUnit={visibleNutrientSource.unit === MENU_UNIT.MILLILITER ? "ml" : "g"}
+            calories={visibleNutrientSource.calories}
+            nutrientValues={recommendationNutrientValues}
+          />
+        </section>
+      </BottomSheet>
     </section>
   );
 }

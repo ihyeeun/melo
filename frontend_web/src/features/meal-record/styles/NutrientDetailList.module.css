@@ -1,0 +1,77 @@
+.detailList {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.detailGroup {
+  display: flex;
+  flex-direction: column;
+}
+
+.groupDivider {
+  background-color: var(--border-neutral);
+  height: 1px;
+  margin: 12px 0;
+  width: 100%;
+}
+
+.detailGroupRows {
+  display: flex;
+  flex-direction: column;
+}
+
+.detailRow {
+  align-items: center;
+  color: var(--label-normal);
+  display: flex;
+  gap: 8px;
+  justify-content: space-between;
+  padding: 8px 0;
+}
+
+.detailLabelSub {
+  color: var(--label-alternative);
+  padding-left: 4px;
+}
+
+.detailValue {
+  align-items: center;
+  display: inline-flex;
+  gap: 8px;
+  position: relative;
+}
+
+.warningButton {
+  align-items: center;
+  background: var(--interaction-alternative);
+  border: 0;
+  border-radius: 50%;
+  color: var(--label-alternative);
+  cursor: pointer;
+  display: inline-flex;
+  height: 20px;
+  justify-content: center;
+  margin-right: 8px;
+  outline: none;
+  padding: 0;
+  width: 20px;
+}
+
+.warningPositioner {
+  z-index: 3;
+}
+
+.warningTooltip {
+  background: var(--primary-normal);
+  border-radius: 6px;
+  color: var(--static-white);
+  max-width: min(360px, calc(100vw - 96px));
+  padding: 10px 14px;
+  white-space: normal;
+  width: max-content;
+}
+
+.textNormal {
+  color: var(--label-normal);
+}

@@ -101,3 +101,30 @@
 .tertiaryText {
   color: var(--label-assistive);
 }
+
+.nutrientBottomSheet :global(.react-modal-sheet-container) {
+  border-top-left-radius: 20px !important;
+  border-top-right-radius: 20px !important;
+}
+
+.nutrientBottomSheet :global(.react-modal-sheet-header) {
+  height: 40px;
+}
+
+.nutrientBottomSheet :global(.react-modal-sheet-drag-indicator) {
+  background: var(--gray-1100);
+  border-radius: 999px;
+  height: 4px;
+  width: 52px;
+}
+
+.nutrientSheetContent {
+  max-height: min(70dvh, 560px);
+  overflow-y: auto;
+  padding: 4px 26px 20px;
+}
+
+.nutrientSheetTitle {
+  color: var(--label-normal);
+  margin-bottom: 16px;
+}

@@ -1,15 +1,23 @@
 import { Tabs } from "@base-ui/react";
-import { Popover } from "@base-ui/react/popover";
 import { ChevronDown, MinusIcon, PlusIcon } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
-import { NUTRIENT_FORM_CONFIG } from "@/features/nutrient-entry/constants/nutrientDetailForm";
+import { NutrientDetailList } from "@/features/meal-record/components/NutrientDetailList";
+import {
+  formatNutrientValue,
+  type MainNutrientKey,
+  type NutrientValues,
+  resolveMainNutrientStates,
+  roundDecimal,
+  scaleNutrientValue,
+  scaleRequiredValue,
+  toNullableNumber,
+} from "@/features/meal-record/utils/nutrientDetail";
 import {
   type MealMenuItem,
   type MealServingInputMode,
   MENU_NUTRIENT_FIELD_KEYS,
   MENU_UNIT,
-  type MenuNutrientFieldKey,
 } from "@/shared/api/types/api.dto";
 import { Button } from "@/shared/commons/button/Button";
 import NumberField from "@/shared/commons/input/NumberField";
@@ -42,38 +50,11 @@ const QUANTITY_STEP_BASE = 0;
 const QUANTITY_INPUT_PATTERN = /^\d{0,4}(?:\.\d?)?$/;
 const UNIT_QUANTITY_PATTERN = /^\s*([\d.]+)\s*[^()]*\(([^)]+)\)\s*$/i;
 const WEIGHT_TOKEN_PATTERN = /([\d.]+)\s*(g|ml)\b/i;
-const DETAIL_WARNING_MESSAGE = [
-  "실제로는 더 많이 들어있을 수 있어요.",
-  "판매사에서 정확한 정보를 제공하고 있지 않아요.",
-] as const;
-
-type NutrientGroup = (typeof NUTRIENT_FORM_CONFIG)[number]["group"] | "serving";
-const DETAIL_GROUP_ORDER: ReadonlyArray<NutrientGroup> = [
-  "serving",
-  "carbs",
-  "protein",
-  "fat",
-  "sodium",
-  "caffeine",
-  "potassium",
-  "cholesterol",
-  "alcohol",
+const SUMMARY_MACROS: ReadonlyArray<{ key: MainNutrientKey; label: string }> = [
+  { key: "carbs", label: "탄수화물" },
+  { key: "protein", label: "단백질" },
+  { key: "fat", label: "지방" },
 ];
-
-type DetailRow = {
-  key: MenuNutrientFieldKey | "totalWeight";
-  label: string;
-  unit: "g" | "mg" | "ml";
-  value: number | null;
-  variant: "main" | "sub";
-  group: NutrientGroup;
-  showWarning: boolean;
-};
-
-type DetailGroupSection = {
-  group: NutrientGroup;
-  rows: DetailRow[];
-};
 
 type ParsedServingContext = {
   baseUnitCount: number;
@@ -87,32 +68,12 @@ type ResolvedServingValues = {
   scaleFactor: number;
 };
 
-type MainNutrientKey = "carbs" | "protein" | "fat";
-type MainNutrientState = {
-  value: number | null;
-  isEstimated: boolean;
-};
-type NutrientValues = Partial<Record<MenuNutrientFieldKey, number | null>>;
-
 function toPositiveNumber(value: number | null | undefined) {
   if (typeof value !== "number" || !Number.isFinite(value) || value <= 0) {
     return null;
   }
 
   return value;
-}
-
-function toNullableNumber(value: number | null | undefined) {
-  if (typeof value !== "number" || !Number.isFinite(value)) {
-    return null;
-  }
-
-  return value;
-}
-
-function roundDecimal(value: number, digits = 2) {
-  const factor = 10 ** digits;
-  return Math.round(value * factor) / factor;
 }
 
 function clampQuantityValue(value: number) {
@@ -145,123 +106,6 @@ function isQuantityInputAllowed(inputValue: string) {
   }
 
   return numeric <= MAX_QUANTITY;
-}
-
-function scaleNutrientValue(value: number | null | undefined, scaleFactor: number) {
-  if (typeof value !== "number" || !Number.isFinite(value)) {
-    return null;
-  }
-
-  return roundDecimal(value * scaleFactor);
-}
-
-function scaleRequiredValue(value: number, scaleFactor: number) {
-  return roundDecimal(value * scaleFactor);
-}
-
-function formatNutrientValue(value: number | null | undefined) {
-  if (typeof value !== "number" || !Number.isFinite(value)) {
-    return "0";
-  }
-
-  return value.toLocaleString("ko-KR", {
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 1,
-  });
-}
-
-const DETAIL_LABEL_OVERRIDES: Partial<Record<MenuNutrientFieldKey, string>> = {
-  sugars: "당류",
-  sugar_alchol: "당알코올(대체당)",
-};
-
-const MAIN_NUTRIENT_KEYS: ReadonlyArray<MainNutrientKey> = ["carbs", "protein", "fat"];
-const MAIN_NUTRIENT_KEY_SET: ReadonlySet<MenuNutrientFieldKey> = new Set(MAIN_NUTRIENT_KEYS);
-const SUMMARY_MACROS: ReadonlyArray<{ key: MainNutrientKey; label: string }> = [
-  { key: "carbs", label: "탄수화물" },
-  { key: "protein", label: "단백질" },
-  { key: "fat", label: "지방" },
-];
-const CHILD_NUTRIENT_KEYS_BY_PARENT: Record<
-  MainNutrientKey,
-  ReadonlyArray<MenuNutrientFieldKey>
-> = {
-  carbs: ["sugars", "sugar_alchol", "dietary_fiber"],
-  protein: [],
-  fat: ["sat_fat", "trans_fat", "un_sat_fat"],
-};
-
-function isMainNutrientKey(key: MenuNutrientFieldKey): key is MainNutrientKey {
-  return MAIN_NUTRIENT_KEY_SET.has(key);
-}
-
-function resolveMainNutrientStates(
-  nutrientValues: NutrientValues,
-): Record<MainNutrientKey, MainNutrientState> {
-  return MAIN_NUTRIENT_KEYS.reduce(
-    (acc, key) => {
-      const directValue = toNullableNumber(nutrientValues[key]);
-      if (directValue !== null) {
-        acc[key] = { value: directValue, isEstimated: false };
-        return acc;
-      }
-
-      const childValues = CHILD_NUTRIENT_KEYS_BY_PARENT[key]
-        .map((childKey) => toNullableNumber(nutrientValues[childKey]))
-        .filter((value): value is number => value !== null);
-      if (childValues.length === 0) {
-        acc[key] = { value: null, isEstimated: false };
-        return acc;
-      }
-
-      acc[key] = {
-        value: roundDecimal(childValues.reduce((sum, value) => sum + value, 0)),
-        isEstimated: true,
-      };
-      return acc;
-    },
-    {} as Record<MainNutrientKey, MainNutrientState>,
-  );
-}
-
-function buildDetailRows({
-  nutrientValues,
-  mainNutrientStates,
-}: {
-  nutrientValues: NutrientValues;
-  mainNutrientStates: Record<MainNutrientKey, MainNutrientState>;
-}): DetailRow[] {
-  return NUTRIENT_FORM_CONFIG.map((field) => {
-    if (field.variant === "main" && isMainNutrientKey(field.key)) {
-      const resolvedMainNutrient = mainNutrientStates[field.key];
-      return {
-        key: field.key,
-        label: DETAIL_LABEL_OVERRIDES[field.key] ?? field.label,
-        unit: field.unit,
-        value: resolvedMainNutrient.value,
-        variant: field.variant,
-        group: field.group,
-        showWarning: resolvedMainNutrient.isEstimated,
-      };
-    }
-
-    return {
-      key: field.key,
-      label: DETAIL_LABEL_OVERRIDES[field.key] ?? field.label,
-      unit: field.unit,
-      value: toNullableNumber(nutrientValues[field.key]),
-      variant: field.variant,
-      group: field.group,
-      showWarning: false,
-    };
-  });
-}
-
-function buildDetailGroups(rows: DetailRow[]): DetailGroupSection[] {
-  return DETAIL_GROUP_ORDER.map((group) => ({
-    group,
-    rows: rows.filter((row) => row.group === group && row.value !== null),
-  })).filter((section) => section.rows.length > 0);
 }
 
 function parseServingContext(menu: MealMenuItem): ParsedServingContext {
@@ -452,16 +296,6 @@ export function MealMenuNutrientDetail({
         inputMode === "weight" ? resolvedServing.totalWeight : resolvedServing.unitCount,
     };
   }, [inputMode, mainNutrientStates, menu, nutrientValues, resolvedServing]);
-
-  const detailRows = useMemo(
-    () =>
-      buildDetailRows({
-        nutrientValues,
-        mainNutrientStates,
-      }),
-    [mainNutrientStates, nutrientValues],
-  );
-  const detailGroups = useMemo(() => buildDetailGroups(detailRows), [detailRows]);
 
   useEffect(() => {
     if (!onSelectionChange) {
@@ -711,83 +545,14 @@ export function MealMenuNutrientDetail({
               </section>
             )}
 
-            <div id={detailListId} className={styles.detailList}>
-              <div className={styles.detailRow}>
-                <p className="typo-title4">
-                  총 용량 {previewMenu.weight}
-                  {servingWeightUnit}
-                </p>
-
-                <div className={styles.detailValue}>
-                  <span className={`${styles.textNormal} typo-body1`}>
-                    {formatNutrientValue(previewMenu.calories)} kcal
-                  </span>
-                </div>
-              </div>
-              {detailGroups.map((group, groupIndex) => (
-                <section key={group.group} className={styles.detailGroup}>
-                  <div className={styles.detailGroupRows}>
-                    {group.rows.map((row) => {
-                      return (
-                        <div key={row.key}>
-                          {groupIndex > 0 && row.variant === "main" && (
-                            <div className={styles.groupDivider} />
-                          )}
-
-                          <article className={styles.detailRow}>
-                            <p
-                              className={`${row.variant === "sub" ? "typo-body4" : "typo-title4"} ${
-                                row.variant === "sub" ? styles.detailLabelSub : styles.textNormal
-                              }`}
-                            >
-                              {row.label}
-                            </p>
-
-                            <div className={styles.detailValue}>
-                              {row.showWarning && row.key !== "totalWeight" && (
-                                <Popover.Root>
-                                  <Popover.Trigger
-                                    type="button"
-                                    className={styles.warningButton}
-                                    aria-label="영양성분 주의 안내"
-                                  >
-                                    <img src="/icons/info-icon.svg" />
-                                  </Popover.Trigger>
-
-                                  <Popover.Portal>
-                                    <Popover.Positioner
-                                      className={styles.warningPositioner}
-                                      side="left"
-                                      align="center"
-                                      sideOffset={12}
-                                      collisionPadding={50}
-                                    >
-                                      <Popover.Popup
-                                        className={`${styles.warningTooltip} typo-label3`}
-                                        initialFocus={false}
-                                        finalFocus={false}
-                                      >
-                                        {DETAIL_WARNING_MESSAGE[0]}
-                                        <br />
-                                        {DETAIL_WARNING_MESSAGE[1]}
-                                      </Popover.Popup>
-                                    </Popover.Positioner>
-                                  </Popover.Portal>
-                                </Popover.Root>
-                              )}
-
-                              <span className={row.variant === "sub" ? "typo-body3" : "typo-body1"}>
-                                {formatNutrientValue(row.value)} {row.unit}
-                              </span>
-                            </div>
-                          </article>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </section>
-              ))}
-            </div>
+            <NutrientDetailList
+              detailListId={detailListId}
+              className={styles.detailList}
+              weight={previewMenu.weight}
+              weightUnit={servingWeightUnit}
+              calories={previewMenu.calories}
+              nutrientValues={nutrientValues}
+            />
           </>
         )}
       </section>
