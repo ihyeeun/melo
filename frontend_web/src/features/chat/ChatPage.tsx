@@ -1,4 +1,4 @@
-import { Camera, ChevronRight, ChevronUp, CircleAlert, Plus, X } from "lucide-react";
+import { Camera, Check, ChevronRight, ChevronUp, CircleAlert, Plus, X } from "lucide-react";
 import type { FormEvent } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
@@ -6,7 +6,10 @@ import { useSendMessageMutation } from "@/features/chat/hooks/mutations/useSendM
 import { useGetChatHistoryQuery } from "@/features/chat/hooks/queries/useGetChatQuery";
 import styles from "@/features/chat/styles/ChatPage.module.css";
 import { getMealTypeFromCurrentTime } from "@/features/chat/utils/chatMeal";
-import { getRecommendResultPath } from "@/features/chat/utils/recommendNavigation";
+import {
+  getRecommendDetailPath,
+  getRecommendResultPath,
+} from "@/features/chat/utils/recommendNavigation";
 import {
   formatMenuDraftKey,
   useMenuDraftInit,
@@ -15,6 +18,8 @@ import { PATH } from "@/router/path";
 import { getMealSearchPath } from "@/router/pathHelpers";
 import { AppApiError } from "@/shared/api/appApi";
 import { type ChatRecommendItemResponseDto } from "@/shared/api/types/api.dto";
+import { DataSourceBadge } from "@/shared/commons/badge/DataSourceBadge";
+import { Button } from "@/shared/commons/button/Button";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
 import { toast } from "@/shared/commons/toast/toast";
 import { useNavigate } from "@/shared/navigation/stackflowNavigation";
@@ -469,11 +474,37 @@ function RecommendationSection({
               {formatCalories(topRecommendation.calories)} kcal
             </span>
           </div>
-        </div>
+          {topRecommendation.data_source === 1 && (
+            <div className={styles.dataSourceBadgeWrapper}>
+              <DataSourceBadge
+                variant="personal"
+                // active={isSelected}
+              />
+            </div>
+          )}
 
-        {topRecommendation.data_source === 0 && (
-          <span className={`${styles.dataSourceBadge} typo-label4`}>개인용</span>
-        )}
+          <div className={styles.recommendAction}>
+            <Button
+              size="small"
+              onClick={() => {
+                toast.warning("식사 기록하기 기능은 아직 준비 중이에요.");
+              }}
+            >
+              식사 기록
+              <Check size={16} className={styles.recommendActionIcon} />
+            </Button>
+            <Button
+              size="small"
+              variant="outlined"
+              onClick={() => {
+                navigate(getRecommendDetailPath(chatId, topRecommendation.menu_id));
+              }}
+            >
+              자세히 보기
+              <ChevronRight size={16} className={styles.recommendActionIcon} />
+            </Button>
+          </div>
+        </div>
       </article>
 
       {remaining.length > 0 ? (

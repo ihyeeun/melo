@@ -219,7 +219,6 @@
 .recommendContents {
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
   width: 100%;
 }
 
@@ -611,4 +610,19 @@
   border-left: 8px solid transparent;
   border-right: 8px solid transparent;
   border-top: 9px solid var(--bg-white);
+}
+
+.recommendAction {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 16px;
+}
+
+.dataSourceBadgeWrapper {
+  margin-top: 6px;
+}
+
+.recommendActionIcon {
+  margin-left: 4px;
 }
