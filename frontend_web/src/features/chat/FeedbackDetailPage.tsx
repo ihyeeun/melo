@@ -48,10 +48,12 @@ export default function FeedbackDetailPage() {
           color="primary"
           fullWidth
           onClick={() => {}}
-          interaction={selection ? "normal" : "disable"}
+          // interaction={selection ? "normal" : "disable"}
+          interaction="disable"
           disabled={!selection}
         >
           {/* {isAlreadyQueued ? "수정하기" : "담기"} */}
+          담기
         </Button>
       </footer>
     </section>
