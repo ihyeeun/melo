@@ -127,6 +127,7 @@ const DiaryPage = createLazyActivity(() => import("@/features/diary/DiaryPage"))
 const RecommendResultPage = createLazyActivity(() => import("@/features/chat/RecommendResultPage"));
 const RecommendDetailPage = createLazyActivity(() => import("@/features/chat/RecommendDetailPage"));
 const FeedbackResultPage = createLazyActivity(() => import("@/features/chat/FeedbackResultPage"));
+const FeedbackDetailPage = createLazyActivity(() => import("@/features/chat/FeedbackDetailPage"));
 
 const ACTIVITIES = {
   Home: HomePage,
@@ -157,6 +158,7 @@ const ACTIVITIES = {
   GoalEditNutrient: GoalEditPage,
   AccountDelete: createStaticActivity(AccountDeletePage),
   FeedbackResult: FeedbackResultPage,
+  FeedbackDetail: FeedbackDetailPage,
 };
 
 const ACTIVITY_ROUTES: Record<keyof typeof ACTIVITIES, RoutePath> = {
@@ -188,6 +190,7 @@ const ACTIVITY_ROUTES: Record<keyof typeof ACTIVITIES, RoutePath> = {
   GoalEditNutrient: PATH.GOAL_EDIT_NUTRIENT,
   AccountDelete: "/account-delete",
   FeedbackResult: PATH.FEEDBACK_RESULT,
+  FeedbackDetail: PATH.FEEDBACK_DETAIL,
 };
 
 type ActivityName = keyof typeof ACTIVITY_ROUTES;

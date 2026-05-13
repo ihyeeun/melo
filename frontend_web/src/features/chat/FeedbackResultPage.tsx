@@ -2,7 +2,7 @@ import { useMemo } from "react";
 
 import { useGetChatHistoryQuery } from "@/features/chat/hooks/queries/useGetChatQuery";
 import styles from "@/features/chat/styles/RecommendResultPage.module.css";
-import { getSafeChatId } from "@/features/chat/utils/recommendNavigation";
+import { getFeedbackDetailPath, getSafeChatId } from "@/features/chat/utils/recommendNavigation";
 import { MealMenuCard } from "@/shared/commons/card/MealMenuCard";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
 import { useNavigate, useSearchParams } from "@/shared/navigation/stackflowNavigation";
@@ -36,7 +36,9 @@ export default function FeedbackResultPage() {
     );
   }
 
-  const handleMenuClick = (menuId: number) => {};
+  const handleMenuClick = ({ menuId, chatId }: { menuId: number; chatId: number }) => {
+    navigate(getFeedbackDetailPath(chatId, menuId));
+  };
 
   return (
     <section className={styles.page}>
@@ -60,7 +62,7 @@ export default function FeedbackResultPage() {
                   unit={menu.unit}
                   icon={isSelected ? "check" : "add"}
                   state={isSelected ? "select" : "default"}
-                  onClick={() => handleMenuClick(menu.menu_id)}
+                  onClick={() => handleMenuClick({ menuId: menu.menu_id, chatId })}
                   onIconClick={() => {}}
                 />
               );

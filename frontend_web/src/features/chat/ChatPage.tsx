@@ -7,6 +7,7 @@ import { useGetChatHistoryQuery } from "@/features/chat/hooks/queries/useGetChat
 import styles from "@/features/chat/styles/ChatPage.module.css";
 import { getMealTypeFromCurrentTime } from "@/features/chat/utils/chatMeal";
 import {
+  getFeedbackResultPath,
   getRecommendDetailPath,
   getRecommendResultPath,
 } from "@/features/chat/utils/recommendNavigation";
@@ -219,7 +220,10 @@ export default function ChatPage() {
                     ) : null}
 
                     {chatItem.response_payload.chat_category === "feedback" ? (
-                      <FeedbackSection feedback={chatItem.response_payload.feedback} />
+                      <FeedbackSection
+                        chatId={chatItem.id}
+                        feedback={chatItem.response_payload.feedback}
+                      />
                     ) : null}
                   </div>
                 </section>
@@ -540,10 +544,11 @@ function RecommendationSection({
   );
 }
 
-function FeedbackSection({ feedback }: { feedback: FeedbackDto }) {
+function FeedbackSection({ chatId, feedback }: { chatId: number; feedback: FeedbackDto }) {
   const [isMenuListOpen, setIsMenuListOpen] = useState(false);
   const primaryMenu = feedback.menus[0];
   const hasMultipleMenus = feedback.menus.length > 1;
+  const navigate = useNavigate();
 
   return (
     <div className={styles.feedbackSection}>
@@ -623,7 +628,7 @@ function FeedbackSection({ feedback }: { feedback: FeedbackDto }) {
               variant="outlined"
               fullWidth
               onClick={() => {
-                toast.warning("자세히 보기 기능은 아직 준비 중이에요.");
+                navigate(getFeedbackResultPath(chatId));
               }}
             >
               자세히 보기
