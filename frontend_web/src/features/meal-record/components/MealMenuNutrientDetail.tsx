@@ -3,6 +3,7 @@ import { ChevronDown, MinusIcon, PlusIcon } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
 import { NutrientDetailList } from "@/features/meal-record/components/NutrientDetailList";
+import { NutrientWarningPopover } from "@/features/meal-record/components/NutrientWarningPopover";
 import {
   formatNutrientValue,
   type MainNutrientKey,
@@ -360,6 +361,7 @@ export function MealMenuNutrientDetail({
   const summaryMacroItems = SUMMARY_MACROS.map((macro) => ({
     ...macro,
     value: mainNutrientStates[macro.key].value,
+    showWarning: mainNutrientStates[macro.key].isEstimated,
   }));
   const isEditAndAddEnabled = typeof onEditAndAdd === "function";
   const handleEditAndAddClick = () => {
@@ -384,7 +386,10 @@ export function MealMenuNutrientDetail({
         <div className={styles.macroRow}>
           {summaryMacroItems.map((macro) => (
             <article key={macro.key} className={styles.macroItem}>
-              <p className={`typo-label3 ${styles.textAlternative}`}>{macro.label}</p>
+              <div className={styles.macroLabelRow}>
+                <p className={`typo-label3 ${styles.textAlternative}`}>{macro.label}</p>
+                {macro.showWarning && <NutrientWarningPopover />}
+              </div>
               <p className={`typo-body1 ${styles.macroValue}`}>
                 <span className={styles.macroNumber}>{formatNutrientValue(macro.value)}</span>
                 <span className={`typo-body1 ${styles.macroUnit}`}>g</span>

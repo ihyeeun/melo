@@ -40,6 +40,13 @@
   padding: 16px;
 }
 
+.macroLabelRow {
+  align-items: center;
+  display: flex;
+  min-width: 0;
+  justify-content: space-between;
+}
+
 .macroValue {
   align-items: baseline;
   color: var(--label-primary);
