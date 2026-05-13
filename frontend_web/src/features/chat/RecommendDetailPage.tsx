@@ -1,14 +1,15 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { useGetChatHistoryQuery } from "@/features/chat/hooks/queries/useGetChatQuery";
-import { useClearChatDraftOnFlowExit } from "@/features/chat/hooks/useClearChatDraftOnFlowExit";
 import styles from "@/features/chat/styles/RecommendDetailPage.module.css";
-import {
-  getRecommendResultPath,
-  getSafeChatId,
-  getSafeMenuId,
-} from "@/features/chat/utils/recommendNavigation";
+import { getSafeChatId, getSafeMenuId } from "@/features/chat/utils/recommendNavigation";
+import { NutrientDetailList } from "@/features/meal-record/components/NutrientDetailList";
+import { useMealDetailQuery } from "@/features/meal-record/hooks/queries/useMealDetailQuery";
+import type { NutrientValues } from "@/features/meal-record/utils/nutrientDetail";
 import { PATH } from "@/router/path";
+import { MENU_NUTRIENT_FIELD_KEYS, MENU_UNIT } from "@/shared/api/types/api.dto";
+import { DataSourceBadge } from "@/shared/commons/badge/DataSourceBadge";
+import BottomSheet from "@/shared/commons/bottomSheet/BottomSheet";
 import { Button } from "@/shared/commons/button/Button";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
 import {
@@ -18,29 +19,44 @@ import {
 } from "@/shared/navigation/stackflowNavigation";
 
 export default function RecommendDetailPage() {
-  useClearChatDraftOnFlowExit();
-
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const [isNutrientSheetOpen, setIsNutrientSheetOpen] = useState(false);
   const chatId = getSafeChatId(searchParams.get("chatId"));
   const menuId = getSafeMenuId(searchParams.get("menuId"));
   const { data, isPending } = useGetChatHistoryQuery();
+  const { data: menuDetail } = useMealDetailQuery(menuId);
 
   const chatItem = useMemo(() => {
     if (chatId === null) return null;
     return data?.chat_list.find((item) => item.id === chatId) ?? null;
   }, [chatId, data?.chat_list]);
+  const recommendationPayload =
+    chatItem?.response_payload?.chat_category === "recommendation"
+      ? chatItem.response_payload
+      : null;
 
   const recommendation = useMemo(() => {
-    if (!chatItem || menuId === null) return null;
-    return (
-      chatItem.response_payload.recommendations.find((item) => item.menu_id === menuId) ?? null
-    );
-  }, [chatItem, menuId]);
+    if (!recommendationPayload || menuId === null) return null;
+    return recommendationPayload.recommendations.find((item) => item.menu_id === menuId) ?? null;
+  }, [recommendationPayload, menuId]);
+
+  const nutrientSource = menuDetail ?? recommendation;
+
+  const recommendationNutrientValues = useMemo<NutrientValues>(() => {
+    if (!nutrientSource) {
+      return {};
+    }
+
+    return MENU_NUTRIENT_FIELD_KEYS.reduce<NutrientValues>((acc, key) => {
+      acc[key] = nutrientSource[key] ?? null;
+      return acc;
+    }, {});
+  }, [nutrientSource]);
 
   useEffect(() => {
     if (chatId === null || menuId === null) {
-      navigate(PATH.CHAT, { replace: true });
+      navigateBack({ fallbackTo: PATH.CHAT });
       return;
     }
 
@@ -49,7 +65,7 @@ export default function RecommendDetailPage() {
     }
 
     if (!chatItem || !recommendation) {
-      navigate(PATH.CHAT, { replace: true });
+      navigateBack({ fallbackTo: PATH.CHAT });
     }
   }, [chatId, chatItem, isPending, menuId, navigate, recommendation]);
 
@@ -62,7 +78,9 @@ export default function RecommendDetailPage() {
       <section className={styles.page}>
         <PageHeader
           title="추천 상세"
-          onBack={() => navigateBack({ fallbackTo: getRecommendResultPath(chatId) })}
+          onBack={() => {
+            navigateBack({ fallbackTo: PATH.CHAT });
+          }}
         />
         <main className={styles.main}>
           <p className={`${styles.loadingText} typo-body4`}>추천 상세를 불러오는 중이에요</p>
@@ -75,17 +93,11 @@ export default function RecommendDetailPage() {
     return null;
   }
 
+  const visibleNutrientSource = nutrientSource ?? recommendation;
+
   return (
     <section className={styles.page}>
-      <PageHeader
-        title="추천 상세"
-        onBack={() =>
-          navigateBack({
-            fallbackOptions: { replace: true },
-            fallbackTo: getRecommendResultPath(chatId),
-          })
-        }
-      />
+      <PageHeader title="추천 상세" onBack={() => navigateBack({ fallbackTo: PATH.CHAT })} />
 
       <main className={styles.main}>
         <div className={styles.content}>
@@ -95,7 +107,7 @@ export default function RecommendDetailPage() {
                 {recommendation.one_line_summary}
               </p>
 
-              <p className={`${styles.menuName} typo-h3`}>{recommendation.menu}</p>
+              <p className={`${styles.menuName} typo-title1`}>{recommendation.menu_name}</p>
               <div className={styles.titleRow}>
                 <div className={styles.titleGroup}>
                   {recommendation.brand && (
@@ -103,7 +115,10 @@ export default function RecommendDetailPage() {
                       {recommendation.brand}
                     </span>
                   )}
-                  <p className={`${styles.secondaryText} typo-label4`}>1{recommendation.amount}</p>
+                  <p className={`${styles.secondaryText} typo-label4`}>
+                    1{recommendation.unit_quantity} ({recommendation.weight}
+                    {recommendation.unit === 0 ? "g" : "ml"})
+                  </p>
                 </div>
                 <p className={`${styles.caloriesText} typo-title1`}>
                   {formatCalories(recommendation.calories)} kcal
@@ -112,7 +127,7 @@ export default function RecommendDetailPage() {
             </div>
 
             <div className={styles.tagRow}>
-              <span className={`${styles.tag} typo-caption`}>개인용</span>
+              {recommendation.data_source === 1 && <DataSourceBadge variant="personal" />}
             </div>
           </section>
 
@@ -133,15 +148,42 @@ export default function RecommendDetailPage() {
 
       <footer className={styles.footer}>
         <Button
+          variant="outlined"
+          size="large"
+          color="primary"
+          fullWidth
+          onClick={() => setIsNutrientSheetOpen(true)}
+        >
+          영양소 상세
+        </Button>
+        <Button
           variant="filled"
           size="large"
           color="primary"
           fullWidth
-          onClick={() => navigate(getRecommendResultPath(chatId), { replace: true })}
+          onClick={() => navigateBack({ fallbackTo: PATH.CHAT })}
         >
           확인했어요
         </Button>
       </footer>
+
+      <BottomSheet
+        isOpen={isNutrientSheetOpen}
+        onClose={() => setIsNutrientSheetOpen(false)}
+        className={styles.nutrientBottomSheet}
+        disableContentDrag
+      >
+        <section className={styles.nutrientSheetContent}>
+          <h2 className={`${styles.nutrientSheetTitle} typo-title2`}>영양 정보</h2>
+          <NutrientDetailList
+            detailListId="recommend-nutrient-detail-list"
+            weight={visibleNutrientSource.weight}
+            weightUnit={visibleNutrientSource.unit === MENU_UNIT.MILLILITER ? "ml" : "g"}
+            calories={visibleNutrientSource.calories}
+            nutrientValues={recommendationNutrientValues}
+          />
+        </section>
+      </BottomSheet>
     </section>
   );
 }

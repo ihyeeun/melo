@@ -7,7 +7,7 @@ import {
   type MealMenuNutrientSelection,
 } from "@/features/meal-record/components/MealMenuNutrientDetail";
 import { useMealDeleteMutation } from "@/features/meal-record/hooks/mutations/useMealDetailMutation";
-import { useMealDetatilQuery } from "@/features/meal-record/hooks/queries/useMealDetailQuery";
+import { useMealDetailQuery } from "@/features/meal-record/hooks/queries/useMealDetailQuery";
 import {
   formatMenuDraftKey,
   useMenuDraftInit,
@@ -19,7 +19,7 @@ import {
 import styles from "@/features/meal-record/styles/MealDetailPage.module.css";
 import type { NutrientModifyLocationState } from "@/features/nutrient-entry/types/nutrientEntry.state";
 import { PATH } from "@/router/path";
-import { getMealRecordPath, getMealSearchPath, type PageKey } from "@/router/pathHelpers";
+import { getMealRecordPath } from "@/router/pathHelpers";
 import { type MealMenuItem, MENU_DATA_SOURCE, MENU_UNIT } from "@/shared/api/types/api.dto";
 import { Button } from "@/shared/commons/button/Button";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
@@ -50,9 +50,6 @@ export default function MealDetailPage() {
   const dateKey = getSafeDateKey(searchParams.get("date"));
   const mealType = getMealType(searchParams.get("mealType"));
   const searchKeyword = getSafeKeyword(searchParams.get("keyword"));
-  const rawPageKey = searchParams.get("pageKey");
-  const pageKey: PageKey | null =
-    rawPageKey === "MEAL_SEARCH" || rawPageKey === "MEAL_RECORD" ? rawPageKey : null;
   const draftKey = formatMenuDraftKey(dateKey, mealType);
 
   const rawMenuId = searchParams.get("menuId");
@@ -77,7 +74,7 @@ export default function MealDetailPage() {
       ? replaceMenuIdCandidate
       : null;
 
-  const { data: meal, isPending, isError } = useMealDetatilQuery(menuId);
+  const { data: meal, isPending, isError } = useMealDetailQuery(menuId);
   const { mutate: deleteMealMutation, isPending: isDeletePending } = useMealDeleteMutation({
     onSuccess: () => {
       toast.success("삭제되었어요");
@@ -210,15 +207,7 @@ export default function MealDetailPage() {
   const isPersonalMenuData = meal.data_source === MENU_DATA_SOURCE.PERSONAL;
 
   const getBackFallbackPath = () => {
-    if (pageKey === "MEAL_SEARCH") {
-      return getMealSearchPath(dateKey, mealType, searchKeyword);
-    }
-
-    if (pageKey === "MEAL_RECORD") {
-      return getMealRecordPath(dateKey, mealType);
-    }
-
-    return PATH.HOME;
+    return getMealRecordPath(dateKey, mealType);
   };
 
   const handleGoBack = () => {
@@ -238,12 +227,10 @@ export default function MealDetailPage() {
     quantity: number,
     wasQueuedInDraft: boolean,
   ) => {
-    const nextPageKey = pageKey ?? "MEAL_RECORD";
     const modifyQueryParams = new URLSearchParams({
       date: dateKey,
       mealType,
       menuId: String(menuToModify.id),
-      pageKey: nextPageKey,
     });
     if (searchKeyword.length > 0) {
       modifyQueryParams.set("keyword", searchKeyword);
@@ -258,7 +245,6 @@ export default function MealDetailPage() {
       quantity,
       dateKey,
       mealType,
-      pageKey: nextPageKey,
       wasQueuedInDraft,
       brandName: menuToModify.brand ?? meal.brand,
       foodName: menuToModify.name ?? meal.name,

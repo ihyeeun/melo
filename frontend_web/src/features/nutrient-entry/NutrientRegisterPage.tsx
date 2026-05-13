@@ -149,13 +149,7 @@ export default function NutrientRegisterPage() {
 
     registerManualMenu(payload, {
       onSuccess: (savedMenuId) => {
-        const returnPath = getMealDetailPath(
-          dateKey,
-          mealType,
-          savedMenuId,
-          "MEAL_SEARCH",
-          searchKeyword,
-        );
+        const returnPath = getMealDetailPath(dateKey, mealType, savedMenuId, searchKeyword);
         toast.success("메뉴가 등록되었어요");
         navigation(returnPath, { replace: true });
       },

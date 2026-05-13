@@ -21,6 +21,10 @@
   background-color: var(--bg-white);
 }
 
+.footerKeyboardOpen {
+  padding-bottom: 0;
+}
+
 .floatingCameraButtonWrapper {
   bottom: 20px;
   display: flex;
@@ -183,14 +187,16 @@
   white-space: pre-wrap;
 }
 
-.recommendationSection {
+.recommendationSection,
+.feedbackSection {
   display: flex;
   flex-direction: column;
   gap: 8px;
   width: 100%;
 }
 
-.recommendCard {
+.recommendCard,
+.feedbackCard {
   background-color: var(--bg-white);
   border: 1px solid var(--border-neutral);
   border-radius: 8px;
@@ -216,11 +222,16 @@
   width: fit-content;
 }
 
-.recommendContents {
+.recommendContents,
+.feedbackContents {
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
   width: 100%;
+}
+
+.feedbackContents {
+  border-top: 1px solid var(--border-neutral);
+  padding-top: 16px;
 }
 
 .recommendMenuName {
@@ -235,7 +246,6 @@
 .recommendMetaRow {
   align-items: flex-end;
   display: flex;
-  justify-content: space-between;
 }
 
 .menuInfoRow {
@@ -253,6 +263,139 @@
 
 .recommendCalories {
   color: var(--label-normal);
+  margin-left: auto;
+}
+
+.feedbackScoreGauge {
+  align-items: center;
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.feedbackGaugeArc {
+  aspect-ratio: 220 / 100;
+  position: relative;
+  width: 100%;
+}
+
+.feedbackGaugeSvg {
+  display: block;
+  height: 100%;
+  width: 100%;
+}
+
+.feedbackGaugeTrack,
+.feedbackGaugeValue {
+  fill: none;
+  stroke-linecap: round;
+  stroke-width: 23px;
+}
+
+.feedbackGaugeTrack {
+  stroke: var(--bg-normal);
+}
+
+.feedbackGaugeValue {
+  stroke: var(--primary-normal);
+  transition: stroke-dasharray 300ms ease;
+}
+
+.feedbackScoreLabel {
+  left: 50%;
+  position: absolute;
+  text-align: center;
+  top: 55%;
+  transform: translateX(-50%);
+}
+
+.feedbackScoreValue {
+  color: var(--label-normal);
+}
+
+.feedbackScoreCaption {
+  color: var(--label-assistive);
+  margin-top: 2px;
+}
+
+.feedbackGaugeCharacter {
+  height: 36px;
+  position: absolute;
+  transform: translate(-50%, -50%);
+  width: 36px;
+  z-index: 1;
+}
+
+.feedbackMenuSummary {
+  display: flex;
+  flex-direction: column;
+}
+
+.feedbackMenuTitle {
+  color: var(--label-normal);
+  overflow-wrap: anywhere;
+}
+
+.feedbackMenuMeta {
+  color: var(--label-assistive);
+}
+
+.feedbackCalories {
+  color: var(--label-normal);
+  white-space: nowrap;
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+}
+
+.feedbackMenuToggle {
+  align-items: end;
+  color: var(--label-normal);
+  display: inline-flex;
+  flex-shrink: 0;
+  gap: 4px;
+}
+
+.feedbackMenuChevron {
+  transform: rotate(180deg);
+  transition: transform 180ms ease;
+  margin-left: 4px;
+}
+
+.feedbackMenuChevronOpen {
+  transform: rotate(0deg);
+}
+
+.feedbackMenuList {
+  background-color: var(--bg-normal);
+  display: flex;
+  flex-direction: column;
+  list-style: none;
+  margin: 0;
+  padding: 8px 12px;
+  border-radius: 8px;
+  margin-top: 4px;
+  gap: 4px;
+}
+
+.feedbackMenuItem {
+  align-items: center;
+  display: flex;
+}
+
+.feedbackMenuItemName {
+  color: var(--label-normal);
+}
+
+.feedbackMenuItemAmount {
+  color: var(--label-assistive);
+  margin-top: 2px;
+}
+
+.feedbackMenuItemCalories {
+  color: var(--label-alternative);
+  flex-shrink: 0;
+  margin-left: auto;
 }
 
 .addAction {
@@ -611,4 +754,32 @@
   border-left: 8px solid transparent;
   border-right: 8px solid transparent;
   border-top: 9px solid var(--bg-white);
+}
+
+.recommendAction,
+.feedbackAction {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 16px;
+}
+
+.dataSourceBadgeWrapper {
+  margin-top: 6px;
+}
+
+.recommendActionIcon,
+.feedbackActionIcon {
+  margin-left: 4px;
+}
+
+.textNormal {
+  color: var(--label-normal);
+}
+
+.textAlternative {
+  color: var(--label-alternative);
+}
+.textAssistive {
+  color: var(--label-assistive);
 }

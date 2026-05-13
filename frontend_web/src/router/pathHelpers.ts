@@ -1,15 +1,7 @@
 import { PATH } from "@/router/path";
 import type { MealType } from "@/shared/api/types/api.dto";
 
-export type PageKey = "MEAL_SEARCH" | "MEAL_RECORD";
-
-function buildPathQuery(
-  dateKey: string,
-  mealType: MealType,
-  menuId?: number,
-  pageKey?: PageKey,
-  keyword?: string,
-) {
+function buildPathQuery(dateKey: string, mealType: MealType, menuId?: number, keyword?: string) {
   const params = new URLSearchParams({
     date: dateKey,
     mealType,
@@ -17,9 +9,6 @@ function buildPathQuery(
 
   if (menuId !== undefined) {
     params.set("menuId", String(menuId));
-  }
-  if (pageKey !== undefined) {
-    params.set("pageKey", pageKey);
   }
   if (typeof keyword === "string" && keyword.trim().length > 0) {
     params.set("keyword", keyword.trim());
@@ -33,23 +22,16 @@ export function getMealRecordPath(dateKey: string, mealType: MealType) {
 }
 
 export function getMealSearchPath(dateKey: string, mealType: MealType, keyword?: string) {
-  return `${PATH.MEAL_RECORD_ADD_SEARCH}?${buildPathQuery(
-    dateKey,
-    mealType,
-    undefined,
-    undefined,
-    keyword,
-  )}`;
+  return `${PATH.MEAL_RECORD_ADD_SEARCH}?${buildPathQuery(dateKey, mealType, undefined, keyword)}`;
 }
 
 export function getMealDetailPath(
   dateKey: string,
   mealType: MealType,
   menuId: number,
-  pageKey?: PageKey,
   keyword?: string,
 ) {
-  return `${PATH.MEAL_DETAIL}?${buildPathQuery(dateKey, mealType, menuId, pageKey, keyword)}`;
+  return `${PATH.MEAL_DETAIL}?${buildPathQuery(dateKey, mealType, menuId, keyword)}`;
 }
 
 export function getPathWithMeal(
@@ -58,5 +40,5 @@ export function getPathWithMeal(
   mealType: MealType,
   keyword?: string,
 ) {
-  return `${path}?${buildPathQuery(dateKey, mealType, undefined, undefined, keyword)}`;
+  return `${path}?${buildPathQuery(dateKey, mealType, undefined, keyword)}`;
 }

@@ -3,9 +3,12 @@ import { ChevronDown, Minus, Plus } from "lucide-react";
 import { useMemo, useState } from "react";
 
 import styles from "@/features/chat/styles/ChatMealRecordBottomSheet.module.css";
-import { parseRecommendationServingContext } from "@/features/chat/utils/chatMeal";
-import type { ChatRecommendItemResponseDto, MealType } from "@/shared/api/types/api.dto";
-import { MEAL_TYPE_OPTIONS } from "@/shared/api/types/api.dto";
+import {
+  type ChatRecommendItemResponseDto,
+  MEAL_TYPE_OPTIONS,
+  type MealType,
+  MENU_UNIT,
+} from "@/shared/api/types/api.dto";
 import BottomSheet from "@/shared/commons/bottomSheet/BottomSheet";
 import { Button } from "@/shared/commons/button/Button";
 import NumberField from "@/shared/commons/input/NumberField";
@@ -51,6 +54,7 @@ type ChatMealRecordBottomSheetProps = {
 const QUANTITY_STEP = 0.5;
 const MIN_QUANTITY = 0.1;
 const CONSUMED_WEIGHT_PRECISION = 4;
+const UNIT_QUANTITY_PATTERN = /^\s*([\d.]+)\s*(.*)$/;
 
 function formatCalories(value: number) {
   return value.toLocaleString("ko-KR", {
@@ -63,8 +67,25 @@ function roundDecimal(value: number, digits = 1) {
   return Math.round(value * factor) / factor;
 }
 
-function parseServingContext(amount: string): ServingContext {
-  return parseRecommendationServingContext(amount);
+function toPositiveNumber(value: number | null | undefined) {
+  if (typeof value !== "number" || !Number.isFinite(value) || value <= 0) {
+    return null;
+  }
+
+  return value;
+}
+
+function resolveServingContext(recommendation: ChatRecommendItemResponseDto): ServingContext {
+  const matched = recommendation.unit_quantity.match(UNIT_QUANTITY_PATTERN);
+  const parsedCount = matched ? Number(matched[1]) : Number.NaN;
+  const unitLabel = matched?.[2]?.trim() || recommendation.unit_quantity || "인분";
+
+  return {
+    baseWeight: toPositiveNumber(recommendation.weight) ?? 1,
+    baseUnitCount: toPositiveNumber(parsedCount) ?? 1,
+    unitLabel,
+    weightUnit: recommendation.unit === MENU_UNIT.MILLILITER ? "ml" : "g",
+  };
 }
 
 function getDisplayValue(
@@ -137,7 +158,7 @@ export function ChatMealRecordBottomSheet({
         return {
           ...menu,
           recommendation,
-          servingContext: parseServingContext(recommendation.amount),
+          servingContext: resolveServingContext(recommendation),
           mode: modeByMenuId[menu.id] ?? "unit",
         };
       })
@@ -204,7 +225,7 @@ export function ChatMealRecordBottomSheet({
               return (
                 <article key={item.id} className={styles.menuItem}>
                   <div className={styles.menuNameRow}>
-                    <p className="typo-title2">{item.recommendation.menu}</p>
+                    <p className="typo-title2">{item.recommendation.menu_name}</p>
                     {item.recommendation.brand && (
                       <p className={`${styles.tertiaryText} typo-label4`}>
                         {item.recommendation.brand}
@@ -236,8 +257,8 @@ export function ChatMealRecordBottomSheet({
                         min={0}
                         step={QUANTITY_STEP}
                         snapOnStep
-                        decrementAriaLabel={`${item.recommendation.menu} 수량 감소`}
-                        incrementAriaLabel={`${item.recommendation.menu} 수량 증가`}
+                        decrementAriaLabel={`${item.recommendation.menu_name} 수량 감소`}
+                        incrementAriaLabel={`${item.recommendation.menu_name} 수량 증가`}
                         decrementIcon={<Minus size={24} />}
                         incrementIcon={<Plus size={24} />}
                         normalizeValue={(value) => roundDecimal(value, 1)}
@@ -256,7 +277,7 @@ export function ChatMealRecordBottomSheet({
                         }}
                         inputProps={{
                           inputMode: "decimal",
-                          "aria-label": `${item.recommendation.menu} 수량 입력`,
+                          "aria-label": `${item.recommendation.menu_name} 수량 입력`,
                         }}
                       />
                     </div>

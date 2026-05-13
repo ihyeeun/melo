@@ -1,0 +1,51 @@
+.detailList {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.detailGroup {
+  display: flex;
+  flex-direction: column;
+}
+
+.groupDivider {
+  background-color: var(--border-neutral);
+  height: 1px;
+  margin: 12px 0;
+  width: 100%;
+}
+
+.detailGroupRows {
+  display: flex;
+  flex-direction: column;
+}
+
+.detailRow {
+  align-items: center;
+  color: var(--label-normal);
+  display: flex;
+  gap: 8px;
+  justify-content: space-between;
+  padding: 8px 0;
+}
+
+.detailLabelSub {
+  color: var(--label-alternative);
+  padding-left: 4px;
+}
+
+.detailValue {
+  align-items: center;
+  display: inline-flex;
+  gap: 8px;
+  position: relative;
+}
+
+.detailWarningButton {
+  margin-right: 8px;
+}
+
+.textNormal {
+  color: var(--label-normal);
+}

@@ -35,3 +35,20 @@ export function getSafeChatId(value: string | null) {
 export function getSafeMenuId(value: string | null) {
   return parsePositiveInt(value);
 }
+
+export function getFeedbackResultPath(chatId: number) {
+  const params = new URLSearchParams({
+    chatId: String(chatId),
+  });
+
+  return `${PATH.FEEDBACK_RESULT}?${params.toString()}`;
+}
+
+export function getFeedbackDetailPath(chatId: number, menuId: number) {
+  const params = new URLSearchParams({
+    chatId: String(chatId),
+    menuId: String(menuId),
+  });
+
+  return `${PATH.FEEDBACK_DETAIL}?${params.toString()}`;
+}

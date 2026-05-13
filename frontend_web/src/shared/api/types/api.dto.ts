@@ -237,32 +237,74 @@ export interface ChatHistoryItemResponseDto {
 
 export type amount_preference_level = "light" | "regular" | "hearty";
 
-export interface ChatRecommendItemResponseDto {
-  rank: number;
+export interface ChatRecommendItemResponseDto extends NullableMenuNutrientFields {
   menu_id: number;
-  menu: string; //메뉴명
+  menu_name: string; //메뉴명
   brand?: string;
-  amount: string; //음식 양 (1인분 230g)
+  unit: number;
+  weight: number;
+  unit_quantity: string;
   calories: number;
-  carbs: number;
-  protein: number;
-  fat: number;
+  data_source: number;
   score: number; //최종 점수
+  rank: number;
   one_line_summary: string;
   recommendation_reason: string;
 }
 
-export interface ChatRecommendResponseDto {
-  intro_message: string; //추천 결과 전체를 소개하는 도입 문구
+export type ChatCategory = "recommendation" | "feedback";
+interface ChatResponseBaseDto {
+  chat_category: ChatCategory;
+  intro_message: string;
+}
+
+export type ChatRecommendResponseDto = ChatRecommendationResponseDto | ChatFeedbackResponseDto;
+
+export interface ChatRecommendationResponseDto extends ChatResponseBaseDto {
+  chat_category: "recommendation";
   recommendations: ChatRecommendItemResponseDto[];
-  recognized_candidates: ChatRecognizedCandidateResponseDto[]; //메뉴판 / 이미지 인식으로 좁혀진 후보 메뉴
+  feedback?: never;
+}
+
+export interface ChatFeedbackResponseDto extends ChatResponseBaseDto {
+  chat_category: "feedback";
+  feedback: FeedbackDto;
+  recommendations?: never;
+}
+
+export interface FeedbackDto {
+  menus: ChatFeedbackMenuResponseDto[];
+  total_calories: number;
+  score: number;
+  is_appropriate: boolean;
+  feedback_summary: string;
+  feedback_reason: string;
+}
+
+export interface ChatFeedbackMenuResponseDto {
+  input_menu_name: string;
+  menu_id: number;
+  menu_name: string;
+  unit: number;
+  weight: number;
+  unit_quantity: string;
+  calories: number;
+  data_source: number;
+  brand?: string;
+}
+
+export interface ChatMenuBoardRecommendResponseDto {
+  chat_category: ChatCategory;
+  intro_message: string;
+  recommendations: ChatRecommendItemResponseDto[];
+  recognized_candidates: ChatRecognizedCandidateResponseDto[];
 }
 
 export interface ChatRecognizedCandidateResponseDto {
   menu_id: number;
   menu: string;
-  brand?: string;
-  category?: string;
+  brand: string;
+  category: string;
 }
 
 // Camera

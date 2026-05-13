@@ -24,6 +24,8 @@ export const PATH = {
   CHAT: "/chat",
   RECOMMEND_RESULT: "/recommend-result",
   RECOMMEND_DETAIL: "/recommend-detail",
+  FEEDBACK_RESULT: "/feedback-result",
+  FEEDBACK_DETAIL: "/feedback-detail",
 
   //Diary
   DIARY: "/diary",

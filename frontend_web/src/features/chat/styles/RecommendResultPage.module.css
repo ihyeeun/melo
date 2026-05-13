@@ -61,11 +61,7 @@
   flex-direction: column;
   gap: 10px;
   padding: 16px;
-}
-
-.resultCardSelected {
-  background-color: var(--interaction-primary);
-  border-color: var(--border-primary);
+  width: 100%;
 }
 
 .rankBadge {
@@ -92,13 +88,6 @@
   min-width: 0;
 }
 
-.titleRow {
-  align-items: center;
-  display: flex;
-  gap: 8px;
-  justify-content: space-between;
-}
-
 .menuName {
   color: var(--label-normal);
 }
@@ -118,26 +107,9 @@
   margin-left: auto;
 }
 
-.addButton {
-  align-items: center;
-  color: var(--gray-500);
-  display: inline-flex;
-  justify-content: center;
-}
-
-.addButtonSelected {
-  border-color: var(--border-primary);
-  color: var(--label-primary);
-}
-
 .loadingText {
   color: var(--label-assistive);
   text-align: center;
-}
-
-.footer {
-  padding: 0 20px;
-  padding-bottom: var(--safe-area-bottom);
 }
 
 .characterImage {

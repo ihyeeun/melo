@@ -1,6 +1,9 @@
 import { CheckCircle2, PlusCircle, X } from "lucide-react";
 import type { KeyboardEvent, MouseEvent } from "react";
 
+import { MENU_DATA_SOURCE, type MenuDataSource } from "@/shared/api/types/api.dto";
+import { DataSourceBadge } from "@/shared/commons/badge/DataSourceBadge";
+
 import styles from "./MealMenuCard.module.css";
 
 export type MealMenuCardIcon = "add" | "check" | "delete";
@@ -16,7 +19,7 @@ type MealMenuCardProps = {
   weight?: number;
   quantity?: number;
   suggestionChipLabel?: string;
-  data_source?: number;
+  data_source?: MenuDataSource | number;
   icon?: MealMenuCardIcon;
   state?: MealMenuCardState;
   className?: string;
@@ -106,7 +109,8 @@ export function MealMenuCard({
     onIconClick?.();
   };
 
-  const isPersonalMenu = data_source === 1;
+  const isSelected = state === "select";
+  const isPersonalMenu = data_source === MENU_DATA_SOURCE.PERSONAL;
   const shouldShowChipList = isPersonalMenu || Boolean(suggestionChipLabel);
   const safeQuantityInput =
     typeof quantity === "number" && Number.isFinite(quantity) && quantity > 0 ? quantity : null;
@@ -169,13 +173,13 @@ export function MealMenuCard({
 
       {shouldShowChipList && (
         <div className={styles.chipList}>
-          {isPersonalMenu && (
-            <span className={`${styles.chip} ${styles.personalChipLabel} typo-label6`}>개인용</span>
-          )}
+          {isPersonalMenu && <DataSourceBadge variant="personal" active={isSelected} />}
           {suggestionChipLabel && (
-            <span className={`${styles.chip} ${styles.suggestionChipLabel} typo-label6`}>
-              {suggestionChipLabel}
-            </span>
+            <DataSourceBadge
+              variant="aiEstimated"
+              active={isSelected}
+              label={suggestionChipLabel}
+            />
           )}
         </div>
       )}

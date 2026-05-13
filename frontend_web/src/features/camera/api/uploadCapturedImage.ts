@@ -1,7 +1,7 @@
 import { requestNativeImageUpload } from "@/shared/api/bridge/nativeBridge";
 import {
   type CapturedImage,
-  type ChatRecommendResponseDto,
+  type ChatMenuBoardRecommendResponseDto,
   type FoodImageRecognitionResponseDto,
   type NutritionLabelRecognitionResponseDto,
 } from "@/shared/api/types/api.dto";
@@ -55,7 +55,7 @@ export async function uploadNutritionLabelImage(capturedImage: CapturedImage) {
 }
 
 export async function uploadMenuBoardImage(capturedImage: CapturedImage) {
-  const response = await requestNativeImageUpload<ApiResponse<ChatRecommendResponseDto>>({
+  const response = await requestNativeImageUpload<ApiResponse<ChatMenuBoardRecommendResponseDto>>({
     endpoint: END_POINT.MENU_BOARD_ANALYSIS,
     fileUri: capturedImage.uri,
     fileName: capturedImage.fileName,
