@@ -134,7 +134,7 @@ export default function MealSearchPage() {
   };
 
   const handleMenuDetailPageOpen = (menuId: number) => {
-    navigate(getMealDetailPath(dateKey, mealType, menuId, "MEAL_SEARCH", submittedKeyword));
+    navigate(getMealDetailPath(dateKey, mealType, menuId, submittedKeyword));
   };
 
   const handleApplySelectedMenus = () => {

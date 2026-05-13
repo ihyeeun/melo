@@ -10,7 +10,6 @@ import {
   getSafeDateKey,
   getSafeKeyword,
   getSafeMenuId,
-  getSafePageKey,
 } from "@/features/meal-record/utils/mealRecord.queryParams";
 import { type RegisterManualMenuPayload } from "@/features/nutrient-entry/api/nutrient";
 import { NutrientDetailForm } from "@/features/nutrient-entry/components/NutrientDetailForm";
@@ -28,7 +27,7 @@ import {
   toNullableFiniteNumber,
 } from "@/features/nutrient-entry/utils/nutrientFields";
 import { PATH } from "@/router/path";
-import { getMealDetailPath, getMealRecordPath, getMealSearchPath } from "@/router/pathHelpers";
+import { getMealDetailPath, getMealRecordPath } from "@/router/pathHelpers";
 import {
   type MealMenuItem,
   MENU_DATA_SOURCE,
@@ -100,7 +99,6 @@ export default function NutrientModifyPage() {
   const dateKey = getSafeDateKey(searchParams.get("date"));
   const mealType = getMealType(searchParams.get("mealType"));
   const searchKeyword = getSafeKeyword(searchParams.get("keyword"));
-  const pageKey = getSafePageKey(searchParams.get("pageKey")) ?? "MEAL_RECORD";
   const draftKey = formatMenuDraftKey(dateKey, mealType);
   const upsertPreviews = useMenuDraftUpsertPreviews();
 
@@ -202,11 +200,7 @@ export default function NutrientModifyPage() {
 
   const getBackFallbackPath = () => {
     if (menuId !== null) {
-      return getMealDetailPath(dateKey, mealType, menuId, pageKey, searchKeyword);
-    }
-
-    if (pageKey === "MEAL_SEARCH") {
-      return getMealSearchPath(dateKey, mealType, searchKeyword);
+      return getMealDetailPath(dateKey, mealType, menuId, searchKeyword);
     }
 
     return getMealRecordPath(dateKey, mealType);
@@ -298,7 +292,7 @@ export default function NutrientModifyPage() {
               return;
             }
 
-            navigate(getMealDetailPath(dateKey, mealType, menuId, pageKey, searchKeyword), {
+            navigate(getMealDetailPath(dateKey, mealType, menuId, searchKeyword), {
               replace: true,
             });
           },
@@ -323,7 +317,6 @@ export default function NutrientModifyPage() {
           dateKey,
           mealType,
           createdMenuId,
-          pageKey,
           searchKeyword,
         );
         const detailPageState: MealDetailLocationState | undefined =

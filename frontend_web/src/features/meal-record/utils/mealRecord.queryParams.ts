@@ -1,4 +1,3 @@
-import type { PageKey } from "@/router/pathHelpers";
 import { DEFAULT_MEAL_TYPE, MEAL_TYPE_SET, type MealType } from "@/shared/api/types/api.dto";
 import { getTodayFormatDateKey } from "@/shared/utils/dateFormat";
 
@@ -14,14 +13,6 @@ export function getMealType(value: string | null): MealType {
   }
 
   return DEFAULT_MEAL_TYPE;
-}
-
-export function getSafePageKey(value: unknown): PageKey | null {
-  if (value === "MEAL_SEARCH" || value === "MEAL_RECORD") {
-    return value;
-  }
-
-  return null;
 }
 
 export function getSafeMenuId(value: unknown): number | null {

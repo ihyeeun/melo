@@ -366,7 +366,7 @@ export default function MealRecordPage() {
   const isSavePending = isRegisterPending || isDeletePending;
 
   const handleMenuDetail = (menuId: number) => {
-    navigate(getMealDetailPath(dateKey, mealType, menuId, "MEAL_RECORD"));
+    navigate(getMealDetailPath(dateKey, mealType, menuId));
   };
 
   const handleBackGuard = useCallback(() => {
