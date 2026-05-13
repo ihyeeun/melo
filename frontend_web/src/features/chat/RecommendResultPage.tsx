@@ -25,7 +25,7 @@ export default function RecommendResultPage() {
     return data?.chat_list.find((item) => item.id === chatId) ?? null;
   }, [chatId, data?.chat_list]);
   const recommendationPayload =
-    chatItem?.response_payload.chat_category === "recommendation"
+    chatItem?.response_payload?.chat_category === "recommendation"
       ? chatItem.response_payload
       : null;
 
