@@ -24,6 +24,10 @@ export default function RecommendResultPage() {
     if (chatId === null) return null;
     return data?.chat_list.find((item) => item.id === chatId) ?? null;
   }, [chatId, data?.chat_list]);
+  const recommendationPayload =
+    chatItem?.response_payload.chat_category === "recommendation"
+      ? chatItem.response_payload
+      : null;
 
   useEffect(() => {
     if (chatId === null) {
@@ -35,10 +39,10 @@ export default function RecommendResultPage() {
       return;
     }
 
-    if (!chatItem || chatItem.response_payload.recommendations.length === 0) {
+    if (!recommendationPayload || recommendationPayload.recommendations.length === 0) {
       navigate(PATH.CHAT, { replace: true });
     }
-  }, [chatId, chatItem, isPending, navigate]);
+  }, [chatId, isPending, navigate, recommendationPayload]);
 
   if (chatId === null) {
     return null;
@@ -55,7 +59,7 @@ export default function RecommendResultPage() {
     );
   }
 
-  if (!chatItem || chatItem.response_payload.recommendations.length === 0) {
+  if (!chatItem || !recommendationPayload || recommendationPayload.recommendations.length === 0) {
     return null;
   }
 
@@ -75,7 +79,7 @@ export default function RecommendResultPage() {
           </div>
 
           <ul className={styles.resultList}>
-            {chatItem.response_payload.recommendations.map((item) => (
+            {recommendationPayload.recommendations.map((item) => (
               <li key={item.menu_id}>
                 <button
                   type="button"

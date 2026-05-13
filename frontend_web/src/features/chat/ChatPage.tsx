@@ -1,4 +1,4 @@
-import { Camera, Check, ChevronRight, ChevronUp, CircleAlert, Plus, X } from "lucide-react";
+import { Camera, ChevronRight, ChevronUp, CircleAlert, Plus, X } from "lucide-react";
 import type { FormEvent } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
@@ -17,7 +17,7 @@ import {
 import { PATH } from "@/router/path";
 import { getMealSearchPath } from "@/router/pathHelpers";
 import { AppApiError } from "@/shared/api/appApi";
-import { type ChatRecommendItemResponseDto } from "@/shared/api/types/api.dto";
+import { type ChatRecommendItemResponseDto, type FeedbackDto } from "@/shared/api/types/api.dto";
 import { DataSourceBadge } from "@/shared/commons/badge/DataSourceBadge";
 import { Button } from "@/shared/commons/button/Button";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
@@ -27,6 +27,14 @@ import { useSelectedDateKey } from "@/shared/stores/selectedDate.store";
 import { formatDateDividerText, formatDateKey, parseDate } from "@/shared/utils/dateFormat";
 
 const QUICK_CHIP_LIST = ["지금 먹기 좋은 메뉴를 추천해줘"];
+const FEEDBACK_GAUGE_VIEWBOX_WIDTH = 220;
+const FEEDBACK_GAUGE_VIEWBOX_HEIGHT = 100;
+const FEEDBACK_GAUGE_CENTER_X = 110;
+const FEEDBACK_GAUGE_CENTER_Y = 95;
+const FEEDBACK_GAUGE_RADIUS = 75;
+const FEEDBACK_GAUGE_START_ANGLE = 170;
+const FEEDBACK_GAUGE_END_ANGLE = 10;
+const FEEDBACK_GAUGE_PATH = getFeedbackGaugePath();
 
 export default function ChatPage() {
   const navigate = useNavigate();
@@ -202,11 +210,16 @@ export default function ChatPage() {
                       {chatItem.response_payload.intro_message}
                     </p>
 
-                    {chatItem.response_payload.recommendations.length > 0 ? (
+                    {chatItem.response_payload.chat_category === "recommendation" &&
+                    chatItem.response_payload.recommendations.length > 0 ? (
                       <RecommendationSection
                         chatId={chatItem.id}
                         recommendations={chatItem.response_payload.recommendations}
                       />
+                    ) : null}
+
+                    {chatItem.response_payload.chat_category === "feedback" ? (
+                      <FeedbackSection feedback={chatItem.response_payload.feedback} />
                     ) : null}
                   </div>
                 </section>
@@ -491,7 +504,7 @@ function RecommendationSection({
               }}
             >
               식사 기록
-              <Check size={16} className={styles.recommendActionIcon} />
+              <Plus size={16} className={styles.recommendActionIcon} />
             </Button>
             <Button
               size="small"
@@ -527,6 +540,174 @@ function RecommendationSection({
   );
 }
 
+function FeedbackSection({ feedback }: { feedback: FeedbackDto }) {
+  const [isMenuListOpen, setIsMenuListOpen] = useState(false);
+  const primaryMenu = feedback.menus[0];
+  const hasMultipleMenus = feedback.menus.length > 1;
+
+  return (
+    <div className={styles.feedbackSection}>
+      <article className={styles.feedbackCard}>
+        <FeedbackScoreGauge score={feedback.score} />
+
+        <div className={styles.feedbackContents}>
+          <div className={styles.feedbackMenuSummary}>
+            <p className={`${styles.feedbackMenuTitle} typo-title2`}>
+              {hasMultipleMenus
+                ? `${primaryMenu.menu_name} 외 ${feedback.menus.length - 1}개`
+                : primaryMenu.menu_name}
+            </p>
+
+            {hasMultipleMenus ? (
+              <button
+                type="button"
+                className={`${styles.feedbackMenuToggle}`}
+                aria-expanded={isMenuListOpen}
+                onClick={() => setIsMenuListOpen((prev) => !prev)}
+              >
+                <p className={`${styles.textAssistive} typo-label4`}>총 칼로리</p>
+
+                <p className={`${styles.feedbackCalories} typo-title3`}>
+                  {formatCalories(feedback.total_calories)} kcal
+                  <ChevronUp
+                    size={20}
+                    className={`${styles.feedbackMenuChevron} ${
+                      isMenuListOpen ? styles.feedbackMenuChevronOpen : ""
+                    }`}
+                  />
+                </p>
+              </button>
+            ) : (
+              <div className={`${styles.feedbackMenuToggle}`}>
+                <p className={`${styles.textAlternative} typo-label4`}>
+                  {formatMenuServing(primaryMenu)}
+                </p>
+                <p className={`${styles.feedbackCalories} typo-title3`}>
+                  {formatCalories(primaryMenu.calories)} kcal
+                </p>
+              </div>
+            )}
+          </div>
+
+          {hasMultipleMenus && isMenuListOpen ? (
+            <ul className={styles.feedbackMenuList}>
+              {feedback.menus.map((menu, index) => (
+                <li
+                  key={`${menu.menu_id}-${menu.input_menu_name}-${index}`}
+                  className={styles.feedbackMenuItem}
+                >
+                  <div>
+                    <p className={`${styles.feedbackMenuItemName} typo-body4`}>{menu.menu_name}</p>
+                  </div>
+                  <span className={`${styles.feedbackMenuItemCalories} typo-body4`}>
+                    {formatCalories(menu.calories)} kcal
+                  </span>
+                </li>
+              ))}
+            </ul>
+          ) : null}
+
+          <div className={styles.feedbackAction}>
+            <Button
+              size="small"
+              fullWidth
+              onClick={() => {
+                toast.warning("식사 기록하기 기능은 아직 준비 중이에요.");
+              }}
+            >
+              식사 기록
+              <Plus size={16} className={styles.feedbackActionIcon} />
+            </Button>
+            <Button
+              size="small"
+              variant="outlined"
+              fullWidth
+              onClick={() => {
+                toast.warning("자세히 보기 기능은 아직 준비 중이에요.");
+              }}
+            >
+              자세히 보기
+              <ChevronRight size={16} className={styles.feedbackActionIcon} />
+            </Button>
+          </div>
+        </div>
+      </article>
+
+      <p className={`${styles.assistantBubble} typo-body3`}>{feedback.feedback_summary}</p>
+      <p className={`${styles.assistantBubble} typo-body3`}>{feedback.feedback_reason}</p>
+    </div>
+  );
+}
+
+function FeedbackScoreGauge({ score }: { score: number }) {
+  const roundedScore = Math.round(score);
+  const safeScore = Math.min(Math.max(roundedScore, 0), 100);
+  const characterIcon = "/icons/chat-chart-icon.svg";
+  const markerPosition = getFeedbackGaugeMarkerPosition(safeScore);
+
+  return (
+    <div className={styles.feedbackScoreGauge} aria-label={`메뉴 추천도 ${safeScore}점`}>
+      <div className={styles.feedbackGaugeArc}>
+        <svg
+          className={styles.feedbackGaugeSvg}
+          viewBox={`0 0 ${FEEDBACK_GAUGE_VIEWBOX_WIDTH} ${FEEDBACK_GAUGE_VIEWBOX_HEIGHT}`}
+          aria-hidden="true"
+        >
+          <path className={styles.feedbackGaugeTrack} d={FEEDBACK_GAUGE_PATH} pathLength={100} />
+          <path
+            className={styles.feedbackGaugeValue}
+            d={FEEDBACK_GAUGE_PATH}
+            pathLength={100}
+            style={{ strokeDasharray: `${safeScore} 100` }}
+          />
+        </svg>
+        <div className={styles.feedbackScoreLabel}>
+          <p className={`${styles.feedbackScoreValue} typo-h3`}>{safeScore}점</p>
+          <p className={`${styles.feedbackScoreCaption} typo-label4`}>메뉴 추천도</p>
+        </div>
+        <img
+          src={characterIcon}
+          alt=""
+          aria-hidden="true"
+          className={styles.feedbackGaugeCharacter}
+          style={{
+            left: markerPosition.x,
+            top: markerPosition.y,
+          }}
+        />
+      </div>
+    </div>
+  );
+}
+
+function getFeedbackGaugeMarkerPosition(score: number) {
+  const angle =
+    FEEDBACK_GAUGE_START_ANGLE -
+    ((FEEDBACK_GAUGE_START_ANGLE - FEEDBACK_GAUGE_END_ANGLE) * score) / 100;
+  const { x, y } = getFeedbackGaugePoint(angle);
+
+  return {
+    x: `${(x / FEEDBACK_GAUGE_VIEWBOX_WIDTH) * 100}%`,
+    y: `${(y / FEEDBACK_GAUGE_VIEWBOX_HEIGHT) * 100}%`,
+  };
+}
+
+function getFeedbackGaugePath() {
+  const start = getFeedbackGaugePoint(FEEDBACK_GAUGE_START_ANGLE);
+  const end = getFeedbackGaugePoint(FEEDBACK_GAUGE_END_ANGLE);
+
+  return `M ${start.x} ${start.y} A ${FEEDBACK_GAUGE_RADIUS} ${FEEDBACK_GAUGE_RADIUS} 0 0 1 ${end.x} ${end.y}`;
+}
+
+function getFeedbackGaugePoint(angle: number) {
+  const radian = (angle * Math.PI) / 180;
+
+  return {
+    x: FEEDBACK_GAUGE_CENTER_X + FEEDBACK_GAUGE_RADIUS * Math.cos(radian),
+    y: FEEDBACK_GAUGE_CENTER_Y - FEEDBACK_GAUGE_RADIUS * Math.sin(radian),
+  };
+}
+
 // 문자열 날짜를 timestamp 숫자로 변환
 function parseDateValue(value: string) {
   const timestamp = new Date(value).getTime();
@@ -548,6 +729,10 @@ function formatCalories(value: number) {
   return value.toLocaleString("ko-KR", {
     maximumFractionDigits: 1,
   });
+}
+
+function formatMenuServing(menu: FeedbackDto["menus"][number]) {
+  return `1${menu.unit_quantity} (${formatCalories(menu.weight)}${menu.unit === 0 ? "g" : "ml"})`;
 }
 
 function resolveErrorMessage(error: unknown) {

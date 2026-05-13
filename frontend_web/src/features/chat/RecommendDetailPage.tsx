@@ -27,13 +27,15 @@ export default function RecommendDetailPage() {
     if (chatId === null) return null;
     return data?.chat_list.find((item) => item.id === chatId) ?? null;
   }, [chatId, data?.chat_list]);
+  const recommendationPayload =
+    chatItem?.response_payload.chat_category === "recommendation"
+      ? chatItem.response_payload
+      : null;
 
   const recommendation = useMemo(() => {
-    if (!chatItem || menuId === null) return null;
-    return (
-      chatItem.response_payload.recommendations.find((item) => item.menu_id === menuId) ?? null
-    );
-  }, [chatItem, menuId]);
+    if (!recommendationPayload || menuId === null) return null;
+    return recommendationPayload.recommendations.find((item) => item.menu_id === menuId) ?? null;
+  }, [recommendationPayload, menuId]);
 
   const nutrientSource = menuDetail ?? recommendation;
 
