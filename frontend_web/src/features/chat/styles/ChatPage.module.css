@@ -235,7 +235,6 @@
 .recommendMetaRow {
   align-items: flex-end;
   display: flex;
-  justify-content: space-between;
 }
 
 .menuInfoRow {
@@ -253,6 +252,7 @@
 
 .recommendCalories {
   color: var(--label-normal);
+  margin-left: auto;
 }
 
 .addAction {
