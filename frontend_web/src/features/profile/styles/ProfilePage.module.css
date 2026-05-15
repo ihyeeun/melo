@@ -123,6 +123,7 @@
   flex-direction: column;
   gap: 18px;
   padding: 20px 17px;
+  margin-top: 12px;
 }
 
 .weeklyHeader {

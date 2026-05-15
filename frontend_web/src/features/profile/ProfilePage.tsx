@@ -222,89 +222,91 @@ export default function ProfilePage() {
             </div>
           </section>
 
-          <section className={styles.activeCardGrid}>
-            <ActionCard
-              onClick={() => handleSelectMetric("weight")}
-              className={`${styles.activeCard} ${selectedMetric === "weight" ? styles.activeMetricCard : ""}`}
-            >
-              <p className={`${styles.activeCardTitle} typo-title4`}>체중</p>
+          <div>
+            <section className={styles.activeCardGrid}>
+              <ActionCard
+                onClick={() => handleSelectMetric("weight")}
+                className={`${styles.activeCard} ${selectedMetric === "weight" ? styles.activeMetricCard : ""}`}
+              >
+                <p className={`${styles.activeCardTitle} typo-title4`}>체중</p>
 
-              <div className={styles.activeCardValueRow}>
-                <span className={`${styles.activeCardValue} typo-title4`}>
-                  {currentWeight.toLocaleString("ko-KR")}
-                </span>
-                <span className={`${styles.activeCardUnit} typo-label4`}>kg</span>
-              </div>
-            </ActionCard>
-
-            <ActionCard
-              onClick={() => handleSelectMetric("calories")}
-              className={`${styles.activeCard} ${selectedMetric === "calories" ? styles.activeMetricCard : ""}`}
-            >
-              <p className={`${styles.activeCardTitle} typo-title4`}>섭취량</p>
-
-              <div className={styles.activeCardValueRow}>
-                <span className={`${styles.activeCardValue} typo-title4`}>
-                  {(dayMeal?.totalCalories ?? 0).toLocaleString("ko-KR")}
-                </span>
-                <span className={`${styles.activeCardUnit} typo-label4`}>kcal</span>
-              </div>
-            </ActionCard>
-
-            <ActionCard
-              onClick={() => handleSelectMetric("steps")}
-              className={`${styles.activeCard} ${selectedMetric === "steps" ? styles.activeMetricCard : ""}`}
-            >
-              <p className={`${styles.activeCardTitle} typo-title4`}>걸음 수</p>
-
-              <div className={styles.activeCardValueRow}>
-                <span className={`${styles.activeCardValue} typo-title4`}>
-                  {todaySteps === null ? "-" : todaySteps.toLocaleString("ko-KR")}
-                </span>
-                <span className={`${styles.activeCardUnit} typo-label4`}>보</span>
-              </div>
-            </ActionCard>
-          </section>
-
-          <div className="divider" />
-
-          <section className={styles.weeklySection}>
-            <div className={styles.weeklyHeader}>
-              <span className={`${styles.weeklyTitle} typo-title3`}>주간 기록 현황</span>
-
-              <div className={styles.legendRow}>
-                {metricConfig.targetLabel && (
-                  <span className={`${styles.legendItem} typo-label4`}>
-                    <span className={`${styles.legendDot} ${styles.legendTarget}`} />
-                    {metricConfig.targetLabel}
+                <div className={styles.activeCardValueRow}>
+                  <span className={`${styles.activeCardValue} typo-title4`}>
+                    {currentWeight.toLocaleString("ko-KR")}
                   </span>
-                )}
-                <span className={`${styles.legendItem} typo-label4`}>
-                  <span className={`${styles.legendDot} ${styles.legendCurrent}`} />
-                  {metricConfig.title}
-                </span>
-              </div>
-            </div>
+                  <span className={`${styles.activeCardUnit} typo-label4`}>kg</span>
+                </div>
+              </ActionCard>
 
-            {weeklyRecordQuery.isPending ? (
-              <p className={`${styles.weeklyStatusText} typo-label2`}>
-                주간 기록을 불러오는 중이에요.
-              </p>
-            ) : weeklyRecordQuery.hasError ? (
-              <p className={`${styles.weeklyStatusText} typo-label2`}>
-                주간 기록을 불러오지 못했어요. 잠시 뒤 다시 시도해주세요.
-              </p>
-            ) : (
-              <section className={styles.weeklyChart}>
-                <span className={`${styles.weeklyYLabel} typo-caption`}>{metricConfig.title}</span>
-                <WeeklyRecordChart
-                  data={weeklyChartData}
-                  unit={metricConfig.unit}
-                  yTicks={metricConfig.ticks}
-                />
-              </section>
-            )}
-          </section>
+              <ActionCard
+                onClick={() => handleSelectMetric("calories")}
+                className={`${styles.activeCard} ${selectedMetric === "calories" ? styles.activeMetricCard : ""}`}
+              >
+                <p className={`${styles.activeCardTitle} typo-title4`}>섭취량</p>
+
+                <div className={styles.activeCardValueRow}>
+                  <span className={`${styles.activeCardValue} typo-title4`}>
+                    {(dayMeal?.totalCalories ?? 0).toLocaleString("ko-KR")}
+                  </span>
+                  <span className={`${styles.activeCardUnit} typo-label4`}>kcal</span>
+                </div>
+              </ActionCard>
+
+              <ActionCard
+                onClick={() => handleSelectMetric("steps")}
+                className={`${styles.activeCard} ${selectedMetric === "steps" ? styles.activeMetricCard : ""}`}
+              >
+                <p className={`${styles.activeCardTitle} typo-title4`}>걸음 수</p>
+
+                <div className={styles.activeCardValueRow}>
+                  <span className={`${styles.activeCardValue} typo-title4`}>
+                    {todaySteps === null ? "-" : todaySteps.toLocaleString("ko-KR")}
+                  </span>
+                  <span className={`${styles.activeCardUnit} typo-label4`}>보</span>
+                </div>
+              </ActionCard>
+            </section>
+
+            <section className={styles.weeklySection}>
+              <div className={styles.weeklyHeader}>
+                <span className={`${styles.weeklyTitle} typo-title3`}>주간 기록 현황</span>
+
+                <div className={styles.legendRow}>
+                  {metricConfig.targetLabel && (
+                    <span className={`${styles.legendItem} typo-label4`}>
+                      <span className={`${styles.legendDot} ${styles.legendTarget}`} />
+                      {metricConfig.targetLabel}
+                    </span>
+                  )}
+                  <span className={`${styles.legendItem} typo-label4`}>
+                    <span className={`${styles.legendDot} ${styles.legendCurrent}`} />
+                    {metricConfig.title}
+                  </span>
+                </div>
+              </div>
+
+              {weeklyRecordQuery.isPending ? (
+                <p className={`${styles.weeklyStatusText} typo-label2`}>
+                  주간 기록을 불러오는 중이에요.
+                </p>
+              ) : weeklyRecordQuery.hasError ? (
+                <p className={`${styles.weeklyStatusText} typo-label2`}>
+                  주간 기록을 불러오지 못했어요. 잠시 뒤 다시 시도해주세요.
+                </p>
+              ) : (
+                <section className={styles.weeklyChart}>
+                  <span className={`${styles.weeklyYLabel} typo-caption`}>
+                    {metricConfig.title}
+                  </span>
+                  <WeeklyRecordChart
+                    data={weeklyChartData}
+                    unit={metricConfig.unit}
+                    yTicks={metricConfig.ticks}
+                  />
+                </section>
+              )}
+            </section>
+          </div>
 
           <BottomSheet
             isOpen={sheetOpen}
