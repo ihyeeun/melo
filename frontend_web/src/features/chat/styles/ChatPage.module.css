@@ -119,10 +119,38 @@
   color: var(--label-primary);
 }
 
-.loadingText {
-  color: var(--label-assistive);
-  padding-top: 36px;
-  text-align: center;
+.skeletonUserMessageGroup {
+  align-items: center;
+  display: flex;
+  gap: 6px;
+  justify-content: flex-end;
+}
+
+.skeletonAssistantBubble {
+  background-color: var(--bg-white);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px 16px;
+  width: 100%;
+}
+
+.skeletonRecommendCard {
+  background-color: var(--bg-white);
+  border: 1px solid var(--border-neutral);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px 20px;
+  width: 100%;
+}
+
+.skeletonRecommendMeta {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
 }
 
 .chatTimeline {

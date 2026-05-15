@@ -135,6 +135,12 @@
       right / var(--stroke) 100% no-repeat;
 }
 
+.mealCardSkeletonContent {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
 .mealHeader {
   align-items: center;
   display: flex;

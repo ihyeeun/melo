@@ -22,6 +22,7 @@ import { type ChatRecommendItemResponseDto, type FeedbackDto } from "@/shared/ap
 import { DataSourceBadge } from "@/shared/commons/badge/DataSourceBadge";
 import { Button } from "@/shared/commons/button/Button";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
+import { Skeleton, SkeletonStatus } from "@/shared/commons/skeleton/Skeleton";
 import { toast } from "@/shared/commons/toast/toast";
 import { navigateBack, useNavigate } from "@/shared/navigation/stackflowNavigation";
 import { useSelectedDateKey } from "@/shared/stores/selectedDate.store";
@@ -178,7 +179,7 @@ export default function ChatPage() {
       <main className={styles.main}>
         {!hasAnyConversation && !isHistoryPending ? <EmptySection /> : null}
         {isHistoryPending && chatList.length === 0 && pendingInput === null ? (
-          <p className={`${styles.loadingText} typo-body4`}>채팅을 불러오는 중이에요</p>
+          <ChatHistorySkeleton />
         ) : null}
 
         {hasAnyConversation ? (
@@ -362,6 +363,53 @@ function EmptySection() {
         상황을 자세히 알려주면 추천이 더 정확해져요
       </p>
     </div>
+  );
+}
+
+function ChatHistorySkeleton() {
+  return (
+    <SkeletonStatus className={styles.chatTimeline} label="채팅 내역을 불러오는 중입니다.">
+      <section className={styles.conversationSection}>
+        <div className={styles.dateDivider}>
+          <Skeleton width={84} height={24} radius={999} />
+        </div>
+
+        <div className={styles.skeletonUserMessageGroup}>
+          <Skeleton width={44} height={14} radius={999} />
+          <Skeleton width="64%" height={38} radius={999} />
+        </div>
+
+        <div className={styles.assistantMessageGroup}>
+          <div className={styles.skeletonAssistantBubble}>
+            <Skeleton width="92%" height={16} radius={999} />
+            <Skeleton width="68%" height={16} radius={999} />
+          </div>
+
+          <article className={styles.skeletonRecommendCard}>
+            <Skeleton width={42} height={22} radius={4} />
+            <Skeleton width="56%" height={24} radius={999} />
+            <Skeleton width="88%" height={16} radius={999} />
+            <div className={styles.skeletonRecommendMeta}>
+              <Skeleton width="44%" height={16} radius={999} />
+              <Skeleton width="28%" height={22} radius={999} />
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section className={styles.conversationSection}>
+        <div className={styles.skeletonUserMessageGroup}>
+          <Skeleton width={44} height={14} radius={999} />
+          <Skeleton width="48%" height={38} radius={999} />
+        </div>
+        <div className={styles.assistantMessageGroup}>
+          <div className={styles.skeletonAssistantBubble}>
+            <Skeleton width="84%" height={16} radius={999} />
+            <Skeleton width="52%" height={16} radius={999} />
+          </div>
+        </div>
+      </section>
+    </SkeletonStatus>
   );
 }
 

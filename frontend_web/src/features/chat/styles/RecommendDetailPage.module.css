@@ -85,11 +85,6 @@
   padding-bottom: var(--safe-area-bottom);
 }
 
-.loadingText {
-  color: var(--label-assistive);
-  text-align: center;
-}
-
 .primaryText {
   color: var(--label-primary);
 }

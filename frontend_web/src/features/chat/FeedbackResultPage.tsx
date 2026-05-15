@@ -6,6 +6,7 @@ import { getFeedbackDetailPath, getSafeChatId } from "@/features/chat/utils/reco
 import { PATH } from "@/router/path";
 import { MealMenuCard } from "@/shared/commons/card/MealMenuCard";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
+import { Skeleton, SkeletonStatus } from "@/shared/commons/skeleton/Skeleton";
 import {
   navigateBack,
   useNavigate,
@@ -27,9 +28,10 @@ export default function FeedbackResultPage() {
       ? chatItem.response_payload.feedback
       : null;
 
-  if (chatId === null || !feedbackMenu) {
+  if (chatId === null) {
     return null;
   }
+
   if (isPending && !chatItem) {
     return (
       <section className={styles.page}>
@@ -40,10 +42,14 @@ export default function FeedbackResultPage() {
           }}
         />
         <main className={styles.main}>
-          <p className={`${styles.loadingText} typo-body4`}>추천 결과를 불러오는 중이에요</p>
+          <FeedbackResultSkeleton />
         </main>
       </section>
     );
+  }
+
+  if (!feedbackMenu) {
+    return null;
   }
 
   const handleMenuClick = ({ menuId, chatId }: { menuId: number; chatId: number }) => {
@@ -86,5 +92,30 @@ export default function FeedbackResultPage() {
         </section>
       </main>
     </section>
+  );
+}
+
+function FeedbackResultSkeleton() {
+  return (
+    <SkeletonStatus className={styles.content} label="추천 결과를 불러오는 중입니다.">
+      <ul className={styles.resultList}>
+        {Array.from({ length: 4 }).map((_, index) => (
+          <li key={index}>
+            <article className={styles.resultCard}>
+              <div className={styles.cardBody}>
+                <div className={styles.textGroup}>
+                  <Skeleton width="58%" height={24} radius={999} />
+                  <Skeleton width="34%" height={16} radius={999} />
+                  <div className={styles.metaRow}>
+                    <Skeleton width="38%" height={16} radius={999} />
+                    <Skeleton className={styles.calories} width="28%" height={22} radius={999} />
+                  </div>
+                </div>
+              </div>
+            </article>
+          </li>
+        ))}
+      </ul>
+    </SkeletonStatus>
   );
 }

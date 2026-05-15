@@ -12,6 +12,7 @@ import { DataSourceBadge } from "@/shared/commons/badge/DataSourceBadge";
 import BottomSheet from "@/shared/commons/bottomSheet/BottomSheet";
 import { Button } from "@/shared/commons/button/Button";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
+import { Skeleton, SkeletonStatus, SkeletonText } from "@/shared/commons/skeleton/Skeleton";
 import {
   navigateBack,
   useNavigate,
@@ -83,7 +84,7 @@ export default function RecommendDetailPage() {
           }}
         />
         <main className={styles.main}>
-          <p className={`${styles.loadingText} typo-body4`}>추천 상세를 불러오는 중이에요</p>
+          <RecommendDetailSkeleton />
         </main>
       </section>
     );
@@ -185,6 +186,32 @@ export default function RecommendDetailPage() {
         </section>
       </BottomSheet>
     </section>
+  );
+}
+
+function RecommendDetailSkeleton() {
+  return (
+    <SkeletonStatus className={styles.content} label="추천 상세를 불러오는 중입니다.">
+      <section className={styles.menuInfo}>
+        <Skeleton width="42%" height={16} radius={999} />
+        <Skeleton width="64%" height={32} radius={999} />
+        <div className={styles.titleRow}>
+          <div className={styles.titleGroup}>
+            <Skeleton width={80} height={16} radius={999} />
+            <Skeleton width={110} height={16} radius={999} />
+          </div>
+          <Skeleton className={styles.caloriesText} width={96} height={28} radius={999} />
+        </div>
+        <Skeleton width={64} height={24} radius={4} />
+      </section>
+
+      <div className="divider" />
+
+      <section className={styles.detailSection}>
+        <Skeleton width="58%" height={22} radius={999} />
+        <SkeletonText lines={4} lineHeight={16} widths={["100%", "94%", "88%", "54%"]} />
+      </section>
+    </SkeletonStatus>
   );
 }
 

@@ -5,6 +5,7 @@ import { isNativeApp, requestNativeAppDeviceInfo } from "@/shared/api/bridge/nat
 import type { AppDeviceInfoPayload } from "@/shared/api/bridge/nativeBridge.types";
 import { Button } from "@/shared/commons/button/Button";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
+import { Skeleton } from "@/shared/commons/skeleton/Skeleton";
 import { toast } from "@/shared/commons/toast/toast";
 import { useNavigate } from "@/shared/navigation/stackflowNavigation";
 
@@ -14,22 +15,24 @@ const MAX_FEEDBACK_LENGTH = 1000;
 
 export default function SettingsFeedbackPage() {
   const navigate = useNavigate();
+  const isInNativeApp = isNativeApp();
   const [feedback, setFeedback] = useState("");
   const [appDeviceInfo, setAppDeviceInfo] = useState<AppDeviceInfoPayload | null>(null);
+  const [isAppInfoLoading, setIsAppInfoLoading] = useState(isInNativeApp);
   const { mutate } = useRegisterInquiryMutation();
 
   const trimmedFeedback = feedback.trim();
   const canSubmit = trimmedFeedback.length > 0;
-  const appInfoLabel = !isNativeApp()
+  const appInfoLabel = !isInNativeApp
     ? "앱 환경이 아니어서 앱/OS 정보를 표시하지 않습니다."
     : appDeviceInfo === null
-      ? "앱/OS 정보를 불러오는 중이에요."
+      ? "앱/OS 정보를 불러오지 못했어요."
       : `앱 버전 ${appDeviceInfo.appVersion}${appDeviceInfo.appBuild ? ` (${appDeviceInfo.appBuild})` : ""} · ${appDeviceInfo.osName} ${appDeviceInfo.osVersion ?? "-"}`;
 
   useEffect(() => {
     let isActive = true;
 
-    if (!isNativeApp()) {
+    if (!isInNativeApp) {
       return () => {
         isActive = false;
       };
@@ -39,16 +42,18 @@ export default function SettingsFeedbackPage() {
       .then((deviceInfo) => {
         if (!isActive) return;
         setAppDeviceInfo(deviceInfo);
+        setIsAppInfoLoading(false);
       })
       .catch(() => {
         if (!isActive) return;
         setAppDeviceInfo(null);
+        setIsAppInfoLoading(false);
       });
 
     return () => {
       isActive = false;
     };
-  }, []);
+  }, [isInNativeApp]);
 
   const handleSubmit = () => {
     if (!canSubmit) {
@@ -98,7 +103,11 @@ export default function SettingsFeedbackPage() {
               />
             </div>
             <p className={`${styles.lengthText} typo-label4`}>최대 {MAX_FEEDBACK_LENGTH}자 이내</p>
-            <p className={`${styles.lengthText} typo-caption`}>{appInfoLabel}</p>
+            {isAppInfoLoading ? (
+              <Skeleton width="68%" height={14} radius={999} />
+            ) : (
+              <p className={`${styles.lengthText} typo-caption`}>{appInfoLabel}</p>
+            )}
           </section>
         </div>
       </main>

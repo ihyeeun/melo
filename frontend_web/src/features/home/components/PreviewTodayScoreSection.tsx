@@ -16,6 +16,7 @@ import {
 import { useGetProfileQuery } from "@/features/profile/hooks/queries/useProfileQuery";
 import { PATH } from "@/router/path";
 import ScoreProgress from "@/shared/commons/progress/Progress";
+import { Skeleton, SkeletonStatus } from "@/shared/commons/skeleton/Skeleton";
 import { toast } from "@/shared/commons/toast/toast";
 import { useNavigate } from "@/shared/navigation/stackflowNavigation";
 import {
@@ -84,8 +85,7 @@ export default function PreviewTodayScoreSection({ selectedDate }: { selectedDat
   const calorieSummary = getCalorieSummary(dayMealSummary?.totalCalories ?? 0, targetCalories);
   const isCalorieExceeded =
     targetCalories !== null && (dayMealSummary?.totalCalories ?? 0) > targetCalories;
-  const statusMessage =
-    shouldFetchProfile && isProfilePending ? "목표 정보를 불러오는 중이에요" : null;
+  const isTargetInfoPending = shouldFetchProfile && isProfilePending;
 
   const handleTodayMealScoreClick = () => {
     if (!hasValidTargets(targets)) {
@@ -109,8 +109,7 @@ export default function PreviewTodayScoreSection({ selectedDate }: { selectedDat
   };
 
   if (isSummaryPending) {
-    // TODO : skeleton UI
-    return <p>로딩 중</p>;
+    return <PreviewTodayScoreSkeleton />;
   }
 
   return (
@@ -145,8 +144,37 @@ export default function PreviewTodayScoreSection({ selectedDate }: { selectedDat
           />
         </div>
 
-        <Badge>{statusMessage ?? calorieSummary.message}</Badge>
+        {isTargetInfoPending ? (
+          <div className={style.badgeContentContainer}>
+            <Skeleton width={154} height={18} radius={999} />
+          </div>
+        ) : (
+          <Badge>{calorieSummary.message}</Badge>
+        )}
       </div>
+    </ActionCard>
+  );
+}
+
+function PreviewTodayScoreSkeleton() {
+  return (
+    <ActionCard className={style.content}>
+      <SkeletonStatus className={style.scoreContainer} label="오늘 식사 점수를 불러오는 중입니다.">
+        <div className={style.scoreTextContainer}>
+          <div className={style.scoreText}>
+            <Skeleton width={168} height={36} radius={999} />
+            <span className={style.dividerContainer} />
+            <Skeleton width={52} height={28} radius={999} />
+            <Skeleton className={style.icon} width={24} height={24} variant="circle" />
+          </div>
+
+          <Skeleton width="100%" height={8} radius={999} />
+        </div>
+
+        <div className={style.badgeContentContainer}>
+          <Skeleton width={164} height={18} radius={999} />
+        </div>
+      </SkeletonStatus>
     </ActionCard>
   );
 }

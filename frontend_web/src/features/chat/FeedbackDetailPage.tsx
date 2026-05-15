@@ -6,10 +6,12 @@ import {
   MealMenuNutrientDetail,
   type MealMenuNutrientSelection,
 } from "@/features/meal-record/components/MealMenuNutrientDetail";
+import { MealMenuNutrientDetailSkeleton } from "@/features/meal-record/components/MealMenuNutrientDetailSkeleton";
 import { useMealDetailQuery } from "@/features/meal-record/hooks/queries/useMealDetailQuery";
 import { PATH } from "@/router/path";
 import { Button } from "@/shared/commons/button/Button";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
+import { Skeleton } from "@/shared/commons/skeleton/Skeleton";
 import { navigateBack, useSearchParams } from "@/shared/navigation/stackflowNavigation";
 
 export default function FeedbackDetailPage() {
@@ -21,7 +23,26 @@ export default function FeedbackDetailPage() {
   const { data: meal, isPending } = useMealDetailQuery(menuId);
 
   if (isPending) {
-    return <p>로딩 중..</p>;
+    return (
+      <section className={styles.page}>
+        <PageHeader
+          title="영양성분 상세"
+          onBack={() => {
+            navigateBack({ fallbackTo: PATH.CHAT });
+          }}
+        />
+
+        <main className={styles.main}>
+          <div className={styles.content}>
+            <MealMenuNutrientDetailSkeleton showEditSection={false} />
+          </div>
+        </main>
+
+        <footer className={styles.footer}>
+          <Skeleton width="100%" height={48} radius={8} />
+        </footer>
+      </section>
+    );
   }
   if (!meal || menuId === null) return null;
 

@@ -6,6 +6,7 @@ import { getRecommendDetailPath, getSafeChatId } from "@/features/chat/utils/rec
 import { useGetProfileQuery } from "@/features/profile/hooks/queries/useProfileQuery";
 import { PATH } from "@/router/path";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
+import { Skeleton, SkeletonStatus } from "@/shared/commons/skeleton/Skeleton";
 import {
   navigateBack,
   useNavigate,
@@ -53,7 +54,7 @@ export default function RecommendResultPage() {
       <section className={styles.page}>
         <PageHeader title="메뉴 추천 결과" onBack={() => navigateBack({ fallbackTo: PATH.CHAT })} />
         <main className={styles.main}>
-          <p className={`${styles.loadingText} typo-body4`}>추천 결과를 불러오는 중이에요</p>
+          <RecommendResultSkeleton />
         </main>
       </section>
     );
@@ -114,6 +115,41 @@ export default function RecommendResultPage() {
         </section>
       </main>
     </section>
+  );
+}
+
+function RecommendResultSkeleton() {
+  return (
+    <SkeletonStatus className={styles.content} label="추천 결과를 불러오는 중입니다.">
+      <div className={styles.intro}>
+        <div className={styles.skeletonIntroText}>
+          <Skeleton width="78%" height={24} radius={999} />
+          <Skeleton width="46%" height={24} radius={999} />
+        </div>
+        <Skeleton width={80} height={80} variant="circle" />
+      </div>
+
+      <ul className={styles.resultList}>
+        {Array.from({ length: 3 }).map((_, index) => (
+          <li key={index}>
+            <article className={styles.resultCard}>
+              <Skeleton width={42} height={22} radius={4} />
+              <div className={styles.cardBody}>
+                <div className={styles.textGroup}>
+                  <Skeleton width="54%" height={24} radius={999} />
+                  <Skeleton width="86%" height={16} radius={999} />
+                  <div className={styles.metaRow}>
+                    <Skeleton width="30%" height={16} radius={999} />
+                    <Skeleton width="26%" height={16} radius={999} />
+                    <Skeleton className={styles.calories} width="26%" height={22} radius={999} />
+                  </div>
+                </div>
+              </div>
+            </article>
+          </li>
+        ))}
+      </ul>
+    </SkeletonStatus>
   );
 }
 

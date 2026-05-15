@@ -39,6 +39,7 @@ import {
   isValidBirthYear,
   makeYearOptions,
 } from "@/shared/commons/picker/yearOptions";
+import { Skeleton, SkeletonStatus } from "@/shared/commons/skeleton/Skeleton";
 import { toast } from "@/shared/commons/toast/toast";
 import { useLocation, useNavigate } from "@/shared/navigation/stackflowNavigation";
 import { useSetTargets } from "@/shared/stores/targetNutrient.store";
@@ -797,7 +798,7 @@ export default function GoalEditPage() {
       <PageHeader title={isPlanStage ? undefined : "목표 재설정"} onBack={handleBack} />
 
       <main className={styles.main}>
-        {isPending && !draft && <p className={styles.loadingText}>불러오는 중...</p>}
+        {isPending && !draft && <GoalEditSummarySkeleton />}
         {!isPending && !draft && <p className={styles.loadingText}>프로필을 불러오지 못했어요</p>}
 
         {draft && stage === "summary" && (
@@ -908,5 +909,21 @@ export default function GoalEditPage() {
         description="탄단지 비율의 합을 100으로 맞춰주세요"
       />
     </div>
+  );
+}
+
+function GoalEditSummarySkeleton() {
+  return (
+    <SkeletonStatus className={styles.summarySection} label="프로필 목표 정보를 불러오는 중입니다.">
+      {SUMMARY_FIELDS.map((field) => (
+        <div key={field.id} className={styles.summaryItem}>
+          <Skeleton width="30%" height={22} radius={999} />
+          <span className={styles.summaryValueRow}>
+            <Skeleton width={92} height={22} radius={999} />
+            <Skeleton width={24} height={24} variant="circle" />
+          </span>
+        </div>
+      ))}
+    </SkeletonStatus>
   );
 }

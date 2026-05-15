@@ -17,6 +17,7 @@ import { PATH } from "@/router/path";
 import { getMealRecordPath, getMealSearchPath } from "@/router/pathHelpers";
 import type { MealTime, MealType, RegisterMealRequestDto } from "@/shared/api/types/api.dto";
 import ScoreProgress from "@/shared/commons/progress/Progress";
+import { Skeleton, SkeletonStatus } from "@/shared/commons/skeleton/Skeleton";
 import { toast } from "@/shared/commons/toast/toast";
 import { useNavigate } from "@/shared/navigation/stackflowNavigation";
 import { useSelectedDateKey, useSetSelectedDate } from "@/shared/stores/selectedDate.store";
@@ -89,7 +90,7 @@ export default function DiaryPage() {
   const isCalorieExceeded = totalCalories > targetCalories;
   const mealScore = nutritionMetrics?.score.totalScore ?? 0;
 
-  const calorieMessage = isPending ? "식사 데이터를 불러오는 중이에요" : calorieSummary.message;
+  const calorieMessage = calorieSummary.message;
   const handleMoveMealRecord = (mealType: MealType) => {
     const hasRecord =
       (dayMeals?.menusByTime[mealType]?.length ?? 0) > 0 ||
@@ -138,59 +139,67 @@ export default function DiaryPage() {
         <Calendar initialDate={selectedDate} onSelectDate={setSelectedDate} />
 
         <div className={styles.content}>
-          <ActionCard onClick={handleTodayMealScoreClick} className={styles.summaryCard}>
-            <div className={styles.scoreCard}>
-              <p className={styles.scoreText}>
-                <p className={styles.calorieText}>
-                  <span className={`${styles.scoreCurrent} typo-h2`}>
-                    {calorieSummary.roundedCurrentCalories.toLocaleString("ko-KR")}
-                  </span>
-                  <span className="typo-title2">
-                    / {roundedTargetCalories.toLocaleString("ko-KR")} kcal
-                  </span>
-                </p>
-                <span className={styles.scoreDivider} aria-hidden="true" />
-                <span className={`${styles.score} typo-title2`}>{mealScore}점</span>
+          {isPending ? (
+            <ActionCard className={styles.summaryCard}>
+              <DiarySummarySkeleton />
+            </ActionCard>
+          ) : (
+            <ActionCard onClick={handleTodayMealScoreClick} className={styles.summaryCard}>
+              <div className={styles.scoreCard}>
+                <p className={styles.scoreText}>
+                  <p className={styles.calorieText}>
+                    <span className={`${styles.scoreCurrent} typo-h2`}>
+                      {calorieSummary.roundedCurrentCalories.toLocaleString("ko-KR")}
+                    </span>
+                    <span className="typo-title2">
+                      / {roundedTargetCalories.toLocaleString("ko-KR")} kcal
+                    </span>
+                  </p>
+                  <span className={styles.scoreDivider} aria-hidden="true" />
+                  <span className={`${styles.score} typo-title2`}>{mealScore}점</span>
 
-                <ChevronRight size={24} className={styles.icon} />
-              </p>
-              <div className={styles.scoreContainer}>
-                <ScoreProgress
-                  value={calorieProgress}
-                  variant={isCalorieExceeded ? "danger-white" : "primary-gray"}
-                />
-                <p className={`${styles.calorieMessage} typo-body4`}>{calorieMessage}</p>
+                  <ChevronRight size={24} className={styles.icon} />
+                </p>
+                <div className={styles.scoreContainer}>
+                  <ScoreProgress
+                    value={calorieProgress}
+                    variant={isCalorieExceeded ? "danger-white" : "primary-gray"}
+                  />
+                  <p className={`${styles.calorieMessage} typo-body4`}>{calorieMessage}</p>
+                </div>
               </div>
-            </div>
-          </ActionCard>
+            </ActionCard>
+          )}
 
           <div className="divider" />
 
           <section className={styles.actionCardList}>
-            {DIARY_MEALS.map((meal) => {
-              const mealMenus = dayMeals?.menusByTime[meal.type] ?? [];
-              const mealCalories = getTotalMealCalories(mealMenus);
-              const didNotEat = Boolean(dayMeals?.didNotEatByTime[meal.type]);
+            {isPending
+              ? DIARY_MEALS.map((meal) => <MealRecordCardSkeleton key={meal.type} />)
+              : DIARY_MEALS.map((meal) => {
+                  const mealMenus = dayMeals?.menusByTime[meal.type] ?? [];
+                  const mealCalories = getTotalMealCalories(mealMenus);
+                  const didNotEat = Boolean(dayMeals?.didNotEatByTime[meal.type]);
 
-              return (
-                <MealRecordCard
-                  key={meal.type}
-                  title={meal.label}
-                  iconSrc={meal.iconSrc}
-                  menus={mealMenus}
-                  calories={mealCalories}
-                  emptyStatusText={meal.emptyStatusText}
-                  didNotEat={didNotEat}
-                  isExpanded={expandedMealType === meal.type}
-                  onNavigate={() => handleMoveMealRecord(meal.type)}
-                  onToggleExpand={() => {
-                    setExpandedMealType((prev) => (prev === meal.type ? null : meal.type));
-                  }}
-                  mealType={meal.type}
-                  selectedDate={selectedDate}
-                />
-              );
-            })}
+                  return (
+                    <MealRecordCard
+                      key={meal.type}
+                      title={meal.label}
+                      iconSrc={meal.iconSrc}
+                      menus={mealMenus}
+                      calories={mealCalories}
+                      emptyStatusText={meal.emptyStatusText}
+                      didNotEat={didNotEat}
+                      isExpanded={expandedMealType === meal.type}
+                      onNavigate={() => handleMoveMealRecord(meal.type)}
+                      onToggleExpand={() => {
+                        setExpandedMealType((prev) => (prev === meal.type ? null : meal.type));
+                      }}
+                      mealType={meal.type}
+                      selectedDate={selectedDate}
+                    />
+                  );
+                })}
           </section>
 
           <div className={styles.bodyCardList}>
@@ -199,6 +208,52 @@ export default function DiaryPage() {
         </div>
       </main>
     </div>
+  );
+}
+
+function DiarySummarySkeleton() {
+  return (
+    <SkeletonStatus className={styles.scoreCard} label="식사 데이터를 불러오는 중입니다.">
+      <div className={styles.scoreText}>
+        <Skeleton width={168} height={36} radius={999} />
+        <span className={styles.scoreDivider} aria-hidden="true" />
+        <Skeleton width={52} height={28} radius={999} />
+        <Skeleton className={styles.icon} width={24} height={24} variant="circle" />
+      </div>
+      <div className={styles.scoreContainer}>
+        <Skeleton width="100%" height={8} radius={999} />
+        <div className={styles.calorieMessage}>
+          <Skeleton width={156} height={18} radius={999} />
+        </div>
+      </div>
+    </SkeletonStatus>
+  );
+}
+
+function MealRecordCardSkeleton() {
+  return (
+    <ActionCard className={styles.mealCard}>
+      <SkeletonStatus
+        className={styles.mealCardSkeletonContent}
+        label="식사 카드 정보를 불러오는 중입니다."
+      >
+        <div className={styles.mealHeader}>
+          <div className={styles.mealTitleContainer}>
+            <Skeleton width={32} height={32} variant="circle" />
+            <Skeleton width={52} height={22} radius={999} />
+          </div>
+          <Skeleton width={24} height={24} variant="circle" />
+        </div>
+
+        <div className={styles.mealSummaryCard}>
+          <div className={styles.mealSummaryButton}>
+            <Skeleton width="58%" height={18} radius={999} />
+            <Skeleton width="28%" height={18} radius={999} />
+          </div>
+          <Skeleton width="72%" height={16} radius={999} />
+        </div>
+      </SkeletonStatus>
+    </ActionCard>
   );
 }
 

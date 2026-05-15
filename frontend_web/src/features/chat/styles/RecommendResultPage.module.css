@@ -42,6 +42,13 @@
   white-space: pre-wrap;
 }
 
+.skeletonIntroText {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 8px;
+}
+
 .resultList {
   display: flex;
   flex-direction: column;
@@ -105,11 +112,6 @@
 .calories {
   color: var(--label-normal);
   margin-left: auto;
-}
-
-.loadingText {
-  color: var(--label-assistive);
-  text-align: center;
 }
 
 .characterImage {

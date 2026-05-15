@@ -31,6 +31,7 @@ import { Button } from "@/shared/commons/button/Button";
 import { MealMenuCard } from "@/shared/commons/card/MealMenuCard";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
 import { ConfirmModal } from "@/shared/commons/modals/ConfirmModal";
+import { Skeleton, SkeletonStatus } from "@/shared/commons/skeleton/Skeleton";
 import { toast } from "@/shared/commons/toast/toast";
 import {
   navigateBack,
@@ -411,7 +412,7 @@ export default function MealRecordPage() {
     navigate(getMealSearchPath(dateKey, mealType));
   };
 
-  if (isSummaryReady) return <p> 로딩 중</p>;
+  if (isSummaryReady) return <MealRecordPageSkeleton onBack={handleBack} />;
 
   return (
     <section className={styles.page}>
@@ -540,6 +541,60 @@ export default function MealRecordPage() {
         onCancel={handleExit}
         onConfirm={() => {}}
       />
+    </section>
+  );
+}
+
+function MealRecordPageSkeleton({ onBack }: { onBack: () => void }) {
+  return (
+    <section className={styles.page}>
+      <PageHeader title="식사 기록 상세" onBack={onBack} />
+
+      <main className={styles.content}>
+        <SkeletonStatus label="식사 기록 상세를 불러오는 중입니다.">
+          <section className={styles.summarySection}>
+            <article className={styles.summaryCard}>
+              <Skeleton width="28%" height={22} radius={999} />
+              <div className={styles.calorieRow}>
+                <Skeleton width={112} height={36} radius={999} />
+                <Skeleton width={40} height={22} radius={999} />
+              </div>
+            </article>
+          </section>
+
+          <div className="dividerMargin20 divider" />
+
+          <section className={styles.mealTypeSection}>
+            <div className={styles.mealTypeButtonGroup}>
+              {MEAL_TYPE_OPTIONS.map((option) => (
+                <Skeleton key={option.key} width={58} height={34} radius={999} />
+              ))}
+            </div>
+          </section>
+
+          <section className={styles.menuSection}>
+            <div className={styles.menuList}>
+              {Array.from({ length: 3 }).map((_, index) => (
+                <article key={index} className={styles.menuCardSkeleton}>
+                  <div className={styles.menuCardSkeletonHeader}>
+                    <Skeleton width="52%" height={24} radius={999} />
+                    <Skeleton width={24} height={24} variant="circle" />
+                  </div>
+                  <div className={styles.menuCardSkeletonMeta}>
+                    <Skeleton width="38%" height={16} radius={999} />
+                    <Skeleton width="28%" height={20} radius={999} />
+                  </div>
+                </article>
+              ))}
+            </div>
+          </section>
+        </SkeletonStatus>
+      </main>
+
+      <footer className={styles.footer}>
+        <Skeleton width="100%" height={48} radius={8} />
+        <Skeleton width="100%" height={48} radius={8} />
+      </footer>
     </section>
   );
 }

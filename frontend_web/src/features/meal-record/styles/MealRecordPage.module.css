@@ -68,6 +68,24 @@
   gap: 8px;
 }
 
+.menuCardSkeleton {
+  background-color: var(--bg-white);
+  border: 1px solid var(--border-neutral);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 16px 20px;
+  width: 100%;
+}
+
+.menuCardSkeletonHeader,
+.menuCardSkeletonMeta {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+}
+
 .photoGroupCard {
   display: flex;
   flex-direction: column;

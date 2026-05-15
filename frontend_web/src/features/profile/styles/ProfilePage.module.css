@@ -19,6 +19,12 @@
   gap: 20px;
 }
 
+.headerIconButton {
+  align-items: center;
+  display: inline-flex;
+  justify-content: center;
+}
+
 .summarySection {
   display: flex;
   flex-direction: column;
@@ -169,6 +175,25 @@
   color: var(--label-alternative);
   text-align: center;
   padding: 24px 0;
+}
+
+.weeklyChartSkeleton {
+  align-items: end;
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  min-height: 170px;
+  padding: 8px 6px 0;
+}
+
+.weeklyChartSkeletonColumn {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  height: 100%;
+  justify-content: flex-end;
+  min-width: 0;
 }
 
 .sheetContainer {
