@@ -60,7 +60,6 @@
 
 .inlineIconButton {
   align-items: center;
-  color: var(--label-normal);
   display: inline-flex;
   flex-shrink: 0;
   justify-content: center;

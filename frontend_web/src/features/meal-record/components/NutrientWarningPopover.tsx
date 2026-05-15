@@ -1,4 +1,5 @@
 import { Popover } from "@base-ui/react/popover";
+import { Info } from "lucide-react";
 
 import styles from "../styles/NutrientWarningPopover.module.css";
 
@@ -19,7 +20,7 @@ export function NutrientWarningPopover({ className }: NutrientWarningPopoverProp
         className={`${styles.warningButton} ${className ?? ""}`}
         aria-label="영양성분 주의 안내"
       >
-        <img src="/icons/info-icon.svg" alt="" aria-hidden="true" />
+        <Info size={19} aria-hidden="true" />
       </Popover.Trigger>
 
       <Popover.Portal>

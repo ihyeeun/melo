@@ -140,18 +140,22 @@
   background-color: var(--primary-normal);
 }
 
+/* 부족 */
 .progressInsufficient {
+  background-color: var(--status-low);
+}
+
+/* 적정 */
+.progressAdequate {
+  background-color: var(--status-success);
+}
+
+/* 주의 */
+.progressCaution {
   background-color: var(--status-warning);
 }
 
-.progressAdequate {
-  background-color: var(--status-link);
-}
-
-.progressCaution {
-  background-color: var(--primary-normal);
-}
-
+/* 초과 */
 .progressExcess {
   background-color: var(--status-error);
 }
@@ -172,15 +176,15 @@
 }
 
 .badgeInsufficient .nutrientBadgeDot {
-  background-color: var(--status-warning);
+  background-color: var(--status-low);
 }
 
 .badgeAdequate .nutrientBadgeDot {
-  background-color: var(--status-link);
+  background-color: var(--status-success);
 }
 
 .badgeCaution .nutrientBadgeDot {
-  background-color: var(--primary-normal);
+  background-color: var(--status-warning);
 }
 
 .badgeExcess .nutrientBadgeDot {

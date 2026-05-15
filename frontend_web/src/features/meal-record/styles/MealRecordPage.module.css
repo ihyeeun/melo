@@ -14,21 +14,20 @@
 }
 
 .summaryCard {
-  background-color: var(--bg-primary-2);
+  background-color: var(--bg-white);
   border-radius: 8px;
   color: var(--label-normal);
   display: flex;
-  flex-direction: column;
   gap: 8px;
   padding: 20px;
-  justify-content: space-between;
-  align-items: space-between;
+  align-items: center;
 }
 
 .calorieRow {
   display: flex;
   gap: 4px;
   align-items: baseline;
+  margin-left: auto;
 }
 
 .currentCalorie {

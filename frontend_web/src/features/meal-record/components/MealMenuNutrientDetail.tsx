@@ -383,16 +383,18 @@ export function MealMenuNutrientDetail({
           </div>
         </div>
 
-        <div className={styles.macroRow}>
+        <div className="divider" />
+
+        <div className={styles.macroContainer}>
           {summaryMacroItems.map((macro) => (
             <article key={macro.key} className={styles.macroItem}>
               <div className={styles.macroLabelRow}>
                 <p className={`typo-label3 ${styles.textAlternative}`}>{macro.label}</p>
                 {macro.showWarning && <NutrientWarningPopover />}
               </div>
-              <p className={`typo-body1 ${styles.macroValue}`}>
+              <p className={`typo-title3 ${styles.macroValue}`}>
                 <span className={styles.macroNumber}>{formatNutrientValue(macro.value)}</span>
-                <span className={`typo-body1 ${styles.macroUnit}`}>g</span>
+                <span className={`${styles.macroUnit}`}>g</span>
               </p>
             </article>
           ))}

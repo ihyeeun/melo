@@ -185,6 +185,7 @@
   --status-warning: var(--yellow-500);
   --status-link: var(--blue-500);
   --status-success: var(--green-500);
+  --status-low: var(--gray-500);
 
   /* =========================
  * Semantic - Color / Border
@@ -196,7 +197,7 @@
   /* =========================
  * Semantic - Color / Dimmer
  * ========================= */
-  --dimmer-dimmer: rgba(0, 0, 0, 0.5);
+  --dimmer-dimmer: rgba(0, 0, 0, 0.65);
 }
 
 /* =========================

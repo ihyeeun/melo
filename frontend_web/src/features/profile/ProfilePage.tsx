@@ -1,4 +1,4 @@
-import { ChevronRightIcon, Pencil, Settings } from "lucide-react";
+import { ChevronRightIcon } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import ActionCard from "@/features/home/components/cards/ActionCard";
@@ -168,7 +168,7 @@ export default function ProfilePage() {
             onClick={() => navigate(PATH.SETTINGS)}
             aria-label="설정"
           >
-            <Settings size={24} />
+            <img src="/icons/setting.svg" alt="설정" width={24} height={24} />
           </button>
         }
       />
@@ -183,7 +183,7 @@ export default function ProfilePage() {
                   className={styles.nicknameButton}
                   onClick={handleNicknameGuardToggleTap}
                 >
-                  <span className={`${styles.nickname} typo-title2`}>
+                  <span className={`${styles.nickname} typo-title1`}>
                     <span className={styles.highlight}>{nickname}</span> 님
                   </span>
                 </button>
@@ -196,7 +196,7 @@ export default function ProfilePage() {
                     setSheetOpen(true);
                   }}
                 >
-                  <Pencil size={20} />
+                  <img src="/icons/pencil.svg" alt="닉네임 수정" width={24} height={24} />
                 </button>
               </div>
 
