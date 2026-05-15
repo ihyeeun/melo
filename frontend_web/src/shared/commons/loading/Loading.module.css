@@ -1,0 +1,67 @@
+.indicator {
+  align-items: center;
+  display: inline-flex;
+  justify-content: center;
+}
+
+.iconGroup {
+  align-items: center;
+  display: flex;
+  gap: 2px;
+  justify-content: center;
+}
+
+.icon {
+  animation: loading-tilt 0.72s ease-in-out infinite alternate;
+  display: block;
+  flex: 0 0 auto;
+  height: auto;
+  transform-origin: 50% 65%;
+  width: var(--loading-icon-size, 34px);
+}
+
+/* .icon:nth-child(2) {
+  animation-delay: 120ms;
+}
+
+.icon:nth-child(3) {
+  animation-delay: 240ms;
+} */
+
+.screen {
+  align-items: center;
+  background: var(--loading-screen-background, var(--dimmer-dimmer));
+  display: flex;
+  justify-content: center;
+  min-height: 100dvh;
+  width: 100%;
+}
+
+.visuallyHidden {
+  border: 0;
+  clip: rect(0 0 0 0);
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  padding: 0;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
+}
+
+@keyframes loading-tilt {
+  from {
+    transform: rotate(-14deg);
+  }
+
+  to {
+    transform: rotate(14deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .icon {
+    animation: none;
+    transform: rotate(0deg);
+  }
+}
