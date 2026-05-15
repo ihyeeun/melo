@@ -49,6 +49,37 @@
   gap: 8px;
 }
 
+.filterList {
+  display: flex;
+  gap: 4px;
+  -ms-overflow-style: none;
+  overflow-x: auto;
+  scrollbar-width: none;
+  margin-bottom: 12px;
+}
+
+.filterList::-webkit-scrollbar {
+  display: none;
+}
+
+.filterBadge {
+  align-items: center;
+  background-color: var(--bg-white);
+  border: 1px solid var(--border-neutral);
+  border-radius: 100px;
+  color: var(--label-normal);
+  display: inline-flex;
+  justify-content: center;
+  padding: 6px 14px;
+  white-space: nowrap;
+}
+
+.filterBadgeSelected {
+  background-color: var(--primary-normal);
+  border-color: none;
+  color: var(--label-white);
+}
+
 .resultList {
   display: flex;
   flex-direction: column;
@@ -112,6 +143,12 @@
 .calories {
   color: var(--label-normal);
   margin-left: auto;
+}
+
+.emptyStatus {
+  color: var(--label-assistive);
+  padding: 24px 0;
+  text-align: center;
 }
 
 .characterImage {

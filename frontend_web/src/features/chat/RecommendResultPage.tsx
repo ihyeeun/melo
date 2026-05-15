@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { useGetChatHistoryQuery } from "@/features/chat/hooks/queries/useGetChatQuery";
 import styles from "@/features/chat/styles/RecommendResultPage.module.css";
@@ -13,10 +13,19 @@ import {
   useSearchParams,
 } from "@/shared/navigation/stackflowNavigation";
 
+type RecommendFilter = "all" | "brand" | "food";
+
+const RECOMMEND_FILTER_OPTIONS: { key: RecommendFilter; label: string }[] = [
+  { key: "all", label: "전체" },
+  { key: "brand", label: "브랜드" },
+  { key: "food", label: "음식" },
+];
+
 export default function RecommendResultPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const chatId = getSafeChatId(searchParams.get("chatId"));
+  const [selectedFilter, setSelectedFilter] = useState<RecommendFilter>("all");
 
   const { data, isPending } = useGetChatHistoryQuery();
   const { data: profile } = useGetProfileQuery();
@@ -29,6 +38,19 @@ export default function RecommendResultPage() {
     chatItem?.response_payload?.chat_category === "recommendation"
       ? chatItem.response_payload
       : null;
+  const filteredRecommendations = useMemo(() => {
+    const recommendations = recommendationPayload?.recommendations ?? [];
+
+    if (selectedFilter === "brand") {
+      return recommendations.filter((item) => hasBrand(item.brand));
+    }
+
+    if (selectedFilter === "food") {
+      return recommendations.filter((item) => !hasBrand(item.brand));
+    }
+
+    return recommendations;
+  }, [recommendationPayload?.recommendations, selectedFilter]);
 
   useEffect(() => {
     if (chatId === null) {
@@ -69,50 +91,76 @@ export default function RecommendResultPage() {
       <PageHeader title="메뉴 추천 결과" onBack={() => navigateBack({ fallbackTo: PATH.CHAT })} />
 
       <main className={styles.main}>
-        <section className={styles.content}>
-          <div className={styles.intro}>
+        <div className={styles.content}>
+          <section className={styles.intro}>
             <p className={`${styles.introMessage} typo-title2`}>
               <span className={styles.primaryText}>{profile?.nickname ?? ""}</span>님을 위한 메뉴를
               추천해드려요!
             </p>
 
             <img src="/icons/character-love.svg" className={styles.characterImage} />
-          </div>
+          </section>
 
-          <ul className={styles.resultList}>
-            {recommendationPayload.recommendations.map((item) => (
-              <li key={item.menu_id}>
-                <button
-                  type="button"
-                  className={styles.resultCard}
-                  onClick={() => navigate(getRecommendDetailPath(chatItem.id, item.menu_id))}
-                >
-                  <span className={`${styles.rankBadge} typo-label6`}>{item.rank}위</span>
+          <section>
+            <div className={styles.filterList} aria-label="추천 결과 필터">
+              {RECOMMEND_FILTER_OPTIONS.map((option) => {
+                const isSelected = selectedFilter === option.key;
 
-                  <div className={styles.cardBody}>
-                    <div className={styles.textGroup}>
-                      <p className={`${styles.menuName} typo-title2`}>{item.menu_name}</p>
-                      <p className={`${styles.summary} typo-label4`}>{item.one_line_summary}</p>
+                return (
+                  <button
+                    key={option.key}
+                    type="button"
+                    className={`${styles.filterBadge} ${isSelected ? styles.filterBadgeSelected : ""} typo-label4`}
+                    aria-pressed={isSelected}
+                    onClick={() => setSelectedFilter(option.key)}
+                  >
+                    {option.label}
+                  </button>
+                );
+              })}
+            </div>
 
-                      <div className={styles.metaRow}>
-                        {item.brand && (
-                          <span className={`${styles.tertiaryText} typo-label4`}>{item.brand}</span>
-                        )}
-                        <span className={`${styles.secondaryText} typo-label4`}>
-                          1{item.unit_quantity} ({item.weight}
-                          {item.unit === 0 ? "g" : "ml"})
-                        </span>
-                        <span className={`${styles.calories} typo-title2`}>
-                          {formatCalories(item.calories)} kcal
-                        </span>
+            {filteredRecommendations.length > 0 ? (
+              <ul className={styles.resultList}>
+                {filteredRecommendations.map((item) => (
+                  <li key={item.menu_id}>
+                    <button
+                      type="button"
+                      className={styles.resultCard}
+                      onClick={() => navigate(getRecommendDetailPath(chatItem.id, item.menu_id))}
+                    >
+                      <span className={`${styles.rankBadge} typo-label6`}>{item.rank}위</span>
+
+                      <div className={styles.cardBody}>
+                        <div className={styles.textGroup}>
+                          <p className={`${styles.menuName} typo-title2`}>{item.menu_name}</p>
+                          <p className={`${styles.summary} typo-label4`}>{item.one_line_summary}</p>
+
+                          <div className={styles.metaRow}>
+                            {hasBrand(item.brand) && (
+                              <span className={`${styles.tertiaryText} typo-label4`}>
+                                {item.brand}
+                              </span>
+                            )}
+                            <span className={`${styles.secondaryText} typo-label4`}>
+                              1{item.unit_quantity} ({item.weight}
+                              {item.unit === 0 ? "g" : "ml"})
+                            </span>
+                            <span className={`${styles.calories} typo-title2`}>
+                              {formatCalories(item.calories)} kcal
+                            </span>
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  </div>
-                </button>
-              </li>
-            ))}
-          </ul>
-        </section>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className={`${styles.emptyStatus} typo-label4`}>해당하는 추천 메뉴가 없어요.</p>
+            )}
+          </section>
+        </div>
       </main>
     </section>
   );
@@ -157,4 +205,8 @@ function formatCalories(value: number) {
   return value.toLocaleString("ko-KR", {
     maximumFractionDigits: 1,
   });
+}
+
+function hasBrand(brand?: string) {
+  return Boolean(brand?.trim());
 }
