@@ -541,6 +541,7 @@ export default function AppWebViewScreen({
         originWhitelist={["*"]}
         style={styles.webview}
         webviewDebuggingEnabled={true}
+        hideKeyboardAccessoryView
         showsHorizontalScrollIndicator={false}
         showsVerticalScrollIndicator={false}
         onOpenWindow={onOpenWindow}
