@@ -14,7 +14,7 @@ import {
 import { PATH } from "@/router/path";
 import { Button } from "@/shared/commons/button/Button";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
-import { useLocation, useNavigate } from "@/shared/navigation/stackflowNavigation";
+import { navigateBack, useLocation, useNavigate } from "@/shared/navigation/stackflowNavigation";
 import type { TargetsNutrients } from "@/shared/stores/targetNutrient.store";
 import { calculateMacroPercentToGram, type MacroKey } from "@/shared/utils/nutrientScore";
 
@@ -132,7 +132,7 @@ export default function TodayMealScorePage() {
 
   return (
     <section className={styles.page}>
-      <PageHeader title="오늘의 식사 분석" onBack={() => navigate(-1)} />
+      <PageHeader title="오늘의 식사 분석" onBack={() => navigateBack({ fallbackTo: PATH.HOME })} />
 
       <main className={styles.main}>
         <div className={styles.content}>
@@ -203,7 +203,7 @@ export default function TodayMealScorePage() {
 
       <footer className={styles.footer}>
         <Button
-          onClick={() => navigate(-1)}
+          onClick={() => navigateBack({ fallbackTo: PATH.HOME })}
           variant="filled"
           interaction="normal"
           size="large"
