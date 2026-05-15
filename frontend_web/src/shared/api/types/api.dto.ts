@@ -118,13 +118,13 @@ export interface SearchInBrandRequestDto extends SearchInputField {
 
 export interface RegisterMealRequestDto extends DateField, MealTimeField {
   image?: string;
-  menu_ids: MenuId[];
-  menu_quantities: number[];
+  menu_ids?: MenuId[];
+  menu_quantities?: number[];
   menu_input_modes?: MealMenuInputMode[];
 }
 
 export interface DeleteMealRequestDto extends DateField, MealTimeField {
-  menu_id: MenuId;
+  menu_id?: MenuId;
 }
 
 export interface MealResponseDto extends MealTimeField {

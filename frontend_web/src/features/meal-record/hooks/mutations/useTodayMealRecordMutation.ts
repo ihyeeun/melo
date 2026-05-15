@@ -108,7 +108,7 @@ export function useTodayMealRecordDeleteWithRollbackMutation() {
         let rollbackSucceeded = true;
 
         try {
-          if (snapshot.menu_ids.length > 0) {
+          if ((snapshot.menu_ids?.length ?? 0) > 0) {
             await postTodayMealRecordRegister(snapshot);
           }
         } catch {
