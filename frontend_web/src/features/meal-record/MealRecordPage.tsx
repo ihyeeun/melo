@@ -334,7 +334,7 @@ export default function MealRecordPage() {
 
     try {
       for (const request of changedRequests) {
-        if (request.menu_ids.length === 0) {
+        if ((request.menu_ids?.length ?? 0) === 0) {
           const deleteResult = await deleteWithRollbackAsync({
             dateKey,
             request,
@@ -488,7 +488,7 @@ export default function MealRecordPage() {
           ) : showDidNotEatState ? (
             <article className={styles.didNotEatState}>
               <img
-                src="/icons/character-sad.svg"
+                src="/icons/character-not-eat.svg"
                 alt=""
                 aria-hidden="true"
                 className={styles.didNotEatImage}

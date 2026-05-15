@@ -121,9 +121,7 @@
 }
 
 .didNotEatState {
-  background-color: var(--bg-white);
-  border-radius: 8px;
-  color: var(--label-normal);
+  color: var(--label-alternative);
   display: flex;
   flex-direction: column;
   align-items: center;

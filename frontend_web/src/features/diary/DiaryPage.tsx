@@ -8,14 +8,17 @@ import TodayBodyLogSection from "@/features/home/components/TodayBodyLogSection"
 import { useDayMealsQuery } from "@/features/home/hooks/queries/useDayMealsQuery";
 import type { MenuWithQuantity } from "@/features/home/utils/dayMealSummary";
 import { getCalorieSummary, hasValidTargets } from "@/features/home/utils/todayMealFeedback";
-import { useTodayMealRecordRegisterMutation } from "@/features/meal-record/hooks/mutations/useTodayMealRecordMutation";
+import {
+  useTodayMealRecordDeleteMutation,
+  useTodayMealRecordRegisterMutation,
+} from "@/features/meal-record/hooks/mutations/useTodayMealRecordMutation";
 import {
   formatMenuDraftKey,
   useMenuDraftInit,
 } from "@/features/meal-record/stores/menuDraft.store";
 import { PATH } from "@/router/path";
 import { getMealRecordPath, getMealSearchPath } from "@/router/pathHelpers";
-import type { MealTime, MealType, RegisterMealRequestDto } from "@/shared/api/types/api.dto";
+import type { MealTime, MealType } from "@/shared/api/types/api.dto";
 import { LoadingOverlay } from "@/shared/commons/loading/Loading";
 import ScoreProgress from "@/shared/commons/progress/Progress";
 import { Skeleton, SkeletonStatus } from "@/shared/commons/skeleton/Skeleton";
@@ -284,24 +287,34 @@ function MealRecordCard({
   selectedDate: Date;
 }) {
   const hasMenus = menus.length > 0;
-  const { mutate: didNotEatMutate, isPending: isDidNotEatPending } =
+  const { mutate: registerDidNotEatMutate, isPending: isRegisterDidNotEatPending } =
     useTodayMealRecordRegisterMutation();
+  const { mutate: deleteDidNotEatMutate, isPending: isDeleteDidNotEatPending } =
+    useTodayMealRecordDeleteMutation();
+  const isDidNotEatPending = isRegisterDidNotEatPending || isDeleteDidNotEatPending;
 
-  const handleDidNotEatClick = () => {
-    const body: RegisterMealRequestDto = {
+  const handleDidNotEatToggle = () => {
+    if (hasMenus || isDidNotEatPending) {
+      return;
+    }
+
+    const body = {
       date: formatDateKey(selectedDate),
       time: Number(mealType) as MealTime,
-      image: "",
-      menu_ids: [],
-      menu_quantities: [],
-      menu_input_modes: [],
     };
 
-    return didNotEatMutate(body);
+    if (didNotEat) {
+      deleteDidNotEatMutate(body);
+      return;
+    }
+
+    registerDidNotEatMutate(body);
   };
 
   return (
-    <ActionCard className={`${styles.mealCard} ${hasMenus ? "" : styles.mealCardEmpty}`}>
+    <ActionCard
+      className={`${styles.mealCard} ${hasMenus || didNotEat ? "" : styles.mealCardEmpty}`}
+    >
       <div className={styles.mealHeader}>
         <button type="button" onClick={onNavigate} className={styles.mealTitleContainer}>
           <img src={iconSrc} alt="" aria-hidden="true" className={styles.mealIcon} />
@@ -318,7 +331,13 @@ function MealRecordCard({
             <ChevronRight size={24} />
           </button>
         ) : didNotEat && emptyStatusText ? (
-          <button type="button" onClick={onNavigate} className={styles.emptyStatusButton}>
+          <button
+            type="button"
+            onClick={handleDidNotEatToggle}
+            className={styles.emptyStatusButton}
+            aria-pressed
+            disabled={isDidNotEatPending}
+          >
             <div className={styles.emptyStatusIconActive}>
               <Check size={13} strokeWidth={3} />
             </div>
@@ -329,8 +348,10 @@ function MealRecordCard({
             {emptyStatusText && (
               <button
                 type="button"
-                onClick={handleDidNotEatClick}
+                onClick={handleDidNotEatToggle}
                 className={styles.emptyStatusButton}
+                aria-pressed={false}
+                disabled={isDidNotEatPending}
               >
                 <div className={styles.emptyStatusIcon}>
                   <Check size={13} strokeWidth={3} />
