@@ -29,7 +29,7 @@ export function AppToastViewport() {
             key={item.id}
             toast={item}
             className="app-toast"
-            swipeDirection={["right", "down"]}
+            swipeDirection={["right", "down", "up", "left"]}
           >
             <span className="app-toast-icon" aria-hidden="true">
               <ToastStatusIcon type={item.type} />
