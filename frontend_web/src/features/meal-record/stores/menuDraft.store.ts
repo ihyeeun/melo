@@ -20,6 +20,7 @@ type MenusDraft = {
   existingMenus: MenuDraftType[];
   previewsById: Record<number, MealRecordTransferPreview>;
   image?: string;
+  serverSignature?: string;
 };
 
 type InitDraftParams = {
@@ -27,6 +28,7 @@ type InitDraftParams = {
   existingMenuCount: number;
   seedMenus?: MenuDraftType[];
   image?: string | null;
+  serverSignature?: string;
 };
 
 type UpsertMenuParams = {
@@ -91,11 +93,17 @@ export const useMenuDraftStore = create<MenuDraftStoreState>()(
     (set) => ({
       drafts: {},
 
-      initDraft: ({ key, existingMenuCount, seedMenus, image }) => {
+      initDraft: ({ key, existingMenuCount, seedMenus, image, serverSignature }) => {
         set((state) => {
           const prev = state.drafts[key];
           const safeCount = Math.max(0, Math.floor(existingMenuCount));
           const normalizedImage = normalizeDraftImage(image);
+          const hasDraftPreviews = Object.keys(prev?.previewsById ?? {}).length > 0;
+          const hasServerChanged =
+            typeof serverSignature === "string" &&
+            ((typeof prev?.serverSignature === "string" &&
+              prev.serverSignature !== serverSignature) ||
+              (prev?.serverSignature === undefined && !hasDraftPreviews));
 
           if (!prev) {
             return {
@@ -106,6 +114,22 @@ export const useMenuDraftStore = create<MenuDraftStoreState>()(
                   existingMenus: [...(seedMenus ?? [])],
                   previewsById: {},
                   image: normalizedImage,
+                  serverSignature,
+                },
+              },
+            };
+          }
+
+          if (hasServerChanged) {
+            return {
+              drafts: {
+                ...state.drafts,
+                [key]: {
+                  existingMenuCount: safeCount,
+                  existingMenus: [...(seedMenus ?? [])],
+                  previewsById: {},
+                  image: normalizedImage,
+                  serverSignature,
                 },
               },
             };
@@ -118,6 +142,7 @@ export const useMenuDraftStore = create<MenuDraftStoreState>()(
                 ...prev,
                 existingMenuCount: Math.max(prev.existingMenuCount, safeCount),
                 image: normalizedImage ?? prev.image,
+                serverSignature: serverSignature ?? prev.serverSignature,
               },
             },
           };

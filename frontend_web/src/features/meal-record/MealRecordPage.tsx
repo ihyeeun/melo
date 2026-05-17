@@ -2,6 +2,7 @@ import { PlusIcon } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { useDayMealsQuery } from "@/features/home/hooks/queries/useDayMealsQuery";
+import type { MenuWithQuantity } from "@/features/home/utils/dayMealSummary";
 import {
   DELETE_MEAL_RECORD_RESULT,
   useTodayMealRecordDeleteWithRollbackMutation,
@@ -83,6 +84,24 @@ function buildMenuSignature(
     .join("|");
 }
 
+function toDraftMenu(menu: MenuWithQuantity) {
+  return {
+    id: menu.id,
+    quantity: menu.quantity,
+    mode: menu.serving_input_mode,
+  };
+}
+
+function buildServerDraftSignature({
+  menus,
+  image,
+}: {
+  menus: Array<{ id: number; quantity: number; mode?: MealServingInputMode }>;
+  image?: string;
+}) {
+  return `${buildMenuSignature(menus)}|image:${image ?? ""}`;
+}
+
 type DisplayMenuItem = {
   id: number;
   name: string;
@@ -130,29 +149,36 @@ export default function MealRecordPage() {
   );
   const mealImage = allDrafts[draftKey]?.image ?? currentMenus?.imagesByTime[mealType] ?? null;
   const didNotEat = Boolean(currentMenus?.didNotEatByTime[mealType]);
-  const currentMenuItems = (() => {
-    if (!currentMenus) return [];
-    return currentMenus.menusByTime[mealType];
-  })();
+  const currentMenuItems = useMemo(
+    () => currentMenus?.menusByTime[mealType] ?? [],
+    [currentMenus, mealType],
+  );
+  const currentSeedMenus = useMemo(
+    () => currentMenuItems.map(toDraftMenu),
+    [currentMenuItems],
+  );
+  const currentServerSignature = useMemo(
+    () =>
+      buildServerDraftSignature({
+        menus: currentSeedMenus,
+        image: currentMenus?.imagesByTime[mealType],
+      }),
+    [currentMenus, currentSeedMenus, mealType],
+  );
 
   useEffect(() => {
     if (!currentMenus) {
       return;
     }
 
-    const seedMenus = currentMenus.menusByTime[mealType].map((menu) => ({
-      id: menu.id,
-      quantity: menu.quantity,
-      mode: menu.serving_input_mode,
-    }));
-
     initDraft({
       key: draftKey,
-      existingMenuCount: seedMenus.length,
-      seedMenus,
+      existingMenuCount: currentSeedMenus.length,
+      seedMenus: currentSeedMenus,
       image: currentMenus.imagesByTime[mealType],
+      serverSignature: currentServerSignature,
     });
-  }, [currentMenus, dateKey, draftKey, initDraft, mealType]);
+  }, [currentMenus, currentSeedMenus, currentServerSignature, draftKey, initDraft, mealType]);
 
   useEffect(() => {
     if (hasAppliedTransferRef.current || !currentMenus || !transferState) {
@@ -163,17 +189,12 @@ export default function MealRecordPage() {
       return;
     }
 
-    const seedMenus = currentMenus.menusByTime[mealType].map((menu) => ({
-      id: menu.id,
-      quantity: menu.quantity,
-      mode: menu.serving_input_mode,
-    }));
-
     initDraft({
       key: draftKey,
-      existingMenuCount: seedMenus.length,
-      seedMenus,
+      existingMenuCount: currentSeedMenus.length,
+      seedMenus: currentSeedMenus,
       image: currentMenus.imagesByTime[mealType],
+      serverSignature: currentServerSignature,
     });
 
     transferState.menus.forEach((menu) => {
@@ -193,6 +214,8 @@ export default function MealRecordPage() {
     navigate(getMealRecordPath(dateKey, mealType), { replace: true });
   }, [
     currentMenus,
+    currentSeedMenus,
+    currentServerSignature,
     dateKey,
     draftKey,
     initDraft,

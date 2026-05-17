@@ -6,11 +6,11 @@ import {
   ChatMealRecordBottomSheet,
   type ChatMealRecordMenu,
 } from "@/features/chat/components/ChatMealRecordBottomSheet";
+import { useSendMessageMutation } from "@/features/chat/hooks/mutations/useSendMessageMutation";
 import {
-  useMealDeleteMutation,
-  useMealRegisterMutation,
-  useSendMessageMutation,
-} from "@/features/chat/hooks/mutations/useSendMessageMutation";
+  useSyncChatMealRecordDeleteMutation,
+  useSyncChatMealRecordRegisterMutation,
+} from "@/features/chat/hooks/mutations/useSyncChatMealRecordMutation";
 import { useGetChatHistoryQuery } from "@/features/chat/hooks/queries/useGetChatQuery";
 import styles from "@/features/chat/styles/ChatPage.module.css";
 import {
@@ -89,14 +89,9 @@ export default function ChatPage() {
   const { data, isPending: isHistoryPending } = useGetChatHistoryQuery();
   const { mutateAsync: sendMessageMutation, isPending: isSendPending } = useSendMessageMutation();
   const initMenuDraft = useMenuDraftInit();
-  const { mutateAsync: mealRegisterMutate, isPending: isMealRegisterPending } =
-    useMealRegisterMutation({
-      onSuccess: () => {
-        // 성공 시 진짜 식사 등록
-        // 여기서 현재 등록된 식사 기록과 채팅에 있는 메뉴를 합쳐서 등록할 수 있도록 수정 필요
-        toast.success("식사 기록이 등록되었어요.");
-      },
-    });
+  const { mutateAsync: syncMealRecordRegisterMutate, isPending: isMealRegisterPending } =
+    useSyncChatMealRecordRegisterMutation();
+  const { mutateAsync: syncMealRecordDeleteMutate } = useSyncChatMealRecordDeleteMutation();
 
   const chatList = useMemo(() => {
     const rawList = data?.chat_list ?? [];
@@ -224,12 +219,12 @@ export default function ChatPage() {
     }
 
     try {
-      await mealRegisterMutate({
-        chat_id: meal.id,
+      await syncMealRecordRegisterMutate({
+        date: selectedDateKey,
+        chatId: meal.id,
         time: nextMealRecord.time,
-        menu_ids: nextMealRecord.menuIds,
-        menu_quantities: nextMealRecord.menuQuantities,
-        menu_input_modes: nextMealRecord.menuInputModes,
+        menus: nextMealRecord.menus,
+        previousMealRecord: meal.meal_record,
       });
 
       toast.success(
@@ -255,6 +250,20 @@ export default function ChatPage() {
     setEditingSelectedMenus([]);
   };
 
+  const handleMealRecordCancelClick = async (meal: ChatHistoryItemResponseDto) => {
+    try {
+      await syncMealRecordDeleteMutate({
+        date: selectedDateKey,
+        chatId: meal.id,
+        previousMealRecord: meal.meal_record,
+      });
+
+      toast.success("식사 기록을 취소했어요.");
+    } catch (error) {
+      toast.warning(resolveErrorMessage(error));
+    }
+  };
+
   const handleEditingQuantityChange = (menuId: number, nextQuantity: number) => {
     setEditingSelectedMenus((prev) =>
       prev.map((menu) => (menu.id === menuId ? { ...menu, quantity: nextQuantity } : menu)),
@@ -277,14 +286,12 @@ export default function ChatPage() {
     }
 
     try {
-      await mealRegisterMutate({
-        chat_id: editingMealRecordChat.id,
+      await syncMealRecordRegisterMutate({
+        date: selectedDateKey,
+        chatId: editingMealRecordChat.id,
         time: Number(editingMealType) as MealTime,
-        menu_ids: editingSelectedMenus.map((menu) => menu.id),
-        menu_quantities: editingSelectedMenus.map((menu) => menu.quantity),
-        menu_input_modes: editingSelectedMenus.map(
-          (menu) => menu.inputMode ?? MENU_INPUT_MODE.UNIT,
-        ),
+        menus: editingSelectedMenus,
+        previousMealRecord: editingMealRecordChat.meal_record,
       });
 
       toast.success("식사 기록이 수정되었어요.");
@@ -376,7 +383,7 @@ export default function ChatPage() {
                     {chatItem.meal_record != null && (
                       <MealRecordCard
                         menus={getRecordedMenus(chatItem)}
-                        chatId={chatItem.id}
+                        onCancelClick={() => handleMealRecordCancelClick(chatItem)}
                         onEditClick={() => handleMealRecordEditClick(chatItem)}
                       />
                     )}
@@ -669,23 +676,22 @@ function ChatInput({
 
 function MealRecordCard({
   menus,
-  chatId,
+  onCancelClick,
   onEditClick,
 }: {
   menus: RecordedMenuSummary[];
-  chatId: number;
+  onCancelClick: () => void;
   onEditClick: () => void;
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const primaryMenu = menus[0];
   const hasMultipleMenus = menus.length > 1;
   const totalCalories = menus.reduce((sum, menu) => sum + menu.recordedCalories, 0);
-  const { mutateAsync: mealDeleteMutate } = useMealDeleteMutation();
 
   if (!primaryMenu) return null;
   const handleCancelClick = () => {
     setIsOpen(false);
-    mealDeleteMutate({ chat_id: chatId });
+    onCancelClick();
   };
 
   return (
@@ -1055,29 +1061,30 @@ function getMergedMealRecordPayload(
     getMealRecordMenus(chatItem).map((recordMenu) => [recordMenu.menu_id, recordMenu]),
   );
   const existingMenuIds = mealRecord?.menu_ids ?? [];
-  const menuIds = [...existingMenuIds];
-  const menuQuantities = existingMenuIds.map((menuId, index) => {
-    return mealRecord?.menu_quantities?.[index] ?? menusById.get(menuId)?.weight ?? 1;
-  });
-  const menuInputModes = existingMenuIds.map((_, index) => {
-    return mealRecord?.menu_input_modes?.[index] ?? MENU_INPUT_MODE.UNIT;
-  });
+  const menus = existingMenuIds.map((menuId, index) => ({
+    id: menuId,
+    quantity: mealRecord?.menu_quantities?.[index] ?? menusById.get(menuId)?.weight ?? 1,
+    inputMode: mealRecord?.menu_input_modes?.[index] ?? MENU_INPUT_MODE.UNIT,
+  }));
 
-  if (menuIds.includes(menu.menu_id)) {
+  if (existingMenuIds.includes(menu.menu_id)) {
     return {
       time: mealRecord?.time ?? (Number(getMealTypeFromCurrentTime(new Date())) as MealTime),
-      menuIds,
-      menuQuantities,
-      menuInputModes,
+      menus,
       wasAdded: false,
     };
   }
 
   return {
     time: mealRecord?.time ?? (Number(getMealTypeFromCurrentTime(new Date())) as MealTime),
-    menuIds: [...menuIds, menu.menu_id],
-    menuQuantities: [...menuQuantities, menu.weight],
-    menuInputModes: [...menuInputModes, MENU_INPUT_MODE.UNIT],
+    menus: [
+      ...menus,
+      {
+        id: menu.menu_id,
+        quantity: menu.weight,
+        inputMode: MENU_INPUT_MODE.UNIT,
+      },
+    ],
     wasAdded: true,
   };
 }

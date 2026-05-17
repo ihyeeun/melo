@@ -4,7 +4,7 @@ import {
   ChatMealRecordBottomSheet,
   type ChatMealRecordMenu,
 } from "@/features/chat/components/ChatMealRecordBottomSheet";
-import { useMealRegisterMutation } from "@/features/chat/hooks/mutations/useSendMessageMutation";
+import { useSyncChatMealRecordRegisterMutation } from "@/features/chat/hooks/mutations/useSyncChatMealRecordMutation";
 import { useGetChatHistoryQuery } from "@/features/chat/hooks/queries/useGetChatQuery";
 import styles from "@/features/chat/styles/RecommendResultPage.module.css";
 import {
@@ -33,6 +33,7 @@ import {
   useNavigate,
   useSearchParams,
 } from "@/shared/navigation/stackflowNavigation";
+import { useSelectedDateKey } from "@/shared/stores/selectedDate.store";
 
 type RecommendFilter = "all" | "brand" | "food";
 type SelectedMealRecordMenu = {
@@ -118,6 +119,7 @@ function RecommendResultContent({
   profileNickname: string;
 }) {
   const navigate = useNavigate();
+  const selectedDateKey = useSelectedDateKey();
   const [selectedFilter, setSelectedFilter] = useState<RecommendFilter>("all");
   const [selectedMenus, setSelectedMenus] = useState<SelectedMealRecordMenu[]>(() =>
     chatItem.meal_record ? getInitialSelectedMenus(recommendations, chatItem.meal_record) : [],
@@ -128,8 +130,8 @@ function RecommendResultContent({
       : getMealTypeFromCurrentTime(new Date()),
   );
   const [isMealRecordSheetOpen, setIsMealRecordSheetOpen] = useState(false);
-  const { mutateAsync: mealRegisterMutate, isPending: isMealRegisterPending } =
-    useMealRegisterMutation();
+  const { mutateAsync: syncMealRecordRegisterMutate, isPending: isMealRegisterPending } =
+    useSyncChatMealRecordRegisterMutation();
 
   const mealRecordMenus = useMemo(() => {
     return getMealRecordMenus(recommendations);
@@ -186,12 +188,12 @@ function RecommendResultContent({
 
   const handleSubmitMealRecord = async () => {
     try {
-      await mealRegisterMutate({
-        chat_id: chatItem.id,
+      await syncMealRecordRegisterMutate({
+        date: selectedDateKey,
+        chatId: chatItem.id,
         time: Number(mealType) as MealTime,
-        menu_ids: selectedMenus.map((menu) => menu.id),
-        menu_quantities: selectedMenus.map((menu) => menu.quantity),
-        menu_input_modes: selectedMenus.map((menu) => menu.inputMode ?? MENU_INPUT_MODE.UNIT),
+        menus: selectedMenus,
+        previousMealRecord: chatItem.meal_record,
       });
 
       toast.success(
