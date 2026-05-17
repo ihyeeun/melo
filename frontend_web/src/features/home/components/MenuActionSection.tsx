@@ -6,7 +6,6 @@ import style from "@/features/home/styles/MenuActionSection.module.css";
 import { PATH } from "@/router/path";
 import { isNativeApp, syncAppTab } from "@/shared/api/bridge/nativeBridge";
 import BottomSheet from "@/shared/commons/bottomSheet/BottomSheet";
-import { toast } from "@/shared/commons/toast/toast";
 import { useNavigate } from "@/shared/navigation/stackflowNavigation";
 
 export default function MenuActionSection({
@@ -40,8 +39,7 @@ export default function MenuActionSection({
 
   const handleNavigateFoodCamera = () => {
     handleCloseCameraActionSheet();
-    toast.warning("음식 촬영 채팅 기능은 아직 준비 중이에요.");
-    return;
+    navigate(PATH.CHAT_FOOD_CAMERA);
   };
 
   return (
