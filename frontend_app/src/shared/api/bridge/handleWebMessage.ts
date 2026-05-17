@@ -490,7 +490,9 @@ export async function handleWebMessage(
     }
 
     if (message.type === "NAVIGATION_BACK") {
-      router.back();
+      if (router.canGoBack()) {
+        router.back();
+      }
       return;
     }
 

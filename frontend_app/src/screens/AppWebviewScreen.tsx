@@ -146,10 +146,9 @@ function navigateToTabRoute(
   if (
     preferBackFromChat &&
     currentTab &&
-    shouldUseNativeBackOnTabExit(currentTab, targetTab) &&
-    router.canGoBack()
+    shouldUseNativeBackOnTabExit(currentTab, targetTab)
   ) {
-    router.back();
+    router.dismissTo(getTabRoute(targetTab));
     return;
   }
 
