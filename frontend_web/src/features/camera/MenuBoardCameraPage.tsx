@@ -47,7 +47,7 @@ export default function MenuBoardCameraPage() {
     isAutoOpenPending && !isProcessing && captureErrorFeedback === null;
 
   const returnFromCameraPage = useCallback(() => {
-    navigateBack({ fallbackTo: PATH.HOME });
+    navigateBack({ fallbackTo: PATH.CHAT });
   }, []);
 
   const handleCameraActions = useCallback(async () => {

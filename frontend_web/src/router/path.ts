@@ -12,10 +12,7 @@ export const PATH = {
   MEAL_RECORD: "/meal-record",
   MEAL_RECORD_ADD_SEARCH: "/meal-record/add/search",
   MEAL_DETAIL: "/meal/detail",
-  MENU_BOARD_CAMERA: "/meal-record/add/menu-board-camera",
-  FOOD_CAMERA: "/meal-record/add/food-camera",
   NUTRIENT_ADD: "/nutrient-add",
-  NUTRIENT_CAMERA: "/nutrient-camera",
   NUTRIENT_ADD_REGISTER: "/nutrient-add/register",
   NUTRIENT_ADD_MODIFY: "/nutrient-add/modify",
   BRAND_SEARCH: "/brand-search",
@@ -34,4 +31,10 @@ export const PATH = {
   GOAL_EDIT: "/profile/goal-edit",
   GOAL_EDIT_TARGET_CALORIES: "/profile/goal-edit/target-calories",
   GOAL_EDIT_NUTRIENT: "/profile/goal-edit/nutrient",
+
+  // Camera
+  MENU_BOARD_CAMERA: "/meal-record/add/menu-board-camera",
+  FOOD_CAMERA: "/meal-record/add/food-camera",
+  NUTRIENT_CAMERA: "/nutrient-camera",
+  CHAT_FOOD_CAMERA: "/chat-food-camera",
 };

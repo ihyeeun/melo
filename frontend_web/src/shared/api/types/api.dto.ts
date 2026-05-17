@@ -307,6 +307,25 @@ export interface ChatRecognizedCandidateResponseDto {
   category: string;
 }
 
+export interface ChatFoodImageFeedbackResponseDto {
+  chat_category: ChatCategory;
+  intro_message: string;
+  feedback: FeedbackDto;
+  recognized_foods: ChatFoodImageRecognizedMenuResponseDto[];
+}
+
+export interface ChatFoodImageRecognizedMenuResponseDto {
+  menu_id: number;
+  menu_name: string;
+  brand?: string;
+  category?: string;
+  confidence?: number; //ai가 반환한 인식 신뢰도 0~1 정규화 값
+  position: {
+    x: number; //인식된 음식의 이미지 내 x 좌표 (0~1 정규화 값)
+    y: number; //인식된 음식의 이미지 내 y 좌표 (0~1 정규화 값)
+  };
+}
+
 // Camera
 export interface FoodImageRecognitionResponseDto {
   menu_ids: number[];
