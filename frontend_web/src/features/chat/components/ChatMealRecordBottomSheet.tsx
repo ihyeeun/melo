@@ -28,6 +28,11 @@ type ServingContext = {
   weightUnit: ServingWeightUnit;
 };
 
+export type ChatMealRecordMenu = Pick<
+  ChatRecommendItemResponseDto,
+  "menu_id" | "menu_name" | "brand" | "unit" | "weight" | "unit_quantity" | "calories"
+>;
+
 const MEAL_TYPE_ICON_MAP = {
   "0": "/icons/breakfast.svg",
   "1": "/icons/lunch.svg",
@@ -38,7 +43,7 @@ const MEAL_TYPE_ICON_MAP = {
 
 type ChatMealRecordBottomSheetProps = {
   isOpen: boolean;
-  recommendations: ChatRecommendItemResponseDto[];
+  recommendations: ChatMealRecordMenu[];
   selectedMenus: SelectedMenuItem[];
   mealType: MealType;
   isSubmitPending?: boolean;
@@ -75,7 +80,7 @@ function toPositiveNumber(value: number | null | undefined) {
   return value;
 }
 
-function resolveServingContext(recommendation: ChatRecommendItemResponseDto): ServingContext {
+function resolveServingContext(recommendation: ChatMealRecordMenu): ServingContext {
   const matched = recommendation.unit_quantity.match(UNIT_QUANTITY_PATTERN);
   const parsedCount = matched ? Number(matched[1]) : Number.NaN;
   const unitLabel = matched?.[2]?.trim() || recommendation.unit_quantity || "인분";

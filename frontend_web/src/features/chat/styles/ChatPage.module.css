@@ -235,7 +235,7 @@
   width: 100%;
 }
 
-.recommendCardSelected {
+.cardSelected {
   border-color: var(--border-primary);
   background-color: var(--interaction-primary);
 }
@@ -810,4 +810,68 @@
 }
 .textAssistive {
   color: var(--label-assistive);
+}
+
+.textPrimary {
+  color: var(--label-primary);
+}
+
+.mealRecordAction {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.mealRecordSummary {
+  display: flex;
+  align-items: center;
+  background: none;
+  border: 0;
+  color: var(--label-normal);
+  gap: 8px;
+  padding: 0;
+  text-align: left;
+  width: 100%;
+}
+
+.mealRecordSummary:disabled {
+  cursor: default;
+}
+
+.mealRecordChevron {
+  color: var(--label-normal);
+  flex-shrink: 0;
+  transform: rotate(180deg);
+  transition: transform 180ms ease;
+}
+
+.mealRecordChevronOpen {
+  transform: rotate(0deg);
+}
+
+.mealRecordMenuList {
+  background-color: var(--bg-normal);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 12px;
+}
+
+.mealRecordMenuItem {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+}
+
+.mealRecordCard {
+  background-color: var(--bg-white);
+  border: 1px solid var(--border-neutral);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px 20px;
+  width: 100%;
 }

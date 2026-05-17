@@ -233,6 +233,12 @@ export interface ChatHistoryItemResponseDto {
   input_text: string; //사용자 입력값
   createdAt: string; //저장 시각
   response_payload: ChatRecommendResponseDto;
+  meal_record?: {
+    time: MealTime;
+    menu_ids?: MenuId[];
+    menu_quantities?: number[];
+    menu_input_modes?: MealMenuInputMode[];
+  };
 }
 
 export type amount_preference_level = "light" | "regular" | "hearty";
