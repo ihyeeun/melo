@@ -11,8 +11,10 @@ import {
   getMealTypeFromChatMealTime,
   getMealTypeFromCurrentTime,
 } from "@/features/chat/utils/chatMeal";
+import { buildChatMealRecordTransferState } from "@/features/chat/utils/chatMealRecordTransfer";
 import { getFeedbackDetailPath, getSafeChatId } from "@/features/chat/utils/recommendNavigation";
 import { PATH } from "@/router/path";
+import { getMealRecordPath } from "@/router/pathHelpers";
 import { AppApiError } from "@/shared/api/appApi";
 import {
   type ChatFeedbackMenuResponseDto,
@@ -168,6 +170,18 @@ function FeedbackResultContent({
     setSelectedMenus((prev) => prev.filter((menu) => menu.id !== menuId));
   };
 
+  const handleAddMore = () => {
+    setIsMealRecordSheetOpen(false);
+    navigate(getMealRecordPath(selectedDateKey, mealType), {
+      state: buildChatMealRecordTransferState({
+        dateKey: selectedDateKey,
+        mealType,
+        selectedMenus,
+        menus: mealRecordMenus,
+      }),
+    });
+  };
+
   const handleSubmitMealRecord = async () => {
     try {
       await syncMealRecordRegisterMutate({
@@ -249,6 +263,7 @@ function FeedbackResultContent({
         onQuantityChange={handleQuantityChange}
         onInputModeChange={handleInputModeChange}
         onRemoveMenu={handleRemoveMenu}
+        onAddMore={handleAddMore}
         onClose={() => setIsMealRecordSheetOpen(false)}
         onSubmit={handleSubmitMealRecord}
       />

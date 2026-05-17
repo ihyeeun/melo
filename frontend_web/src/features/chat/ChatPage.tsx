@@ -17,6 +17,7 @@ import {
   getMealTypeFromChatMealTime,
   getMealTypeFromCurrentTime,
 } from "@/features/chat/utils/chatMeal";
+import { buildChatMealRecordTransferState } from "@/features/chat/utils/chatMealRecordTransfer";
 import {
   getFeedbackResultPath,
   getRecommendDetailPath,
@@ -27,7 +28,7 @@ import {
   useMenuDraftInit,
 } from "@/features/meal-record/stores/menuDraft.store";
 import { PATH } from "@/router/path";
-import { getMealSearchPath } from "@/router/pathHelpers";
+import { getMealRecordPath, getMealSearchPath } from "@/router/pathHelpers";
 import { AppApiError } from "@/shared/api/appApi";
 import {
   type ChatHistoryItemResponseDto,
@@ -280,6 +281,21 @@ export default function ChatPage() {
     setEditingSelectedMenus((prev) => prev.filter((menu) => menu.id !== menuId));
   };
 
+  const handleEditingAddMore = () => {
+    if (editingMealRecordChat === null) {
+      return;
+    }
+    handleMealRecordEditClose();
+    navigate(getMealRecordPath(selectedDateKey, editingMealType), {
+      state: buildChatMealRecordTransferState({
+        dateKey: selectedDateKey,
+        mealType: editingMealType,
+        selectedMenus: editingSelectedMenus,
+        menus: editingMealRecordMenus,
+      }),
+    });
+  };
+
   const handleMealRecordEditSubmit = async () => {
     if (editingMealRecordChat === null) {
       return;
@@ -517,6 +533,7 @@ export default function ChatPage() {
         onQuantityChange={handleEditingQuantityChange}
         onInputModeChange={handleEditingInputModeChange}
         onRemoveMenu={handleEditingRemoveMenu}
+        onAddMore={handleEditingAddMore}
         onClose={handleMealRecordEditClose}
         onSubmit={handleMealRecordEditSubmit}
       />

@@ -202,6 +202,7 @@ export default function MealRecordPage() {
         key: draftKey,
         id: menu.id,
         quantity: menu.quantity,
+        mode: menu.mode,
       });
     });
 
