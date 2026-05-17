@@ -2,7 +2,6 @@ import { PlusIcon } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { useDayMealsQuery } from "@/features/home/hooks/queries/useDayMealsQuery";
-import type { MenuWithQuantity } from "@/features/home/utils/dayMealSummary";
 import {
   DELETE_MEAL_RECORD_RESULT,
   useTodayMealRecordDeleteWithRollbackMutation,
@@ -18,6 +17,11 @@ import {
   useMenuDraftUpsert,
   useMenuDraftUpsertPreviews,
 } from "@/features/meal-record/stores/menuDraft.store";
+import {
+  buildMenuDraftSignature,
+  normalizeServingInputMode,
+  toMenuDraftSeed,
+} from "@/features/meal-record/utils/menuDraftSync";
 import { PATH } from "@/router/path";
 import { getMealDetailPath, getMealRecordPath, getMealSearchPath } from "@/router/pathHelpers";
 import {
@@ -66,10 +70,6 @@ function scaleCaloriesByWeight(calories: number, nextWeight: number, currentWeig
   return safeCalories * (safeNextWeight / safeCurrentWeight);
 }
 
-function normalizeServingInputMode(mode: MealServingInputMode | undefined) {
-  return mode === "unit" ? "unit" : "weight";
-}
-
 function toMenuInputMode(mode: MealServingInputMode | undefined) {
   return mode === "unit" ? MENU_INPUT_MODE.UNIT : MENU_INPUT_MODE.WEIGHT;
 }
@@ -82,24 +82,6 @@ function buildMenuSignature(
     .sort((a, b) => a[0] - b[0])
     .map(([id, quantity, mode]) => `${id}:${quantity}:${mode}`)
     .join("|");
-}
-
-function toDraftMenu(menu: MenuWithQuantity) {
-  return {
-    id: menu.id,
-    quantity: menu.quantity,
-    mode: menu.serving_input_mode,
-  };
-}
-
-function buildServerDraftSignature({
-  menus,
-  image,
-}: {
-  menus: Array<{ id: number; quantity: number; mode?: MealServingInputMode }>;
-  image?: string;
-}) {
-  return `${buildMenuSignature(menus)}|image:${image ?? ""}`;
 }
 
 type DisplayMenuItem = {
@@ -154,12 +136,12 @@ export default function MealRecordPage() {
     [currentMenus, mealType],
   );
   const currentSeedMenus = useMemo(
-    () => currentMenuItems.map(toDraftMenu),
+    () => currentMenuItems.map(toMenuDraftSeed),
     [currentMenuItems],
   );
   const currentServerSignature = useMemo(
     () =>
-      buildServerDraftSignature({
+      buildMenuDraftSignature({
         menus: currentSeedMenus,
         image: currentMenus?.imagesByTime[mealType],
       }),
@@ -432,6 +414,7 @@ export default function MealRecordPage() {
       existingMenuCount: seedMenus.length,
       seedMenus,
       image: mealImage,
+      serverSignature: currentServerSignature,
     });
 
     navigate(getMealSearchPath(dateKey, mealType));

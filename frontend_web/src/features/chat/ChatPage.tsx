@@ -23,10 +23,6 @@ import {
   getRecommendDetailPath,
   getRecommendResultPath,
 } from "@/features/chat/utils/recommendNavigation";
-import {
-  formatMenuDraftKey,
-  useMenuDraftInit,
-} from "@/features/meal-record/stores/menuDraft.store";
 import { PATH } from "@/router/path";
 import { getMealRecordPath, getMealSearchPath } from "@/router/pathHelpers";
 import { AppApiError } from "@/shared/api/appApi";
@@ -46,7 +42,12 @@ import { Skeleton, SkeletonStatus } from "@/shared/commons/skeleton/Skeleton";
 import { toast } from "@/shared/commons/toast/toast";
 import { navigateBack, useNavigate } from "@/shared/navigation/stackflowNavigation";
 import { useSelectedDateKey } from "@/shared/stores/selectedDate.store";
-import { formatDateDividerText, formatDateKey, parseDate } from "@/shared/utils/dateFormat";
+import {
+  formatDateDividerText,
+  formatDateKey,
+  getTodayFormatDateKey,
+  parseDate,
+} from "@/shared/utils/dateFormat";
 
 const QUICK_CHIP_LIST = ["지금 먹기 좋은 메뉴를 추천해줘"];
 const FEEDBACK_GAUGE_VIEWBOX_WIDTH = 220;
@@ -89,7 +90,6 @@ export default function ChatPage() {
 
   const { data, isPending: isHistoryPending } = useGetChatHistoryQuery();
   const { mutateAsync: sendMessageMutation, isPending: isSendPending } = useSendMessageMutation();
-  const initMenuDraft = useMenuDraftInit();
   const { mutateAsync: syncMealRecordRegisterMutate, isPending: isMealRegisterPending } =
     useSyncChatMealRecordRegisterMutation();
   const { mutateAsync: syncMealRecordDeleteMutate } = useSyncChatMealRecordDeleteMutation();
@@ -192,17 +192,11 @@ export default function ChatPage() {
     navigate(PATH.CHAT_FOOD_CAMERA);
   };
 
-  // TODO + 버튼의 직접 메뉴 기록하기시 draft 초기화 / 로직 재검토 필요
   const handleNavigateDirectMenuRecord = () => {
+    const dateKey = getTodayFormatDateKey();
     const mealType = getMealTypeFromCurrentTime(new Date());
 
-    initMenuDraft({
-      key: formatMenuDraftKey(selectedDateKey, mealType),
-      existingMenuCount: 0,
-      seedMenus: [],
-    });
-
-    navigate(getMealSearchPath(selectedDateKey, mealType));
+    navigate(getMealSearchPath(dateKey, mealType));
   };
 
   const handleMenuRecordClick = async (meal: ChatHistoryItemResponseDto) => {
