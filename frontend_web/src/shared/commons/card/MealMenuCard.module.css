@@ -27,7 +27,17 @@
 .header {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 6px;
+}
+
+.rankBadge {
+  align-items: center;
+  background-color: var(--primary-strong);
+  border-radius: 4px;
+  color: var(--static-white);
+  display: inline-flex;
+  padding: 2px 6px;
+  width: fit-content;
 }
 
 .titleSection {

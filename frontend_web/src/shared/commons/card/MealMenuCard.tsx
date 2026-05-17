@@ -11,6 +11,7 @@ export type MealMenuCardState = "default" | "select";
 
 type MealMenuCardProps = {
   name: string;
+  rank?: number;
   description?: string;
   calories?: number;
   unit_quantity?: string;
@@ -72,6 +73,7 @@ function ActionIcon({ icon }: { icon: MealMenuCardIcon }) {
 
 export function MealMenuCard({
   name,
+  rank,
   description,
   calories,
   unit_quantity,
@@ -134,6 +136,10 @@ export function MealMenuCard({
     >
       <div className={styles.content}>
         <section className={styles.header}>
+          {typeof rank === "number" && Number.isFinite(rank) ? (
+            <span className={`${styles.rankBadge} typo-label6`}>{rank}위</span>
+          ) : null}
+
           <div className={styles.titleSection}>
             <p className={`${styles.title} typo-title2 ellipsis`}>{name}</p>
 
