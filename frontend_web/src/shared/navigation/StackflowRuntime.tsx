@@ -10,12 +10,17 @@ import {
 
 import {
   getStackflowStackComponent,
+  navigateBack,
+  pushStackflowPath,
   resetStackflowWithCurrentBrowserPath,
   syncStackflowWithCurrentBrowserPath,
 } from "./stackflowRouter";
+import {
+  getWebNavigationCommand,
+  WEB_NAVIGATION_COMMAND_EVENT,
+} from "./webNavigationCommand";
 
 const StackComponent = getStackflowStackComponent();
-const NATIVE_PATH_SYNC_EVENT = "MELO_NATIVE_PATH_SYNC";
 
 function useSyncTargetsFromProfile() {
   const hasTargetsLoaded = useTargetsLoadedState();
@@ -40,19 +45,34 @@ export function StackflowRuntime() {
   useSyncTargetsFromProfile();
 
   useEffect(() => {
-    const handleNativePathSync = () => {
-      window.setTimeout(resetStackflowWithCurrentBrowserPath, 0);
+    const handleWebNavigationCommand = (event: Event) => {
+      const command = getWebNavigationCommand(event);
+      if (!command) return;
+
+      window.setTimeout(() => {
+        if (command.type === "BACK") {
+          navigateBack({ fallbackTo: command.fallbackPath, animate: command.animate });
+          return;
+        }
+
+        if (command.stackAction === "push") {
+          pushStackflowPath(command.path, { animate: command.animate });
+          return;
+        }
+
+        resetStackflowWithCurrentBrowserPath({ animate: command.animate });
+      }, 0);
     };
 
     const handlePopState = () => {
       window.setTimeout(syncStackflowWithCurrentBrowserPath, 0);
     };
 
-    window.addEventListener(NATIVE_PATH_SYNC_EVENT, handleNativePathSync);
+    window.addEventListener(WEB_NAVIGATION_COMMAND_EVENT, handleWebNavigationCommand);
     window.addEventListener("popstate", handlePopState);
 
     return () => {
-      window.removeEventListener(NATIVE_PATH_SYNC_EVENT, handleNativePathSync);
+      window.removeEventListener(WEB_NAVIGATION_COMMAND_EVENT, handleWebNavigationCommand);
       window.removeEventListener("popstate", handlePopState);
     };
   }, []);

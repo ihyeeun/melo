@@ -974,6 +974,29 @@ function canGoBackWithStack() {
   return getBackStackDepth(stackflowActions.getStack()) > 1;
 }
 
+export function pushStackflowPath(to: To, { animate = true }: { animate?: boolean } = {}) {
+  const activeActivity = stackflowActions
+    .getStack()
+    .activities.find((activity) => activity.isActive);
+
+  if (
+    activeActivity &&
+    getComparablePath(getActivityPath(activeActivity)) === getComparablePath(toPathString(to))
+  ) {
+    return;
+  }
+
+  const resolved = resolveActivityForPath(to);
+  if (!resolved) {
+    resetStackflowWithCurrentBrowserPath({ animate: false });
+    return;
+  }
+
+  const result = stackflowActions.push(resolved.activityName, resolved.params, { animate });
+  setActivityNavigationState(result.activityId, null);
+  pruneActivityNavigationStateMap();
+}
+
 export function isPreviousStackActivity(activityName: string) {
   const activities = getActiveStackActivities();
   const previousActivity = activities.at(-2);

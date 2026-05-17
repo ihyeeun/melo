@@ -26,6 +26,7 @@ import {
 import { PATH } from "@/router/path";
 import { getMealRecordPath, getMealSearchPath } from "@/router/pathHelpers";
 import { AppApiError } from "@/shared/api/appApi";
+import { isNativeApp } from "@/shared/api/bridge/nativeBridge";
 import {
   type ChatHistoryItemResponseDto,
   type ChatRecommendItemResponseDto,
@@ -164,6 +165,15 @@ export default function ChatPage() {
   const handleSubmit = async (event?: FormEvent<HTMLFormElement>) => {
     event?.preventDefault();
     await sendChatMessage(inputValue);
+  };
+
+  const handleBack = () => {
+    if (isNativeApp()) {
+      navigateBack();
+      return;
+    }
+
+    navigateBack({ fallbackTo: PATH.HOME });
   };
 
   const handleToggleCameraActionMenu = () => {
@@ -313,7 +323,7 @@ export default function ChatPage() {
 
   return (
     <div className={styles.page}>
-      <PageHeader onBack={() => navigateBack({ fallbackTo: PATH.HOME })} />
+      <PageHeader onBack={handleBack} />
 
       {isCameraActionMenuOpen ? (
         <button
