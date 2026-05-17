@@ -4,7 +4,7 @@ import { router } from "expo-router";
 import * as FileSystem from "expo-file-system/legacy";
 import * as ImagePicker from "expo-image-picker";
 import * as SecureStore from "expo-secure-store";
-import { type ComponentProps, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -29,7 +29,6 @@ import type { BridgeCameraCaptureRequestPayload } from "@/src/shared/api/bridge/
 
 type CameraCaptureMode = NonNullable<BridgeCameraCaptureRequestPayload["mode"]>;
 type CameraPermissionStatus = Awaited<ReturnType<typeof Camera.getCameraPermissionStatus>>;
-type IoniconName = ComponentProps<typeof Ionicons>["name"];
 
 const DEFAULT_CAPTURE_MODE: CameraCaptureMode = "NUTRITION_LABEL";
 const CAMERA_ONBOARDING_DONE_VALUE = "done";
@@ -67,8 +66,6 @@ const CAMERA_MODE_CONFIG: Record<
 type CameraOnboardingConfig = {
   title: string;
   description: string;
-  visualAspectRatio: number;
-  placeholderIconName: IoniconName;
   image: ImageSourcePropType;
 };
 
@@ -76,22 +73,16 @@ const CAMERA_ONBOARDING_CONFIG: Partial<Record<CameraCaptureMode, CameraOnboardi
   NUTRITION_LABEL: {
     title: "영양성분표 사진을 촬영해주세요",
     description: "최대한 정보가 잘 읽히도록\n빛 반사나 왜곡 없이 올려주세요",
-    visualAspectRatio: 0.78,
-    placeholderIconName: "nutrition-outline",
     image: require("@/assets/images/Icon/camera-onboarding-nutrient.png"),
   },
   MENU_BOARD: {
     title: "메뉴판이 잘 보이도록 촬영해주세요",
     description: "최대한 정보가 잘 읽히도록\n빛 반사나 왜곡 없이 올려주세요",
-    visualAspectRatio: 0.88,
-    placeholderIconName: "receipt-outline",
     image: require("@/assets/images/Icon/camera-onboarding-menu.png"),
   },
   FOOD: {
     title: "음식이 잘 보이도록 촬영해주세요",
     description: "화면 프레임 안에 음식이\n들어갈 수 있도록 촬영해주세요",
-    visualAspectRatio: 1,
-    placeholderIconName: "restaurant-outline",
     image: require("@/assets/images/Icon/camera-onboarding-food.png"),
   },
 };
@@ -162,49 +153,74 @@ function LoadingView() {
 function CameraOnboardingOverlay({
   config,
   onClose,
+  onSkip,
 }: {
   config: CameraOnboardingConfig;
   onClose: () => void;
+  onSkip: () => void;
 }) {
   return (
     <View style={styles.cameraOnboardingOverlay} pointerEvents="box-none">
       <View style={styles.cameraOnboardingBackdrop} pointerEvents="none" />
 
       <View style={styles.cameraOnboardingCenter}>
-        <View style={styles.cameraOnboardingFocusFrame} pointerEvents="none">
-          <View style={[styles.cameraOnboardingFocusCorner, styles.focusCornerTopLeft]} />
-          <View style={[styles.cameraOnboardingFocusCorner, styles.focusCornerTopRight]} />
-          <View style={[styles.cameraOnboardingFocusCorner, styles.focusCornerBottomLeft]} />
-          <View style={[styles.cameraOnboardingFocusCorner, styles.focusCornerBottomRight]} />
-        </View>
-
         <View style={styles.cameraOnboardingCard}>
-          <Pressable
-            style={styles.cameraOnboardingCloseButton}
-            onPress={onClose}
-            hitSlop={8}
-            accessibilityRole="button"
-            accessibilityLabel="카메라 안내 닫기"
-          >
-            <Ionicons name="close" size={24} color="#111111" />
-          </Pressable>
-
-          <View style={styles.cameraOnboardingVisual}>
-            <Image
-              source={config.image}
-              style={styles.cameraOnboardingImage}
-              resizeMode="contain"
-            />
-            <View style={styles.cameraOnboardingVisualFrame} pointerEvents="none">
-              <View style={[styles.cameraOnboardingVisualCorner, styles.visualCornerTopLeft]} />
-              <View style={[styles.cameraOnboardingVisualCorner, styles.visualCornerTopRight]} />
-              <View style={[styles.cameraOnboardingVisualCorner, styles.visualCornerBottomLeft]} />
-              <View style={[styles.cameraOnboardingVisualCorner, styles.visualCornerBottomRight]} />
+          <View style={styles.cameraOnboardingContent}>
+            <View style={styles.cameraOnboardingVisual}>
+              <Image
+                source={config.image}
+                style={styles.cameraOnboardingImage}
+                resizeMode="cover"
+              />
+              <View style={styles.cameraOnboardingVisualFrame} pointerEvents="none">
+                <View style={[styles.cameraOnboardingVisualCorner, styles.visualCornerTopLeft]} />
+                <View style={[styles.cameraOnboardingVisualCorner, styles.visualCornerTopRight]} />
+                <View
+                  style={[styles.cameraOnboardingVisualCorner, styles.visualCornerBottomLeft]}
+                />
+                <View
+                  style={[styles.cameraOnboardingVisualCorner, styles.visualCornerBottomRight]}
+                />
+              </View>
             </View>
+
+            <Text allowFontScaling={false} style={styles.cameraOnboardingTitle}>
+              {config.title}
+            </Text>
+            <Text allowFontScaling={false} style={styles.cameraOnboardingDescription}>
+              {config.description}
+            </Text>
           </View>
 
-          <Text style={styles.cameraOnboardingTitle}>{config.title}</Text>
-          <Text style={styles.cameraOnboardingDescription}>{config.description}</Text>
+          <View style={styles.cameraOnboardingActions}>
+            <Pressable
+              style={({ pressed }) => [
+                styles.cameraOnboardingPrimaryButton,
+                pressed && styles.pressedButton,
+              ]}
+              onPress={onClose}
+              accessibilityRole="button"
+              accessibilityLabel="카메라 안내 닫기"
+            >
+              <Text allowFontScaling={false} style={styles.cameraOnboardingPrimaryButtonText}>
+                닫기
+              </Text>
+            </Pressable>
+
+            <Pressable
+              style={({ pressed }) => [
+                styles.cameraOnboardingSkipButton,
+                pressed && styles.pressedButton,
+              ]}
+              onPress={onSkip}
+              accessibilityRole="button"
+              accessibilityLabel="카메라 안내 다시 보지 않기"
+            >
+              <Text allowFontScaling={false} style={styles.cameraOnboardingSkipButtonText}>
+                다시 보지 않기
+              </Text>
+            </Pressable>
+          </View>
         </View>
       </View>
     </View>
@@ -386,6 +402,10 @@ export default function CameraCaptureScreen() {
 
   const handleCameraOnboardingClose = useCallback(() => {
     setIsCameraOnboardingVisible(false);
+  }, []);
+
+  const handleCameraOnboardingSkip = useCallback(() => {
+    setIsCameraOnboardingVisible(false);
     void markCameraOnboardingDone(captureMode);
   }, [captureMode]);
 
@@ -538,8 +558,10 @@ export default function CameraCaptureScreen() {
 
         <View style={styles.permissionCard}>
           <Ionicons name="camera-outline" size={36} color="#ff8a00" />
-          <Text style={styles.permissionTitle}>카메라 권한이 꺼져 있어요.</Text>
-          <Text style={styles.permissionDescription}>
+          <Text allowFontScaling={false} style={styles.permissionTitle}>
+            카메라 권한이 꺼져 있어요.
+          </Text>
+          <Text allowFontScaling={false} style={styles.permissionDescription}>
             기기 설정에서 카메라 접근을 허용한 뒤{"\n"} 다시 시도해주세요.
           </Text>
 
@@ -549,7 +571,9 @@ export default function CameraCaptureScreen() {
             accessibilityRole="button"
             accessibilityLabel="설정으로 이동"
           >
-            <Text style={styles.permissionPrimaryButtonText}>설정으로 이동</Text>
+            <Text allowFontScaling={false} style={styles.permissionPrimaryButtonText}>
+              설정으로 이동
+            </Text>
           </Pressable>
         </View>
       </View>
@@ -588,7 +612,9 @@ export default function CameraCaptureScreen() {
         <View style={styles.overlay}>
           {cameraModeConfig.guideText ? (
             <View style={styles.guideCard}>
-              <Text style={styles.guideText}>{cameraModeConfig.guideText}</Text>
+              <Text allowFontScaling={false} style={styles.guideText}>
+                {cameraModeConfig.guideText}
+              </Text>
             </View>
           ) : null}
           {cameraModeConfig.frameAspectRatio ? (
@@ -606,6 +632,7 @@ export default function CameraCaptureScreen() {
         <CameraOnboardingOverlay
           config={cameraOnboardingConfig}
           onClose={handleCameraOnboardingClose}
+          onSkip={handleCameraOnboardingSkip}
         />
       ) : null}
 
@@ -812,8 +839,9 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: 26,
-    paddingBottom: 30,
+    paddingHorizontal: 24,
+    paddingTop: 88,
+    paddingBottom: 136,
     zIndex: 40,
   },
   cameraOnboardingBackdrop: {
@@ -825,71 +853,26 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  cameraOnboardingFocusFrame: {
-    position: "absolute",
-    top: -28,
-    right: -8,
-    bottom: -28,
-    left: -8,
-  },
-  cameraOnboardingFocusCorner: {
-    position: "absolute",
-    width: 64,
-    height: 64,
-    borderColor: "rgba(255, 255, 255, 0.42)",
-  },
-  focusCornerTopLeft: {
-    top: 0,
-    left: 0,
-    borderTopWidth: 3,
-    borderLeftWidth: 3,
-    borderTopLeftRadius: 22,
-  },
-  focusCornerTopRight: {
-    top: 0,
-    right: 0,
-    borderTopWidth: 3,
-    borderRightWidth: 3,
-    borderTopRightRadius: 22,
-  },
-  focusCornerBottomLeft: {
-    bottom: 0,
-    left: 0,
-    borderBottomWidth: 3,
-    borderLeftWidth: 3,
-    borderBottomLeftRadius: 22,
-  },
-  focusCornerBottomRight: {
-    right: 0,
-    bottom: 0,
-    borderRightWidth: 3,
-    borderBottomWidth: 3,
-    borderBottomRightRadius: 22,
-  },
   cameraOnboardingCard: {
     width: "100%",
-    borderRadius: 24,
+    borderRadius: 20,
     backgroundColor: "#ffffff",
-    alignItems: "center",
-    padding: 24,
-    paddingTop: 50,
+    overflow: "hidden",
   },
-  cameraOnboardingCloseButton: {
-    position: "absolute",
-    top: 22,
-    right: 22,
-    width: 32,
-    height: 32,
+  cameraOnboardingContent: {
+    backgroundColor: "#ffe9d5",
     alignItems: "center",
-    justifyContent: "center",
-    zIndex: 1,
+    paddingHorizontal: 28,
+    paddingTop: 40,
+    paddingBottom: 30,
   },
   cameraOnboardingVisual: {
-    width: 200,
-    height: 200,
+    width: 250,
+    height: 250,
     alignItems: "center",
     justifyContent: "center",
     position: "relative",
+    overflow: "hidden",
   },
   cameraOnboardingImage: {
     width: "100%",
@@ -901,8 +884,8 @@ const styles = StyleSheet.create({
   },
   cameraOnboardingVisualCorner: {
     position: "absolute",
-    width: 58,
-    height: 58,
+    width: 68,
+    height: 68,
     borderColor: "#ff8000",
   },
   visualCornerTopLeft: {
@@ -936,16 +919,47 @@ const styles = StyleSheet.create({
   cameraOnboardingTitle: {
     color: "#1f1f1f",
     fontSize: 20,
-    fontWeight: "500",
     textAlign: "center",
-    marginTop: 24,
+    marginTop: 28,
+    lineHeight: 1.45 * 16,
   },
   cameraOnboardingDescription: {
     color: "#1f1f1f",
     fontSize: 16,
-    fontWeight: "400",
     textAlign: "center",
     marginTop: 8,
     lineHeight: 1.45 * 16,
+  },
+  cameraOnboardingActions: {
+    alignItems: "center",
+    backgroundColor: "#ffffff",
+    paddingHorizontal: 30,
+    paddingVertical: 24,
+  },
+  cameraOnboardingPrimaryButton: {
+    alignItems: "center",
+    alignSelf: "stretch",
+    backgroundColor: "#ff8a00",
+    borderRadius: 4,
+    height: 42,
+    justifyContent: "center",
+  },
+  cameraOnboardingPrimaryButtonText: {
+    color: "#ffffff",
+    fontSize: 16,
+    fontWeight: "700",
+    lineHeight: 1.4 * 16,
+  },
+  cameraOnboardingSkipButton: {
+    marginTop: 12,
+  },
+  cameraOnboardingSkipButtonText: {
+    color: "#8d8d8d",
+    fontSize: 15,
+    fontWeight: "400",
+    lineHeight: 1.4 * 16,
+  },
+  pressedButton: {
+    opacity: 0.78,
   },
 });
