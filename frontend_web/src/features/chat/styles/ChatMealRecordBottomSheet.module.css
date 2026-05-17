@@ -148,7 +148,7 @@
 }
 
 .unitSelectTrigger:focus {
-  outline: 1px solid var(--border-primary);
+  outline: none;
 }
 
 .selectIcon {

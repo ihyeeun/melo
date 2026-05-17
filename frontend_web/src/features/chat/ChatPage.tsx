@@ -33,8 +33,10 @@ import {
   type ChatHistoryItemResponseDto,
   type ChatRecommendItemResponseDto,
   type FeedbackDto,
+  type MealMenuInputMode,
   type MealTime,
   type MealType,
+  MENU_INPUT_MODE,
 } from "@/shared/api/types/api.dto";
 import { DataSourceBadge } from "@/shared/commons/badge/DataSourceBadge";
 import { Button } from "@/shared/commons/button/Button";
@@ -64,6 +66,7 @@ type RecordedMenuSummary = {
 type SelectedMealRecordMenu = {
   id: number;
   quantity: number;
+  inputMode: MealMenuInputMode;
 };
 
 export default function ChatPage() {
@@ -91,6 +94,7 @@ export default function ChatPage() {
       onSuccess: () => {
         // 성공 시 진짜 식사 등록
         // 여기서 현재 등록된 식사 기록과 채팅에 있는 메뉴를 합쳐서 등록할 수 있도록 수정 필요
+        toast.success("식사 기록이 등록되었어요.");
       },
     });
 
@@ -205,33 +209,35 @@ export default function ChatPage() {
     navigate(getMealSearchPath(selectedDateKey, mealType));
   };
 
-  const handleMenuRecordClick = (meal: ChatHistoryItemResponseDto) => {
-    const mealType = Number(getMealTypeFromCurrentTime(new Date())) as MealTime;
+  const handleMenuRecordClick = async (meal: ChatHistoryItemResponseDto) => {
+    const primaryMenu = getPrimaryMealRecordMenu(meal);
 
-    if (meal.response_payload.chat_category === "recommendation") {
-      mealRegisterMutate({
-        chat_id: meal.id,
-        time: mealType,
-        menu_ids: [meal.response_payload.recommendations![0].menu_id],
-        menu_quantities: [meal.response_payload.recommendations![0].weight],
-        menu_input_modes: [1],
-      });
-    } else if (meal.response_payload.chat_category === "feedback") {
-      const primaryMenu = meal.response_payload.feedback.menus[0];
-      mealRegisterMutate({
-        chat_id: meal.id,
-        time: mealType,
-        menu_ids: [primaryMenu.menu_id],
-        menu_quantities: [primaryMenu.weight],
-        menu_input_modes: [1],
-      });
+    if (!primaryMenu) {
+      return;
     }
 
-    toast.success("식사 기록이 등록되었어요.");
+    const nextMealRecord = getMergedMealRecordPayload(meal, primaryMenu);
 
-    // TODO 찐 식사 기록 연동하기
-    // mealRecordMutate({
-    // });
+    if (!nextMealRecord.wasAdded) {
+      toast.warning("이미 식사 기록에 추가된 메뉴예요.");
+      return;
+    }
+
+    try {
+      await mealRegisterMutate({
+        chat_id: meal.id,
+        time: nextMealRecord.time,
+        menu_ids: nextMealRecord.menuIds,
+        menu_quantities: nextMealRecord.menuQuantities,
+        menu_input_modes: nextMealRecord.menuInputModes,
+      });
+
+      toast.success(
+        meal.meal_record ? "식사 기록에 메뉴를 추가했어요." : "식사 기록이 등록되었어요.",
+      );
+    } catch (error) {
+      toast.warning(resolveErrorMessage(error));
+    }
   };
 
   const handleMealRecordEditClick = (meal: ChatHistoryItemResponseDto) => {
@@ -255,6 +261,12 @@ export default function ChatPage() {
     );
   };
 
+  const handleEditingInputModeChange = (menuId: number, nextInputMode: MealMenuInputMode) => {
+    setEditingSelectedMenus((prev) =>
+      prev.map((menu) => (menu.id === menuId ? { ...menu, inputMode: nextInputMode } : menu)),
+    );
+  };
+
   const handleEditingRemoveMenu = (menuId: number) => {
     setEditingSelectedMenus((prev) => prev.filter((menu) => menu.id !== menuId));
   };
@@ -265,19 +277,14 @@ export default function ChatPage() {
     }
 
     try {
-      const existingMealRecord = editingMealRecordChat.meal_record;
-      const existingMenuIds = existingMealRecord?.menu_ids ?? [];
-
       await mealRegisterMutate({
         chat_id: editingMealRecordChat.id,
         time: Number(editingMealType) as MealTime,
         menu_ids: editingSelectedMenus.map((menu) => menu.id),
         menu_quantities: editingSelectedMenus.map((menu) => menu.quantity),
-        menu_input_modes: editingSelectedMenus.map((menu) => {
-          const recordIndex = existingMenuIds.findIndex((menuId) => menuId === menu.id);
-
-          return existingMealRecord?.menu_input_modes?.[recordIndex] ?? 1;
-        }),
+        menu_input_modes: editingSelectedMenus.map(
+          (menu) => menu.inputMode ?? MENU_INPUT_MODE.UNIT,
+        ),
       });
 
       toast.success("식사 기록이 수정되었어요.");
@@ -343,7 +350,12 @@ export default function ChatPage() {
                         chatId={chatItem.id}
                         recommendations={chatItem.response_payload.recommendations}
                         onMealRecordClick={() => handleMenuRecordClick(chatItem)}
-                        isMealRecorded={chatItem.meal_record != null}
+                        isMealRecorded={
+                          chatItem.meal_record != null &&
+                          chatItem.meal_record.menu_ids!.includes(
+                            chatItem.response_payload.recommendations[0].menu_id,
+                          )
+                        }
                       />
                     ) : null}
 
@@ -352,7 +364,12 @@ export default function ChatPage() {
                         chatId={chatItem.id}
                         feedback={chatItem.response_payload.feedback}
                         onMealRecordClick={() => handleMenuRecordClick(chatItem)}
-                        isMealRecorded={chatItem.meal_record != null}
+                        isMealRecorded={
+                          chatItem.meal_record != null &&
+                          chatItem.meal_record.menu_ids!.includes(
+                            chatItem.response_payload.feedback.menus[0].menu_id,
+                          )
+                        }
                       />
                     ) : null}
 
@@ -491,6 +508,7 @@ export default function ChatPage() {
         isSubmitPending={isMealRegisterPending}
         onMealTypeChange={setEditingMealType}
         onQuantityChange={handleEditingQuantityChange}
+        onInputModeChange={handleEditingInputModeChange}
         onRemoveMenu={handleEditingRemoveMenu}
         onClose={handleMealRecordEditClose}
         onSubmit={handleMealRecordEditSubmit}
@@ -1020,6 +1038,50 @@ function getFeedbackGaugePoint(angle: number) {
   };
 }
 
+function getPrimaryMealRecordMenu(chatItem: ChatHistoryItemResponseDto): ChatMealRecordMenu | null {
+  if (chatItem.response_payload.chat_category === "recommendation") {
+    return chatItem.response_payload.recommendations[0] ?? null;
+  }
+
+  return chatItem.response_payload.feedback.menus[0] ?? null;
+}
+
+function getMergedMealRecordPayload(
+  chatItem: ChatHistoryItemResponseDto,
+  menu: ChatMealRecordMenu,
+) {
+  const mealRecord = chatItem.meal_record;
+  const menusById = new Map(
+    getMealRecordMenus(chatItem).map((recordMenu) => [recordMenu.menu_id, recordMenu]),
+  );
+  const existingMenuIds = mealRecord?.menu_ids ?? [];
+  const menuIds = [...existingMenuIds];
+  const menuQuantities = existingMenuIds.map((menuId, index) => {
+    return mealRecord?.menu_quantities?.[index] ?? menusById.get(menuId)?.weight ?? 1;
+  });
+  const menuInputModes = existingMenuIds.map((_, index) => {
+    return mealRecord?.menu_input_modes?.[index] ?? MENU_INPUT_MODE.UNIT;
+  });
+
+  if (menuIds.includes(menu.menu_id)) {
+    return {
+      time: mealRecord?.time ?? (Number(getMealTypeFromCurrentTime(new Date())) as MealTime),
+      menuIds,
+      menuQuantities,
+      menuInputModes,
+      wasAdded: false,
+    };
+  }
+
+  return {
+    time: mealRecord?.time ?? (Number(getMealTypeFromCurrentTime(new Date())) as MealTime),
+    menuIds: [...menuIds, menu.menu_id],
+    menuQuantities: [...menuQuantities, menu.weight],
+    menuInputModes: [...menuInputModes, MENU_INPUT_MODE.UNIT],
+    wasAdded: true,
+  };
+}
+
 function getMealRecordMenus(chatItem: ChatHistoryItemResponseDto): ChatMealRecordMenu[] {
   const menus =
     chatItem.response_payload.chat_category === "recommendation"
@@ -1059,6 +1121,7 @@ function getMealRecordSelectedMenus(
       return {
         id: menuId,
         quantity: mealRecord.menu_quantities?.[index] ?? menu.weight,
+        inputMode: mealRecord.menu_input_modes?.[index] ?? MENU_INPUT_MODE.UNIT,
       };
     })
     .filter((menu): menu is SelectedMealRecordMenu => menu !== null);
