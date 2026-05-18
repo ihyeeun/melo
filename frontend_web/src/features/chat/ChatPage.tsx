@@ -1,3 +1,4 @@
+import { useEnterDoneEffect } from "@stackflow/react";
 import {
   Camera,
   Check,
@@ -111,7 +112,8 @@ export default function ChatPage() {
   const navigate = useNavigate();
   const selectedDateKey = useSelectedDateKey();
   const mainRef = useRef<HTMLElement>(null);
-  const endAnchorRef = useRef<HTMLDivElement>(null);
+  const isScrolledAwayFromBottomRef = useRef(false);
+  const didInitialAutoScrollRef = useRef(false);
 
   const [inputValue, setInputValue] = useState("");
   const [isInputFocused, setIsInputFocused] = useState(false);
@@ -172,8 +174,50 @@ export default function ChatPage() {
     }
 
     const distanceToBottom = main.scrollHeight - main.scrollTop - main.clientHeight;
-    setIsScrolledAwayFromBottom(distanceToBottom > SCROLL_BOTTOM_THRESHOLD);
+    const isAwayFromBottom = distanceToBottom > SCROLL_BOTTOM_THRESHOLD;
+    isScrolledAwayFromBottomRef.current = isAwayFromBottom;
+    setIsScrolledAwayFromBottom(isAwayFromBottom);
   }, []);
+
+  const scrollToBottom = useCallback((behavior: ScrollBehavior = "auto") => {
+    const main = mainRef.current;
+
+    if (!main) {
+      return;
+    }
+
+    main.scrollTo({
+      top: main.scrollHeight,
+      behavior,
+    });
+
+    if (behavior === "auto") {
+      isScrolledAwayFromBottomRef.current = false;
+      setIsScrolledAwayFromBottom(false);
+    }
+  }, []);
+
+  const scrollToBottomAfterLayout = useCallback(
+    (behavior: ScrollBehavior = "auto") => {
+      if (typeof window === "undefined") {
+        scrollToBottom(behavior);
+        return;
+      }
+
+      window.requestAnimationFrame(() => {
+        scrollToBottom(behavior);
+      });
+    },
+    [scrollToBottom],
+  );
+
+  const handleChatImageLoad = useCallback(() => {
+    if (isScrolledAwayFromBottomRef.current) {
+      return;
+    }
+
+    scrollToBottomAfterLayout("auto");
+  }, [scrollToBottomAfterLayout]);
 
   useEffect(() => {
     if (!isQuickActionVisible) {
@@ -188,20 +232,53 @@ export default function ChatPage() {
   }, [isScrollToBottomButtonVisible]);
 
   useEffect(() => {
-    endAnchorRef.current?.scrollIntoView({
-      behavior: "instant",
-      block: "end",
-    });
+    if (!hasAnyConversation) {
+      updateIsScrolledAwayFromBottom();
+      return;
+    }
 
-    updateIsScrolledAwayFromBottom();
-  }, [chatList, updateIsScrolledAwayFromBottom]);
+    if (!didInitialAutoScrollRef.current && !isHistoryPending) {
+      didInitialAutoScrollRef.current = true;
+      scrollToBottom("auto");
+      scrollToBottomAfterLayout("auto");
+      return;
+    }
+
+    const shouldKeepBottom = pendingInput !== null || !isScrolledAwayFromBottomRef.current;
+
+    if (!shouldKeepBottom) {
+      updateIsScrolledAwayFromBottom();
+      return;
+    }
+
+    scrollToBottom("auto");
+    scrollToBottomAfterLayout("auto");
+  }, [
+    chatList,
+    hasAnyConversation,
+    isHistoryPending,
+    pendingInput,
+    scrollToBottom,
+    scrollToBottomAfterLayout,
+    updateIsScrolledAwayFromBottom,
+  ]);
 
   useEffect(() => {
-    endAnchorRef.current?.scrollIntoView({
-      behavior: "smooth",
-      block: "end",
-    });
-  }, [isTypingPending, pendingInput]);
+    if (!isTypingPending && pendingInput === null) {
+      return;
+    }
+
+    scrollToBottomAfterLayout("smooth");
+  }, [isTypingPending, pendingInput, scrollToBottomAfterLayout]);
+
+  useEnterDoneEffect(() => {
+    if (!hasAnyConversation || isHistoryPending) {
+      return;
+    }
+
+    scrollToBottom("auto");
+    scrollToBottomAfterLayout("auto");
+  }, [hasAnyConversation, isHistoryPending, scrollToBottom, scrollToBottomAfterLayout]);
 
   useEffect(() => {
     updateIsScrolledAwayFromBottom();
@@ -291,10 +368,7 @@ export default function ChatPage() {
 
   const handleScrollToBottom = () => {
     handleCloseCameraActionMenu();
-    endAnchorRef.current?.scrollIntoView({
-      behavior: "smooth",
-      block: "end",
-    });
+    scrollToBottom("smooth");
   };
 
   const handleNavigateMenuBoardCamera = () => {
@@ -455,6 +529,7 @@ export default function ChatPage() {
               const chatDate = parseDate(chatItem.createdAt);
               const previousItem = chatList[index - 1];
               const previousDate = previousItem ? parseDate(previousItem.createdAt) : null;
+              const userImageUrl = getChatItemImageUrl(chatItem);
               const shouldShowDateDivider =
                 chatDate !== null &&
                 (previousDate === null || formatDateKey(chatDate) !== formatDateKey(previousDate));
@@ -472,7 +547,18 @@ export default function ChatPage() {
                     <p className={`${styles.timeText} typo-caption`}>
                       {formatChatTime(chatItem.createdAt)}
                     </p>
-                    <p className={`${styles.userBubble} typo-body3`}>{chatItem.input_text}</p>
+                    <div className={styles.userMessageContent}>
+                      <p className={`${styles.userBubble} typo-body3`}>{chatItem.input_text}</p>
+                      {userImageUrl ? (
+                        <img
+                          src={userImageUrl}
+                          alt="사용자가 업로드한 이미지"
+                          aria-hidden="true"
+                          className={styles.userImageBubble}
+                          onLoad={handleChatImageLoad}
+                        />
+                      ) : null}
+                    </div>
                   </div>
 
                   <div className={styles.assistantMessageGroup}>
@@ -637,7 +723,6 @@ export default function ChatPage() {
             </section>
           )}
         </div>
-        <div ref={endAnchorRef} />
       </main>
 
       <footer className={`${styles.footer} ${isInputFocused ? styles.footerKeyboardOpen : ""}`}>
@@ -1197,6 +1282,12 @@ function getPrimaryMealRecordMenu(chatItem: ChatHistoryItemResponseDto): ChatMea
   }
 
   return chatItem.response_payload.feedback.menus[0] ?? null;
+}
+
+function getChatItemImageUrl(chatItem: ChatHistoryItemResponseDto) {
+  const imageUrl = chatItem.image_url ?? chatItem.response_payload.image_url ?? "";
+
+  return imageUrl.trim().length > 0 ? imageUrl : null;
 }
 
 function getMergedMealRecordPayload(

@@ -536,7 +536,7 @@ export function MealMenuNutrientDetail({
           <>
             <div className="divider dividerMargin20" />
 
-            {showEditSection && (
+            {showEditSection ? (
               <section className={styles.editSection}>
                 <p className={`typo-label3 ${styles.textNormal}`}>영양성분이 잘못되었나요?</p>
                 <Button
@@ -550,7 +550,7 @@ export function MealMenuNutrientDetail({
                   수정해서 담기
                 </Button>
               </section>
-            )}
+            ) : null}
 
             <NutrientDetailList
               detailListId={detailListId}

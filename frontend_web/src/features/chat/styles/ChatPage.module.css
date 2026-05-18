@@ -191,13 +191,32 @@
   color: var(--label-assistive);
 }
 
+.userMessageContent {
+  align-items: flex-end;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-width: 80%;
+}
+
 .userBubble {
   background-color: var(--bg-white);
   border-radius: 100px;
   color: var(--label-normal);
-  max-width: 80%;
+  max-width: 100%;
+  overflow-wrap: anywhere;
   padding: 8px 16px;
   white-space: pre-wrap;
+}
+
+.userImageBubble {
+  background-color: var(--bg-white);
+  border-radius: 12px;
+  display: block;
+  max-height: 240px;
+  max-width: 100%;
+  object-fit: cover;
+  width: 100%;
 }
 
 .assistantMessageGroup {
@@ -333,7 +352,7 @@
   left: 50%;
   position: absolute;
   text-align: center;
-  top: 55%;
+  top: 50%;
   transform: translateX(-50%);
 }
 

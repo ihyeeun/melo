@@ -1,4 +1,16 @@
 import { PATH } from "@/router/path";
+import type { MealServingInputMode } from "@/shared/api/types/api.dto";
+
+export type FeedbackDetailSelectionPayload = {
+  menuId: number;
+  quantity: number;
+  mode: MealServingInputMode;
+};
+
+export type FeedbackDetailNavigationState = {
+  initialSelection?: FeedbackDetailSelectionPayload | null;
+  onConfirmSelection?: (selection: FeedbackDetailSelectionPayload) => void;
+};
 
 function parsePositiveInt(value: string | null) {
   if (value === null) return null;

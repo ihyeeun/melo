@@ -231,6 +231,7 @@ export interface ChatHistoryResponseDto {
 export interface ChatHistoryItemResponseDto {
   id: number; //채팅 기록 id
   input_text: string; //사용자 입력값
+  image_url?: string | null; //사용자 입력 이미지
   createdAt: string; //저장 시각
   response_payload: ChatRecommendResponseDto;
   meal_record?: {
@@ -262,6 +263,7 @@ export type ChatCategory = "recommendation" | "feedback";
 interface ChatResponseBaseDto {
   chat_category: ChatCategory;
   intro_message: string;
+  image_url?: string | null;
 }
 
 export type ChatRecommendResponseDto = ChatRecommendationResponseDto | ChatFeedbackResponseDto;
@@ -275,6 +277,7 @@ export interface ChatRecommendationResponseDto extends ChatResponseBaseDto {
 export interface ChatFeedbackResponseDto extends ChatResponseBaseDto {
   chat_category: "feedback";
   feedback: FeedbackDto;
+  recognized_foods?: ChatFoodImageRecognizedMenuResponseDto[];
   recommendations?: never;
 }
 
@@ -295,6 +298,8 @@ export interface ChatFeedbackMenuResponseDto {
   weight: number;
   unit_quantity: string;
   calories: number;
+  score: number;
+  is_appropriate: boolean;
   data_source: number;
   brand?: string;
 }
