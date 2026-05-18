@@ -123,8 +123,9 @@ async function replaceDiaryMenusByTime({
     return;
   }
 
-  for (const menu of currentMenus) {
-    await deleteTodayMealRecord({
+  await Promise.all(
+    currentMenus.map((menu) =>
+      deleteTodayMealRecord({
       date,
       time,
       menu_id: menu.id,
