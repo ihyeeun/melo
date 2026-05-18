@@ -39,7 +39,6 @@ type MealMenuNutrientDetailProps = {
   onToggleDetail: () => void;
   onSelectionChange?: (selection: MealMenuNutrientSelection | null) => void;
   onEditAndAdd?: () => void;
-  showEditSection?: boolean;
   detailListId?: string;
 };
 
@@ -173,7 +172,6 @@ export function MealMenuNutrientDetail({
   onToggleDetail,
   onSelectionChange,
   onEditAndAdd,
-  showEditSection = true,
   detailListId = "meal-record-detail-list",
 }: MealMenuNutrientDetailProps) {
   const servingContext = useMemo(() => parseServingContext(menu), [menu]);
@@ -536,21 +534,19 @@ export function MealMenuNutrientDetail({
           <>
             <div className="divider dividerMargin20" />
 
-            {showEditSection && (
-              <section className={styles.editSection}>
-                <p className={`typo-label3 ${styles.textNormal}`}>영양성분이 잘못되었나요?</p>
-                <Button
-                  variant="text"
-                  interaction={isEditAndAddEnabled ? "normal" : "disable"}
-                  size="small"
-                  color="normal"
-                  onClick={handleEditAndAddClick}
-                  disabled={!isEditAndAddEnabled}
-                >
-                  수정해서 담기
-                </Button>
-              </section>
-            )}
+            <section className={styles.editSection}>
+              <p className={`typo-label3 ${styles.textNormal}`}>영양성분이 잘못되었나요?</p>
+              <Button
+                variant="text"
+                interaction={isEditAndAddEnabled ? "normal" : "disable"}
+                size="small"
+                color="normal"
+                onClick={handleEditAndAddClick}
+                disabled={!isEditAndAddEnabled}
+              >
+                수정해서 담기
+              </Button>
+            </section>
 
             <NutrientDetailList
               detailListId={detailListId}

@@ -1,5 +1,3 @@
-import { Menu } from "@base-ui/react/menu";
-import { EllipsisVertical } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
 import {
@@ -21,7 +19,7 @@ import styles from "@/features/meal-record/styles/MealDetailPage.module.css";
 import type { NutrientModifyLocationState } from "@/features/nutrient-entry/types/nutrientEntry.state";
 import { PATH } from "@/router/path";
 import { getMealRecordPath } from "@/router/pathHelpers";
-import { type MealMenuItem, MENU_DATA_SOURCE, MENU_UNIT } from "@/shared/api/types/api.dto";
+import { type MealMenuItem, MENU_DATA_SOURCE } from "@/shared/api/types/api.dto";
 import { Button } from "@/shared/commons/button/Button";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
 import { LoadingOverlay } from "@/shared/commons/loading/Loading";
@@ -232,44 +230,34 @@ export default function MealDetailPage() {
 
   const isPersonalMenuData = meal.data_source === MENU_DATA_SOURCE.PERSONAL;
 
-  const handleModify = () => {
-    moveToNutrientModify(meal, existingSelection?.quantity ?? 1, existingSelection !== null);
-  };
-
-  const handleEditAndAdd = () => {
-    moveToNutrientModify(selection?.menu ?? meal, selection?.quantity ?? 1, false);
-  };
-
-  const moveToNutrientModify = (
-    menuToModify: MealMenuItem,
-    quantity: number,
-    wasQueuedInDraft: boolean,
-  ) => {
+  const getNutrientModifyPath = (targetMenuId: number) => {
     const modifyQueryParams = new URLSearchParams({
       date: dateKey,
       mealType,
-      menuId: String(menuToModify.id),
+      menuId: String(targetMenuId),
     });
     if (searchKeyword.length > 0) {
       modifyQueryParams.set("keyword", searchKeyword);
     }
-    const normalizedUnit = menuToModify.unit ?? meal.unit;
 
+    return `${PATH.NUTRIENT_ADD_MODIFY}?${modifyQueryParams.toString()}`;
+  };
+
+  const handleEditAndAdd = () => {
+    if (isPersonalMenuData) {
+      navigate(getNutrientModifyPath(meal.id));
+      return;
+    }
+
+    moveToNutrientModify(selection?.menu ?? meal);
+  };
+
+  const moveToNutrientModify = (menuToModify: MealMenuItem) => {
     const state: NutrientModifyLocationState = {
-      dataSource: menuToModify.data_source ?? meal.data_source,
-      source: "meal-record",
-      menuId: menuToModify.id,
       menu: menuToModify,
-      quantity,
-      dateKey,
-      mealType,
-      wasQueuedInDraft,
-      brandName: menuToModify.brand ?? meal.brand,
-      foodName: menuToModify.name ?? meal.name,
-      servingUnit: normalizedUnit === MENU_UNIT.MILLILITER ? "ml" : "g",
     };
 
-    navigate(`${PATH.NUTRIENT_ADD_MODIFY}?${modifyQueryParams.toString()}`, { state });
+    navigate(getNutrientModifyPath(menuToModify.id), { state });
   };
 
   const handleDelete = () => {
@@ -287,33 +275,9 @@ export default function MealDetailPage() {
         onBack={handleGoBack}
         rightSlot={
           isPersonalMenuData && (
-            <div className={styles.headerButtons}>
-              <Menu.Root>
-                <Menu.Trigger>
-                  <EllipsisVertical size={20} />
-                </Menu.Trigger>
-
-                <Menu.Portal>
-                  <Menu.Positioner className={styles.menuPositioner} sideOffset={8}>
-                    <Menu.Popup>
-                      <Menu.Item
-                        onClick={handleModify}
-                        className={`${styles.menuItem} typo-label3`}
-                      >
-                        수정
-                      </Menu.Item>
-                      <Menu.Separator className="divider" />
-                      <Menu.Item
-                        onClick={handleDelete}
-                        className={`${styles.menuItem} typo-label3`}
-                      >
-                        삭제
-                      </Menu.Item>
-                    </Menu.Popup>
-                  </Menu.Positioner>
-                </Menu.Portal>
-              </Menu.Root>
-            </div>
+            <Button variant="text" color="normal" onClick={handleDelete}>
+              삭제
+            </Button>
           )
         }
       />
@@ -328,7 +292,6 @@ export default function MealDetailPage() {
             onToggleDetail={() => setIsDetailOpen((prev) => !prev)}
             onSelectionChange={setSelection}
             onEditAndAdd={handleEditAndAdd}
-            showEditSection={!isPersonalMenuData}
           />
         </div>
       </main>
