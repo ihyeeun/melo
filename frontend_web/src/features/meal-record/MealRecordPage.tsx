@@ -1,7 +1,11 @@
-import { PlusIcon } from "lucide-react";
+import { PlusIcon, XIcon } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { useDayMealsQuery } from "@/features/home/hooks/queries/useDayMealsQuery";
+import {
+  MAX_MEAL_RECORD_MENUS,
+  MEAL_RECORD_MENU_LIMIT_MESSAGE,
+} from "@/features/meal-record/constants/menu.constants";
 import {
   DELETE_MEAL_RECORD_RESULT,
   useTodayMealRecordDeleteWithRollbackMutation,
@@ -13,10 +17,16 @@ import {
   useMenuDraftInit,
   useMenuDraftMenus,
   useMenuDraftRemove,
+  useMenuDraftRemoveImage,
   useMenuDraftStore,
   useMenuDraftUpsert,
   useMenuDraftUpsertPreviews,
 } from "@/features/meal-record/stores/menuDraft.store";
+import {
+  buildMenuDraftSignature,
+  normalizeServingInputMode,
+  toMenuDraftSeed,
+} from "@/features/meal-record/utils/menuDraftSync";
 import { PATH } from "@/router/path";
 import { getMealDetailPath, getMealRecordPath, getMealSearchPath } from "@/router/pathHelpers";
 import {
@@ -65,12 +75,17 @@ function scaleCaloriesByWeight(calories: number, nextWeight: number, currentWeig
   return safeCalories * (safeNextWeight / safeCurrentWeight);
 }
 
-function normalizeServingInputMode(mode: MealServingInputMode | undefined) {
-  return mode === "unit" ? "unit" : "weight";
-}
-
 function toMenuInputMode(mode: MealServingInputMode | undefined) {
   return mode === "unit" ? MENU_INPUT_MODE.UNIT : MENU_INPUT_MODE.WEIGHT;
+}
+
+function normalizeMealImage(image: string | null | undefined) {
+  if (typeof image !== "string") {
+    return undefined;
+  }
+
+  const trimmedImage = image.trim();
+  return trimmedImage.length > 0 ? trimmedImage : undefined;
 }
 
 function buildMenuSignature(
@@ -120,39 +135,48 @@ export default function MealRecordPage() {
   const upsertMenu = useMenuDraftUpsert();
   const upsertPreviews = useMenuDraftUpsertPreviews();
   const removeMenu = useMenuDraftRemove();
+  const removeImage = useMenuDraftRemoveImage();
   const clearDraft = useMenuDraftClear();
   const draftMenus = useMenuDraftMenus(dateKey, mealType);
   const allDrafts = useMenuDraftStore((store) => store.drafts);
-  const hasCurrentDraft = Boolean(allDrafts[draftKey]);
+  const currentDraft = allDrafts[draftKey];
+  const hasCurrentDraft = Boolean(currentDraft);
   const draftPreviewsById = useMemo(
     () => allDrafts[draftKey]?.previewsById ?? {},
     [allDrafts, draftKey],
   );
-  const mealImage = allDrafts[draftKey]?.image ?? currentMenus?.imagesByTime[mealType] ?? null;
+  const mealImage =
+    currentDraft?.image === null
+      ? null
+      : (normalizeMealImage(currentDraft?.image ?? currentMenus?.imagesByTime[mealType]) ?? null);
   const didNotEat = Boolean(currentMenus?.didNotEatByTime[mealType]);
-  const currentMenuItems = (() => {
-    if (!currentMenus) return [];
-    return currentMenus.menusByTime[mealType];
-  })();
+  const currentMenuItems = useMemo(
+    () => currentMenus?.menusByTime[mealType] ?? [],
+    [currentMenus, mealType],
+  );
+  const currentSeedMenus = useMemo(() => currentMenuItems.map(toMenuDraftSeed), [currentMenuItems]);
+  const currentServerSignature = useMemo(
+    () =>
+      buildMenuDraftSignature({
+        menus: currentSeedMenus,
+        image: currentMenus?.imagesByTime[mealType],
+      }),
+    [currentMenus, currentSeedMenus, mealType],
+  );
 
   useEffect(() => {
     if (!currentMenus) {
       return;
     }
 
-    const seedMenus = currentMenus.menusByTime[mealType].map((menu) => ({
-      id: menu.id,
-      quantity: menu.quantity,
-      mode: menu.serving_input_mode,
-    }));
-
     initDraft({
       key: draftKey,
-      existingMenuCount: seedMenus.length,
-      seedMenus,
+      existingMenuCount: currentSeedMenus.length,
+      seedMenus: currentSeedMenus,
       image: currentMenus.imagesByTime[mealType],
+      serverSignature: currentServerSignature,
     });
-  }, [currentMenus, dateKey, draftKey, initDraft, mealType]);
+  }, [currentMenus, currentSeedMenus, currentServerSignature, draftKey, initDraft, mealType]);
 
   useEffect(() => {
     if (hasAppliedTransferRef.current || !currentMenus || !transferState) {
@@ -163,17 +187,24 @@ export default function MealRecordPage() {
       return;
     }
 
-    const seedMenus = currentMenus.menusByTime[mealType].map((menu) => ({
-      id: menu.id,
-      quantity: menu.quantity,
-      mode: menu.serving_input_mode,
-    }));
+    const nextMenuIds = new Set(currentSeedMenus.map((menu) => menu.id));
+    transferState.menus.forEach((menu) => {
+      nextMenuIds.add(menu.id);
+    });
+
+    if (nextMenuIds.size > MAX_MEAL_RECORD_MENUS) {
+      toast.warning(MEAL_RECORD_MENU_LIMIT_MESSAGE);
+      hasAppliedTransferRef.current = true;
+      navigate(getMealRecordPath(dateKey, mealType), { replace: true });
+      return;
+    }
 
     initDraft({
       key: draftKey,
-      existingMenuCount: seedMenus.length,
-      seedMenus,
+      existingMenuCount: currentSeedMenus.length,
+      seedMenus: currentSeedMenus,
       image: currentMenus.imagesByTime[mealType],
+      serverSignature: currentServerSignature,
     });
 
     transferState.menus.forEach((menu) => {
@@ -181,6 +212,7 @@ export default function MealRecordPage() {
         key: draftKey,
         id: menu.id,
         quantity: menu.quantity,
+        mode: menu.mode,
       });
     });
 
@@ -193,6 +225,8 @@ export default function MealRecordPage() {
     navigate(getMealRecordPath(dateKey, mealType), { replace: true });
   }, [
     currentMenus,
+    currentSeedMenus,
+    currentServerSignature,
     dateKey,
     draftKey,
     initDraft,
@@ -280,7 +314,16 @@ export default function MealRecordPage() {
         quantity: menu.quantity,
         mode: menu.serving_input_mode,
       }));
-      if (buildMenuSignature(currentMenusByType) === buildMenuSignature(draftMenusByType)) {
+      const hasMenuChanged =
+        buildMenuSignature(currentMenusByType) !== buildMenuSignature(draftMenusByType);
+      const currentImage = normalizeMealImage(currentMenus.imagesByTime[type]);
+      const nextImage =
+        draftByType.image === null
+          ? undefined
+          : normalizeMealImage(draftByType.image ?? currentImage);
+      const hasImageChanged = draftByType.image !== undefined && nextImage !== currentImage;
+
+      if (!hasMenuChanged && !hasImageChanged) {
         return requests;
       }
 
@@ -292,8 +335,8 @@ export default function MealRecordPage() {
         menu_input_modes: draftMenusByType.map((menu) => toMenuInputMode(menu.mode)),
       };
 
-      if (typeof draftByType.image === "string" && draftByType.image.trim().length > 0) {
-        request.image = draftByType.image;
+      if (nextImage) {
+        request.image = nextImage;
       }
 
       requests.push(request);
@@ -325,6 +368,24 @@ export default function MealRecordPage() {
 
   const handleRemoveMenu = (menuId: number) => {
     removeMenu({ key: draftKey, id: menuId });
+  };
+
+  const handleRemoveImage = () => {
+    if (!currentMenus) {
+      return;
+    }
+
+    if (!hasCurrentDraft) {
+      initDraft({
+        key: draftKey,
+        existingMenuCount: currentSeedMenus.length,
+        seedMenus: currentSeedMenus,
+        image: currentMenus.imagesByTime[mealType],
+        serverSignature: currentServerSignature,
+      });
+    }
+
+    removeImage({ key: draftKey });
   };
 
   const handleComplete = async () => {
@@ -408,6 +469,7 @@ export default function MealRecordPage() {
       existingMenuCount: seedMenus.length,
       seedMenus,
       image: mealImage,
+      serverSignature: currentServerSignature,
     });
 
     navigate(getMealSearchPath(dateKey, mealType));
@@ -460,6 +522,14 @@ export default function MealRecordPage() {
             <article className={styles.photoGroupCard}>
               <div className={styles.imgContainer}>
                 <img src={mealImage} alt="식사 사진" className={styles.photoImage} />
+                <button
+                  type="button"
+                  className={styles.photoDeleteButton}
+                  onClick={handleRemoveImage}
+                  aria-label="식사 사진 삭제"
+                >
+                  <XIcon size={18} strokeWidth={3} aria-hidden="true" />
+                </button>
               </div>
 
               <div className="divider" />

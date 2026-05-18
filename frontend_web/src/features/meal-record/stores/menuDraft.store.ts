@@ -19,7 +19,8 @@ type MenusDraft = {
   existingMenuCount: number;
   existingMenus: MenuDraftType[];
   previewsById: Record<number, MealRecordTransferPreview>;
-  image?: string;
+  image?: string | null;
+  serverSignature?: string;
 };
 
 type InitDraftParams = {
@@ -27,6 +28,7 @@ type InitDraftParams = {
   existingMenuCount: number;
   seedMenus?: MenuDraftType[];
   image?: string | null;
+  serverSignature?: string;
 };
 
 type UpsertMenuParams = {
@@ -41,6 +43,10 @@ type RemoveMenuParams = {
   id: number;
 };
 
+type RemoveImageParams = {
+  key: MenuDraftKey;
+};
+
 type UpsertPreviewsParams = {
   key: MenuDraftKey;
   previews: MealRecordTransferPreview[];
@@ -51,6 +57,7 @@ type MenuDraftStoreState = {
   initDraft: (params: InitDraftParams) => void;
   upsertMenu: (params: UpsertMenuParams) => void;
   removeMenu: (params: RemoveMenuParams) => void;
+  removeImage: (params: RemoveImageParams) => void;
   upsertPreviews: (params: UpsertPreviewsParams) => void;
   clearDraft: (key: MenuDraftKey) => void;
 };
@@ -91,11 +98,17 @@ export const useMenuDraftStore = create<MenuDraftStoreState>()(
     (set) => ({
       drafts: {},
 
-      initDraft: ({ key, existingMenuCount, seedMenus, image }) => {
+      initDraft: ({ key, existingMenuCount, seedMenus, image, serverSignature }) => {
         set((state) => {
           const prev = state.drafts[key];
           const safeCount = Math.max(0, Math.floor(existingMenuCount));
           const normalizedImage = normalizeDraftImage(image);
+          const hasDraftPreviews = Object.keys(prev?.previewsById ?? {}).length > 0;
+          const hasServerChanged =
+            typeof serverSignature === "string" &&
+            ((typeof prev?.serverSignature === "string" &&
+              prev.serverSignature !== serverSignature) ||
+              (prev?.serverSignature === undefined && !hasDraftPreviews));
 
           if (!prev) {
             return {
@@ -106,6 +119,22 @@ export const useMenuDraftStore = create<MenuDraftStoreState>()(
                   existingMenus: [...(seedMenus ?? [])],
                   previewsById: {},
                   image: normalizedImage,
+                  serverSignature,
+                },
+              },
+            };
+          }
+
+          if (hasServerChanged) {
+            return {
+              drafts: {
+                ...state.drafts,
+                [key]: {
+                  existingMenuCount: safeCount,
+                  existingMenus: [...(seedMenus ?? [])],
+                  previewsById: {},
+                  image: normalizedImage,
+                  serverSignature,
                 },
               },
             };
@@ -117,7 +146,8 @@ export const useMenuDraftStore = create<MenuDraftStoreState>()(
               [key]: {
                 ...prev,
                 existingMenuCount: Math.max(prev.existingMenuCount, safeCount),
-                image: normalizedImage ?? prev.image,
+                image: prev.image !== undefined ? prev.image : normalizedImage,
+                serverSignature: serverSignature ?? prev.serverSignature,
               },
             },
           };
@@ -168,6 +198,25 @@ export const useMenuDraftStore = create<MenuDraftStoreState>()(
               [key]: {
                 ...draft,
                 existingMenus: draft.existingMenus.filter((menu) => menu.id !== id),
+              },
+            },
+          };
+        });
+      },
+
+      removeImage: ({ key }) => {
+        set((state) => {
+          const draft = state.drafts[key];
+          if (!draft) {
+            return state;
+          }
+
+          return {
+            drafts: {
+              ...state.drafts,
+              [key]: {
+                ...draft,
+                image: null,
               },
             },
           };
@@ -229,6 +278,7 @@ export const useMenuDraftStore = create<MenuDraftStoreState>()(
 export const useMenuDraftInit = () => useMenuDraftStore((store) => store.initDraft);
 export const useMenuDraftUpsert = () => useMenuDraftStore((store) => store.upsertMenu);
 export const useMenuDraftRemove = () => useMenuDraftStore((store) => store.removeMenu);
+export const useMenuDraftRemoveImage = () => useMenuDraftStore((store) => store.removeImage);
 export const useMenuDraftUpsertPreviews = () => useMenuDraftStore((store) => store.upsertPreviews);
 export const useMenuDraftClear = () => useMenuDraftStore((store) => store.clearDraft);
 

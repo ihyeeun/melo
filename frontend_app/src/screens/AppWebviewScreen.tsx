@@ -1,5 +1,19 @@
 import { handleWebMessage } from "@/src/shared/api/bridge/handleWebMessage";
 import { subscribeAuthExpired } from "@/src/shared/auth/authSessionEvents";
+import {
+  type AppTabName,
+  getNativeTabHistoryAction,
+  getTabRoute,
+  getWebTabStackAction,
+  isAppTabName,
+  resolveTabFromPath,
+  shouldUseNativeBackOnTabExit,
+} from "@/src/shared/navigation/appTabNavigation";
+import {
+  createWebNavigationCommandDispatchSource,
+  createWebNavigationCommandScript,
+  DEFAULT_TAB_BACK_FALLBACK_PATH,
+} from "@/src/shared/navigation/webNavigationCommand";
 import { router } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import { BackHandler, Linking, Platform, StyleSheet } from "react-native";
@@ -25,11 +39,11 @@ const LOCAL_DEV_HOSTNAMES = new Set(["localhost", "127.0.0.1", "10.0.2.2"]);
 type AppWebViewScreenProps = {
   path?: string;
   currentTab?: AppTabName;
+  chatBackRequestKey?: number;
   onTabBarVisibilityChange?: (hidden: boolean) => void;
   onFeatureGuardEnabledChange?: (enabled: boolean) => void;
 };
 
-export type AppTabName = "home" | "chat" | "diary" | "profile";
 type WebViewOpenWindowEvent = Parameters<NonNullable<WebViewProps["onOpenWindow"]>>[0];
 
 function buildWebAppUrl(path?: string) {
@@ -107,17 +121,6 @@ function resolveWebPathname(requestUrl: string, webAppOrigin: string | null) {
   }
 }
 
-function resolveTabFromPath(pathname: string): AppTabName | null {
-  const normalizedPath = pathname !== "/" && pathname.endsWith("/") ? pathname.slice(0, -1) : pathname;
-
-  if (normalizedPath === "/" || normalizedPath === "/home") return "home";
-  if (normalizedPath === "/chat") return "chat";
-  if (normalizedPath === "/diary") return "diary";
-  if (normalizedPath === "/profile") return "profile";
-
-  return null;
-}
-
 function resolveTabFromUrl(requestUrl: string, webAppOrigin: string | null): AppTabName | null {
   const pathname = resolveWebPathname(requestUrl, webAppOrigin);
   if (!pathname) return null;
@@ -132,8 +135,29 @@ function shouldHideTabBar(requestUrl: string, webAppOrigin: string | null) {
   return resolveTabFromPath(pathname) === null;
 }
 
-function getTabRoute(tabName: AppTabName) {
-  return `/(tabs)/${tabName}` as const;
+function navigateToTabRoute(
+  targetTab: AppTabName,
+  currentTab?: AppTabName,
+  { preferBackFromChat = false }: { preferBackFromChat?: boolean } = {},
+) {
+  const action = getNativeTabHistoryAction(targetTab, currentTab);
+  if (!action) return;
+
+  if (
+    preferBackFromChat &&
+    currentTab &&
+    shouldUseNativeBackOnTabExit(currentTab, targetTab)
+  ) {
+    router.dismissTo(getTabRoute(targetTab));
+    return;
+  }
+
+  if (action === "push") {
+    router.push(getTabRoute(targetTab));
+    return;
+  }
+
+  router.replace(getTabRoute(targetTab));
 }
 
 const pathChangeBridgeScript = `
@@ -168,14 +192,20 @@ const pathChangeBridgeScript = `
   })();
 `;
 
-function createTabPathSyncScript(absoluteHref: string, appOrigin: string | null) {
+function createTabPathSyncScript(
+  absoluteHref: string,
+  appOrigin: string | null,
+  stackAction: "push" | "reset",
+) {
   const serializedAbsoluteHref = JSON.stringify(absoluteHref);
   const serializedAppOrigin = JSON.stringify(appOrigin);
+  const serializedStackAction = JSON.stringify(stackAction);
 
   return `
     (function () {
       var passedAbsoluteUrl = ${serializedAbsoluteHref};
       var appOrigin = ${serializedAppOrigin};
+      var stackAction = ${serializedStackAction};
       if (typeof passedAbsoluteUrl !== "string" || passedAbsoluteUrl.length === 0) return;
 
       var targetUrl;
@@ -203,15 +233,22 @@ function createTabPathSyncScript(absoluteHref: string, appOrigin: string | null)
       var currentPath = window.location.pathname + window.location.search + window.location.hash;
       if (nextPath === currentPath) return;
 
+      var syncCommand = {
+        type: "SYNC_TAB_PATH",
+        href: targetUrl.href,
+        path: nextPath,
+        stackAction: stackAction,
+        animate: false
+      };
+
+      if (stackAction === "push") {
+        ${createWebNavigationCommandDispatchSource("syncCommand")}
+        return;
+      }
+
       history.replaceState(null, "", nextPath);
 
-      try {
-        window.dispatchEvent(new CustomEvent("MELO_NATIVE_PATH_SYNC"));
-      } catch {
-        var event = document.createEvent("Event");
-        event.initEvent("MELO_NATIVE_PATH_SYNC", true, true);
-        window.dispatchEvent(event);
-      }
+      ${createWebNavigationCommandDispatchSource("syncCommand")}
 
       if (!window.ReactNativeWebView) return;
       window.ReactNativeWebView.postMessage(
@@ -223,6 +260,14 @@ function createTabPathSyncScript(absoluteHref: string, appOrigin: string | null)
     })();
     true;
   `;
+}
+
+function createNativeBackRequestScript() {
+  return createWebNavigationCommandScript({
+    type: "BACK",
+    fallbackPath: DEFAULT_TAB_BACK_FALLBACK_PATH,
+    animate: true,
+  });
 }
 
 function normalizeInset(inset: number) {
@@ -246,6 +291,7 @@ function createSafeAreaSyncScript(topInset: number, bottomInset: number) {
 export default function AppWebViewScreen({
   path,
   currentTab,
+  chatBackRequestKey,
   onTabBarVisibilityChange,
   onFeatureGuardEnabledChange,
 }: AppWebViewScreenProps) {
@@ -255,6 +301,8 @@ export default function AppWebViewScreen({
   const didLoadOnceRef = useRef(false);
   const didInitializeTabPathSyncRef = useRef(false);
   const pendingTabPathRef = useRef<string | null>(null);
+  const previousChatBackRequestKeyRef = useRef(chatBackRequestKey);
+  const previousTabRef = useRef<AppTabName | undefined>(currentTab);
   const latestWebPathRef = useRef<string | null>(null);
   const tabBarHiddenByPathRef = useRef(false);
   const tabBarHiddenByWebRef = useRef(false);
@@ -333,7 +381,7 @@ export default function AppWebViewScreen({
       const targetTab = resolveTabFromUrl(url, webAppOrigin);
       if (!targetTab || targetTab === currentTab) return;
 
-      router.replace(getTabRoute(targetTab));
+      navigateToTabRoute(targetTab, currentTab, { preferBackFromChat: true });
     },
     [currentTab, isTabWebView, syncTabBarFromUrl, webAppOrigin],
   );
@@ -351,7 +399,15 @@ export default function AppWebViewScreen({
       }
       if (latestWebPathRef.current === nextHref) return;
 
-      webViewRef.current?.injectJavaScript(createTabPathSyncScript(nextHref, webAppOrigin));
+      const currentWebTab = latestWebPathRef.current
+        ? resolveTabFromUrl(latestWebPathRef.current, webAppOrigin)
+        : (previousTabRef.current ?? null);
+      const nextWebTab = resolveTabFromUrl(nextHref, webAppOrigin);
+      const stackAction = getWebTabStackAction(currentWebTab, nextWebTab);
+
+      webViewRef.current?.injectJavaScript(
+        createTabPathSyncScript(nextHref, webAppOrigin, stackAction),
+      );
     },
     [isTabWebView, webAppOrigin],
   );
@@ -408,6 +464,22 @@ export default function AppWebViewScreen({
   }, [currentTab, flushPendingTabPathSync, isTabWebView, normalizedTabPath]);
 
   useEffect(() => {
+    previousTabRef.current = currentTab;
+  }, [currentTab]);
+
+  useEffect(() => {
+    if (!isTabWebView || currentTab !== "chat") {
+      previousChatBackRequestKeyRef.current = chatBackRequestKey;
+      return;
+    }
+
+    if (previousChatBackRequestKeyRef.current === chatBackRequestKey) return;
+
+    previousChatBackRequestKeyRef.current = chatBackRequestKey;
+    webViewRef.current?.injectJavaScript(createNativeBackRequestScript());
+  }, [chatBackRequestKey, currentTab, isTabWebView]);
+
+  useEffect(() => {
     if (!isTabWebView) return;
 
     tabBarHiddenByPathRef.current = false;
@@ -426,7 +498,7 @@ export default function AppWebViewScreen({
       try {
         const rawData = JSON.parse(event.nativeEvent.data) as {
           type?: string;
-          payload?: { href?: string; enabled?: boolean; isHidden?: boolean };
+          payload?: { href?: string; enabled?: boolean; isHidden?: boolean; tab?: unknown };
           context?: { href?: string };
         };
 
@@ -439,6 +511,11 @@ export default function AppWebViewScreen({
           if (canSyncAfterInitialLoad()) {
             syncTabStateFromUrl(rawData.payload.href);
           }
+          return;
+        }
+
+        if (isTabWebView && rawData.type === "TAB_SYNC" && isAppTabName(rawData.payload?.tab)) {
+          navigateToTabRoute(rawData.payload.tab, currentTab, { preferBackFromChat: true });
           return;
         }
 
@@ -462,6 +539,8 @@ export default function AppWebViewScreen({
     },
     [
       canSyncAfterInitialLoad,
+      currentTab,
+      isTabWebView,
       onFeatureGuardEnabledChange,
       rememberTabWebHref,
       syncTabBarVisibility,

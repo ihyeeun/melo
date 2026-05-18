@@ -35,7 +35,7 @@ import {
   useSearchParams,
 } from "@/shared/navigation/stackflowNavigation";
 
-import { MAX_MEAL_RECORD_MENUS } from "./constants/menu.constants";
+import { MAX_MEAL_RECORD_MENUS, MEAL_RECORD_MENU_LIMIT_MESSAGE } from "./constants/menu.constants";
 import { getMealType, getSafeDateKey, getSafeKeyword } from "./utils/mealRecord.queryParams";
 
 type MealDetailLocationState = {
@@ -171,7 +171,7 @@ export default function MealDetailPage() {
     nextSelectedMenuIds.add(nextMenuId);
 
     if (nextSelectedMenuIds.size > MAX_MEAL_RECORD_MENUS) {
-      toast.warning("최대 100개까지 기록할 수 있어요");
+      toast.warning(MEAL_RECORD_MENU_LIMIT_MESSAGE);
       return;
     }
 

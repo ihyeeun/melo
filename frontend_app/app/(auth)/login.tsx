@@ -1,5 +1,5 @@
 import React from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import { KakaoLoginButton } from "@/features/auth/components/KakaoLoginButton";
 import { AppleLoginButton } from "@/features/auth/components/AppleLoginButton";
 import { router } from "expo-router";
@@ -9,10 +9,6 @@ import LoginImage from "@/assets/images/login-image.svg";
 export default function LoginPage() {
   const startAppleLogin = React.useCallback(() => {
     router.push("/appleLogin");
-  }, []);
-
-  const startAdminLogin = React.useCallback(() => {
-    router.push("/admin-login");
   }, []);
 
   const openTermsPage = React.useCallback(() => {
@@ -30,19 +26,12 @@ export default function LoginPage() {
           <View style={styles.socialButtonGroup}>
             <KakaoLoginButton onPress={() => router.push("/kakaoLogin")} />
             <AppleLoginButton onPress={startAppleLogin} />
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="일반 로그인"
-              style={({ pressed }) => [styles.defaultLoginButton, pressed && styles.defaultLoginButtonPressed]}
-              onPress={startAdminLogin}
-            >
-              <Text style={styles.defaultLoginButtonText}>일반 로그인</Text>
-            </Pressable>
           </View>
 
-          <Text style={styles.agreementText}>
+          <Text allowFontScaling={false} style={styles.agreementText}>
             가입하면 Melo의{"\n"}
             <Text
+              allowFontScaling={false}
               style={styles.linkText}
               onPress={openTermsPage}
               accessible={true}
@@ -86,25 +75,6 @@ const styles = StyleSheet.create({
     gap: 12,
     alignItems: "center",
     width: "100%",
-  },
-  defaultLoginButton: {
-    alignSelf: "center",
-    width: 300,
-    height: 45,
-    borderRadius: 4,
-    borderWidth: 1,
-    borderColor: "#dddddd",
-    backgroundColor: "#ffffff",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  defaultLoginButtonPressed: {
-    opacity: 0.7,
-  },
-  defaultLoginButtonText: {
-    color: "#333333",
-    fontSize: 15,
-    fontWeight: "500",
   },
   agreementText: {
     color: "#666666",

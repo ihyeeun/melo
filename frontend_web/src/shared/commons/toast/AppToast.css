@@ -1,5 +1,5 @@
 .app-toast-viewport {
-  bottom: max(30px, var(--safe-area-bottom));
+  top: max(30px, var(--safe-area-top));
   display: flex;
   flex-direction: column;
   gap: 8px;

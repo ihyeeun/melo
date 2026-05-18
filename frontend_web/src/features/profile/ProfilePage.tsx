@@ -248,7 +248,9 @@ export default function ProfilePage() {
 
                 <div className={styles.activeCardValueRow}>
                   <span className={`${styles.activeCardValue} typo-title4`}>
-                    {(dayMeal?.totalCalories ?? 0).toLocaleString("ko-KR")}
+                    {(dayMeal?.totalCalories ?? 0).toLocaleString("ko-KR", {
+                      maximumFractionDigits: 1,
+                    })}
                   </span>
                   <span className={`${styles.activeCardUnit} typo-label4`}>kcal</span>
                 </div>
@@ -262,7 +264,7 @@ export default function ProfilePage() {
 
                 <div className={styles.activeCardValueRow}>
                   <span className={`${styles.activeCardValue} typo-title4`}>
-                    {todaySteps === null ? "-" : todaySteps.toLocaleString("ko-KR")}
+                    {todaySteps === null ? "0" : todaySteps.toLocaleString("ko-KR")}
                   </span>
                   <span className={`${styles.activeCardUnit} typo-label4`}>보</span>
                 </div>

@@ -121,7 +121,9 @@ export default function AppleLogin() {
       {(isPageLoading || isCallbackProcessing) && (
         <View style={styles.loadingOverlay}>
           <ActivityIndicator size="small" color="#444" />
-          <Text style={styles.loadingText}>로그인 준비 중...</Text>
+          <Text allowFontScaling={false} style={styles.loadingText}>
+            로그인 준비 중...
+          </Text>
         </View>
       )}
     </SafeAreaView>

@@ -140,7 +140,6 @@
 .btn--variant-outlined.btn--color-normal.btn--state-default {
   border: 1px solid var(--border-normal);
   color: var(--label-assistive);
-  background-color: var(--interaction-alternative);
 }
 
 .btn--variant-outlined.btn--color-normal:hover,

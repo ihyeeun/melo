@@ -1,7 +1,16 @@
-import AppWebViewScreen, { type AppTabName } from "@/src/screens/AppWebviewScreen";
+import AppWebViewScreen from "@/src/screens/AppWebviewScreen";
+import {
+  type AppTabName,
+  getNativeTabHistoryAction,
+  getTabPath,
+  getTabRoute,
+  isAppTabName,
+  shouldEnableTabBackGesture,
+} from "@/src/shared/navigation/appTabNavigation";
+import { useEdgeSwipeBack } from "@/src/shared/navigation/useEdgeSwipeBack";
 import { router, Slot, useSegments } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import HomeIcon from "../../assets/images/Icon/home-outline.svg";
 import HomeFillIcon from "../../assets/images/Icon/home-fill.svg";
@@ -11,13 +20,6 @@ import DiaryIcon from "../../assets/images/Icon/diary-outline.svg";
 import DiaryFillIcon from "../../assets/images/Icon/diary-fill.svg";
 import UserIcon from "../../assets/images/Icon/user-outline.svg";
 import UserFillIcon from "../../assets/images/Icon/user-fill.svg";
-
-const TAB_PATH_MAP: Record<AppTabName, string> = {
-  home: "/home",
-  chat: "/chat",
-  diary: "/diary",
-  profile: "/profile",
-};
 
 const TAB_ITEMS: {
   tab: AppTabName;
@@ -38,17 +40,22 @@ function resolveCurrentTab(segments: string[]): AppTabName | null {
   for (let index = segments.length - 1; index >= 0; index -= 1) {
     const routeName = segments[index];
 
-    if (routeName === "home") return "home";
-    if (routeName === "chat") return "chat";
-    if (routeName === "diary") return "diary";
-    if (routeName === "profile") return "profile";
+    if (isAppTabName(routeName)) return routeName;
   }
 
   return null;
 }
 
-function getTabRoute(tab: AppTabName) {
-  return `/(tabs)/${tab}` as const;
+function navigateToTab(tab: AppTabName, currentTab: AppTabName) {
+  const action = getNativeTabHistoryAction(tab, currentTab);
+  if (!action) return;
+
+  if (action === "push") {
+    router.push(getTabRoute(tab));
+    return;
+  }
+
+  router.replace(getTabRoute(tab));
 }
 
 export default function TabsLayout() {
@@ -58,8 +65,9 @@ export default function TabsLayout() {
     lastResolvedTab = resolvedTab;
   }
   const currentTab = resolvedTab ?? lastResolvedTab;
-  const tabPath = TAB_PATH_MAP[currentTab];
+  const tabPath = getTabPath(currentTab);
   const [isTabBarHidden, setIsTabBarHidden] = useState(false);
+  const [chatBackRequestKey, setChatBackRequestKey] = useState(0);
   const [isFreeUserGuardEnabled, setIsFreeUserGuardEnabled] = useState(FREE_USER_GUARD_ENABLED);
   const insets = useSafeAreaInsets();
   const tabBarBottomPadding = Math.max(insets.bottom, 8);
@@ -68,6 +76,14 @@ export default function TabsLayout() {
     [isFreeUserGuardEnabled],
   );
   const shouldHideTabBar = isTabBarHidden || currentTab === "chat";
+  const shouldEnableChatBackSwipe = shouldEnableTabBackGesture(currentTab) && !isTabBarHidden;
+  const requestChatBack = useCallback(() => {
+    setChatBackRequestKey((key) => key + 1);
+  }, []);
+  const chatBackSwipe = useEdgeSwipeBack({
+    enabled: shouldEnableChatBackSwipe,
+    onBack: requestChatBack,
+  });
 
   useEffect(() => {
     if (!isFreeUserGuardEnabled || currentTab !== "chat") return;
@@ -81,6 +97,7 @@ export default function TabsLayout() {
         <AppWebViewScreen
           path={tabPath}
           currentTab={currentTab}
+          chatBackRequestKey={chatBackRequestKey}
           onTabBarVisibilityChange={setIsTabBarHidden}
           onFeatureGuardEnabledChange={setIsFreeUserGuardEnabled}
         />
@@ -89,6 +106,13 @@ export default function TabsLayout() {
       <View style={styles.hiddenSlot} pointerEvents="none">
         <Slot />
       </View>
+
+      {shouldEnableChatBackSwipe ? (
+        <View
+          style={[styles.chatBackSwipeEdge, { width: chatBackSwipe.edgeWidth }]}
+          {...chatBackSwipe.panHandlers}
+        />
+      ) : null}
 
       {!shouldHideTabBar ? (
         <View style={[styles.tabBar, { paddingBottom: tabBarBottomPadding }]}>
@@ -100,13 +124,11 @@ export default function TabsLayout() {
               <Pressable
                 key={tab}
                 style={styles.tabButton}
-                onPress={() => {
-                  if (isFocused) return;
-                  router.replace(getTabRoute(tab));
-                }}
+                onPress={() => navigateToTab(tab, currentTab)}
               >
                 <RenderIcon width={24} height={24} />
                 <Text
+                  allowFontScaling={false}
                   style={[
                     styles.tabLabel,
                     isFocused ? styles.tabLabelFocused : styles.tabLabelBlurred,
@@ -135,6 +157,13 @@ const styles = StyleSheet.create({
     width: 0,
     height: 0,
     opacity: 0,
+  },
+  chatBackSwipeEdge: {
+    bottom: 0,
+    left: 0,
+    position: "absolute",
+    top: 0,
+    zIndex: 10,
   },
   tabBar: {
     backgroundColor: "#ffffff",

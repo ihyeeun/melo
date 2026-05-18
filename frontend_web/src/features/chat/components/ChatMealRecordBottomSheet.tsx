@@ -1,12 +1,14 @@
 import { Select } from "@base-ui/react";
 import { ChevronDown, Minus, Plus } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 
 import styles from "@/features/chat/styles/ChatMealRecordBottomSheet.module.css";
 import {
   type ChatRecommendItemResponseDto,
   MEAL_TYPE_OPTIONS,
+  type MealMenuInputMode,
   type MealType,
+  MENU_INPUT_MODE,
   MENU_UNIT,
 } from "@/shared/api/types/api.dto";
 import BottomSheet from "@/shared/commons/bottomSheet/BottomSheet";
@@ -16,6 +18,7 @@ import NumberField from "@/shared/commons/input/NumberField";
 type SelectedMenuItem = {
   id: number;
   quantity: number;
+  inputMode?: MealMenuInputMode;
 };
 
 type ServingWeightUnit = "g" | "ml";
@@ -28,6 +31,11 @@ type ServingContext = {
   weightUnit: ServingWeightUnit;
 };
 
+export type ChatMealRecordMenu = Pick<
+  ChatRecommendItemResponseDto,
+  "menu_id" | "menu_name" | "brand" | "unit" | "weight" | "unit_quantity" | "calories"
+>;
+
 const MEAL_TYPE_ICON_MAP = {
   "0": "/icons/breakfast.svg",
   "1": "/icons/lunch.svg",
@@ -38,13 +46,14 @@ const MEAL_TYPE_ICON_MAP = {
 
 type ChatMealRecordBottomSheetProps = {
   isOpen: boolean;
-  recommendations: ChatRecommendItemResponseDto[];
+  recommendations: ChatMealRecordMenu[];
   selectedMenus: SelectedMenuItem[];
   mealType: MealType;
   isSubmitPending?: boolean;
   submitLabel?: string;
   onMealTypeChange: (mealType: MealType) => void;
   onQuantityChange: (menuId: number, nextQuantity: number) => void;
+  onInputModeChange: (menuId: number, nextInputMode: MealMenuInputMode) => void;
   onRemoveMenu: (menuId: number) => void;
   onAddMore?: () => void;
   onClose: () => void;
@@ -75,7 +84,7 @@ function toPositiveNumber(value: number | null | undefined) {
   return value;
 }
 
-function resolveServingContext(recommendation: ChatRecommendItemResponseDto): ServingContext {
+function resolveServingContext(recommendation: ChatMealRecordMenu): ServingContext {
   const matched = recommendation.unit_quantity.match(UNIT_QUANTITY_PATTERN);
   const parsedCount = matched ? Number(matched[1]) : Number.NaN;
   const unitLabel = matched?.[2]?.trim() || recommendation.unit_quantity || "인분";
@@ -126,6 +135,14 @@ function getScaledCalories(
   return baseCalories * (consumedWeight / servingContext.baseWeight);
 }
 
+function toServingInputMode(inputMode?: MealMenuInputMode): ServingInputMode {
+  return inputMode === MENU_INPUT_MODE.WEIGHT ? "weight" : "unit";
+}
+
+function toMenuInputMode(mode: ServingInputMode): MealMenuInputMode {
+  return mode === "weight" ? MENU_INPUT_MODE.WEIGHT : MENU_INPUT_MODE.UNIT;
+}
+
 export function ChatMealRecordBottomSheet({
   isOpen,
   recommendations,
@@ -135,13 +152,12 @@ export function ChatMealRecordBottomSheet({
   submitLabel = "담기",
   onMealTypeChange,
   onQuantityChange,
+  onInputModeChange,
   onRemoveMenu,
   onAddMore,
   onClose,
   onSubmit,
 }: ChatMealRecordBottomSheetProps) {
-  const [modeByMenuId, setModeByMenuId] = useState<Record<number, ServingInputMode>>({});
-
   const recommendationById = useMemo(
     () => new Map(recommendations.map((item) => [item.menu_id, item])),
     [recommendations],
@@ -159,11 +175,11 @@ export function ChatMealRecordBottomSheet({
           ...menu,
           recommendation,
           servingContext: resolveServingContext(recommendation),
-          mode: modeByMenuId[menu.id] ?? "unit",
+          mode: toServingInputMode(menu.inputMode),
         };
       })
       .filter((item): item is NonNullable<typeof item> => item !== null);
-  }, [modeByMenuId, recommendationById, selectedMenus]);
+  }, [recommendationById, selectedMenus]);
 
   const totalCalories = selectedItems.reduce((sum, item) => {
     return (
@@ -286,10 +302,7 @@ export function ChatMealRecordBottomSheet({
                       value={item.mode}
                       onValueChange={(nextValue) => {
                         const safeMode = nextValue === "weight" ? "weight" : "unit";
-                        setModeByMenuId((prev) => ({
-                          ...prev,
-                          [item.id]: safeMode,
-                        }));
+                        onInputModeChange(item.id, toMenuInputMode(safeMode));
                       }}
                     >
                       <Select.Trigger className={`${styles.unitSelectTrigger} typo-h3`}>

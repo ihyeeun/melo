@@ -1,10 +1,15 @@
-import { MEAL_TYPE_SET, type MealType } from "@/shared/api/types/api.dto";
+import {
+  MEAL_TYPE_SET,
+  type MealServingInputMode,
+  type MealType,
+} from "@/shared/api/types/api.dto";
 
 export const CHAT_TO_MEAL_RECORD_SOURCE = "chat_bottom_sheet" as const;
 
 export type MealRecordTransferMenu = {
   id: number;
   quantity: number;
+  mode?: MealServingInputMode;
 };
 
 export type MealRecordTransferPreview = {
@@ -38,12 +43,20 @@ function normalizeQuantity(quantity: number) {
   return Math.round(quantity * 10000) / 10000;
 }
 
+function normalizeMode(mode: unknown): MealServingInputMode | undefined {
+  if (mode === "unit" || mode === "weight") {
+    return mode;
+  }
+
+  return undefined;
+}
+
 function normalizeMenus(value: unknown): MealRecordTransferMenu[] {
   if (!Array.isArray(value)) {
     return [];
   }
 
-  const quantityById = new Map<number, number>();
+  const menuById = new Map<number, MealRecordTransferMenu>();
 
   value.forEach((menu) => {
     if (!menu || typeof menu !== "object") {
@@ -52,6 +65,7 @@ function normalizeMenus(value: unknown): MealRecordTransferMenu[] {
 
     const id = (menu as { id?: unknown }).id;
     const quantity = (menu as { quantity?: unknown }).quantity;
+    const mode = (menu as { mode?: unknown }).mode;
     if (!toPositiveInt(id)) {
       return;
     }
@@ -59,13 +73,14 @@ function normalizeMenus(value: unknown): MealRecordTransferMenu[] {
     const normalizedQuantity =
       typeof quantity === "number" ? normalizeQuantity(quantity) : normalizeQuantity(1);
 
-    quantityById.set(id, normalizedQuantity);
+    menuById.set(id, {
+      id,
+      quantity: normalizedQuantity,
+      mode: normalizeMode(mode),
+    });
   });
 
-  return [...quantityById.entries()].map(([id, quantity]) => ({
-    id,
-    quantity,
-  }));
+  return [...menuById.values()];
 }
 
 function normalizePreviews(value: unknown): MealRecordTransferPreview[] {

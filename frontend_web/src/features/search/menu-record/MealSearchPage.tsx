@@ -1,9 +1,14 @@
 import { useActivity, useEnterDoneEffect } from "@stackflow/react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
-import { MAX_MEAL_RECORD_MENUS } from "@/features/meal-record/constants/menu.constants";
+import { useDayMealsQuery } from "@/features/home/hooks/queries/useDayMealsQuery";
+import {
+  MAX_MEAL_RECORD_MENUS,
+  MEAL_RECORD_MENU_LIMIT_MESSAGE,
+} from "@/features/meal-record/constants/menu.constants";
 import {
   formatMenuDraftKey,
+  useMenuDraftInit,
   useMenuDraftMenus,
   useMenuDraftRemove,
   useMenuDraftSelectedCount,
@@ -16,11 +21,14 @@ import {
   getSafeDateKey,
   getSafeKeyword,
 } from "@/features/meal-record/utils/mealRecord.queryParams";
+import {
+  buildMenuDraftSignature,
+  toMenuDraftSeed,
+} from "@/features/meal-record/utils/menuDraftSync";
 import RegisterBottomSheet from "@/features/search/components/RegisterBottomSheet";
 import { useMealSearchMutation } from "@/features/search/menu-record/hooks/useMealSearchMutation";
 import { PATH } from "@/router/path";
-import { getMealDetailPath, getMealRecordPath } from "@/router/pathHelpers";
-import { getPathWithMeal } from "@/router/pathHelpers";
+import { getMealDetailPath, getMealRecordPath, getPathWithMeal } from "@/router/pathHelpers";
 import { type MenuSimpleResponseDto } from "@/shared/api/types/api.dto";
 import { Button } from "@/shared/commons/button/Button";
 import { FloatingCameraButton } from "@/shared/commons/button/FloatingCameraButton";
@@ -54,6 +62,12 @@ export default function MealSearchPage() {
   const searchInputRef = useRef<HTMLInputElement>(null);
   const draftKey = formatMenuDraftKey(dateKey, mealType);
 
+  const {
+    data: dayMeals,
+    isPending: isDayMealsPending,
+    isError: isDayMealsError,
+  } = useDayMealsQuery(dateKey);
+  const initDraft = useMenuDraftInit();
   const upsertMenu = useMenuDraftUpsert();
   const upsertPreviews = useMenuDraftUpsertPreviews();
   const removeMenu = useMenuDraftRemove();
@@ -81,13 +95,33 @@ export default function MealSearchPage() {
   };
 
   useEffect(() => {
-    if (!isTop || hasDraft) {
+    if (!isTop || !dayMeals) {
       return;
     }
 
-    toast.warning("올바르지 않은 접근이에요");
+    const seedMenus = dayMeals.menusByTime[mealType].map(toMenuDraftSeed);
+    const image = dayMeals.imagesByTime[mealType];
+
+    initDraft({
+      key: draftKey,
+      existingMenuCount: seedMenus.length,
+      seedMenus,
+      image,
+      serverSignature: buildMenuDraftSignature({
+        menus: seedMenus,
+        image,
+      }),
+    });
+  }, [dayMeals, draftKey, initDraft, isTop, mealType]);
+
+  useEffect(() => {
+    if (!isTop || hasDraft || isDayMealsPending || !isDayMealsError) {
+      return;
+    }
+
+    toast.warning("식사 기록을 불러오지 못했어요. 잠시 후 다시 시도해주세요.");
     navigate(getMealRecordPath(dateKey, mealType), { replace: true });
-  }, [dateKey, hasDraft, isTop, mealType, navigate]);
+  }, [dateKey, hasDraft, isDayMealsError, isDayMealsPending, isTop, mealType, navigate]);
 
   useEnterDoneEffect(() => {
     const frameId = window.requestAnimationFrame(() => {
@@ -108,7 +142,7 @@ export default function MealSearchPage() {
     }
 
     if (selectedCount + 1 > MAX_MEAL_RECORD_MENUS) {
-      toast.warning("최대 100개까지 기록할 수 있어요");
+      toast.warning(MEAL_RECORD_MENU_LIMIT_MESSAGE);
       return;
     }
 
@@ -176,7 +210,7 @@ export default function MealSearchPage() {
   const handleCameraClick = () => {
     if (selectedCount >= MAX_MEAL_RECORD_MENUS) {
       toast.warning(
-        `최대 ${MAX_MEAL_RECORD_MENUS}개까지 기록할 수 있어요`,
+        MEAL_RECORD_MENU_LIMIT_MESSAGE,
         "기존 메뉴를 일부 삭제한 뒤 다시 시도해주세요.",
       );
       return;
@@ -197,7 +231,31 @@ export default function MealSearchPage() {
   };
 
   if (!hasDraft) {
-    return null;
+    return (
+      <section className={styles.page}>
+        <SearchInputHeader
+          value={submittedKeyword}
+          onValueChange={setSubmittedKeyword}
+          onClear={handleClearKeyword}
+          onEnter={handleMealSearch}
+          inputRef={searchInputRef}
+          placeholder="메뉴를 검색해보세요"
+          inputAriaLabel="메뉴 검색"
+          onBack={() => {
+            resetSearchState();
+            navigateBack({ fallbackTo: getMealRecordPath(dateKey, mealType) });
+          }}
+        />
+
+        <main className={styles.main}>
+          <section className={styles.content}>
+            <div className={styles.placeholder}>
+              <LoadingIndicator label="식사 기록을 불러오는 중입니다." />
+            </div>
+          </section>
+        </main>
+      </section>
+    );
   }
 
   return (

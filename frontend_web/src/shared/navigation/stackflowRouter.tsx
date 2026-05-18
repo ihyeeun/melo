@@ -128,6 +128,10 @@ const RecommendResultPage = createLazyActivity(() => import("@/features/chat/Rec
 const RecommendDetailPage = createLazyActivity(() => import("@/features/chat/RecommendDetailPage"));
 const FeedbackResultPage = createLazyActivity(() => import("@/features/chat/FeedbackResultPage"));
 const FeedbackDetailPage = createLazyActivity(() => import("@/features/chat/FeedbackDetailPage"));
+const ChatFoodCameraPage = createGuardedLazyActivity(
+  FEATURE_GUARD.FOOD_CAMERA,
+  () => import("@/features/camera/ChatFoodCameraPage"),
+);
 
 const ACTIVITIES = {
   Home: HomePage,
@@ -159,6 +163,7 @@ const ACTIVITIES = {
   AccountDelete: createStaticActivity(AccountDeletePage),
   FeedbackResult: FeedbackResultPage,
   FeedbackDetail: FeedbackDetailPage,
+  ChatFoodCamera: ChatFoodCameraPage,
 };
 
 const ACTIVITY_ROUTES: Record<keyof typeof ACTIVITIES, RoutePath> = {
@@ -191,6 +196,7 @@ const ACTIVITY_ROUTES: Record<keyof typeof ACTIVITIES, RoutePath> = {
   AccountDelete: "/account-delete",
   FeedbackResult: PATH.FEEDBACK_RESULT,
   FeedbackDetail: PATH.FEEDBACK_DETAIL,
+  ChatFoodCamera: PATH.CHAT_FOOD_CAMERA,
 };
 
 type ActivityName = keyof typeof ACTIVITY_ROUTES;
@@ -966,6 +972,29 @@ export function resetStackflowWithCurrentBrowserPath({
 
 function canGoBackWithStack() {
   return getBackStackDepth(stackflowActions.getStack()) > 1;
+}
+
+export function pushStackflowPath(to: To, { animate = true }: { animate?: boolean } = {}) {
+  const activeActivity = stackflowActions
+    .getStack()
+    .activities.find((activity) => activity.isActive);
+
+  if (
+    activeActivity &&
+    getComparablePath(getActivityPath(activeActivity)) === getComparablePath(toPathString(to))
+  ) {
+    return;
+  }
+
+  const resolved = resolveActivityForPath(to);
+  if (!resolved) {
+    resetStackflowWithCurrentBrowserPath({ animate: false });
+    return;
+  }
+
+  const result = stackflowActions.push(resolved.activityName, resolved.params, { animate });
+  setActivityNavigationState(result.activityId, null);
+  pruneActivityNavigationStateMap();
 }
 
 export function isPreviousStackActivity(activityName: string) {

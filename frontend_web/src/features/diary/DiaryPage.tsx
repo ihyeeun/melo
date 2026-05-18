@@ -12,10 +12,6 @@ import {
   useTodayMealRecordDeleteMutation,
   useTodayMealRecordRegisterMutation,
 } from "@/features/meal-record/hooks/mutations/useTodayMealRecordMutation";
-import {
-  formatMenuDraftKey,
-  useMenuDraftInit,
-} from "@/features/meal-record/stores/menuDraft.store";
 import { PATH } from "@/router/path";
 import { getMealRecordPath, getMealSearchPath } from "@/router/pathHelpers";
 import type { MealTime, MealType } from "@/shared/api/types/api.dto";
@@ -59,7 +55,6 @@ export default function DiaryPage() {
   const [expandedMealType, setExpandedMealType] = useState<MealType | null>(null);
   const navigate = useNavigate();
   const targets = useTargetsState();
-  const initDraft = useMenuDraftInit();
 
   const { data: dayMeals, isPending } = useDayMealsQuery(selectedDateKey);
 
@@ -104,19 +99,6 @@ export default function DiaryPage() {
       navigate(getMealRecordPath(selectedDateKey, mealType));
       return;
     }
-
-    const seedMenus = (dayMeals?.menusByTime[mealType] ?? []).map((menu) => ({
-      id: menu.id,
-      quantity: menu.quantity,
-      mode: menu.serving_input_mode,
-    }));
-
-    initDraft({
-      key: formatMenuDraftKey(selectedDateKey, mealType),
-      existingMenuCount: seedMenus.length,
-      seedMenus,
-      image: dayMeals?.imagesByTime[mealType],
-    });
 
     navigate(getMealSearchPath(selectedDateKey, mealType));
   };

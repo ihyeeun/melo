@@ -233,6 +233,12 @@ export interface ChatHistoryItemResponseDto {
   input_text: string; //사용자 입력값
   createdAt: string; //저장 시각
   response_payload: ChatRecommendResponseDto;
+  meal_record?: {
+    time: MealTime;
+    menu_ids?: MenuId[];
+    menu_quantities?: number[];
+    menu_input_modes?: MealMenuInputMode[];
+  };
 }
 
 export type amount_preference_level = "light" | "regular" | "hearty";
@@ -305,6 +311,25 @@ export interface ChatRecognizedCandidateResponseDto {
   menu: string;
   brand: string;
   category: string;
+}
+
+export interface ChatFoodImageFeedbackResponseDto {
+  chat_category: ChatCategory;
+  intro_message: string;
+  feedback: FeedbackDto;
+  recognized_foods: ChatFoodImageRecognizedMenuResponseDto[];
+}
+
+export interface ChatFoodImageRecognizedMenuResponseDto {
+  menu_id: number;
+  menu_name: string;
+  brand?: string;
+  category?: string;
+  confidence?: number; //ai가 반환한 인식 신뢰도 0~1 정규화 값
+  position: {
+    x: number; //인식된 음식의 이미지 내 x 좌표 (0~1 정규화 값)
+    y: number; //인식된 음식의 이미지 내 y 좌표 (0~1 정규화 값)
+  };
 }
 
 // Camera

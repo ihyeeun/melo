@@ -112,6 +112,14 @@ select:focus {
   outline: 1px solid var(--border-primary);
 }
 
+button {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button:active {
+  background-color: transparent;
+}
+
 /* Keep scrolling behavior, but hide visible scrollbars globally. */
 * {
   -ms-overflow-style: none;

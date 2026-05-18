@@ -75,13 +75,18 @@ export default function AdminLoginPage() {
       >
         <View style={styles.content}>
           <View style={styles.header}>
-            <Text style={styles.title}>테스트 계정 로그인</Text>
+            <Text allowFontScaling={false} style={styles.title}>
+              테스트 계정 로그인
+            </Text>
           </View>
 
           <View style={styles.form}>
             <View style={styles.field}>
-              <Text style={styles.label}>이메일</Text>
+              <Text allowFontScaling={false} style={styles.label}>
+                이메일
+              </Text>
               <TextInput
+                allowFontScaling={false}
                 value={email}
                 onChangeText={setEmail}
                 placeholder="sample@email.com"
@@ -96,8 +101,11 @@ export default function AdminLoginPage() {
             </View>
 
             <View style={styles.field}>
-              <Text style={styles.label}>비밀번호</Text>
+              <Text allowFontScaling={false} style={styles.label}>
+                비밀번호
+              </Text>
               <TextInput
+                allowFontScaling={false}
                 value={adminId}
                 onChangeText={setAdminId}
                 placeholder="password"
@@ -110,7 +118,11 @@ export default function AdminLoginPage() {
               />
             </View>
 
-            {errorMessage ? <Text style={styles.errorMessage}>{errorMessage}</Text> : null}
+            {errorMessage ? (
+              <Text allowFontScaling={false} style={styles.errorMessage}>
+                {errorMessage}
+              </Text>
+            ) : null}
 
             <Pressable
               onPress={handleSubmit}
@@ -123,7 +135,9 @@ export default function AdminLoginPage() {
               {isSubmitting ? (
                 <ActivityIndicator size="small" color="#ffffff" />
               ) : (
-                <Text style={styles.submitButtonText}>로그인</Text>
+                <Text allowFontScaling={false} style={styles.submitButtonText}>
+                  로그인
+                </Text>
               )}
             </Pressable>
           </View>
