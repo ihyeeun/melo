@@ -24,7 +24,6 @@ export default function TodayBodyLogSection({ date }: { date: string }) {
     onSuccess: () => {
       toast.success("체중이 기록되었어요");
       closeEditor();
-      // TODO: 등록된 체중 값으로 bodyLog 업데이트
     },
     onError: () => {
       toast.error("체중 기록에 실패했어요");
