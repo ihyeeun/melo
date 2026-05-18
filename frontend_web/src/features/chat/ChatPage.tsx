@@ -111,7 +111,7 @@ export default function ChatPage() {
   const navigate = useNavigate();
   const selectedDateKey = useSelectedDateKey();
   const mainRef = useRef<HTMLElement>(null);
-  const endAnchorRef = useRef<HTMLDivElement>(null);
+  const isScrolledAwayFromBottomRef = useRef(false);
 
   const [inputValue, setInputValue] = useState("");
   const [isInputFocused, setIsInputFocused] = useState(false);
@@ -172,8 +172,37 @@ export default function ChatPage() {
     }
 
     const distanceToBottom = main.scrollHeight - main.scrollTop - main.clientHeight;
-    setIsScrolledAwayFromBottom(distanceToBottom > SCROLL_BOTTOM_THRESHOLD);
+    const isAwayFromBottom = distanceToBottom > SCROLL_BOTTOM_THRESHOLD;
+    isScrolledAwayFromBottomRef.current = isAwayFromBottom;
+    setIsScrolledAwayFromBottom(isAwayFromBottom);
   }, []);
+
+  const scrollToBottom = useCallback((behavior: ScrollBehavior = "auto") => {
+    const main = mainRef.current;
+
+    if (!main) {
+      return;
+    }
+
+    main.scrollTo({
+      top: main.scrollHeight,
+      behavior,
+    });
+  }, []);
+
+  const scrollToBottomAfterLayout = useCallback(
+    (behavior: ScrollBehavior = "auto") => {
+      if (typeof window === "undefined") {
+        scrollToBottom(behavior);
+        return;
+      }
+
+      window.requestAnimationFrame(() => {
+        scrollToBottom(behavior);
+      });
+    },
+    [scrollToBottom],
+  );
 
   useEffect(() => {
     if (!isQuickActionVisible) {
@@ -188,20 +217,38 @@ export default function ChatPage() {
   }, [isScrollToBottomButtonVisible]);
 
   useEffect(() => {
-    endAnchorRef.current?.scrollIntoView({
-      behavior: "instant",
-      block: "end",
-    });
+    if (!hasAnyConversation) {
+      updateIsScrolledAwayFromBottom();
+      return;
+    }
 
-    updateIsScrolledAwayFromBottom();
-  }, [chatList, updateIsScrolledAwayFromBottom]);
+    const shouldKeepBottom =
+      !isHistoryPending || pendingInput !== null || !isScrolledAwayFromBottomRef.current;
+
+    if (!shouldKeepBottom) {
+      updateIsScrolledAwayFromBottom();
+      return;
+    }
+
+    scrollToBottom("auto");
+    scrollToBottomAfterLayout("auto");
+  }, [
+    chatList,
+    hasAnyConversation,
+    isHistoryPending,
+    pendingInput,
+    scrollToBottom,
+    scrollToBottomAfterLayout,
+    updateIsScrolledAwayFromBottom,
+  ]);
 
   useEffect(() => {
-    endAnchorRef.current?.scrollIntoView({
-      behavior: "smooth",
-      block: "end",
-    });
-  }, [isTypingPending, pendingInput]);
+    if (!isTypingPending && pendingInput === null) {
+      return;
+    }
+
+    scrollToBottomAfterLayout("smooth");
+  }, [isTypingPending, pendingInput, scrollToBottomAfterLayout]);
 
   useEffect(() => {
     updateIsScrolledAwayFromBottom();
@@ -291,10 +338,7 @@ export default function ChatPage() {
 
   const handleScrollToBottom = () => {
     handleCloseCameraActionMenu();
-    endAnchorRef.current?.scrollIntoView({
-      behavior: "smooth",
-      block: "end",
-    });
+    scrollToBottom("smooth");
   };
 
   const handleNavigateMenuBoardCamera = () => {
@@ -648,7 +692,6 @@ export default function ChatPage() {
             </section>
           )}
         </div>
-        <div ref={endAnchorRef} />
       </main>
 
       <footer className={`${styles.footer} ${isInputFocused ? styles.footerKeyboardOpen : ""}`}>
