@@ -515,7 +515,7 @@ export default function AppWebViewScreen({
         }
 
         if (isTabWebView && rawData.type === "TAB_SYNC" && isAppTabName(rawData.payload?.tab)) {
-          navigateToTabRoute(rawData.payload.tab, currentTab);
+          navigateToTabRoute(rawData.payload.tab, currentTab, { preferBackFromChat: true });
           return;
         }
 
