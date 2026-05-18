@@ -23,8 +23,11 @@ body,
 html,
 body {
   -webkit-text-size-adjust: 100%;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
   overscroll-behavior: none;
   text-size-adjust: 100%;
+  user-select: none;
 }
 
 #root {
@@ -108,6 +111,23 @@ select {
   color: var(--label-normal);
   font-family: var(--font-family-base);
   caret-color: var(--primary-normal);
+}
+
+input,
+textarea,
+select,
+[contenteditable=""],
+[contenteditable="true"],
+[contenteditable="plaintext-only"] {
+  -webkit-touch-callout: default;
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+img,
+svg {
+  -webkit-user-drag: none;
+  user-select: none;
 }
 
 input:focus,
