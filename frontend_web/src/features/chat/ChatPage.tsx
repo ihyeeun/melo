@@ -1,4 +1,3 @@
-import { useEnterDoneEffect } from "@stackflow/react";
 import {
   Camera,
   Check,
@@ -112,8 +111,7 @@ export default function ChatPage() {
   const navigate = useNavigate();
   const selectedDateKey = useSelectedDateKey();
   const mainRef = useRef<HTMLElement>(null);
-  const isScrolledAwayFromBottomRef = useRef(false);
-  const didInitialAutoScrollRef = useRef(false);
+  const endAnchorRef = useRef<HTMLDivElement>(null);
 
   const [inputValue, setInputValue] = useState("");
   const [isInputFocused, setIsInputFocused] = useState(false);
@@ -174,50 +172,8 @@ export default function ChatPage() {
     }
 
     const distanceToBottom = main.scrollHeight - main.scrollTop - main.clientHeight;
-    const isAwayFromBottom = distanceToBottom > SCROLL_BOTTOM_THRESHOLD;
-    isScrolledAwayFromBottomRef.current = isAwayFromBottom;
-    setIsScrolledAwayFromBottom(isAwayFromBottom);
+    setIsScrolledAwayFromBottom(distanceToBottom > SCROLL_BOTTOM_THRESHOLD);
   }, []);
-
-  const scrollToBottom = useCallback((behavior: ScrollBehavior = "auto") => {
-    const main = mainRef.current;
-
-    if (!main) {
-      return;
-    }
-
-    main.scrollTo({
-      top: main.scrollHeight,
-      behavior,
-    });
-
-    if (behavior === "auto") {
-      isScrolledAwayFromBottomRef.current = false;
-      setIsScrolledAwayFromBottom(false);
-    }
-  }, []);
-
-  const scrollToBottomAfterLayout = useCallback(
-    (behavior: ScrollBehavior = "auto") => {
-      if (typeof window === "undefined") {
-        scrollToBottom(behavior);
-        return;
-      }
-
-      window.requestAnimationFrame(() => {
-        scrollToBottom(behavior);
-      });
-    },
-    [scrollToBottom],
-  );
-
-  const handleChatImageLoad = useCallback(() => {
-    if (isScrolledAwayFromBottomRef.current) {
-      return;
-    }
-
-    scrollToBottomAfterLayout("auto");
-  }, [scrollToBottomAfterLayout]);
 
   useEffect(() => {
     if (!isQuickActionVisible) {
@@ -232,53 +188,20 @@ export default function ChatPage() {
   }, [isScrollToBottomButtonVisible]);
 
   useEffect(() => {
-    if (!hasAnyConversation) {
-      updateIsScrolledAwayFromBottom();
-      return;
-    }
+    endAnchorRef.current?.scrollIntoView({
+      behavior: "instant",
+      block: "end",
+    });
 
-    if (!didInitialAutoScrollRef.current && !isHistoryPending) {
-      didInitialAutoScrollRef.current = true;
-      scrollToBottom("auto");
-      scrollToBottomAfterLayout("auto");
-      return;
-    }
-
-    const shouldKeepBottom = pendingInput !== null || !isScrolledAwayFromBottomRef.current;
-
-    if (!shouldKeepBottom) {
-      updateIsScrolledAwayFromBottom();
-      return;
-    }
-
-    scrollToBottom("auto");
-    scrollToBottomAfterLayout("auto");
-  }, [
-    chatList,
-    hasAnyConversation,
-    isHistoryPending,
-    pendingInput,
-    scrollToBottom,
-    scrollToBottomAfterLayout,
-    updateIsScrolledAwayFromBottom,
-  ]);
+    updateIsScrolledAwayFromBottom();
+  }, [chatList, updateIsScrolledAwayFromBottom]);
 
   useEffect(() => {
-    if (!isTypingPending && pendingInput === null) {
-      return;
-    }
-
-    scrollToBottomAfterLayout("smooth");
-  }, [isTypingPending, pendingInput, scrollToBottomAfterLayout]);
-
-  useEnterDoneEffect(() => {
-    if (!hasAnyConversation || isHistoryPending) {
-      return;
-    }
-
-    scrollToBottom("auto");
-    scrollToBottomAfterLayout("auto");
-  }, [hasAnyConversation, isHistoryPending, scrollToBottom, scrollToBottomAfterLayout]);
+    endAnchorRef.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "end",
+    });
+  }, [isTypingPending, pendingInput]);
 
   useEffect(() => {
     updateIsScrolledAwayFromBottom();
@@ -368,7 +291,10 @@ export default function ChatPage() {
 
   const handleScrollToBottom = () => {
     handleCloseCameraActionMenu();
-    scrollToBottom("smooth");
+    endAnchorRef.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "end",
+    });
   };
 
   const handleNavigateMenuBoardCamera = () => {
@@ -555,7 +481,6 @@ export default function ChatPage() {
                           alt="사용자가 업로드한 이미지"
                           aria-hidden="true"
                           className={styles.userImageBubble}
-                          onLoad={handleChatImageLoad}
                         />
                       ) : null}
                     </div>
@@ -723,6 +648,7 @@ export default function ChatPage() {
             </section>
           )}
         </div>
+        <div ref={endAnchorRef} />
       </main>
 
       <footer className={`${styles.footer} ${isInputFocused ? styles.footerKeyboardOpen : ""}`}>
