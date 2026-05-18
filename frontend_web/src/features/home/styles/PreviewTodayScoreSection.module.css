@@ -4,6 +4,7 @@
   background-color: var(--bg-primary-2);
   gap: 10px;
   padding: 24px 20px;
+  border: none;
 }
 
 .scoreContainer {

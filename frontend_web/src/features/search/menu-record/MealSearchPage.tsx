@@ -34,7 +34,6 @@ import { Button } from "@/shared/commons/button/Button";
 import { FloatingCameraButton } from "@/shared/commons/button/FloatingCameraButton";
 import { MealMenuCard } from "@/shared/commons/card/MealMenuCard";
 import { SearchInputHeader } from "@/shared/commons/header/SearchInputHeader";
-import { LoadingIndicator } from "@/shared/commons/loading/Loading";
 import { toast } from "@/shared/commons/toast/toast";
 import { FEATURE_GUARD, isFeatureBlocked } from "@/shared/guards/featureGuard";
 import {
@@ -249,9 +248,7 @@ export default function MealSearchPage() {
 
         <main className={styles.main}>
           <section className={styles.content}>
-            <div className={styles.placeholder}>
-              <LoadingIndicator label="식사 기록을 불러오는 중입니다." />
-            </div>
+            <div className={styles.placeholder}></div>
           </section>
         </main>
       </section>
@@ -277,9 +274,7 @@ export default function MealSearchPage() {
       <main className={styles.main}>
         <section className={styles.content}>
           {isSearchPending ? (
-            <div className={styles.placeholder}>
-              <LoadingIndicator label="메뉴를 검색하는 중입니다." />
-            </div>
+            <div className={styles.placeholder}></div>
           ) : searchResults ? (
             <>
               {searchResults.has_result ? (

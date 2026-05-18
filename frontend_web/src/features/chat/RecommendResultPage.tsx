@@ -224,67 +224,64 @@ function RecommendResultContent({
     <section className={styles.page}>
       <PageHeader title="메뉴 추천 결과" onBack={() => navigateBack({ fallbackTo: PATH.CHAT })} />
 
-      <main className={styles.main}>
-        <div className={styles.content}>
-          <section className={styles.intro}>
-            <p className={`${styles.introMessage} typo-title2`}>
-              <span className={styles.textPrimary}>{profileNickname}</span>님을 위한 메뉴를
-              추천해드려요!
-            </p>
+      <section className={styles.titleSection}>
+        <div className={styles.intro}>
+          <p className={`${styles.introMessage} typo-title2`}>
+            <span className={styles.textPrimary}>{profileNickname}</span>님을 위한 메뉴를
+            추천해드려요!
+          </p>
 
-            <img src="/icons/character-love.svg" className={styles.characterImage} />
-          </section>
-
-          <section>
-            <div className={styles.filterList} aria-label="추천 결과 필터">
-              {RECOMMEND_FILTER_OPTIONS.map((option) => {
-                const isSelected = selectedFilter === option.key;
-
-                return (
-                  <button
-                    key={option.key}
-                    type="button"
-                    className={`${styles.filterBadge} ${isSelected ? styles.filterBadgeSelected : ""} typo-label4`}
-                    aria-pressed={isSelected}
-                    onClick={() => setSelectedFilter(option.key)}
-                  >
-                    {option.label}
-                  </button>
-                );
-              })}
-            </div>
-
-            {filteredRecommendations.length > 0 ? (
-              <ul className={styles.resultList}>
-                {filteredRecommendations.map((item) => {
-                  const isSelected = selectedMenuIds.has(item.menu_id);
-
-                  return (
-                    <li key={item.menu_id}>
-                      <MealMenuCard
-                        rank={item.rank}
-                        name={item.menu_name}
-                        description={item.one_line_summary}
-                        calories={item.calories}
-                        unit_quantity={item.unit_quantity}
-                        brand={item.brand}
-                        data_source={item.data_source}
-                        weight={item.weight}
-                        unit={item.unit}
-                        icon={isSelected ? "check" : "add"}
-                        state={isSelected ? "select" : "default"}
-                        onClick={() => navigate(getRecommendDetailPath(chatItem.id, item.menu_id))}
-                        onIconClick={() => handleToggleMenu(item)}
-                      />
-                    </li>
-                  );
-                })}
-              </ul>
-            ) : (
-              <p className={`${styles.emptyStatus} typo-label4`}>해당하는 추천 메뉴가 없어요.</p>
-            )}
-          </section>
+          <img src="/icons/character-love.svg" className={styles.characterImage} />
         </div>
+        <div className={styles.filterList} aria-label="추천 결과 필터">
+          {RECOMMEND_FILTER_OPTIONS.map((option) => {
+            const isSelected = selectedFilter === option.key;
+
+            return (
+              <button
+                key={option.key}
+                type="button"
+                className={`${styles.filterBadge} ${isSelected ? styles.filterBadgeSelected : ""} typo-label4`}
+                aria-pressed={isSelected}
+                onClick={() => setSelectedFilter(option.key)}
+              >
+                {option.label}
+              </button>
+            );
+          })}
+        </div>
+      </section>
+
+      <main className={styles.main}>
+        {filteredRecommendations.length > 0 ? (
+          <ul className={styles.resultList}>
+            {filteredRecommendations.map((item) => {
+              const isSelected = selectedMenuIds.has(item.menu_id);
+
+              return (
+                <li key={item.menu_id}>
+                  <MealMenuCard
+                    rank={item.rank}
+                    name={item.menu_name}
+                    description={item.one_line_summary}
+                    calories={item.calories}
+                    unit_quantity={item.unit_quantity}
+                    brand={item.brand}
+                    data_source={item.data_source}
+                    weight={item.weight}
+                    unit={item.unit}
+                    icon={isSelected ? "check" : "add"}
+                    state={isSelected ? "select" : "default"}
+                    onClick={() => navigate(getRecommendDetailPath(chatItem.id, item.menu_id))}
+                    onIconClick={() => handleToggleMenu(item)}
+                  />
+                </li>
+              );
+            })}
+          </ul>
+        ) : (
+          <p className={`${styles.emptyStatus} typo-label4`}>해당하는 추천 메뉴가 없어요.</p>
+        )}
       </main>
 
       <footer className={styles.footer}>

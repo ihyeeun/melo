@@ -152,6 +152,14 @@
   background: rgb(255 255 255 / 50%);
 }
 
+.calendar-day-cell--month.is-today .calendar-day-number-container {
+  background-color: var(--interaction-white-2);
+}
+
+.calendar-day-cell--month.is-today .calendar-day-number {
+  color: var(--label-primary);
+}
+
 .calendar-day-cell--month.is-selected .calendar-day-number-container {
   background-color: var(--bg-white);
   padding: 0 5px;

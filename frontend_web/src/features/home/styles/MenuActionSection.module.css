@@ -96,6 +96,7 @@
 
 .bgPrimary {
   background-color: var(--primary-normal);
+  border-color: var(--border-primary);
 }
 
 .textWhite {

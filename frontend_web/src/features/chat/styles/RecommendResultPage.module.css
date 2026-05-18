@@ -18,12 +18,6 @@
   padding-bottom: var(--safe-area-bottom);
 }
 
-.content {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
 .textPrimary {
   color: var(--label-primary);
 }
@@ -40,10 +34,18 @@
   color: var(--label-normal);
 }
 
+.titleSection {
+  position: sticky;
+  top: 0;
+  background-color: var(--bg-normal);
+  padding: 0 20px;
+}
+
 .intro {
   align-items: center;
   display: flex;
   justify-content: space-between;
+  margin-bottom: 20px;
 }
 
 .introMessage {

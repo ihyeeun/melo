@@ -121,9 +121,8 @@ export default function DiaryPage() {
 
   return (
     <div className={styles.page}>
+      <Calendar initialDate={selectedDate} onSelectDate={setSelectedDate} />
       <main className={styles.main}>
-        <Calendar initialDate={selectedDate} onSelectDate={setSelectedDate} />
-
         <div className={styles.content}>
           {isPending ? (
             <ActionCard className={styles.summaryCard}>
