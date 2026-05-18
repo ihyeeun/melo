@@ -3,6 +3,10 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { useDayMealsQuery } from "@/features/home/hooks/queries/useDayMealsQuery";
 import {
+  MAX_MEAL_RECORD_MENUS,
+  MEAL_RECORD_MENU_LIMIT_MESSAGE,
+} from "@/features/meal-record/constants/menu.constants";
+import {
   DELETE_MEAL_RECORD_RESULT,
   useTodayMealRecordDeleteWithRollbackMutation,
   useTodayMealRecordRegisterMutation,
@@ -180,6 +184,18 @@ export default function MealRecordPage() {
     }
 
     if (transferState.dateKey !== dateKey || transferState.mealType !== mealType) {
+      return;
+    }
+
+    const nextMenuIds = new Set(currentSeedMenus.map((menu) => menu.id));
+    transferState.menus.forEach((menu) => {
+      nextMenuIds.add(menu.id);
+    });
+
+    if (nextMenuIds.size > MAX_MEAL_RECORD_MENUS) {
+      toast.warning(MEAL_RECORD_MENU_LIMIT_MESSAGE);
+      hasAppliedTransferRef.current = true;
+      navigate(getMealRecordPath(dateKey, mealType), { replace: true });
       return;
     }
 

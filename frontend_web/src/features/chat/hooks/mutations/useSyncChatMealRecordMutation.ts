@@ -10,6 +10,10 @@ import {
   postTodayMealRecordRegister,
 } from "@/features/meal-record/api/DayMeal";
 import {
+  MAX_MEAL_RECORD_MENUS,
+  MEAL_RECORD_MENU_LIMIT_MESSAGE,
+} from "@/features/meal-record/constants/menu.constants";
+import {
   type ChatHistoryItemResponseDto,
   type MealMenuInputMode,
   type MealTime,
@@ -37,6 +41,10 @@ type DeleteChatMealRecordParams = {
   date: string;
   chatId: number;
   previousMealRecord?: PreviousMealRecord;
+};
+
+type SyncDiaryMealRecordParams = Omit<SyncChatMealRecordParams, "chatId"> & {
+  dayMeals: DayMealSummary;
 };
 
 function toMenuInputMode(mode: MenuWithQuantity["serving_input_mode"]): MealMenuInputMode {
@@ -96,6 +104,28 @@ function mergeMenus(
   });
 
   return [...menuById.values()];
+}
+
+function getNextDiaryMenusByTime({
+  time,
+  menus,
+  previousMealRecord,
+  dayMeals,
+}: SyncDiaryMealRecordParams) {
+  const previousMenuIds = previousMealRecord?.menu_ids ?? [];
+  const previousTime = previousMealRecord?.time;
+  const removeIdSet = previousTime === time ? new Set(previousMenuIds) : new Set<number>();
+  const baseMenus = getMenusByTime(dayMeals, time)
+    .filter((menu) => !removeIdSet.has(menu.id))
+    .map(toDiaryPayload);
+
+  return mergeMenus(baseMenus, menus);
+}
+
+function assertDiaryMealRecordMenuLimit(menus: ChatMealRecordMenuPayload[]) {
+  if (menus.length > MAX_MEAL_RECORD_MENUS) {
+    throw new Error(MEAL_RECORD_MENU_LIMIT_MESSAGE);
+  }
 }
 
 function toPreviousMealRecordMenus(
@@ -287,11 +317,18 @@ async function syncDiaryMealRecord({
   menus,
   previousMealRecord,
   dayMeals,
-}: Omit<SyncChatMealRecordParams, "chatId"> & {
-  dayMeals: DayMealSummary;
-}) {
+}: SyncDiaryMealRecordParams) {
   const previousMenuIds = previousMealRecord?.menu_ids ?? [];
   const previousTime = previousMealRecord?.time;
+  const nextMenus = getNextDiaryMenusByTime({
+    date,
+    time,
+    menus,
+    previousMealRecord,
+    dayMeals,
+  });
+
+  assertDiaryMealRecordMenuLimit(nextMenus);
 
   if (previousTime !== undefined && previousTime !== time) {
     await removeDiaryMenusById({
@@ -301,12 +338,6 @@ async function syncDiaryMealRecord({
       dayMeals,
     });
   }
-
-  const removeIdSet = previousTime === time ? new Set(previousMenuIds) : new Set<number>();
-  const baseMenus = getMenusByTime(dayMeals, time)
-    .filter((menu) => !removeIdSet.has(menu.id))
-    .map(toDiaryPayload);
-  const nextMenus = mergeMenus(baseMenus, menus);
 
   await replaceDiaryMenusByTime({
     date,
@@ -326,6 +357,14 @@ async function invalidateSyncedMealRecordQueries(queryClient: QueryClient, date:
   ]);
 }
 
+async function fetchDayMealsForSync(queryClient: QueryClient, date: string) {
+  return queryClient.fetchQuery({
+    queryKey: homeQueryKeys.dayMeals.byDate(date),
+    queryFn: () => getDayMeals({ date }),
+    staleTime: Infinity,
+  });
+}
+
 export function useSyncChatMealRecordRegisterMutation() {
   const queryClient = useQueryClient();
 
@@ -337,10 +376,17 @@ export function useSyncChatMealRecordRegisterMutation() {
       menus,
       previousMealRecord,
     }: SyncChatMealRecordParams) => {
-      const dayMeals = await queryClient.fetchQuery({
-        queryKey: homeQueryKeys.dayMeals.byDate(date),
-        queryFn: () => getDayMeals({ date }),
-      });
+      const dayMeals = await fetchDayMealsForSync(queryClient, date);
+
+      assertDiaryMealRecordMenuLimit(
+        getNextDiaryMenusByTime({
+          date,
+          time,
+          menus,
+          previousMealRecord,
+          dayMeals,
+        }),
+      );
 
       await registerChatMealRecord({
         chatId,
@@ -376,7 +422,7 @@ export function useSyncChatMealRecordRegisterMutation() {
         throw error;
       }
     },
-    onSettled: async (_data, _error, variables) => {
+    onSuccess: async (_data, variables) => {
       await invalidateSyncedMealRecordQueries(queryClient, variables.date);
     },
   });
@@ -390,10 +436,7 @@ export function useSyncChatMealRecordDeleteMutation() {
       const previousMenuIds = previousMealRecord?.menu_ids ?? [];
 
       if (previousMealRecord && previousMenuIds.length > 0) {
-        const dayMeals = await queryClient.fetchQuery({
-          queryKey: homeQueryKeys.dayMeals.byDate(date),
-          queryFn: () => getDayMeals({ date }),
-        });
+        const dayMeals = await fetchDayMealsForSync(queryClient, date);
 
         try {
           await removeDiaryMenusById({
@@ -422,7 +465,7 @@ export function useSyncChatMealRecordDeleteMutation() {
 
       await mealDelete({ chat_id: chatId });
     },
-    onSettled: async (_data, _error, variables) => {
+    onSuccess: async (_data, variables) => {
       await invalidateSyncedMealRecordQueries(queryClient, variables.date);
     },
   });

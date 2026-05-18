@@ -2,7 +2,10 @@ import { useActivity, useEnterDoneEffect } from "@stackflow/react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { useDayMealsQuery } from "@/features/home/hooks/queries/useDayMealsQuery";
-import { MAX_MEAL_RECORD_MENUS } from "@/features/meal-record/constants/menu.constants";
+import {
+  MAX_MEAL_RECORD_MENUS,
+  MEAL_RECORD_MENU_LIMIT_MESSAGE,
+} from "@/features/meal-record/constants/menu.constants";
 import {
   formatMenuDraftKey,
   useMenuDraftInit,
@@ -139,7 +142,7 @@ export default function MealSearchPage() {
     }
 
     if (selectedCount + 1 > MAX_MEAL_RECORD_MENUS) {
-      toast.warning("최대 100개까지 기록할 수 있어요");
+      toast.warning(MEAL_RECORD_MENU_LIMIT_MESSAGE);
       return;
     }
 
@@ -207,7 +210,7 @@ export default function MealSearchPage() {
   const handleCameraClick = () => {
     if (selectedCount >= MAX_MEAL_RECORD_MENUS) {
       toast.warning(
-        `최대 ${MAX_MEAL_RECORD_MENUS}개까지 기록할 수 있어요`,
+        MEAL_RECORD_MENU_LIMIT_MESSAGE,
         "기존 메뉴를 일부 삭제한 뒤 다시 시도해주세요.",
       );
       return;
