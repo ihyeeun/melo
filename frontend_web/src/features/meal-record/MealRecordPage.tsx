@@ -389,11 +389,18 @@ export default function MealRecordPage() {
   };
 
   const handleComplete = async () => {
-    if (changedRequests.length === 0 || !currentMenus) {
+    if (!currentMenus || isSavePending) {
       return;
     }
 
     try {
+      if (changedRequests.length === 0) {
+        clearAllDrafts();
+        toast.success("식사 기록이 저장되었어요");
+        navigate(PATH.DIARY, { replace: true });
+        return;
+      }
+
       for (const request of changedRequests) {
         if ((request.menu_ids?.length ?? 0) === 0) {
           const deleteResult = await deleteWithRollbackAsync({
@@ -593,11 +600,10 @@ export default function MealRecordPage() {
             void handleComplete();
           }}
           variant="filled"
-          interaction={hasUnsavedChanges && !isSavePending ? "normal" : "disable"}
+          interaction="normal"
           size="large"
           color="primary"
           fullWidth
-          disabled={!hasUnsavedChanges || isSavePending}
         >
           완료하기
         </Button>
