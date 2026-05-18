@@ -13,14 +13,17 @@
 html,
 body,
 #root {
+  height: 100%;
   margin: 0;
+  overflow: hidden;
   padding: 0;
+  width: 100%;
 }
 
 html,
 body {
-  height: 100%;
   -webkit-text-size-adjust: 100%;
+  overscroll-behavior: none;
   text-size-adjust: 100%;
 }
 
@@ -31,8 +34,9 @@ body {
   margin: 0 auto;
 
   /* width: min(100%, 375px); */
-  min-height: 100vh;
-  min-height: 100dvh;
+  height: 100vh;
+  height: 100dvh;
+  min-height: 0;
   padding: 0;
 }
 
