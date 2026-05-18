@@ -1,6 +1,15 @@
-import { Camera, Check, ChevronRight, ChevronUp, CircleAlert, Plus, X } from "lucide-react";
+import {
+  Camera,
+  Check,
+  ChevronDown,
+  ChevronRight,
+  ChevronUp,
+  CircleAlert,
+  Plus,
+  X,
+} from "lucide-react";
 import type { FormEvent } from "react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import {
   ChatMealRecordBottomSheet,
@@ -59,6 +68,8 @@ const FEEDBACK_GAUGE_RADIUS = 75;
 const FEEDBACK_GAUGE_START_ANGLE = 170;
 const FEEDBACK_GAUGE_END_ANGLE = 10;
 const FEEDBACK_GAUGE_PATH = getFeedbackGaugePath();
+const CAMERA_HINT_DISMISSED_STORAGE_KEY = "chat.cameraHintDismissed";
+const SCROLL_BOTTOM_THRESHOLD = 24;
 
 type RecordedMenuSummary = {
   menu_id: number;
@@ -72,9 +83,34 @@ type SelectedMealRecordMenu = {
   inputMode: MealMenuInputMode;
 };
 
+function getIsCameraHintDismissed() {
+  if (typeof window === "undefined") {
+    return false;
+  }
+
+  try {
+    return window.localStorage.getItem(CAMERA_HINT_DISMISSED_STORAGE_KEY) === "true";
+  } catch {
+    return false;
+  }
+}
+
+function saveCameraHintDismissed() {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  try {
+    window.localStorage.setItem(CAMERA_HINT_DISMISSED_STORAGE_KEY, "true");
+  } catch {
+    // The in-memory state still hides the hint for the current session.
+  }
+}
+
 export default function ChatPage() {
   const navigate = useNavigate();
   const selectedDateKey = useSelectedDateKey();
+  const mainRef = useRef<HTMLElement>(null);
   const endAnchorRef = useRef<HTMLDivElement>(null);
 
   const [inputValue, setInputValue] = useState("");
@@ -82,6 +118,8 @@ export default function ChatPage() {
   const [pendingInput, setPendingInput] = useState<string | null>(null);
   const [isAwaitingHistory, setIsAwaitingHistory] = useState(false);
   const [isCameraActionMenuOpen, setIsCameraActionMenuOpen] = useState(false);
+  const [isCameraHintDismissed, setIsCameraHintDismissed] = useState(getIsCameraHintDismissed);
+  const [isScrolledAwayFromBottom, setIsScrolledAwayFromBottom] = useState(false);
   const [editingMealRecordChat, setEditingMealRecordChat] =
     useState<ChatHistoryItemResponseDto | null>(null);
   const [editingMealType, setEditingMealType] = useState<MealType>(
@@ -122,6 +160,20 @@ export default function ChatPage() {
   const isTypingPending = pendingInput !== null && (isSendPending || isAwaitingHistory);
   const isInputEmpty = inputValue.trim().length === 0;
   const isQuickActionVisible = isInputEmpty && !isInputFocused;
+  const isScrollToBottomButtonVisible = hasAnyConversation && isScrolledAwayFromBottom;
+  const isFloatingButtonVisible =
+    !isInputFocused && (isQuickActionVisible || isScrollToBottomButtonVisible);
+
+  const updateIsScrolledAwayFromBottom = useCallback(() => {
+    const main = mainRef.current;
+
+    if (!main) {
+      return;
+    }
+
+    const distanceToBottom = main.scrollHeight - main.scrollTop - main.clientHeight;
+    setIsScrolledAwayFromBottom(distanceToBottom > SCROLL_BOTTOM_THRESHOLD);
+  }, []);
 
   useEffect(() => {
     if (!isQuickActionVisible) {
@@ -130,11 +182,19 @@ export default function ChatPage() {
   }, [isQuickActionVisible]);
 
   useEffect(() => {
+    if (isScrollToBottomButtonVisible) {
+      setIsCameraActionMenuOpen(false);
+    }
+  }, [isScrollToBottomButtonVisible]);
+
+  useEffect(() => {
     endAnchorRef.current?.scrollIntoView({
       behavior: "instant",
       block: "end",
     });
-  }, [chatList]);
+
+    updateIsScrolledAwayFromBottom();
+  }, [chatList, updateIsScrolledAwayFromBottom]);
 
   useEffect(() => {
     endAnchorRef.current?.scrollIntoView({
@@ -142,6 +202,42 @@ export default function ChatPage() {
       block: "end",
     });
   }, [isTypingPending, pendingInput]);
+
+  useEffect(() => {
+    updateIsScrolledAwayFromBottom();
+
+    const main = mainRef.current;
+
+    if (!main) {
+      return;
+    }
+
+    main.addEventListener("scroll", updateIsScrolledAwayFromBottom, { passive: true });
+    window.addEventListener("resize", updateIsScrolledAwayFromBottom);
+
+    return () => {
+      main.removeEventListener("scroll", updateIsScrolledAwayFromBottom);
+      window.removeEventListener("resize", updateIsScrolledAwayFromBottom);
+    };
+  }, [updateIsScrolledAwayFromBottom]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const frameId = window.requestAnimationFrame(updateIsScrolledAwayFromBottom);
+
+    return () => {
+      window.cancelAnimationFrame(frameId);
+    };
+  }, [
+    hasAnyConversation,
+    isInputFocused,
+    isQuickActionVisible,
+    pendingInput,
+    updateIsScrolledAwayFromBottom,
+  ]);
 
   const sendChatMessage = async (rawInput: string) => {
     const text = rawInput.trim();
@@ -181,11 +277,24 @@ export default function ChatPage() {
       return;
     }
 
+    if (!isCameraHintDismissed) {
+      setIsCameraHintDismissed(true);
+      saveCameraHintDismissed();
+    }
+
     setIsCameraActionMenuOpen((prev) => !prev);
   };
 
   const handleCloseCameraActionMenu = () => {
     setIsCameraActionMenuOpen(false);
+  };
+
+  const handleScrollToBottom = () => {
+    handleCloseCameraActionMenu();
+    endAnchorRef.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "end",
+    });
   };
 
   const handleNavigateMenuBoardCamera = () => {
@@ -325,7 +434,7 @@ export default function ChatPage() {
     <div className={styles.page}>
       <PageHeader onBack={handleBack} />
 
-      {isCameraActionMenuOpen ? (
+      {isCameraActionMenuOpen && !isScrollToBottomButtonVisible ? (
         <button
           type="button"
           className={styles.floatingCameraBackdrop}
@@ -334,7 +443,7 @@ export default function ChatPage() {
         />
       ) : null}
 
-      <main className={styles.main}>
+      <main ref={mainRef} className={styles.main}>
         {!hasAnyConversation && !isHistoryPending ? <EmptySection /> : null}
         {isHistoryPending && chatList.length === 0 && pendingInput === null ? (
           <ChatHistorySkeleton />
@@ -435,13 +544,10 @@ export default function ChatPage() {
           </div>
         ) : null}
 
-        {!isInputFocused && (
-          <div
-            className={`${styles.floatingCameraButtonWrapper} `}
-            aria-hidden={!isQuickActionVisible}
-          >
+        {isFloatingButtonVisible && (
+          <div className={styles.floatingCameraButtonWrapper}>
             <div className={styles.floatingCameraActionContainer}>
-              {isCameraActionMenuOpen ? (
+              {isCameraActionMenuOpen && !isScrollToBottomButtonVisible ? (
                 <div className={styles.floatingCameraActionList}>
                   <button
                     type="button"
@@ -481,42 +587,60 @@ export default function ChatPage() {
                 </div>
               ) : null}
 
-              {!isCameraActionMenuOpen && (
-                <div className={`${styles.fabBubble} typo-caption`}>메뉴 찍기</div>
-              )}
+              {!isScrollToBottomButtonVisible &&
+                !isCameraActionMenuOpen &&
+                !isCameraHintDismissed && (
+                  <div className={`${styles.fabBubble} typo-caption`}>메뉴 찍기</div>
+                )}
               <button
                 type="button"
-                className={`${styles.cameraButton}`}
-                onClick={handleToggleCameraActionMenu}
-                aria-label={isCameraActionMenuOpen ? "촬영 메뉴 닫기" : "촬영 메뉴 열기"}
-                aria-expanded={isCameraActionMenuOpen}
+                className={styles.cameraButton}
+                onClick={
+                  isScrollToBottomButtonVisible
+                    ? handleScrollToBottom
+                    : handleToggleCameraActionMenu
+                }
+                aria-label={
+                  isScrollToBottomButtonVisible
+                    ? "맨 아래로 이동"
+                    : isCameraActionMenuOpen
+                      ? "촬영 메뉴 닫기"
+                      : "촬영 메뉴 열기"
+                }
+                aria-expanded={isScrollToBottomButtonVisible ? undefined : isCameraActionMenuOpen}
               >
-                {isCameraActionMenuOpen ? <X size={24} /> : <Camera size={24} />}
+                {isScrollToBottomButtonVisible ? (
+                  <ChevronDown size={24} />
+                ) : isCameraActionMenuOpen ? (
+                  <X size={24} />
+                ) : (
+                  <Camera size={24} />
+                )}
               </button>
             </div>
           </div>
         )}
-
+        <div>
+          {!isInputFocused && (
+            <section className={`${styles.chipSection}`}>
+              {QUICK_CHIP_LIST.map((chip) => (
+                <button
+                  key={chip}
+                  type="button"
+                  className={styles.chipContainer}
+                  onClick={() => sendChatMessage(chip)}
+                  disabled={isSendPending}
+                >
+                  <p className="typo-body3">{chip}</p>
+                </button>
+              ))}
+            </section>
+          )}
+        </div>
         <div ref={endAnchorRef} />
       </main>
 
       <footer className={`${styles.footer} ${isInputFocused ? styles.footerKeyboardOpen : ""}`}>
-        {!hasAnyConversation && (
-          <section className={`${styles.chipSection}`}>
-            {QUICK_CHIP_LIST.map((chip) => (
-              <button
-                key={chip}
-                type="button"
-                className={styles.chipContainer}
-                onClick={() => sendChatMessage(chip)}
-                disabled={isSendPending}
-              >
-                <p className="typo-body3">{chip}</p>
-              </button>
-            ))}
-          </section>
-        )}
-
         <ChatInput
           value={inputValue}
           isInputEmpty={isInputEmpty}

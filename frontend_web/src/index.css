@@ -141,7 +141,7 @@ button {
 }
 
 button:active {
-  background-color: transparent;
+  transform: scale(0.98);
 }
 
 /* Keep scrolling behavior, but hide visible scrollbars globally. */

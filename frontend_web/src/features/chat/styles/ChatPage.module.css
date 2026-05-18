@@ -26,7 +26,7 @@
 }
 
 .floatingCameraButtonWrapper {
-  bottom: 20px;
+  bottom: 15px;
   display: flex;
   flex-shrink: 0;
   justify-content: flex-end;
@@ -615,10 +615,9 @@
 
 .chipSection {
   background-color: var(--bg-normal);
-  height: 58px;
   display: flex;
   align-items: center;
-  padding: 0 16px;
+  padding: 10px 0;
   gap: 10px;
   overflow-x: auto;
   overflow-y: hidden;
