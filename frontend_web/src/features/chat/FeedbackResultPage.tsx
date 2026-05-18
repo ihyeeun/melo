@@ -12,7 +12,12 @@ import {
   getMealTypeFromCurrentTime,
 } from "@/features/chat/utils/chatMeal";
 import { buildChatMealRecordTransferState } from "@/features/chat/utils/chatMealRecordTransfer";
-import { getFeedbackDetailPath, getSafeChatId } from "@/features/chat/utils/recommendNavigation";
+import {
+  type FeedbackDetailNavigationState,
+  type FeedbackDetailSelectionPayload,
+  getFeedbackDetailPath,
+  getSafeChatId,
+} from "@/features/chat/utils/recommendNavigation";
 import { PATH } from "@/router/path";
 import { getMealRecordPath } from "@/router/pathHelpers";
 import { AppApiError } from "@/shared/api/appApi";
@@ -21,6 +26,7 @@ import {
   type ChatFoodImageRecognizedMenuResponseDto,
   type ChatHistoryItemResponseDto,
   type MealMenuInputMode,
+  type MealServingInputMode,
   type MealTime,
   type MealType,
   MENU_INPUT_MODE,
@@ -134,8 +140,37 @@ function FeedbackResultContent({
     return new Set(selectedMenus.map((menu) => menu.id));
   }, [selectedMenus]);
 
+  const handleConfirmDetailSelection = (selection: FeedbackDetailSelectionPayload) => {
+    setSelectedMenus((prev) => {
+      const nextMenu: SelectedMealRecordMenu = {
+        id: selection.menuId,
+        quantity: selection.quantity,
+        inputMode: toMealMenuInputMode(selection.mode),
+      };
+      const existingIndex = prev.findIndex((menu) => menu.id === selection.menuId);
+
+      if (existingIndex === -1) {
+        return [...prev, nextMenu];
+      }
+
+      return prev.map((menu) => (menu.id === selection.menuId ? nextMenu : menu));
+    });
+  };
+
   const handleMenuClick = ({ menuId, chatId }: { menuId: number; chatId: number }) => {
-    navigate(getFeedbackDetailPath(chatId, menuId));
+    const initialSelection = selectedMenus.find((menu) => menu.id === menuId);
+    const state: FeedbackDetailNavigationState = {
+      initialSelection: initialSelection
+        ? {
+            menuId,
+            quantity: initialSelection.quantity,
+            mode: toMealServingInputMode(initialSelection.inputMode),
+          }
+        : null,
+      onConfirmSelection: handleConfirmDetailSelection,
+    };
+
+    navigate(getFeedbackDetailPath(chatId, menuId), { state });
   };
 
   const handleToggleMenu = (menu: ChatFeedbackMenuResponseDto) => {
@@ -435,6 +470,14 @@ function getMealRecordStateKey(chatItem: ChatHistoryItemResponseDto) {
     mealRecord.menu_quantities?.join(",") ?? "",
     mealRecord.menu_input_modes?.join(",") ?? "",
   ].join(":");
+}
+
+function toMealServingInputMode(inputMode: MealMenuInputMode): MealServingInputMode {
+  return inputMode === MENU_INPUT_MODE.WEIGHT ? "weight" : "unit";
+}
+
+function toMealMenuInputMode(mode: MealServingInputMode): MealMenuInputMode {
+  return mode === "weight" ? MENU_INPUT_MODE.WEIGHT : MENU_INPUT_MODE.UNIT;
 }
 
 function resolveErrorMessage(error: unknown) {
