@@ -126,11 +126,12 @@ async function replaceDiaryMenusByTime({
   await Promise.all(
     currentMenus.map((menu) =>
       deleteTodayMealRecord({
-      date,
-      time,
-      menu_id: menu.id,
-    });
-  }
+        date,
+        time,
+        menu_id: menu.id,
+      }),
+    ),
+  );
 }
 
 async function removeDiaryMenusById({
@@ -185,8 +186,7 @@ async function syncDiaryMealRecord({
     });
   }
 
-  const removeIdSet =
-    previousTime === time ? new Set(previousMenuIds) : new Set<number>();
+  const removeIdSet = previousTime === time ? new Set(previousMenuIds) : new Set<number>();
   const baseMenus = getMenusByTime(dayMeals, time)
     .filter((menu) => !removeIdSet.has(menu.id))
     .map(toDiaryPayload);
@@ -216,14 +216,6 @@ export function useSyncChatMealRecordRegisterMutation() {
         queryFn: () => getDayMeals({ date }),
       });
 
-      await syncDiaryMealRecord({
-        date,
-        time,
-        menus,
-        previousMealRecord,
-        dayMeals,
-      });
-
       await mealRegister({
         chat_id: chatId,
         time,
@@ -231,15 +223,13 @@ export function useSyncChatMealRecordRegisterMutation() {
         menu_quantities: menus.map((menu) => menu.quantity),
         menu_input_modes: menus.map((menu) => menu.inputMode),
       });
-    },
-    onSettled: async (_data, _error, variables) => {
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: homeQueryKeys.dayMeals.byDate(variables.date) }),
-        queryClient.invalidateQueries({
-          queryKey: chatQueryKeys.chatHistory,
-          refetchType: "active",
-        }),
-      ]);
+      await syncDiaryMealRecord({
+        date,
+        time,
+        menus,
+        previousMealRecord,
+        dayMeals,
+      });
     },
   });
 }
