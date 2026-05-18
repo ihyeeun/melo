@@ -113,6 +113,7 @@ export default function ChatPage() {
   const selectedDateKey = useSelectedDateKey();
   const mainRef = useRef<HTMLElement>(null);
   const isScrolledAwayFromBottomRef = useRef(false);
+  const didInitialAutoScrollRef = useRef(false);
 
   const [inputValue, setInputValue] = useState("");
   const [isInputFocused, setIsInputFocused] = useState(false);
@@ -236,8 +237,14 @@ export default function ChatPage() {
       return;
     }
 
-    const shouldKeepBottom =
-      !isHistoryPending || pendingInput !== null || !isScrolledAwayFromBottomRef.current;
+    if (!didInitialAutoScrollRef.current && !isHistoryPending) {
+      didInitialAutoScrollRef.current = true;
+      scrollToBottom("auto");
+      scrollToBottomAfterLayout("auto");
+      return;
+    }
+
+    const shouldKeepBottom = pendingInput !== null || !isScrolledAwayFromBottomRef.current;
 
     if (!shouldKeepBottom) {
       updateIsScrolledAwayFromBottom();
@@ -545,7 +552,7 @@ export default function ChatPage() {
                       {userImageUrl ? (
                         <img
                           src={userImageUrl}
-                          alt=""
+                          alt="사용자가 업로드한 이미지"
                           aria-hidden="true"
                           className={styles.userImageBubble}
                           onLoad={handleChatImageLoad}
