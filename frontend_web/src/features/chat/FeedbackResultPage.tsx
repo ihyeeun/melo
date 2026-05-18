@@ -237,6 +237,7 @@ function FeedbackResultContent({
                     unit_quantity={menu.unit_quantity}
                     brand={menu.brand}
                     data_source={menu.data_source}
+                    suggestionChipLabel={menu.is_appropriate}
                     weight={menu.weight}
                     unit={menu.unit}
                     icon={isSelected ? "check" : "add"}
