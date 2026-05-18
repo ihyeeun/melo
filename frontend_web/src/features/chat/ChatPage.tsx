@@ -378,10 +378,11 @@ export default function ChatPage() {
                         recommendations={chatItem.response_payload.recommendations}
                         onMealRecordClick={() => handleMenuRecordClick(chatItem)}
                         isMealRecorded={
-                          chatItem.meal_record != null &&
-                          chatItem.meal_record.menu_ids!.includes(
-                            chatItem.response_payload.recommendations[0].menu_id,
-                          )
+                          (chatItem.meal_record != null &&
+                            chatItem.meal_record.menu_ids?.includes(
+                              chatItem.response_payload.recommendations[0].menu_id,
+                            )) ??
+                          false
                         }
                       />
                     ) : null}
@@ -392,10 +393,11 @@ export default function ChatPage() {
                         feedback={chatItem.response_payload.feedback}
                         onMealRecordClick={() => handleMenuRecordClick(chatItem)}
                         isMealRecorded={
-                          chatItem.meal_record != null &&
-                          chatItem.meal_record.menu_ids!.includes(
-                            chatItem.response_payload.feedback.menus[0].menu_id,
-                          )
+                          (chatItem.meal_record != null &&
+                            chatItem.meal_record.menu_ids?.includes(
+                              chatItem.response_payload.feedback.menus[0].menu_id,
+                            )) ??
+                          false
                         }
                       />
                     ) : null}
