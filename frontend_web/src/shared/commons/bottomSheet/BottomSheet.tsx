@@ -1,3 +1,5 @@
+import "./BottomSheet.css";
+
 import { Sheet } from "react-modal-sheet";
 
 import { useTabBarVisibilitySync } from "@/shared/api/bridge/useTabBarVisibilitySync";
@@ -29,9 +31,12 @@ export default function BottomSheet({
           background: "#fff",
           borderTopLeftRadius: 20,
           borderTopRightRadius: 20,
+          boxShadow: "none",
         }}
       >
-        <Sheet.Header />
+        <Sheet.Header className="melo-bottom-sheet-header">
+          <div className="melo-bottom-sheet-handle" aria-hidden="true" />
+        </Sheet.Header>
         <Sheet.Content disableDrag={disableContentDrag}>
           <div>
             {title ? <div>{title}</div> : null}
@@ -41,7 +46,14 @@ export default function BottomSheet({
         </Sheet.Content>
       </Sheet.Container>
 
-      <Sheet.Backdrop onTap={onClose} />
+      <Sheet.Backdrop
+        onTap={onClose}
+        transition={{ duration: 0.25 }}
+        style={{
+          backgroundColor: "var(--dimmer-dimmer)",
+          transform: "none",
+        }}
+      />
     </Sheet>
   );
 }

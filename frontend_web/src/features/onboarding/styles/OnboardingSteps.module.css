@@ -184,10 +184,6 @@
 }
 
 .onboardingNutrientGoal {
-  font-size: 18px;
-  font-weight: var(--fw-medium);
-  line-height: var(--line-height-145);
-  margin: 0;
   text-align: center;
 }
 
@@ -269,4 +265,8 @@
 .weightAdjustButton:disabled {
   background: var(--gray-400);
   cursor: not-allowed;
+}
+
+.textPrimary {
+  color: var(--label-primary);
 }

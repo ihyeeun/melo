@@ -26,6 +26,7 @@ import {
   resolveCameraCaptureSession,
 } from "@/src/shared/api/bridge/cameraCaptureSession";
 import type { BridgeCameraCaptureRequestPayload } from "@/src/shared/api/bridge/bridge.types";
+import { typography } from "@/src/shared/styles/tokens";
 
 type CameraCaptureMode = NonNullable<BridgeCameraCaptureRequestPayload["mode"]>;
 type CameraPermissionStatus = Awaited<ReturnType<typeof Camera.getCameraPermissionStatus>>;
@@ -685,15 +686,14 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   permissionTitle: {
+    ...typography["typo-title2"],
     marginTop: 4,
     color: "#141414",
-    fontSize: 21,
-    fontWeight: "700",
     textAlign: "center",
   },
   permissionDescription: {
+    ...typography["typo-body4"],
     color: "#5f5f5f",
-    fontSize: 14,
     lineHeight: 20,
     textAlign: "center",
   },
@@ -707,9 +707,8 @@ const styles = StyleSheet.create({
     alignSelf: "stretch",
   },
   permissionPrimaryButtonText: {
+    ...typography["typo-label2"],
     color: "#ffffff",
-    fontSize: 16,
-    fontWeight: "700",
   },
   loadingContainer: {
     flex: 1,
@@ -752,8 +751,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
   },
   guideText: {
-    fontSize: 14,
-    fontWeight: "400",
+    ...typography["typo-label4"],
     color: "#000",
   },
   frameBox: {
@@ -860,7 +858,7 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   cameraOnboardingContent: {
-    backgroundColor: "#ffe9d5",
+    backgroundColor: "#f5f5f5",
     alignItems: "center",
     paddingHorizontal: 28,
     paddingTop: 40,
@@ -917,18 +915,16 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 30,
   },
   cameraOnboardingTitle: {
+    ...typography["typo-title2"],
     color: "#1f1f1f",
-    fontSize: 20,
     textAlign: "center",
     marginTop: 28,
-    lineHeight: 1.45 * 16,
   },
   cameraOnboardingDescription: {
+    ...typography["typo-body3"],
     color: "#1f1f1f",
-    fontSize: 16,
     textAlign: "center",
     marginTop: 8,
-    lineHeight: 1.45 * 16,
   },
   cameraOnboardingActions: {
     alignItems: "center",
@@ -940,24 +936,20 @@ const styles = StyleSheet.create({
     alignItems: "center",
     alignSelf: "stretch",
     backgroundColor: "#ff8a00",
-    borderRadius: 4,
+    borderRadius: 6,
     height: 42,
     justifyContent: "center",
   },
   cameraOnboardingPrimaryButtonText: {
+    ...typography["typo-label1"],
     color: "#ffffff",
-    fontSize: 16,
-    fontWeight: "700",
-    lineHeight: 1.4 * 16,
   },
   cameraOnboardingSkipButton: {
     marginTop: 12,
   },
   cameraOnboardingSkipButtonText: {
+    ...typography["typo-label3"],
     color: "#8d8d8d",
-    fontSize: 15,
-    fontWeight: "400",
-    lineHeight: 1.4 * 16,
   },
   pressedButton: {
     opacity: 0.78,

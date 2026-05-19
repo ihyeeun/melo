@@ -1,3 +1,5 @@
+import "./BottomSheet.css";
+
 import { useMemo } from "react";
 import { Sheet } from "react-modal-sheet";
 
@@ -63,16 +65,29 @@ export default function SnapBottomSheet({
       initialSnap={safeInitialSnap}
       disableScrollLocking={disableScrollLocking}
     >
-      <Sheet.Container>
-        <Sheet.Header />
+      <Sheet.Container
+        style={{
+          boxShadow: "none",
+        }}
+      >
+        <Sheet.Header className="melo-bottom-sheet-header">
+          <div className="melo-bottom-sheet-handle" aria-hidden="true" />
+        </Sheet.Header>
         <Sheet.Content>
           <div>
-            {title ? <div style={{ fontSize: 16, fontWeight: 700 }}>{title}</div> : null}
+            {title ? <div className="typo-title2">{title}</div> : null}
             {children}
           </div>
         </Sheet.Content>
       </Sheet.Container>
-      <Sheet.Backdrop onTap={onClose} />
+      <Sheet.Backdrop
+        onTap={onClose}
+        transition={{ duration: 0.2 }}
+        style={{
+          backgroundColor: "var(--dimmer-dimmer)",
+          transform: "none",
+        }}
+      />
     </Sheet>
   );
 }

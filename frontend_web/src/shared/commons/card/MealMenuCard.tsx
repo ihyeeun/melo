@@ -167,11 +167,11 @@ export function MealMenuCard({
             </span>
             <span
               className={`${styles.unitAmount} typo-label4`}
-            >{`(${formatQuantity(resolvedConsumedWeight)} ${weightUnitText})`}</span>
+            >{`(${formatQuantity(resolvedConsumedWeight)}${weightUnitText})`}</span>
           </p>
           {displayedCalories !== null && (
             <span className={`${styles.calories} typo-title2`}>
-              {formatCalories(displayedCalories)} kcal
+              {formatCalories(displayedCalories)}kcal
             </span>
           )}
         </section>

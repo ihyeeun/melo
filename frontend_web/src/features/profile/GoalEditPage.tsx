@@ -1,11 +1,6 @@
-import { useQueryClient } from "@tanstack/react-query";
 import { ChevronRight } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import { registerWeight } from "@/features/home/api/health";
-import { queryKeys as homeQueryKeys } from "@/features/home/hooks/queries/queryKey";
-import StepGoalCalories from "@/features/onboarding/components/steps/StepGoalCalories";
-import StepNutrient from "@/features/onboarding/components/steps/StepNutrient";
 import {
   isInRange,
   ONBOARDING_HEIGHT_RANGE,
@@ -13,26 +8,17 @@ import {
 } from "@/features/onboarding/constants/inputRanges";
 import type { OnboardingData } from "@/features/onboarding/onboarding.types";
 import {
-  updateActivity,
-  updateBirthYear,
-  updateGender,
-  updateGoal,
-  updateHeight,
-  updateTargetCalories,
-  updateTargetRatio,
-  updateTargetWeight,
-  updateWeight,
-} from "@/features/profile/api/profile";
-import { queryKeys } from "@/features/profile/hooks/queries/queryKey";
+  type GoalEditDraft,
+  isGoalWeightRangeValid,
+  validateStartPlan,
+} from "@/features/profile/goalEdit.model";
 import { useGetProfileQuery } from "@/features/profile/hooks/queries/useProfileQuery";
 import styles from "@/features/profile/styles/GoalEditPage.module.css";
 import { PATH } from "@/router/path";
-import type { ProfileResponseDto, WeightStepsResponseDto } from "@/shared/api/types/api.dto";
 import BottomSheet from "@/shared/commons/bottomSheet/BottomSheet";
 import { Button } from "@/shared/commons/button/Button";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
 import { EditorInput } from "@/shared/commons/input/EditorInput";
-import { CheckButtonModal } from "@/shared/commons/modals/CheckButtonModal";
 import WheelPicker from "@/shared/commons/picker/WheelPicker";
 import {
   getBirthYearRange,
@@ -41,14 +27,14 @@ import {
 } from "@/shared/commons/picker/yearOptions";
 import { Skeleton, SkeletonStatus } from "@/shared/commons/skeleton/Skeleton";
 import { toast } from "@/shared/commons/toast/toast";
-import { useLocation, useNavigate } from "@/shared/navigation/stackflowNavigation";
-import { useSetTargets } from "@/shared/stores/targetNutrient.store";
-import { getTodayFormatDateKey } from "@/shared/utils/dateFormat";
+import { useNavigate } from "@/shared/navigation/stackflowNavigation";
 
-type GoalEditStage = "summary" | "targetCalories" | "nutrient";
-type GoalEditNavigationState = {
-  goalEditFlow?: boolean;
-};
+import {
+  useGoalEditDraft,
+  useStartGoalEditFlow,
+  useUpdateGoalEditDraft,
+} from "./stores/goalEditFlow.store";
+
 type EditableField =
   | "gender"
   | "birthYear"
@@ -57,21 +43,6 @@ type EditableField =
   | "activity"
   | "goal"
   | "goalWeight";
-
-type GoalEditDraft = Pick<
-  OnboardingData,
-  | "gender"
-  | "birthYear"
-  | "height"
-  | "weight"
-  | "activity"
-  | "goal"
-  | "target_weight"
-  | "target_calories"
-  | "carbs"
-  | "protein"
-  | "fat"
->;
 
 type SummaryField = {
   id: EditableField;
@@ -104,49 +75,6 @@ const GOAL_OPTIONS = [
 ] as const;
 
 const GOAL_LABELS = GOAL_OPTIONS.map((goal) => goal.title);
-
-const GOAL_CALORIES_MIN = 1;
-const GOAL_CALORIES_MAX = 99999;
-const RATIO_TOLERANCE = 0.001;
-const GOAL_EDIT_STAGE_PATH: Record<GoalEditStage, string> = {
-  summary: PATH.GOAL_EDIT,
-  targetCalories: PATH.GOAL_EDIT_TARGET_CALORIES,
-  nutrient: PATH.GOAL_EDIT_NUTRIENT,
-};
-
-function normalizePathname(pathname: string) {
-  return pathname.length > 1 && pathname.endsWith("/") ? pathname.slice(0, -1) : pathname;
-}
-
-function getGoalEditStage(pathname: string): GoalEditStage {
-  const normalizedPathname = normalizePathname(pathname);
-
-  if (normalizedPathname === PATH.GOAL_EDIT_TARGET_CALORIES) {
-    return "targetCalories";
-  }
-
-  if (normalizedPathname === PATH.GOAL_EDIT_NUTRIENT) {
-    return "nutrient";
-  }
-
-  return "summary";
-}
-
-function toGoalEditDraft(profile: ProfileResponseDto): GoalEditDraft {
-  return {
-    gender: profile.gender,
-    birthYear: profile.birthYear,
-    height: profile.height,
-    weight: profile.weight,
-    activity: profile.activity,
-    goal: profile.goal,
-    target_weight: profile.target_weight,
-    target_calories: profile.target_calories,
-    carbs: profile.target_ratio[0],
-    protein: profile.target_ratio[1],
-    fat: profile.target_ratio[2],
-  };
-}
 
 function formatDecimal(value?: number) {
   if (value === undefined) return "-";
@@ -183,115 +111,26 @@ function getSummaryValue(field: EditableField, draft: GoalEditDraft) {
   return draft.target_weight !== undefined ? `${formatDecimal(draft.target_weight)}kg` : "-";
 }
 
-function isGoalWeightRangeValid(data: GoalEditDraft) {
-  return isInRange(data.target_weight, ONBOARDING_WEIGHT_RANGE.min, ONBOARDING_WEIGHT_RANGE.max);
-}
-
-function validateStartPlan(draft: GoalEditDraft) {
-  if (draft.gender === undefined) return "성별을 선택해주세요";
-  if (!isValidBirthYear(draft.birthYear)) return "출생 연도를 다시 확인해주세요";
-
-  if (!isInRange(draft.height, ONBOARDING_HEIGHT_RANGE.min, ONBOARDING_HEIGHT_RANGE.max)) {
-    return "키를 다시 확인해주세요";
-  }
-
-  if (!isInRange(draft.weight, ONBOARDING_WEIGHT_RANGE.min, ONBOARDING_WEIGHT_RANGE.max)) {
-    return "현재 몸무게를 다시 확인해주세요";
-  }
-
-  if (draft.activity === undefined) return "활동량을 선택해주세요";
-  if (draft.goal === undefined) return "목표를 선택해주세요";
-
-  if (!isGoalWeightRangeValid(draft)) {
-    return "목표 몸무게를 다시 확인해주세요";
-  }
-
-  return null;
-}
-
-function hasNutrientTotal(draft: GoalEditDraft) {
-  if (draft.carbs === undefined || draft.protein === undefined || draft.fat === undefined) {
-    return false;
-  }
-
-  const nutrientTotal = draft.carbs + draft.protein + draft.fat;
-  return Math.abs(nutrientTotal - 100) < RATIO_TOLERANCE;
-}
-
-function isRatioChanged(initial: GoalEditDraft, draft: GoalEditDraft) {
-  if (
-    draft.carbs === undefined ||
-    draft.protein === undefined ||
-    draft.fat === undefined ||
-    initial.carbs === undefined ||
-    initial.protein === undefined ||
-    initial.fat === undefined
-  ) {
-    return false;
-  }
-
-  return (
-    Math.abs(draft.carbs - initial.carbs) >= RATIO_TOLERANCE ||
-    Math.abs(draft.protein - initial.protein) >= RATIO_TOLERANCE ||
-    Math.abs(draft.fat - initial.fat) >= RATIO_TOLERANCE
-  );
-}
-
-function toUpdatedProfile(previous: ProfileResponseDto, draft: GoalEditDraft): ProfileResponseDto {
-  const nextTargetRatio: [number, number, number] = [
-    draft.carbs ?? previous.target_ratio[0],
-    draft.protein ?? previous.target_ratio[1],
-    draft.fat ?? previous.target_ratio[2],
-  ];
-
-  return {
-    ...previous,
-    gender: draft.gender ?? previous.gender,
-    birthYear: draft.birthYear ?? previous.birthYear,
-    height: draft.height ?? previous.height,
-    weight: draft.weight ?? previous.weight,
-    activity: draft.activity ?? previous.activity,
-    goal: draft.goal ?? previous.goal,
-    target_weight: draft.target_weight ?? previous.target_weight,
-    target_calories: draft.target_calories ?? previous.target_calories,
-    target_ratio: nextTargetRatio,
-  };
-}
-
 export default function GoalEditPage() {
-  const location = useLocation();
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
-  const setTargets = useSetTargets();
   const { data: profile, isPending } = useGetProfileQuery();
-
-  const stage = useMemo(() => getGoalEditStage(location.pathname), [location.pathname]);
-  const isPlanStage = stage === "targetCalories" || stage === "nutrient";
-  const navigationState = (location.state as GoalEditNavigationState | null) ?? undefined;
-  const [draft, setDraft] = useState<GoalEditDraft | null>(null);
-  const [initialDraft, setInitialDraft] = useState<GoalEditDraft | null>(null);
+  const draft = useGoalEditDraft();
+  const startGoalEditFlow = useStartGoalEditFlow();
+  const updateDraft = useUpdateGoalEditDraft();
+  const hasInitializedRef = useRef(false);
   const [editingField, setEditingField] = useState<EditableField | null>(null);
   const [sheetData, setSheetData] = useState<GoalEditDraft>({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isNutrientTotalModalOpen, setIsNutrientTotalModalOpen] = useState(false);
 
   useEffect(() => {
-    if (!profile || draft) {
+    if (!profile || hasInitializedRef.current) {
       return;
     }
 
-    const mapped = toGoalEditDraft(profile);
-    setDraft(mapped);
-    setInitialDraft(mapped);
-  }, [profile, draft]);
+    startGoalEditFlow(profile);
+    hasInitializedRef.current = true;
+  }, [profile, startGoalEditFlow]);
 
-  const updateDraft = useCallback(
-    (patch: Partial<OnboardingData>) => {
-      if (isSubmitting) return;
-      setDraft((previous) => (previous ? { ...previous, ...patch } : previous));
-    },
-    [isSubmitting],
-  );
+  const visibleDraft = draft;
 
   const updateSheetData = useCallback((patch: Partial<OnboardingData>) => {
     setSheetData((previous) => ({ ...previous, ...patch }));
@@ -311,17 +150,10 @@ export default function GoalEditPage() {
     [birthYearRange.max, birthYearRange.min],
   );
 
-  useEffect(() => {
-    if (editingField !== "birthYear") return;
-    if (isValidBirthYear(sheetData.birthYear)) return;
-
-    updateSheetData({ birthYear: birthYearDefault });
-  }, [birthYearDefault, editingField, sheetData.birthYear, updateSheetData]);
-
   const openEditor = (field: EditableField) => {
-    if (!draft) return;
+    if (!visibleDraft) return;
     setEditingField(field);
-    setSheetData({ ...draft });
+    setSheetData({ ...visibleDraft });
   };
 
   const closeEditor = () => {
@@ -335,7 +167,7 @@ export default function GoalEditPage() {
   };
 
   const applyEditor = () => {
-    if (!draft || !editingField) return;
+    if (!visibleDraft || !editingField) return;
 
     if (editingField === "gender") {
       if (sheetData.gender === undefined) {
@@ -349,12 +181,16 @@ export default function GoalEditPage() {
     }
 
     if (editingField === "birthYear") {
-      if (!isValidBirthYear(sheetData.birthYear)) {
+      const nextBirthYear = isValidBirthYear(sheetData.birthYear)
+        ? sheetData.birthYear
+        : birthYearDefault;
+
+      if (!isValidBirthYear(nextBirthYear)) {
         toast.warning("출생 연도를 다시 확인해주세요");
         return;
       }
 
-      updateDraft({ birthYear: sheetData.birthYear });
+      updateDraft({ birthYear: nextBirthYear });
       closeEditor();
       return;
     }
@@ -404,7 +240,7 @@ export default function GoalEditPage() {
     }
 
     const nextDraft: GoalEditDraft = {
-      ...draft,
+      ...visibleDraft,
       target_weight: sheetData.target_weight,
     };
 
@@ -418,199 +254,24 @@ export default function GoalEditPage() {
   };
 
   const canStartPlan = useMemo(() => {
-    if (!draft) return false;
-    return validateStartPlan(draft) === null;
-  }, [draft]);
+    if (!visibleDraft) return false;
+    return validateStartPlan(visibleDraft) === null;
+  }, [visibleDraft]);
 
   const handleStartPlan = () => {
-    if (!draft) return;
+    if (!visibleDraft) return;
 
-    const errorMessage = validateStartPlan(draft);
+    const errorMessage = validateStartPlan(visibleDraft);
     if (errorMessage) {
       toast.warning(errorMessage);
       return;
     }
 
-    navigate(GOAL_EDIT_STAGE_PATH.targetCalories, { state: navigationState });
-  };
-
-  const handleGoNutrient = () => {
-    if (!draft) return;
-
-    if (draft.target_calories === undefined || draft.target_calories < GOAL_CALORIES_MIN) {
-      toast.warning("목표 칼로리를 입력해주세요");
-      return;
-    }
-
-    if (draft.target_calories > GOAL_CALORIES_MAX) {
-      toast.warning("목표 칼로리는 1~99999 사이로 입력해주세요");
-      return;
-    }
-
-    navigate(GOAL_EDIT_STAGE_PATH.nutrient, { state: navigationState });
-  };
-
-  const handleComplete = async () => {
-    if (!draft || !initialDraft) {
-      return;
-    }
-
-    const errorMessage = validateStartPlan(draft);
-    if (errorMessage) {
-      toast.warning(errorMessage);
-      return;
-    }
-
-    if (draft.target_calories === undefined) {
-      toast.warning("목표 칼로리를 입력해주세요");
-      return;
-    }
-
-    if (!hasNutrientTotal(draft)) {
-      setIsNutrientTotalModalOpen(true);
-      return;
-    }
-
-    const today = getTodayFormatDateKey();
-    const updateTasks: Array<() => Promise<ProfileResponseDto>> = [];
-
-    if (draft.gender !== undefined && draft.gender !== initialDraft.gender) {
-      updateTasks.push(() => updateGender(draft.gender!));
-    }
-
-    if (draft.birthYear !== undefined && draft.birthYear !== initialDraft.birthYear) {
-      updateTasks.push(() => updateBirthYear(draft.birthYear!));
-    }
-
-    if (draft.height !== undefined && draft.height !== initialDraft.height) {
-      updateTasks.push(() => updateHeight(draft.height!));
-    }
-
-    if (draft.weight !== undefined && draft.weight !== initialDraft.weight) {
-      updateTasks.push(async () => {
-        const nextWeight = draft.weight!;
-        const previousWeight = initialDraft.weight;
-        const updatedProfile = await updateWeight(nextWeight);
-
-        try {
-          await registerWeight({ date: today, weight: nextWeight });
-        } catch (error) {
-          console.error("Failed to register updated weight", error);
-
-          if (previousWeight !== undefined) {
-            try {
-              await updateWeight(previousWeight);
-            } catch (rollbackError) {
-              console.error("Failed to rollback profile weight", rollbackError);
-            }
-          }
-
-          throw error;
-        }
-
-        queryClient.setQueryData<WeightStepsResponseDto>(
-          homeQueryKeys.bodyStats(today),
-          (previous) => ({
-            weight: nextWeight,
-            steps: previous?.steps ?? 0,
-          }),
-        );
-
-        return updatedProfile;
-      });
-    }
-
-    if (draft.activity !== undefined && draft.activity !== initialDraft.activity) {
-      updateTasks.push(() => updateActivity(draft.activity!));
-    }
-
-    if (draft.goal !== undefined && draft.goal !== initialDraft.goal) {
-      updateTasks.push(() => updateGoal(draft.goal!));
-    }
-
-    if (draft.target_weight !== undefined && draft.target_weight !== initialDraft.target_weight) {
-      updateTasks.push(() => updateTargetWeight(draft.target_weight!));
-    }
-
-    if (
-      draft.target_calories !== undefined &&
-      draft.target_calories !== initialDraft.target_calories
-    ) {
-      updateTasks.push(() => updateTargetCalories(draft.target_calories!));
-    }
-
-    if (isRatioChanged(initialDraft, draft)) {
-      updateTasks.push(() => updateTargetRatio([draft.carbs!, draft.protein!, draft.fat!]));
-    }
-
-    if (updateTasks.length === 0) {
-      toast.show({ title: "변경된 내용이 없어요" });
-      return;
-    }
-
-    try {
-      setIsSubmitting(true);
-
-      await Promise.all(updateTasks.map((task) => task()));
-
-      queryClient.setQueryData<ProfileResponseDto>(queryKeys.profile, (previous) => {
-        if (!previous) {
-          return previous;
-        }
-
-        return toUpdatedProfile(previous, draft);
-      });
-
-      setTargets({
-        target_calories: draft.target_calories!,
-        target_ratio: [draft.carbs!, draft.protein!, draft.fat!],
-      });
-      setInitialDraft({ ...draft });
-
-      toast.success("목표가 수정되었어요");
-      if (navigationState?.goalEditFlow) {
-        const backStepsByStage: Record<GoalEditStage, number> = {
-          summary: -1,
-          targetCalories: -2,
-          nutrient: -3,
-        };
-
-        navigate(backStepsByStage[stage]);
-        return;
-      }
-
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.profile,
-      });
-
-      navigate(PATH.PROFILE, { replace: true });
-    } catch (error) {
-      console.error(error);
-      toast.warning("목표 수정에 실패했어요");
-    } finally {
-      setIsSubmitting(false);
-    }
+    navigate(PATH.GOAL_EDIT_TARGET_CALORIES);
   };
 
   const handleBack = () => {
-    if (isSubmitting) return;
-
-    if (stage === "summary") {
-      navigate(-1);
-      return;
-    }
-
-    if (navigationState?.goalEditFlow) {
-      navigate(-1);
-      return;
-    }
-
-    if (stage === "targetCalories") {
-      navigate(GOAL_EDIT_STAGE_PATH.summary, { replace: true, state: navigationState });
-      return;
-    }
-
-    navigate(GOAL_EDIT_STAGE_PATH.targetCalories, { replace: true, state: navigationState });
+    navigate(-1);
   };
 
   const selectedBirthYear = isValidBirthYear(sheetData.birthYear)
@@ -620,7 +281,6 @@ export default function GoalEditPage() {
     editingField === "gender" || editingField === "activity" || editingField === "goal";
   const hasPositiveValue = (value?: number) => value !== undefined && value > 0;
   const isEditorConfirmDisabled =
-    isSubmitting ||
     (editingField === "height" && !hasPositiveValue(sheetData.height)) ||
     (editingField === "weight" && !hasPositiveValue(sheetData.weight)) ||
     (editingField === "goalWeight" && !hasPositiveValue(sheetData.target_weight));
@@ -791,17 +451,17 @@ export default function GoalEditPage() {
     );
   };
 
-  const isFooterDisabled = isSubmitting || (stage === "summary" && !canStartPlan);
+  const isFooterDisabled = !canStartPlan;
 
   return (
-    <div className={`${styles.page} ${isPlanStage ? styles.pageWhite : ""}`}>
-      <PageHeader title={isPlanStage ? undefined : "목표 재설정"} onBack={handleBack} />
+    <div className={styles.page}>
+      <PageHeader title="목표 재설정" onBack={handleBack} />
 
       <main className={styles.main}>
-        {isPending && !draft && <GoalEditSummarySkeleton />}
-        {!isPending && !draft && <p className={styles.loadingText}>프로필을 불러오지 못했어요</p>}
+        {isPending && !visibleDraft && <GoalEditSummarySkeleton />}
+        {!isPending && !visibleDraft && <p className={styles.loadingText}>프로필을 불러오지 못했어요</p>}
 
-        {draft && stage === "summary" && (
+        {visibleDraft && (
           <section className={styles.summarySection}>
             {SUMMARY_FIELDS.map((field) => (
               <button
@@ -813,7 +473,7 @@ export default function GoalEditPage() {
                 <span className={`${styles.summaryLabel} typo-title3`}>{field.label}</span>
                 <span className={styles.summaryValueRow}>
                   <span className={`${styles.summaryValue} typo-label1`}>
-                    {getSummaryValue(field.id, draft)}
+                    {getSummaryValue(field.id, visibleDraft)}
                   </span>
                   <ChevronRight className={styles.summaryChevron} size={24} />
                 </span>
@@ -821,59 +481,19 @@ export default function GoalEditPage() {
             ))}
           </section>
         )}
-
-        {draft && stage === "targetCalories" && (
-          <section className={styles.stageSection}>
-            <StepGoalCalories data={draft} update={updateDraft} />
-          </section>
-        )}
-
-        {draft && stage === "nutrient" && (
-          <section className={styles.stageSection}>
-            <StepNutrient data={draft} update={updateDraft} />
-          </section>
-        )}
       </main>
 
       <footer className={styles.footer}>
-        {stage === "summary" && (
-          <Button
-            onClick={handleStartPlan}
-            disabled={isFooterDisabled}
-            fullWidth
-            variant="filled"
-            size="large"
-            interaction={isFooterDisabled ? "disable" : "normal"}
-          >
-            새로운 식단 계획 받기
-          </Button>
-        )}
-
-        {stage === "targetCalories" && (
-          <Button
-            onClick={handleGoNutrient}
-            disabled={isSubmitting}
-            fullWidth
-            variant="filled"
-            size="large"
-            interaction={isSubmitting ? "disable" : "normal"}
-          >
-            다음
-          </Button>
-        )}
-
-        {stage === "nutrient" && (
-          <Button
-            onClick={handleComplete}
-            disabled={isSubmitting}
-            fullWidth
-            variant="filled"
-            size="large"
-            interaction={isSubmitting ? "disable" : "normal"}
-          >
-            {isSubmitting ? "완료 중..." : "완료"}
-          </Button>
-        )}
+        <Button
+          onClick={handleStartPlan}
+          disabled={isFooterDisabled}
+          fullWidth
+          variant="filled"
+          size="large"
+          interaction={isFooterDisabled ? "disable" : "normal"}
+        >
+          새로운 식단 계획 받기
+        </Button>
       </footer>
 
       <BottomSheet
@@ -901,13 +521,6 @@ export default function GoalEditPage() {
           )}
         </div>
       </BottomSheet>
-
-      <CheckButtonModal
-        open={isNutrientTotalModalOpen}
-        onOpenChange={setIsNutrientTotalModalOpen}
-        title="영양소 비율 확인"
-        description="탄단지 비율의 합을 100으로 맞춰주세요"
-      />
     </div>
   );
 }

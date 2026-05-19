@@ -64,7 +64,11 @@ function toPositiveNumber(value: number | null | undefined) {
   return value;
 }
 
-function scaleCaloriesByWeight(calories: number, nextWeight: number, currentWeight: number) {
+function scaleCaloriesByWeight(
+  calories: number,
+  nextWeight: number | null | undefined,
+  currentWeight: number | null | undefined,
+) {
   const safeCalories = toPositiveNumber(calories) ?? 0;
   const safeNextWeight = toPositiveNumber(nextWeight);
   const safeCurrentWeight = toPositiveNumber(currentWeight);
@@ -284,7 +288,7 @@ export default function MealRecordPage() {
         id: preview.id,
         name: preview.name,
         brand: preview.brand,
-        calories: preview.calories,
+        calories: scaleCaloriesByWeight(preview.calories, draftMenu.quantity, preview.weight),
         quantity: draftMenu.quantity,
         unit_quantity: preview.unit_quantity,
         unit: preview.unit,
@@ -397,7 +401,7 @@ export default function MealRecordPage() {
       if (changedRequests.length === 0) {
         clearAllDrafts();
         toast.success("식사 기록이 저장되었어요");
-        navigate(PATH.DIARY, { replace: true });
+        navigateBack({ fallbackTo: PATH.DIARY });
         return;
       }
 
@@ -417,7 +421,7 @@ export default function MealRecordPage() {
           if (deleteResult === DELETE_MEAL_RECORD_RESULT.FAILED_UNRECOVERED) {
             clearAllDrafts();
             toast.warning("서버가 불안정해요. 잠시 후 다시 시도해주세요.");
-            navigate(PATH.DIARY, { replace: true });
+            navigateBack({ fallbackTo: PATH.DIARY });
             return;
           }
 
@@ -428,8 +432,8 @@ export default function MealRecordPage() {
       }
 
       clearAllDrafts();
+      navigateBack({ fallbackTo: PATH.DIARY, skipBackHandler: true });
       toast.success("식사 기록이 저장되었어요");
-      navigate(PATH.DIARY, { replace: true });
     } catch {
       toast.warning("식사 기록 저장에 실패했어요. 잠시 후 다시 시도해주세요.");
     }

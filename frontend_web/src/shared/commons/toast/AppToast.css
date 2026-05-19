@@ -105,7 +105,12 @@
 
 .app-toast[data-ending-style] {
   opacity: 0;
+  pointer-events: none;
   transform: translateY(6px);
+}
+
+.app-toast[data-limited] {
+  pointer-events: none;
 }
 
 .app-toast {

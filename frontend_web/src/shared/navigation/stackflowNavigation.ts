@@ -10,6 +10,7 @@ export {
   navigate,
   navigateBack,
   navigateBackAndPush,
+  resetStackflow,
   syncStackflowWithCurrentBrowserPath,
   useLocation,
   useNavigate,

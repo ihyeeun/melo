@@ -82,7 +82,7 @@ export default function StepNutrient({ data, update }: StepComponentProps) {
         )}
       </div>
       <div className={styles.onboardingNutrientContent}>
-        <p className={styles.onboardingNutrientGoal}>
+        <p className={`${styles.onboardingNutrientGoal} ${styles.textPrimary} typo-title2`}>
           목표 칼로리 {data.target_calories ?? "--"}kcal
         </p>
         <div className={styles.onboardingNutrientList}>

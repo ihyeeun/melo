@@ -119,6 +119,12 @@ const FoodCameraPage = createGuardedLazyActivity(
 );
 const ProfilePage = createLazyActivity(() => import("@/features/profile/ProfilePage"));
 const GoalEditPage = createLazyActivity(() => import("@/features/profile/GoalEditPage"));
+const GoalEditTargetCaloriesPage = createLazyActivity(
+  () => import("@/features/profile/GoalEditTargetCaloriesPage"),
+);
+const GoalEditNutrientPage = createLazyActivity(
+  () => import("@/features/profile/GoalEditNutrientPage"),
+);
 const ChatPage = createGuardedLazyActivity(
   FEATURE_GUARD.CHAT,
   () => import("@/features/chat/ChatPage"),
@@ -158,8 +164,8 @@ const ACTIVITIES = {
   RecommendDetail: RecommendDetailPage,
   Diary: DiaryPage,
   GoalEdit: GoalEditPage,
-  GoalEditTargetCalories: GoalEditPage,
-  GoalEditNutrient: GoalEditPage,
+  GoalEditTargetCalories: GoalEditTargetCaloriesPage,
+  GoalEditNutrient: GoalEditNutrientPage,
   AccountDelete: createStaticActivity(AccountDeletePage),
   FeedbackResult: FeedbackResultPage,
   FeedbackDetail: FeedbackDetailPage,
@@ -946,14 +952,17 @@ export function navigateBack({
   return false;
 }
 
-export function resetStackflowWithCurrentBrowserPath({
-  animate = true,
-}: { animate?: boolean } = {}) {
-  const currentPath = getCurrentBrowserPath();
-  const resolved = resolveActivityForPath(currentPath);
-
-  const targetActivityName = resolved?.activityName ?? "Home";
-  const targetParams = resolved?.params ?? {};
+function replaceStackWithActivity({
+  activityName,
+  animate,
+  params,
+  state,
+}: {
+  activityName: ActivityName;
+  animate: boolean;
+  params: ActivityParams;
+  state?: unknown;
+}) {
   const stack = stackflowActions.getStack();
   const backStackDepth = getBackStackDepth(stack);
 
@@ -961,13 +970,45 @@ export function resetStackflowWithCurrentBrowserPath({
     stackflowActions.dispatchEvent("Popped", { skipExitActiveState: true });
   }
 
-  const result = stackflowActions.replace(targetActivityName, targetParams, {
+  const result = stackflowActions.replace(activityName, params, {
     animate,
     activityId: createStackflowActivityId(),
   });
 
-  setActivityNavigationState(result.activityId, null);
+  setActivityNavigationState(result.activityId, state);
   pruneActivityNavigationStateMap();
+}
+
+export function resetStackflow(
+  to: To,
+  { animate = true, state }: Omit<NavigateOptions, "replace"> = {},
+) {
+  const resolved = resolveActivityForPath(to);
+  if (!resolved) {
+    window.location.assign(toPathString(to));
+    return;
+  }
+
+  replaceStackWithActivity({
+    activityName: resolved.activityName,
+    animate,
+    params: resolved.params,
+    state,
+  });
+}
+
+export function resetStackflowWithCurrentBrowserPath({
+  animate = true,
+}: { animate?: boolean } = {}) {
+  const currentPath = getCurrentBrowserPath();
+  const resolved = resolveActivityForPath(currentPath);
+
+  replaceStackWithActivity({
+    activityName: resolved?.activityName ?? "Home",
+    animate,
+    params: resolved?.params ?? {},
+    state: null,
+  });
 }
 
 function canGoBackWithStack() {

@@ -69,10 +69,7 @@
   border-radius: 8px;
   color: var(--label-normal);
   display: inline-flex;
-  gap: 10px;
-  justify-content: space-between;
-  min-height: 56px;
-  padding: 0 16px;
+  padding: 10px 14px;
   text-align: left;
   width: 100%;
 }
@@ -91,8 +88,9 @@
 }
 
 .brandSearchIcon {
-  color: var(--interaction-normal);
+  color: var(--label-normal);
   flex-shrink: 0;
+  margin-left: auto;
 }
 
 .footer {

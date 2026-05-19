@@ -192,7 +192,7 @@
 }
 
 .emptyStatusIconActive {
-  color: var(--label-primary);
+  color: var(--primary-strong);
   background-color: var(--interaction-primary);
   border-radius: 100px;
   height: 20px;
@@ -200,7 +200,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 2px solid var(--border-primary);
+  border: 2px solid var(--primary-strong);
 }
 
 .emptyStatusText {

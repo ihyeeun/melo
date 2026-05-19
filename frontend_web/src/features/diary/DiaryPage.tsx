@@ -320,7 +320,7 @@ function MealRecordCard({
             disabled={isDidNotEatPending}
           >
             <div className={styles.emptyStatusIconActive}>
-              <Check size={13} strokeWidth={3} />
+              <Check size={12} strokeWidth={3} />
             </div>
             <span className={`${styles.textPrimary} typo-title4`}>{emptyStatusText}</span>
           </button>
@@ -335,7 +335,7 @@ function MealRecordCard({
                 disabled={isDidNotEatPending}
               >
                 <div className={styles.emptyStatusIcon}>
-                  <Check size={13} strokeWidth={3} />
+                  <Check size={12} strokeWidth={3} />
                 </div>
                 <span className={`${styles.emptyStatusText} typo-title4`}>{emptyStatusText}</span>
               </button>

@@ -1,5 +1,6 @@
 import { signInAdmin } from "@/features/auth/api/authTokenApi";
 import { saveTokens } from "@/features/auth/store/tokenStore";
+import { typography } from "@/src/shared/styles/tokens";
 import { isAxiosError } from "axios";
 import { router } from "expo-router";
 import React from "react";
@@ -166,8 +167,7 @@ const styles = StyleSheet.create({
     marginBottom: 100,
   },
   title: {
-    fontSize: 28,
-    fontWeight: "700",
+    ...typography["typo-h3"],
     color: "#111111",
   },
   form: {
@@ -177,8 +177,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   label: {
-    fontSize: 14,
-    fontWeight: "600",
+    ...typography["typo-label4"],
     color: "#333333",
   },
   input: {
@@ -188,13 +187,12 @@ const styles = StyleSheet.create({
     borderColor: "#dddddd",
     borderRadius: 8,
     paddingHorizontal: 14,
-    fontSize: 16,
+    ...typography["typo-body3"],
     color: "#111111",
     backgroundColor: "#fafafa",
   },
   errorMessage: {
-    fontSize: 13,
-    lineHeight: 20,
+    ...typography["typo-label6"],
     color: "#d93025",
   },
   submitButton: {
@@ -210,8 +208,7 @@ const styles = StyleSheet.create({
     opacity: 0.8,
   },
   submitButtonText: {
-    fontSize: 16,
-    fontWeight: "600",
+    ...typography["typo-label2"],
     color: "#ffffff",
   },
   linkButton: {
@@ -219,7 +216,7 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
   },
   linkButtonText: {
-    fontSize: 14,
+    ...typography["typo-body4"],
     color: "#666666",
     textDecorationLine: "underline",
   },
