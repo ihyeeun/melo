@@ -2,10 +2,6 @@ import { useEffect, useMemo, useState } from "react";
 
 import { useMealDetailQuery } from "@/features/meal-record/hooks/queries/useMealDetailQuery";
 import {
-  formatMenuDraftKey,
-  useMenuDraftUpsertPreviews,
-} from "@/features/meal-record/stores/menuDraft.store";
-import {
   getMealType,
   getSafeDateKey,
   getSafeKeyword,
@@ -66,27 +62,6 @@ function buildInitialFormState(
   };
 }
 
-function scaleCaloriesByConsumedWeight(
-  baseCalories: number,
-  baseWeight: number,
-  consumedWeight?: number,
-) {
-  if (
-    typeof baseCalories !== "number" ||
-    !Number.isFinite(baseCalories) ||
-    typeof baseWeight !== "number" ||
-    !Number.isFinite(baseWeight) ||
-    baseWeight <= 0 ||
-    typeof consumedWeight !== "number" ||
-    !Number.isFinite(consumedWeight) ||
-    consumedWeight <= 0
-  ) {
-    return baseCalories;
-  }
-
-  return baseCalories * (consumedWeight / baseWeight);
-}
-
 const RESET_NUTRIENT_FIELDS = buildNutrientResetPatch();
 
 export default function NutrientModifyPage() {
@@ -100,8 +75,6 @@ export default function NutrientModifyPage() {
   const dateKey = getSafeDateKey(searchParams.get("date"));
   const mealType = getMealType(searchParams.get("mealType"));
   const searchKeyword = getSafeKeyword(searchParams.get("keyword"));
-  const draftKey = formatMenuDraftKey(dateKey, mealType);
-  const upsertPreviews = useMenuDraftUpsertPreviews();
 
   const {
     data: fetchedMenu,
@@ -257,42 +230,6 @@ export default function NutrientModifyPage() {
         {
           onSuccess: () => {
             toast.success("영양 성분을 수정했어요");
-            const shouldBackToMealRecord =
-              locationState.source === "meal-record" && locationState.wasQueuedInDraft === true;
-
-            if (shouldBackToMealRecord) {
-              const consumedWeight = toFiniteNumberOrUndefined(locationState.quantity);
-              const unitQuantity =
-                typeof resolvedMenu?.unit_quantity === "string" &&
-                resolvedMenu.unit_quantity.trim().length > 0
-                  ? resolvedMenu.unit_quantity.trim()
-                  : `1회(${payload.weight}${payload.unit === MENU_UNIT.GRAM ? "g" : "ml"})`;
-              const scaledCalories = scaleCaloriesByConsumedWeight(
-                payload.calories,
-                payload.weight,
-                consumedWeight,
-              );
-
-              upsertPreviews({
-                key: draftKey,
-                previews: [
-                  {
-                    id: menuId,
-                    name: payload.name,
-                    brand: payload.brand,
-                    unit_quantity: unitQuantity,
-                    calories: scaledCalories,
-                    weight: payload.weight,
-                    unit: payload.unit,
-                    data_source: MENU_DATA_SOURCE.PERSONAL,
-                  },
-                ],
-              });
-
-              navigate(getMealRecordPath(dateKey, mealType), { replace: true });
-              return;
-            }
-
             navigate(getMealDetailPath(dateKey, mealType, menuId, searchKeyword), {
               replace: true,
             });
