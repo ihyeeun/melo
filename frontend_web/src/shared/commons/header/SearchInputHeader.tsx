@@ -2,6 +2,7 @@ import { ChevronLeft } from "lucide-react";
 import {
   type ChangeEvent,
   type InputHTMLAttributes,
+  type KeyboardEvent,
   type RefObject,
   useEffect,
   useRef,
@@ -24,6 +25,7 @@ type Props = {
   className?: string;
   inputRef?: RefObject<HTMLInputElement | null>;
   enterKeyHint?: InputHTMLAttributes<HTMLInputElement>["enterKeyHint"];
+  blurOnEnter?: boolean;
 };
 
 export function SearchInputHeader({
@@ -40,10 +42,12 @@ export function SearchInputHeader({
   className,
   inputRef,
   enterKeyHint = "search",
+  blurOnEnter = true,
 }: Props) {
   const [isComposing, setIsComposing] = useState(false);
   const didMountRef = useRef(false);
   const onEnterRef = useRef(onEnter);
+  const lastSubmittedValueRef = useRef<string | null>(null);
 
   useEffect(() => {
     onEnterRef.current = onEnter;
@@ -58,6 +62,8 @@ export function SearchInputHeader({
     }
 
     const timeoutId = window.setTimeout(() => {
+      if (lastSubmittedValueRef.current === value) return;
+      lastSubmittedValueRef.current = value;
       onEnterRef.current?.(value);
     }, debounceMs);
 
@@ -72,6 +78,23 @@ export function SearchInputHeader({
 
   const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
     onValueChange(event.target.value);
+  };
+
+  const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+    if (event.key !== "Enter") return;
+    if (isComposing || event.nativeEvent.isComposing) return;
+
+    event.preventDefault();
+
+    const nextValue = event.currentTarget.value;
+    if (onEnterRef.current && lastSubmittedValueRef.current !== nextValue) {
+      lastSubmittedValueRef.current = nextValue;
+      onEnterRef.current(nextValue);
+    }
+
+    if (blurOnEnter) {
+      event.currentTarget.blur();
+    }
   };
 
   const handleClear = () => {
@@ -103,6 +126,7 @@ export function SearchInputHeader({
             type="search"
             value={value}
             onChange={handleChange}
+            onKeyDown={handleKeyDown}
             onCompositionStart={() => setIsComposing(true)}
             onCompositionEnd={() => setIsComposing(false)}
             placeholder={placeholder}
