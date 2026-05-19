@@ -35,9 +35,9 @@ export function AppToastViewport() {
               <ToastStatusIcon type={item.type} />
             </span>
             <Toast.Content className="app-toast-content">
-              {item.title ? <Toast.Title className="app-toast-title typo-title3" /> : null}
+              {item.title ? <Toast.Title className="app-toast-title typo-title4" /> : null}
               {item.description ? (
-                <Toast.Description className="app-toast-description typo-body2" />
+                <Toast.Description className="app-toast-description typo-body4" />
               ) : null}
             </Toast.Content>
             {item.actionProps ? <Toast.Action className="app-toast-action" /> : null}

@@ -30,7 +30,7 @@ function show({
 export const toast = {
   show,
   success: (title: string, description?: string) =>
-    show({ title, description, type: "success", timeout: 2400 }),
+    show({ title, description, type: "success", timeout: 1200 }),
   warning: (title: string, description?: string) =>
     show({ title, description, type: "warning", timeout: 2600, priority: "high" }),
   error: (title: string, description?: string) =>
