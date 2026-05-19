@@ -401,7 +401,7 @@ export default function MealRecordPage() {
       if (changedRequests.length === 0) {
         clearAllDrafts();
         toast.success("식사 기록이 저장되었어요");
-        navigate(PATH.DIARY, { replace: true });
+        navigateBack({ fallbackTo: PATH.DIARY });
         return;
       }
 
@@ -421,7 +421,7 @@ export default function MealRecordPage() {
           if (deleteResult === DELETE_MEAL_RECORD_RESULT.FAILED_UNRECOVERED) {
             clearAllDrafts();
             toast.warning("서버가 불안정해요. 잠시 후 다시 시도해주세요.");
-            navigate(PATH.DIARY, { replace: true });
+            navigateBack({ fallbackTo: PATH.DIARY });
             return;
           }
 
@@ -432,8 +432,8 @@ export default function MealRecordPage() {
       }
 
       clearAllDrafts();
+      navigateBack({ fallbackTo: PATH.DIARY, skipBackHandler: true });
       toast.success("식사 기록이 저장되었어요");
-      navigate(PATH.DIARY, { replace: true });
     } catch {
       toast.warning("식사 기록 저장에 실패했어요. 잠시 후 다시 시도해주세요.");
     }
