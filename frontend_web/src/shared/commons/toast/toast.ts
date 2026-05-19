@@ -11,6 +11,12 @@ type ShowToastOptions = {
   priority?: ToastPriority;
 };
 
+const activeToastIdsBySignature = new Map<string, string>();
+
+function getToastSignature(type: ToastType, title: string, description?: string) {
+  return `${type}:${title}:${description ?? ""}`;
+}
+
 function show({
   title,
   description,
@@ -18,13 +24,28 @@ function show({
   type = "default",
   priority = "low",
 }: ShowToastOptions) {
-  return appToastManager.add({
+  const signature = getToastSignature(type, title, description);
+  const activeToastId = activeToastIdsBySignature.get(signature);
+  if (activeToastId) {
+    return activeToastId;
+  }
+
+  let toastId = "";
+  toastId = appToastManager.add({
     title,
     description,
     timeout,
     type,
     priority,
+    onRemove: () => {
+      if (activeToastIdsBySignature.get(signature) === toastId) {
+        activeToastIdsBySignature.delete(signature);
+      }
+    },
   });
+  activeToastIdsBySignature.set(signature, toastId);
+
+  return toastId;
 }
 
 export const toast = {
