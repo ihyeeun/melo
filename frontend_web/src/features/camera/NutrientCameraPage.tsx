@@ -21,8 +21,8 @@ import { CheckButtonModal } from "@/shared/commons/modals/CheckButtonModal";
 import { toast } from "@/shared/commons/toast/toast";
 import {
   navigateBack,
+  navigateBackAndPush,
   useLocation,
-  useNavigate,
   useSearchParams,
 } from "@/shared/navigation/stackflowNavigation";
 
@@ -31,7 +31,6 @@ type NutrientCameraLocationState = {
 };
 
 export default function NutrientCameraPage() {
-  const navigate = useNavigate();
   const location = useLocation();
   const [isUploading, setIsUploading] = useState(false);
   const [capturedPreviewSrc, setCapturedPreviewSrc] = useState<string | null>(null);
@@ -112,15 +111,20 @@ export default function NutrientCameraPage() {
         ? `${PATH.NUTRIENT_ADD_REGISTER}?${registerParams.toString()}`
         : PATH.NUTRIENT_ADD_REGISTER;
 
-      navigate(registerPath, {
-        state: {
-          ...imageData, // unit, weight, calories, carbs...
-          name: searchParams.get("name") ?? "",
-          brand: searchParams.get("brand") ?? "",
-          entrySource: "camera" as const,
-          dateKey: dateKey ?? undefined,
-          mealType: mealType ?? undefined,
-          keyword: keyword ?? undefined,
+      navigateBackAndPush({
+        count: 2,
+        animate: false,
+        to: registerPath,
+        pushOptions: {
+          state: {
+            ...imageData, // unit, weight, calories, carbs...
+            name: searchParams.get("name") ?? "",
+            brand: searchParams.get("brand") ?? "",
+            entrySource: "camera" as const,
+            dateKey: dateKey ?? undefined,
+            mealType: mealType ?? undefined,
+            keyword: keyword ?? undefined,
+          },
         },
       });
 
@@ -133,7 +137,6 @@ export default function NutrientCameraPage() {
     }
   }, [
     isUploading,
-    navigate,
     returnFromCameraPage,
     searchParams,
     shouldAutoOpenCamera,
