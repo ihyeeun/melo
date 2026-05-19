@@ -1,5 +1,6 @@
 import { postHasUserInfo } from "@/features/auth/api/onboardingStatusApi";
 import { saveTokens } from "@/features/auth/store/tokenStore";
+import { typography } from "@/src/shared/styles/tokens";
 import { router } from "expo-router";
 import { useCallback, useRef, useState } from "react";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
@@ -143,7 +144,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   loadingText: {
-    fontSize: 14,
+    ...typography["typo-label3"],
     color: "#666666",
   },
 });

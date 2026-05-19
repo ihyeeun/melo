@@ -8,6 +8,7 @@ import {
   shouldEnableTabBackGesture,
 } from "@/src/shared/navigation/appTabNavigation";
 import { useEdgeSwipeBack } from "@/src/shared/navigation/useEdgeSwipeBack";
+import { typography } from "@/src/shared/styles/tokens";
 import { router, Slot, useSegments } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -178,10 +179,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   tabLabel: {
+    ...typography["typo-label6"],
     marginTop: 4,
-    fontSize: 11,
-    lineHeight: 14,
-    fontWeight: "500",
   },
   tabLabelFocused: {
     color: "#ff8e00",

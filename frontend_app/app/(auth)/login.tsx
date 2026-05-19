@@ -2,6 +2,7 @@ import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { KakaoLoginButton } from "@/features/auth/components/KakaoLoginButton";
 import { AppleLoginButton } from "@/features/auth/components/AppleLoginButton";
+import { typography } from "@/src/shared/styles/tokens";
 import { router } from "expo-router";
 import LoginLogo from "@/assets/images/login-logo.svg";
 import LoginImage from "@/assets/images/login-image.svg";
@@ -77,13 +78,12 @@ const styles = StyleSheet.create({
     width: "100%",
   },
   agreementText: {
+    ...typography["typo-body4"],
     color: "#666666",
-    fontSize: 14,
     lineHeight: 22,
     textAlign: "center",
   },
   linkText: {
     textDecorationLine: "underline",
-    color: "#4a4a4a",
   },
 });

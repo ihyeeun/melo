@@ -1,5 +1,7 @@
 import { loadAccessToken } from "@/features/auth/store/tokenStore";
 import { subscribeAuthExpired } from "@/src/shared/auth/authSessionEvents";
+import { pretendardFonts } from "@/src/shared/styles/fonts";
+import { useFonts } from "expo-font";
 import { router, Stack, useSegments } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 
@@ -8,6 +10,7 @@ export default function RootLayout() {
   const segmentRef = useRef<string[]>([]);
   const didBootstrapRef = useRef(false);
   const [isBootstrapping, setIsBootstrapping] = useState(true);
+  const [fontsLoaded, fontError] = useFonts(pretendardFonts);
 
   useEffect(() => {
     segmentRef.current = segments as string[];
@@ -22,6 +25,12 @@ export default function RootLayout() {
 
     return unsubscribe;
   }, []);
+
+  useEffect(() => {
+    if (fontError) {
+      console.error("Pretendard font load failed:", fontError);
+    }
+  }, [fontError]);
 
   useEffect(() => {
     let cancelled = false;
@@ -57,7 +66,7 @@ export default function RootLayout() {
     };
   }, [segments]);
 
-  if (isBootstrapping) return null;
+  if ((!fontsLoaded && !fontError) || isBootstrapping) return null;
 
   return (
     <Stack>

@@ -1,5 +1,6 @@
 import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import { typography } from "@/src/shared/styles/tokens";
 import AppleLogo from "../../../assets/images/Icon/apple-logo.svg";
 
 type AppleLoginButtonProps = {
@@ -44,8 +45,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   label: {
+    ...typography["typo-label3"],
     color: "#ffffff",
-    fontSize: 15,
-    fontWeight: "500",
   },
 });
