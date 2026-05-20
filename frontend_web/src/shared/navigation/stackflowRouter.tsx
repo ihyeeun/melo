@@ -23,6 +23,8 @@ import {
 
 import AccountDeletePage from "@/features/account-delete/AccountDeletePage";
 import { PATH } from "@/router/path";
+import { track } from "@/shared/analytics/analytics";
+import { EVENT_NAME } from "@/shared/analytics/analytics.constants";
 import { isNativeApp, requestAppBack } from "@/shared/api/bridge/nativeBridge";
 import {
   FEATURE_GUARD,
@@ -219,6 +221,7 @@ const SWIPE_VERTICAL_CANCEL_RATIO = 2.4;
 
 const activityNavigationStateMap = new Map<string, unknown>();
 const stackflowBackHandlerMap = new Map<string, StackflowBackHandler>();
+let lastScreenViewKey: string | null = null;
 let pruneActivityNavigationStateTimeoutId: number | null = null;
 
 function createLazyActivity(loader: () => Promise<{ default: ComponentType }>) {
@@ -610,6 +613,25 @@ function StackActivityFrame({
       window.cancelAnimationFrame(frameId);
     };
   }, [activity.key, activity.transitionState]);
+
+  useEffect(() => {
+    if (!activity.isTop || activity.transitionState !== "enter-done") {
+      return;
+    }
+
+    const path = getActivityPath(activity);
+    const screenViewKey = `${activity.id}:${path}`;
+    if (lastScreenViewKey === screenViewKey) {
+      return;
+    }
+
+    lastScreenViewKey = screenViewKey;
+    track(EVENT_NAME.SCREEN_VIEW, {
+      screen_name: activity.name,
+      path,
+      stack_depth: getBackStackDepth(stackflowActions.getStack()),
+    });
+  }, [activity]);
 
   const handlePointerDown = useCallback(
     (event: ReactPointerEvent<HTMLDivElement>) => {

@@ -34,11 +34,14 @@ import {
 } from "@/features/chat/utils/recommendNavigation";
 import { PATH } from "@/router/path";
 import { getMealRecordPath, getMealSearchPath } from "@/router/pathHelpers";
+import { track } from "@/shared/analytics/analytics";
+import { EVENT_NAME } from "@/shared/analytics/analytics.constants";
 import { AppApiError } from "@/shared/api/appApi";
 import { isNativeApp } from "@/shared/api/bridge/nativeBridge";
 import {
   type ChatHistoryItemResponseDto,
   type ChatRecommendItemResponseDto,
+  type ChatRecommendResponseDto,
   type FeedbackDto,
   type MealMenuInputMode,
   type MealTime,
@@ -246,10 +249,15 @@ export default function ChatPage() {
     setPendingInput(text);
     setInputValue("");
     setIsAwaitingHistory(true);
+    track(EVENT_NAME.AI_COACH_CHAT, { input_length: text.length });
 
     try {
-      await sendMessageMutation({ input: text });
+      const response = await sendMessageMutation({ input: text });
+      track(EVENT_NAME.AI_COACH_RESPONSE_SUCCESS, getAiCoachResponseAnalyticsProperties(response));
     } catch (error) {
+      track(EVENT_NAME.AI_COACH_RESPONSE_FAIL, {
+        reason: resolveErrorMessage(error),
+      });
       toast.warning(resolveErrorMessage(error));
       setInputValue(text);
     } finally {
@@ -339,6 +347,10 @@ export default function ChatPage() {
         time: nextMealRecord.time,
         menus: nextMealRecord.menus,
         previousMealRecord: meal.meal_record,
+      });
+      track(EVENT_NAME.RECOMMEND_MENU_SAVE, {
+        menu_name: primaryMenu.menu_name,
+        menu_id: primaryMenu.menu_id,
       });
 
       toast.success(
@@ -1366,4 +1378,20 @@ function resolveErrorMessage(error: unknown) {
   }
 
   return "메시지 전송에 실패했어요. 잠시 후 다시 시도해주세요.";
+}
+
+function getAiCoachResponseAnalyticsProperties(response: ChatRecommendResponseDto) {
+  if (response.chat_category !== "recommendation") {
+    return {
+      feedback_menu_ids: response.feedback.menus.map((menu) => menu.menu_id),
+      feedback_menu_names: response.feedback.menus.map((menu) => menu.menu_name),
+      has_menu: response.feedback.menus.length > 0,
+    };
+  }
+
+  return {
+    recommendation_menu_ids: response.recommendations.map((menu) => menu.menu_id),
+    recommendation_menu_names: response.recommendations.map((menu) => menu.menu_name),
+    has_menu: response.recommendations.length > 0,
+  };
 }

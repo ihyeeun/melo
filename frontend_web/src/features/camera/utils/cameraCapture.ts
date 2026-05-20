@@ -82,6 +82,10 @@ function getImageRecognitionErrorMessage(error: unknown) {
   return IMAGE_RECOGNITION_ERROR_MESSAGE_BY_SERVER_MESSAGE[message] ?? null;
 }
 
+export function getAnalyticsErrorMessage(error: unknown, fallback = "unknown") {
+  return getImageRecognitionErrorMessage(error) ?? getErrorMessage(error, fallback);
+}
+
 function isCameraPermissionDenied(error: unknown) {
   return CAMERA_PERMISSION_DENIED_CODES.has((error as BridgeCameraError)?.error ?? "");
 }

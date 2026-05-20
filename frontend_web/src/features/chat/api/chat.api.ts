@@ -1,5 +1,5 @@
 import { appApiData } from "@/shared/api/appApi";
-import type { ChatHistoryResponseDto } from "@/shared/api/types/api.dto";
+import type { ChatHistoryResponseDto, ChatRecommendResponseDto } from "@/shared/api/types/api.dto";
 
 export async function getChatHistory() {
   const response = await appApiData<ChatHistoryResponseDto>({
@@ -11,7 +11,7 @@ export async function getChatHistory() {
 }
 
 export async function sendMessage({ input }: { input: string }) {
-  const response = await appApiData({
+  const response = await appApiData<ChatRecommendResponseDto>({
     endpoint: "/chat/recommend",
     method: "POST",
     body: { input },

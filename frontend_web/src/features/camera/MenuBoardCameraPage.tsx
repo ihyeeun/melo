@@ -6,12 +6,15 @@ import { useMenuBoardMutation } from "@/features/camera/hooks/mutations/useImage
 import {
   type CameraCaptureErrorFeedback,
   DEFAULT_CAMERA_CAPTURE_QUALITY,
+  getAnalyticsErrorMessage,
   getCameraCaptureErrorFeedback,
   getCapturedImagePreviewSrc,
   getRecognitionErrorFeedback,
   isCameraCaptureCancelled,
 } from "@/features/camera/utils/cameraCapture";
 import { PATH } from "@/router/path";
+import { track } from "@/shared/analytics/analytics";
+import { EVENT_NAME } from "@/shared/analytics/analytics.constants";
 import { syncAppTab } from "@/shared/api/bridge/nativeBridge";
 import { requestNativeCameraCapture } from "@/shared/api/bridge/nativeBridge";
 import type { ChatMenuBoardRecommendResponseDto } from "@/shared/api/types/api.dto";
@@ -53,6 +56,7 @@ export default function MenuBoardCameraPage() {
   const handleCameraActions = useCallback(async () => {
     if (isProcessing) return;
     setCaptureErrorFeedback(null);
+    track(EVENT_NAME.OCR_SCAN_START, { source: "menu_board_camera" });
 
     let capturedImage: Awaited<ReturnType<typeof requestNativeCameraCapture>>;
     try {
@@ -64,11 +68,19 @@ export default function MenuBoardCameraPage() {
     } catch (error) {
       setIsAutoOpenPending(false);
       if (isCameraCaptureCancelled(error)) {
+        track(EVENT_NAME.OCR_SCAN_FAIL, {
+          reason: "user_cancelled",
+          source: "menu_board_camera",
+        });
         if (shouldAutoOpenCamera) {
           returnFromCameraPage();
         }
         return;
       }
+      track(EVENT_NAME.OCR_SCAN_FAIL, {
+        reason: getAnalyticsErrorMessage(error, "카메라를 실행하지 못했어요"),
+        source: "menu_board_camera",
+      });
       setCapturedPreviewSrc(null);
       setCaptureErrorFeedback(getCameraCaptureErrorFeedback(error));
       return;
@@ -78,6 +90,7 @@ export default function MenuBoardCameraPage() {
       setCapturedPreviewSrc(getCapturedImagePreviewSrc(capturedImage));
       setIsProcessing(true);
       const response = await uploadMenuBoardImage(capturedImage);
+      track(EVENT_NAME.OCR_SCAN_SUCCESS, { source: "menu_board_camera" });
       syncAppTab("chat");
 
       navigate(PATH.CHAT, {
@@ -90,6 +103,10 @@ export default function MenuBoardCameraPage() {
 
       toast.success("메뉴판 분석이 완료되었어요");
     } catch (error) {
+      track(EVENT_NAME.OCR_SCAN_FAIL, {
+        reason: getAnalyticsErrorMessage(error, "메뉴판 분석에 실패했어요."),
+        source: "menu_board_camera",
+      });
       setCapturedPreviewSrc(null);
       setCaptureErrorFeedback(getRecognitionErrorFeedback("MENU_BOARD", error));
     } finally {

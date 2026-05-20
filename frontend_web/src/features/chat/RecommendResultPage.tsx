@@ -16,6 +16,8 @@ import { getRecommendDetailPath, getSafeChatId } from "@/features/chat/utils/rec
 import { useGetProfileQuery } from "@/features/profile/hooks/queries/useProfileQuery";
 import { PATH } from "@/router/path";
 import { getMealRecordPath } from "@/router/pathHelpers";
+import { track } from "@/shared/analytics/analytics";
+import { EVENT_NAME } from "@/shared/analytics/analytics.constants";
 import { AppApiError } from "@/shared/api/appApi";
 import {
   type ChatHistoryItemResponseDto,
@@ -209,6 +211,12 @@ function RecommendResultContent({
         menus: selectedMenus,
         previousMealRecord: chatItem.meal_record,
       });
+      getSelectedMealRecordMenus(mealRecordMenus, selectedMenus).forEach((menu) => {
+        track(EVENT_NAME.RECOMMEND_MENU_SAVE, {
+          menu_name: menu.menu_name,
+          menu_id: menu.menu_id,
+        });
+      });
 
       toast.success(
         chatItem.meal_record ? "식사 기록이 수정되었어요." : "식사 기록이 등록되었어요.",
@@ -388,6 +396,17 @@ function getInitialSelectedMenus(
       };
     })
     .filter((menu): menu is SelectedMealRecordMenu => menu !== null);
+}
+
+function getSelectedMealRecordMenus(
+  mealRecordMenus: ChatMealRecordMenu[],
+  selectedMenus: SelectedMealRecordMenu[],
+) {
+  const menusById = new Map(mealRecordMenus.map((menu) => [menu.menu_id, menu]));
+
+  return selectedMenus
+    .map((selectedMenu) => menusById.get(selectedMenu.id) ?? null)
+    .filter((menu): menu is ChatMealRecordMenu => menu !== null);
 }
 
 function getMealRecordStateKey(chatItem: ChatHistoryItemResponseDto) {

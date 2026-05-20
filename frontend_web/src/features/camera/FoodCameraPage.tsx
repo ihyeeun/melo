@@ -6,6 +6,7 @@ import { useFoodImageMutation } from "@/features/camera/hooks/mutations/useImage
 import {
   type CameraCaptureErrorFeedback,
   DEFAULT_CAMERA_CAPTURE_QUALITY,
+  getAnalyticsErrorMessage,
   getCameraCaptureErrorFeedback,
   getCapturedImagePreviewSrc,
   getRecognitionErrorFeedback,
@@ -19,6 +20,8 @@ import {
 } from "@/features/meal-record/stores/menuDraft.store";
 import { getMealType, getSafeDateKey } from "@/features/meal-record/utils/mealRecord.queryParams";
 import { getMealRecordPath } from "@/router/pathHelpers";
+import { track } from "@/shared/analytics/analytics";
+import { EVENT_NAME } from "@/shared/analytics/analytics.constants";
 import { requestNativeCameraCapture } from "@/shared/api/bridge/nativeBridge";
 import { type MealTime, MENU_INPUT_MODE } from "@/shared/api/types/api.dto";
 import { Button } from "@/shared/commons/button/Button";
@@ -67,6 +70,9 @@ export default function FoodCameraPage() {
   const handleCameraActions = useCallback(async () => {
     if (isUploading) return;
     setCaptureErrorFeedback(null);
+    track(EVENT_NAME.FOOD_SCAN_START, {
+      source: "meal_record_camera",
+    });
 
     let capturedImage: Awaited<ReturnType<typeof requestNativeCameraCapture>>;
     try {
@@ -78,26 +84,43 @@ export default function FoodCameraPage() {
     } catch (error) {
       setIsAutoOpenPending(false);
       if (isCameraCaptureCancelled(error)) {
+        track(EVENT_NAME.FOOD_SCAN_FAIL, {
+          reason: "user_cancelled",
+          source: "meal_record_camera",
+        });
         if (shouldAutoOpenCamera) {
           returnFromCameraPage();
         }
         return;
       }
+      track(EVENT_NAME.FOOD_SCAN_FAIL, {
+        reason: getAnalyticsErrorMessage(error, "카메라를 실행하지 못했어요"),
+        source: "meal_record_camera",
+      });
       setCapturedPreviewSrc(null);
       setCaptureErrorFeedback(getCameraCaptureErrorFeedback(error));
       return;
     }
 
+    let hasRecognitionSucceeded = false;
     try {
       setCapturedPreviewSrc(getCapturedImagePreviewSrc(capturedImage));
       setIsUploading(true);
       const imageData = await uploadImage(capturedImage);
 
       if (!imageData?.menu_ids?.length) {
+        track(EVENT_NAME.FOOD_SCAN_FAIL, {
+          reason: "사진에서 음식을 찾을 수 없어요.",
+          source: "meal_record_camera",
+        });
         setCapturedPreviewSrc(null);
         setCaptureErrorFeedback(getRecognitionErrorFeedback("FOOD"));
         return;
       }
+      hasRecognitionSucceeded = true;
+      track(EVENT_NAME.FOOD_SCAN_SUCCESS, {
+        source: "meal_record_camera",
+      });
 
       imageData.menu_ids.forEach((id, idx) => {
         upsertMenu({
@@ -123,6 +146,12 @@ export default function FoodCameraPage() {
       toast.success("촬영한 사진의 메뉴가 기록되었어요.");
       navigate(getMealRecordPath(dateKey, mealType), { replace: true });
     } catch (error) {
+      if (!hasRecognitionSucceeded) {
+        track(EVENT_NAME.FOOD_SCAN_FAIL, {
+          reason: getAnalyticsErrorMessage(error, "음식 메뉴 분석에 실패했어요."),
+          source: "meal_record_camera",
+        });
+      }
       setCapturedPreviewSrc(null);
       setCaptureErrorFeedback(getRecognitionErrorFeedback("FOOD", error));
     } finally {

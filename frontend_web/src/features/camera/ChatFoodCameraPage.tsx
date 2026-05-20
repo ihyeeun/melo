@@ -6,12 +6,15 @@ import { useChatFoodImageFeedbackMutation } from "@/features/camera/hooks/mutati
 import {
   type CameraCaptureErrorFeedback,
   DEFAULT_CAMERA_CAPTURE_QUALITY,
+  getAnalyticsErrorMessage,
   getCameraCaptureErrorFeedback,
   getCapturedImagePreviewSrc,
   getRecognitionErrorFeedback,
   isCameraCaptureCancelled,
 } from "@/features/camera/utils/cameraCapture";
 import { PATH } from "@/router/path";
+import { track } from "@/shared/analytics/analytics";
+import { EVENT_NAME } from "@/shared/analytics/analytics.constants";
 import { requestNativeCameraCapture, syncAppTab } from "@/shared/api/bridge/nativeBridge";
 import { Button } from "@/shared/commons/button/Button";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
@@ -32,6 +35,7 @@ export default function ChatFoodCameraPage() {
   const handleCameraActions = useCallback(async () => {
     if (isProcessing) return;
     setCaptureErrorFeedback(null);
+    track(EVENT_NAME.FOOD_SCAN_START, { source: "chat_food_camera" });
 
     let image: Awaited<ReturnType<typeof requestNativeCameraCapture>>;
     // 앱에서 이미지를 받아오는 로직
@@ -45,8 +49,16 @@ export default function ChatFoodCameraPage() {
     } catch (error) {
       setIsOpeningCamera(false);
       if (isCameraCaptureCancelled(error)) {
+        track(EVENT_NAME.FOOD_SCAN_FAIL, {
+          reason: "user_cancelled",
+          source: "chat_food_camera",
+        });
         return;
       }
+      track(EVENT_NAME.FOOD_SCAN_FAIL, {
+        reason: getAnalyticsErrorMessage(error, "카메라를 실행하지 못했어요"),
+        source: "chat_food_camera",
+      });
       setPreviewSrc(null);
       setCaptureErrorFeedback(getCameraCaptureErrorFeedback(error));
       return;
@@ -57,12 +69,17 @@ export default function ChatFoodCameraPage() {
       setPreviewSrc(getCapturedImagePreviewSrc(image)); // 이미지 미리보기 설정
       setIsProcessing(true);
       await uploadFoodImage(image);
+      track(EVENT_NAME.FOOD_SCAN_SUCCESS, { source: "chat_food_camera" });
       syncAppTab("chat");
 
       navigate(PATH.CHAT, {
         replace: true,
       });
     } catch (error) {
+      track(EVENT_NAME.FOOD_SCAN_FAIL, {
+        reason: getAnalyticsErrorMessage(error, "음식 메뉴 분석에 실패했어요."),
+        source: "chat_food_camera",
+      });
       setPreviewSrc(null);
       setCaptureErrorFeedback(getRecognitionErrorFeedback("FOOD", error));
     } finally {
