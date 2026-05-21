@@ -1012,9 +1012,9 @@ function RecommendationSection({
           <p className={`${styles.textNormal} typo-body3`}>
             다른 추천 메뉴도 있어요 (총 {recommendations.length}개)
           </p>
-          <p className={`${styles.textAssistive} typo-label3`}>
+          <p className={`${styles.ActionIcon} typo-label3`}>
             더보기
-            <ChevronRight size={20} className={styles.ActionIcon} />
+            <ChevronRight size={20} />
           </p>
         </button>
       ) : null}

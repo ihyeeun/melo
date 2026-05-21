@@ -710,7 +710,11 @@
 }
 
 .ActionIcon {
-  margin-left: 2px;
+  gap: 2px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--label-assistive);
 }
 
 .textNormal {

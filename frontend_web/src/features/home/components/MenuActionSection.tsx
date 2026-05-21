@@ -60,7 +60,7 @@ export default function MenuActionSection({
           <div data-home-onboarding-target="chat">
             <MenuCard
               title={"AI 코치"}
-              description="식단 고민,\n무엇이든 물어보세요"
+              description={"식단 고민,\n무엇이든 물어보세요"}
               iconSrc="/icons/chat-icon.svg"
               onClick={() => {
                 if (isNativeApp()) {
@@ -122,7 +122,7 @@ function MenuCard({
     <ActionCard onClick={onClick} className={type === "camera" ? style.bgPrimary : ""}>
       <div className={style.menuCardContainer}>
         <p className={`typo-title4 ${type === "camera" ? style.textWhite : ""}`}>{title}</p>
-        <p className={`${type === "camera" ? style.textWhite : style.description} typo-body3`}>
+        <p className={`${style.description} ${type === "camera" ? style.textWhite : ""} typo-body3`}>
           {description}
         </p>
         <div className={style.iconContainer}>
