@@ -362,7 +362,7 @@ export function MealMenuNutrientDetail({
     ...macro,
     value: mainNutrientStates[macro.key].value,
     showWarning: mainNutrientStates[macro.key].isEstimated,
-  }));
+  })).filter((macro) => macro.value !== null);
   const isEditAndAddEnabled = typeof onEditAndAdd === "function";
   const handleEditAndAddClick = () => {
     onEditAndAdd?.();
@@ -383,22 +383,26 @@ export function MealMenuNutrientDetail({
           </div>
         </div>
 
-        <div className="divider" />
+        {summaryMacroItems.length > 0 ? (
+          <>
+            <div className="divider" />
 
-        <div className={styles.macroContainer}>
-          {summaryMacroItems.map((macro) => (
-            <article key={macro.key} className={styles.macroItem}>
-              <div className={styles.macroLabelRow}>
-                <p className={`typo-label3 ${styles.textAlternative}`}>{macro.label}</p>
-                {macro.showWarning && <NutrientWarningPopover />}
-              </div>
-              <p className={`typo-title3 ${styles.macroValue}`}>
-                <span className={styles.macroNumber}>{formatNutrientValue(macro.value)}</span>
-                <span className={`${styles.macroUnit}`}>g</span>
-              </p>
-            </article>
-          ))}
-        </div>
+            <div className={styles.macroContainer}>
+              {summaryMacroItems.map((macro) => (
+                <article key={macro.key} className={styles.macroItem}>
+                  <div className={styles.macroLabelRow}>
+                    <p className={`typo-label3 ${styles.textAlternative}`}>{macro.label}</p>
+                    {macro.showWarning && <NutrientWarningPopover />}
+                  </div>
+                  <p className={`typo-title3 ${styles.macroValue}`}>
+                    <span className={styles.macroNumber}>{formatNutrientValue(macro.value)}</span>
+                    <span className={`${styles.macroUnit}`}>g</span>
+                  </p>
+                </article>
+              ))}
+            </div>
+          </>
+        ) : null}
       </section>
 
       <section className={styles.servingInputSection}>
