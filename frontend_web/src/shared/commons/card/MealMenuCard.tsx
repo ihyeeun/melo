@@ -137,11 +137,11 @@ export function MealMenuCard({
       <div className={styles.content}>
         <section className={styles.header}>
           {typeof rank === "number" && Number.isFinite(rank) ? (
-            <span className={`${styles.rankBadge} typo-label6`}>{rank}위</span>
+            <span className={`${styles.rankBadge} typo-caption4`}>{rank}위</span>
           ) : null}
 
           <div className={styles.titleSection}>
-            <p className={`${styles.title} typo-title2 ellipsis`}>{name}</p>
+            <p className={`${styles.title} typo-title3 ellipsis`}>{name}</p>
 
             <button
               type="button"
@@ -154,7 +154,7 @@ export function MealMenuCard({
             </button>
           </div>
           {description && (
-            <p className={`typo-label4 ${styles.description} ellipsis`}>{description}</p>
+            <p className={`typo-body3 ${styles.description} ellipsis`}>{description}</p>
           )}
         </section>
 
@@ -170,7 +170,7 @@ export function MealMenuCard({
             >{`(${formatQuantity(resolvedConsumedWeight)}${weightUnitText})`}</span>
           </p>
           {displayedCalories !== null && (
-            <span className={`${styles.calories} typo-title2`}>
+            <span className={`${styles.calories} typo-title3`}>
               {formatCalories(displayedCalories)}kcal
             </span>
           )}

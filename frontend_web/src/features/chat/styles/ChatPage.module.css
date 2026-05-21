@@ -26,7 +26,7 @@
 }
 
 .floatingCameraButtonWrapper {
-  bottom: 15px;
+  bottom: 20px;
   display: flex;
   flex-shrink: 0;
   justify-content: flex-end;
@@ -201,6 +201,7 @@
 
 .userBubble {
   background-color: var(--bg-white);
+  border: 1px solid var(--border-neutral);
   border-radius: 100px;
   color: var(--label-normal);
   max-width: 100%;
@@ -229,6 +230,7 @@
 
 .assistantBubble {
   background-color: var(--bg-white);
+  border: 1px solid var(--border-neutral);
   border-radius: 8px;
   padding: 8px 16px;
   white-space: pre-wrap;
@@ -317,11 +319,13 @@
   align-items: center;
   display: flex;
   justify-content: center;
+  padding-bottom: 6px;
   width: 100%;
 }
 
 .feedbackGaugeArc {
   aspect-ratio: 220 / 100;
+  max-width: 350px;
   position: relative;
   width: 100%;
 }
@@ -348,6 +352,18 @@
   transition: stroke-dasharray 300ms ease;
 }
 
+.feedbackGaugeValueLow {
+  stroke: var(--status-low);
+}
+
+.feedbackGaugeValueWarning {
+  stroke: var(--status-warning);
+}
+
+.feedbackGaugeValueNormal {
+  stroke: var(--primary-normal);
+}
+
 .feedbackScoreLabel {
   left: 50%;
   position: absolute;
@@ -366,10 +382,12 @@
 }
 
 .feedbackGaugeCharacter {
-  height: 36px;
+  height: 46px;
+  object-fit: contain;
+  pointer-events: none;
   position: absolute;
   transform: translate(-50%, -50%);
-  width: 36px;
+  width: 46px;
   z-index: 1;
 }
 
@@ -445,27 +463,10 @@
   margin-left: auto;
 }
 
-.addAction {
-  display: flex;
-  gap: 8px;
-  justify-content: center;
-  width: 100%;
-}
-
-.addActionText {
-  color: var(--label-alternative);
-}
-
-.addActionSelected {
-  display: flex;
-  gap: 8px;
-  justify-content: center;
-  color: var(--label-primary);
-}
-
 .moreRecommendCard {
   align-items: flex-start;
   background-color: var(--bg-white);
+  border: 1px solid var(--border-neutral);
   border-radius: 8px;
   display: flex;
   flex-direction: column;
@@ -474,121 +475,10 @@
   width: 100%;
 }
 
-.recordNowButton {
-  align-items: center;
-  background-color: var(--bg-white);
-  border-radius: 8px;
-  color: var(--label-primary);
-  display: flex;
-  justify-content: space-between;
-  padding: 10px 12px;
-}
-
-.moreRecommendTitle {
-  color: var(--label-normal);
-}
-
-.moreRecommendAction {
-  align-items: center;
-  color: var(--label-assistive);
-  display: inline-flex;
-  gap: 2px;
-}
-
-.recordCompleteCard {
-  background-color: var(--bg-white);
-  border-radius: 12px;
-  padding: 14px;
-  width: 100%;
-}
-
-.recordCompleteTitle {
-  color: var(--primary-strong);
-  margin: 0 0 8px;
-}
-
-.recordCompleteSummaryButton {
-  align-items: center;
-  display: flex;
-  justify-content: space-between;
-  width: 100%;
-}
-
-.recordCompleteSummaryText {
-  color: var(--label-normal);
-}
-
-.recordCompleteCaloriesWrapper {
-  align-items: center;
-  display: inline-flex;
-  gap: 2px;
-}
-
-.recordCompleteCalories {
-  color: var(--label-normal);
-}
-
-.recordCompleteChevron {
-  color: var(--label-normal);
-  transition: transform 0.2s ease;
-}
-
-.recordCompleteChevronExpanded {
-  transform: rotate(180deg);
-}
-
-.recordCompleteDetailList {
-  border-top: 1px solid var(--border-neutral);
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  list-style: none;
-  margin: 10px 0 0;
-  padding: 10px 0 0;
-}
-
-.recordCompleteDetailItem {
-  align-items: center;
-  display: flex;
-  justify-content: space-between;
-}
-
-.recordCompleteDetailCalories {
-  color: var(--label-alternative);
-}
-
-.recordCompleteActionRow {
-  display: flex;
-  gap: 8px;
-  margin-top: 12px;
-}
-
-.recordActionButton {
-  border-radius: 8px;
-  flex: 1;
-  font-size: var(--fs-body3);
-  height: 40px;
-  justify-content: center;
-  text-align: center;
-}
-
-.recordActionButtonNeutral {
-  border: 1px solid var(--border-neutral);
-  color: var(--label-alternative);
-}
-
-.recordActionButtonPrimary {
-  border: 1px solid var(--border-primary);
-  color: var(--primary-strong);
-}
-
-.recordActionButton:disabled {
-  opacity: 0.6;
-}
-
 .typingBubble {
   align-items: center;
   background-color: var(--bg-white);
+  border: 1px solid var(--border-neutral);
   border-radius: 12px;
   display: inline-flex;
   gap: 5px;
@@ -817,6 +707,10 @@
 .recommendActionIcon,
 .feedbackActionIcon {
   margin-left: 4px;
+}
+
+.ActionIcon {
+  margin-left: 2px;
 }
 
 .textNormal {

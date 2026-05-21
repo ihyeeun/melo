@@ -32,7 +32,7 @@ export function NutrientWarningPopover({ className }: NutrientWarningPopoverProp
           collisionPadding={50}
         >
           <Popover.Popup
-            className={`${styles.warningTooltip} typo-label3`}
+            className={`${styles.warningTooltip} typo-body3`}
             initialFocus={false}
             finalFocus={false}
           >

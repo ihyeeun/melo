@@ -75,7 +75,7 @@ export function EditorInput({
           }
         }}
       />
-      {unit && <span className={`typo-title2 ${styles.unit}`}>{unit}</span>}
+      {unit && <span className={`typo-caption1 ${styles.unit}`}>{unit}</span>}
     </div>
   );
 }

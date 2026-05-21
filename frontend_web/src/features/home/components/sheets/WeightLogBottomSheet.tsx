@@ -68,7 +68,7 @@ export default function WeightLogBottomSheet({
             increment: style.weightAdjustButton,
             inputWrapper: style.weightValueDisplay,
             input: `typo-h2 ${style.weightNumberInput}`,
-            unit: `typo-title2 ${style.weightUnit}`,
+            unit: `typo-caption1 ${style.weightUnit}`,
           }}
           decrementAriaLabel="체중 0.1kg 감소"
           incrementAriaLabel="체중 0.1kg 증가"

@@ -43,14 +43,21 @@ export default function NutrientAddPage() {
 
   const dateKey = getSafeDateKey(searchParams.get("date") ?? locationState.dateKey ?? null);
   const mealType = getMealType(searchParams.get("mealType") ?? locationState.mealType ?? null);
-  const searchKeyword = getSafeKeyword(searchParams.get("keyword") ?? locationState.keyword ?? null);
+  const searchKeyword = getSafeKeyword(
+    searchParams.get("keyword") ?? locationState.keyword ?? null,
+  );
   const [foodName, setFoodName] = useState(locationState.name ?? "");
   const [brandSearchReturnKey] = useState(
     locationState.brandSearchReturnKey ?? createBrandSearchSelectionKey(),
   );
   const selectedBrandName = useBrandSearchSelectedBrand(brandSearchReturnKey);
   const clearBrandSearchSelection = useClearBrandSearchSelection();
-  const brandName = (selectedBrandName ?? locationState.brand ?? locationState.brandName ?? "").trim();
+  const brandName = (
+    selectedBrandName ??
+    locationState.brand ??
+    locationState.brandName ??
+    ""
+  ).trim();
 
   useEffect(() => {
     return () => {
@@ -130,7 +137,7 @@ export default function NutrientAddPage() {
               aria-label="음식명 입력"
             />
 
-            <p className={`typo-label4 ${styles.limitText}`}>최대 300자 이내</p>
+            <p className={`typo-body3 ${styles.limitText}`}>최대 300자 이내</p>
           </div>
 
           <div className={styles.fieldWrap}>

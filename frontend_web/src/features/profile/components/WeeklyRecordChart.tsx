@@ -45,7 +45,7 @@ function XAxisTick({ payload, x = 0, y = 0 }: AxisTickProps) {
     : [rawValue, ""];
   const isTodayTick = statusLabel.trim() === "오늘";
   const tickClassName =
-    `${styles.xAxisTick} ${isTodayTick ? styles.xAxisTickToday : ""} typo-caption`.trim();
+    `${styles.xAxisTick} ${isTodayTick ? styles.xAxisTickToday : ""} typo-caption4`.trim();
 
   return (
     <text className={tickClassName} textAnchor="middle" x={x} y={y + 12}>
@@ -61,7 +61,7 @@ function XAxisTick({ payload, x = 0, y = 0 }: AxisTickProps) {
 
 function YAxisTick({ payload, x = 0, y = 0 }: AxisTickProps) {
   return (
-    <text className={`${styles.yAxisTick} typo-caption`} textAnchor="end" x={x} y={y}>
+    <text className={`${styles.yAxisTick} typo-caption4`} textAnchor="end" x={x} y={y}>
       {payload?.value}
     </text>
   );

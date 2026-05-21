@@ -178,7 +178,7 @@ export default function NutrientRegisterPage() {
                 <div className={styles.fieldWrap}>
                   <div className={styles.labelRow}>
                     <p className={`typo-title3 ${styles.labelText}`}>음식명</p>
-                    <p className={`typo-label6 ${styles.requiredText}`}>* 필수로 작성해주세요</p>
+                    <p className={`typo-body3 ${styles.requiredText}`}>* 필수로 작성해주세요</p>
                   </div>
 
                   <input

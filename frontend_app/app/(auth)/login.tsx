@@ -78,7 +78,7 @@ const styles = StyleSheet.create({
     width: "100%",
   },
   agreementText: {
-    ...typography["typo-body4"],
+    ...typography["typo-body3"],
     color: "#666666",
     lineHeight: 22,
     textAlign: "center",

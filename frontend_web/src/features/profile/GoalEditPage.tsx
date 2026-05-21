@@ -459,7 +459,9 @@ export default function GoalEditPage() {
 
       <main className={styles.main}>
         {isPending && !visibleDraft && <GoalEditSummarySkeleton />}
-        {!isPending && !visibleDraft && <p className={styles.loadingText}>프로필을 불러오지 못했어요</p>}
+        {!isPending && !visibleDraft && (
+          <p className={styles.loadingText}>프로필을 불러오지 못했어요</p>
+        )}
 
         {visibleDraft && (
           <section className={styles.summarySection}>
@@ -470,13 +472,13 @@ export default function GoalEditPage() {
                 className={styles.summaryItem}
                 onClick={() => openEditor(field.id)}
               >
-                <span className={`${styles.summaryLabel} typo-title3`}>{field.label}</span>
-                <span className={styles.summaryValueRow}>
-                  <span className={`${styles.summaryValue} typo-label1`}>
+                <span className={`${styles.summaryLabel} typo-title4`}>{field.label}</span>
+                <div className={styles.summaryValueRow}>
+                  <span className={`${styles.summaryValue} typo-body2`}>
                     {getSummaryValue(field.id, visibleDraft)}
                   </span>
-                  <ChevronRight className={styles.summaryChevron} size={24} />
-                </span>
+                  <ChevronRight className={styles.summaryChevron} size={24} strokeWidth={1.5} />
+                </div>
               </button>
             ))}
           </section>

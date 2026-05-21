@@ -208,3 +208,9 @@
   justify-content: center;
   align-items: center;
 }
+
+.calorieValueWrapper {
+  display: flex;
+  gap: 4px;
+  align-items: baseline;
+}

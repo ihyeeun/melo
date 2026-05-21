@@ -195,11 +195,7 @@ export default function HomeOnboardingOverlay({
   };
 
   return (
-    <div
-      className={styles.overlayRoot}
-      aria-hidden="true"
-      onClick={handleAdvanceStepOrFinish}
-    >
+    <div className={styles.overlayRoot} aria-hidden="true" onClick={handleAdvanceStepOrFinish}>
       <button
         type="button"
         className={styles.closeButton}
@@ -223,9 +219,9 @@ export default function HomeOnboardingOverlay({
       />
 
       <section ref={bubbleRef} className={styles.bubble} style={bubbleStyle}>
-        <p className={`${styles.title} typo-label2`}>{currentStep.title}</p>
+        <p className={`${styles.title} typo-title4`}>{currentStep.title}</p>
         {currentStep.description ? (
-          <p className={`${styles.description} typo-label4`}>{currentStep.description}</p>
+          <p className={`${styles.description} typo-body3`}>{currentStep.description}</p>
         ) : null}
 
         <div className={styles.bubbleFooter}>
@@ -244,7 +240,7 @@ export default function HomeOnboardingOverlay({
           ) : (
             <span />
           )}
-          <span className={`${styles.stepCount} typo-caption`}>
+          <span className={`${styles.stepCount} typo-caption4`}>
             {stepIndex + 1}/{onboardingSteps.length}
           </span>
         </div>

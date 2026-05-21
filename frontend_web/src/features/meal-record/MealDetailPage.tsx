@@ -274,7 +274,8 @@ export default function MealDetailPage() {
         title="영양성분 상세"
         onBack={handleGoBack}
         rightSlot={
-          isPersonalMenuData && (
+          isPersonalMenuData &&
+          meal.is_deleted === 0 && (
             <Button variant="text" color="normal" onClick={handleDelete}>
               삭제
             </Button>

@@ -48,7 +48,7 @@ export default function MenuActionSection({
         {showMenuBoardCameraCard ? (
           <div data-home-onboarding-target="menu-board-camera">
             <MenuCard
-              title={"메뉴 촬영하기"}
+              title={"메뉴 촬영"}
               description="메뉴판이나 음식을 찍어 피드백을 받아보세요"
               iconSrc="/icons/camera-icon.svg"
               onClick={handleOpenCameraActionSheet}
@@ -60,7 +60,7 @@ export default function MenuActionSection({
           <div data-home-onboarding-target="chat">
             <MenuCard
               title={"AI 코치"}
-              description="오늘의 식단 고민을 해결해드려요"
+              description="식단 고민,\n무엇이든 물어보세요"
               iconSrc="/icons/chat-icon.svg"
               onClick={() => {
                 if (isNativeApp()) {
@@ -86,7 +86,7 @@ export default function MenuActionSection({
               onClick={handleNavigateMenuBoardCamera}
               className={style.cameraActionSheetButton}
             >
-              <p className={`typo-title4`}>메뉴판 촬영</p>
+              <p className={`typo-label2`}>메뉴판 촬영</p>
             </button>
 
             <div className="divider" />
@@ -96,7 +96,7 @@ export default function MenuActionSection({
               className={style.cameraActionSheetButton}
               onClick={handleNavigateFoodCamera}
             >
-              <p className={`typo-title4`}>음식 촬영</p>
+              <p className={`typo-label2`}>음식 촬영</p>
             </button>
           </div>
         </div>
@@ -122,7 +122,7 @@ function MenuCard({
     <ActionCard onClick={onClick} className={type === "camera" ? style.bgPrimary : ""}>
       <div className={style.menuCardContainer}>
         <p className={`typo-title4 ${type === "camera" ? style.textWhite : ""}`}>{title}</p>
-        <p className={`${type === "camera" ? style.textWhite : style.description} typo-body4`}>
+        <p className={`${type === "camera" ? style.textWhite : style.description} typo-body3`}>
           {description}
         </p>
         <div className={style.iconContainer}>

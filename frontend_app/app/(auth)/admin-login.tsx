@@ -167,7 +167,7 @@ const styles = StyleSheet.create({
     marginBottom: 100,
   },
   title: {
-    ...typography["typo-h3"],
+    ...typography["typo-h2"],
     color: "#111111",
   },
   form: {
@@ -216,7 +216,7 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
   },
   linkButtonText: {
-    ...typography["typo-body4"],
+    ...typography["typo-body3"],
     color: "#666666",
     textDecorationLine: "underline",
   },

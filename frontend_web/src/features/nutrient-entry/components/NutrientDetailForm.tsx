@@ -143,7 +143,7 @@ export function NutrientDetailForm({
       <div className={styles.topFieldSection}>
         <div className={styles.titleRow}>
           <p className={`typo-title4 ${styles.titleText}`}>총 용량</p>
-          <p className={`typo-label6 ${styles.requiredText}`}>* 필수로 작성해주세요</p>
+          <p className={`typo-body3 ${styles.requiredText}`}>* 필수로 작성해주세요</p>
         </div>
         <div className={styles.weightRow}>
           <SingleDecimalInput
@@ -198,9 +198,9 @@ export function NutrientDetailForm({
       <div className={styles.topFieldSection}>
         <div className={styles.titleRow}>
           <p className={`typo-title4 ${styles.titleText}`}>
-            총 칼로리 <span className={`typo-label3 ${styles.titleUnit}`}>(kcal)</span>
+            총 칼로리 <span className={`typo-caption3 ${styles.titleUnit}`}>(kcal)</span>
           </p>
-          <p className={`typo-label6 ${styles.requiredText}`}>* 필수로 작성해주세요</p>
+          <p className={`typo-body3 ${styles.requiredText}`}>* 필수로 작성해주세요</p>
         </div>
         <SingleDecimalInput
           className={`typo-body3 ${styles.valueInput}`}
@@ -232,7 +232,7 @@ export function NutrientDetailForm({
               >
                 <p
                   className={cx(
-                    isMainField ? "typo-title4" : "typo-body4",
+                    isMainField ? "typo-title4" : "typo-body3",
                     styles.fieldLabel,
                     isMainField ? styles.fieldLabelMain : styles.fieldLabelSub,
                   )}

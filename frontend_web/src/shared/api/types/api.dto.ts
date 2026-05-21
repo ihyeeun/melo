@@ -46,6 +46,7 @@ export interface MealTimeField {
 
 export interface MenuBaseFields extends MenuIdField {
   data_source: MenuDataSource;
+  is_deleted: number;
   name: string;
   brand: string;
   category: string;

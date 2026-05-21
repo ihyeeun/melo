@@ -38,12 +38,8 @@
 .detailValue {
   align-items: center;
   display: inline-flex;
-  gap: 8px;
+  gap: 4px;
   position: relative;
-}
-
-.detailWarningButton {
-  margin-right: 8px;
 }
 
 .textNormal {

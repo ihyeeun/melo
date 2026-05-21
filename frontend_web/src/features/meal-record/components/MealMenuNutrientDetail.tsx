@@ -391,7 +391,7 @@ export function MealMenuNutrientDetail({
               {summaryMacroItems.map((macro) => (
                 <article key={macro.key} className={styles.macroItem}>
                   <div className={styles.macroLabelRow}>
-                    <p className={`typo-label3 ${styles.textAlternative}`}>{macro.label}</p>
+                    <p className={`typo-body2 ${styles.textAlternative}`}>{macro.label}</p>
                     {macro.showWarning && <NutrientWarningPopover />}
                   </div>
                   <p className={`typo-title3 ${styles.macroValue}`}>
@@ -414,11 +414,17 @@ export function MealMenuNutrientDetail({
           }}
         >
           <Tabs.List className={styles.TabsList}>
-            <Tabs.Tab value="unit" className={`${styles.TabsTab} typo-title4`}>
+            <Tabs.Tab
+              value="unit"
+              className={`${styles.TabsTab} ${inputMode === "unit" ? "typo-label1" : "typo-label2"}`}
+            >
               1{menu.unit_quantity} ({menu.weight}
               {menu.unit === MENU_UNIT.GRAM ? "g" : "ml"})
             </Tabs.Tab>
-            <Tabs.Tab value="weight" className={`${styles.TabsTab} typo-title4`}>
+            <Tabs.Tab
+              value="weight"
+              className={`${styles.TabsTab} ${inputMode === "weight" ? "typo-label1" : "typo-label2"}`}
+            >
               {menu.unit === MENU_UNIT.GRAM ? "g" : "ml"}
             </Tabs.Tab>
           </Tabs.List>
@@ -542,7 +548,7 @@ export function MealMenuNutrientDetail({
 
             {showEditSection ? (
               <section className={styles.editSection}>
-                <p className={`typo-label3 ${styles.textNormal}`}>영양성분이 잘못되었나요?</p>
+                <p className={`typo-body3 ${styles.textNormal}`}>영양성분이 잘못되었나요?</p>
                 <Button
                   variant="text"
                   interaction={isEditAndAddEnabled ? "normal" : "disable"}

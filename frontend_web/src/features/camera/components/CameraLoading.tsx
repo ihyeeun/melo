@@ -16,7 +16,7 @@ export function CameraLoading({ description, previewSrc = null }: CameraLoadingP
             <div className={styles.scanLine} aria-hidden />
           </div>
         ) : null}
-        <p className="typo-title1">
+        <p className="typo-body2">
           {description}
           <br />
           조금만 기다려주세요

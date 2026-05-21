@@ -692,7 +692,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   permissionDescription: {
-    ...typography["typo-body4"],
+    ...typography["typo-body3"],
     color: "#5f5f5f",
     lineHeight: 20,
     textAlign: "center",
@@ -921,7 +921,7 @@ const styles = StyleSheet.create({
     marginTop: 28,
   },
   cameraOnboardingDescription: {
-    ...typography["typo-body3"],
+    ...typography["typo-body2"],
     color: "#1f1f1f",
     textAlign: "center",
     marginTop: 8,

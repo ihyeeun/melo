@@ -22,24 +22,16 @@
   --fw-bold: 600;
 
   /* Font sizes (Typography 2026-03 spec) */
-  --fs-h1: 40px;
-  --fs-h2: 38px;
-  --fs-h3: 26px;
-  --fs-title1: 24px;
-  --fs-title2: 20px;
-  --fs-title3: 18px;
-  --fs-title4: 16px;
-  --fs-body1: 20px;
-  --fs-body2: 18px;
-  --fs-body3: 16px;
-  --fs-body4: 14px;
-  --fs-label1: 18px;
-  --fs-label2: 16px;
-  --fs-label3: 15px;
-  --fs-label4: 14px;
-  --fs-label5: 13px;
-  --fs-label6: 13px;
-  --fs-caption: 12px;
+  --fs-40: 40px;
+  --fs-26: 26px;
+  --fs-24: 24px;
+  --fs-20: 20px;
+  --fs-18: 18px;
+  --fs-16: 16px;
+  --fs-15: 15px;
+  --fs-14: 14px;
+  --fs-13: 13px;
+  --fs-12: 12px;
 
   /* =========================
    * Color - Common
@@ -211,126 +203,133 @@ body {
  * Typography presets (class)
  * ========================= */
 .typo-h1 {
-  font-size: var(--fs-h1);
+  font-size: var(--fs-40);
   font-weight: var(--fw-medium);
   letter-spacing: var(--letter-spacing-tight);
   line-height: var(--line-height-120);
 }
 
 .typo-h2 {
-  font-size: var(--fs-h2);
-  font-weight: var(--fw-semibold);
-  letter-spacing: var(--letter-spacing-tight);
-  line-height: var(--line-height-120);
-}
-
-.typo-h3 {
-  font-size: var(--fs-h3);
+  font-size: var(--fs-26);
   font-weight: var(--fw-semibold);
   letter-spacing: var(--letter-spacing-tight);
   line-height: var(--line-height-120);
 }
 
 .typo-title1 {
-  font-size: var(--fs-title1);
+  font-size: var(--fs-24);
   font-weight: var(--fw-semibold);
   letter-spacing: var(--letter-spacing-tight);
   line-height: var(--line-height-145);
 }
 
 .typo-title2 {
-  font-size: var(--fs-title2);
+  font-size: var(--fs-20);
   font-weight: var(--fw-semibold);
   letter-spacing: var(--letter-spacing-tight);
   line-height: var(--line-height-145);
 }
 
 .typo-title3 {
-  font-size: var(--fs-title3);
+  font-size: var(--fs-18);
   font-weight: var(--fw-semibold);
   letter-spacing: var(--letter-spacing-tight);
   line-height: var(--line-height-145);
 }
 
 .typo-title4 {
-  font-size: var(--fs-title4);
+  font-size: var(--fs-16);
   font-weight: var(--fw-semibold);
   letter-spacing: var(--letter-spacing-tight);
   line-height: var(--line-height-145);
 }
 
 .typo-body1 {
-  font-size: var(--fs-body1);
+  font-size: var(--fs-20);
   font-weight: var(--fw-semibold);
   letter-spacing: var(--letter-spacing-tight);
   line-height: var(--line-height-130);
 }
 
 .typo-body2 {
-  font-size: var(--fs-body2);
-  font-weight: var(--fw-semibold);
-  letter-spacing: var(--letter-spacing-body);
-  line-height: var(--line-height-120);
-}
-
-.typo-body3 {
-  font-size: var(--fs-body3);
+  font-size: var(--fs-16);
   font-weight: var(--fw-medium);
   letter-spacing: var(--letter-spacing-body);
   line-height: var(--line-height-145);
 }
 
-.typo-body4 {
-  font-size: var(--fs-body4);
+.typo-body3 {
+  font-size: var(--fs-14);
   font-weight: var(--fw-medium);
   letter-spacing: var(--letter-spacing-body);
   line-height: var(--line-height-145);
 }
 
 .typo-label1 {
-  font-size: var(--fs-label1);
-  font-weight: var(--fw-medium);
+  font-size: var(--fs-16);
+  font-weight: var(--fw-bold);
   letter-spacing: var(--letter-spacing-label);
   line-height: var(--line-height-140);
 }
 
 .typo-label2 {
-  font-size: var(--fs-label2);
-  font-weight: var(--fw-bold);
+  font-size: var(--fs-16);
+  font-weight: var(--fw-semibold);
   letter-spacing: var(--letter-spacing-normal);
   line-height: var(--line-height-140);
 }
 
 .typo-label3 {
-  font-size: var(--fs-label3);
+  font-size: var(--fs-15);
   font-weight: var(--fw-medium);
   letter-spacing: var(--letter-spacing-label);
   line-height: var(--line-height-140);
 }
 
 .typo-label4 {
-  font-size: var(--fs-label4);
+  font-size: var(--fs-14);
   font-weight: var(--fw-medium);
   letter-spacing: var(--letter-spacing-tight);
   line-height: var(--line-height-140);
 }
 
 .typo-label5 {
-  font-size: var(--fs-label5);
+  font-size: var(--fs-13);
   font-weight: var(--fw-bold);
   letter-spacing: var(--letter-spacing-body);
   line-height: var(--line-height-140);
 }
 
 .typo-label6 {
-  font-size: var(--fs-label6);
+  font-size: var(--fs-13);
   font-weight: var(--fw-medium);
   letter-spacing: var(--letter-spacing-body);
   line-height: var(--line-height-140);
 }
 
-.typo-caption {
-  font-size: var(--fs-caption);
+.typo-caption1 {
+  font-size: var(--fs-20);
+  font-weight: var(--fw-semibold);
+  letter-spacing: var(--letter-spacing-tight);
+  line-height: var(--line-height-145);
+}
+
+.typo-caption2 {
+  font-size: var(--fs-18);
+  font-weight: var(--fw-medium);
+  letter-spacing: var(--letter-spacing-label);
+  line-height: var(--line-height-140);
+}
+
+.typo-caption3 {
+  font-size: var(--fs-15);
+  font-weight: var(--fw-medium);
+  letter-spacing: var(--letter-spacing-label);
+  line-height: var(--line-height-140);
+}
+
+.typo-caption4 {
+  font-size: var(--fs-12);
   font-weight: var(--fw-medium);
   letter-spacing: var(--letter-spacing-normal);
   line-height: var(--line-height-130);

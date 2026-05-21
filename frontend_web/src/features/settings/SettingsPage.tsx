@@ -44,7 +44,7 @@ export default function SettingsPage() {
           >
             <div className={styles.labelContainer}>
               <img src="/icons/question.svg" alt="Feedback Icon" className={styles.img} />
-              <span className={`${styles.menuLabel} typo-title3`}>문의하기 / 아이디어 보내기</span>
+              <span className={`${styles.menuLabel} typo-title4`}>문의하기 / 아이디어 보내기</span>
             </div>
             <ChevronRight size={24} className={styles.menuChevron} />
           </button>
@@ -61,13 +61,13 @@ export default function SettingsPage() {
                 alt="구독 코드 입력"
                 className={styles.img}
               />
-              <span className={`${styles.menuLabel} typo-title3`}>구독 코드 입력</span>
+              <span className={`${styles.menuLabel} typo-title4`}>구독 코드 입력</span>
             </div>
             <ChevronRight size={24} className={styles.menuChevron} />
           </button> */}
 
           <button type="button" className={styles.menuItem} onClick={() => navigate(PATH.TERMS)}>
-            <span className={`${styles.menuLabel} typo-title3`}>
+            <span className={`${styles.menuLabel} typo-title4`}>
               서비스이용약관 / 개인정보처리방침
             </span>
             <ChevronRight size={24} className={styles.menuChevron} />
@@ -76,9 +76,11 @@ export default function SettingsPage() {
           <button
             type="button"
             className={styles.menuItem}
-            onClick={() => window.open(NUTRITION_ANALYSIS_INFO_URL, "_blank", "noopener,noreferrer")}
+            onClick={() =>
+              window.open(NUTRITION_ANALYSIS_INFO_URL, "_blank", "noopener,noreferrer")
+            }
           >
-            <span className={`${styles.menuLabel} typo-title3`}>영양 분석 및 산출 근거</span>
+            <span className={`${styles.menuLabel} typo-title4`}>영양 분석 및 산출 근거</span>
             <ChevronRight size={24} className={styles.menuChevron} />
           </button>
 
@@ -87,7 +89,7 @@ export default function SettingsPage() {
             className={styles.menuItem}
             onClick={() => setIsLogoutModalOpen(true)}
           >
-            <span className={`${styles.menuLabel} typo-title3`}>로그아웃</span>
+            <span className={`${styles.menuLabel} typo-title4`}>로그아웃</span>
             <ChevronRight size={24} className={styles.menuChevron} />
           </button>
 
@@ -96,7 +98,7 @@ export default function SettingsPage() {
             className={styles.menuItem}
             onClick={() => setIsWithdrawModalOpen(true)}
           >
-            <span className={`${styles.menuLabel} typo-title3`}>탈퇴하기</span>
+            <span className={`${styles.menuLabel} typo-title4`}>탈퇴하기</span>
             <ChevronRight size={24} className={styles.menuChevron} />
           </button>
         </div>

@@ -142,7 +142,7 @@ export default function TodayMealScorePage() {
             </div>
             <p className={styles.scoreValue}>
               <span className={`${styles.score} typo-h2`}>{score}</span>
-              <span className={`${styles.score} typo-title2`}> 점</span>
+              <span className={`${styles.score} typo-caption1`}>점</span>
             </p>
           </section>
 
@@ -153,16 +153,12 @@ export default function TodayMealScorePage() {
               <p className="typo-title3">칼로리</p>
               <div className={styles.calorieInfo}>
                 <div className={styles.calorieValueContainer}>
-                  <p className="typo-h3">
+                  <p className="typo-h2">
                     {calorieSummary.roundedCurrentCalories.toLocaleString("ko-KR")} kcal
                   </p>
 
-                  <div className={styles.dividerContainer}>
-                    <div className="divider-horizontal" />
-                  </div>
-
                   <p className="typo-title3">
-                    {roundedTargetCalories.toLocaleString("ko-KR")} kcal
+                    / {roundedTargetCalories.toLocaleString("ko-KR")} kcal
                   </p>
                 </div>
                 <div className={styles.calorieProgressContainer}>
@@ -170,9 +166,7 @@ export default function TodayMealScorePage() {
                     value={calorieProgress}
                     status={isCalorieExceeded ? "excess" : undefined}
                   />
-                  <p className={`${styles.textAlternative} typo-label3`}>
-                    {calorieSummary.message}
-                  </p>
+                  <p className={`${styles.textAlternative} typo-body3`}>{calorieSummary.message}</p>
                 </div>
               </div>
             </div>

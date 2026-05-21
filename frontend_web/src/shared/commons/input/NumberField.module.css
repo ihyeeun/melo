@@ -17,7 +17,7 @@
 .input {
   border: 0;
   box-sizing: border-box;
-  font-size: var(--fs-body1);
+  font-size: var(--fs-20);
   font-weight: var(--fw-semibold);
   letter-spacing: var(--letter-spacing-tight);
   line-height: var(--line-height-130);

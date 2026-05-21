@@ -182,7 +182,7 @@ function PreviewTodayScoreSkeleton() {
 function Badge({ children }: { children: ReactNode }) {
   return (
     <div className={style.badgeContentContainer}>
-      <p className="typo-body4">{children}</p>
+      <p className="typo-body3">{children}</p>
     </div>
   );
 }

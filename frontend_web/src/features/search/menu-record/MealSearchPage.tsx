@@ -310,7 +310,9 @@ export default function MealSearchPage() {
                         setIsDirectInputSheetOpen(true);
                       }}
                     >
-                      <span className={styles.bottomText}>찾으시는 메뉴가 없나요?</span>
+                      <span className={`${styles.bottomText} typo-body3`}>
+                        찾으시는 메뉴가 없나요?
+                      </span>
                       직접 등록하기
                     </Button>
                   </div>
@@ -318,7 +320,7 @@ export default function MealSearchPage() {
               ) : (
                 <div className={styles.emptyResultContainer}>
                   <section className={styles.emptyResult}>
-                    <p className="typo-label4">
+                    <p className="typo-body3">
                       일치하는 메뉴나 브랜드가 없어요
                       <br />
                       비슷한 항목을 선택하거나 직접 등록할 수 있어요
@@ -374,7 +376,7 @@ export default function MealSearchPage() {
             </>
           ) : (
             <div className={styles.placeholder}>
-              <p className={`typo-title4 ${styles.placeholderText}`}>
+              <p className={`typo-body2 ${styles.placeholderText}`}>
                 메뉴를 검색하거나
                 <br />
                 음식 사진을 찍어 기록해보세요

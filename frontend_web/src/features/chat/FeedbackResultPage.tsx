@@ -364,10 +364,10 @@ function FoodImageFeedbackPreview({
             aria-label={`${label}${scoreText ? ` ${scoreText}` : ""} 상세 보기`}
           >
             <span className={styles.foodMarkerBubble}>
-              <span className={`${styles.foodMarkerName} typo-label3`}>{label}</span>
+              <span className={`${styles.foodMarkerName} typo-body3`}>{label}</span>
               {scoreText ? (
                 <span
-                  className={`typo-title3 ${styles.foodMarkerScore} ${getScoreClass(score ?? 0)}`}
+                  className={`typo-body2 ${styles.foodMarkerScore} ${getScoreClass(score ?? 0)}`}
                 >
                   {scoreText}
                 </span>

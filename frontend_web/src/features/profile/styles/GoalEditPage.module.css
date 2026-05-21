@@ -50,11 +50,11 @@
 }
 
 .summaryValue {
-  color: var(--label-alternative);
+  color: var(--label-assistive);
 }
 
 .summaryChevron {
-  color: var(--label-normal);
+  color: var(--interaction-normal);
 }
 
 .stageSection {
@@ -95,7 +95,7 @@
 
 .editorTitle {
   color: var(--label-normal);
-  font-size: var(--fs-title2);
+  font-size: var(--fs-20);
   font-weight: var(--fw-semibold);
   letter-spacing: var(--letter-spacing-tight);
   line-height: var(--line-height-145);
@@ -141,7 +141,7 @@
 }
 
 .genderCardLabel {
-  font-size: var(--fs-title3);
+  font-size: var(--fs-18);
   font-weight: var(--fw-semibold);
   letter-spacing: var(--letter-spacing-tight);
   line-height: var(--line-height-145);

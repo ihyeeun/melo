@@ -137,20 +137,20 @@
 .emptyResultContainer {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 20px;
 }
 
 .emptyResult {
   align-items: center;
   background-color: var(--bg-white);
   border: 1px solid var(--border-neutral);
-  border-radius: 12px;
+  border-radius: 8px;
   color: var(--label-normal);
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 20px;
   justify-content: center;
-  padding: 26px 20px;
+  padding: 30px 20px 26px 20px;
   text-align: center;
 }
 

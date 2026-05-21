@@ -233,10 +233,10 @@ export default function ProfilePage() {
                 <p className={`${styles.activeCardTitle} typo-title4`}>체중</p>
 
                 <div className={styles.activeCardValueRow}>
-                  <span className={`${styles.activeCardValue} typo-title4`}>
+                  <span className={`${styles.activeCardValue} typo-body3`}>
                     {currentWeight.toLocaleString("ko-KR")}
                   </span>
-                  <span className={`${styles.activeCardUnit} typo-label4`}>kg</span>
+                  <span className={`${styles.activeCardUnit} typo-caption3`}>kg</span>
                 </div>
               </ActionCard>
 
@@ -247,12 +247,12 @@ export default function ProfilePage() {
                 <p className={`${styles.activeCardTitle} typo-title4`}>섭취량</p>
 
                 <div className={styles.activeCardValueRow}>
-                  <span className={`${styles.activeCardValue} typo-title4`}>
+                  <span className={`${styles.activeCardValue} typo-body3`}>
                     {(dayMeal?.totalCalories ?? 0).toLocaleString("ko-KR", {
                       maximumFractionDigits: 1,
                     })}
                   </span>
-                  <span className={`${styles.activeCardUnit} typo-label4`}>kcal</span>
+                  <span className={`${styles.activeCardUnit} typo-caption3`}>kcal</span>
                 </div>
               </ActionCard>
 
@@ -263,26 +263,26 @@ export default function ProfilePage() {
                 <p className={`${styles.activeCardTitle} typo-title4`}>걸음 수</p>
 
                 <div className={styles.activeCardValueRow}>
-                  <span className={`${styles.activeCardValue} typo-title4`}>
+                  <span className={`${styles.activeCardValue} typo-body3`}>
                     {todaySteps === null ? "0" : todaySteps.toLocaleString("ko-KR")}
                   </span>
-                  <span className={`${styles.activeCardUnit} typo-label4`}>보</span>
+                  <span className={`${styles.activeCardUnit} typo-caption3`}>보</span>
                 </div>
               </ActionCard>
             </section>
 
             <section className={styles.weeklySection}>
               <div className={styles.weeklyHeader}>
-                <span className={`${styles.weeklyTitle} typo-title3`}>주간 기록 현황</span>
+                <span className={`${styles.weeklyTitle} typo-title4`}>주간 기록 현황</span>
 
                 <div className={styles.legendRow}>
                   {metricConfig.targetLabel && (
-                    <span className={`${styles.legendItem} typo-label4`}>
+                    <span className={`${styles.legendItem} typo-caption3`}>
                       <span className={`${styles.legendDot} ${styles.legendTarget}`} />
                       {metricConfig.targetLabel}
                     </span>
                   )}
-                  <span className={`${styles.legendItem} typo-label4`}>
+                  <span className={`${styles.legendItem} typo-caption3`}>
                     <span className={`${styles.legendDot} ${styles.legendCurrent}`} />
                     {metricConfig.title}
                   </span>
@@ -297,7 +297,7 @@ export default function ProfilePage() {
                 </p>
               ) : (
                 <section className={styles.weeklyChart}>
-                  <span className={`${styles.weeklyYLabel} typo-caption`}>
+                  <span className={`${styles.weeklyYLabel} typo-caption4`}>
                     {metricConfig.title}
                   </span>
                   <WeeklyRecordChart

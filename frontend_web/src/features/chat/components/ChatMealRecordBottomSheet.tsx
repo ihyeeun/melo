@@ -193,16 +193,16 @@ export function ChatMealRecordBottomSheet({
         <div className={styles.scrollArea}>
           <article className={styles.calorieCard}>
             <span className="typo-title2">총 칼로리</span>
-            <p className="typo-title2">
-              <span className={`${styles.calorieValue} typo-h3`}>
+            <div className={styles.calorieValueWrapper}>
+              <span className={`${styles.calorieValue} typo-h2`}>
                 {formatCalories(totalCalories)}
-              </span>{" "}
-              kcal
-            </p>
+              </span>
+              <span className="typo-caption1">kcal</span>
+            </div>
           </article>
 
           <section>
-            <p className={`${styles.sectionTitle} typo-title2`}>섭취시간대</p>
+            <p className={`${styles.sectionTitle} typo-title4`}>섭취시간대</p>
             <div className={styles.mealTypeList}>
               {MEAL_TYPE_OPTIONS.map((option) => {
                 const isActive = option.key === mealType;
@@ -241,7 +241,7 @@ export function ChatMealRecordBottomSheet({
               return (
                 <article key={item.id} className={styles.menuItem}>
                   <div className={styles.menuNameRow}>
-                    <p className="typo-title2">{item.recommendation.menu_name}</p>
+                    <p className="typo-title4">{item.recommendation.menu_name}</p>
                     {item.recommendation.brand && (
                       <p className={`${styles.tertiaryText} typo-label4`}>
                         {item.recommendation.brand}
@@ -305,7 +305,7 @@ export function ChatMealRecordBottomSheet({
                         onInputModeChange(item.id, toMenuInputMode(safeMode));
                       }}
                     >
-                      <Select.Trigger className={`${styles.unitSelectTrigger} typo-h3`}>
+                      <Select.Trigger className={`${styles.unitSelectTrigger} typo-h2`}>
                         <Select.Value className="typo-body3">{selectLabel}</Select.Value>
                         <Select.Icon className={styles.selectIcon} aria-hidden>
                           <ChevronDown size={24} />
@@ -341,7 +341,7 @@ export function ChatMealRecordBottomSheet({
 
           {onAddMore ? (
             <section className={styles.additionalAction}>
-              <p className={`${styles.secondaryText} typo-label3`}>다른 메뉴도 드셨나요?</p>
+              <p className={`${styles.secondaryText} typo-body3`}>다른 메뉴도 드셨나요?</p>
               <Button
                 variant="text"
                 interaction="normal"

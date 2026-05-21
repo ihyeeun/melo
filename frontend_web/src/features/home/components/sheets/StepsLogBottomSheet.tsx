@@ -83,7 +83,7 @@ export default function StepsLogBottomSheet({
             placeholder: "걸음 수 입력",
             "aria-label": "오늘의 걸음 수 입력",
           }}
-          suffix={<span className={`typo-title2 ${style.stepsUnit}`}>보</span>}
+          suffix={<span className={`typo-caption1 ${style.stepsUnit}`}>보</span>}
         />
         <div className={style.sheetActions}>
           <Button onClick={handleSubmit} fullWidth size="large">

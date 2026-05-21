@@ -44,7 +44,10 @@
 }
 
 .scoreValue {
+  align-items: baseline;
+  display: inline-flex;
   flex-shrink: 0;
+  gap: 2px;
 }
 
 .nutrientSection {
@@ -74,11 +77,7 @@
 .calorieValueContainer {
   align-items: center;
   display: flex;
-  gap: 12px;
-}
-
-.dividerContainer {
-  height: 24px;
+  gap: 4px;
 }
 
 .calorieProgressContainer {

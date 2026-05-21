@@ -40,7 +40,7 @@
   border-radius: 6px;
   height: 36px;
   padding: 8px 20px;
-  font-size: var(--fs-label4);
+  font-size: var(--fs-14);
   font-weight: var(--fw-medium);
   letter-spacing: var(--letter-spacing-tight);
   line-height: var(--line-height-140);
@@ -49,7 +49,7 @@
 .btn--variant-filled.btn--size-normal,
 .btn--variant-outlined.btn--size-normal {
   border-radius: 6px;
-  font-size: var(--fs-label2);
+  font-size: var(--fs-16);
   font-weight: var(--fw-bold);
   height: 42px;
   letter-spacing: var(--letter-spacing-normal);
@@ -62,7 +62,7 @@
   border-radius: 8px;
   height: 50px;
   padding: 14px 24px;
-  font-size: var(--fs-label2);
+  font-size: var(--fs-16);
   font-weight: var(--fw-bold);
   letter-spacing: var(--letter-spacing-normal);
   line-height: var(--line-height-140);
@@ -70,7 +70,7 @@
 
 .btn--variant-filled.btn--state-disabled.btn--size-normal,
 .btn--variant-filled.btn--state-disabled.btn--size-large {
-  font-size: var(--fs-label3);
+  font-size: var(--fs-15);
   font-weight: var(--fw-medium);
   letter-spacing: var(--letter-spacing-label);
   line-height: var(--line-height-140);
@@ -181,7 +181,7 @@
 .btn--variant-text.btn--size-small,
 .btn--variant-text.btn--size-normal,
 .btn--variant-text.btn--size-large {
-  font-size: var(--fs-label3);
+  font-size: var(--fs-15);
   font-weight: var(--fw-medium);
   letter-spacing: var(--letter-spacing-label);
   line-height: var(--line-height-140);

@@ -212,11 +212,11 @@ export default function SteptargetCalories({ data, update }: StepComponentProps)
           <img src="/icons/pencil.svg" alt="목표 칼로리 값 수정" width={24} height={24} />
         </button>
 
-        <p className={`${styles.onboardingGoalKcalHelper} typo-title3`}>{goalWeekMessage}</p>
+        <p className={`${styles.onboardingGoalKcalHelper} typo-body1`}>{goalWeekMessage}</p>
       </div>
       <BottomSheet isOpen={open} onClose={() => setOpen(false)}>
         <div className={styles.onboardingGoalKcalSheet}>
-          <h3>목표 칼로리</h3>
+          <h3 className="typo-title2">목표 칼로리</h3>
           <EditorInput
             type="number"
             inputMode="numeric"

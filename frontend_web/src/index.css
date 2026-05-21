@@ -51,7 +51,7 @@ body {
 }
 
 p {
-  font-size: var(--fs-body2);
+  font-size: var(--fs-16);
   font-weight: var(--fw-medium);
   letter-spacing: var(--letter-spacing-body);
   line-height: var(--line-height-130);
@@ -67,28 +67,28 @@ h4 {
 }
 
 h1 {
-  font-size: var(--fs-h1);
+  font-size: var(--fs-40);
   font-weight: var(--fw-medium);
   letter-spacing: var(--letter-spacing-tight);
   line-height: var(--line-height-120);
 }
 
 h2 {
-  font-size: var(--fs-h2);
+  font-size: var(--fs-26);
   font-weight: var(--fw-semibold);
   letter-spacing: var(--letter-spacing-tight);
   line-height: var(--line-height-120);
 }
 
 h3 {
-  font-size: var(--fs-h3);
+  font-size: var(--fs-26);
   font-weight: var(--fw-semibold);
   letter-spacing: var(--letter-spacing-tight);
   line-height: var(--line-height-120);
 }
 
 h4 {
-  font-size: var(--fs-title1);
+  font-size: var(--fs-24);
   font-weight: var(--fw-semibold);
   letter-spacing: var(--letter-spacing-tight);
   line-height: var(--line-height-145);

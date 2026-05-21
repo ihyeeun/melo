@@ -34,7 +34,7 @@ export default function DirectInputBottomSheet({
             fullWidth
             onClick={onSelectNumberInput}
           >
-            <span className={`typo-title4 ${styles.sheetButtonText}`}>{numberInputLabel}</span>
+            <span className={`typo-label2 ${styles.sheetButtonText}`}>{numberInputLabel}</span>
           </Button>
 
           <div className="divider dividerMargin16" />
@@ -47,7 +47,7 @@ export default function DirectInputBottomSheet({
             fullWidth
             onClick={onSelectCameraInput}
           >
-            <span className={`typo-title4 ${styles.sheetButtonText}`}>{cameraInputLabel}</span>
+            <span className={`typo-label2 ${styles.sheetButtonText}`}>{cameraInputLabel}</span>
           </Button>
         </div>
       </div>

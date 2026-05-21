@@ -493,18 +493,16 @@ export default function MealRecordPage() {
       <PageHeader title="식사 기록 상세" onBack={handleBack} />
 
       <main className={styles.content}>
-        <section className={styles.summarySection}>
-          <article className={styles.summaryCard}>
-            <p className="typo-title3">섭취 칼로리</p>
+        <article className={styles.summaryCard}>
+          <p className="typo-title2">섭취 칼로리</p>
 
-            <div className={styles.calorieRow}>
-              <span className={`${styles.currentCalorie} typo-h2`}>
-                {totalCalories.toLocaleString("ko-KR", { maximumFractionDigits: 1 })}
-              </span>
-              <span className="typo-title2">kcal</span>
-            </div>
-          </article>
-        </section>
+          <div className={styles.calorieRow}>
+            <span className={`${styles.textPrimary} typo-h2`}>
+              {totalCalories.toLocaleString("ko-KR", { maximumFractionDigits: 1 })}
+            </span>
+            <span className="typo-caption1">kcal</span>
+          </div>
+        </article>
 
         <div className="dividerMargin20 divider" />
 
@@ -574,14 +572,14 @@ export default function MealRecordPage() {
                 aria-hidden="true"
                 className={styles.didNotEatImage}
               />
-              <p className="typo-title2">안 먹었어요</p>
+              <p className="typo-body1">안 먹었어요</p>
             </article>
           ) : (
             <button type="button" className={styles.emptyState} onClick={handleMealSearchNavigate}>
               <div className={styles.emptyStateIcon}>
                 <PlusIcon size={24} />
               </div>
-              <p className="typo-title2">기록하러 가볼까요?</p>
+              <p className="typo-body1">기록하러 가볼까요?</p>
             </button>
           )}
         </section>

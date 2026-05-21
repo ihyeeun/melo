@@ -121,7 +121,10 @@ export function dayMealSummary(meals: MealRecordResponseDto): DayMealSummary {
     4: 0,
   };
 
-  const resolveServingInputMode = (meal: MealResponseDto, menuIndex: number): MealServingInputMode => {
+  const resolveServingInputMode = (
+    meal: MealResponseDto,
+    menuIndex: number,
+  ): MealServingInputMode => {
     const menuInputModes = Array.isArray(meal.menu_input_modes)
       ? (meal.menu_input_modes as MealMenuInputMode[])
       : [];
@@ -129,9 +132,17 @@ export function dayMealSummary(meals: MealRecordResponseDto): DayMealSummary {
     return menuInputModes[menuIndex] === MENU_INPUT_MODE.WEIGHT ? "weight" : "unit";
   };
 
-  const resolveConsumedWeight = (meal: MealResponseDto, menu: MenuSimpleResponseDto, menuIndex: number) => {
+  const resolveConsumedWeight = (
+    meal: MealResponseDto,
+    menu: MenuSimpleResponseDto,
+    menuIndex: number,
+  ) => {
     const consumedWeight = meal.menu_quantities[menuIndex];
-    if (typeof consumedWeight === "number" && Number.isFinite(consumedWeight) && consumedWeight > 0) {
+    if (
+      typeof consumedWeight === "number" &&
+      Number.isFinite(consumedWeight) &&
+      consumedWeight > 0
+    ) {
       return consumedWeight;
     }
 
@@ -167,6 +178,7 @@ export function dayMealSummary(meals: MealRecordResponseDto): DayMealSummary {
       const menuItem: MenuWithQuantity = {
         id: menu.id,
         data_source: menu.data_source,
+        is_deleted: menu.is_deleted,
         name: menu.name,
         brand: menu?.brand,
         category: menu.category,

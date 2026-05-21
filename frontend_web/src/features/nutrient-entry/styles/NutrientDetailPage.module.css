@@ -210,7 +210,7 @@
   background: var(--bg-white);
   border-radius: 6px;
   color: var(--label-assistive);
-  font-size: var(--fs-title4);
+  font-size: var(--fs-16);
   font-weight: var(--fw-semibold);
   letter-spacing: var(--letter-spacing-tight);
   line-height: var(--line-height-145);

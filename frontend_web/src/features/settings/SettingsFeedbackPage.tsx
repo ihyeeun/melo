@@ -103,11 +103,11 @@ export default function SettingsFeedbackPage() {
                 aria-label="문의 내용"
               />
             </div>
-            <p className={`${styles.lengthText} typo-label4`}>최대 {MAX_FEEDBACK_LENGTH}자 이내</p>
+            <p className={`${styles.lengthText} typo-body3`}>최대 {MAX_FEEDBACK_LENGTH}자 이내</p>
             {isAppInfoLoading ? (
               <Skeleton width="68%" height={14} radius={999} />
             ) : (
-              <p className={`${styles.lengthText} typo-caption`}>{appInfoLabel}</p>
+              <p className={`${styles.lengthText} typo-caption4`}>{appInfoLabel}</p>
             )}
           </section>
         </div>

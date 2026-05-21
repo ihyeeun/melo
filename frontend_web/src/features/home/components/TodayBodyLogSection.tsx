@@ -122,8 +122,8 @@ function TodayMetricCard({
           <PlusIcon size={24} />
         </div>
         <div className={style.valueText}>
-          <span className={`typo-h3 ${style.highlightValue}`}>{value.toLocaleString()}</span>
-          <span className="typo-label1">{unit}</span>
+          <span className={`typo-h2 ${style.highlightValue}`}>{value.toLocaleString()}</span>
+          <span className="typo-caption3">{unit}</span>
         </div>
       </div>
     </ActionCard>

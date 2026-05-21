@@ -31,12 +31,7 @@ export function DataSourceBadge({
   label,
   className,
 }: DataSourceBadgeProps) {
-  const classes = [
-    styles.badge,
-    VARIANT_CLASS[variant],
-    "typo-label6",
-    className ?? "",
-  ]
+  const classes = [styles.badge, VARIANT_CLASS[variant], "typo-caption4", className ?? ""]
     .filter(Boolean)
     .join(" ");
 

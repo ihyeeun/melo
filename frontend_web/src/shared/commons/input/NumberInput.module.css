@@ -6,7 +6,7 @@
 
 .inputBox input {
   border: none;
-  font-size: var(--fs-h1);
+  font-size: var(--fs-40);
   font-weight: var(--fw-medium);
   letter-spacing: var(--letter-spacing-tight);
   line-height: var(--line-height-120);

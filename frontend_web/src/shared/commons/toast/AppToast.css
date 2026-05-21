@@ -1,27 +1,38 @@
 .app-toast-viewport {
-  top: max(30px, var(--safe-area-top));
+  align-items: center;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 22px;
   left: 50%;
   pointer-events: none;
   position: fixed;
+  top: max(30px, var(--safe-area-top));
   transform: translateX(-50%);
-  width: min(calc(100vw - 24px), 360px);
+  width: min(calc(100vw - 20px), 520px);
   z-index: 99999;
 }
 
-.app-toast {
-  align-items: flex-start;
-  background: var(--bg-white);
-  border: 1px solid transparent;
-  border-radius: 12px;
-  box-shadow: var(--shadow-normal);
-  color: var(--label-normal);
+.app-toast-body {
+  align-items: center;
   display: flex;
-  gap: 10px;
-  padding: 20px;
+  gap: 8px;
+  width: 100%;
+}
+
+.app-toast {
+  align-items: center;
+  background: var(--dimmer-dimmer);
+  border-radius: 100px;
+  color: var(--label-white);
+  display: flex;
+  max-width: 100%;
+  min-height: 56px;
+  padding: 16px 32px;
   pointer-events: auto;
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
+  width: max-content;
 }
 
 .app-toast-content {
@@ -31,76 +42,113 @@
 
 .app-toast-icon {
   align-items: center;
-  color: var(--status-link);
+  background: var(--status-link);
+  border-radius: 50%;
+  color: var(--static-white);
   display: inline-flex;
   flex-shrink: 0;
-  height: 24px;
+  height: 20px;
   justify-content: center;
-  margin-top: 1px;
-  width: 24px;
+  width: 20px;
+  margin-right: 8px;
+}
+
+.app-toast-icon svg {
+  display: block;
+}
+
+.app-toast-status-mark {
+  display: block;
+  font-size: var(--fs-14);
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--letter-spacing-normal);
+  line-height: 1;
 }
 
 .app-toast-title {
+  color: var(--label-white);
   margin: 0;
+  overflow-wrap: anywhere;
+  word-break: keep-all;
 }
 
 .app-toast-description {
+  color: rgb(255 255 255 / 82%);
   margin: 4px 0 0;
+  overflow-wrap: anywhere;
   word-break: keep-all;
-  color: var(--label-alternative);
 }
 
 .app-toast-action {
-  border-radius: 6px;
-  color: var(--label-primary);
-  font-size: var(--fs-label5);
+  border-radius: 999px;
+  color: var(--label-white);
+  font-size: var(--fs-13);
   font-weight: var(--fw-bold);
-  letter-spacing: var(--letter-spacing-body);
+  letter-spacing: var(--letter-spacing-normal);
   line-height: var(--line-height-140);
   margin-top: 2px;
-  padding: 4px 8px;
+  padding: 4px 10px;
 }
 
 .app-toast-close {
-  border-radius: 6px;
-  color: var(--label-alternative);
-  height: 24px;
-  line-height: 24px;
-  margin-right: -2px;
-  text-align: center;
-  width: 24px;
+  align-items: center;
+  border-radius: 50%;
+  color: var(--label-white);
+  display: inline-flex;
+  flex-shrink: 0;
+  height: 20px;
+  justify-content: center;
+  opacity: 0.95;
+  width: 20px;
+  margin-left: 15px;
+}
+
+.app-toast-close svg {
+  display: block;
 }
 
 .app-toast[data-type="warning"] {
-  background: var(--yellow-100);
-  border-color: var(--yellow-500);
+  background: var(--gray-700);
+  border-color: transparent;
 }
 
 .app-toast[data-type="warning"] .app-toast-icon {
-  color: var(--yellow-700);
+  background: var(--status-warning);
 }
 
 .app-toast[data-type="error"] {
-  background: var(--red-100);
-  border-color: var(--red-500);
+  background: var(--gray-700);
+  border-color: transparent;
 }
 
 .app-toast[data-type="error"] .app-toast-icon {
-  color: var(--red-500);
+  background: var(--status-error);
 }
 
 .app-toast[data-type="success"] {
-  background: var(--green-100);
-  border-color: var(--green-500);
+  background: var(--gray-700);
+  border-color: transparent;
 }
 
 .app-toast[data-type="success"] .app-toast-icon {
-  color: var(--green-500);
+  background: var(--status-success);
+}
+
+.app-toast[data-has-description="true"] {
+  align-items: flex-start;
+  border-radius: 28px;
+  padding-bottom: 18px;
+  padding-top: 18px;
+}
+
+.app-toast[data-has-description="true"] .app-toast-icon,
+.app-toast[data-has-description="true"] .app-toast-close {
+  margin-top: 1px;
 }
 
 .app-toast[data-starting-style] {
   opacity: 0;
-  transform: translateY(10px) scale(0.98);
+  transform: translateY(12px) scale(0.98);
 }
 
 .app-toast[data-ending-style] {
@@ -111,10 +159,4 @@
 
 .app-toast[data-limited] {
   pointer-events: none;
-}
-
-.app-toast {
-  transition:
-    opacity 0.2s ease,
-    transform 0.2s ease;
 }

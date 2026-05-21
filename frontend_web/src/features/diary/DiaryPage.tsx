@@ -150,7 +150,7 @@ export default function DiaryPage() {
                     value={calorieProgress}
                     variant={isCalorieExceeded ? "danger-white" : "primary-gray"}
                   />
-                  <p className={`${styles.calorieMessage} typo-body4`}>{calorieMessage}</p>
+                  <p className={`${styles.calorieMessage} typo-body3`}>{calorieMessage}</p>
                 </div>
               </div>
             </ActionCard>
@@ -337,7 +337,7 @@ function MealRecordCard({
                 <div className={styles.emptyStatusIcon}>
                   <Check size={12} strokeWidth={3} />
                 </div>
-                <span className={`${styles.emptyStatusText} typo-title4`}>{emptyStatusText}</span>
+                <span className={`${styles.emptyStatusText} typo-label2`}>{emptyStatusText}</span>
               </button>
             )}
 
@@ -374,8 +374,8 @@ function MealRecordCard({
             <ul className={styles.mealDetailList}>
               {menus.map((menu) => (
                 <li key={menu.id} className={styles.mealDetailItem}>
-                  <span className="typo-body4">{menu.name}</span>
-                  <span className={`${styles.textAlternative} typo-body4`}>
+                  <span className="typo-body3">{menu.name}</span>
+                  <span className={`${styles.textAlternative} typo-body3`}>
                     {formatCalories(menu.calories)} kcal
                   </span>
                 </li>
