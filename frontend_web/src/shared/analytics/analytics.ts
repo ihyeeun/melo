@@ -54,6 +54,12 @@ export function identifyNickname(nickname?: string | null) {
   if (!normalizedNickname) {
     currentNickname = null;
     identifiedNickname = null;
+    if (initialized) {
+      const identify = new amplitude.Identify();
+      identify.unset("nickname");
+      amplitude.identify(identify);
+      identifiedNickname = null;
+    }
     return;
   }
 
