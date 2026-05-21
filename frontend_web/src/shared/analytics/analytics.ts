@@ -50,8 +50,12 @@ export function initAnalytics() {
 }
 
 export function identifyNickname(nickname?: string | null) {
-  const normalizedNickname = nickname?.trim();
-  if (!normalizedNickname) return;
+  const normalizedNickname = nickname?.trim() ?? null;
+  if (!normalizedNickname) {
+    currentNickname = null;
+    identifiedNickname = null;
+    return;
+  }
 
   currentNickname = normalizedNickname;
   syncNicknameUserProperty(normalizedNickname);

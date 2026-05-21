@@ -18,6 +18,7 @@ export function useGetProfileQuery(options?: UseGetProfileQueryOptions) {
   });
 
   useEffect(() => {
+    if (!query.data?.nickname) return;
     identifyNickname(query.data?.nickname);
   }, [query.data?.nickname]);
 
