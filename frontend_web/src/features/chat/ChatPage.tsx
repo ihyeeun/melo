@@ -1383,15 +1383,17 @@ function resolveErrorMessage(error: unknown) {
 function getAiCoachResponseAnalyticsProperties(response: ChatRecommendResponseDto) {
   if (response.chat_category !== "recommendation") {
     return {
-      feedback_menu_ids: response.feedback.menus.map((menu) => menu.menu_id),
-      feedback_menu_names: response.feedback.menus.map((menu) => menu.menu_name),
+      menu_ids: response.feedback.menus.map((menu) => menu.menu_id),
+      menu_names: response.feedback.menus.map((menu) => menu.menu_name),
       has_menu: response.feedback.menus.length > 0,
+      chat_mode: "feedback",
     };
   }
 
   return {
-    recommendation_menu_ids: response.recommendations.map((menu) => menu.menu_id),
-    recommendation_menu_names: response.recommendations.map((menu) => menu.menu_name),
+    menu_ids: response.recommendations.map((menu) => menu.menu_id),
+    menu_names: response.recommendations.map((menu) => menu.menu_name),
     has_menu: response.recommendations.length > 0,
+    chat_mode: "recommendation",
   };
 }
