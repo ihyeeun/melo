@@ -4,7 +4,6 @@ import { useRecommendNutrientMutation } from "@/features/onboarding/hooks/mutati
 import type { StepComponentProps } from "@/features/onboarding/onboarding.types";
 import styles from "@/features/onboarding/styles/OnboardingSteps.module.css";
 import NumberField from "@/shared/commons/input/NumberField";
-import { LoadingIndicator } from "@/shared/commons/loading/Loading";
 
 const INTERNAL_DECIMALS = 4;
 const NUTRIENT_INPUT_PATTERN = /^(?:100(?:\.0?)?|[0-9]{0,2}(?:\.[0-9]?)?)$/;
@@ -74,7 +73,7 @@ export default function StepNutrient({ data, update }: StepComponentProps) {
         <h2 className="typo-title1">추천하는 탄단지 비율이에요</h2>
         {isPending ? (
           <div className={styles.onboardingLoadingRow}>
-            <LoadingIndicator iconSize={24} label="추천 탄단지 비율을 계산하는 중입니다." />
+            {/* <LoadingIndicator iconSize={24} label="추천 탄단지 비율을 계산하는 중입니다." /> */}
             <p className={styles.onboardingSubtitle}>추천 비율을 계산하고 있어요</p>
           </div>
         ) : (
@@ -82,7 +81,9 @@ export default function StepNutrient({ data, update }: StepComponentProps) {
         )}
       </div>
       <div className={styles.onboardingNutrientContent}>
-        <p className={`${styles.onboardingNutrientGoal} ${styles.textPrimary} typo-title1`}>
+        <p
+          className={`${styles.onboardingNutrientGoal} ${styles.textPrimary} textNoWrap typo-title1`}
+        >
           목표 칼로리 {data.target_calories ?? "--"}kcal
         </p>
         <div className={styles.onboardingNutrientList}>
@@ -152,7 +153,7 @@ function NutrientCard({ label, nutrientType, targetCalories, value, onChange }: 
 
       <div className={styles.onboardingNutrientMeta}>
         <span className="typo-body1">{formatRoundedValue(targetGram)}g</span>
-        <span className="typo-body1">{formatRoundedValue(targetKcal)}kcal</span>
+        <span className="textNoWrap typo-body1">{formatRoundedValue(targetKcal)}kcal</span>
       </div>
     </div>
   );

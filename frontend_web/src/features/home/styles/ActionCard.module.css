@@ -10,3 +10,12 @@
   padding: 16px;
   width: 100%;
 }
+
+.cardContainer[role="button"] {
+  cursor: pointer;
+  text-align: start;
+}
+
+.cardContainer[role="button"]:active {
+  transform: scale(0.98);
+}

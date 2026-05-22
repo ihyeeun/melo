@@ -39,14 +39,14 @@
 
 .overlay {
   align-items: center;
-  background: var(--loading-overlay-background, var(--dimmer-dimmer));
+  background: var(--loading-overlay-background, transparent);
   display: flex;
   inset: 0;
   justify-content: center;
   min-height: 100dvh;
   position: fixed;
   width: 100%;
-  z-index: 1000;
+  z-index: 10000;
 }
 
 .visuallyHidden {

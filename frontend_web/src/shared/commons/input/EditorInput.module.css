@@ -18,8 +18,10 @@
 
 .unit {
   color: var(--label-normal);
+  flex-shrink: 0;
   margin-left: 12px;
   padding-bottom: 2px;
+  white-space: nowrap;
 }
 
 .inputBox:has(input:not(:placeholder-shown)) .unit {

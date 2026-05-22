@@ -117,7 +117,7 @@ export default function PreviewTodayScoreSection({ selectedDate }: { selectedDat
       <div className={style.scoreContainer}>
         <div className={style.scoreTextContainer}>
           <div className={style.scoreText}>
-            <p className={`${style.calorieText} typo-title2`}>
+            <p className={`${style.calorieText} textNoWrap typo-title2`}>
               <span className={`${style.score} typo-h2`}>
                 {calorieSummary.roundedCurrentCalories.toLocaleString("ko-KR")}
               </span>

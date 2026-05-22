@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type { KeyboardEvent, ReactNode } from "react";
 
 import style from "@/features/home/styles/ActionCard.module.css";
 
@@ -9,15 +9,26 @@ type ActionCardProps = {
 };
 
 export default function ActionCard({ children, className = "", onClick }: ActionCardProps) {
-  const Component = onClick ? "button" : "div";
+  const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (!onClick || event.currentTarget !== event.target) {
+      return;
+    }
+
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      onClick();
+    }
+  };
 
   return (
-    <Component
+    <div
       className={`${style.cardContainer} ${className ?? ""}`}
       onClick={onClick}
-      type={onClick ? "button" : undefined}
+      onKeyDown={handleKeyDown}
+      role={onClick ? "button" : undefined}
+      tabIndex={onClick ? 0 : undefined}
     >
       {children}
-    </Component>
+    </div>
   );
 }

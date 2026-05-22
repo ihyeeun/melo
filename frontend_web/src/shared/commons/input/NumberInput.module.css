@@ -28,8 +28,10 @@ input::placeholder {
 
 .unit {
   color: var(--label-assistive);
+  flex-shrink: 0;
   font-size: 40px;
   margin-left: 4px;
+  white-space: nowrap;
 }
 
 .inputBox:has(input:not(:placeholder-shown)) .unit {

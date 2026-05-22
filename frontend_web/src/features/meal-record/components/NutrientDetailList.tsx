@@ -51,7 +51,7 @@ export function NutrientDetailList({
         </p>
 
         <div className={styles.detailValue}>
-          <span className={`${styles.textNormal} typo-body1`}>
+          <span className={`${styles.textNormal} textNoWrap typo-body1`}>
             {formatNutrientValue(calories)} kcal
           </span>
         </div>

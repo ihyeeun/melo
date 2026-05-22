@@ -377,7 +377,7 @@ export function MealMenuNutrientDetail({
             {previewMenu.brand && (
               <p className={`typo-label4 ${styles.textAlternative}`}>{previewMenu.brand}</p>
             )}
-            <p className={`${(styles.textNormal, styles.calories)} typo-title1`}>
+            <p className={`${(styles.textNormal, styles.calories)} textNoWrap typo-title1`}>
               {formatNutrientValue(previewMenu.calories)} kcal
             </p>
           </div>

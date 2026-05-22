@@ -1,8 +1,9 @@
-import { CheckCircle2, PlusCircle, X } from "lucide-react";
+import { CheckCircle2, X } from "lucide-react";
 import type { KeyboardEvent, MouseEvent } from "react";
 
 import { MENU_DATA_SOURCE, type MenuDataSource } from "@/shared/api/types/api.dto";
 import { DataSourceBadge } from "@/shared/commons/badge/DataSourceBadge";
+import { formatNumberWithMaxOneDecimal } from "@/shared/utils/numberFormat";
 
 import styles from "./MealMenuCard.module.css";
 
@@ -29,10 +30,6 @@ type MealMenuCardProps = {
 };
 
 const UNIT_QUANTITY_PATTERN = /^\s*([\d.]+)/;
-
-function formatCalories(value: number) {
-  return value.toLocaleString("ko-KR", { maximumFractionDigits: 1 });
-}
 
 function formatQuantity(value: number) {
   return value.toLocaleString("ko-KR", {
@@ -66,7 +63,8 @@ function getActionAriaLabel(icon: MealMenuCardIcon) {
 }
 
 function ActionIcon({ icon }: { icon: MealMenuCardIcon }) {
-  if (icon === "add") return <PlusCircle size={24} strokeWidth={2} />;
+  if (icon === "add")
+    return <img src="/icons/circle-check.svg" width={24} height={24} aria-hidden="true" />;
   if (icon === "check") return <CheckCircle2 size={24} strokeWidth={2} />;
   return <X size={24} strokeWidth={2} />;
 }
@@ -160,7 +158,11 @@ export function MealMenuCard({
 
         <section className={styles.meta}>
           <p className={styles.prouductInfo}>
-            {brand && <span className={`${styles.brand} typo-label4`}>{brand}</span>}
+            {brand && (
+              <span className={`${styles.brand} typo-label4`} title={brand}>
+                {brand}
+              </span>
+            )}
             <span className={`${styles.unitAmount} typo-label4`}>
               {formatQuantity(safeDisplayUnitCount)}
               {unit_quantity}
@@ -170,8 +172,8 @@ export function MealMenuCard({
             >{`(${formatQuantity(resolvedConsumedWeight)}${weightUnitText})`}</span>
           </p>
           {displayedCalories !== null && (
-            <span className={`${styles.calories} typo-title3`}>
-              {formatCalories(displayedCalories)}kcal
+            <span className={`${styles.calories} textNoWrap typo-title3`}>
+              {formatNumberWithMaxOneDecimal(displayedCalories)}kcal
             </span>
           )}
         </section>

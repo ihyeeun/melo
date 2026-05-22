@@ -10,7 +10,6 @@ import {
 import BottomSheet from "@/shared/commons/bottomSheet/BottomSheet";
 import { Button } from "@/shared/commons/button/Button";
 import { EditorInput } from "@/shared/commons/input/EditorInput";
-import { LoadingIndicator } from "@/shared/commons/loading/Loading";
 import { toast } from "@/shared/commons/toast/toast";
 
 const GOAL_CALORIES_MIN = 1;
@@ -194,19 +193,21 @@ export default function SteptargetCalories({ data, update }: StepComponentProps)
         <h2 className="typo-title1">목표 칼로리를 선택해주세요</h2>
         {isPending ? (
           <div className={styles.onboardingLoadingRow}>
-            <LoadingIndicator iconSize={24} label="추천 목표 칼로리를 계산하는 중입니다." />
+            {/* <LoadingIndicator iconSize={24} label="추천 목표 칼로리를 계산하는 중입니다." /> */}
             <p className={styles.onboardingSubtitle}>추천 목표 칼로리를 계산하고 있어요</p>
           </div>
         ) : (
           <p className={styles.onboardingSubtitle}>
-            추천하는 목표 칼로리는 {formattargetCalories(displayRecommendedCalories)}kcal예요
+            추천하는 목표 칼로리는{" "}
+            <span className="textNoWrap">{formattargetCalories(displayRecommendedCalories)}kcal</span>
+            예요
           </p>
         )}
       </div>
 
       <div className={styles.goalCalorieContainer}>
         <button className={styles.onboardingGoalKcalTrigger} type="button" onClick={openEditor}>
-          <p className={`${styles.onboardingGoalKcalValue} typo-h1`}>
+          <p className={`${styles.onboardingGoalKcalValue} textNoWrap typo-h1`}>
             {formattargetCalories(visibletargetCalories)} kcal
           </p>
           <img src="/icons/pencil.svg" alt="목표 칼로리 값 수정" width={24} height={24} />

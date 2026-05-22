@@ -34,6 +34,7 @@ import { Button } from "@/shared/commons/button/Button";
 import { FloatingCameraButton } from "@/shared/commons/button/FloatingCameraButton";
 import { MealMenuCard } from "@/shared/commons/card/MealMenuCard";
 import { SearchInputHeader } from "@/shared/commons/header/SearchInputHeader";
+import { LoadingIndicator } from "@/shared/commons/loading/Loading";
 import { toast } from "@/shared/commons/toast/toast";
 import { FEATURE_GUARD, isFeatureBlocked } from "@/shared/guards/featureGuard";
 import {
@@ -274,7 +275,9 @@ export default function MealSearchPage() {
       <main className={styles.main}>
         <section className={styles.content}>
           {isSearchPending ? (
-            <div className={styles.placeholder}></div>
+            <div className={styles.placeholder}>
+              <LoadingIndicator />
+            </div>
           ) : searchResults ? (
             <>
               {searchResults.has_result ? (
@@ -319,33 +322,30 @@ export default function MealSearchPage() {
                 </div>
               ) : (
                 <div className={styles.emptyResultContainer}>
-                  <section className={styles.emptyResult}>
-                    <p className="typo-body3">
-                      일치하는 메뉴나 브랜드가 없어요
-                      <br />
-                      비슷한 항목을 선택하거나 직접 등록할 수 있어요
-                    </p>
-                    <div className={styles.buttonContainer}>
-                      <Button
-                        variant="text"
-                        interaction="normal"
-                        size="small"
-                        color="normal"
-                        onClick={() => {
-                          setIsDirectInputSheetOpen(true);
-                        }}
-                      >
-                        영양 성분 직접 등록
-                      </Button>
-                    </div>
-                  </section>
+                  {searchResults.menu_list.length === 0 && (
+                    <section className={styles.emptyResult}>
+                      <p className="typo-body3">일치하는 메뉴가 없어요</p>
+                      <div className={styles.buttonContainer}>
+                        <Button
+                          variant="text"
+                          interaction="normal"
+                          size="small"
+                          color="normal"
+                          onClick={() => {
+                            setIsDirectInputSheetOpen(true);
+                          }}
+                        >
+                          영양 성분 직접 등록
+                        </Button>
+                      </div>
+                    </section>
+                  )}
 
-                  {(searchResults.menu_list.length >= 0 ||
-                    searchResults.brand_list.length >= 0) && (
+                  {searchResults.menu_list.length > 0 && (
                     <section className={styles.similarSection}>
-                      <p className={`${styles.similarSectionTitle} typo-title3`}>
+                      {/* <p className={`${styles.similarSectionTitle} typo-title3`}>
                         비슷한 메뉴는 어때요?
-                      </p>
+                      </p> */}
 
                       <div className={styles.resultList}>
                         {searchResults.menu_list.map((menu) => {
@@ -368,6 +368,23 @@ export default function MealSearchPage() {
                             />
                           );
                         })}
+                      </div>
+
+                      <div className={styles.bottomTextContainer}>
+                        <Button
+                          variant="text"
+                          interaction="normal"
+                          size="small"
+                          color="normal"
+                          onClick={() => {
+                            setIsDirectInputSheetOpen(true);
+                          }}
+                        >
+                          <span className={`${styles.bottomText} typo-body3`}>
+                            찾으시는 메뉴가 없나요?
+                          </span>
+                          직접 등록하기
+                        </Button>
                       </div>
                     </section>
                   )}

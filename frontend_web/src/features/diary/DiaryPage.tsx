@@ -1,4 +1,5 @@
 import { Check, ChevronDown, ChevronRight, PlusIcon } from "lucide-react";
+import type { MouseEvent } from "react";
 import { useMemo, useState } from "react";
 
 import Calendar from "@/features/calendar/components/Calendar";
@@ -23,6 +24,7 @@ import { useNavigate } from "@/shared/navigation/stackflowNavigation";
 import { useSelectedDateKey, useSetSelectedDate } from "@/shared/stores/selectedDate.store";
 import { useTargetsState } from "@/shared/stores/targetNutrient.store";
 import { formatDateKey, parseDateKey } from "@/shared/utils/dateFormat";
+import { formatNumberWithMaxOneDecimal } from "@/shared/utils/numberFormat";
 import {
   calculateDailyNutritionMetricsForDisplay,
   getCalorieProgressPercent,
@@ -136,7 +138,7 @@ export default function DiaryPage() {
                     <span className={`${styles.scoreCurrent} typo-h2`}>
                       {calorieSummary.roundedCurrentCalories.toLocaleString("ko-KR")}
                     </span>
-                    <span className="typo-title2">
+                    <span className="textNoWrap typo-title2">
                       / {roundedTargetCalories.toLocaleString("ko-KR")} kcal
                     </span>
                   </p>
@@ -292,12 +294,32 @@ function MealRecordCard({
     registerDidNotEatMutate(body);
   };
 
+  const handleNavigateButtonClick = (event: MouseEvent<HTMLButtonElement>) => {
+    event.stopPropagation();
+    onNavigate();
+  };
+
+  const handleDidNotEatButtonClick = (event: MouseEvent<HTMLButtonElement>) => {
+    event.stopPropagation();
+    handleDidNotEatToggle();
+  };
+
+  const handleMealSummaryButtonClick = (event: MouseEvent<HTMLButtonElement>) => {
+    event.stopPropagation();
+    onToggleExpand();
+  };
+
   return (
     <ActionCard
       className={`${styles.mealCard} ${hasMenus || didNotEat ? "" : styles.mealCardEmpty}`}
+      onClick={onNavigate}
     >
       <div className={styles.mealHeader}>
-        <button type="button" onClick={onNavigate} className={styles.mealTitleContainer}>
+        <button
+          type="button"
+          onClick={handleNavigateButtonClick}
+          className={styles.mealTitleContainer}
+        >
           <img src={iconSrc} alt="" aria-hidden="true" className={styles.mealIcon} />
           <p className="typo-title3">{title}</p>
         </button>
@@ -305,7 +327,7 @@ function MealRecordCard({
         {hasMenus ? (
           <button
             type="button"
-            onClick={onNavigate}
+            onClick={handleNavigateButtonClick}
             className={styles.navigateButton}
             aria-label={`${title} 기록으로 이동`}
           >
@@ -314,7 +336,7 @@ function MealRecordCard({
         ) : didNotEat && emptyStatusText ? (
           <button
             type="button"
-            onClick={handleDidNotEatToggle}
+            onClick={handleDidNotEatButtonClick}
             className={styles.emptyStatusButton}
             aria-pressed
             disabled={isDidNotEatPending}
@@ -329,7 +351,7 @@ function MealRecordCard({
             {emptyStatusText && (
               <button
                 type="button"
-                onClick={handleDidNotEatToggle}
+                onClick={handleDidNotEatButtonClick}
                 className={styles.emptyStatusButton}
                 aria-pressed={false}
                 disabled={isDidNotEatPending}
@@ -341,7 +363,7 @@ function MealRecordCard({
               </button>
             )}
 
-            <button type="button" onClick={onNavigate}>
+            <button type="button" onClick={handleNavigateButtonClick}>
               <PlusIcon size={24} className={styles.emptyPlusIcon} />
             </button>
           </div>
@@ -353,7 +375,7 @@ function MealRecordCard({
           <button
             type="button"
             className={styles.mealSummaryButton}
-            onClick={onToggleExpand}
+            onClick={handleMealSummaryButtonClick}
             aria-expanded={isExpanded}
             aria-label={`${title} 상세 ${isExpanded ? "접기" : "펼치기"}`}
           >
@@ -362,7 +384,9 @@ function MealRecordCard({
             </span>
 
             <span className={styles.mealSummaryMeta}>
-              <span className={`${styles.score} typo-title3`}>{formatCalories(calories)} kcal</span>
+              <span className={`${styles.score} textNoWrap typo-title3`}>
+                {formatNumberWithMaxOneDecimal(calories)}kcal
+              </span>
               <ChevronDown
                 size={24}
                 className={`${styles.mealSummaryArrow} ${isExpanded ? styles.mealSummaryArrowExpanded : ""}`}
@@ -375,8 +399,8 @@ function MealRecordCard({
               {menus.map((menu) => (
                 <li key={menu.id} className={styles.mealDetailItem}>
                   <span className="typo-body3">{menu.name}</span>
-                  <span className={`${styles.textAlternative} typo-body3`}>
-                    {formatCalories(menu.calories)} kcal
+                  <span className={`${styles.textAlternative} textNoWrap typo-body3`}>
+                    {formatNumberWithMaxOneDecimal(menu.calories)}kcal
                   </span>
                 </li>
               ))}
@@ -390,10 +414,6 @@ function MealRecordCard({
       ) : null}
     </ActionCard>
   );
-}
-
-function formatCalories(value: number) {
-  return value.toLocaleString("ko-KR", { maximumFractionDigits: 1 });
 }
 
 function getTotalMealCalories(menus: MenuWithQuantity[]) {

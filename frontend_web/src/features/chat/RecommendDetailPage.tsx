@@ -18,6 +18,7 @@ import {
   useNavigate,
   useSearchParams,
 } from "@/shared/navigation/stackflowNavigation";
+import { formatNumberWithMaxOneDecimal } from "@/shared/utils/numberFormat";
 
 export default function RecommendDetailPage() {
   const navigate = useNavigate();
@@ -121,8 +122,8 @@ export default function RecommendDetailPage() {
                     {recommendation.unit === 0 ? "g" : "ml"})
                   </p>
                 </div>
-                <p className={`${styles.caloriesText} typo-title1`}>
-                  {formatCalories(recommendation.calories)} kcal
+                <p className={`${styles.caloriesText} textNoWrap typo-title1`}>
+                  {formatNumberWithMaxOneDecimal(recommendation.calories)}kcal
                 </p>
               </div>
             </div>
@@ -213,10 +214,4 @@ function RecommendDetailSkeleton() {
       </section>
     </SkeletonStatus>
   );
-}
-
-function formatCalories(value: number) {
-  return value.toLocaleString("ko-KR", {
-    maximumFractionDigits: 1,
-  });
 }

@@ -1,9 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 
-import {
-  ChatMealRecordBottomSheet,
-  type ChatMealRecordMenu,
-} from "@/features/chat/components/ChatMealRecordBottomSheet";
 import { useSyncChatMealRecordRegisterMutation } from "@/features/chat/hooks/mutations/useSyncChatMealRecordMutation";
 import { useGetChatHistoryQuery } from "@/features/chat/hooks/queries/useGetChatQuery";
 import styles from "@/features/chat/styles/RecommendResultPage.module.css";
@@ -11,7 +7,6 @@ import {
   getMealTypeFromChatMealTime,
   getMealTypeFromCurrentTime,
 } from "@/features/chat/utils/chatMeal";
-import { buildChatMealRecordTransferState } from "@/features/chat/utils/chatMealRecordTransfer";
 import {
   type FeedbackDetailNavigationState,
   type FeedbackDetailSelectionPayload,
@@ -19,7 +14,6 @@ import {
   getSafeChatId,
 } from "@/features/chat/utils/recommendNavigation";
 import { PATH } from "@/router/path";
-import { getMealRecordPath } from "@/router/pathHelpers";
 import { AppApiError } from "@/shared/api/appApi";
 import {
   type ChatFeedbackMenuResponseDto,
@@ -124,16 +118,16 @@ function FeedbackResultContent({
   const [selectedMenus, setSelectedMenus] = useState<SelectedMealRecordMenu[]>(() =>
     chatItem.meal_record ? getInitialSelectedMenus(menus, chatItem.meal_record) : [],
   );
-  const [mealType, setMealType] = useState<MealType>(() =>
-    chatItem.meal_record
-      ? getMealTypeFromChatMealTime(chatItem.meal_record.time)
-      : getMealTypeFromCurrentTime(new Date()),
+  const mealType = useMemo<MealType>(
+    () =>
+      chatItem.meal_record
+        ? getMealTypeFromChatMealTime(chatItem.meal_record.time)
+        : getMealTypeFromCurrentTime(new Date()),
+    [chatItem.meal_record],
   );
-  const [isMealRecordSheetOpen, setIsMealRecordSheetOpen] = useState(false);
   const { mutateAsync: syncMealRecordRegisterMutate, isPending: isMealRegisterPending } =
     useSyncChatMealRecordRegisterMutation();
 
-  const mealRecordMenus = useMemo(() => getMealRecordMenus(menus), [menus]);
   const imageUrl = getChatItemImageUrl(chatItem);
   const recognizedFoods = getRecognizedFoods(chatItem);
   const selectedMenuIds = useMemo(() => {
@@ -192,34 +186,6 @@ function FeedbackResultContent({
     });
   };
 
-  const handleQuantityChange = (menuId: number, nextQuantity: number) => {
-    setSelectedMenus((prev) =>
-      prev.map((menu) => (menu.id === menuId ? { ...menu, quantity: nextQuantity } : menu)),
-    );
-  };
-
-  const handleInputModeChange = (menuId: number, nextInputMode: MealMenuInputMode) => {
-    setSelectedMenus((prev) =>
-      prev.map((menu) => (menu.id === menuId ? { ...menu, inputMode: nextInputMode } : menu)),
-    );
-  };
-
-  const handleRemoveMenu = (menuId: number) => {
-    setSelectedMenus((prev) => prev.filter((menu) => menu.id !== menuId));
-  };
-
-  const handleAddMore = () => {
-    setIsMealRecordSheetOpen(false);
-    navigate(getMealRecordPath(selectedDateKey, mealType), {
-      state: buildChatMealRecordTransferState({
-        dateKey: selectedDateKey,
-        mealType,
-        selectedMenus,
-        menus: mealRecordMenus,
-      }),
-    });
-  };
-
   const handleSubmitMealRecord = async () => {
     try {
       await syncMealRecordRegisterMutate({
@@ -233,7 +199,6 @@ function FeedbackResultContent({
       toast.success(
         chatItem.meal_record ? "식사 기록이 수정되었어요." : "식사 기록이 등록되었어요.",
       );
-      setIsMealRecordSheetOpen(false);
       navigateBack({ fallbackTo: PATH.CHAT });
     } catch (error) {
       toast.warning(resolveErrorMessage(error));
@@ -293,28 +258,12 @@ function FeedbackResultContent({
           variant="filled"
           size="large"
           color="primary"
-          disabled={selectedMenus.length === 0}
-          onClick={() => setIsMealRecordSheetOpen(true)}
+          disabled={selectedMenus.length === 0 || isMealRegisterPending}
+          onClick={handleSubmitMealRecord}
         >
           {selectedMenus.length}개 {chatItem.meal_record ? "수정하기" : "기록하기"}
         </Button>
       </footer>
-
-      <ChatMealRecordBottomSheet
-        isOpen={isMealRecordSheetOpen}
-        recommendations={mealRecordMenus}
-        selectedMenus={selectedMenus}
-        mealType={mealType}
-        submitLabel={chatItem.meal_record ? "수정하기" : "담기"}
-        isSubmitPending={isMealRegisterPending}
-        onMealTypeChange={setMealType}
-        onQuantityChange={handleQuantityChange}
-        onInputModeChange={handleInputModeChange}
-        onRemoveMenu={handleRemoveMenu}
-        onAddMore={handleAddMore}
-        onClose={() => setIsMealRecordSheetOpen(false)}
-        onSubmit={handleSubmitMealRecord}
-      />
     </section>
   );
 }
@@ -403,18 +352,6 @@ function FeedbackResultSkeleton() {
       </ul>
     </SkeletonStatus>
   );
-}
-
-function getMealRecordMenus(menus: ChatFeedbackMenuResponseDto[]): ChatMealRecordMenu[] {
-  return menus.map((menu) => ({
-    menu_id: menu.menu_id,
-    menu_name: menu.menu_name,
-    brand: menu.brand,
-    unit: menu.unit,
-    weight: menu.weight,
-    unit_quantity: menu.unit_quantity,
-    calories: menu.calories,
-  }));
 }
 
 function getChatItemImageUrl(chatItem: ChatHistoryItemResponseDto) {

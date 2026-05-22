@@ -153,11 +153,11 @@ export default function TodayMealScorePage() {
               <p className="typo-title3">칼로리</p>
               <div className={styles.calorieInfo}>
                 <div className={styles.calorieValueContainer}>
-                  <p className="typo-h2">
+                  <p className="textNoWrap typo-h2">
                     {calorieSummary.roundedCurrentCalories.toLocaleString("ko-KR")} kcal
                   </p>
 
-                  <p className="typo-title3">
+                  <p className="textNoWrap typo-title3">
                     / {roundedTargetCalories.toLocaleString("ko-KR")} kcal
                   </p>
                 </div>

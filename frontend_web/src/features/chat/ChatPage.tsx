@@ -1,5 +1,5 @@
 import { Camera, Check, ChevronDown, ChevronRight, ChevronUp, Plus, X } from "lucide-react";
-import type { FormEvent } from "react";
+import type { FormEvent, KeyboardEvent, MouseEvent } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import {
@@ -19,6 +19,7 @@ import {
 } from "@/features/chat/utils/chatMeal";
 import { buildChatMealRecordTransferState } from "@/features/chat/utils/chatMealRecordTransfer";
 import {
+  getFeedbackDetailPath,
   getFeedbackResultPath,
   getRecommendDetailPath,
   getRecommendResultPath,
@@ -34,6 +35,7 @@ import {
   type ChatRecommendItemResponseDto,
   type ChatRecommendResponseDto,
   type FeedbackDto,
+  MEAL_TYPE_OPTIONS,
   type MealMenuInputMode,
   type MealTime,
   type MealType,
@@ -52,6 +54,7 @@ import {
   getTodayFormatDateKey,
   parseDate,
 } from "@/shared/utils/dateFormat";
+import { formatNumberWithMaxOneDecimal } from "@/shared/utils/numberFormat";
 
 const QUICK_CHIP_LIST = ["지금 먹기 좋은 메뉴를 추천해줘"];
 const FEEDBACK_GAUGE_VIEWBOX_WIDTH = 220;
@@ -62,7 +65,7 @@ const FEEDBACK_GAUGE_RADIUS = 75;
 const FEEDBACK_GAUGE_START_ANGLE = 170;
 const FEEDBACK_GAUGE_END_ANGLE = 10;
 const FEEDBACK_GAUGE_PATH = getFeedbackGaugePath();
-const CAMERA_HINT_DISMISSED_STORAGE_KEY = "chat.cameraHintDismissed";
+const CAMERA_HINT_DISMISSED_SESSION_KEY = "chat.cameraHintDismissed";
 const SCROLL_BOTTOM_THRESHOLD = 24;
 
 type RecordedMenuSummary = {
@@ -77,25 +80,25 @@ type SelectedMealRecordMenu = {
   inputMode: MealMenuInputMode;
 };
 
-function getIsCameraHintDismissed() {
+function getIsCameraHintDismissedInSession() {
   if (typeof window === "undefined") {
     return false;
   }
 
   try {
-    return window.localStorage.getItem(CAMERA_HINT_DISMISSED_STORAGE_KEY) === "true";
+    return window.sessionStorage.getItem(CAMERA_HINT_DISMISSED_SESSION_KEY) === "true";
   } catch {
     return false;
   }
 }
 
-function saveCameraHintDismissed() {
+function saveCameraHintDismissedInSession() {
   if (typeof window === "undefined") {
     return;
   }
 
   try {
-    window.localStorage.setItem(CAMERA_HINT_DISMISSED_STORAGE_KEY, "true");
+    window.sessionStorage.setItem(CAMERA_HINT_DISMISSED_SESSION_KEY, "true");
   } catch {
     // The in-memory state still hides the hint for the current session.
   }
@@ -112,7 +115,9 @@ export default function ChatPage() {
   const [pendingInput, setPendingInput] = useState<string | null>(null);
   const [isAwaitingHistory, setIsAwaitingHistory] = useState(false);
   const [isCameraActionMenuOpen, setIsCameraActionMenuOpen] = useState(false);
-  const [isCameraHintDismissed, setIsCameraHintDismissed] = useState(getIsCameraHintDismissed);
+  const [isCameraHintDismissed, setIsCameraHintDismissed] = useState(
+    getIsCameraHintDismissedInSession,
+  );
   const [isScrolledAwayFromBottom, setIsScrolledAwayFromBottom] = useState(false);
   const [editingMealRecordChat, setEditingMealRecordChat] =
     useState<ChatHistoryItemResponseDto | null>(null);
@@ -237,6 +242,11 @@ export default function ChatPage() {
     const text = rawInput.trim();
     if (!text || isSendPending) return;
 
+    if (!isCameraHintDismissed) {
+      setIsCameraHintDismissed(true);
+      saveCameraHintDismissedInSession();
+    }
+
     setPendingInput(text);
     setInputValue("");
     setIsAwaitingHistory(true);
@@ -274,11 +284,6 @@ export default function ChatPage() {
   const handleToggleCameraActionMenu = () => {
     if (!isQuickActionVisible) {
       return;
-    }
-
-    if (!isCameraHintDismissed) {
-      setIsCameraHintDismissed(true);
-      saveCameraHintDismissed();
     }
 
     setIsCameraActionMenuOpen((prev) => !prev);
@@ -381,6 +386,50 @@ export default function ChatPage() {
     }
   };
 
+  const handlePrimaryMealRecordRemoveClick = async (meal: ChatHistoryItemResponseDto) => {
+    const mealRecord = meal.meal_record;
+    const primaryMenu = getPrimaryMealRecordMenu(meal);
+
+    if (!mealRecord || !primaryMenu) {
+      return;
+    }
+
+    const remainingMenus = getRemainingMealRecordMenus(meal, primaryMenu.menu_id);
+
+    if (remainingMenus.length === (mealRecord.menu_ids?.length ?? 0)) {
+      return;
+    }
+
+    if (remainingMenus.length === 0) {
+      try {
+        await syncMealRecordDeleteMutate({
+          date: selectedDateKey,
+          chatId: meal.id,
+          previousMealRecord: mealRecord,
+        });
+
+        toast.success("식사 기록에서 메뉴를 제거했어요.");
+      } catch (error) {
+        toast.warning(resolveErrorMessage(error));
+      }
+      return;
+    }
+
+    try {
+      await syncMealRecordRegisterMutate({
+        date: selectedDateKey,
+        chatId: meal.id,
+        time: mealRecord.time,
+        menus: remainingMenus,
+        previousMealRecord: mealRecord,
+      });
+
+      toast.success("식사 기록에서 메뉴를 제거했어요.");
+    } catch (error) {
+      toast.warning(resolveErrorMessage(error));
+    }
+  };
+
   const handleEditingQuantityChange = (menuId: number, nextQuantity: number) => {
     setEditingSelectedMenus((prev) =>
       prev.map((menu) => (menu.id === menuId ? { ...menu, quantity: nextQuantity } : menu)),
@@ -477,7 +526,7 @@ export default function ChatPage() {
                       {formatChatTime(chatItem.createdAt)}
                     </p>
                     <div className={styles.userMessageContent}>
-                      <p className={`${styles.userBubble} typo-body3`}>{chatItem.input_text}</p>
+                      <p className={`${styles.userBubble} typo-body2`}>{chatItem.input_text}</p>
                       {userImageUrl ? (
                         <img
                           src={userImageUrl}
@@ -490,7 +539,7 @@ export default function ChatPage() {
                   </div>
 
                   <div className={styles.assistantMessageGroup}>
-                    <p className={`${styles.assistantBubble} typo-body3`}>
+                    <p className={`${styles.assistantBubble} typo-body2`}>
                       {chatItem.response_payload.intro_message}
                     </p>
 
@@ -500,6 +549,7 @@ export default function ChatPage() {
                         chatId={chatItem.id}
                         recommendations={chatItem.response_payload.recommendations}
                         onMealRecordClick={() => handleMenuRecordClick(chatItem)}
+                        onMealRecordCancelClick={() => handlePrimaryMealRecordRemoveClick(chatItem)}
                         isMealRecorded={
                           (chatItem.meal_record != null &&
                             chatItem.meal_record.menu_ids?.includes(
@@ -515,6 +565,7 @@ export default function ChatPage() {
                         chatId={chatItem.id}
                         feedback={chatItem.response_payload.feedback}
                         onMealRecordClick={() => handleMenuRecordClick(chatItem)}
+                        onMealRecordCancelClick={() => handlePrimaryMealRecordRemoveClick(chatItem)}
                         isMealRecorded={
                           (chatItem.meal_record != null &&
                             chatItem.meal_record.menu_ids?.includes(
@@ -528,6 +579,7 @@ export default function ChatPage() {
                     {chatItem.meal_record != null && (
                       <MealRecordCard
                         menus={getRecordedMenus(chatItem)}
+                        mealRecordTime={chatItem.meal_record.time}
                         onCancelClick={() => handleMealRecordCancelClick(chatItem)}
                         onEditClick={() => handleMealRecordEditClick(chatItem)}
                       />
@@ -541,7 +593,7 @@ export default function ChatPage() {
               <section className={styles.conversationSection} aria-live="polite">
                 <div className={styles.userMessageGroup}>
                   <p className={`${styles.timeText} typo-caption4`}>{formatChatTime(new Date())}</p>
-                  <p className={`${styles.userBubble} typo-body3`}>{pendingInput}</p>
+                  <p className={`${styles.userBubble} typo-body2`}>{pendingInput}</p>
                 </div>
 
                 {isTypingPending ? (
@@ -645,7 +697,7 @@ export default function ChatPage() {
                   onClick={() => sendChatMessage(chip)}
                   disabled={isSendPending}
                 >
-                  <p className="typo-body3">{chip}</p>
+                  <p className="typo-body2">{chip}</p>
                 </button>
               ))}
             </section>
@@ -796,7 +848,7 @@ function ChatInput({
           <textarea
             rows={1}
             value={value}
-            className={`${styles.textInput} typo-body3`}
+            className={`${styles.textInput} typo-body2`}
             placeholder="맥도날드에 왔는데 뭐 먹을까?"
             onChange={(event) => handleInputChange(event.target.value.slice(0, 500))}
             onFocus={() => onInputFocusChange(true)}
@@ -828,7 +880,7 @@ function ChatInput({
           disabled={!isAddActionOpen}
         >
           <img src="/icons/search-icon.svg" className={styles.addActionItemIcon} />
-          <span className="typo-body3">직접 메뉴 기록하기</span>
+          <span className="typo-body2">직접 메뉴 기록하기</span>
         </button>
       </div>
     </div>
@@ -837,10 +889,12 @@ function ChatInput({
 
 function MealRecordCard({
   menus,
+  mealRecordTime,
   onCancelClick,
   onEditClick,
 }: {
   menus: RecordedMenuSummary[];
+  mealRecordTime: MealTime;
   onCancelClick: () => void;
   onEditClick: () => void;
 }) {
@@ -848,6 +902,10 @@ function MealRecordCard({
   const primaryMenu = menus[0];
   const hasMultipleMenus = menus.length > 1;
   const totalCalories = menus.reduce((sum, menu) => sum + menu.recordedCalories, 0);
+
+  const mealType = getMealTypeFromChatMealTime(mealRecordTime);
+  const mealTimeLabel =
+    MEAL_TYPE_OPTIONS.find((option) => option.key === mealType)?.label ?? "식사";
 
   if (!primaryMenu) return null;
   const handleCancelClick = () => {
@@ -857,7 +915,7 @@ function MealRecordCard({
 
   return (
     <section className={styles.mealRecordCard}>
-      <p className={`${styles.textPrimary} typo-title2`}>기록 완료!</p>
+      <p className={`${styles.textPrimary} typo-title2`}>{mealTimeLabel} 기록 완료!</p>
 
       <button
         type="button"
@@ -870,13 +928,15 @@ function MealRecordCard({
         disabled={!hasMultipleMenus}
         aria-expanded={hasMultipleMenus ? isOpen : undefined}
       >
-        <p className={`${styles.textNormal} typo-title4`}>
+        <p className={`${styles.mealRecordSummaryName} ${styles.textNormal} typo-title4`}>
           {hasMultipleMenus
             ? `${primaryMenu.menu_name} 외 ${menus.length - 1}개`
             : primaryMenu.menu_name}
         </p>
-        <span className={`${styles.recommendCalories} typo-title3`}>
-          {formatCalories(totalCalories)} kcal
+        <span
+          className={`${styles.mealRecordSummaryCalories} ${styles.recommendCalories} textNoWrap typo-title3`}
+        >
+          {formatNumberWithMaxOneDecimal(totalCalories)}kcal
         </span>
         {hasMultipleMenus ? (
           <ChevronUp
@@ -890,9 +950,13 @@ function MealRecordCard({
         <div className={styles.mealRecordMenuList}>
           {menus.map((menu) => (
             <div key={menu.menu_id} className={styles.mealRecordMenuItem}>
-              <p className={`${styles.textNormal} typo-body3`}>{menu.menu_name}</p>
-              <span className={`${styles.textAlternative} typo-body3`}>
-                {formatCalories(menu.recordedCalories)} kcal
+              <p className={`${styles.mealRecordMenuName} ${styles.textNormal} typo-body3`}>
+                {menu.menu_name}
+              </p>
+              <span
+                className={`${styles.mealRecordMenuCalories} ${styles.textAlternative} textNoWrap typo-body3`}
+              >
+                {formatNumberWithMaxOneDecimal(menu.recordedCalories)}kcal
               </span>
             </div>
           ))}
@@ -927,11 +991,13 @@ function RecommendationSection({
   chatId,
   recommendations,
   onMealRecordClick,
+  onMealRecordCancelClick,
   isMealRecorded,
 }: {
   chatId: number;
   recommendations: ChatRecommendItemResponseDto[];
   onMealRecordClick: () => void;
+  onMealRecordCancelClick: () => void;
   isMealRecorded: boolean;
 }) {
   const navigate = useNavigate();
@@ -941,10 +1007,50 @@ function RecommendationSection({
   if (!topRecommendation) return null;
 
   const topBadgeText = topRecommendation.rank ? `${topRecommendation.rank}위` : "추천";
+  const handleRecommendationDetailClick = () => {
+    navigate(getRecommendDetailPath(chatId, topRecommendation.menu_id));
+  };
+
+  const handleRecommendationCardClick = (event: MouseEvent<HTMLElement>) => {
+    if (isNestedInteractiveTarget(event.target, event.currentTarget)) {
+      return;
+    }
+
+    handleRecommendationDetailClick();
+  };
+
+  const handleRecommendationCardKeyDown = (event: KeyboardEvent<HTMLElement>) => {
+    if (event.target !== event.currentTarget) {
+      return;
+    }
+
+    if (event.key !== "Enter" && event.key !== " ") {
+      return;
+    }
+
+    event.preventDefault();
+    handleRecommendationDetailClick();
+  };
+
+  const handleMealRecordToggleClick = () => {
+    if (isMealRecorded) {
+      onMealRecordCancelClick();
+      return;
+    }
+
+    onMealRecordClick();
+  };
 
   return (
     <div className={styles.recommendationSection}>
-      <article className={`${styles.recommendCard} ${isMealRecorded ? styles.cardSelected : ""}`}>
+      <article
+        className={`${styles.recommendCard} ${isMealRecorded ? styles.cardSelected : ""}`}
+        role="button"
+        tabIndex={0}
+        aria-label="추천 상세 보기"
+        onClick={handleRecommendationCardClick}
+        onKeyDown={handleRecommendationCardKeyDown}
+      >
         <span className={`${styles.rankBadge} typo-label6`}>{topBadgeText}</span>
 
         <div className={styles.recommendContents}>
@@ -964,8 +1070,8 @@ function RecommendationSection({
                 {topRecommendation.unit === 0 ? "g" : "ml"})
               </span>
             </p>
-            <span className={`${styles.recommendCalories} typo-title2`}>
-              {formatCalories(topRecommendation.calories)} kcal
+            <span className={`${styles.recommendCalories} textNoWrap typo-title2`}>
+              {formatNumberWithMaxOneDecimal(topRecommendation.calories)}kcal
             </span>
           </div>
           {topRecommendation.data_source === 1 && (
@@ -977,9 +1083,8 @@ function RecommendationSection({
           <div className={styles.recommendAction}>
             <Button
               size="small"
-              onClick={() => {
-                onMealRecordClick();
-              }}
+              aria-pressed={isMealRecorded}
+              onClick={handleMealRecordToggleClick}
             >
               식사 기록
               {isMealRecorded ? (
@@ -988,13 +1093,7 @@ function RecommendationSection({
                 <Plus size={16} className={styles.recommendActionIcon} />
               )}
             </Button>
-            <Button
-              size="small"
-              variant="outlined"
-              onClick={() => {
-                navigate(getRecommendDetailPath(chatId, topRecommendation.menu_id));
-              }}
-            >
+            <Button size="small" variant="outlined" onClick={handleRecommendationDetailClick}>
               자세히 보기
               <ChevronRight size={16} className={styles.recommendActionIcon} />
             </Button>
@@ -1009,7 +1108,7 @@ function RecommendationSection({
           aria-label="추천 목록 더보기"
           onClick={() => navigate(getRecommendResultPath(chatId))}
         >
-          <p className={`${styles.textNormal} typo-body3`}>
+          <p className={`${styles.textNormal} typo-body2`}>
             다른 추천 메뉴도 있어요 (총 {recommendations.length}개)
           </p>
           <p className={`${styles.ActionIcon} typo-label3`}>
@@ -1026,11 +1125,13 @@ function FeedbackSection({
   chatId,
   feedback,
   onMealRecordClick,
+  onMealRecordCancelClick,
   isMealRecorded,
 }: {
   chatId: number;
   feedback: FeedbackDto;
   onMealRecordClick: () => void;
+  onMealRecordCancelClick: () => void;
   isMealRecorded: boolean;
 }) {
   const [isMenuListOpen, setIsMenuListOpen] = useState(false);
@@ -1038,9 +1139,57 @@ function FeedbackSection({
   const hasMultipleMenus = feedback.menus.length > 1;
   const navigate = useNavigate();
 
+  if (!primaryMenu) return null;
+
+  const handleFeedbackDetailClick = () => {
+    if (hasMultipleMenus) {
+      navigate(getFeedbackResultPath(chatId));
+      return;
+    }
+
+    navigate(getFeedbackDetailPath(chatId, primaryMenu.menu_id));
+  };
+
+  const handleFeedbackCardClick = (event: MouseEvent<HTMLElement>) => {
+    if (isNestedInteractiveTarget(event.target, event.currentTarget)) {
+      return;
+    }
+
+    handleFeedbackDetailClick();
+  };
+
+  const handleFeedbackCardKeyDown = (event: KeyboardEvent<HTMLElement>) => {
+    if (event.target !== event.currentTarget) {
+      return;
+    }
+
+    if (event.key !== "Enter" && event.key !== " ") {
+      return;
+    }
+
+    event.preventDefault();
+    handleFeedbackDetailClick();
+  };
+
+  const handleMealRecordToggleClick = () => {
+    if (isMealRecorded) {
+      onMealRecordCancelClick();
+      return;
+    }
+
+    onMealRecordClick();
+  };
+
   return (
     <div className={styles.feedbackSection}>
-      <article className={`${styles.feedbackCard} ${isMealRecorded ? styles.cardSelected : ""}`}>
+      <article
+        className={`${styles.feedbackCard} ${isMealRecorded ? styles.cardSelected : ""}`}
+        role="button"
+        tabIndex={0}
+        aria-label="피드백 상세 보기"
+        onClick={handleFeedbackCardClick}
+        onKeyDown={handleFeedbackCardKeyDown}
+      >
         <FeedbackScoreGauge score={feedback.score} />
 
         <div className={styles.feedbackContents}>
@@ -1060,8 +1209,8 @@ function FeedbackSection({
               >
                 <p className={`${styles.textAssistive} typo-label4`}>총 칼로리</p>
 
-                <p className={`${styles.feedbackCalories} typo-title3`}>
-                  {formatCalories(feedback.total_calories)} kcal
+                <p className={`${styles.feedbackCalories} textNoWrap typo-title3`}>
+                  {formatNumberWithMaxOneDecimal(feedback.total_calories)}kcal
                   <ChevronUp
                     size={20}
                     className={`${styles.feedbackMenuChevron} ${
@@ -1075,8 +1224,8 @@ function FeedbackSection({
                 <p className={`${styles.textAlternative} typo-label4`}>
                   {formatMenuServing(primaryMenu)}
                 </p>
-                <p className={`${styles.feedbackCalories} typo-title3`}>
-                  {formatCalories(primaryMenu.calories)} kcal
+                <p className={`${styles.feedbackCalories} textNoWrap typo-title3`}>
+                  {formatNumberWithMaxOneDecimal(primaryMenu.calories)}kcal
                 </p>
               </div>
             )}
@@ -1092,8 +1241,8 @@ function FeedbackSection({
                   <div>
                     <p className={`${styles.feedbackMenuItemName} typo-body3`}>{menu.menu_name}</p>
                   </div>
-                  <span className={`${styles.feedbackMenuItemCalories} typo-body3`}>
-                    {formatCalories(menu.calories)} kcal
+                  <span className={`${styles.feedbackMenuItemCalories} textNoWrap typo-body3`}>
+                    {formatNumberWithMaxOneDecimal(menu.calories)}kcal
                   </span>
                 </li>
               ))}
@@ -1104,9 +1253,8 @@ function FeedbackSection({
             <Button
               size="small"
               fullWidth
-              onClick={() => {
-                onMealRecordClick();
-              }}
+              aria-pressed={isMealRecorded}
+              onClick={handleMealRecordToggleClick}
             >
               식사 기록
               {isMealRecorded ? (
@@ -1115,14 +1263,7 @@ function FeedbackSection({
                 <Plus size={16} className={styles.feedbackActionIcon} />
               )}
             </Button>
-            <Button
-              size="small"
-              variant="outlined"
-              fullWidth
-              onClick={() => {
-                navigate(getFeedbackResultPath(chatId));
-              }}
-            >
+            <Button size="small" variant="outlined" fullWidth onClick={handleFeedbackDetailClick}>
               자세히 보기
               <ChevronRight size={16} className={styles.feedbackActionIcon} />
             </Button>
@@ -1130,10 +1271,19 @@ function FeedbackSection({
         </div>
       </article>
 
-      <p className={`${styles.assistantBubble} typo-body3`}>{feedback.feedback_summary}</p>
-      <p className={`${styles.assistantBubble} typo-body3`}>{feedback.feedback_reason}</p>
+      <p className={`${styles.assistantBubble} typo-body2`}>{feedback.feedback_summary}</p>
+      <p className={`${styles.assistantBubble} typo-body2`}>{feedback.feedback_reason}</p>
     </div>
   );
+}
+
+function isNestedInteractiveTarget(target: EventTarget | null, boundary: HTMLElement) {
+  if (!(target instanceof HTMLElement)) {
+    return false;
+  }
+
+  const interactiveElement = target.closest("button, a, input, select, textarea, [role='button']");
+  return interactiveElement !== null && interactiveElement !== boundary;
 }
 
 function FeedbackScoreGauge({ score }: { score: number }) {
@@ -1277,6 +1427,33 @@ function getMergedMealRecordPayload(
   };
 }
 
+function getRemainingMealRecordMenus(
+  chatItem: ChatHistoryItemResponseDto,
+  removeMenuId: number,
+): SelectedMealRecordMenu[] {
+  const mealRecord = chatItem.meal_record;
+
+  if (!mealRecord) {
+    return [];
+  }
+
+  const menusById = new Map(getMealRecordMenus(chatItem).map((menu) => [menu.menu_id, menu]));
+
+  return (mealRecord.menu_ids ?? []).flatMap((menuId, index) => {
+    if (menuId === removeMenuId) {
+      return [];
+    }
+
+    return [
+      {
+        id: menuId,
+        quantity: mealRecord.menu_quantities?.[index] ?? menusById.get(menuId)?.weight ?? 1,
+        inputMode: mealRecord.menu_input_modes?.[index] ?? MENU_INPUT_MODE.UNIT,
+      },
+    ];
+  });
+}
+
 function getMealRecordMenus(chatItem: ChatHistoryItemResponseDto): ChatMealRecordMenu[] {
   const menus =
     chatItem.response_payload.chat_category === "recommendation"
@@ -1370,14 +1547,8 @@ function formatChatTime(dateLike: Date | string) {
   });
 }
 
-function formatCalories(value: number) {
-  return value.toLocaleString("ko-KR", {
-    maximumFractionDigits: 1,
-  });
-}
-
 function formatMenuServing(menu: FeedbackDto["menus"][number]) {
-  return `1${menu.unit_quantity} (${formatCalories(menu.weight)}${menu.unit === 0 ? "g" : "ml"})`;
+  return `1${menu.unit_quantity} (${formatNumberWithMaxOneDecimal(menu.weight)}${menu.unit === 0 ? "g" : "ml"})`;
 }
 
 function resolveErrorMessage(error: unknown) {

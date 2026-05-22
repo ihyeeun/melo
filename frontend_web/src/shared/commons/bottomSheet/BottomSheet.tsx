@@ -13,6 +13,18 @@ type BottomSheetProps = {
   children: React.ReactNode;
 };
 
+function blurActiveElement() {
+  if (typeof document === "undefined") {
+    return;
+  }
+
+  const activeElement = document.activeElement;
+
+  if (activeElement instanceof HTMLElement) {
+    activeElement.blur();
+  }
+}
+
 export default function BottomSheet({
   isOpen,
   onClose,
@@ -27,14 +39,18 @@ export default function BottomSheet({
     <Sheet isOpen={isOpen} onClose={onClose} detent="content" className={className}>
       <Sheet.Container
         style={{
-          paddingBottom: "var(--safe-area-bottom)",
+          paddingBottom:
+            "max(0px, calc(var(--safe-area-bottom) - var(--keyboard-inset-height, 0px)))",
           background: "#fff",
           borderTopLeftRadius: 20,
           borderTopRightRadius: 20,
           boxShadow: "none",
         }}
       >
-        <Sheet.Header className="melo-bottom-sheet-header">
+        <Sheet.Header
+          className="melo-bottom-sheet-header"
+          onPointerDownCapture={blurActiveElement}
+        >
           <div className="melo-bottom-sheet-handle" aria-hidden="true" />
         </Sheet.Header>
         <Sheet.Content disableDrag={disableContentDrag}>

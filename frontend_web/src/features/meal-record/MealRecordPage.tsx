@@ -496,7 +496,7 @@ export default function MealRecordPage() {
         <article className={styles.summaryCard}>
           <p className="typo-title2">섭취 칼로리</p>
 
-          <div className={styles.calorieRow}>
+          <div className={`${styles.calorieRow} textNoWrap`}>
             <span className={`${styles.textPrimary} typo-h2`}>
               {totalCalories.toLocaleString("ko-KR", { maximumFractionDigits: 1 })}
             </span>

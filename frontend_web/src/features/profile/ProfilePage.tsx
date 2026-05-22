@@ -252,7 +252,7 @@ export default function ProfilePage() {
                       maximumFractionDigits: 1,
                     })}
                   </span>
-                  <span className={`${styles.activeCardUnit} typo-caption3`}>kcal</span>
+                  <span className={`${styles.activeCardUnit} textNoWrap typo-caption3`}>kcal</span>
                 </div>
               </ActionCard>
 

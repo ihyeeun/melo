@@ -56,6 +56,8 @@ p {
   letter-spacing: var(--letter-spacing-body);
   line-height: var(--line-height-130);
   margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
   word-break: keep-all;
 }
 
