@@ -54,6 +54,7 @@ import {
   getTodayFormatDateKey,
   parseDate,
 } from "@/shared/utils/dateFormat";
+import { formatNumberWithMaxOneDecimal } from "@/shared/utils/numberFormat";
 
 const QUICK_CHIP_LIST = ["지금 먹기 좋은 메뉴를 추천해줘"];
 const FEEDBACK_GAUGE_VIEWBOX_WIDTH = 220;
@@ -935,7 +936,7 @@ function MealRecordCard({
         <span
           className={`${styles.mealRecordSummaryCalories} ${styles.recommendCalories} textNoWrap typo-title3`}
         >
-          {formatCalories(totalCalories)}kcal
+          {formatNumberWithMaxOneDecimal(totalCalories)}kcal
         </span>
         {hasMultipleMenus ? (
           <ChevronUp
@@ -955,7 +956,7 @@ function MealRecordCard({
               <span
                 className={`${styles.mealRecordMenuCalories} ${styles.textAlternative} textNoWrap typo-body3`}
               >
-                {formatCalories(menu.recordedCalories)}kcal
+                {formatNumberWithMaxOneDecimal(menu.recordedCalories)}kcal
               </span>
             </div>
           ))}
@@ -1070,7 +1071,7 @@ function RecommendationSection({
               </span>
             </p>
             <span className={`${styles.recommendCalories} textNoWrap typo-title2`}>
-              {formatCalories(topRecommendation.calories)}kcal
+              {formatNumberWithMaxOneDecimal(topRecommendation.calories)}kcal
             </span>
           </div>
           {topRecommendation.data_source === 1 && (
@@ -1209,7 +1210,7 @@ function FeedbackSection({
                 <p className={`${styles.textAssistive} typo-label4`}>총 칼로리</p>
 
                 <p className={`${styles.feedbackCalories} textNoWrap typo-title3`}>
-                  {formatCalories(feedback.total_calories)}kcal
+                  {formatNumberWithMaxOneDecimal(feedback.total_calories)}kcal
                   <ChevronUp
                     size={20}
                     className={`${styles.feedbackMenuChevron} ${
@@ -1224,7 +1225,7 @@ function FeedbackSection({
                   {formatMenuServing(primaryMenu)}
                 </p>
                 <p className={`${styles.feedbackCalories} textNoWrap typo-title3`}>
-                  {formatCalories(primaryMenu.calories)}kcal
+                  {formatNumberWithMaxOneDecimal(primaryMenu.calories)}kcal
                 </p>
               </div>
             )}
@@ -1241,7 +1242,7 @@ function FeedbackSection({
                     <p className={`${styles.feedbackMenuItemName} typo-body3`}>{menu.menu_name}</p>
                   </div>
                   <span className={`${styles.feedbackMenuItemCalories} textNoWrap typo-body3`}>
-                    {formatCalories(menu.calories)}kcal
+                    {formatNumberWithMaxOneDecimal(menu.calories)}kcal
                   </span>
                 </li>
               ))}
@@ -1538,14 +1539,8 @@ function formatChatTime(dateLike: Date | string) {
   });
 }
 
-function formatCalories(value: number) {
-  return value.toLocaleString("ko-KR", {
-    maximumFractionDigits: 1,
-  });
-}
-
 function formatMenuServing(menu: FeedbackDto["menus"][number]) {
-  return `1${menu.unit_quantity} (${formatCalories(menu.weight)}${menu.unit === 0 ? "g" : "ml"})`;
+  return `1${menu.unit_quantity} (${formatNumberWithMaxOneDecimal(menu.weight)}${menu.unit === 0 ? "g" : "ml"})`;
 }
 
 function resolveErrorMessage(error: unknown) {

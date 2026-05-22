@@ -24,6 +24,7 @@ import { useNavigate } from "@/shared/navigation/stackflowNavigation";
 import { useSelectedDateKey, useSetSelectedDate } from "@/shared/stores/selectedDate.store";
 import { useTargetsState } from "@/shared/stores/targetNutrient.store";
 import { formatDateKey, parseDateKey } from "@/shared/utils/dateFormat";
+import { formatNumberWithMaxOneDecimal } from "@/shared/utils/numberFormat";
 import {
   calculateDailyNutritionMetricsForDisplay,
   getCalorieProgressPercent,
@@ -384,7 +385,7 @@ function MealRecordCard({
 
             <span className={styles.mealSummaryMeta}>
               <span className={`${styles.score} textNoWrap typo-title3`}>
-                {formatCalories(calories)} kcal
+                {formatNumberWithMaxOneDecimal(calories)}kcal
               </span>
               <ChevronDown
                 size={24}
@@ -399,7 +400,7 @@ function MealRecordCard({
                 <li key={menu.id} className={styles.mealDetailItem}>
                   <span className="typo-body3">{menu.name}</span>
                   <span className={`${styles.textAlternative} textNoWrap typo-body3`}>
-                    {formatCalories(menu.calories)} kcal
+                    {formatNumberWithMaxOneDecimal(menu.calories)}kcal
                   </span>
                 </li>
               ))}
@@ -413,10 +414,6 @@ function MealRecordCard({
       ) : null}
     </ActionCard>
   );
-}
-
-function formatCalories(value: number) {
-  return value.toLocaleString("ko-KR", { maximumFractionDigits: 1 });
 }
 
 function getTotalMealCalories(menus: MenuWithQuantity[]) {

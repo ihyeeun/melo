@@ -14,6 +14,7 @@ import {
 import BottomSheet from "@/shared/commons/bottomSheet/BottomSheet";
 import { Button } from "@/shared/commons/button/Button";
 import NumberField from "@/shared/commons/input/NumberField";
+import { formatNumberWithMaxOneDecimal } from "@/shared/utils/numberFormat";
 
 type SelectedMenuItem = {
   id: number;
@@ -64,12 +65,6 @@ const QUANTITY_STEP = 0.5;
 const MIN_QUANTITY = 0.1;
 const CONSUMED_WEIGHT_PRECISION = 4;
 const UNIT_QUANTITY_PATTERN = /^\s*([\d.]+)\s*(.*)$/;
-
-function formatCalories(value: number) {
-  return value.toLocaleString("ko-KR", {
-    maximumFractionDigits: 1,
-  });
-}
 
 function roundDecimal(value: number, digits = 1) {
   const factor = 10 ** digits;
@@ -195,7 +190,7 @@ export function ChatMealRecordBottomSheet({
             <span className="typo-title2">총 칼로리</span>
             <div className={`${styles.calorieValueWrapper} textNoWrap`}>
               <span className={`${styles.calorieValue} typo-h2`}>
-                {formatCalories(totalCalories)}
+                {formatNumberWithMaxOneDecimal(totalCalories)}
               </span>
               <span className="typo-caption1">kcal</span>
             </div>

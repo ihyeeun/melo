@@ -1,8 +1,9 @@
-import { CheckCircle2, PlusCircle, X } from "lucide-react";
+import { CheckCircle2, X } from "lucide-react";
 import type { KeyboardEvent, MouseEvent } from "react";
 
 import { MENU_DATA_SOURCE, type MenuDataSource } from "@/shared/api/types/api.dto";
 import { DataSourceBadge } from "@/shared/commons/badge/DataSourceBadge";
+import { formatNumberWithMaxOneDecimal } from "@/shared/utils/numberFormat";
 
 import styles from "./MealMenuCard.module.css";
 
@@ -29,10 +30,6 @@ type MealMenuCardProps = {
 };
 
 const UNIT_QUANTITY_PATTERN = /^\s*([\d.]+)/;
-
-function formatCalories(value: number) {
-  return value.toLocaleString("ko-KR", { maximumFractionDigits: 1 });
-}
 
 function formatQuantity(value: number) {
   return value.toLocaleString("ko-KR", {
@@ -66,7 +63,7 @@ function getActionAriaLabel(icon: MealMenuCardIcon) {
 }
 
 function ActionIcon({ icon }: { icon: MealMenuCardIcon }) {
-  if (icon === "add") return <PlusCircle size={24} strokeWidth={2} />;
+  if (icon === "add") return <img src="/icons/circle-check.svg" width={24} height={24} />;
   if (icon === "check") return <CheckCircle2 size={24} strokeWidth={2} />;
   return <X size={24} strokeWidth={2} />;
 }
@@ -175,7 +172,7 @@ export function MealMenuCard({
           </p>
           {displayedCalories !== null && (
             <span className={`${styles.calories} textNoWrap typo-title3`}>
-              {formatCalories(displayedCalories)}kcal
+              {formatNumberWithMaxOneDecimal(displayedCalories)}kcal
             </span>
           )}
         </section>
