@@ -130,7 +130,7 @@ export default function MenuBoardCameraPage() {
       )}
 
       {isProcessing ? (
-        <CameraLoading description="메뉴판을 분석 중이에요." previewSrc={capturedPreviewSrc} />
+        <CameraLoading description="메뉴판을 분석 중이에요" previewSrc={capturedPreviewSrc} />
       ) : shouldHideWebCameraPrompt ? (
         <main className={styles.main} />
       ) : (

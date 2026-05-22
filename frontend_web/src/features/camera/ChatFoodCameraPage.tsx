@@ -101,7 +101,7 @@ export default function ChatFoodCameraPage() {
       {isOpeningCamera ? (
         <CameraLoading description="" previewSrc={null} />
       ) : isProcessing ? (
-        <CameraLoading description="음식을 분석 중이에요." previewSrc={previewSrc} />
+        <CameraLoading description="음식을 분석 중이에요" previewSrc={previewSrc} />
       ) : (
         <main className={styles.main}>
           {/* <div className={styles.content}>
