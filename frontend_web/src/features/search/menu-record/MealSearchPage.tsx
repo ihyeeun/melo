@@ -324,11 +324,7 @@ export default function MealSearchPage() {
                 <div className={styles.emptyResultContainer}>
                   {searchResults.menu_list.length === 0 && (
                     <section className={styles.emptyResult}>
-                      <p className="typo-body3">
-                        일치하는 메뉴가 없어요
-                        <br />
-                        비슷한 메뉴를 선택하거나 직접 등록할 수 있어요
-                      </p>
+                      <p className="typo-body3">일치하는 메뉴가 없어요</p>
                       <div className={styles.buttonContainer}>
                         <Button
                           variant="text"
