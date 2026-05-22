@@ -94,7 +94,7 @@ export default function FeedbackDetailPage() {
           chatItem.meal_record?.time ??
           (Number(getMealTypeFromCurrentTime(new Date())) as MealTime),
         menus: getNextMealRecordMenus({
-          mealRecord: chatItem.meal_record,
+          chatItem,
           menuId,
           selection,
         }),
@@ -195,14 +195,16 @@ export default function FeedbackDetailPage() {
 }
 
 function getNextMealRecordMenus({
-  mealRecord,
+  chatItem,
   menuId,
   selection,
 }: {
-  mealRecord: ChatHistoryItemResponseDto["meal_record"];
+  chatItem: ChatHistoryItemResponseDto;
   menuId: number;
   selection: MealMenuNutrientSelection;
 }): SelectedMealRecordMenu[] {
+  const mealRecord = chatItem.meal_record;
+  const menusById = new Map(getFeedbackMealRecordMenus(chatItem).map((menu) => [menu.menu_id, menu]));
   const selectedMenu = {
     id: menuId,
     quantity: selection.quantity,
@@ -210,7 +212,7 @@ function getNextMealRecordMenus({
   };
   const previousMenus = (mealRecord?.menu_ids ?? []).map((id, index) => ({
     id,
-    quantity: mealRecord?.menu_quantities?.[index] ?? 1,
+    quantity: mealRecord?.menu_quantities?.[index] ?? menusById.get(id)?.weight ?? 1,
     inputMode: mealRecord?.menu_input_modes?.[index] ?? MENU_INPUT_MODE.UNIT,
   }));
   const existingIndex = previousMenus.findIndex((menu) => menu.id === menuId);
@@ -220,6 +222,14 @@ function getNextMealRecordMenus({
   }
 
   return previousMenus.map((menu) => (menu.id === menuId ? selectedMenu : menu));
+}
+
+function getFeedbackMealRecordMenus(chatItem: ChatHistoryItemResponseDto) {
+  if (chatItem.response_payload.chat_category !== "feedback") {
+    return [];
+  }
+
+  return chatItem.response_payload.feedback.menus;
 }
 
 function toMealMenuInputMode(mode: MealServingInputMode): MealMenuInputMode {
