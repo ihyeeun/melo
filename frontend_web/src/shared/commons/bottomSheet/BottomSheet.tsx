@@ -27,7 +27,8 @@ export default function BottomSheet({
     <Sheet isOpen={isOpen} onClose={onClose} detent="content" className={className}>
       <Sheet.Container
         style={{
-          paddingBottom: "var(--safe-area-bottom)",
+          paddingBottom:
+            "max(0px, calc(var(--safe-area-bottom) - var(--keyboard-inset-height, 0px)))",
           background: "#fff",
           borderTopLeftRadius: 20,
           borderTopRightRadius: 20,

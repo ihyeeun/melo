@@ -353,20 +353,20 @@ export function ChatMealRecordBottomSheet({
               </Button>
             </section>
           ) : null}
-        </div>
 
-        <div className={styles.actionBar}>
-          <Button
-            variant="filled"
-            interaction={selectedItems.length > 0 && !isSubmitPending ? "normal" : "disable"}
-            size="large"
-            color="primary"
-            fullWidth
-            disabled={selectedItems.length === 0 || isSubmitPending}
-            onClick={onSubmit}
-          >
-            {isSubmitPending ? "저장 중..." : submitLabel}
-          </Button>
+          <div className={styles.actionBar}>
+            <Button
+              variant="filled"
+              interaction={selectedItems.length > 0 && !isSubmitPending ? "normal" : "disable"}
+              size="large"
+              color="primary"
+              fullWidth
+              disabled={selectedItems.length === 0 || isSubmitPending}
+              onClick={onSubmit}
+            >
+              {isSubmitPending ? "저장 중..." : submitLabel}
+            </Button>
+          </div>
         </div>
       </section>
     </BottomSheet>
