@@ -343,7 +343,7 @@ export default function GoalEditPage() {
           <h2 className={styles.editorTitle}>키</h2>
           <EditorInput
             type="number"
-            inputMode="numeric"
+            inputMode="decimal"
             value={sheetData.height}
             onChange={(value) => updateSheetData({ height: value })}
             placeholder="키 입력"
