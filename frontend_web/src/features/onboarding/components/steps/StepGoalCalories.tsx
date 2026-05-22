@@ -198,14 +198,16 @@ export default function SteptargetCalories({ data, update }: StepComponentProps)
           </div>
         ) : (
           <p className={styles.onboardingSubtitle}>
-            추천하는 목표 칼로리는 {formattargetCalories(displayRecommendedCalories)}kcal예요
+            추천하는 목표 칼로리는{" "}
+            <span className="textNoWrap">{formattargetCalories(displayRecommendedCalories)}kcal</span>
+            예요
           </p>
         )}
       </div>
 
       <div className={styles.goalCalorieContainer}>
         <button className={styles.onboardingGoalKcalTrigger} type="button" onClick={openEditor}>
-          <p className={`${styles.onboardingGoalKcalValue} typo-h1`}>
+          <p className={`${styles.onboardingGoalKcalValue} textNoWrap typo-h1`}>
             {formattargetCalories(visibletargetCalories)} kcal
           </p>
           <img src="/icons/pencil.svg" alt="목표 칼로리 값 수정" width={24} height={24} />

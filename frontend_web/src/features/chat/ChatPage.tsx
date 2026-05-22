@@ -933,7 +933,7 @@ function MealRecordCard({
             : primaryMenu.menu_name}
         </p>
         <span
-          className={`${styles.mealRecordSummaryCalories} ${styles.recommendCalories} typo-title3`}
+          className={`${styles.mealRecordSummaryCalories} ${styles.recommendCalories} textNoWrap typo-title3`}
         >
           {formatCalories(totalCalories)}kcal
         </span>
@@ -953,7 +953,7 @@ function MealRecordCard({
                 {menu.menu_name}
               </p>
               <span
-                className={`${styles.mealRecordMenuCalories} ${styles.textAlternative} typo-body3`}
+                className={`${styles.mealRecordMenuCalories} ${styles.textAlternative} textNoWrap typo-body3`}
               >
                 {formatCalories(menu.recordedCalories)}kcal
               </span>
@@ -1069,7 +1069,7 @@ function RecommendationSection({
                 {topRecommendation.unit === 0 ? "g" : "ml"})
               </span>
             </p>
-            <span className={`${styles.recommendCalories} typo-title2`}>
+            <span className={`${styles.recommendCalories} textNoWrap typo-title2`}>
               {formatCalories(topRecommendation.calories)}kcal
             </span>
           </div>
@@ -1208,7 +1208,7 @@ function FeedbackSection({
               >
                 <p className={`${styles.textAssistive} typo-label4`}>총 칼로리</p>
 
-                <p className={`${styles.feedbackCalories} typo-title3`}>
+                <p className={`${styles.feedbackCalories} textNoWrap typo-title3`}>
                   {formatCalories(feedback.total_calories)}kcal
                   <ChevronUp
                     size={20}
@@ -1223,7 +1223,7 @@ function FeedbackSection({
                 <p className={`${styles.textAlternative} typo-label4`}>
                   {formatMenuServing(primaryMenu)}
                 </p>
-                <p className={`${styles.feedbackCalories} typo-title3`}>
+                <p className={`${styles.feedbackCalories} textNoWrap typo-title3`}>
                   {formatCalories(primaryMenu.calories)}kcal
                 </p>
               </div>
@@ -1240,7 +1240,7 @@ function FeedbackSection({
                   <div>
                     <p className={`${styles.feedbackMenuItemName} typo-body3`}>{menu.menu_name}</p>
                   </div>
-                  <span className={`${styles.feedbackMenuItemCalories} typo-body3`}>
+                  <span className={`${styles.feedbackMenuItemCalories} textNoWrap typo-body3`}>
                     {formatCalories(menu.calories)}kcal
                   </span>
                 </li>

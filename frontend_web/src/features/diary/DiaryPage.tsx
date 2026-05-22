@@ -137,7 +137,7 @@ export default function DiaryPage() {
                     <span className={`${styles.scoreCurrent} typo-h2`}>
                       {calorieSummary.roundedCurrentCalories.toLocaleString("ko-KR")}
                     </span>
-                    <span className="typo-title2">
+                    <span className="textNoWrap typo-title2">
                       / {roundedTargetCalories.toLocaleString("ko-KR")} kcal
                     </span>
                   </p>
@@ -383,7 +383,9 @@ function MealRecordCard({
             </span>
 
             <span className={styles.mealSummaryMeta}>
-              <span className={`${styles.score} typo-title3`}>{formatCalories(calories)} kcal</span>
+              <span className={`${styles.score} textNoWrap typo-title3`}>
+                {formatCalories(calories)} kcal
+              </span>
               <ChevronDown
                 size={24}
                 className={`${styles.mealSummaryArrow} ${isExpanded ? styles.mealSummaryArrowExpanded : ""}`}
@@ -396,7 +398,7 @@ function MealRecordCard({
               {menus.map((menu) => (
                 <li key={menu.id} className={styles.mealDetailItem}>
                   <span className="typo-body3">{menu.name}</span>
-                  <span className={`${styles.textAlternative} typo-body3`}>
+                  <span className={`${styles.textAlternative} textNoWrap typo-body3`}>
                     {formatCalories(menu.calories)} kcal
                   </span>
                 </li>

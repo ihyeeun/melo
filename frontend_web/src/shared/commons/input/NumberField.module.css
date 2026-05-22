@@ -69,5 +69,7 @@
 
 .unit {
   color: var(--common-1200);
+  flex-shrink: 0;
   font-size: 20px;
+  white-space: nowrap;
 }

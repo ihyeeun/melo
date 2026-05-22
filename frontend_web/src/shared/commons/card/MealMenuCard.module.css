@@ -22,6 +22,7 @@
 .content {
   display: flex;
   flex-direction: column;
+  min-width: 0;
 }
 
 .header {
@@ -44,6 +45,7 @@
   display: flex;
   gap: 16px;
   justify-content: space-between;
+  min-width: 0;
 }
 
 .description {
@@ -97,29 +99,45 @@
 
 .title {
   color: var(--label-normal);
+  min-width: 0;
 }
 
 .meta {
   align-items: baseline;
   display: flex;
   flex-wrap: wrap;
+  gap: 4px 8px;
   justify-content: space-between;
+  min-width: 0;
 }
 
 .prouductInfo {
-  align-items: center;
+  align-items: baseline;
   display: flex;
+  flex: 1 1 0;
+  flex-wrap: wrap;
   gap: 4px;
+  min-width: 0;
 }
 
 .calories {
   color: var(--label-normal);
+  flex-shrink: 0;
 }
 
 .brand {
   color: var(--label-assistive);
+  display: -webkit-box;
+  max-width: 100%;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  word-break: normal;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 1;
 }
 
 .unitAmount {
   color: var(--label-alternative);
+  flex-shrink: 0;
+  white-space: nowrap;
 }

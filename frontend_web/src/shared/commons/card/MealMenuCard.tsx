@@ -160,7 +160,11 @@ export function MealMenuCard({
 
         <section className={styles.meta}>
           <p className={styles.prouductInfo}>
-            {brand && <span className={`${styles.brand} typo-label4`}>{brand}</span>}
+            {brand && (
+              <span className={`${styles.brand} typo-label4`} title={brand}>
+                {brand}
+              </span>
+            )}
             <span className={`${styles.unitAmount} typo-label4`}>
               {formatQuantity(safeDisplayUnitCount)}
               {unit_quantity}
@@ -170,7 +174,7 @@ export function MealMenuCard({
             >{`(${formatQuantity(resolvedConsumedWeight)}${weightUnitText})`}</span>
           </p>
           {displayedCalories !== null && (
-            <span className={`${styles.calories} typo-title3`}>
+            <span className={`${styles.calories} textNoWrap typo-title3`}>
               {formatCalories(displayedCalories)}kcal
             </span>
           )}

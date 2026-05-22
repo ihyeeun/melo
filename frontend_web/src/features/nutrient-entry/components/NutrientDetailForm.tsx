@@ -198,7 +198,7 @@ export function NutrientDetailForm({
       <div className={styles.topFieldSection}>
         <div className={styles.titleRow}>
           <p className={`typo-title4 ${styles.titleText}`}>
-            총 칼로리 <span className={`typo-caption3 ${styles.titleUnit}`}>(kcal)</span>
+            총 칼로리 <span className={`typo-caption3 ${styles.titleUnit} textNoWrap`}>(kcal)</span>
           </p>
           <p className={`typo-body3 ${styles.requiredText}`}>* 필수로 작성해주세요</p>
         </div>

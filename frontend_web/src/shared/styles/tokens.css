@@ -360,3 +360,8 @@ body {
 .dividerMargin16 {
   margin: 16px 0;
 }
+
+.textNoWrap {
+  flex-shrink: 0;
+  white-space: nowrap;
+}

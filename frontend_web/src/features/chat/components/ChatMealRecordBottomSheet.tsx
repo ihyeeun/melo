@@ -193,7 +193,7 @@ export function ChatMealRecordBottomSheet({
         <div className={styles.scrollArea}>
           <article className={styles.calorieCard}>
             <span className="typo-title2">총 칼로리</span>
-            <div className={styles.calorieValueWrapper}>
+            <div className={`${styles.calorieValueWrapper} textNoWrap`}>
               <span className={`${styles.calorieValue} typo-h2`}>
                 {formatCalories(totalCalories)}
               </span>

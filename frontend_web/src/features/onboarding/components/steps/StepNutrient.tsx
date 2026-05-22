@@ -81,7 +81,9 @@ export default function StepNutrient({ data, update }: StepComponentProps) {
         )}
       </div>
       <div className={styles.onboardingNutrientContent}>
-        <p className={`${styles.onboardingNutrientGoal} ${styles.textPrimary} typo-title1`}>
+        <p
+          className={`${styles.onboardingNutrientGoal} ${styles.textPrimary} textNoWrap typo-title1`}
+        >
           목표 칼로리 {data.target_calories ?? "--"}kcal
         </p>
         <div className={styles.onboardingNutrientList}>
@@ -151,7 +153,7 @@ function NutrientCard({ label, nutrientType, targetCalories, value, onChange }: 
 
       <div className={styles.onboardingNutrientMeta}>
         <span className="typo-body1">{formatRoundedValue(targetGram)}g</span>
-        <span className="typo-body1">{formatRoundedValue(targetKcal)}kcal</span>
+        <span className="textNoWrap typo-body1">{formatRoundedValue(targetKcal)}kcal</span>
       </div>
     </div>
   );

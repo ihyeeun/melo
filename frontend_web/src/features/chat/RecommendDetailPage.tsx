@@ -121,7 +121,7 @@ export default function RecommendDetailPage() {
                     {recommendation.unit === 0 ? "g" : "ml"})
                   </p>
                 </div>
-                <p className={`${styles.caloriesText} typo-title1`}>
+                <p className={`${styles.caloriesText} textNoWrap typo-title1`}>
                   {formatCalories(recommendation.calories)} kcal
                 </p>
               </div>
