@@ -394,7 +394,7 @@ export default function ChatPage() {
       return;
     }
 
-    const remainingMenus = getRemainingMealRecordMenus(mealRecord, primaryMenu.menu_id);
+    const remainingMenus = getRemainingMealRecordMenus(meal, primaryMenu.menu_id);
 
     if (remainingMenus.length === (mealRecord.menu_ids?.length ?? 0)) {
       return;
@@ -1428,9 +1428,17 @@ function getMergedMealRecordPayload(
 }
 
 function getRemainingMealRecordMenus(
-  mealRecord: NonNullable<ChatHistoryItemResponseDto["meal_record"]>,
+  chatItem: ChatHistoryItemResponseDto,
   removeMenuId: number,
 ): SelectedMealRecordMenu[] {
+  const mealRecord = chatItem.meal_record;
+
+  if (!mealRecord) {
+    return [];
+  }
+
+  const menusById = new Map(getMealRecordMenus(chatItem).map((menu) => [menu.menu_id, menu]));
+
   return (mealRecord.menu_ids ?? []).flatMap((menuId, index) => {
     if (menuId === removeMenuId) {
       return [];
@@ -1439,7 +1447,7 @@ function getRemainingMealRecordMenus(
     return [
       {
         id: menuId,
-        quantity: mealRecord.menu_quantities?.[index] ?? 1,
+        quantity: mealRecord.menu_quantities?.[index] ?? menusById.get(menuId)?.weight ?? 1,
         inputMode: mealRecord.menu_input_modes?.[index] ?? MENU_INPUT_MODE.UNIT,
       },
     ];
