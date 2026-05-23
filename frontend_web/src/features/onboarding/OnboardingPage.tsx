@@ -107,7 +107,8 @@ export default function OnboardingPage() {
   const [stepIndex, setStepIndex] = useState(0);
   const [isNutrientTotalModalOpen, setIsNutrientTotalModalOpen] = useState(false);
   const navigate = useNavigate();
-  const showSubscribedCodeStep = !isNativeApp();
+  const isWebOnboarding = !isNativeApp();
+  const showSubscribedCodeStep = isWebOnboarding;
   const steps = useMemo(
     () => getOnboardingSteps({ showSubscribedCodeStep }),
     [showSubscribedCodeStep],
@@ -211,7 +212,7 @@ export default function OnboardingPage() {
 
   const StepComponent = STEP_COMPONENTS[step.id];
 
-  return (
+  const onboardingContent = (
     <div className={styles.page}>
       <OnboardingHeader stepIndex={stepIndex} total={total} onPrev={prev} />
 
@@ -243,4 +244,14 @@ export default function OnboardingPage() {
       />
     </div>
   );
+
+  if (isWebOnboarding) {
+    return (
+      <div className={styles.webFrameContainer}>
+        <div className={styles.phoneFrame}>{onboardingContent}</div>
+      </div>
+    );
+  }
+
+  return onboardingContent;
 }

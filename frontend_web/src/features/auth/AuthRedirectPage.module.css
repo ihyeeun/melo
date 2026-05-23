@@ -55,7 +55,7 @@
   overflow-x: hidden;
   overflow-y: auto;
   padding: calc(var(--safe-area-top) + 24px) 0 calc(var(--safe-area-bottom) + 28px);
-  width: min(100%, 430px);
+  width: min(100%, 480px);
 }
 
 .loginWrapper {
@@ -129,7 +129,7 @@
   text-underline-offset: 3px;
 }
 
-@media (width <= 430px) {
+@media (width <= 480px) {
   .loginContainer {
     background: var(--bg-white);
   }
