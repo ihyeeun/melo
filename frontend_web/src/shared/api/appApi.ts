@@ -54,6 +54,14 @@ async function parseApiResponse<T>(response: Response): Promise<ApiResponse<T>> 
   const text = await response.text();
 
   if (!text) {
+    if (response.ok) {
+      return {
+        message: response.statusText || "요청이 성공적으로 처리되었습니다.",
+        statusCode: response.status || 200,
+        data: undefined as T,
+      };
+    }
+
     return createFallbackFailResponse(response);
   }
 

@@ -85,7 +85,7 @@ export default function TodayMealScorePage() {
       key: "carbs",
       name: "탄수화물",
       current: Math.round(pageState.currents.totalNutrients.carbs),
-      showNotice: pageState.currents.nutrientNotices.carbsEstimatedFromSubNutrients,
+      showNotice: pageState.currents.nutrientNotices.carbsEstimatedFromSubNutrients ?? false,
       target: Math.round(
         calculateMacroPercentToGram({
           nutrientType: "carbs",

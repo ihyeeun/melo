@@ -61,7 +61,6 @@
 .loginWrapper {
   display: flex;
   flex-direction: column;
-  align-items: space-between;
   justify-content: space-between;
   height: 100%;
   width: 100%;
