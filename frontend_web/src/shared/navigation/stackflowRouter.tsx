@@ -140,6 +140,7 @@ const ChatFoodCameraPage = createGuardedLazyActivity(
   FEATURE_GUARD.FOOD_CAMERA,
   () => import("@/features/camera/ChatFoodCameraPage"),
 );
+const AppInfoPage = createLazyActivity(() => import("@/features/auth/AppInfoPage"));
 
 const ACTIVITIES = {
   Home: HomePage,
@@ -172,6 +173,7 @@ const ACTIVITIES = {
   FeedbackResult: FeedbackResultPage,
   FeedbackDetail: FeedbackDetailPage,
   ChatFoodCamera: ChatFoodCameraPage,
+  AppInfo: AppInfoPage,
 };
 
 const ACTIVITY_ROUTES: Record<keyof typeof ACTIVITIES, RoutePath> = {
@@ -205,6 +207,7 @@ const ACTIVITY_ROUTES: Record<keyof typeof ACTIVITIES, RoutePath> = {
   FeedbackResult: PATH.FEEDBACK_RESULT,
   FeedbackDetail: PATH.FEEDBACK_DETAIL,
   ChatFoodCamera: PATH.CHAT_FOOD_CAMERA,
+  AppInfo: PATH.APP_INFO,
 };
 
 type ActivityName = keyof typeof ACTIVITY_ROUTES;

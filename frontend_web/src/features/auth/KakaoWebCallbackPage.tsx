@@ -73,7 +73,7 @@ export default function KakaoWebCallbackPage() {
 
         if (cancelled) return;
 
-        replacePath(hasUserInfo === true ? PATH.HOME : PATH.ONBOARDING);
+        replacePath(hasUserInfo === true ? PATH.APP_INFO : PATH.ONBOARDING);
       } catch (error) {
         if (cancelled) return;
         setErrorMessage(getLoginErrorMessage(error));

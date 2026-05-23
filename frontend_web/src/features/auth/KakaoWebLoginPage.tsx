@@ -47,7 +47,7 @@ export default function KakaoWebLoginPage() {
 
           <img src="/login/login-image.svg" alt="logo" />
 
-          <section className={styles.loginActions} aria-label="로그인">
+          <section className={styles.loginActions}>
             <button
               className={`${styles.kakaoButton} typo-label3`}
               type="button"
