@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 
 import { useGetProfileQuery } from "@/features/profile/hooks/queries/useProfileQuery";
+import { PATH } from "@/router/path";
 import { isNativeApp } from "@/shared/api/bridge/nativeBridge";
 import {
   useSetTargets,
@@ -26,7 +27,9 @@ function useSyncTargetsFromProfile() {
   const hasTargetsLoaded = useTargetsLoadedState();
   const targets = useTargetsState();
   const setTargets = useSetTargets();
-  const shouldFetchProfile = hasTargetsLoaded && !targets && isNativeApp();
+  const isOnboardingPath =
+    typeof window !== "undefined" && window.location.pathname === PATH.ONBOARDING;
+  const shouldFetchProfile = hasTargetsLoaded && !targets && isNativeApp() && !isOnboardingPath;
   const { data: profile } = useGetProfileQuery({ enabled: shouldFetchProfile });
 
   useEffect(() => {
