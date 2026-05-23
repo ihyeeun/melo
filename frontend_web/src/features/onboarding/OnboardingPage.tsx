@@ -9,6 +9,7 @@ import {
 import { useRegisterUserInfoMutation } from "@/features/onboarding/hooks/mutations/useRegisterUserInfoMutation";
 import styles from "@/features/onboarding/styles/OnboardingPage.module.css";
 import { PATH } from "@/router/path";
+import { AppApiError } from "@/shared/api/appApi";
 import { isNativeApp, syncAppTab } from "@/shared/api/bridge/nativeBridge";
 import { Button } from "@/shared/commons/button/Button";
 import { LoadingOverlay } from "@/shared/commons/loading/Loading";
@@ -17,7 +18,78 @@ import { toast } from "@/shared/commons/toast/toast";
 import { useNavigate } from "@/shared/navigation/stackflowNavigation";
 
 import { getOnboardingSteps, STEP_COMPONENTS } from "./components/steps/steps";
-import type { OnboardingData } from "./onboarding.types";
+import type { OnboardingData, StepId } from "./onboarding.types";
+
+type RegisterUserInfoErrorResolution = {
+  message: string;
+  openNutrientTotalModal?: boolean;
+  shouldGoHome?: boolean;
+  stepId?: StepId;
+};
+
+function resolveRegisterUserInfoError(error: Error): RegisterUserInfoErrorResolution {
+  if (!(error instanceof AppApiError)) {
+    return {
+      message: "회원 정보 등록에 실패했어요",
+    };
+  }
+
+  if (error.statusCode === 400 && error.message === "ratio sum must be 100") {
+    return {
+      message: "탄단지 비율의 합을 100으로 맞춰주세요",
+      openNutrientTotalModal: true,
+      stepId: "nutrient",
+    };
+  }
+
+  if (error.statusCode === 400 && error.message === "Subscription code is not active") {
+    return {
+      message: "사용 기간이 지났거나 비활성화된 구독 코드예요",
+      stepId: "subscribedCode",
+    };
+  }
+
+  if (
+    error.statusCode === 403 &&
+    error.message === "Not a member of the USER (only USER can call this api)"
+  ) {
+    return {
+      message: "회원 인증이 필요해요. 다시 로그인해주세요",
+    };
+  }
+
+  if (error.statusCode === 404 && error.message === "Subscription code not found") {
+    return {
+      message: "존재하지 않는 구독 코드예요",
+      stepId: "subscribedCode",
+    };
+  }
+
+  if (error.statusCode === 409 && error.message === "Your profile already exists") {
+    return {
+      message: "이미 등록된 프로필이 있어요",
+      shouldGoHome: true,
+    };
+  }
+
+  if (error.statusCode === 409 && error.message === "Your subCode already exists") {
+    return {
+      message: "이미 등록한 구독 코드예요",
+      stepId: "subscribedCode",
+    };
+  }
+
+  if (error.statusCode === 409 && error.message === "Subscription code usage limit exceeded") {
+    return {
+      message: "사용 한도가 초과된 구독 코드예요",
+      stepId: "subscribedCode",
+    };
+  }
+
+  return {
+    message: "회원 정보 등록에 실패했어요",
+  };
+}
 
 function isBodyRangeValid(data: OnboardingData) {
   return (
@@ -49,8 +121,27 @@ export default function OnboardingPage() {
       syncAppTab("home");
       navigate(PATH.HOME, { replace: true });
     },
-    onError: () => {
-      toast.warning("등록 실패");
+    onError: (error) => {
+      const resolved = resolveRegisterUserInfoError(error);
+
+      toast.warning(resolved.message);
+
+      if (resolved.openNutrientTotalModal) {
+        setIsNutrientTotalModalOpen(true);
+      }
+
+      if (resolved.stepId) {
+        const nextStepIndex = steps.findIndex((candidate) => candidate.id === resolved.stepId);
+
+        if (nextStepIndex >= 0) {
+          setStepIndex(nextStepIndex);
+        }
+      }
+
+      if (resolved.shouldGoHome) {
+        syncAppTab("home");
+        navigate(PATH.HOME, { replace: true });
+      }
     },
   });
 
@@ -103,7 +194,7 @@ export default function OnboardingPage() {
       target_weight: userData.target_weight!,
       target_calories: userData.target_calories!,
       target_ratio: [userData.carbs!, userData.protein!, userData.fat!],
-      subCode: userData.subscribedCode ?? "",
+      subCode: userData.subscribedCode?.trim() ?? "",
     });
   };
 
