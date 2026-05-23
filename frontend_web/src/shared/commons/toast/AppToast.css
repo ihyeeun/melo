@@ -6,8 +6,8 @@
   left: 50%;
   pointer-events: none;
   position: fixed;
-  top: max(30px, var(--safe-area-top));
-  transform: translateX(-50%);
+  top: 50%;
+  transform: translate(-50%, -50%);
   width: min(calc(100vw - 20px), 520px);
   z-index: 99999;
 }
