@@ -95,7 +95,11 @@ export const MENU_NUTRIENT_FIELD_KEYS = [
 
 export type MenuNutrientFieldKey = (typeof MENU_NUTRIENT_FIELD_KEYS)[number];
 
-export type MenuSimpleResponseDto = MenuBaseFields;
+type MenuSimpleSubNutrientFields = Partial<
+  Pick<MenuNutrientFields, "sugars" | "sat_fat" | "trans_fat" | "un_sat_fat">
+>;
+
+export type MenuSimpleResponseDto = MenuBaseFields & MenuSimpleSubNutrientFields;
 
 export interface MenuResponseDto extends MenuBaseFields, MenuNutrientFields {}
 
@@ -169,7 +173,10 @@ type NullableMenuNutrientFields = {
   [K in keyof MenuNutrientFields]?: MenuNutrientFields[K] | null;
 };
 
-export type MealMenuItem = Omit<MenuSimpleResponseDto, "brand" | "category" | "unit" | "weight"> &
+export type MealMenuItem = Omit<
+  MenuSimpleResponseDto,
+  "brand" | "category" | "unit" | "weight" | keyof MenuSimpleSubNutrientFields
+> &
   Partial<Pick<MenuSimpleResponseDto, "brand" | "category" | "unit">> & {
     weight?: MenuBaseFields["weight"] | null;
   } & NullableMenuNutrientFields & {

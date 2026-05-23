@@ -1,9 +1,9 @@
 import { END_POINT } from "@/features/onboarding/api/endpoints";
 import type { OnboardingData } from "@/features/onboarding/onboarding.types";
-import { appApiData } from "@/shared/api/appApi";
+import { authedApiData } from "@/shared/api/appApi";
 
 export function fetchRecommendtargetCalories(payload: OnboardingData) {
-  return appApiData<number>({
+  return authedApiData<number>({
     endpoint: END_POINT.RECOMMEND_CALORIES,
     method: "POST",
     body: payload,
@@ -16,7 +16,7 @@ type NutrientResponse = {
   fat: number;
 };
 export function postRecommendNutrient(payload: OnboardingData) {
-  return appApiData<NutrientResponse>({
+  return authedApiData<NutrientResponse>({
     endpoint: END_POINT.RECOMMEND_NUTRIENT,
     method: "POST",
     body: payload,

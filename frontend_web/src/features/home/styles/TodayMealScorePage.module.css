@@ -110,6 +110,12 @@
   flex-direction: column;
 }
 
+.nutrientNameRow {
+  align-items: center;
+  display: inline-flex;
+  gap: 4px;
+}
+
 .textAlternative {
   color: var(--label-alternative);
 }

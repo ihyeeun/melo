@@ -1,5 +1,6 @@
 import { Popover } from "@base-ui/react/popover";
 import { Info } from "lucide-react";
+import { Fragment } from "react";
 
 import styles from "../styles/NutrientWarningPopover.module.css";
 
@@ -9,16 +10,22 @@ export const DETAIL_WARNING_MESSAGE = [
 ] as const;
 
 type NutrientWarningPopoverProps = {
+  ariaLabel?: string;
   className?: string;
+  messages?: readonly string[];
 };
 
-export function NutrientWarningPopover({ className }: NutrientWarningPopoverProps) {
+export function NutrientWarningPopover({
+  ariaLabel = "영양성분 주의 안내",
+  className,
+  messages = DETAIL_WARNING_MESSAGE,
+}: NutrientWarningPopoverProps) {
   return (
     <Popover.Root>
       <Popover.Trigger
         type="button"
         className={`${styles.warningButton} ${className ?? ""}`}
-        aria-label="영양성분 주의 안내"
+        aria-label={ariaLabel}
       >
         <Info size={19} aria-hidden="true" />
       </Popover.Trigger>
@@ -36,9 +43,12 @@ export function NutrientWarningPopover({ className }: NutrientWarningPopoverProp
             initialFocus={false}
             finalFocus={false}
           >
-            {DETAIL_WARNING_MESSAGE[0]}
-            <br />
-            {DETAIL_WARNING_MESSAGE[1]}
+            {messages.map((message, index) => (
+              <Fragment key={`${message}-${index}`}>
+                {index > 0 && <br />}
+                {message}
+              </Fragment>
+            ))}
           </Popover.Popup>
         </Popover.Positioner>
       </Popover.Portal>

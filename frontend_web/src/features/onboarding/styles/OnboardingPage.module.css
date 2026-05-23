@@ -1,10 +1,30 @@
 .page {
+  background-color: var(--bg-white);
   display: flex;
   flex-direction: column;
   height: 100%;
   min-height: 100dvh;
   width: 100%;
-  background-color: var(--bg-white);
+}
+
+.webFrameContainer {
+  align-items: stretch;
+  background: var(--bg-normal);
+  display: flex;
+  height: 100%;
+  justify-content: center;
+  overflow: hidden;
+  width: 100%;
+}
+
+.phoneFrame {
+  background: var(--bg-white);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  width: min(100%, 480px);
 }
 
 .main {
@@ -24,4 +44,14 @@
 
 .onboardingTitle {
   height: fit-content;
+}
+
+@media (width <= 480px) {
+  .webFrameContainer {
+    background: var(--bg-white);
+  }
+
+  .phoneFrame {
+    box-shadow: none;
+  }
 }

@@ -1,5 +1,5 @@
 import { END_POINT } from "@/features/onboarding/api/endpoints";
-import { appApiData } from "@/shared/api/appApi";
+import { authedApiData } from "@/shared/api/appApi";
 
 type UserInfoRequest = {
   gender: number;
@@ -20,7 +20,7 @@ type UserInfoReponse = {
 } & UserInfoRequest;
 
 export function postRegisterUserInfo(payload: UserInfoRequest) {
-  return appApiData<UserInfoReponse>({
+  return authedApiData<UserInfoReponse>({
     endpoint: END_POINT.REGISTER_USER_INFO,
     method: "POST",
     body: payload,

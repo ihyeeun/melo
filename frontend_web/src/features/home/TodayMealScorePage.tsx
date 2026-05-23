@@ -11,6 +11,7 @@ import {
   type NutrientStatus,
   resolveTargetCalories,
 } from "@/features/home/utils/todayMealFeedback";
+import { NutrientWarningPopover } from "@/features/meal-record/components/NutrientWarningPopover";
 import { PATH } from "@/router/path";
 import { Button } from "@/shared/commons/button/Button";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
@@ -22,10 +23,15 @@ type NutrientItem = {
   key: MacroKey;
   name: "탄수화물" | "단백질" | "지방";
   current: number;
+  showNotice?: boolean;
   target: number;
   status: NutrientStatus;
   progressPercent: number;
 };
+
+const NET_CARBS_NOTICE_MESSAGE = [
+  "탄수화물에서 식이섬유를 뺀 순탄수를 기준으로 탄수화물 정보를 제공하고 있어요",
+] as const;
 
 const progressStatusClassName: Record<NutrientStatus, string> = {
   insufficient: styles.progressInsufficient,
@@ -79,6 +85,7 @@ export default function TodayMealScorePage() {
       key: "carbs",
       name: "탄수화물",
       current: Math.round(pageState.currents.totalNutrients.carbs),
+      showNotice: pageState.currents.nutrientNotices.carbsEstimatedFromSubNutrients ?? false,
       target: Math.round(
         calculateMacroPercentToGram({
           nutrientType: "carbs",
@@ -177,13 +184,21 @@ export default function TodayMealScorePage() {
               {nutrientItems.map((item) => (
                 <article key={item.name} className={styles.nutrientItem}>
                   <div className={styles.nutrientHeader}>
-                    <p className={styles.nutrientTitle}>
-                      <span className="typo-title4">{item.name}</span>
+                    <div className={styles.nutrientTitle}>
+                      <span className={styles.nutrientNameRow}>
+                        <span className="typo-title4">{item.name}</span>
+                        {item.showNotice && (
+                          <NutrientWarningPopover
+                            ariaLabel="순탄수 기준 안내"
+                            messages={NET_CARBS_NOTICE_MESSAGE}
+                          />
+                        )}
+                      </span>
                       <span className={`${styles.textAlternative} typo-label4`}>
                         {item.current.toLocaleString("ko-KR")}g /{" "}
                         {item.target.toLocaleString("ko-KR")}g
                       </span>
-                    </p>
+                    </div>
                     <NutrientStatusBadge status={item.status} />
                   </div>
 

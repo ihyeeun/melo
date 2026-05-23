@@ -8,6 +8,49 @@ import type {
 import { MENU_INPUT_MODE } from "@/shared/api/types/api.dto";
 
 type MealTimeKey = 0 | 1 | 2 | 3 | 4;
+type OptionalNutrientValue = number | null | undefined;
+
+function toFiniteNutrientValue(value: OptionalNutrientValue) {
+  return typeof value === "number" && Number.isFinite(value) ? value : null;
+}
+
+function sumFiniteNutrientValues(values: ReadonlyArray<OptionalNutrientValue>) {
+  const finiteValues = values
+    .map(toFiniteNutrientValue)
+    .filter((value): value is number => value !== null);
+
+  if (finiteValues.length === 0) {
+    return null;
+  }
+
+  return finiteValues.reduce((sum, value) => sum + value, 0);
+}
+
+function resolveSummaryNutrientValue(
+  parentValue: OptionalNutrientValue,
+  childValues: ReadonlyArray<OptionalNutrientValue>,
+) {
+  const parent = toFiniteNutrientValue(parentValue);
+  const childSum = sumFiniteNutrientValues(childValues);
+
+  if (parent !== null && !(parent === 0 && childSum !== null && childSum > 0)) {
+    return {
+      isEstimatedFromSubNutrients: false,
+      value: parent,
+    };
+  }
+
+  return {
+    isEstimatedFromSubNutrients: childSum !== null,
+    value: childSum ?? 0,
+  };
+}
+
+function scaleOptionalNutrient(value: OptionalNutrientValue, scaleFactor: number) {
+  const nutrient = toFiniteNutrientValue(value);
+
+  return nutrient === null ? undefined : nutrient * scaleFactor;
+}
 
 export type MenuWithQuantity = MenuSimpleResponseDto & {
   quantity: number;
@@ -20,6 +63,9 @@ export type DayMealSummary = {
     carbs: number;
     protein: number;
     fat: number;
+  };
+  nutrientNotices: {
+    carbsEstimatedFromSubNutrients: boolean;
   };
   caloriesByTime: {
     breakfast: number;
@@ -120,6 +166,9 @@ export function dayMealSummary(meals: MealRecordResponseDto): DayMealSummary {
     3: 0,
     4: 0,
   };
+  const nutrientNotices = {
+    carbsEstimatedFromSubNutrients: false,
+  };
 
   const resolveServingInputMode = (
     meal: MealResponseDto,
@@ -171,9 +220,23 @@ export function dayMealSummary(meals: MealRecordResponseDto): DayMealSummary {
           : 1;
       const scaleFactor = consumedWeight / baseWeight;
       const calories = menu.calories * scaleFactor;
-      const carbs = menu.carbs * scaleFactor;
+      const resolvedCarbs = resolveSummaryNutrientValue(menu.carbs, [menu.sugars]);
+      const carbs = resolvedCarbs.value * scaleFactor;
       const protein = menu.protein * scaleFactor;
-      const fat = menu.fat * scaleFactor;
+      const resolvedFat = resolveSummaryNutrientValue(menu.fat, [
+        menu.sat_fat,
+        menu.trans_fat,
+        menu.un_sat_fat,
+      ]);
+      const fat = resolvedFat.value * scaleFactor;
+      const sugars = scaleOptionalNutrient(menu.sugars, scaleFactor);
+      const satFat = scaleOptionalNutrient(menu.sat_fat, scaleFactor);
+      const transFat = scaleOptionalNutrient(menu.trans_fat, scaleFactor);
+      const unSatFat = scaleOptionalNutrient(menu.un_sat_fat, scaleFactor);
+
+      if (resolvedCarbs.isEstimatedFromSubNutrients) {
+        nutrientNotices.carbsEstimatedFromSubNutrients = true;
+      }
 
       const menuItem: MenuWithQuantity = {
         id: menu.id,
@@ -189,6 +252,10 @@ export function dayMealSummary(meals: MealRecordResponseDto): DayMealSummary {
         carbs,
         protein,
         fat,
+        ...(sugars !== undefined ? { sugars } : {}),
+        ...(satFat !== undefined ? { sat_fat: satFat } : {}),
+        ...(transFat !== undefined ? { trans_fat: transFat } : {}),
+        ...(unSatFat !== undefined ? { un_sat_fat: unSatFat } : {}),
         quantity: consumedWeight,
         serving_input_mode: servingInputMode,
       };
@@ -246,6 +313,7 @@ export function dayMealSummary(meals: MealRecordResponseDto): DayMealSummary {
   return {
     totalCalories,
     totalNutrients,
+    nutrientNotices,
     caloriesByTime,
     nutrientsByTime,
     menusByTime,

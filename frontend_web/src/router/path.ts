@@ -1,6 +1,8 @@
 export const PATH = {
   ROOT: "/",
   HOME: "/home",
+  KAKAO_WEB_LOGIN: "/auth/kakao/login",
+  KAKAO_WEB_CALLBACK: "/userAuth/kakao/web/callback",
   TODAY_MEAL_SCORE: "/home/date-meal-score",
   ONBOARDING: "/onboarding",
   RECOMMEND: "/recommend",
@@ -37,4 +39,7 @@ export const PATH = {
   FOOD_CAMERA: "/meal-record/add/food-camera",
   NUTRIENT_CAMERA: "/nutrient-camera",
   CHAT_FOOD_CAMERA: "/chat-food-camera",
+
+  // ETC
+  APP_INFO: "/app-info",
 };
