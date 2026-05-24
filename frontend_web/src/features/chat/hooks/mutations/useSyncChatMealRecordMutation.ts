@@ -1,6 +1,6 @@
 import { type QueryClient, useMutation, useQueryClient } from "@tanstack/react-query";
 
-import { mealDelete, mealRegister } from "@/features/chat/api/chat.api";
+import { mealDelete } from "@/features/chat/api/chat.api";
 import { queryKeys as chatQueryKeys } from "@/features/chat/hooks/queries/queryKey";
 import { getDayMeals } from "@/features/home/api/dayMeal";
 import { queryKeys as homeQueryKeys } from "@/features/home/hooks/queries/queryKey";
@@ -130,35 +130,7 @@ function assertDiaryMealRecordMenuLimit(menus: ChatMealRecordMenuPayload[]) {
   }
 }
 
-function toPreviousMealRecordMenus(
-  mealRecord: NonNullable<PreviousMealRecord>,
-): ChatMealRecordMenuPayload[] {
-  return (mealRecord.menu_ids ?? []).map((id, index) => ({
-    id,
-    quantity: mealRecord.menu_quantities?.[index] ?? 1,
-    inputMode: mealRecord.menu_input_modes?.[index] ?? MENU_INPUT_MODE.UNIT,
-  }));
-}
-
-async function registerChatMealRecord({
-  chatId,
-  time,
-  menus,
-}: {
-  chatId: number;
-  time: MealTime;
-  menus: ChatMealRecordMenuPayload[];
-}) {
-  await mealRegister({
-    chat_id: chatId,
-    time,
-    menu_ids: menus.map((menu) => menu.id),
-    menu_quantities: menus.map((menu) => menu.quantity),
-    menu_input_modes: menus.map((menu) => menu.inputMode),
-  });
-}
-
-async function restoreChatMealRecord({
+async function deleteStaleChatMealRecord({
   chatId,
   previousMealRecord,
 }: {
@@ -166,21 +138,13 @@ async function restoreChatMealRecord({
   previousMealRecord?: PreviousMealRecord;
 }) {
   if (!previousMealRecord) {
-    await mealDelete({ chat_id: chatId });
     return;
   }
 
-  const previousMenus = toPreviousMealRecordMenus(previousMealRecord);
-  if (previousMenus.length === 0) {
-    await mealDelete({ chat_id: chatId });
-    return;
-  }
-
-  await registerChatMealRecord({
-    chatId,
-    time: previousMealRecord.time,
-    menus: previousMenus,
-  });
+  await rollbackBestEffort(
+    () => mealDelete({ chat_id: chatId }),
+    "Failed to delete stale chat meal record",
+  );
 }
 
 async function replaceDiaryMenusByTime({
@@ -379,7 +343,7 @@ export function useSyncChatMealRecordRegisterMutation() {
       previousMealRecord,
       previousDiaryMealRecord,
     }: SyncChatMealRecordParams) => {
-      const diaryPreviousMealRecord = previousDiaryMealRecord ?? previousMealRecord;
+      const diaryPreviousMealRecord = previousDiaryMealRecord;
       const dayMeals = await fetchDayMealsForSync(queryClient, date);
 
       assertDiaryMealRecordMenuLimit(
@@ -392,12 +356,6 @@ export function useSyncChatMealRecordRegisterMutation() {
         }),
       );
 
-      await registerChatMealRecord({
-        chatId,
-        time,
-        menus,
-      });
-
       try {
         await syncDiaryMealRecord({
           date,
@@ -407,24 +365,20 @@ export function useSyncChatMealRecordRegisterMutation() {
           dayMeals,
         });
       } catch (error) {
-        await Promise.all([
-          rollbackBestEffort(
-            () => restoreChatMealRecord({ chatId, previousMealRecord }),
-            "Failed to rollback chat meal record",
-          ),
-          rollbackBestEffort(
-            () =>
-              restoreDiaryMenusBySnapshot({
-                date,
-                times: diaryPreviousMealRecord ? [time, diaryPreviousMealRecord.time] : [time],
-                dayMeals,
-              }),
-            "Failed to rollback diary meal record",
-          ),
-        ]);
+        await rollbackBestEffort(
+          () =>
+            restoreDiaryMenusBySnapshot({
+              date,
+              times: diaryPreviousMealRecord ? [time, diaryPreviousMealRecord.time] : [time],
+              dayMeals,
+            }),
+          "Failed to rollback diary meal record",
+        );
 
         throw error;
       }
+
+      await deleteStaleChatMealRecord({ chatId, previousMealRecord });
     },
     onSuccess: async (_data, variables) => {
       await invalidateSyncedMealRecordQueries(queryClient, variables.date);
@@ -442,7 +396,7 @@ export function useSyncChatMealRecordDeleteMutation() {
       previousMealRecord,
       previousDiaryMealRecord,
     }: DeleteChatMealRecordParams) => {
-      const diaryPreviousMealRecord = previousDiaryMealRecord ?? previousMealRecord;
+      const diaryPreviousMealRecord = previousDiaryMealRecord;
       const previousMenuIds = diaryPreviousMealRecord?.menu_ids ?? [];
 
       if (diaryPreviousMealRecord && previousMenuIds.length > 0) {
@@ -456,7 +410,7 @@ export function useSyncChatMealRecordDeleteMutation() {
             dayMeals,
           });
 
-          await mealDelete({ chat_id: chatId });
+          await deleteStaleChatMealRecord({ chatId, previousMealRecord });
         } catch (error) {
           await rollbackBestEffort(
             () =>
@@ -473,7 +427,7 @@ export function useSyncChatMealRecordDeleteMutation() {
         return;
       }
 
-      await mealDelete({ chat_id: chatId });
+      await deleteStaleChatMealRecord({ chatId, previousMealRecord });
     },
     onSuccess: async (_data, variables) => {
       await invalidateSyncedMealRecordQueries(queryClient, variables.date);

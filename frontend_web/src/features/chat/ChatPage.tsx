@@ -91,7 +91,12 @@ type SelectedMealRecordMenu = {
   inputMode: MealMenuInputMode;
 };
 
-type MealRecordSnapshot = NonNullable<ChatHistoryItemResponseDto["meal_record"]>;
+type MealRecordSnapshot = {
+  time: MealTime;
+  menu_ids?: number[];
+  menu_quantities?: number[];
+  menu_input_modes?: MealMenuInputMode[];
+};
 
 type MealRecordViewModel = {
   dateKey: string;
@@ -1735,18 +1740,6 @@ function getChatMealRecordViewModel(
     return null;
   }
 
-  if (chatItem.meal_record) {
-    const historyMealRecord = getMealRecordViewModelByTime(
-      dayMeals,
-      dateKey,
-      chatItem.meal_record.time,
-    );
-
-    if (historyMealRecord) {
-      return historyMealRecord;
-    }
-  }
-
   const primaryMenu = getPrimaryMealRecordMenu(chatItem);
 
   return primaryMenu
@@ -1772,14 +1765,6 @@ function getMealRecordViewModelByMenuId(
   }
 
   return null;
-}
-
-function getMealRecordViewModelByTime(
-  dayMeals: DayMealSummary,
-  dateKey: string,
-  mealTime: MealTime,
-) {
-  return buildMealRecordViewModel(dateKey, dayMeals, mealTime);
 }
 
 function getDateMealRecordViewModels(dayMeals: DayMealSummary, dateKey: string) {
