@@ -63,6 +63,7 @@ import {
   formatDateKey,
   getTodayFormatDateKey,
   parseDate,
+  parseDateKey,
 } from "@/shared/utils/dateFormat";
 import { formatNumberWithMaxOneDecimal } from "@/shared/utils/numberFormat";
 
@@ -154,6 +155,7 @@ function saveCameraHintDismissedInSession() {
 export default function ChatPage() {
   const navigate = useNavigate();
   const selectedDateKey = useSelectedDateKey();
+  const todayDateKey = getTodayFormatDateKey();
   const mainRef = useRef<HTMLElement>(null);
   const endAnchorRef = useRef<HTMLDivElement>(null);
 
@@ -199,7 +201,7 @@ export default function ChatPage() {
     });
   }, [data]);
   const chatDateKeys = useMemo(() => {
-    const dateKeySet = new Set<string>();
+    const dateKeySet = new Set<string>([todayDateKey]);
 
     chatList.forEach((chatItem) => {
       const dateKey = getChatDateKey(chatItem);
@@ -210,7 +212,7 @@ export default function ChatPage() {
     });
 
     return [...dateKeySet];
-  }, [chatList]);
+  }, [chatList, todayDateKey]);
   const dayMealQueries = useQueries({
     queries: chatDateKeys.map((dateKey) => ({
       queryKey: homeQueryKeys.dayMeals.byDate(dateKey),
@@ -255,13 +257,38 @@ export default function ChatPage() {
 
     return linkedTimes;
   }, [chatList, dayMealsByDate]);
+  const hasTodayChat = useMemo(
+    () => chatList.some((chatItem) => getChatDateKey(chatItem) === todayDateKey),
+    [chatList, todayDateKey],
+  );
+  const standaloneTodayMealRecords = useMemo(() => {
+    if (hasTodayChat) {
+      return [];
+    }
+
+    const todayMeals = dayMealsByDate.get(todayDateKey);
+
+    if (!todayMeals) {
+      return [];
+    }
+
+    const linkedTimes = linkedMealRecordTimesByDate.get(todayDateKey);
+
+    return getDateMealRecordViewModels(todayMeals, todayDateKey).filter(
+      (record) => !linkedTimes?.has(record.time),
+    );
+  }, [dayMealsByDate, hasTodayChat, linkedMealRecordTimesByDate, todayDateKey]);
+  const todayMealQueryIndex = chatDateKeys.indexOf(todayDateKey);
+  const isTodayMealPending =
+    todayMealQueryIndex >= 0 ? (dayMealQueries[todayMealQueryIndex]?.isPending ?? false) : false;
   const editingMealRecordMenus = editingMealRecordContext?.menus ?? [];
 
   const hasAnyConversation = chatList.length > 0 || pendingInput !== null;
+  const hasTimelineContent = hasAnyConversation || standaloneTodayMealRecords.length > 0;
   const isTypingPending = pendingInput !== null && (isSendPending || isAwaitingHistory);
   const isInputEmpty = inputValue.trim().length === 0;
   const isQuickActionVisible = isInputEmpty && !isInputFocused;
-  const isScrollToBottomButtonVisible = hasAnyConversation && isScrolledAwayFromBottom;
+  const isScrollToBottomButtonVisible = hasTimelineContent && isScrolledAwayFromBottom;
   const isFloatingButtonVisible =
     !isInputFocused && (isQuickActionVisible || isScrollToBottomButtonVisible);
 
@@ -333,7 +360,7 @@ export default function ChatPage() {
       window.cancelAnimationFrame(frameId);
     };
   }, [
-    hasAnyConversation,
+    hasTimelineContent,
     isInputFocused,
     isQuickActionVisible,
     pendingInput,
@@ -741,12 +768,14 @@ export default function ChatPage() {
       ) : null}
 
       <main ref={mainRef} className={styles.main}>
-        {!hasAnyConversation && !isHistoryPending ? <EmptySection /> : null}
-        {isHistoryPending && chatList.length === 0 && pendingInput === null ? (
+        {!hasTimelineContent && !isHistoryPending && !isTodayMealPending ? <EmptySection /> : null}
+        {(isHistoryPending || isTodayMealPending) &&
+        !hasTimelineContent &&
+        pendingInput === null ? (
           <ChatHistorySkeleton />
         ) : null}
 
-        {hasAnyConversation ? (
+        {hasTimelineContent ? (
           <div className={styles.chatTimeline}>
             {chatList.map((chatItem, index) => {
               const chatDate = parseDate(chatItem.createdAt);
@@ -861,6 +890,28 @@ export default function ChatPage() {
                 </section>
               );
             })}
+
+            {standaloneTodayMealRecords.length > 0 ? (
+              <section className={styles.conversationSection}>
+                <div className={styles.dateDivider}>
+                  <span className={`${styles.dateText} typo-caption4`}>
+                    {formatDateDividerText(parseDateKey(todayDateKey))}
+                  </span>
+                </div>
+
+                <div className={styles.assistantMessageGroup}>
+                  {standaloneTodayMealRecords.map((dateMealRecord) => (
+                    <MealRecordCard
+                      key={`today-meal-${dateMealRecord.time}`}
+                      menus={dateMealRecord.recordedMenus}
+                      mealRecordTime={dateMealRecord.time}
+                      onCancelClick={() => handleDiaryMealRecordCancelClick(dateMealRecord)}
+                      onEditClick={() => handleDiaryMealRecordEditClick(dateMealRecord)}
+                    />
+                  ))}
+                </div>
+              </section>
+            ) : null}
 
             {pendingInput !== null ? (
               <section className={styles.conversationSection} aria-live="polite">
