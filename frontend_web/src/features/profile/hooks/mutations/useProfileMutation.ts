@@ -12,7 +12,7 @@ export function useNickNameUpdateMutation(callbacks?: UseMutationCallback) {
   return useMutation({
     mutationFn: updateNickName,
     onSuccess: (data) => {
-      identifyNickname(data.nickname);
+      identifyNickname(data.nickname, data.role === "ADMIN");
       if (callbacks?.onSuccess) callbacks.onSuccess();
       queryClient.setQueryData<ProfileResponseDto>(queryKeys.profile, data);
     },

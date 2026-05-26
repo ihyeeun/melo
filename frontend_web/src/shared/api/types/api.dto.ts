@@ -211,6 +211,8 @@ export type CapturedImage = {
 export type TargetRatio = [carb: number, protein: number, fat: number];
 export interface ProfileResponseDto {
   nickname: string;
+  name?: string; //소셜 프로필명
+  role: string; //USER, ADMIN
   gender: number;
   birthYear: number;
   height: number;

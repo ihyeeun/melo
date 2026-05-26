@@ -11,17 +11,23 @@ type PendingEvent = {
 let initialized = false;
 let analyticsUnavailable = false;
 let currentNickname: string | null = null;
-let identifiedNickname: string | null = null;
+let currentIsTestUser: boolean | null = null;
+let identifiedUserPropertiesKey: string | null = null;
 const pendingEvents: PendingEvent[] = [];
 const trackedOnceKeys = new Set<string>();
 
-function syncNicknameUserProperty(nickname: string) {
-  if (!initialized || identifiedNickname === nickname) return;
+function syncUserProperties(nickname: string, isTestUser: boolean | null) {
+  const userPropertiesKey = `${nickname}:${isTestUser ?? "unknown"}`;
+
+  if (!initialized || identifiedUserPropertiesKey === userPropertiesKey) return;
 
   const identify = new amplitude.Identify();
   identify.set("nickname", nickname);
+  if (isTestUser !== null) {
+    identify.set("is_test_user", isTestUser);
+  }
   amplitude.identify(identify);
-  identifiedNickname = nickname;
+  identifiedUserPropertiesKey = userPropertiesKey;
 }
 
 export function initAnalytics() {
@@ -41,7 +47,7 @@ export function initAnalytics() {
   initialized = true;
 
   if (currentNickname) {
-    syncNicknameUserProperty(currentNickname);
+    syncUserProperties(currentNickname, currentIsTestUser);
   }
 
   pendingEvents.splice(0).forEach(({ eventName, properties }) => {
@@ -49,22 +55,25 @@ export function initAnalytics() {
   });
 }
 
-export function identifyNickname(nickname?: string | null) {
+export function identifyNickname(nickname?: string | null, isTestUser?: boolean) {
   const normalizedNickname = nickname?.trim() ?? null;
   if (!normalizedNickname) {
     currentNickname = null;
-    identifiedNickname = null;
+    currentIsTestUser = null;
+    identifiedUserPropertiesKey = null;
     if (initialized) {
       const identify = new amplitude.Identify();
       identify.unset("nickname");
+      identify.unset("is_test_user");
       amplitude.identify(identify);
-      identifiedNickname = null;
+      identifiedUserPropertiesKey = null;
     }
     return;
   }
 
   currentNickname = normalizedNickname;
-  syncNicknameUserProperty(normalizedNickname);
+  currentIsTestUser = isTestUser ?? null;
+  syncUserProperties(normalizedNickname, currentIsTestUser);
 }
 
 function sendTrack(eventName: AnalyticsEventName, properties?: AnalyticsProperties) {
