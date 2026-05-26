@@ -10,7 +10,13 @@ import {
 import { useSendMessageMutation } from "@/features/chat/hooks/mutations/useSendMessageMutation";
 import { useGetChatHistoryQuery } from "@/features/chat/hooks/queries/useGetChatQuery";
 import styles from "@/features/chat/styles/ChatPage.module.css";
-import { buildDiaryMealRecordRequest } from "@/features/chat/utils/chatDiaryMealRecord";
+import {
+  buildDiaryMealRecordRequest,
+  getDiaryMealImage,
+  getNextDiaryMenusByCandidateIds,
+  getSelectedDiaryMenusByTime,
+  type SelectedDiaryMealRecordMenu,
+} from "@/features/chat/utils/chatDiaryMealRecord";
 import {
   getMealTypeFromChatMealTime,
   getMealTypeFromCurrentTime,
@@ -80,17 +86,9 @@ type RecordedMenuSummary = {
   recordedCalories: number;
 };
 
-type SelectedMealRecordMenu = {
-  id: number;
-  quantity: number;
-  mode: MealServingInputMode;
-};
-
 type MealRecordSnapshot = {
   time: MealTime;
-  menu_ids?: number[];
-  menu_quantities?: number[];
-  menu_modes?: MealServingInputMode[];
+  menus: SelectedDiaryMealRecordMenu[];
 };
 
 type MealRecordViewModel = {
@@ -99,7 +97,6 @@ type MealRecordViewModel = {
   image?: string;
   time: MealTime;
   menus: ChatMealRecordMenu[];
-  selectedMenus: SelectedMealRecordMenu[];
   recordedMenus: RecordedMenuSummary[];
   previousMealRecord: MealRecordSnapshot;
 };
@@ -156,7 +153,9 @@ export default function ChatPage() {
   const [editingMealType, setEditingMealType] = useState<MealType>(
     getMealTypeFromCurrentTime(new Date()),
   );
-  const [editingSelectedMenus, setEditingSelectedMenus] = useState<SelectedMealRecordMenu[]>([]);
+  const [editingSelectedMenus, setEditingSelectedMenus] = useState<SelectedDiaryMealRecordMenu[]>(
+    [],
+  );
 
   const { data, isPending: isHistoryPending } = useGetChatHistoryQuery();
   const { mutateAsync: sendMessageMutation, isPending: isSendPending } = useSendMessageMutation();
@@ -213,30 +212,6 @@ export default function ChatPage() {
 
     return dayMeals;
   }, [chatDateKeys, dayMealQueries]);
-  const linkedMealRecordTimesByDate = useMemo(() => {
-    const linkedTimes = new Map<string, Set<MealTime>>();
-
-    chatList.forEach((chatItem) => {
-      const dateKey = getChatDateKey(chatItem);
-      const dayMeals = dateKey ? dayMealsByDate.get(dateKey) : undefined;
-
-      if (!dateKey || !dayMeals) {
-        return;
-      }
-
-      const mealRecord = getChatMealRecordViewModel(chatItem, dayMeals, dateKey);
-
-      if (!mealRecord) {
-        return;
-      }
-
-      const times = linkedTimes.get(dateKey) ?? new Set<MealTime>();
-      times.add(mealRecord.time);
-      linkedTimes.set(dateKey, times);
-    });
-
-    return linkedTimes;
-  }, [chatList, dayMealsByDate]);
   const hasTodayChat = useMemo(
     () => chatList.some((chatItem) => getChatDateKey(chatItem) === todayDateKey),
     [chatList, todayDateKey],
@@ -252,12 +227,8 @@ export default function ChatPage() {
       return [];
     }
 
-    const linkedTimes = linkedMealRecordTimesByDate.get(todayDateKey);
-
-    return getDateMealRecordViewModels(todayMeals, todayDateKey).filter(
-      (record) => !linkedTimes?.has(record.time),
-    );
-  }, [dayMealsByDate, hasTodayChat, linkedMealRecordTimesByDate, todayDateKey]);
+    return getDateMealRecordViewModels(todayMeals, todayDateKey);
+  }, [dayMealsByDate, hasTodayChat, todayDateKey]);
   const todayMealQueryIndex = chatDateKeys.indexOf(todayDateKey);
   const isTodayMealPending =
     todayMealQueryIndex >= 0 ? (dayMealQueries[todayMealQueryIndex]?.isPending ?? false) : false;
@@ -460,7 +431,8 @@ export default function ChatPage() {
       return;
     }
 
-    const hadMealRecord = getSelectedMenusByTime(dayMeals, nextMealRecord.time).length > 0;
+    const hadMealRecord =
+      getSelectedDiaryMenusByTime(dayMeals, nextMealRecord.time).length > 0;
 
     try {
       await registerDiaryMealRecordMutate(
@@ -468,7 +440,7 @@ export default function ChatPage() {
           dateKey,
           mealType: getMealTypeFromChatMealTime(nextMealRecord.time),
           selectedMenus: nextMealRecord.menus,
-          image: mealRecord?.image ?? getMealImage(dayMeals, nextMealRecord.time),
+          image: mealRecord?.image ?? getDiaryMealImage(dayMeals, nextMealRecord.time),
         }),
       );
       track(EVENT_NAME.RECOMMEND_MENU_SAVE, {
@@ -493,7 +465,7 @@ export default function ChatPage() {
       previousMealRecord: mealRecord.previousMealRecord,
     });
     setEditingMealType(getMealTypeFromChatMealTime(mealRecord.time));
-    setEditingSelectedMenus(mealRecord.selectedMenus);
+    setEditingSelectedMenus(mealRecord.previousMealRecord.menus);
   };
 
   const handleMealRecordEditClose = () => {
@@ -514,11 +486,10 @@ export default function ChatPage() {
     const previousMealRecord = mealRecord.previousMealRecord;
     const remainingMenus = getRemainingMealRecordMenus(
       previousMealRecord,
-      mealRecord.menus,
       primaryMenu.menu_id,
     );
 
-    if (remainingMenus.length === (previousMealRecord.menu_ids?.length ?? 0)) {
+    if (remainingMenus.length === previousMealRecord.menus.length) {
       return;
     }
 
@@ -637,10 +608,12 @@ export default function ChatPage() {
     const nextMenus =
       previousMealRecord.time === nextTime
         ? editingSelectedMenus
-        : mergeSelectedMealRecordMenus(
-            getSelectedMenusByTime(editingMealRecordContext.dayMeals, nextTime),
-            editingSelectedMenus,
-          );
+        : getNextDiaryMenusByCandidateIds({
+            dayMeals: editingMealRecordContext.dayMeals,
+            time: nextTime,
+            selectedMenus: editingSelectedMenus,
+            candidateIds: editingSelectedMenus.map((menu) => menu.id),
+          });
 
     try {
       if (previousMealRecord.time !== nextTime) {
@@ -669,7 +642,7 @@ export default function ChatPage() {
           image:
             previousMealRecord.time === nextTime
               ? editingMealRecordContext.image
-              : getMealImage(editingMealRecordContext.dayMeals, nextTime),
+              : getDiaryMealImage(editingMealRecordContext.dayMeals, nextTime),
         }),
       );
 
@@ -682,7 +655,7 @@ export default function ChatPage() {
             buildDiaryMealRecordRequest({
               dateKey: editingMealRecordContext.dateKey,
               mealType: previousMealType,
-              selectedMenus: toSelectedMenus(previousMealRecord),
+              selectedMenus: previousMealRecord.menus,
               image: editingMealRecordContext.image,
             }),
           );
@@ -722,16 +695,22 @@ export default function ChatPage() {
               const chatDate = parseDate(chatItem.createdAt);
               const chatDateKey = chatDate ? formatDateKey(chatDate) : null;
               const chatDayMeals = chatDateKey ? dayMealsByDate.get(chatDateKey) : undefined;
-              const mealRecord = chatDateKey
-                ? getChatMealRecordViewModel(chatItem, chatDayMeals, chatDateKey)
-                : null;
-              const unlinkedDateMealRecords =
-                chatDateKey &&
-                chatDayMeals &&
-                isLastChatItemOnDate(chatList, index, chatDateKey)
-                  ? getDateMealRecordViewModels(chatDayMeals, chatDateKey).filter(
-                      (record) => !linkedMealRecordTimesByDate.get(chatDateKey)?.has(record.time),
+              const fallbackMealRecord =
+                chatDateKey && chatDayMeals
+                  ? getMealRecordViewModelByTime(
+                      chatDayMeals,
+                      chatDateKey,
+                      getFallbackMealRecordTime(chatItem),
                     )
+                  : null;
+              const mealRecordsAfterChatItem =
+                chatDateKey && chatDayMeals
+                  ? getMealRecordsAfterChatItem({
+                      chatList,
+                      index,
+                      dateKey: chatDateKey,
+                      mealRecords: getDateMealRecordViewModels(chatDayMeals, chatDateKey),
+                    })
                   : [];
               const primaryMenu = getPrimaryMealRecordMenu(chatItem);
               const primaryMealRecord =
@@ -786,7 +765,12 @@ export default function ChatPage() {
                         chatId={chatItem.id}
                         recommendations={chatItem.response_payload.recommendations}
                         onMealRecordClick={() =>
-                          handleMenuRecordClick(chatItem, chatDateKey, chatDayMeals, mealRecord)
+                          handleMenuRecordClick(
+                            chatItem,
+                            chatDateKey,
+                            chatDayMeals,
+                            fallbackMealRecord,
+                          )
                         }
                         onMealRecordCancelClick={() =>
                           handlePrimaryMealRecordRemoveClick(chatItem, primaryMealRecord)
@@ -800,7 +784,12 @@ export default function ChatPage() {
                         chatId={chatItem.id}
                         feedback={chatItem.response_payload.feedback}
                         onMealRecordClick={() =>
-                          handleMenuRecordClick(chatItem, chatDateKey, chatDayMeals, mealRecord)
+                          handleMenuRecordClick(
+                            chatItem,
+                            chatDateKey,
+                            chatDayMeals,
+                            fallbackMealRecord,
+                          )
                         }
                         onMealRecordCancelClick={() =>
                           handlePrimaryMealRecordRemoveClick(chatItem, primaryMealRecord)
@@ -809,16 +798,7 @@ export default function ChatPage() {
                       />
                     ) : null}
 
-                    {mealRecord !== null && (
-                      <MealRecordCard
-                        menus={mealRecord.recordedMenus}
-                        mealRecordTime={mealRecord.time}
-                        onCancelClick={() => handleDiaryMealRecordCancelClick(mealRecord)}
-                        onEditClick={() => handleMealRecordEditClick(mealRecord)}
-                      />
-                    )}
-
-                    {unlinkedDateMealRecords.map((dateMealRecord) => (
+                    {mealRecordsAfterChatItem.map((dateMealRecord) => (
                       <MealRecordCard
                         key={`date-meal-${dateMealRecord.time}`}
                         menus={dateMealRecord.recordedMenus}
@@ -1668,11 +1648,11 @@ function getMergedMealRecordPayload(
   mealRecord?: MealRecordSnapshot,
 ): {
   time: MealTime;
-  menus: SelectedMealRecordMenu[];
+  menus: SelectedDiaryMealRecordMenu[];
   wasAdded: boolean;
 } {
   const time = mealRecord?.time ?? getFallbackMealRecordTime(chatItem);
-  const menus = mealRecord ? toSelectedMenus(mealRecord) : getSelectedMenusByTime(dayMeals, time);
+  const menus = mealRecord ? mealRecord.menus : getSelectedDiaryMenusByTime(dayMeals, time);
   const existingMenuIds = menus.map((recordedMenu) => recordedMenu.id);
 
   if (existingMenuIds.includes(menu.menu_id)) {
@@ -1699,24 +1679,9 @@ function getMergedMealRecordPayload(
 
 function getRemainingMealRecordMenus(
   mealRecord: MealRecordSnapshot,
-  menus: ChatMealRecordMenu[],
   removeMenuId: number,
-): SelectedMealRecordMenu[] {
-  const menusById = new Map(menus.map((menu) => [menu.menu_id, menu]));
-
-  return (mealRecord.menu_ids ?? []).flatMap((menuId, index) => {
-    if (menuId === removeMenuId) {
-      return [];
-    }
-
-    return [
-      {
-        id: menuId,
-        quantity: mealRecord.menu_quantities?.[index] ?? menusById.get(menuId)?.weight ?? 1,
-        mode: mealRecord.menu_modes?.[index] ?? "unit",
-      },
-    ];
-  });
+): SelectedDiaryMealRecordMenu[] {
+  return mealRecord.menus.filter((menu) => menu.id !== removeMenuId);
 }
 
 function getFallbackMealRecordTime(chatItem: ChatHistoryItemResponseDto): MealTime {
@@ -1725,20 +1690,78 @@ function getFallbackMealRecordTime(chatItem: ChatHistoryItemResponseDto): MealTi
   return Number(getMealTypeFromCurrentTime(chatDate ?? new Date())) as MealTime;
 }
 
-function getChatMealRecordViewModel(
-  chatItem: ChatHistoryItemResponseDto,
+function getMealRecordsAfterChatItem({
+  chatList,
+  index,
+  dateKey,
+  mealRecords,
+}: {
+  chatList: ChatHistoryItemResponseDto[];
+  index: number;
+  dateKey: string;
+  mealRecords: MealRecordViewModel[];
+}) {
+  const chatItem = chatList[index];
+
+  if (!chatItem || mealRecords.length === 0) {
+    return [];
+  }
+
+  const mealTimesWithChat = getMealTimesWithChatOnDate(chatList, dateKey);
+  const currentMealTime = getFallbackMealRecordTime(chatItem);
+  const isCurrentLastInMealTime = isLastChatItemOnMealTime(
+    chatList,
+    index,
+    dateKey,
+    currentMealTime,
+  );
+  const isCurrentLastOnDate = isLastChatItemOnDate(chatList, index, dateKey);
+
+  return mealRecords.filter((mealRecord) => {
+    if (mealTimesWithChat.has(mealRecord.time)) {
+      return mealRecord.time === currentMealTime && isCurrentLastInMealTime;
+    }
+
+    return isCurrentLastOnDate;
+  });
+}
+
+function getMealTimesWithChatOnDate(chatList: ChatHistoryItemResponseDto[], dateKey: string) {
+  const mealTimes = new Set<MealTime>();
+
+  chatList.forEach((chatItem) => {
+    if (getChatDateKey(chatItem) === dateKey) {
+      mealTimes.add(getFallbackMealRecordTime(chatItem));
+    }
+  });
+
+  return mealTimes;
+}
+
+function isLastChatItemOnMealTime(
+  chatList: ChatHistoryItemResponseDto[],
+  index: number,
+  dateKey: string,
+  mealTime: MealTime,
+) {
+  return !chatList
+    .slice(index + 1)
+    .some(
+      (chatItem) =>
+        getChatDateKey(chatItem) === dateKey && getFallbackMealRecordTime(chatItem) === mealTime,
+    );
+}
+
+function getMealRecordViewModelByTime(
   dayMeals: DayMealSummary | undefined,
   dateKey: string,
+  mealTime: MealTime,
 ) {
   if (!dayMeals) {
     return null;
   }
 
-  const primaryMenu = getPrimaryMealRecordMenu(chatItem);
-
-  return primaryMenu
-    ? getMealRecordViewModelByMenuId(dayMeals, dateKey, primaryMenu.menu_id)
-    : null;
+  return buildMealRecordViewModel(dateKey, dayMeals, mealTime);
 }
 
 function getMealRecordViewModelByMenuId(
@@ -1780,19 +1803,18 @@ function buildMealRecordViewModel(
     return null;
   }
 
+  const selectedMenus = getSelectedDiaryMenusByTime(dayMeals, mealTime);
+
   return {
     dateKey,
     dayMeals,
-    image: getMealImage(dayMeals, mealTime),
+    image: getDiaryMealImage(dayMeals, mealTime),
     time: mealTime,
     menus: menus.map(toChatMealRecordMenu),
-    selectedMenus: menus.map(toSelectedMealRecordMenu),
     recordedMenus: menus.map(toRecordedMenuSummary),
     previousMealRecord: {
       time: mealTime,
-      menu_ids: menus.map((menu) => menu.id),
-      menu_quantities: menus.map((menu) => menu.quantity),
-      menu_modes: menus.map((menu) => menu.serving_input_mode),
+      menus: selectedMenus,
     },
   };
 }
@@ -1809,43 +1831,6 @@ function toChatMealRecordMenu(menu: MenuWithQuantity): ChatMealRecordMenu {
   };
 }
 
-function toSelectedMealRecordMenu(menu: MenuWithQuantity): SelectedMealRecordMenu {
-  return {
-    id: menu.id,
-    quantity: menu.quantity,
-    mode: menu.serving_input_mode,
-  };
-}
-
-function getSelectedMenusByTime(dayMeals: DayMealSummary, mealTime: MealTime) {
-  return dayMeals.menusByTime[mealTime].map(toSelectedMealRecordMenu);
-}
-
-function toSelectedMenus(mealRecord: MealRecordSnapshot): SelectedMealRecordMenu[] {
-  return (mealRecord.menu_ids ?? []).map((menuId, index) => ({
-    id: menuId,
-    quantity: mealRecord.menu_quantities?.[index] ?? 1,
-    mode: mealRecord.menu_modes?.[index] ?? "unit",
-  }));
-}
-
-function mergeSelectedMealRecordMenus(
-  baseMenus: SelectedMealRecordMenu[],
-  overrideMenus: SelectedMealRecordMenu[],
-) {
-  const menuById = new Map<number, SelectedMealRecordMenu>();
-
-  baseMenus.forEach((menu) => {
-    menuById.set(menu.id, menu);
-  });
-
-  overrideMenus.forEach((menu) => {
-    menuById.set(menu.id, menu);
-  });
-
-  return [...menuById.values()];
-}
-
 function toRecordedMenuSummary(menu: MenuWithQuantity): RecordedMenuSummary {
   return {
     menu_id: menu.id,
@@ -1860,12 +1845,6 @@ function getBaseCalories(menu: MenuWithQuantity) {
   }
 
   return menu.calories;
-}
-
-function getMealImage(dayMeals: DayMealSummary, mealTime: MealTime) {
-  const image = dayMeals.imagesByTime[mealTime];
-
-  return typeof image === "string" && image.trim().length > 0 ? image : undefined;
 }
 
 function isLastChatItemOnDate(
