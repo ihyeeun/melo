@@ -57,6 +57,7 @@ import {
 import { DataSourceBadge } from "@/shared/commons/badge/DataSourceBadge";
 import { Button } from "@/shared/commons/button/Button";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
+import { ConfirmModal } from "@/shared/commons/modals/ConfirmModal";
 import { Skeleton, SkeletonStatus } from "@/shared/commons/skeleton/Skeleton";
 import { toast } from "@/shared/commons/toast/toast";
 import { navigateBack, useNavigate } from "@/shared/navigation/stackflowNavigation";
@@ -111,6 +112,17 @@ type EditingMealRecordContext = {
   previousMealRecord: MealRecordSnapshot;
 };
 
+type MealRecordCancelTarget =
+  | {
+      type: "primaryMenu";
+      chatItem: ChatHistoryItemResponseDto;
+      mealRecord: MealRecordViewModel;
+    }
+  | {
+      type: "mealRecord";
+      mealRecord: MealRecordViewModel;
+    };
+
 function getIsCameraHintDismissedInSession() {
   if (typeof window === "undefined") {
     return false;
@@ -158,6 +170,8 @@ export default function ChatPage() {
   const [editingSelectedMenus, setEditingSelectedMenus] = useState<SelectedDiaryMealRecordMenu[]>(
     [],
   );
+  const [mealRecordCancelTarget, setMealRecordCancelTarget] =
+    useState<MealRecordCancelTarget | null>(null);
 
   const { data, isPending: isHistoryPending } = useGetChatHistoryQuery();
   const { mutateAsync: sendMessageMutation, isPending: isSendPending } = useSendMessageMutation();
@@ -558,6 +572,44 @@ export default function ChatPage() {
     }
   };
 
+  const handlePrimaryMealRecordCancelRequest = (
+    chatItem: ChatHistoryItemResponseDto,
+    mealRecord: MealRecordViewModel | null,
+  ) => {
+    if (!mealRecord) {
+      return;
+    }
+
+    setMealRecordCancelTarget({
+      type: "primaryMenu",
+      chatItem,
+      mealRecord,
+    });
+  };
+
+  const handleMealRecordCancelRequest = (mealRecord: MealRecordViewModel) => {
+    setMealRecordCancelTarget({
+      type: "mealRecord",
+      mealRecord,
+    });
+  };
+
+  const handleMealRecordCancelConfirm = async () => {
+    if (mealRecordCancelTarget === null) {
+      return;
+    }
+
+    if (mealRecordCancelTarget.type === "primaryMenu") {
+      await handlePrimaryMealRecordRemoveClick(
+        mealRecordCancelTarget.chatItem,
+        mealRecordCancelTarget.mealRecord,
+      );
+      return;
+    }
+
+    await handleDiaryMealRecordCancelClick(mealRecordCancelTarget.mealRecord);
+  };
+
   const handleEditingQuantityChange = (menuId: number, nextQuantity: number) => {
     setEditingSelectedMenus((prev) =>
       prev.map((menu) => (menu.id === menuId ? { ...menu, quantity: nextQuantity } : menu)),
@@ -767,7 +819,7 @@ export default function ChatPage() {
                           )
                         }
                         onMealRecordCancelClick={() =>
-                          handlePrimaryMealRecordRemoveClick(chatItem, primaryMealRecord)
+                          handlePrimaryMealRecordCancelRequest(chatItem, primaryMealRecord)
                         }
                         isMealRecorded={primaryMealRecord !== null}
                       />
@@ -786,7 +838,7 @@ export default function ChatPage() {
                           )
                         }
                         onMealRecordCancelClick={() =>
-                          handlePrimaryMealRecordRemoveClick(chatItem, primaryMealRecord)
+                          handlePrimaryMealRecordCancelRequest(chatItem, primaryMealRecord)
                         }
                         isMealRecorded={primaryMealRecord !== null}
                       />
@@ -797,7 +849,7 @@ export default function ChatPage() {
                         key={`date-meal-${dateMealRecord.time}`}
                         menus={dateMealRecord.recordedMenus}
                         mealRecordTime={dateMealRecord.time}
-                        onCancelClick={() => handleDiaryMealRecordCancelClick(dateMealRecord)}
+                        onCancelClick={() => handleMealRecordCancelRequest(dateMealRecord)}
                         onEditClick={() => handleMealRecordEditClick(dateMealRecord)}
                       />
                     ))}
@@ -820,7 +872,7 @@ export default function ChatPage() {
                       key={`today-meal-${dateMealRecord.time}`}
                       menus={dateMealRecord.recordedMenus}
                       mealRecordTime={dateMealRecord.time}
-                      onCancelClick={() => handleDiaryMealRecordCancelClick(dateMealRecord)}
+                      onCancelClick={() => handleMealRecordCancelRequest(dateMealRecord)}
                       onEditClick={() => handleMealRecordEditClick(dateMealRecord)}
                     />
                   ))}
@@ -963,6 +1015,25 @@ export default function ChatPage() {
         onAddMore={handleEditingAddMore}
         onClose={handleMealRecordEditClose}
         onSubmit={handleMealRecordEditSubmit}
+      />
+      <ConfirmModal
+        open={mealRecordCancelTarget !== null}
+        onOpenChange={(open) => {
+          if (!open) {
+            setMealRecordCancelTarget(null);
+          }
+        }}
+        title="기록 취소"
+        description={
+          mealRecordCancelTarget?.type === "primaryMenu"
+            ? "이 메뉴를 식사 기록에서 제거할까요?"
+            : "이 식사 기록을 취소할까요?"
+        }
+        cancelText="취소"
+        confirmText="확인"
+        confirmDisabled={isMealRecordEditPending}
+        closeOnConfirm={false}
+        onConfirm={handleMealRecordCancelConfirm}
       />
     </div>
   );
