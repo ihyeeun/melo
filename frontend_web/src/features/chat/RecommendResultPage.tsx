@@ -117,8 +117,9 @@ function RecommendResultContent({
 }) {
   const navigate = useNavigate();
   const [selectedFilter, setSelectedFilter] = useState<RecommendFilter>("all");
-  const [selectedMenusOverride, setSelectedMenusOverride] =
-    useState<SelectedMealRecordMenu[] | null>(null);
+  const [selectedMenusOverride, setSelectedMenusOverride] = useState<
+    SelectedMealRecordMenu[] | null
+  >(null);
   const chatDateKey = useMemo(() => getChatDateKey(chatItem), [chatItem]);
   const { data: dayMeals, isPending: isDayMealsPending } = useDayMealsQuery(chatDateKey);
   const { mutateAsync: registerDiaryMealRecordMutate, isPending: isMealRegisterPending } =
@@ -195,12 +196,14 @@ function RecommendResultContent({
         }),
       );
 
-      recommendations.filter((menu) => selectedMenuIds.has(menu.menu_id)).forEach((menu) => {
-        track(EVENT_NAME.RECOMMEND_MENU_SAVE, {
-          menu_name: menu.menu_name,
-          menu_id: menu.menu_id,
+      recommendations
+        .filter((menu) => selectedMenuIds.has(menu.menu_id))
+        .forEach((menu) => {
+          track(EVENT_NAME.RECOMMEND_MENU_SAVE, {
+            menu_name: menu.menu_name,
+            menu_id: menu.menu_id,
+          });
         });
-      });
 
       toast.success(
         diaryMealRecordSelection ? "식사 기록이 수정되었어요." : "식사 기록이 등록되었어요.",
@@ -218,8 +221,9 @@ function RecommendResultContent({
       <section className={styles.titleSection}>
         <div className={styles.intro}>
           <p className={`${styles.introMessage} typo-title2`}>
-            <span className={styles.textPrimary}>{profileNickname}</span>님을 위한 메뉴를
-            추천해드려요!
+            <span className={styles.textPrimary}>{profileNickname}</span>님을 위한
+            <br />
+            메뉴를 추천해드려요!
           </p>
 
           <img src="/icons/character-love.svg" className={styles.characterImage} />

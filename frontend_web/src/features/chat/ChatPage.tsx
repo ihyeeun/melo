@@ -431,8 +431,7 @@ export default function ChatPage() {
       return;
     }
 
-    const hadMealRecord =
-      getSelectedDiaryMenusByTime(dayMeals, nextMealRecord.time).length > 0;
+    const hadMealRecord = getSelectedDiaryMenusByTime(dayMeals, nextMealRecord.time).length > 0;
 
     try {
       await registerDiaryMealRecordMutate(
@@ -448,9 +447,7 @@ export default function ChatPage() {
         menu_id: primaryMenu.menu_id,
       });
 
-      toast.success(
-        hadMealRecord ? "식사 기록에 메뉴를 추가했어요." : "식사 기록이 등록되었어요.",
-      );
+      toast.success(hadMealRecord ? "식사 기록에 메뉴를 추가했어요." : "식사 기록이 등록되었어요.");
     } catch (error) {
       toast.warning(resolveErrorMessage(error));
     }
@@ -484,10 +481,7 @@ export default function ChatPage() {
     }
 
     const previousMealRecord = mealRecord.previousMealRecord;
-    const remainingMenus = getRemainingMealRecordMenus(
-      previousMealRecord,
-      primaryMenu.menu_id,
-    );
+    const remainingMenus = getRemainingMealRecordMenus(previousMealRecord, primaryMenu.menu_id);
 
     if (remainingMenus.length === previousMealRecord.menus.length) {
       return;
@@ -715,11 +709,7 @@ export default function ChatPage() {
               const primaryMenu = getPrimaryMealRecordMenu(chatItem);
               const primaryMealRecord =
                 chatDateKey && primaryMenu
-                  ? getMealRecordViewModelByMenuId(
-                      chatDayMeals,
-                      chatDateKey,
-                      primaryMenu.menu_id,
-                    )
+                  ? getMealRecordViewModelByMenuId(chatDayMeals, chatDateKey, primaryMenu.menu_id)
                   : null;
               const previousItem = chatList[index - 1];
               const previousDate = previousItem ? parseDate(previousItem.createdAt) : null;
@@ -1185,7 +1175,7 @@ function MealRecordCard({
         </span>
         {hasMultipleMenus ? (
           <ChevronUp
-            size={20}
+            size={24}
             className={`${styles.mealRecordChevron} ${isOpen ? styles.mealRecordChevronOpen : ""}`}
           />
         ) : null}
@@ -1457,7 +1447,7 @@ function FeedbackSection({
                 <p className={`${styles.feedbackCalories} textNoWrap typo-title3`}>
                   {formatNumberWithMaxOneDecimal(feedback.total_calories)}kcal
                   <ChevronUp
-                    size={20}
+                    size={24}
                     className={`${styles.feedbackMenuChevron} ${
                       isMenuListOpen ? styles.feedbackMenuChevronOpen : ""
                     }`}
