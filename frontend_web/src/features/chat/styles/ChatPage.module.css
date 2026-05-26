@@ -189,6 +189,8 @@
 
 .timeText {
   color: var(--label-assistive);
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .userMessageContent {

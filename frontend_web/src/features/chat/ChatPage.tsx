@@ -451,7 +451,9 @@ export default function ChatPage() {
 
       toast.success(hadMealRecord ? "식사 기록에 메뉴를 추가했어요." : "식사 기록이 등록되었어요.");
     } catch (error) {
-      toast.warning(resolveErrorMessage(error, "식사 기록 저장에 실패했어요. 잠시 후 다시 시도해주세요."));
+      toast.warning(
+        resolveErrorMessage(error, "식사 기록 저장에 실패했어요. 잠시 후 다시 시도해주세요."),
+      );
     }
   };
 
