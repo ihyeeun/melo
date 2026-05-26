@@ -44,7 +44,7 @@ export function buildChatMealRecordTransferState({
     menus: selectedMenus.map((menu) => ({
       id: menu.id,
       quantity: menu.quantity,
-      mode: menu.mode,
+      mode: menu.mode ?? "unit",
     })),
     previews: selectedMenus.reduce<MealRecordTransferPreview[]>((previews, menu) => {
       const matchedMenu = menuById.get(menu.id);
