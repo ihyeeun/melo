@@ -6,9 +6,8 @@ import styles from "@/features/chat/styles/ChatMealRecordBottomSheet.module.css"
 import {
   type ChatRecommendItemResponseDto,
   MEAL_TYPE_OPTIONS,
-  type MealMenuInputMode,
+  type MealServingInputMode,
   type MealType,
-  MENU_INPUT_MODE,
   MENU_UNIT,
 } from "@/shared/api/types/api.dto";
 import BottomSheet from "@/shared/commons/bottomSheet/BottomSheet";
@@ -19,11 +18,10 @@ import { formatNumberWithMaxOneDecimal } from "@/shared/utils/numberFormat";
 type SelectedMenuItem = {
   id: number;
   quantity: number;
-  inputMode?: MealMenuInputMode;
+  mode?: MealServingInputMode;
 };
 
 type ServingWeightUnit = "g" | "ml";
-type ServingInputMode = "unit" | "weight";
 
 type ServingContext = {
   baseWeight: number;
@@ -54,7 +52,7 @@ type ChatMealRecordBottomSheetProps = {
   submitLabel?: string;
   onMealTypeChange: (mealType: MealType) => void;
   onQuantityChange: (menuId: number, nextQuantity: number) => void;
-  onInputModeChange: (menuId: number, nextInputMode: MealMenuInputMode) => void;
+  onModeChange: (menuId: number, nextMode: MealServingInputMode) => void;
   onRemoveMenu: (menuId: number) => void;
   onAddMore?: () => void;
   onClose: () => void;
@@ -94,7 +92,7 @@ function resolveServingContext(recommendation: ChatMealRecordMenu): ServingConte
 
 function getDisplayValue(
   consumedWeight: number,
-  mode: ServingInputMode,
+  mode: MealServingInputMode,
   servingContext: ServingContext,
 ) {
   if (mode === "unit") {
@@ -109,7 +107,7 @@ function getDisplayValue(
 
 function toConsumedWeight(
   displayValue: number,
-  mode: ServingInputMode,
+  mode: MealServingInputMode,
   servingContext: ServingContext,
 ) {
   if (mode === "weight") {
@@ -130,14 +128,6 @@ function getScaledCalories(
   return baseCalories * (consumedWeight / servingContext.baseWeight);
 }
 
-function toServingInputMode(inputMode?: MealMenuInputMode): ServingInputMode {
-  return inputMode === MENU_INPUT_MODE.WEIGHT ? "weight" : "unit";
-}
-
-function toMenuInputMode(mode: ServingInputMode): MealMenuInputMode {
-  return mode === "weight" ? MENU_INPUT_MODE.WEIGHT : MENU_INPUT_MODE.UNIT;
-}
-
 export function ChatMealRecordBottomSheet({
   isOpen,
   recommendations,
@@ -147,7 +137,7 @@ export function ChatMealRecordBottomSheet({
   submitLabel = "담기",
   onMealTypeChange,
   onQuantityChange,
-  onInputModeChange,
+  onModeChange,
   onRemoveMenu,
   onAddMore,
   onClose,
@@ -170,7 +160,7 @@ export function ChatMealRecordBottomSheet({
           ...menu,
           recommendation,
           servingContext: resolveServingContext(recommendation),
-          mode: toServingInputMode(menu.inputMode),
+          mode: menu.mode ?? "unit",
         };
       })
       .filter((item): item is NonNullable<typeof item> => item !== null);
@@ -297,7 +287,7 @@ export function ChatMealRecordBottomSheet({
                       value={item.mode}
                       onValueChange={(nextValue) => {
                         const safeMode = nextValue === "weight" ? "weight" : "unit";
-                        onInputModeChange(item.id, toMenuInputMode(safeMode));
+                        onModeChange(item.id, safeMode);
                       }}
                     >
                       <Select.Trigger className={`${styles.unitSelectTrigger} typo-h2`}>

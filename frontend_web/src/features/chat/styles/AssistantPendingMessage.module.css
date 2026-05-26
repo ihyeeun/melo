@@ -1,0 +1,175 @@
+.pendingStatus {
+  align-items: center;
+  display: inline-grid;
+  max-width: 100%;
+  min-height: 44px;
+}
+
+.typingLayer,
+.longWaitStatus {
+  grid-area: 1 / 1;
+}
+
+.typingLayer {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  transition:
+    opacity 260ms ease,
+    transform 260ms ease;
+}
+
+.pendingStatusLongWait .typingLayer {
+  opacity: 0;
+  transform: translateY(-2px) scale(0.96);
+}
+
+.typingBubble {
+  align-items: center;
+  border-radius: 12px;
+  display: inline-flex;
+  gap: 5px;
+  min-height: 44px;
+}
+
+.typingDot {
+  animation: typing-bounce 1.2s ease-in-out infinite;
+  background-color: var(--primary-strong);
+  border-radius: 999px;
+  height: 6px;
+  width: 6px;
+}
+
+.typingDot:nth-child(2) {
+  animation-delay: 0.15s;
+}
+
+.typingDot:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+.longWaitStatus {
+  align-items: center;
+  animation: long-wait-status-enter 320ms ease-out both;
+  color: var(--label-normal);
+  display: inline-flex;
+  gap: 12px;
+  min-height: 44px;
+}
+
+.longWaitMarker {
+  --dot-gap: 5px;
+  --dot-offset: calc((8px + var(--dot-gap)) / 2);
+
+  animation: long-wait-marker-rotate 2s ease-in-out infinite;
+  display: block;
+  flex: 0 0 auto;
+  height: calc(19px + var(--dot-gap));
+  position: relative;
+  transform-origin: center;
+  width: calc(19px + var(--dot-gap));
+}
+
+.longWaitDot {
+  --dot-x: 0;
+  --dot-y: 0;
+
+  animation: long-wait-dot-spread 2s ease-in-out infinite;
+  background-color: var(--primary-strong);
+  border-radius: 999px;
+  height: 6px;
+  left: 50%;
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 6px;
+}
+
+.longWaitDot:nth-child(1) {
+  --dot-x: calc(var(--dot-offset) * -1);
+  --dot-y: calc(var(--dot-offset) * -1);
+}
+
+.longWaitDot:nth-child(2) {
+  --dot-x: var(--dot-offset);
+  --dot-y: calc(var(--dot-offset) * -1);
+}
+
+.longWaitDot:nth-child(3) {
+  --dot-x: calc(var(--dot-offset) * -1);
+  --dot-y: var(--dot-offset);
+}
+
+.longWaitDot:nth-child(4) {
+  --dot-x: var(--dot-offset);
+  --dot-y: var(--dot-offset);
+}
+
+.longWaitText {
+  animation: pending-text-fade 800ms ease-out;
+  margin: 0;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+@keyframes typing-bounce {
+  0%,
+  80%,
+  100% {
+    opacity: 0.35;
+    transform: translateY(0);
+  }
+
+  40% {
+    opacity: 1;
+    transform: translateY(-4px);
+  }
+}
+
+@keyframes long-wait-marker-rotate {
+  0%,
+  34% {
+    transform: rotate(0deg);
+  }
+
+  78%,
+  100% {
+    transform: rotate(-270deg);
+  }
+}
+
+@keyframes long-wait-dot-spread {
+  0%,
+  14%,
+  100% {
+    transform: translate(-50%, -50%) translate(0, 0) scale(0.82);
+  }
+
+  34%,
+  78% {
+    transform: translate(-50%, -50%) translate(var(--dot-x), var(--dot-y)) scale(1);
+  }
+}
+
+@keyframes long-wait-status-enter {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pending-text-fade {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

@@ -19,39 +19,3 @@ export async function sendMessage({ input }: { input: string }) {
   });
   return response;
 }
-
-export async function mealRegister({
-  chat_id,
-  time,
-  menu_ids,
-  menu_quantities,
-  menu_input_modes,
-}: {
-  chat_id: number;
-  time: number;
-  menu_ids: number[];
-  menu_quantities: number[];
-  menu_input_modes: number[];
-}) {
-  await appApiData({
-    endpoint: "/chat/meal-record",
-    method: "POST",
-    body: {
-      chat_id,
-      time,
-      menu_ids,
-      menu_quantities,
-      menu_input_modes,
-    },
-  });
-}
-
-export async function mealDelete({ chat_id }: { chat_id: number }) {
-  await appApiData({
-    endpoint: "/chat/meal-record/delete",
-    method: "POST",
-    body: {
-      chat_id,
-    },
-  });
-}

@@ -1,10 +1,5 @@
 import type { ChatMealRecordMenu } from "@/features/chat/components/ChatMealRecordBottomSheet";
-import {
-  type MealMenuInputMode,
-  type MealServingInputMode,
-  type MealType,
-  MENU_INPUT_MODE,
-} from "@/shared/api/types/api.dto";
+import { type MealServingInputMode, type MealType } from "@/shared/api/types/api.dto";
 import {
   CHAT_TO_MEAL_RECORD_SOURCE,
   type MealRecordTransferPreview,
@@ -14,12 +9,8 @@ import {
 type SelectedChatMealRecordMenu = {
   id: number;
   quantity: number;
-  inputMode: MealMenuInputMode;
+  mode?: MealServingInputMode;
 };
-
-function toServingInputMode(inputMode: MealMenuInputMode): MealServingInputMode {
-  return inputMode === MENU_INPUT_MODE.WEIGHT ? "weight" : "unit";
-}
 
 function toTransferPreview(menu: ChatMealRecordMenu): MealRecordTransferPreview {
   return {
@@ -53,7 +44,7 @@ export function buildChatMealRecordTransferState({
     menus: selectedMenus.map((menu) => ({
       id: menu.id,
       quantity: menu.quantity,
-      mode: toServingInputMode(menu.inputMode),
+      mode: menu.mode ?? "unit",
     })),
     previews: selectedMenus.reduce<MealRecordTransferPreview[]>((previews, menu) => {
       const matchedMenu = menuById.get(menu.id);
