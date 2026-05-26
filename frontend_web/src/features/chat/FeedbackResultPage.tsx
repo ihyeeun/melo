@@ -1,29 +1,32 @@
 import { useEffect, useMemo, useState } from "react";
 
-import { useSyncChatMealRecordRegisterMutation } from "@/features/chat/hooks/mutations/useSyncChatMealRecordMutation";
 import { useGetChatHistoryQuery } from "@/features/chat/hooks/queries/useGetChatQuery";
 import styles from "@/features/chat/styles/RecommendResultPage.module.css";
 import {
-  getMealTypeFromChatMealTime,
-  getMealTypeFromCurrentTime,
-} from "@/features/chat/utils/chatMeal";
+  buildDiaryMealRecordRequest,
+  getChatDateKey,
+  getDiaryMealImage,
+  getDiaryMealRecordSelectionByMenuIds,
+  getFallbackMealTime,
+  getNextDiaryMenusByCandidateIds,
+  type SelectedDiaryMealRecordMenu,
+} from "@/features/chat/utils/chatDiaryMealRecord";
+import { getMealTypeFromChatMealTime } from "@/features/chat/utils/chatMeal";
 import {
   type FeedbackDetailNavigationState,
   type FeedbackDetailSelectionPayload,
   getFeedbackDetailPath,
   getSafeChatId,
 } from "@/features/chat/utils/recommendNavigation";
+import { useDayMealsQuery } from "@/features/home/hooks/queries/useDayMealsQuery";
+import { useTodayMealRecordRegisterMutation } from "@/features/meal-record/hooks/mutations/useTodayMealRecordMutation";
 import { PATH } from "@/router/path";
 import { AppApiError } from "@/shared/api/appApi";
 import {
   type ChatFeedbackMenuResponseDto,
   type ChatFoodImageRecognizedMenuResponseDto,
   type ChatHistoryItemResponseDto,
-  type MealMenuInputMode,
-  type MealServingInputMode,
-  type MealTime,
   type MealType,
-  MENU_INPUT_MODE,
 } from "@/shared/api/types/api.dto";
 import { Button } from "@/shared/commons/button/Button";
 import { MealMenuCard } from "@/shared/commons/card/MealMenuCard";
@@ -35,13 +38,8 @@ import {
   useNavigate,
   useSearchParams,
 } from "@/shared/navigation/stackflowNavigation";
-import { useSelectedDateKey } from "@/shared/stores/selectedDate.store";
 
-type SelectedMealRecordMenu = {
-  id: number;
-  quantity: number;
-  inputMode: MealMenuInputMode;
-};
+type SelectedMealRecordMenu = SelectedDiaryMealRecordMenu;
 
 export default function FeedbackResultPage() {
   const navigate = useNavigate();
@@ -99,7 +97,7 @@ export default function FeedbackResultPage() {
 
   return (
     <FeedbackResultContent
-      key={getMealRecordStateKey(chatItem)}
+      key={chatItem.id}
       chatItem={chatItem}
       menus={feedbackMenu.menus}
     />
@@ -114,40 +112,45 @@ function FeedbackResultContent({
   menus: ChatFeedbackMenuResponseDto[];
 }) {
   const navigate = useNavigate();
-  const selectedDateKey = useSelectedDateKey();
-  const [selectedMenus, setSelectedMenus] = useState<SelectedMealRecordMenu[]>(() =>
-    chatItem.meal_record ? getInitialSelectedMenus(menus, chatItem.meal_record) : [],
-  );
-  const mealType = useMemo<MealType>(
-    () =>
-      chatItem.meal_record
-        ? getMealTypeFromChatMealTime(chatItem.meal_record.time)
-        : getMealTypeFromCurrentTime(new Date()),
-    [chatItem.meal_record],
-  );
-  const { mutateAsync: syncMealRecordRegisterMutate, isPending: isMealRegisterPending } =
-    useSyncChatMealRecordRegisterMutation();
+  const [selectedMenusOverride, setSelectedMenusOverride] =
+    useState<SelectedMealRecordMenu[] | null>(null);
+  const chatDateKey = useMemo(() => getChatDateKey(chatItem), [chatItem]);
+  const { data: dayMeals, isPending: isDayMealsPending } = useDayMealsQuery(chatDateKey);
+  const { mutateAsync: registerDiaryMealRecordMutate, isPending: isMealRegisterPending } =
+    useTodayMealRecordRegisterMutation();
 
   const imageUrl = getChatItemImageUrl(chatItem);
   const recognizedFoods = getRecognizedFoods(chatItem);
+  const feedbackMenuIds = useMemo(() => menus.map((menu) => menu.menu_id), [menus]);
+  const diaryMealRecordSelection = useMemo(
+    () => getDiaryMealRecordSelectionByMenuIds(dayMeals, feedbackMenuIds),
+    [dayMeals, feedbackMenuIds],
+  );
+  const targetMealTime = diaryMealRecordSelection?.time ?? getFallbackMealTime(chatItem);
+  const mealType: MealType = getMealTypeFromChatMealTime(targetMealTime);
+  const selectedMenus = useMemo(
+    () => selectedMenusOverride ?? diaryMealRecordSelection?.menus ?? [],
+    [diaryMealRecordSelection, selectedMenusOverride],
+  );
   const selectedMenuIds = useMemo(() => {
     return new Set(selectedMenus.map((menu) => menu.id));
   }, [selectedMenus]);
 
   const handleConfirmDetailSelection = (selection: FeedbackDetailSelectionPayload) => {
-    setSelectedMenus((prev) => {
+    setSelectedMenusOverride((prev) => {
+      const currentMenus = prev ?? diaryMealRecordSelection?.menus ?? [];
       const nextMenu: SelectedMealRecordMenu = {
         id: selection.menuId,
         quantity: selection.quantity,
-        inputMode: toMealMenuInputMode(selection.mode),
+        mode: selection.mode,
       };
-      const existingIndex = prev.findIndex((menu) => menu.id === selection.menuId);
+      const existingIndex = currentMenus.findIndex((menu) => menu.id === selection.menuId);
 
       if (existingIndex === -1) {
-        return [...prev, nextMenu];
+        return [...currentMenus, nextMenu];
       }
 
-      return prev.map((menu) => (menu.id === selection.menuId ? nextMenu : menu));
+      return currentMenus.map((menu) => (menu.id === selection.menuId ? nextMenu : menu));
     });
   };
 
@@ -158,7 +161,7 @@ function FeedbackResultContent({
         ? {
             menuId,
             quantity: initialSelection.quantity,
-            mode: toMealServingInputMode(initialSelection.inputMode),
+            mode: initialSelection.mode,
           }
         : null,
       onConfirmSelection: handleConfirmDetailSelection,
@@ -168,36 +171,50 @@ function FeedbackResultContent({
   };
 
   const handleToggleMenu = (menu: ChatFeedbackMenuResponseDto) => {
-    setSelectedMenus((prev) => {
-      const isAlreadySelected = prev.some((item) => item.id === menu.menu_id);
+    setSelectedMenusOverride((prev) => {
+      const currentMenus = prev ?? diaryMealRecordSelection?.menus ?? [];
+      const isAlreadySelected = currentMenus.some((item) => item.id === menu.menu_id);
 
       if (isAlreadySelected) {
-        return prev.filter((item) => item.id !== menu.menu_id);
+        return currentMenus.filter((item) => item.id !== menu.menu_id);
       }
 
       return [
-        ...prev,
+        ...currentMenus,
         {
           id: menu.menu_id,
           quantity: menu.weight,
-          inputMode: MENU_INPUT_MODE.UNIT,
+          mode: "unit",
         },
       ];
     });
   };
 
   const handleSubmitMealRecord = async () => {
+    if (!dayMeals) {
+      toast.warning("식사 기록을 등록할 수 없어요.");
+      return;
+    }
+
     try {
-      await syncMealRecordRegisterMutate({
-        date: selectedDateKey,
-        chatId: chatItem.id,
-        time: Number(mealType) as MealTime,
-        menus: selectedMenus,
-        previousMealRecord: chatItem.meal_record,
+      const nextMenus = getNextDiaryMenusByCandidateIds({
+        dayMeals,
+        time: targetMealTime,
+        selectedMenus,
+        candidateIds: feedbackMenuIds,
       });
 
+      await registerDiaryMealRecordMutate(
+        buildDiaryMealRecordRequest({
+          dateKey: chatDateKey,
+          mealType,
+          selectedMenus: nextMenus,
+          image: getDiaryMealImage(dayMeals, targetMealTime),
+        }),
+      );
+
       toast.success(
-        chatItem.meal_record ? "식사 기록이 수정되었어요." : "식사 기록이 등록되었어요.",
+        diaryMealRecordSelection ? "식사 기록이 수정되었어요." : "식사 기록이 등록되었어요.",
       );
       navigateBack({ fallbackTo: PATH.CHAT });
     } catch (error) {
@@ -258,10 +275,10 @@ function FeedbackResultContent({
           variant="filled"
           size="large"
           color="primary"
-          disabled={selectedMenus.length === 0 || isMealRegisterPending}
+          disabled={selectedMenus.length === 0 || isMealRegisterPending || isDayMealsPending}
           onClick={handleSubmitMealRecord}
         >
-          {selectedMenus.length}개 {chatItem.meal_record ? "수정하기" : "기록하기"}
+          {selectedMenus.length}개 {diaryMealRecordSelection ? "수정하기" : "기록하기"}
         </Button>
       </footer>
     </section>
@@ -366,55 +383,6 @@ function getRecognizedFoods(chatItem: ChatHistoryItemResponseDto) {
   }
 
   return chatItem.response_payload.recognized_foods ?? [];
-}
-
-function getInitialSelectedMenus(
-  menus: ChatFeedbackMenuResponseDto[],
-  mealRecord: NonNullable<ChatHistoryItemResponseDto["meal_record"]>,
-): SelectedMealRecordMenu[] {
-  const menusById = new Map(menus.map((menu) => [menu.menu_id, menu]));
-
-  return (mealRecord.menu_ids ?? [])
-    .map((menuId, index) => {
-      const menu = menusById.get(menuId);
-
-      if (!menu) {
-        return null;
-      }
-
-      return {
-        id: menuId,
-        quantity: mealRecord.menu_quantities?.[index] ?? menu.weight,
-        inputMode: mealRecord.menu_input_modes?.[index] ?? MENU_INPUT_MODE.UNIT,
-      };
-    })
-    .filter((menu): menu is SelectedMealRecordMenu => menu !== null);
-}
-
-function getMealRecordStateKey(chatItem: ChatHistoryItemResponseDto) {
-  const mealRecord = chatItem.meal_record;
-
-  if (!mealRecord) {
-    return `${chatItem.id}:empty`;
-  }
-
-  return [
-    chatItem.id,
-    chatItem.image_url ?? "",
-    chatItem.response_payload.image_url ?? "",
-    mealRecord.time,
-    mealRecord.menu_ids?.join(",") ?? "",
-    mealRecord.menu_quantities?.join(",") ?? "",
-    mealRecord.menu_input_modes?.join(",") ?? "",
-  ].join(":");
-}
-
-function toMealServingInputMode(inputMode: MealMenuInputMode): MealServingInputMode {
-  return inputMode === MENU_INPUT_MODE.WEIGHT ? "weight" : "unit";
-}
-
-function toMealMenuInputMode(mode: MealServingInputMode): MealMenuInputMode {
-  return mode === "weight" ? MENU_INPUT_MODE.WEIGHT : MENU_INPUT_MODE.UNIT;
 }
 
 function resolveErrorMessage(error: unknown) {
