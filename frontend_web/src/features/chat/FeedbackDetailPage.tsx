@@ -34,10 +34,12 @@ import { toast } from "@/shared/commons/toast/toast";
 import {
   navigateBack,
   useLocation,
+  useNavigate,
   useSearchParams,
 } from "@/shared/navigation/stackflowNavigation";
 
 export default function FeedbackDetailPage() {
+  const navigate = useNavigate();
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [selection, setSelection] = useState<MealMenuNutrientSelection | null>(null);
   const location = useLocation<FeedbackDetailNavigationState>();
@@ -56,6 +58,14 @@ export default function FeedbackDetailPage() {
     if (chatId === null) return null;
     return chatHistory?.chat_list.find((item) => item.id === chatId) ?? null;
   }, [chatHistory?.chat_list, chatId]);
+
+  useEffect(() => {
+    if (hasSelectionCallback || isChatHistoryPending || chatItem) return;
+
+    toast.warning("채팅 정보를 불러오지 못했어요.");
+    navigate(PATH.CHAT, { replace: true });
+  }, [chatItem, hasSelectionCallback, isChatHistoryPending, navigate]);
+
   const chatDateKey = useMemo(
     () => (!hasSelectionCallback && chatItem ? getChatDateKey(chatItem) : ""),
     [chatItem, hasSelectionCallback],
