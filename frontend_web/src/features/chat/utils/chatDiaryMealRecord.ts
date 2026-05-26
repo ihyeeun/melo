@@ -36,7 +36,7 @@ export function getFallbackMealTime(chatItem: Pick<ChatHistoryItemResponseDto, "
 
 // 다이어리에 기록되어있는 메뉴들을 다시 저장할 수 있도록 ids, quantities, modes 형태를 뽑아 바꾸는 함수
 export function getSelectedDiaryMenusByTime(dayMeals: DayMealSummary, mealTime: MealTime) {
-  return dayMeals.menusByTime[mealTime].map(toSelectedDiaryMealRecordMenu);
+  return dayMeals.menusByTime?.[mealTime]?.map(toSelectedDiaryMealRecordMenu) ?? [];
 }
 
 // 채팅 결과에 나온 메뉴가 다이어리 기록에 있는지 찾는 함수 (기록, 수정하기 버튼)
@@ -51,7 +51,7 @@ export function getDiaryMealRecordSelectionByMenuIds(
   const targetIdSet = new Set(menuIds);
 
   for (const mealTime of MEAL_TIME_LIST) {
-    const selectedMenus = dayMeals.menusByTime[mealTime]
+    const selectedMenus = (dayMeals.menusByTime?.[mealTime] ?? [])
       .filter((menu) => targetIdSet.has(menu.id))
       .map(toSelectedDiaryMealRecordMenu);
 
@@ -76,7 +76,7 @@ export function getDiaryMealMenuSelection(
   }
 
   for (const mealTime of MEAL_TIME_LIST) {
-    const menu = dayMeals.menusByTime[mealTime].find((item) => item.id === menuId);
+    const menu = dayMeals.menusByTime?.[mealTime]?.find((item) => item.id === menuId);
 
     if (menu) {
       return {
@@ -110,7 +110,7 @@ export function getNextDiaryMenusByCandidateIds({
 }
 
 export function getDiaryMealImage(dayMeals: DayMealSummary, mealTime: MealTime) {
-  const image = dayMeals.imagesByTime[mealTime];
+  const image = dayMeals.imagesByTime?.[mealTime];
   return typeof image === "string" && image.trim().length > 0 ? image : undefined;
 }
 

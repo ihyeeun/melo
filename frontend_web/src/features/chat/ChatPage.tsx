@@ -14,6 +14,7 @@ import styles from "@/features/chat/styles/ChatPage.module.css";
 import {
   buildDiaryMealRecordRequest,
   getDiaryMealImage,
+  getFallbackMealTime,
   getNextDiaryMenusByCandidateIds,
   getSelectedDiaryMenusByTime,
   type SelectedDiaryMealRecordMenu,
@@ -450,7 +451,7 @@ export default function ChatPage() {
 
       toast.success(hadMealRecord ? "식사 기록에 메뉴를 추가했어요." : "식사 기록이 등록되었어요.");
     } catch (error) {
-      toast.warning(resolveErrorMessage(error));
+      toast.warning(resolveErrorMessage(error, "식사 기록 저장에 실패했어요. 잠시 후 다시 시도해주세요."));
     }
   };
 
@@ -695,7 +696,7 @@ export default function ChatPage() {
                   ? getMealRecordViewModelByTime(
                       chatDayMeals,
                       chatDateKey,
-                      getFallbackMealRecordTime(chatItem),
+                      getFallbackMealTime(chatItem),
                     )
                   : null;
               const mealRecordsAfterChatItem =
@@ -1654,7 +1655,7 @@ function getMergedMealRecordPayload(
   menus: SelectedDiaryMealRecordMenu[];
   wasAdded: boolean;
 } {
-  const time = mealRecord?.time ?? getFallbackMealRecordTime(chatItem);
+  const time = mealRecord?.time ?? getFallbackMealTime(chatItem);
   const menus = mealRecord ? mealRecord.menus : getSelectedDiaryMenusByTime(dayMeals, time);
   const existingMenuIds = menus.map((recordedMenu) => recordedMenu.id);
 
@@ -1687,12 +1688,6 @@ function getRemainingMealRecordMenus(
   return mealRecord.menus.filter((menu) => menu.id !== removeMenuId);
 }
 
-function getFallbackMealRecordTime(chatItem: ChatHistoryItemResponseDto): MealTime {
-  const chatDate = parseDate(chatItem.createdAt);
-
-  return Number(getMealTypeFromCurrentTime(chatDate ?? new Date())) as MealTime;
-}
-
 function getMealRecordsAfterChatItem({
   chatList,
   index,
@@ -1711,7 +1706,7 @@ function getMealRecordsAfterChatItem({
   }
 
   const mealTimesWithChat = getMealTimesWithChatOnDate(chatList, dateKey);
-  const currentMealTime = getFallbackMealRecordTime(chatItem);
+  const currentMealTime = getFallbackMealTime(chatItem);
   const isCurrentLastInMealTime = isLastChatItemOnMealTime(
     chatList,
     index,
@@ -1734,7 +1729,7 @@ function getMealTimesWithChatOnDate(chatList: ChatHistoryItemResponseDto[], date
 
   chatList.forEach((chatItem) => {
     if (getChatDateKey(chatItem) === dateKey) {
-      mealTimes.add(getFallbackMealRecordTime(chatItem));
+      mealTimes.add(getFallbackMealTime(chatItem));
     }
   });
 
@@ -1751,7 +1746,7 @@ function isLastChatItemOnMealTime(
     .slice(index + 1)
     .some(
       (chatItem) =>
-        getChatDateKey(chatItem) === dateKey && getFallbackMealRecordTime(chatItem) === mealTime,
+        getChatDateKey(chatItem) === dateKey && getFallbackMealTime(chatItem) === mealTime,
     );
 }
 
@@ -1777,7 +1772,7 @@ function getMealRecordViewModelByMenuId(
   }
 
   for (const mealTime of MEAL_TIME_LIST) {
-    const menus = dayMeals.menusByTime[mealTime];
+    const menus = dayMeals.menusByTime?.[mealTime] ?? [];
 
     if (menus.some((menu) => menu.id === menuId)) {
       return buildMealRecordViewModel(dateKey, dayMeals, mealTime);
@@ -1800,7 +1795,7 @@ function buildMealRecordViewModel(
   dayMeals: DayMealSummary,
   mealTime: MealTime,
 ): MealRecordViewModel | null {
-  const menus = dayMeals.menusByTime[mealTime];
+  const menus = dayMeals.menusByTime?.[mealTime] ?? [];
 
   if (menus.length === 0) {
     return null;
@@ -1880,7 +1875,10 @@ function formatMenuServing(menu: FeedbackDto["menus"][number]) {
   return `1${menu.unit_quantity} (${formatNumberWithMaxOneDecimal(menu.weight)}${menu.unit === 0 ? "g" : "ml"})`;
 }
 
-function resolveErrorMessage(error: unknown) {
+function resolveErrorMessage(
+  error: unknown,
+  fallbackMessage = "메시지 전송에 실패했어요. 잠시 후 다시 시도해주세요.",
+) {
   if (error instanceof AppApiError && error.message.trim().length > 0) {
     return error.message;
   }
@@ -1889,7 +1887,7 @@ function resolveErrorMessage(error: unknown) {
     return error.message;
   }
 
-  return "메시지 전송에 실패했어요. 잠시 후 다시 시도해주세요.";
+  return fallbackMessage;
 }
 
 function getAiCoachResponseAnalyticsProperties(response: ChatRecommendResponseDto) {
