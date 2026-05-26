@@ -110,17 +110,23 @@ export function getCameraCaptureErrorFeedback(error: unknown): CameraCaptureErro
   };
 }
 
+const BRIDGE_TIMEOUT_CODE = "BRIDGE_TIMEOUT";
+
+function isBridgeTimeout(error: unknown) {
+  const bridgeError = error as BridgeCameraError;
+  return bridgeError?.error === BRIDGE_TIMEOUT_CODE || bridgeError?.statusCode === 408;
+}
+
 export function getRecognitionErrorFeedback(
   domain: RecognitionDomain,
   error?: unknown,
 ): CameraCaptureErrorFeedback {
-  // const statusCode = (error as BridgeCameraError)?.statusCode;
-  // if (typeof statusCode === "number" && statusCode >= 500) {
-  //   return {
-  //     title: "서버 응답이 불안정해요",
-  //     description: "잠시 후 다시 시도해주세요.",
-  //   };
-  // }
+  if (isBridgeTimeout(error)) {
+    return {
+      title: "분석 시간이 오래 걸리고 있어요",
+      description: "요청 대기 시간이 초과됐어요.",
+    };
+  }
 
   const copy = RECOGNITION_ERROR_COPY[domain];
   const message =

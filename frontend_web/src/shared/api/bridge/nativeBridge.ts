@@ -232,31 +232,40 @@ export function requestNativeAppDeviceInfo() {
 }
 
 export function requestNativeCameraCapture(payload?: CameraCaptureRequestPayload) {
-  return sendRequestToApp<CameraCaptureResponsePayload>((id) => ({
-    id,
-    type: "CAMERA_CAPTURE_REQUEST",
-    payload,
-  }), {
-    timeoutMs: 120000,
-  });
+  return sendRequestToApp<CameraCaptureResponsePayload>(
+    (id) => ({
+      id,
+      type: "CAMERA_CAPTURE_REQUEST",
+      payload,
+    }),
+    {
+      timeoutMs: 300000,
+    },
+  );
 }
 
 export function requestNativeGalleryPick(payload?: GalleryPickRequestPayload) {
-  return sendRequestToApp<CameraCaptureResponsePayload>((id) => ({
-    id,
-    type: "GALLERY_PICK_REQUEST",
-    payload,
-  }), {
-    timeoutMs: 120000,
-  });
+  return sendRequestToApp<CameraCaptureResponsePayload>(
+    (id) => ({
+      id,
+      type: "GALLERY_PICK_REQUEST",
+      payload,
+    }),
+    {
+      timeoutMs: 300000,
+    },
+  );
 }
 
 export function requestNativeImageUpload<T = unknown>(payload: ImageUploadRequestPayload) {
-  return sendRequestToApp<T>((id) => ({
-    id,
-    type: "IMAGE_UPLOAD_REQUEST",
-    payload,
-  }), {
-    timeoutMs: 120000,
-  });
+  return sendRequestToApp<T>(
+    (id) => ({
+      id,
+      type: "IMAGE_UPLOAD_REQUEST",
+      payload,
+    }),
+    {
+      timeoutMs: 240000,
+    },
+  );
 }

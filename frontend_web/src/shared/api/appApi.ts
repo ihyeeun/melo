@@ -44,7 +44,7 @@ function appendParams(url: URL, params?: RequestOptions["params"]) {
 
 function createFallbackFailResponse(response: Response): ApiFailResponse {
   return {
-    message: response.statusText || "요청 처리 중 오류가 발생했습니다.",
+    message: response.statusText || "요청 처리 중 오류가 발생했습니다",
     statusCode: response.status || 500,
     error: "API_REQUEST_FAILED",
   };
