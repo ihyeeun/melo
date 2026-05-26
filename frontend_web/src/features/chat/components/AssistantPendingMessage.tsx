@@ -85,7 +85,7 @@ export function AssistantPendingMessage() {
 function getPendingStatusMessage(index: number, nickname: string) {
   switch (index) {
     case 1:
-      return `${nickname}님을 위한 최적의 메뉴를 찾는 중이에요`;
+      return `${nickname}님을 위한\n최적의 메뉴를 찾는 중이에요`;
     case 2:
       return "답변을 준비하고 있어요";
     default:
