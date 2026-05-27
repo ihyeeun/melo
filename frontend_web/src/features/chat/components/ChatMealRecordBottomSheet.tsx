@@ -260,10 +260,8 @@ export function ChatMealRecordBottomSheet({
                         snapOnStep
                         decrementAriaLabel={`${item.recommendation.menu_name} 수량 감소`}
                         incrementAriaLabel={`${item.recommendation.menu_name} 수량 증가`}
-                        decrementIcon={
-                          <SystemIcon name="circle-minus" mode="image" size={24} />
-                        }
-                        incrementIcon={<SystemIcon name="circle-plus" mode="image" size={24} />}
+                        decrementIcon={<SystemIcon name="minus" mode="image" size={24} />}
+                        incrementIcon={<SystemIcon name="plus" mode="image" size={24} />}
                         normalizeValue={(value) => roundDecimal(value, 1)}
                         unstyled
                         classNames={{
@@ -294,9 +292,9 @@ export function ChatMealRecordBottomSheet({
                     >
                       <Select.Trigger className={`${styles.unitSelectTrigger} typo-h2`}>
                         <Select.Value className="typo-body3">{selectLabel}</Select.Value>
-                      <Select.Icon className={styles.selectIcon} aria-hidden>
+                        <Select.Icon className={styles.selectIcon} aria-hidden>
                           <SystemIcon name="chevron-down-normal" size={24} />
-                      </Select.Icon>
+                        </Select.Icon>
                       </Select.Trigger>
 
                       <Select.Portal>
