@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import ActionCard from "@/features/home/components/cards/ActionCard";
 import { useGetBodyLog } from "@/features/home/hooks/queries/useBodyLogQuery";
@@ -19,7 +19,6 @@ import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import { LoadingOverlay } from "@/shared/commons/loading/Loading";
 import { Skeleton, SkeletonStatus } from "@/shared/commons/skeleton/Skeleton";
 import { toast } from "@/shared/commons/toast/toast";
-import { toggleFreeUserGuardEnabled } from "@/shared/guards/featureGuard";
 import { useNavigate } from "@/shared/navigation/stackflowNavigation";
 import { getTodayFormatDateKey } from "@/shared/utils/dateFormat";
 
@@ -54,8 +53,6 @@ const METRIC_CONFIG: Record<
 
 const NICKNAME_MAX_LENGTH = 15;
 const NICKNAME_ALLOWED_PATTERN = /[^0-9A-Za-zㄱ-ㅎㅏ-ㅣ가-힣]/g;
-const GUARD_TOGGLE_REQUIRED_TAP_COUNT = 5;
-const GUARD_TOGGLE_TAP_INTERVAL_MS = 1200;
 
 const sanitizeNickName = (value: string) =>
   value.replace(NICKNAME_ALLOWED_PATTERN, "").slice(0, NICKNAME_MAX_LENGTH);
@@ -70,7 +67,6 @@ export default function ProfilePage() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [nickName, setNickName] = useState("");
   const [selectedMetric, setSelectedMetric] = useState<WeeklyMetricType>("weight");
-  const nicknameTapStateRef = useRef({ count: 0, lastTappedAt: 0 });
   const { mutate: updateNickName, isPending: isNickNamePending } = useNickNameUpdateMutation();
 
   useEffect(() => {
@@ -140,23 +136,6 @@ export default function ProfilePage() {
     });
   };
 
-  const handleNicknameGuardToggleTap = () => {
-    const now = Date.now();
-    const previousTapState = nicknameTapStateRef.current;
-    const isContinuousTap = now - previousTapState.lastTappedAt <= GUARD_TOGGLE_TAP_INTERVAL_MS;
-    const nextCount = isContinuousTap ? previousTapState.count + 1 : 1;
-
-    nicknameTapStateRef.current = {
-      count: nextCount,
-      lastTappedAt: now,
-    };
-
-    if (nextCount < GUARD_TOGGLE_REQUIRED_TAP_COUNT) return;
-
-    nicknameTapStateRef.current = { count: 0, lastTappedAt: 0 };
-    toggleFreeUserGuardEnabled();
-  };
-
   if (isProfilePending || isDayMealPending || isBodyLogPending) {
     return <ProfilePageSkeleton />;
   }
@@ -181,15 +160,12 @@ export default function ProfilePage() {
           <section className={styles.summarySection}>
             <div className={styles.summaryText}>
               <div className={styles.nicknameRow}>
-                <button
-                  type="button"
-                  className={styles.nicknameButton}
-                  onClick={handleNicknameGuardToggleTap}
-                >
-                  <span className={`${styles.nickname} typo-title1`}>
-                    <span className={styles.highlight}>{nickname}</span> 님
-                  </span>
-                </button>
+                {profile?.is_subscribed && (
+                  <img src="/icons/subscribe-badge.svg" className={styles.subscribeBadge} />
+                )}
+                <p className={`${styles.nickname} typo-title1`}>
+                  <span className={styles.highlight}>{nickname}</span> 님
+                </p>
 
                 <button
                   type="button"

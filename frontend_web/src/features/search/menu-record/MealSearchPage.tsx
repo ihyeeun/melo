@@ -36,7 +36,7 @@ import { MealMenuCard } from "@/shared/commons/card/MealMenuCard";
 import { SearchInputHeader } from "@/shared/commons/header/SearchInputHeader";
 import { LoadingIndicator } from "@/shared/commons/loading/Loading";
 import { toast } from "@/shared/commons/toast/toast";
-import { FEATURE_GUARD, isFeatureBlocked } from "@/shared/guards/featureGuard";
+import { FEATURE_GUARD, useIsFeatureBlocked } from "@/shared/guards/featureGuard";
 import {
   isPreviousStackActivity,
   navigateBack,
@@ -75,7 +75,8 @@ export default function MealSearchPage() {
   const selectedCount = useMenuDraftSelectedCount(dateKey, mealType);
   const draft = useMenuDraftStore((store) => store.drafts[draftKey]);
   const hasDraft = Boolean(draft);
-  const showFoodCameraButton = !isFeatureBlocked(FEATURE_GUARD.FOOD_CAMERA);
+  const isFoodCameraBlocked = useIsFeatureBlocked(FEATURE_GUARD.FOOD_CAMERA);
+  const showFoodCameraButton = !isFoodCameraBlocked;
 
   const selectedMenuIdSet = useMemo(
     () => new Set(selectedMenus.map((menu) => menu.id)),

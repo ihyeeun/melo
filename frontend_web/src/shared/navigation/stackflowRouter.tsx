@@ -29,7 +29,7 @@ import { isNativeApp, requestAppBack } from "@/shared/api/bridge/nativeBridge";
 import {
   FEATURE_GUARD,
   type FeatureGuardTarget,
-  isFeatureBlocked,
+  useIsFeatureBlocked,
 } from "@/shared/guards/featureGuard";
 
 import styles from "./StackflowRuntime.module.css";
@@ -260,7 +260,9 @@ function createGuardedLazyActivity(
   const Activity = createLazyActivity(loader);
 
   return function GuardedActivity() {
-    if (isFeatureBlocked(feature)) {
+    const isBlocked = useIsFeatureBlocked(feature);
+
+    if (isBlocked) {
       return <RedirectActivity to={PATH.HOME} />;
     }
 

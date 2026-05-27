@@ -213,6 +213,7 @@ export interface ProfileResponseDto {
   nickname: string;
   name?: string; //소셜 프로필명
   role: string; //USER, ADMIN
+  is_subscribed: boolean;
   gender: number;
   birthYear: number;
   height: number;

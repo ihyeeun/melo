@@ -42,14 +42,10 @@
   gap: 4px;
 }
 
-.nicknameButton {
-  align-items: center;
-  background: none;
-  border: 0;
-  color: var(--label-normal);
-  display: inline-flex;
-  justify-content: center;
-  padding: 0;
+.subscribeBadge {
+  margin-right: 2px;
+  width: 30px;
+  height: 30px;
 }
 
 .nickname {

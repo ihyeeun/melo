@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { useGetProfileQuery } from "@/features/profile/hooks/queries/useProfileQuery";
 import { PATH } from "@/router/path";
 import { isNativeApp } from "@/shared/api/bridge/nativeBridge";
+import { setFreeUserGuardEnabled } from "@/shared/guards/featureGuard";
 import {
   useSetTargets,
   useTargetsLoadedState,
@@ -22,6 +23,24 @@ import {
 } from "./webNavigationCommand";
 
 const StackComponent = getStackflowStackComponent();
+
+function useSyncFeatureGuardFromProfile() {
+  const isOnboardingPath =
+    typeof window !== "undefined" && window.location.pathname === PATH.ONBOARDING;
+  const shouldFetchProfile = !isOnboardingPath;
+  const { data: profile, isError } = useGetProfileQuery({ enabled: shouldFetchProfile });
+  const isSubscribed = profile?.is_subscribed;
+
+  useEffect(() => {
+    if (typeof isSubscribed !== "boolean") {
+      return;
+    }
+
+    setFreeUserGuardEnabled(!isSubscribed);
+  }, [isSubscribed]);
+
+  return !shouldFetchProfile || typeof isSubscribed === "boolean" || isError;
+}
 
 function useSyncTargetsFromProfile() {
   const hasTargetsLoaded = useTargetsLoadedState();
@@ -45,6 +64,7 @@ function useSyncTargetsFromProfile() {
 }
 
 export function StackflowRuntime() {
+  const isFeatureGuardReady = useSyncFeatureGuardFromProfile();
   useSyncTargetsFromProfile();
 
   useEffect(() => {
@@ -79,6 +99,10 @@ export function StackflowRuntime() {
       window.removeEventListener("popstate", handlePopState);
     };
   }, []);
+
+  if (!isFeatureGuardReady) {
+    return null;
+  }
 
   return <StackComponent />;
 }
