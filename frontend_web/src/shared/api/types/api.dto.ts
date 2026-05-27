@@ -103,12 +103,17 @@ export type MenuSimpleResponseDto = MenuBaseFields & MenuSimpleSubNutrientFields
 
 export interface MenuResponseDto extends MenuBaseFields, MenuNutrientFields {}
 
-export type SearchRequestDto = SearchInputField;
+export interface SearchMenuRequestDto extends SearchInputField {
+  limit: number;
+  cursor?: number | null;
+}
+
+export type SearchRequestDto = SearchMenuRequestDto;
 
 export interface SearchResponseDto {
   has_result: boolean;
   menu_list: MenuSimpleResponseDto[];
-  brand_list: string[];
+  next_cursor: number | null;
 }
 
 export interface SearchBrandResponseDto {

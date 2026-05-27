@@ -26,7 +26,7 @@ import {
   toMenuDraftSeed,
 } from "@/features/meal-record/utils/menuDraftSync";
 import RegisterBottomSheet from "@/features/search/components/RegisterBottomSheet";
-import { useMealSearchMutation } from "@/features/search/menu-record/hooks/useMealSearchMutation";
+import { useMealSearchInfiniteQuery } from "@/features/search/menu-record/hooks/queries/useMealSearchInfiniteQuery";
 import { PATH } from "@/router/path";
 import { getMealDetailPath, getMealRecordPath, getPathWithMeal } from "@/router/pathHelpers";
 import { type MenuSimpleResponseDto } from "@/shared/api/types/api.dto";
@@ -46,6 +46,9 @@ import {
 
 import styles from "../styles/MealSearch.module.css";
 
+const MENU_SEARCH_PAGE_LIMIT = 20;
+const DIRECT_REGISTER_BUTTON_INTERVAL = 15;
+
 function getDefaultConsumedWeight(weight: number) {
   return typeof weight === "number" && Number.isFinite(weight) && weight > 0 ? weight : 1;
 }
@@ -59,7 +62,9 @@ export default function MealSearchPage() {
   const mealType = getMealType(searchParams.get("mealType"));
   const initialKeyword = getSafeKeyword(searchParams.get("keyword"));
   const [submittedKeyword, setSubmittedKeyword] = useState(initialKeyword);
+  const [searchKeyword, setSearchKeyword] = useState(initialKeyword);
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const loadMoreRef = useRef<HTMLDivElement>(null);
   const draftKey = formatMenuDraftKey(dateKey, mealType);
 
   const {
@@ -84,15 +89,27 @@ export default function MealSearchPage() {
   );
 
   const {
-    mutate: mealSearchMutation,
     data: searchResults,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
     isPending: isSearchPending,
-    reset: resetMealSearch,
-  } = useMealSearchMutation();
+  } = useMealSearchInfiniteQuery(searchKeyword, {
+    enabled: hasDraft,
+    limit: MENU_SEARCH_PAGE_LIMIT,
+  });
+
+  const firstSearchResult = searchResults?.pages[0];
+  const searchMenuList = useMemo(
+    () => searchResults?.pages.flatMap((page) => page.menu_list) ?? [],
+    [searchResults?.pages],
+  );
+  const hasSearchKeyword = searchKeyword.trim().length > 0;
+  const hasSearchResponse = firstSearchResult !== undefined;
 
   const resetSearchState = () => {
     setSubmittedKeyword("");
-    resetMealSearch();
+    setSearchKeyword("");
   };
 
   useEffect(() => {
@@ -171,7 +188,7 @@ export default function MealSearchPage() {
   };
 
   const handleMenuDetailPageOpen = (menuId: number) => {
-    navigate(getMealDetailPath(dateKey, mealType, menuId, submittedKeyword));
+    navigate(getMealDetailPath(dateKey, mealType, menuId, searchKeyword));
   };
 
   const handleApplySelectedMenus = () => {
@@ -188,8 +205,7 @@ export default function MealSearchPage() {
   };
 
   const handleClearKeyword = () => {
-    setSubmittedKeyword("");
-    resetMealSearch();
+    resetSearchState();
     searchInputRef.current?.focus();
   };
 
@@ -226,9 +242,107 @@ export default function MealSearchPage() {
 
   const handleMealSearch = (keyword = submittedKeyword) => {
     const normalizedKeyword = keyword.trim();
-    if (normalizedKeyword === "") return;
 
-    mealSearchMutation(normalizedKeyword);
+    setSearchKeyword(normalizedKeyword);
+  };
+
+  useEffect(() => {
+    const target = loadMoreRef.current;
+    if (!target || !hasNextPage) {
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry?.isIntersecting || isFetchingNextPage) {
+          return;
+        }
+
+        void fetchNextPage();
+      },
+      {
+        rootMargin: "160px 0px",
+      },
+    );
+
+    observer.observe(target);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage, searchMenuList.length]);
+
+  const renderMenuCard = (menu: MenuSimpleResponseDto) => {
+    const isSelected = selectedMenuIdSet.has(menu.id);
+
+    return (
+      <MealMenuCard
+        key={menu.id}
+        name={menu.name}
+        calories={menu.calories}
+        unit_quantity={menu.unit_quantity}
+        brand={menu.brand}
+        data_source={menu.data_source}
+        weight={menu.weight}
+        unit={menu.unit}
+        icon={isSelected ? "check" : "add"}
+        state={isSelected ? "select" : "default"}
+        onClick={() => handleMenuDetailPageOpen(menu.id)}
+        onIconClick={() => handleToggleMenuSelection(menu)}
+      />
+    );
+  };
+
+  const renderLoadMoreState = () => (
+    <div ref={loadMoreRef} className={styles.loadMoreState}>
+      {isFetchingNextPage ? (
+        <LoadingIndicator iconSize={24} label="메뉴를 더 불러오는 중입니다." />
+      ) : null}
+    </div>
+  );
+
+  const renderDirectRegisterButton = (key?: string) => (
+    <div key={key} className={styles.bottomTextContainer}>
+      <Button
+        variant="text"
+        interaction="normal"
+        size="small"
+        color="normal"
+        onClick={() => {
+          setIsDirectInputSheetOpen(true);
+        }}
+      >
+        <span className={`${styles.bottomText} typo-body3`}>찾으시는 메뉴가 없나요?</span>
+        직접 등록하기
+      </Button>
+    </div>
+  );
+
+  const renderMenuCardsWithDirectRegisterButtons = () =>
+    searchMenuList.flatMap((menu, index) => {
+      const menuIndex = index + 1;
+      const elements = [renderMenuCard(menu)];
+
+      if (menuIndex % DIRECT_REGISTER_BUTTON_INTERVAL === 0) {
+        elements.push(renderDirectRegisterButton(`direct-register-${menuIndex}`));
+      }
+
+      return elements;
+    });
+
+  const renderPaginationFooter = () => {
+    if (hasNextPage) {
+      return renderLoadMoreState();
+    }
+
+    if (
+      searchMenuList.length > 0 &&
+      searchMenuList.length % DIRECT_REGISTER_BUTTON_INTERVAL === 0
+    ) {
+      return null;
+    }
+
+    return renderDirectRegisterButton();
   };
 
   if (!hasDraft) {
@@ -275,55 +389,20 @@ export default function MealSearchPage() {
 
       <main className={styles.main}>
         <section className={styles.content}>
-          {isSearchPending ? (
+          {hasSearchKeyword && isSearchPending ? (
             <div className={styles.placeholder}>
               <LoadingIndicator />
             </div>
-          ) : searchResults ? (
+          ) : hasSearchResponse ? (
             <>
-              {searchResults.has_result ? (
+              {firstSearchResult.has_result ? (
                 <div className={styles.resultList}>
-                  {searchResults.menu_list.map((menu) => {
-                    const isSelected = selectedMenuIdSet.has(menu.id);
-
-                    return (
-                      <MealMenuCard
-                        key={menu.id}
-                        name={menu.name}
-                        calories={menu.calories}
-                        unit_quantity={menu.unit_quantity}
-                        brand={menu.brand}
-                        data_source={menu.data_source}
-                        weight={menu.weight}
-                        unit={menu.unit}
-                        icon={isSelected ? "check" : "add"}
-                        state={isSelected ? "select" : "default"}
-                        onClick={() => handleMenuDetailPageOpen(menu.id)}
-                        onIconClick={() => handleToggleMenuSelection(menu)}
-                      />
-                    );
-                  })}
-
-                  <div className={styles.bottomTextContainer}>
-                    <Button
-                      variant="text"
-                      interaction="normal"
-                      size="small"
-                      color="normal"
-                      onClick={() => {
-                        setIsDirectInputSheetOpen(true);
-                      }}
-                    >
-                      <span className={`${styles.bottomText} typo-body3`}>
-                        찾으시는 메뉴가 없나요?
-                      </span>
-                      직접 등록하기
-                    </Button>
-                  </div>
+                  {renderMenuCardsWithDirectRegisterButtons()}
+                  {renderPaginationFooter()}
                 </div>
               ) : (
                 <div className={styles.emptyResultContainer}>
-                  {searchResults.menu_list.length === 0 && (
+                  {searchMenuList.length === 0 && (
                     <section className={styles.emptyResult}>
                       <p className="typo-body3">일치하는 메뉴가 없어요</p>
                       <div className={styles.buttonContainer}>
@@ -342,51 +421,17 @@ export default function MealSearchPage() {
                     </section>
                   )}
 
-                  {searchResults.menu_list.length > 0 && (
+                  {searchMenuList.length > 0 && (
                     <section className={styles.similarSection}>
                       {/* <p className={`${styles.similarSectionTitle} typo-title3`}>
                         비슷한 메뉴는 어때요?
                       </p> */}
 
                       <div className={styles.resultList}>
-                        {searchResults.menu_list.map((menu) => {
-                          const isSelected = selectedMenuIdSet.has(menu.id);
-
-                          return (
-                            <MealMenuCard
-                              key={menu.id}
-                              name={menu.name}
-                              calories={menu.calories}
-                              unit_quantity={menu.unit_quantity}
-                              weight={menu.weight}
-                              unit={menu.unit}
-                              brand={menu.brand}
-                              data_source={menu.data_source}
-                              icon={isSelected ? "check" : "add"}
-                              state={isSelected ? "select" : "default"}
-                              onClick={() => handleMenuDetailPageOpen(menu.id)}
-                              onIconClick={() => handleToggleMenuSelection(menu)}
-                            />
-                          );
-                        })}
+                        {renderMenuCardsWithDirectRegisterButtons()}
                       </div>
 
-                      <div className={styles.bottomTextContainer}>
-                        <Button
-                          variant="text"
-                          interaction="normal"
-                          size="small"
-                          color="normal"
-                          onClick={() => {
-                            setIsDirectInputSheetOpen(true);
-                          }}
-                        >
-                          <span className={`${styles.bottomText} typo-body3`}>
-                            찾으시는 메뉴가 없나요?
-                          </span>
-                          직접 등록하기
-                        </Button>
-                      </div>
+                      {renderPaginationFooter()}
                     </section>
                   )}
                 </div>
