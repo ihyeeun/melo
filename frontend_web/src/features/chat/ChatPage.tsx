@@ -204,8 +204,9 @@ export default function ChatPage() {
   );
   const [mealRecordCancelTarget, setMealRecordCancelTarget] =
     useState<MealRecordCancelTarget | null>(null);
-  const [timelineScrollTarget, setTimelineScrollTarget] =
-    useState<TimelineScrollTarget | null>(null);
+  const [timelineScrollTarget, setTimelineScrollTarget] = useState<TimelineScrollTarget | null>(
+    null,
+  );
 
   const { data, isPending: isHistoryPending } = useGetChatHistoryQuery();
   const { mutateAsync: sendMessageMutation, isPending: isSendPending } = useSendMessageMutation();
@@ -320,15 +321,12 @@ export default function ChatPage() {
     timelineScrollElementRefs.current.delete(key);
   }, []);
 
-  const prepareChatResponseScroll = useCallback(
-    () => {
-      pendingChatResponseAfterIdRef.current = chatList.reduce(
-        (maxId, chatItem) => Math.max(maxId, chatItem.id),
-        0,
-      );
-    },
-    [chatList],
-  );
+  const prepareChatResponseScroll = useCallback(() => {
+    pendingChatResponseAfterIdRef.current = chatList.reduce(
+      (maxId, chatItem) => Math.max(maxId, chatItem.id),
+      0,
+    );
+  }, [chatList]);
 
   const commitTimelineScroll = useCallback((key: string, block: ScrollLogicalPosition) => {
     timelineScrollRequestIdRef.current += 1;
@@ -350,10 +348,13 @@ export default function ChatPage() {
     [commitTimelineScroll],
   );
 
-  const cancelChatResponseScroll = useCallback((key?: string) => {
-    pendingChatResponseAfterIdRef.current = null;
-    cancelTimelineScroll(key);
-  }, [cancelTimelineScroll]);
+  const cancelChatResponseScroll = useCallback(
+    (key?: string) => {
+      pendingChatResponseAfterIdRef.current = null;
+      cancelTimelineScroll(key);
+    },
+    [cancelTimelineScroll],
+  );
 
   const prepareMealRecordScroll = useCallback((dateKey: string, mealTime: MealTime) => {
     const key = getMealRecordTimelineItemKey(dateKey, mealTime);
@@ -361,18 +362,24 @@ export default function ChatPage() {
     return key;
   }, []);
 
-  const commitMealRecordScroll = useCallback((key: string) => {
-    pendingMealRecordScrollKeyRef.current = key;
-    commitTimelineScroll(key, "center");
-  }, [commitTimelineScroll]);
+  const commitMealRecordScroll = useCallback(
+    (key: string) => {
+      pendingMealRecordScrollKeyRef.current = key;
+      commitTimelineScroll(key, "center");
+    },
+    [commitTimelineScroll],
+  );
 
-  const cancelMealRecordScroll = useCallback((key: string) => {
-    if (pendingMealRecordScrollKeyRef.current === key) {
-      pendingMealRecordScrollKeyRef.current = null;
-    }
+  const cancelMealRecordScroll = useCallback(
+    (key: string) => {
+      if (pendingMealRecordScrollKeyRef.current === key) {
+        pendingMealRecordScrollKeyRef.current = null;
+      }
 
-    cancelTimelineScroll(key);
-  }, [cancelTimelineScroll]);
+      cancelTimelineScroll(key);
+    },
+    [cancelTimelineScroll],
+  );
 
   useEffect(() => {
     if (
@@ -395,11 +402,7 @@ export default function ChatPage() {
     });
 
     updateIsScrolledAwayFromBottom();
-  }, [
-    timelineScrollTarget,
-    timelineSignature,
-    updateIsScrolledAwayFromBottom,
-  ]);
+  }, [timelineScrollTarget, timelineSignature, updateIsScrolledAwayFromBottom]);
 
   useEffect(() => {
     if (!timelineScrollTarget || typeof window === "undefined") {
@@ -1021,17 +1024,13 @@ export default function ChatPage() {
                     ) : null}
 
                     <div className={styles.assistantMessageRow}>
-                      <div className={styles.assistantMessageContent}>
-                        <MealRecordCard
-                          menus={mealRecord.recordedMenus}
-                          mealRecordTime={mealRecord.time}
-                          onCancelClick={() => handleMealRecordCancelRequest(mealRecord)}
-                          onEditClick={() => handleMealRecordEditClick(mealRecord)}
-                        />
-                      </div>
-                      <p className={`${styles.timeText} typo-caption4`}>
-                        {formatTimeText(getMealRecordSavedAt(mealRecord))}
-                      </p>
+                      <MealRecordCard
+                        menus={mealRecord.recordedMenus}
+                        mealRecordTime={mealRecord.time}
+                        timeText={formatTimeText(getMealRecordSavedAt(mealRecord))}
+                        onCancelClick={() => handleMealRecordCancelRequest(mealRecord)}
+                        onEditClick={() => handleMealRecordEditClick(mealRecord)}
+                      />
                     </div>
                   </section>
                 );
@@ -1058,6 +1057,7 @@ export default function ChatPage() {
                     )
                   : null;
               const userImageUrl = getChatItemImageUrl(chatItem);
+              const assistantTimeText = formatTimeText(chatItem.createdAt);
 
               return (
                 <section key={timelineItem.key} className={styles.conversationSection}>
@@ -1091,11 +1091,19 @@ export default function ChatPage() {
 
                   <div className={styles.assistantMessageRow}>
                     <div className={styles.assistantMessageContent}>
-                      <AssistantMessageBubbles message={chatItem.response_payload.intro_message} />
+                      <AssistantMessageBubbles
+                        message={chatItem.response_payload.intro_message}
+                        timeText={
+                          chatItem.response_payload.chat_category === "recommendation"
+                            ? assistantTimeText
+                            : undefined
+                        }
+                      />
 
                       {chatItem.response_payload.chat_category === "general" ? (
                         <AssistantMessageBubbles
                           message={chatItem.response_payload.general_answer}
+                          timeText={assistantTimeText}
                         />
                       ) : null}
 
@@ -1123,6 +1131,7 @@ export default function ChatPage() {
                         <FeedbackSection
                           chatId={chatItem.id}
                           feedback={chatItem.response_payload.feedback}
+                          timeText={assistantTimeText}
                           onMealRecordClick={() =>
                             handleMenuRecordClick(
                               chatItem,
@@ -1138,9 +1147,6 @@ export default function ChatPage() {
                         />
                       ) : null}
                     </div>
-                    <p className={`${styles.timeText} typo-caption4`}>
-                      {formatTimeText(chatItem.createdAt)}
-                    </p>
                   </div>
                 </section>
               );
@@ -1375,16 +1381,26 @@ function ChatHistorySkeleton() {
   );
 }
 
-function AssistantMessageBubbles({ message }: { message: string }) {
+function AssistantMessageBubbles({ message, timeText }: { message: string; timeText?: string }) {
   const bubbleTexts = splitAssistantMessageIntoBubbles(message);
 
   return (
     <>
-      {bubbleTexts.map((bubbleText, index) => (
-        <p key={`${index}-${bubbleText}`} className={`${styles.assistantBubble} typo-body2`}>
-          {bubbleText}
-        </p>
-      ))}
+      {bubbleTexts.map((bubbleText, index) => {
+        const hasTimeText = Boolean(timeText) && index === bubbleTexts.length - 1;
+
+        return (
+          <p
+            key={`${index}-${bubbleText}`}
+            className={`${styles.assistantBubble} ${
+              hasTimeText ? styles.assistantBubbleWithTime : ""
+            } typo-body2`}
+            data-time={hasTimeText ? timeText : undefined}
+          >
+            {bubbleText}
+          </p>
+        );
+      })}
     </>
   );
 }
@@ -1487,11 +1503,13 @@ function ChatInput({
 function MealRecordCard({
   menus,
   mealRecordTime,
+  timeText,
   onCancelClick,
   onEditClick,
 }: {
   menus: RecordedMenuSummary[];
   mealRecordTime: MealTime;
+  timeText: string;
   onCancelClick: () => void;
   onEditClick: () => void;
 }) {
@@ -1511,7 +1529,10 @@ function MealRecordCard({
   };
 
   return (
-    <section className={styles.mealRecordCard}>
+    <section
+      className={`${styles.mealRecordCard} ${styles.mealRecordCardWithTime}`}
+      data-time={timeText}
+    >
       <p className={`${styles.textPrimary} typo-title2`}>{mealTimeLabel} 기록 완료!</p>
 
       <button
@@ -1729,12 +1750,14 @@ function RecommendationSection({
 function FeedbackSection({
   chatId,
   feedback,
+  timeText,
   onMealRecordClick,
   onMealRecordCancelClick,
   isMealRecorded,
 }: {
   chatId: number;
   feedback: FeedbackDto;
+  timeText: string;
   onMealRecordClick: () => void;
   onMealRecordCancelClick: () => void;
   isMealRecorded: boolean;
@@ -1889,7 +1912,7 @@ function FeedbackSection({
       </article>
 
       <AssistantMessageBubbles message={feedback.feedback_summary} />
-      <AssistantMessageBubbles message={feedback.feedback_reason} />
+      <AssistantMessageBubbles message={feedback.feedback_reason} timeText={timeText} />
     </div>
   );
 }
