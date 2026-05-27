@@ -1331,7 +1331,8 @@ function RecommendationSection({
   if (!topRecommendation) return null;
 
   const topBadgeText = topRecommendation.rank ? `${topRecommendation.rank}위` : "추천";
-  const handleRecommendationDetailClick = () => {
+  const handleRecommendationDetailClick = (event?: MouseEvent<HTMLElement>) => {
+    event?.stopPropagation();
     navigate(getRecommendDetailPath(chatId, topRecommendation.menu_id));
   };
 
@@ -1356,7 +1357,9 @@ function RecommendationSection({
     handleRecommendationDetailClick();
   };
 
-  const handleMealRecordToggleClick = () => {
+  const handleMealRecordToggleClick = (event: MouseEvent<HTMLElement>) => {
+    event.stopPropagation();
+
     if (isMealRecorded) {
       onMealRecordCancelClick();
       return;
@@ -1465,7 +1468,9 @@ function FeedbackSection({
 
   if (!primaryMenu) return null;
 
-  const handleFeedbackDetailClick = () => {
+  const handleFeedbackDetailClick = (event?: MouseEvent<HTMLElement>) => {
+    event?.stopPropagation();
+
     if (hasMultipleMenus) {
       navigate(getFeedbackResultPath(chatId));
       return;
@@ -1495,7 +1500,9 @@ function FeedbackSection({
     handleFeedbackDetailClick();
   };
 
-  const handleMealRecordToggleClick = () => {
+  const handleMealRecordToggleClick = (event: MouseEvent<HTMLElement>) => {
+    event.stopPropagation();
+
     if (isMealRecorded) {
       onMealRecordCancelClick();
       return;
@@ -1529,7 +1536,10 @@ function FeedbackSection({
                 type="button"
                 className={`${styles.feedbackMenuToggle}`}
                 aria-expanded={isMenuListOpen}
-                onClick={() => setIsMenuListOpen((prev) => !prev)}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  setIsMenuListOpen((prev) => !prev);
+                }}
               >
                 <p className={`${styles.textAssistive} typo-label4`}>총 칼로리</p>
 
@@ -1602,7 +1612,7 @@ function FeedbackSection({
 }
 
 function isNestedInteractiveTarget(target: EventTarget | null, boundary: HTMLElement) {
-  if (!(target instanceof HTMLElement)) {
+  if (!(target instanceof Element)) {
     return false;
   }
 
