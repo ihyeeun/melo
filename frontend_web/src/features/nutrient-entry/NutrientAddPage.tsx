@@ -1,4 +1,3 @@
-import { Search } from "lucide-react";
 import { type ChangeEvent, useEffect, useState } from "react";
 
 import {
@@ -17,6 +16,7 @@ import { getPathWithMeal } from "@/router/pathHelpers";
 import type { MealType, RegisterMenuRequestDto } from "@/shared/api/types/api.dto";
 import { Button } from "@/shared/commons/button/Button";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
+import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import {
   navigateBack,
   useLocation,
@@ -153,7 +153,7 @@ export default function NutrientAddPage() {
               >
                 {brandName || "브랜드명 입력"}
               </span>
-              <Search size={20} className={styles.brandSearchIcon} />
+              <SystemIcon name="search" size={20} className={styles.brandSearchIcon} />
             </button>
           </div>
         </div>

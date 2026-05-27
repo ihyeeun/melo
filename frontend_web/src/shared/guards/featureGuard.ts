@@ -1,3 +1,5 @@
+import { useSyncExternalStore } from "react";
+
 import { syncAppFeatureGuardEnabled } from "@/shared/api/bridge/nativeBridge";
 
 export const FREE_USER_GUARD_ENABLED = true;
@@ -22,6 +24,16 @@ const featureGuardChangeListeners = new Set<(enabled: boolean) => void>();
 export function isFeatureBlocked(feature: FeatureGuardTarget) {
   if (!freeUserGuardEnabledRuntime) return false;
   return BLOCKED_FEATURES.has(feature);
+}
+
+export function useIsFeatureBlocked(feature: FeatureGuardTarget) {
+  const isGuardEnabled = useSyncExternalStore(
+    subscribeFeatureGuardChange,
+    isFreeUserGuardEnabled,
+    isFreeUserGuardEnabled,
+  );
+
+  return isGuardEnabled && BLOCKED_FEATURES.has(feature);
 }
 
 export function syncFeatureGuardStateToApp() {

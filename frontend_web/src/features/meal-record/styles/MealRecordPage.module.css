@@ -108,9 +108,9 @@
 .photoDeleteButton {
   align-items: center;
   background-color: var(--dimmer-dimmer);
+  color: var(--static-white);
   border: 0;
   border-radius: 100px;
-  color: var(--static-white);
   display: inline-flex;
   height: 32px;
   justify-content: center;

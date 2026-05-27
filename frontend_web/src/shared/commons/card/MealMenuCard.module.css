@@ -80,7 +80,6 @@
 .iconButton {
   align-items: center;
   border-radius: 6px;
-  color: var(--gray-500);
   display: inline-flex;
   flex-shrink: 0;
   height: 24px;

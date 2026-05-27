@@ -1,11 +1,11 @@
 import { Select } from "@base-ui/react";
-import { ChevronDown } from "lucide-react";
 import type { FocusEventHandler, InputHTMLAttributes } from "react";
 import { useState } from "react";
 
 import { NUTRIENT_FORM_CONFIG } from "@/features/nutrient-entry/constants/nutrientDetailForm";
 import styles from "@/features/nutrient-entry/styles/NutrientDetailForm.module.css";
 import type { MenuNutrientFields, MenuUnit } from "@/shared/api/types/api.dto";
+import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 
 type Props = {
   totalWeight?: number;
@@ -170,7 +170,7 @@ export function NutrientDetailForm({
             >
               <Select.Value>{selectedWeightUnitLabel}</Select.Value>
               <Select.Icon className={styles.selectIcon} aria-hidden>
-                <ChevronDown size={20} />
+                <SystemIcon name="chevron-down-normal" size={20} />
               </Select.Icon>
             </Select.Trigger>
 

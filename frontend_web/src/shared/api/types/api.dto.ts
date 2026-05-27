@@ -103,12 +103,17 @@ export type MenuSimpleResponseDto = MenuBaseFields & MenuSimpleSubNutrientFields
 
 export interface MenuResponseDto extends MenuBaseFields, MenuNutrientFields {}
 
-export type SearchRequestDto = SearchInputField;
+export interface SearchMenuRequestDto extends SearchInputField {
+  limit: number;
+  cursor?: number | null;
+}
+
+export type SearchRequestDto = SearchMenuRequestDto;
 
 export interface SearchResponseDto {
   has_result: boolean;
   menu_list: MenuSimpleResponseDto[];
-  brand_list: string[];
+  next_cursor: number | null;
 }
 
 export interface SearchBrandResponseDto {
@@ -134,6 +139,8 @@ export interface DeleteMealRequestDto extends DateField, MealTimeField {
 
 export interface MealResponseDto extends MealTimeField {
   image: string;
+  createdAt: string;
+  updatedAt: string;
   menu_list: MenuSimpleResponseDto[];
   menu_quantities: number[];
   menu_input_modes: MealMenuInputMode[];
@@ -213,6 +220,7 @@ export interface ProfileResponseDto {
   nickname: string;
   name?: string; //소셜 프로필명
   role: string; //USER, ADMIN
+  is_subscribed: boolean;
   gender: number;
   birthYear: number;
   height: number;
@@ -269,14 +277,17 @@ export interface ChatRecommendItemResponseDto extends NullableMenuNutrientFields
   recommendation_reason: string;
 }
 
-export type ChatCategory = "recommendation" | "feedback";
+export type ChatCategory = "recommendation" | "feedback" | "general";
 interface ChatResponseBaseDto {
   chat_category: ChatCategory;
   intro_message: string;
   image_url?: string | null;
 }
 
-export type ChatRecommendResponseDto = ChatRecommendationResponseDto | ChatFeedbackResponseDto;
+export type ChatRecommendResponseDto =
+  | ChatRecommendationResponseDto
+  | ChatFeedbackResponseDto
+  | ChatGeneralResponseDto;
 
 export interface ChatRecommendationResponseDto extends ChatResponseBaseDto {
   chat_category: "recommendation";
@@ -288,6 +299,13 @@ export interface ChatFeedbackResponseDto extends ChatResponseBaseDto {
   chat_category: "feedback";
   feedback: FeedbackDto;
   recognized_foods?: ChatFoodImageRecognizedMenuResponseDto[];
+  recommendations?: never;
+}
+
+export interface ChatGeneralResponseDto extends ChatResponseBaseDto {
+  chat_category: "general";
+  general_answer: string;
+  feedback?: never;
   recommendations?: never;
 }
 
@@ -315,7 +333,7 @@ export interface ChatFeedbackMenuResponseDto {
 }
 
 export interface ChatMenuBoardRecommendResponseDto {
-  chat_category: ChatCategory;
+  chat_category: "recommendation";
   intro_message: string;
   recommendations: ChatRecommendItemResponseDto[];
   recognized_candidates: ChatRecognizedCandidateResponseDto[];
@@ -329,7 +347,7 @@ export interface ChatRecognizedCandidateResponseDto {
 }
 
 export interface ChatFoodImageFeedbackResponseDto {
-  chat_category: ChatCategory;
+  chat_category: "feedback";
   intro_message: string;
   feedback: FeedbackDto;
   recognized_foods: ChatFoodImageRecognizedMenuResponseDto[];

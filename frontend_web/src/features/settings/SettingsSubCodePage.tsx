@@ -1,6 +1,8 @@
+import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 
 import { registerSubCode } from "@/features/profile/api/profile";
+import { queryKeys } from "@/features/profile/hooks/queries/queryKey";
 import { Button } from "@/shared/commons/button/Button";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
 import { toast } from "@/shared/commons/toast/toast";
@@ -12,6 +14,7 @@ const MAX_SUB_CODE_LENGTH = 40;
 
 export default function SettingsSubCodePage() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [subCode, setSubCode] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -26,7 +29,8 @@ export default function SettingsSubCodePage() {
 
     try {
       setIsSubmitting(true);
-      await registerSubCode(trimmedSubCode);
+      const updatedProfile = await registerSubCode(trimmedSubCode);
+      queryClient.setQueryData(queryKeys.profile, updatedProfile);
       toast.success("구독 코드가 등록되었어요");
       navigate(-1);
     } catch (error) {

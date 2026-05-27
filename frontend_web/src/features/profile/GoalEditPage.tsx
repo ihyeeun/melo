@@ -1,4 +1,3 @@
-import { ChevronRight } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import {
@@ -18,6 +17,7 @@ import { PATH } from "@/router/path";
 import BottomSheet from "@/shared/commons/bottomSheet/BottomSheet";
 import { Button } from "@/shared/commons/button/Button";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
+import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import { EditorInput } from "@/shared/commons/input/EditorInput";
 import WheelPicker from "@/shared/commons/picker/WheelPicker";
 import {
@@ -477,7 +477,11 @@ export default function GoalEditPage() {
                   <span className={`${styles.summaryValue} typo-body2`}>
                     {getSummaryValue(field.id, visibleDraft)}
                   </span>
-                  <ChevronRight className={styles.summaryChevron} size={24} strokeWidth={1.5} />
+                  <SystemIcon
+                    name="chevron-right-thin"
+                    className={styles.summaryChevron}
+                    size={24}
+                  />
                 </div>
               </button>
             ))}

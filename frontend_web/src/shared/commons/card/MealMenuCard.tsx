@@ -1,8 +1,8 @@
-import { CheckCircle2, X } from "lucide-react";
 import type { KeyboardEvent, MouseEvent } from "react";
 
 import { MENU_DATA_SOURCE, type MenuDataSource } from "@/shared/api/types/api.dto";
 import { DataSourceBadge } from "@/shared/commons/badge/DataSourceBadge";
+import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import { formatNumberWithMaxOneDecimal } from "@/shared/utils/numberFormat";
 
 import styles from "./MealMenuCard.module.css";
@@ -63,10 +63,9 @@ function getActionAriaLabel(icon: MealMenuCardIcon) {
 }
 
 function ActionIcon({ icon }: { icon: MealMenuCardIcon }) {
-  if (icon === "add")
-    return <img src="/icons/circle-check.svg" width={24} height={24} aria-hidden="true" />;
-  if (icon === "check") return <CheckCircle2 size={24} strokeWidth={2} />;
-  return <X size={24} strokeWidth={2} />;
+  if (icon === "add") return <SystemIcon name="circle-plus" mode="image" size={24} />;
+  if (icon === "check") return <SystemIcon name="circle-check-selected" mode="image" size={24} />;
+  return <SystemIcon name="close" size={24} />;
 }
 
 export function MealMenuCard({

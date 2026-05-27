@@ -1,4 +1,3 @@
-import { PlusIcon } from "lucide-react";
 import { useState } from "react";
 
 import ActionCard from "@/features/home/components/cards/ActionCard";
@@ -11,6 +10,7 @@ import {
 import { useGetBodyLog } from "@/features/home/hooks/queries/useBodyLogQuery";
 import style from "@/features/home/styles/TodayBodyLogSection.module.css";
 import { useGetProfileQuery } from "@/features/profile/hooks/queries/useProfileQuery";
+import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import { LoadingOverlay } from "@/shared/commons/loading/Loading";
 import { toast } from "@/shared/commons/toast/toast";
 
@@ -119,7 +119,7 @@ function TodayMetricCard({
       <div className={style.cardContainer}>
         <div className={style.cardTitleContainer}>
           <p className="typo-title4">{title}</p>
-          <PlusIcon size={24} />
+          <SystemIcon name="circle-plus-fill" mode="image" size={24} />
         </div>
         <div className={style.valueText}>
           <span className={`typo-h2 ${style.highlightValue}`}>{value.toLocaleString()}</span>

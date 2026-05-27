@@ -1,18 +1,19 @@
 import "./AppToast.css";
 
 import { Toast } from "@base-ui/react/toast";
-import { Check, X } from "lucide-react";
+
+import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 
 type AppToastType = "default" | "success" | "warning" | "error";
 
 function ToastStatusIcon({ type }: { type?: string }) {
   switch (type as AppToastType) {
     case "success":
-      return <Check size={14} strokeWidth={3} />;
+      return <SystemIcon name="check" size={14} />;
     case "warning":
       return <span className="app-toast-status-mark">!</span>;
     case "error":
-      return <X size={14} strokeWidth={3} />;
+      return <SystemIcon name="close" size={14} />;
     default:
       return <span className="app-toast-status-mark">i</span>;
   }
@@ -43,7 +44,7 @@ export function AppToastViewport() {
             </Toast.Content>
             {item.actionProps ? <Toast.Action className="app-toast-action" /> : null}
             <Toast.Close className="app-toast-close" aria-label="알림 닫기">
-              <X size={20} strokeWidth={1.5} />
+              <SystemIcon name="close" size={20} />
             </Toast.Close>
           </Toast.Root>
         ))}

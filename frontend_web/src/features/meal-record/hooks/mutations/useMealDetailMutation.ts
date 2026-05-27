@@ -11,7 +11,7 @@ export function useMealDeleteMutation(callbacks?: UseMutationCallback) {
         callbacks.onSuccess();
       }
     },
-    onError: (error: Error) => {
+    onError: (error) => {
       if (callbacks?.onError) {
         callbacks.onError(error);
       }

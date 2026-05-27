@@ -1,4 +1,3 @@
-import { Check, ChevronDown, ChevronRight, PlusIcon } from "lucide-react";
 import type { MouseEvent } from "react";
 import { useMemo, useState } from "react";
 
@@ -16,6 +15,7 @@ import {
 import { PATH } from "@/router/path";
 import { getMealRecordPath, getMealSearchPath } from "@/router/pathHelpers";
 import type { MealTime, MealType } from "@/shared/api/types/api.dto";
+import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import { LoadingOverlay } from "@/shared/commons/loading/Loading";
 import ScoreProgress from "@/shared/commons/progress/Progress";
 import { Skeleton, SkeletonStatus } from "@/shared/commons/skeleton/Skeleton";
@@ -145,7 +145,7 @@ export default function DiaryPage() {
                   <span className={styles.scoreDivider} aria-hidden="true" />
                   <span className={`${styles.score} typo-title2`}>{mealScore}점</span>
 
-                  <ChevronRight size={24} className={styles.icon} />
+                  <SystemIcon name="chevron-right-normal" size={24} className={styles.icon} />
                 </div>
                 <div className={styles.scoreContainer}>
                   <ScoreProgress
@@ -331,7 +331,7 @@ function MealRecordCard({
             className={styles.navigateButton}
             aria-label={`${title} 기록으로 이동`}
           >
-            <ChevronRight size={24} />
+            <SystemIcon name="chevron-right-normal" size={24} />
           </button>
         ) : didNotEat && emptyStatusText ? (
           <button
@@ -341,10 +341,8 @@ function MealRecordCard({
             aria-pressed
             disabled={isDidNotEatPending}
           >
-            <div className={styles.emptyStatusIconActive}>
-              <Check size={12} strokeWidth={3} />
-            </div>
-            <span className={`${styles.textPrimary} typo-title4`}>{emptyStatusText}</span>
+            <SystemIcon name="circle-check-selected" mode="image" size={24} />
+            <span className={`${styles.textPrimary} typo-label2`}>{emptyStatusText}</span>
           </button>
         ) : (
           <div className={styles.emptyMeta} aria-label={`${title} 기록하기`}>
@@ -356,15 +354,13 @@ function MealRecordCard({
                 aria-pressed={false}
                 disabled={isDidNotEatPending}
               >
-                <div className={styles.emptyStatusIcon}>
-                  <Check size={12} strokeWidth={3} />
-                </div>
+                <SystemIcon name="circle-check" mode="image" size={24} />
                 <span className={`${styles.emptyStatusText} typo-label2`}>{emptyStatusText}</span>
               </button>
             )}
 
             <button type="button" onClick={handleNavigateButtonClick}>
-              <PlusIcon size={24} className={styles.emptyPlusIcon} />
+              <SystemIcon name="circle-plus" mode="image" size={24} />
             </button>
           </div>
         )}
@@ -387,7 +383,8 @@ function MealRecordCard({
               <span className={`${styles.score} textNoWrap typo-title3`}>
                 {formatNumberWithMaxOneDecimal(calories)}kcal
               </span>
-              <ChevronDown
+              <SystemIcon
+                name="chevron-down-normal"
                 size={24}
                 className={`${styles.mealSummaryArrow} ${isExpanded ? styles.mealSummaryArrowExpanded : ""}`}
               />

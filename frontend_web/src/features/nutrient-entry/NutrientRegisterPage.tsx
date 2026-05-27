@@ -1,4 +1,3 @@
-import { Search } from "lucide-react";
 import { type ChangeEvent, useEffect, useState } from "react";
 
 import {
@@ -29,6 +28,7 @@ import type {
 } from "@/shared/api/types/api.dto";
 import { Button } from "@/shared/commons/button/Button";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
+import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import { LoadingOverlay } from "@/shared/commons/loading/Loading";
 import { toast } from "@/shared/commons/toast/toast";
 import {
@@ -204,7 +204,7 @@ export default function NutrientRegisterPage() {
                     >
                       {brandName || "브랜드명 입력"}
                     </span>
-                    <Search size={20} className={styles.brandSearchIcon} />
+                    <SystemIcon name="search" size={20} className={styles.brandSearchIcon} />
                   </button>
                 </div>
 

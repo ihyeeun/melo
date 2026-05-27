@@ -1,5 +1,6 @@
-import { ChevronLeft } from "lucide-react";
 import type { ReactNode } from "react";
+
+import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 
 import styles from "./PageHeader.module.css";
 
@@ -37,7 +38,7 @@ export function PageHeader({
           disabled={!onBack}
           aria-label={backButtonAriaLabel}
         >
-          <ChevronLeft size={24} />
+          <SystemIcon name="chevron-left-normal" size={24} />
         </button>
         <h1 className={`${styles.title} typo-title3`}>{title}</h1>
         <div className={styles.rightSlot}>{rightSlot}</div>

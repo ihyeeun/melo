@@ -1,4 +1,3 @@
-import { ChevronRightIcon } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import ActionCard from "@/features/home/components/cards/ActionCard";
@@ -16,6 +15,7 @@ import { PATH } from "@/router/path";
 import BottomSheet from "@/shared/commons/bottomSheet/BottomSheet";
 import { Button } from "@/shared/commons/button/Button";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
+import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import { LoadingOverlay } from "@/shared/commons/loading/Loading";
 import { Skeleton, SkeletonStatus } from "@/shared/commons/skeleton/Skeleton";
 import { toast } from "@/shared/commons/toast/toast";
@@ -26,8 +26,9 @@ import { getTodayFormatDateKey } from "@/shared/utils/dateFormat";
 const METRIC_CONFIG: Record<
   WeeklyMetricType,
   {
+    domainMode?: "fit" | "zero";
     targetLabel?: string;
-    ticks: number[];
+    ticks?: number[];
     title: string;
     unit: string;
   }
@@ -35,7 +36,7 @@ const METRIC_CONFIG: Record<
   weight: {
     title: "체중",
     unit: "kg",
-    ticks: [0, 25, 50, 75, 100],
+    domainMode: "fit",
     targetLabel: "목표 체중",
   },
   calories: {
@@ -68,6 +69,7 @@ export default function ProfilePage() {
 
   const [sheetOpen, setSheetOpen] = useState(false);
   const [nickName, setNickName] = useState("");
+  const [nickNameErrorMessage, setNickNameErrorMessage] = useState("");
   const [selectedMetric, setSelectedMetric] = useState<WeeklyMetricType>("weight");
   const nicknameTapStateRef = useRef({ count: 0, lastTappedAt: 0 });
   const { mutate: updateNickName, isPending: isNickNamePending } = useNickNameUpdateMutation();
@@ -124,17 +126,24 @@ export default function ProfilePage() {
 
   const handleUpdateNickName = () => {
     if (nickName?.trim() === "" || nickName === undefined) {
+      setNickNameErrorMessage("");
       toast.warning("닉네임을 입력해주세요");
       return;
     }
 
+    setNickNameErrorMessage("");
     updateNickName(nickName, {
       onSuccess: () => {
         setSheetOpen(false);
+        setNickNameErrorMessage("");
         toast.success("닉네임이 수정되었어요");
       },
-      onError: () => {
-        toast.warning("닉네임 수정에 실패했어요");
+      onError: (error) => {
+        if (error.statusCode === 409) {
+          setNickNameErrorMessage("이미 사용 중인 닉네임이에요");
+        } else {
+          setNickNameErrorMessage("닉네임 수정에 실패했어요");
+        }
       },
     });
   };
@@ -170,7 +179,7 @@ export default function ProfilePage() {
             onClick={() => navigate(PATH.SETTINGS)}
             aria-label="설정"
           >
-            <img src="/icons/setting.svg" alt="설정" width={24} height={24} />
+            <SystemIcon name="setting" size={24} />
           </button>
         }
       />
@@ -180,15 +189,15 @@ export default function ProfilePage() {
           <section className={styles.summarySection}>
             <div className={styles.summaryText}>
               <div className={styles.nicknameRow}>
-                <button
-                  type="button"
-                  className={styles.nicknameButton}
+                {profile?.is_subscribed && (
+                  <img src="/icons/subscribe-badge.svg" className={styles.subscribeBadge} />
+                )}
+                <p
+                  className={`${styles.nickname} typo-title1`}
                   onClick={handleNicknameGuardToggleTap}
                 >
-                  <span className={`${styles.nickname} typo-title1`}>
-                    <span className={styles.highlight}>{nickname}</span> 님
-                  </span>
-                </button>
+                  <span className={styles.highlight}>{nickname}</span> 님
+                </p>
 
                 <button
                   type="button"
@@ -198,7 +207,7 @@ export default function ProfilePage() {
                     setSheetOpen(true);
                   }}
                 >
-                  <img src="/icons/pencil.svg" alt="닉네임 수정" width={24} height={24} />
+                  <SystemIcon name="pencil-fill" size={24} />
                 </button>
               </div>
 
@@ -219,7 +228,7 @@ export default function ProfilePage() {
                 color="normal"
               >
                 목표 재설정
-                <ChevronRightIcon size={20} className={styles.icon} />
+                <SystemIcon name="chevron-right-thin" size={20} className={styles.icon} />
               </Button>
             </div>
           </section>
@@ -302,7 +311,10 @@ export default function ProfilePage() {
                   </span>
                   <WeeklyRecordChart
                     data={weeklyChartData}
+                    domainMode={metricConfig.domainMode}
+                    targetLabel={metricConfig.targetLabel}
                     unit={metricConfig.unit}
+                    valueLabel={metricConfig.title}
                     yTicks={metricConfig.ticks}
                   />
                 </section>
@@ -315,17 +327,36 @@ export default function ProfilePage() {
             onClose={() => {
               setSheetOpen(false);
               setNickName(sanitizeNickName(profile?.nickname ?? ""));
+              setNickNameErrorMessage("");
             }}
           >
             <div className={styles.sheetContainer}>
               <section className={styles.sheetContent}>
                 <p className="typo-title2">닉네임 수정하기</p>
-                <input
-                  placeholder="닉네임 입력"
-                  value={nickName}
-                  onChange={(e) => setNickName(sanitizeNickName(e.target.value))}
-                  className={`${styles.input} typo-body3`}
-                />
+                <div className={styles.fieldGroup}>
+                  <input
+                    placeholder="닉네임 입력"
+                    value={nickName}
+                    onChange={(e) => {
+                      setNickName(sanitizeNickName(e.target.value));
+                      setNickNameErrorMessage("");
+                    }}
+                    className={`${styles.input} typo-body3`}
+                    aria-invalid={nickNameErrorMessage ? true : undefined}
+                    aria-describedby={
+                      nickNameErrorMessage ? "profile-nickname-error-message" : undefined
+                    }
+                  />
+                  {nickNameErrorMessage ? (
+                    <p
+                      id="profile-nickname-error-message"
+                      className={`${styles.nickNameErrorMessage} typo-body3`}
+                      role="alert"
+                    >
+                      {nickNameErrorMessage}
+                    </p>
+                  ) : null}
+                </div>
               </section>
 
               <Button

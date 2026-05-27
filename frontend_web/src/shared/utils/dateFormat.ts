@@ -35,6 +35,20 @@ export function parseDate(value: string) {
   return parsed;
 }
 
+// Date 객체를 "오전 9:05" 형태의 문자열로 변환
+export function formatTimeText(dateLike: Date | string | null | undefined) {
+  if (!dateLike) return "";
+
+  const date = typeof dateLike === "string" ? parseDate(dateLike) : dateLike;
+  if (!date) return "";
+
+  return date.toLocaleTimeString("ko-KR", {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  });
+}
+
 // Date 객체를 "YYYY년 M월 D일 요일" 형식의 문자열로 변환
 export function formatDateDividerText(date: Date) {
   const weekday = date.toLocaleDateString("ko-KR", {

@@ -309,6 +309,7 @@
   background: var(--onboarding-card-bg, var(--bg-white));
   border: 1px solid var(--onboarding-muted-border, var(--border-neutral));
   padding: 16px 20px;
+  border-radius: 8px;
 }
 
 .onboardingStepReadable .onboardingOptionList {

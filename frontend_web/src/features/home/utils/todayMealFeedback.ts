@@ -17,7 +17,7 @@ export type CalorieSummary = {
   message: string;
 };
 
-export type NutrientStatus = "insufficient" | "adequate" | "caution" | "excess";
+export type NutrientStatus = "insufficient" | "adequate" | "excess";
 
 export function resolveTargetCalories(targets: TargetsNutrients | null) {
   if (!targets || !Number.isFinite(targets.target_calories) || targets.target_calories <= 0) {
@@ -144,14 +144,11 @@ export function getNutrientStatus(current: number, target: number): NutrientStat
   }
 
   const intakePercent = (current / target) * 100;
-  if (intakePercent < 40) {
+  if (intakePercent < 75) {
     return "insufficient";
   }
-  if (intakePercent < 90) {
+  if (intakePercent <= 100) {
     return "adequate";
-  }
-  if (intakePercent <= 110) {
-    return "caution";
   }
   return "excess";
 }
@@ -162,9 +159,6 @@ export function getNutrientStatusLabel(status: NutrientStatus) {
   }
   if (status === "adequate") {
     return "적정";
-  }
-  if (status === "caution") {
-    return "주의";
   }
   return "초과";
 }

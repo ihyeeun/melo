@@ -39,17 +39,13 @@
 .nicknameRow {
   align-items: center;
   display: flex;
-  gap: 6px;
+  gap: 4px;
 }
 
-.nicknameButton {
-  align-items: center;
-  background: none;
-  border: 0;
-  color: var(--label-normal);
-  display: inline-flex;
-  justify-content: center;
-  padding: 0;
+.subscribeBadge {
+  margin-right: 2px;
+  width: 30px;
+  height: 30px;
 }
 
 .nickname {
@@ -210,6 +206,12 @@
   gap: 16px;
 }
 
+.fieldGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
 .input {
   padding: 14px 12px;
   border: 1px solid var(--border-neutral);
@@ -218,6 +220,10 @@
 
 .input::placeholder {
   color: var(--label-assistive);
+}
+
+.nickNameErrorMessage {
+  color: var(--status-error);
 }
 
 .icon {

@@ -155,11 +155,6 @@
   background-color: var(--status-success);
 }
 
-/* 주의 */
-.progressCaution {
-  background-color: var(--status-warning);
-}
-
 /* 초과 */
 .progressExcess {
   background-color: var(--status-error);
@@ -186,10 +181,6 @@
 
 .badgeAdequate .nutrientBadgeDot {
   background-color: var(--status-success);
-}
-
-.badgeCaution .nutrientBadgeDot {
-  background-color: var(--status-warning);
 }
 
 .badgeExcess .nutrientBadgeDot {

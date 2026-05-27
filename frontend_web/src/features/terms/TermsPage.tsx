@@ -1,8 +1,8 @@
 import { Accordion } from "@base-ui/react/accordion";
-import { ChevronDown } from "lucide-react";
 
 import { PATH } from "@/router/path";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
+import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import { navigateBack } from "@/shared/navigation/stackflowNavigation";
 
 import styles from "./TermsPage.module.css";
@@ -19,7 +19,7 @@ export default function TermsPage() {
               <Accordion.Header className={styles.header}>
                 <Accordion.Trigger className={`${styles.trigger} typo-title4`}>
                   서비스 이용약관
-                  <ChevronDown size={24} className={styles.triggerIcon} />
+                  <SystemIcon name="chevron-down-thin" size={24} className={styles.triggerIcon} />
                 </Accordion.Trigger>
               </Accordion.Header>
               <Accordion.Panel className={styles.panel}>
@@ -42,7 +42,7 @@ export default function TermsPage() {
               <Accordion.Header className={styles.header}>
                 <Accordion.Trigger className={`${styles.trigger} typo-title4`}>
                   개인정보처리방침
-                  <ChevronDown size={24} className={styles.triggerIcon} />
+                  <SystemIcon name="chevron-down-thin" size={24} className={styles.triggerIcon} />
                 </Accordion.Trigger>
               </Accordion.Header>
               <Accordion.Panel className={styles.panel}>

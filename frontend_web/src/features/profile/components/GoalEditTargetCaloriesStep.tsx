@@ -8,6 +8,7 @@ import {
 import type { GoalEditDraft } from "@/features/profile/goalEdit.model";
 import BottomSheet from "@/shared/commons/bottomSheet/BottomSheet";
 import { Button } from "@/shared/commons/button/Button";
+import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import { EditorInput } from "@/shared/commons/input/EditorInput";
 import { toast } from "@/shared/commons/toast/toast";
 
@@ -216,7 +217,7 @@ export default function GoalEditTargetCaloriesStep({ data, update }: Props) {
           <p className={`${styles.goalKcalValue} textNoWrap typo-h1`}>
             {formatTargetCalories(visibleTargetCalories)} kcal
           </p>
-          <img src="/icons/pencil.svg" alt="목표 칼로리 값 수정" width={24} height={24} />
+          <SystemIcon name="pencil-fill" size={24} />
         </button>
 
         <p className={`${styles.goalKcalHelper} typo-body1`}>{goalWeekMessage}</p>

@@ -134,6 +134,14 @@
   gap: 8px;
 }
 
+.loadMoreState {
+  align-items: center;
+  display: flex;
+  justify-content: center;
+  min-height: 40px;
+  padding: 8px 0;
+}
+
 .emptyResultContainer {
   display: flex;
   flex-direction: column;

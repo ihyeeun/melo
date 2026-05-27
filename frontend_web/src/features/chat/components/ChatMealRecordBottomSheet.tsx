@@ -1,5 +1,4 @@
 import { Select } from "@base-ui/react";
-import { ChevronDown, Minus, Plus } from "lucide-react";
 import { useMemo } from "react";
 
 import styles from "@/features/chat/styles/ChatMealRecordBottomSheet.module.css";
@@ -12,6 +11,7 @@ import {
 } from "@/shared/api/types/api.dto";
 import BottomSheet from "@/shared/commons/bottomSheet/BottomSheet";
 import { Button } from "@/shared/commons/button/Button";
+import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import NumberField from "@/shared/commons/input/NumberField";
 import { formatNumberWithMaxOneDecimal } from "@/shared/utils/numberFormat";
 
@@ -260,8 +260,8 @@ export function ChatMealRecordBottomSheet({
                         snapOnStep
                         decrementAriaLabel={`${item.recommendation.menu_name} 수량 감소`}
                         incrementAriaLabel={`${item.recommendation.menu_name} 수량 증가`}
-                        decrementIcon={<Minus size={24} />}
-                        incrementIcon={<Plus size={24} />}
+                        decrementIcon={<SystemIcon name="minus" mode="image" size={24} />}
+                        incrementIcon={<SystemIcon name="plus" mode="image" size={24} />}
                         normalizeValue={(value) => roundDecimal(value, 1)}
                         unstyled
                         classNames={{
@@ -293,7 +293,7 @@ export function ChatMealRecordBottomSheet({
                       <Select.Trigger className={`${styles.unitSelectTrigger} typo-h2`}>
                         <Select.Value className="typo-body3">{selectLabel}</Select.Value>
                         <Select.Icon className={styles.selectIcon} aria-hidden>
-                          <ChevronDown size={24} />
+                          <SystemIcon name="chevron-down-normal" size={24} />
                         </Select.Icon>
                       </Select.Trigger>
 

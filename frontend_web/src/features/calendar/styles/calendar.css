@@ -65,10 +65,6 @@
   width: 24px;
 }
 
-.calendar-nav-button:active {
-  background-color: var(--interaction-white-2);
-}
-
 .calendar-body {
   align-items: center;
   display: flex;

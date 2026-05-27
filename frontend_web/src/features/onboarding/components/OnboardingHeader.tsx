@@ -1,6 +1,5 @@
-import { ChevronLeft } from "lucide-react";
-
 import styles from "@/features/onboarding/styles/OnboardingHeader.module.css";
+import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 
 type Props = {
   stepIndex: number;
@@ -19,7 +18,7 @@ export default function OnboardingHeader({ stepIndex, total, onPrev }: Props) {
           disabled={stepIndex === 0}
           aria-label="이전"
         >
-          <ChevronLeft size={24} />
+          <SystemIcon name="chevron-left-normal" size={24} />
         </button>
       </div>
 
