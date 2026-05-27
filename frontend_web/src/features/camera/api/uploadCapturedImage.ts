@@ -1,4 +1,6 @@
+import { AppApiError, toAppApiError } from "@/shared/api/appApi";
 import { requestNativeImageUpload } from "@/shared/api/bridge/nativeBridge";
+import type { ImageUploadRequestPayload } from "@/shared/api/bridge/nativeBridge.types";
 import {
   type CapturedImage,
   type ChatFoodImageFeedbackResponseDto,
@@ -16,81 +18,75 @@ const END_POINT = {
   CHAT_FOOD_IMAGE_FEEDBACK: "/chat/food-image-feedback",
 };
 
-export async function uploadCapturedImageToServer(capturedImage: CapturedImage) {
-  const response = await requestNativeImageUpload<ApiResponse<FoodImageRecognitionResponseDto>>({
-    endpoint: END_POINT.FOOD_ANALYSIS,
-    fileUri: capturedImage.uri,
-    fileName: capturedImage.fileName,
-    mimeType: capturedImage.mimeType,
-    fieldName: "image",
-    method: "POST",
-  });
+async function requestNativeImageUploadData<T>(
+  payload: ImageUploadRequestPayload,
+  fallbackMessage: string,
+) {
+  try {
+    const response = await requestNativeImageUpload<ApiResponse<T>>(payload);
 
-  if (!isApiSuccess(response)) {
-    const error = new Error(response.message ?? "음식 이미지 분석 실패");
-    Object.assign(error, response);
-    throw error;
+    if (!isApiSuccess(response)) {
+      throw new AppApiError(response);
+    }
+
+    return response.data;
+  } catch (error) {
+    throw toAppApiError(error, fallbackMessage, "IMAGE_UPLOAD_REQUEST_FAILED");
   }
+}
 
-  return response.data;
+export async function uploadCapturedImageToServer(capturedImage: CapturedImage) {
+  return requestNativeImageUploadData<FoodImageRecognitionResponseDto>(
+    {
+      endpoint: END_POINT.FOOD_ANALYSIS,
+      fileUri: capturedImage.uri,
+      fileName: capturedImage.fileName,
+      mimeType: capturedImage.mimeType,
+      fieldName: "image",
+      method: "POST",
+    },
+    "음식 이미지 분석 실패",
+  );
 }
 
 export async function uploadNutritionLabelImage(capturedImage: CapturedImage) {
-  const response = await requestNativeImageUpload<
-    ApiResponse<NutritionLabelRecognitionResponseDto>
-  >({
-    endpoint: END_POINT.NUTRIENT_RECOGNITION,
-    fileUri: capturedImage.uri,
-    fileName: capturedImage.fileName,
-    mimeType: capturedImage.mimeType,
-    fieldName: "image",
-    method: "POST",
-  });
-
-  if (!isApiSuccess(response)) {
-    const error = new Error(response.message ?? "영양성분표 이미지 분석 실패");
-    Object.assign(error, response);
-    throw error;
-  }
-
-  return response.data;
+  return requestNativeImageUploadData<NutritionLabelRecognitionResponseDto>(
+    {
+      endpoint: END_POINT.NUTRIENT_RECOGNITION,
+      fileUri: capturedImage.uri,
+      fileName: capturedImage.fileName,
+      mimeType: capturedImage.mimeType,
+      fieldName: "image",
+      method: "POST",
+    },
+    "영양성분표 이미지 분석 실패",
+  );
 }
 
 export async function uploadMenuBoardImage(capturedImage: CapturedImage) {
-  const response = await requestNativeImageUpload<ApiResponse<ChatMenuBoardRecommendResponseDto>>({
-    endpoint: END_POINT.MENU_BOARD_ANALYSIS,
-    fileUri: capturedImage.uri,
-    fileName: capturedImage.fileName,
-    mimeType: capturedImage.mimeType,
-    fieldName: "image",
-    method: "POST",
-  });
-
-  if (!isApiSuccess(response)) {
-    const error = new Error(response.message ?? "메뉴판 분석 실패");
-    Object.assign(error, response);
-    throw error;
-  }
-
-  return response.data;
+  return requestNativeImageUploadData<ChatMenuBoardRecommendResponseDto>(
+    {
+      endpoint: END_POINT.MENU_BOARD_ANALYSIS,
+      fileUri: capturedImage.uri,
+      fileName: capturedImage.fileName,
+      mimeType: capturedImage.mimeType,
+      fieldName: "image",
+      method: "POST",
+    },
+    "메뉴판 분석 실패",
+  );
 }
 
 export async function uploadChatFoodImageFeedback(image: CapturedImage) {
-  const response = await requestNativeImageUpload<ApiResponse<ChatFoodImageFeedbackResponseDto>>({
-    endpoint: END_POINT.CHAT_FOOD_IMAGE_FEEDBACK,
-    fileUri: image.uri,
-    fileName: image.fileName,
-    mimeType: image.mimeType,
-    fieldName: "image",
-    method: "POST",
-  });
-
-  if (!isApiSuccess(response)) {
-    const error = new Error(response.message ?? "음식 분석 실패");
-    // TODO 에러 핸들링 값 던지도록 인터셉터 필요할 듯
-    Object.assign(error, response);
-    throw error;
-  }
-
-  return response.data;
+  return requestNativeImageUploadData<ChatFoodImageFeedbackResponseDto>(
+    {
+      endpoint: END_POINT.CHAT_FOOD_IMAGE_FEEDBACK,
+      fileUri: image.uri,
+      fileName: image.fileName,
+      mimeType: image.mimeType,
+      fieldName: "image",
+      method: "POST",
+    },
+    "음식 분석 실패",
+  );
 }

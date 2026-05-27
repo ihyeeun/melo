@@ -50,6 +50,53 @@ function createFallbackFailResponse(response: Response): ApiFailResponse {
   };
 }
 
+function createApiFailResponseFromUnknown(
+  error: unknown,
+  {
+    fallbackError = "API_REQUEST_FAILED",
+    fallbackMessage = "요청 처리 중 오류가 발생했습니다",
+    fallbackStatusCode = 500,
+  }: {
+    fallbackError?: string;
+    fallbackMessage?: string;
+    fallbackStatusCode?: number;
+  } = {},
+): ApiFailResponse {
+  if (typeof error !== "object" || error === null) {
+    return {
+      message: fallbackMessage,
+      statusCode: fallbackStatusCode,
+      error: fallbackError,
+    };
+  }
+
+  const {
+    error: errorCode,
+    message,
+    statusCode,
+  } = error as {
+    error?: unknown;
+    message?: unknown;
+    statusCode?: unknown;
+  };
+
+  const parsedStatusCode =
+    typeof statusCode === "number"
+      ? statusCode
+      : typeof statusCode === "string"
+        ? Number(statusCode)
+        : null;
+
+  return {
+    message: typeof message === "string" ? message : fallbackMessage,
+    statusCode:
+      parsedStatusCode !== null && !Number.isNaN(parsedStatusCode)
+        ? parsedStatusCode
+        : fallbackStatusCode,
+    error: typeof errorCode === "string" ? errorCode : fallbackError,
+  };
+}
+
 async function parseApiResponse<T>(response: Response): Promise<ApiResponse<T>> {
   const text = await response.text();
 
@@ -72,18 +119,33 @@ async function parseApiResponse<T>(response: Response): Promise<ApiResponse<T>> 
       return createFallbackFailResponse(response);
     }
 
-    throw new Error("서버 응답을 읽지 못했습니다.");
+    return {
+      message: "서버 응답을 읽지 못했습니다.",
+      statusCode: response.status || 500,
+      error: "API_RESPONSE_PARSE_FAILED",
+    };
   }
 }
 
 export async function appApi<T>(options: RequestOptions): Promise<ApiResponse<T>> {
   if (!isNativeApp()) {
-    throw new Error("앱 WebView 환경에서만 API 요청이 가능합니다.");
+    return {
+      message: "앱 WebView 환경에서만 API 요청이 가능합니다.",
+      statusCode: 500,
+      error: "APP_BRIDGE_UNAVAILABLE",
+    };
   }
 
   const { timeoutMs, ...payload } = options;
-  const response = await requestToApp<ApiResponse<T>>(payload, { timeoutMs });
-  return response;
+  try {
+    const response = await requestToApp<ApiResponse<T>>(payload, { timeoutMs });
+    return response;
+  } catch (error) {
+    return createApiFailResponseFromUnknown(error, {
+      fallbackError: "APP_API_REQUEST_FAILED",
+      fallbackMessage: "앱 API 요청 실패",
+    });
+  }
 }
 
 export async function webApi<T>(
@@ -132,7 +194,10 @@ export async function webApi<T>(
       };
     }
 
-    throw error;
+    return createApiFailResponseFromUnknown(error, {
+      fallbackError: "WEB_API_REQUEST_FAILED",
+      fallbackMessage: "요청 처리 중 오류가 발생했습니다",
+    });
   } finally {
     if (timeoutId !== null) {
       window.clearTimeout(timeoutId);
@@ -154,6 +219,23 @@ export class AppApiError extends Error {
     this.statusCode = payload.statusCode;
     this.error = payload.error;
   }
+}
+
+export function toAppApiError(
+  error: unknown,
+  fallbackMessage = "요청 처리 중 오류가 발생했습니다",
+  fallbackError = "API_REQUEST_FAILED",
+) {
+  if (error instanceof AppApiError) {
+    return error;
+  }
+
+  return new AppApiError(
+    createApiFailResponseFromUnknown(error, {
+      fallbackError,
+      fallbackMessage,
+    }),
+  );
 }
 
 function resolveApiData<T>(response: ApiResponse<T>): T {

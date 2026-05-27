@@ -18,7 +18,6 @@ export function useNickNameUpdateMutation(callbacks?: UseMutationCallback) {
     },
     onError: (error) => {
       if (callbacks?.onError) callbacks.onError(error);
-      // TODO 중복 닉네임 처리 필요
     },
   });
 }
