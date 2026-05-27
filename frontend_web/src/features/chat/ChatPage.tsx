@@ -1077,7 +1077,9 @@ export default function ChatPage() {
                       {formatTimeText(chatItem.createdAt)}
                     </p>
                     <div className={styles.userMessageContent}>
-                      <p className={`${styles.userBubble} typo-body2`}>{chatItem.input_text}</p>
+                      {!userImageUrl && (
+                        <p className={`${styles.userBubble} typo-body2`}>{chatItem.input_text}</p>
+                      )}
                       {userImageUrl ? (
                         <img
                           src={userImageUrl}
