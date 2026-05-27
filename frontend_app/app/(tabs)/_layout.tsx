@@ -179,13 +179,14 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   tabLabel: {
-    ...typography["typo-label6"],
     marginTop: 4,
   },
   tabLabelFocused: {
-    color: "#ff8e00",
+    ...typography["typo-label5"],
+    color: "#ff8000",
   },
   tabLabelBlurred: {
+    ...typography["typo-label6"],
     color: "#d9d9d9",
   },
 });
