@@ -36,14 +36,12 @@ const NET_CARBS_NOTICE_MESSAGE = [
 const progressStatusClassName: Record<NutrientStatus, string> = {
   insufficient: styles.progressInsufficient,
   adequate: styles.progressAdequate,
-  caution: styles.progressCaution,
   excess: styles.progressExcess,
 };
 
 const badgeStatusClassName: Record<NutrientStatus, string> = {
   insufficient: styles.badgeInsufficient,
   adequate: styles.badgeAdequate,
-  caution: styles.badgeCaution,
   excess: styles.badgeExcess,
 };
 
