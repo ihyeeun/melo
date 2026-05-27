@@ -145,11 +145,7 @@ export default function DiaryPage() {
                   <span className={styles.scoreDivider} aria-hidden="true" />
                   <span className={`${styles.score} typo-title2`}>{mealScore}점</span>
 
-                  <SystemIcon
-                    name="chevron-right-normal"
-                    size={24}
-                    className={styles.icon}
-                  />
+                  <SystemIcon name="chevron-right-normal" size={24} className={styles.icon} />
                 </div>
                 <div className={styles.scoreContainer}>
                   <ScoreProgress
@@ -345,10 +341,8 @@ function MealRecordCard({
             aria-pressed
             disabled={isDidNotEatPending}
           >
-            <div className={styles.emptyStatusIconActive}>
-              <SystemIcon name="check" size={12} />
-            </div>
-            <span className={`${styles.textPrimary} typo-title4`}>{emptyStatusText}</span>
+            <SystemIcon name="circle-check-selected" mode="image" size={24} />
+            <span className={`${styles.textPrimary} typo-label2`}>{emptyStatusText}</span>
           </button>
         ) : (
           <div className={styles.emptyMeta} aria-label={`${title} 기록하기`}>
@@ -360,15 +354,13 @@ function MealRecordCard({
                 aria-pressed={false}
                 disabled={isDidNotEatPending}
               >
-                <div className={styles.emptyStatusIcon}>
-                  <SystemIcon name="check" size={12} />
-                </div>
+                <SystemIcon name="circle-check" mode="image" size={24} />
                 <span className={`${styles.emptyStatusText} typo-label2`}>{emptyStatusText}</span>
               </button>
             )}
 
             <button type="button" onClick={handleNavigateButtonClick}>
-              <SystemIcon name="plus" size={24} className={styles.emptyPlusIcon} />
+              <SystemIcon name="circle-plus" mode="image" size={24} />
             </button>
           </div>
         )}
