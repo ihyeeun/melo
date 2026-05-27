@@ -105,8 +105,8 @@ export default function WeeklyRecordChart({ data, unit, yTicks }: WeeklyRecordCh
               <stop offset="100%" stopColor="var(--chart-current)" stopOpacity={0} />
             </linearGradient>
             <linearGradient id={targetGradientId} x1="0" x2="0" y1="0" y2="1">
-              <stop offset="0%" stopColor="var(--chart-target)" stopOpacity={1} />
-              <stop offset="100%" stopColor="var(--chart-target)" stopOpacity={0} />
+              {/* <stop offset="0%" stopColor="var(--chart-target)" stopOpacity={1} />
+              <stop offset="100%" stopColor="var(--chart-target)" stopOpacity={0} /> */}
             </linearGradient>
           </defs>
 
@@ -135,7 +135,7 @@ export default function WeeklyRecordChart({ data, unit, yTicks }: WeeklyRecordCh
 
           <Tooltip
             content={(props) => <CustomTooltip {...props} unit={unit} />}
-            cursor={{ fill: "rgb(0 0 0 / 6%)" }}
+            cursor={false}
             wrapperClassName={styles.tooltipWrapper}
           />
 
