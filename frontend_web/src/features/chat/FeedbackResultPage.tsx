@@ -95,13 +95,7 @@ export default function FeedbackResultPage() {
     return null;
   }
 
-  return (
-    <FeedbackResultContent
-      key={chatItem.id}
-      chatItem={chatItem}
-      menus={feedbackMenu.menus}
-    />
-  );
+  return <FeedbackResultContent key={chatItem.id} chatItem={chatItem} menus={feedbackMenu.menus} />;
 }
 
 function FeedbackResultContent({
@@ -112,8 +106,9 @@ function FeedbackResultContent({
   menus: ChatFeedbackMenuResponseDto[];
 }) {
   const navigate = useNavigate();
-  const [selectedMenusOverride, setSelectedMenusOverride] =
-    useState<SelectedMealRecordMenu[] | null>(null);
+  const [selectedMenusOverride, setSelectedMenusOverride] = useState<
+    SelectedMealRecordMenu[] | null
+  >(null);
   const chatDateKey = useMemo(() => getChatDateKey(chatItem), [chatItem]);
   const { data: dayMeals, isPending: isDayMealsPending } = useDayMealsQuery(chatDateKey);
   const { mutateAsync: registerDiaryMealRecordMutate, isPending: isMealRegisterPending } =
@@ -225,9 +220,7 @@ function FeedbackResultContent({
         }),
       );
 
-      toast.success(
-        diaryMealRecordSelection ? "식사 기록이 수정되었어요." : "식사 기록이 등록되었어요.",
-      );
+      toast.success("식사 기록이 등록되었어요.");
       navigateBack({ fallbackTo: PATH.CHAT });
     } catch (error) {
       toast.warning(resolveErrorMessage(error));
@@ -295,7 +288,7 @@ function FeedbackResultContent({
           disabled={selectedMenus.length === 0 || isMealRegisterPending || isDayMealsPending}
           onClick={handleSubmitMealRecord}
         >
-          {selectedMenus.length}개 {diaryMealRecordSelection ? "수정하기" : "기록하기"}
+          {selectedMenus.length}개 기록하기
         </Button>
       </footer>
     </section>

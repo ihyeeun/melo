@@ -209,9 +209,7 @@ function RecommendResultContent({
           });
         });
 
-      toast.success(
-        diaryMealRecordSelection ? "식사 기록이 수정되었어요." : "식사 기록이 등록되었어요.",
-      );
+      toast.success("식사 기록이 등록되었어요.");
       navigateBack({ fallbackTo: PATH.CHAT });
     } catch (error) {
       toast.warning(resolveErrorMessage(error));
@@ -292,7 +290,8 @@ function RecommendResultContent({
           disabled={selectedMenus.length === 0 || isMealRegisterPending || isDayMealsPending}
           onClick={handleSubmitMealRecord}
         >
-          {selectedMenus.length}개 {diaryMealRecordSelection ? "수정하기" : "기록하기"}
+          {/* {selectedMenus.length}개 {diaryMealRecordSelection ? "수정하기" : "기록하기"} */}
+          {selectedMenus.length}개 기록하기
         </Button>
       </footer>
     </section>
