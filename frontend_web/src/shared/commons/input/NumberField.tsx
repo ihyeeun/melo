@@ -1,7 +1,7 @@
 import { NumberField as BaseNumberField } from "@base-ui/react/number-field";
-import { MinusIcon, PlusIcon } from "lucide-react";
 import React from "react";
 
+import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import { toOneDecimalPlace } from "@/shared/utils/numberFormat";
 
 import styles from "./NumberField.module.css";
@@ -158,7 +158,7 @@ export default function NumberField({
             aria-label={decrementAriaLabel}
             disabled={decrementDisabled}
           >
-            {decrementIcon ?? <MinusIcon size={24} />}
+            {decrementIcon ?? <SystemIcon name="circle-minus" mode="image" size={24} />}
           </BaseNumberField.Decrement>
         )}
         <div
@@ -217,7 +217,7 @@ export default function NumberField({
             aria-label={incrementAriaLabel}
             disabled={incrementDisabled}
           >
-            {incrementIcon ?? <PlusIcon size={24} />}
+            {incrementIcon ?? <SystemIcon name="circle-plus" mode="image" size={24} />}
           </BaseNumberField.Increment>
         )}
       </BaseNumberField.Group>

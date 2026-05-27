@@ -53,7 +53,7 @@
   margin-right: 8px;
 }
 
-.app-toast-icon svg {
+.app-toast-icon [data-system-icon] {
   display: block;
 }
 
@@ -103,7 +103,7 @@
   margin-left: 15px;
 }
 
-.app-toast-close svg {
+.app-toast-close [data-system-icon] {
   display: block;
 }
 

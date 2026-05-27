@@ -1,4 +1,3 @@
-import { ChevronLeft } from "lucide-react";
 import {
   type ChangeEvent,
   type InputHTMLAttributes,
@@ -8,6 +7,8 @@ import {
   useRef,
   useState,
 } from "react";
+
+import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 
 import styles from "./SearchInputHeader.module.css";
 
@@ -116,7 +117,7 @@ export function SearchInputHeader({
           disabled={!onBack}
           aria-label={backButtonAriaLabel}
         >
-          <ChevronLeft size={24} />
+          <SystemIcon name="chevron-left-normal" size={24} />
         </button>
 
         <div className={styles.fieldWrap}>
@@ -142,7 +143,7 @@ export function SearchInputHeader({
               onClick={handleClear}
               aria-label="검색어 지우기"
             >
-              <img src="/icons/circle-close.svg" alt="검색어 지우기" />
+              <SystemIcon name="circle-close" mode="image" size={20} />
             </button>
           )}
         </div>

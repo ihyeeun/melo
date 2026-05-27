@@ -1,4 +1,3 @@
-import { PlusIcon, XIcon } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { useDayMealsQuery } from "@/features/home/hooks/queries/useDayMealsQuery";
@@ -40,6 +39,7 @@ import {
 import { Button } from "@/shared/commons/button/Button";
 import { MealMenuCard } from "@/shared/commons/card/MealMenuCard";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
+import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import { LoadingOverlay } from "@/shared/commons/loading/Loading";
 import { ConfirmModal } from "@/shared/commons/modals/ConfirmModal";
 import { Skeleton, SkeletonStatus } from "@/shared/commons/skeleton/Skeleton";
@@ -537,7 +537,7 @@ export default function MealRecordPage() {
                   onClick={handleRemoveImage}
                   aria-label="식사 사진 삭제"
                 >
-                  <XIcon size={18} strokeWidth={3} aria-hidden="true" />
+                  <SystemIcon name="close" size={28} />
                 </button>
               </div>
 
@@ -577,7 +577,7 @@ export default function MealRecordPage() {
           ) : (
             <button type="button" className={styles.emptyState} onClick={handleMealSearchNavigate}>
               <div className={styles.emptyStateIcon}>
-                <PlusIcon size={24} />
+                <SystemIcon name="circle-plus-large" mode="image" size={32} />
               </div>
               <p className="typo-body1">기록하러 가볼까요?</p>
             </button>

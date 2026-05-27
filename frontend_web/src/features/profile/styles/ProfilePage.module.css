@@ -39,7 +39,7 @@
 .nicknameRow {
   align-items: center;
   display: flex;
-  gap: 6px;
+  gap: 4px;
 }
 
 .nicknameButton {

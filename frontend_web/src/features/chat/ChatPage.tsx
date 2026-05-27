@@ -1,5 +1,4 @@
 import { useQueries } from "@tanstack/react-query";
-import { Camera, Check, ChevronDown, ChevronRight, ChevronUp, Plus, X } from "lucide-react";
 import type { FormEvent, KeyboardEvent, MouseEvent } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
@@ -57,6 +56,7 @@ import {
 import { DataSourceBadge } from "@/shared/commons/badge/DataSourceBadge";
 import { Button } from "@/shared/commons/button/Button";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
+import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import { ConfirmModal } from "@/shared/commons/modals/ConfirmModal";
 import { Skeleton, SkeletonStatus } from "@/shared/commons/skeleton/Skeleton";
 import { toast } from "@/shared/commons/toast/toast";
@@ -959,11 +959,11 @@ export default function ChatPage() {
                 aria-expanded={isScrollToBottomButtonVisible ? undefined : isCameraActionMenuOpen}
               >
                 {isScrollToBottomButtonVisible ? (
-                  <ChevronDown size={24} />
+                  <SystemIcon name="chevron-down-normal" size={24} />
                 ) : isCameraActionMenuOpen ? (
-                  <X size={24} />
+                  <SystemIcon name="close" size={24} />
                 ) : (
-                  <Camera size={24} />
+                  <SystemIcon name="camera" size={24} />
                 )}
               </button>
             </div>
@@ -1162,7 +1162,8 @@ function ChatInput({
           onClick={() => setIsAddActionOpen((prev) => !prev)}
           aria-label={isAddActionOpen ? "추가 기능 닫기" : "추가 기능 열기"}
         >
-          <Plus
+          <SystemIcon
+            name="plus"
             size={24}
             className={`${styles.plusIcon} ${isAddActionOpen ? styles.plusIconOpen : ""}`}
           />
@@ -1187,7 +1188,7 @@ function ChatInput({
               disabled={isSendDisabled}
               aria-label="메시지 전송"
             >
-              <ChevronUp size={24} />
+              <SystemIcon name="chevron-up-normal" size={24} />
             </button>
           )}
         </div>
@@ -1263,7 +1264,8 @@ function MealRecordCard({
           {formatNumberWithMaxOneDecimal(totalCalories)}kcal
         </span>
         {hasMultipleMenus ? (
-          <ChevronUp
+          <SystemIcon
+            name="chevron-up-normal"
             size={24}
             className={`${styles.mealRecordChevron} ${isOpen ? styles.mealRecordChevronOpen : ""}`}
           />
@@ -1415,14 +1417,18 @@ function RecommendationSection({
             >
               식사 기록
               {isMealRecorded ? (
-                <Check size={16} className={styles.recommendActionIcon} />
+                <SystemIcon name="check" size={16} className={styles.recommendActionIcon} />
               ) : (
-                <Plus size={16} className={styles.recommendActionIcon} />
+                <SystemIcon name="plus" size={16} className={styles.recommendActionIcon} />
               )}
             </Button>
             <Button size="small" variant="outlined" onClick={handleRecommendationDetailClick}>
               자세히 보기
-              <ChevronRight size={16} className={styles.recommendActionIcon} />
+              <SystemIcon
+                name="chevron-right-normal"
+                size={16}
+                className={styles.recommendActionIcon}
+              />
             </Button>
           </div>
         </div>
@@ -1440,7 +1446,7 @@ function RecommendationSection({
           </p>
           <p className={`${styles.ActionIcon} typo-label3`}>
             더보기
-            <ChevronRight size={20} />
+            <SystemIcon name="chevron-right-normal" size={20} />
           </p>
         </button>
       ) : null}
@@ -1545,7 +1551,8 @@ function FeedbackSection({
 
                 <p className={`${styles.feedbackCalories} textNoWrap typo-title3`}>
                   {formatNumberWithMaxOneDecimal(feedback.total_calories)}kcal
-                  <ChevronUp
+                  <SystemIcon
+                    name="chevron-up-normal"
                     size={24}
                     className={`${styles.feedbackMenuChevron} ${
                       isMenuListOpen ? styles.feedbackMenuChevronOpen : ""
@@ -1592,14 +1599,18 @@ function FeedbackSection({
             >
               식사 기록
               {isMealRecorded ? (
-                <Check size={16} className={styles.feedbackActionIcon} />
+                <SystemIcon name="check" size={16} className={styles.feedbackActionIcon} />
               ) : (
-                <Plus size={16} className={styles.feedbackActionIcon} />
+                <SystemIcon name="plus" size={16} className={styles.feedbackActionIcon} />
               )}
             </Button>
             <Button size="small" variant="outlined" fullWidth onClick={handleFeedbackDetailClick}>
               자세히 보기
-              <ChevronRight size={16} className={styles.feedbackActionIcon} />
+              <SystemIcon
+                name="chevron-right-normal"
+                size={16}
+                className={styles.feedbackActionIcon}
+              />
             </Button>
           </div>
         </div>

@@ -1,5 +1,4 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { ChevronRight } from "lucide-react";
 import type { ReactNode } from "react";
 import { useEffect } from "react";
 
@@ -15,6 +14,7 @@ import {
 } from "@/features/home/utils/todayMealFeedback";
 import { useGetProfileQuery } from "@/features/profile/hooks/queries/useProfileQuery";
 import { PATH } from "@/router/path";
+import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import ScoreProgress from "@/shared/commons/progress/Progress";
 import { Skeleton, SkeletonStatus } from "@/shared/commons/skeleton/Skeleton";
 import { toast } from "@/shared/commons/toast/toast";
@@ -132,7 +132,7 @@ export default function PreviewTodayScoreSection({ selectedDate }: { selectedDat
 
             <span className={`typo-title2`}>{score ?? "--"}점</span>
 
-            <ChevronRight size={24} className={style.icon} />
+            <SystemIcon name="chevron-right-normal" size={24} className={style.icon} />
           </div>
 
           <ScoreProgress

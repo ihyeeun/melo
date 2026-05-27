@@ -1,4 +1,3 @@
-import { ChevronRightIcon } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import ActionCard from "@/features/home/components/cards/ActionCard";
@@ -16,6 +15,7 @@ import { PATH } from "@/router/path";
 import BottomSheet from "@/shared/commons/bottomSheet/BottomSheet";
 import { Button } from "@/shared/commons/button/Button";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
+import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import { LoadingOverlay } from "@/shared/commons/loading/Loading";
 import { Skeleton, SkeletonStatus } from "@/shared/commons/skeleton/Skeleton";
 import { toast } from "@/shared/commons/toast/toast";
@@ -170,7 +170,7 @@ export default function ProfilePage() {
             onClick={() => navigate(PATH.SETTINGS)}
             aria-label="설정"
           >
-            <img src="/icons/setting.svg" alt="설정" width={24} height={24} />
+            <SystemIcon name="setting" size={24} />
           </button>
         }
       />
@@ -198,7 +198,7 @@ export default function ProfilePage() {
                     setSheetOpen(true);
                   }}
                 >
-                  <img src="/icons/pencil.svg" alt="닉네임 수정" width={24} height={24} />
+                  <SystemIcon name="pencil-fill" size={24} />
                 </button>
               </div>
 
@@ -219,7 +219,7 @@ export default function ProfilePage() {
                 color="normal"
               >
                 목표 재설정
-                <ChevronRightIcon size={20} className={styles.icon} />
+                <SystemIcon name="chevron-right-thin" size={20} className={styles.icon} />
               </Button>
             </div>
           </section>

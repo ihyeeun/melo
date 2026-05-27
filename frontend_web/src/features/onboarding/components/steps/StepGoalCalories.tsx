@@ -9,6 +9,7 @@ import {
 } from "@/features/onboarding/utils/calculateGoalWeek";
 import BottomSheet from "@/shared/commons/bottomSheet/BottomSheet";
 import { Button } from "@/shared/commons/button/Button";
+import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import { EditorInput } from "@/shared/commons/input/EditorInput";
 import { toast } from "@/shared/commons/toast/toast";
 
@@ -214,7 +215,7 @@ export default function SteptargetCalories({ data, update }: StepComponentProps)
           <p className={`${styles.onboardingGoalKcalValue} textNoWrap typo-h1`}>
             {formattargetCalories(visibletargetCalories)} kcal
           </p>
-          <img src="/icons/pencil.svg" alt="목표 칼로리 값 수정" width={24} height={24} />
+          <SystemIcon name="pencil-fill" size={24} />
         </button>
 
         <p className={`${styles.onboardingGoalKcalHelper} typo-body1`}>{goalWeekMessage}</p>

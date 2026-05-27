@@ -1,4 +1,4 @@
-import { ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
+import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 
 import type { ViewMode } from "../types/calendar.types";
 import { formatCalendarHeader } from "../utils/format";
@@ -38,7 +38,8 @@ export default function CalendarHeader({
             <span className="calendar-title typo-title3">
               {viewMode === "week" ? weekTitle : "월간"}
             </span>
-            <ChevronDown
+            <SystemIcon
+              name="chevron-down-normal"
               size={24}
               className={`calendar-title-icon ${viewMode === "month" ? "is-open" : ""}`}
             />
@@ -62,11 +63,11 @@ export default function CalendarHeader({
       {viewMode === "month" && (
         <div className="calendar-month-title">
           <button type="button" className="calendar-nav-button" onClick={onPrev} aria-label="이전">
-            <ChevronLeft size={24} />
+            <SystemIcon name="chevron-left-normal" size={24} />
           </button>
           <p className="typo-title3 calendar-text-white">{monthTitle}</p>
           <button type="button" className="calendar-nav-button" onClick={onNext} aria-label="다음">
-            <ChevronRight size={24} />
+            <SystemIcon name="chevron-right-normal" size={24} />
           </button>
         </div>
       )}

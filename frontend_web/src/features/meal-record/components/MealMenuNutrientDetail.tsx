@@ -1,5 +1,4 @@
 import { Tabs } from "@base-ui/react";
-import { ChevronDown, MinusIcon, PlusIcon } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
 import { NutrientDetailList } from "@/features/meal-record/components/NutrientDetailList";
@@ -21,6 +20,7 @@ import {
   MENU_UNIT,
 } from "@/shared/api/types/api.dto";
 import { Button } from "@/shared/commons/button/Button";
+import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import NumberField from "@/shared/commons/input/NumberField";
 
 import styles from "../styles/MealMenuNutrientDetail.module.css";
@@ -437,7 +437,7 @@ export function MealMenuNutrientDetail({
                 aria-label="입력값 감소"
                 onClick={() => handleInputStep(-1)}
               >
-                <MinusIcon size={24} />
+                <SystemIcon name="minus" size={24} />
               </button>
               <NumberField
                 value={quantityInput}
@@ -472,7 +472,7 @@ export function MealMenuNutrientDetail({
                 aria-label="입력값 증가"
                 onClick={() => handleInputStep(1)}
               >
-                <PlusIcon size={24} />
+                <SystemIcon name="plus" size={24} />
               </button>
             </div>
           </Tabs.Panel>
@@ -485,7 +485,7 @@ export function MealMenuNutrientDetail({
                 aria-label="입력값 감소"
                 onClick={() => handleInputStep(-1)}
               >
-                <MinusIcon size={24} />
+                <SystemIcon name="minus" size={24} />
               </button>
               <NumberField
                 value={quantityInput}
@@ -520,7 +520,7 @@ export function MealMenuNutrientDetail({
                 aria-label="입력값 증가"
                 onClick={() => handleInputStep(1)}
               >
-                <PlusIcon size={24} />
+                <SystemIcon name="plus" size={24} />
               </button>
             </div>
           </Tabs.Panel>
@@ -536,7 +536,8 @@ export function MealMenuNutrientDetail({
           aria-controls={detailListId}
         >
           <span className="typo-title3">상세 영양성분 보기</span>
-          <ChevronDown
+          <SystemIcon
+            name="chevron-down-normal"
             size={24}
             className={`${styles.arrowIcon} ${isDetailOpen ? styles.arrowIconExpanded : ""}`}
           />

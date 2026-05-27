@@ -1,5 +1,4 @@
 import { useEnterDoneEffect } from "@stackflow/react";
-import { ChevronRight } from "lucide-react";
 import { useRef, useState } from "react";
 
 import { useGetBrandSearchQuery } from "@/features/search/brand/hooks/queries/useBrandSearchQuery";
@@ -146,7 +145,6 @@ export default function BrandSearch() {
                         aria-pressed={isSelected}
                       >
                         <span className={`typo-title2 ${styles.brandName}`}>{brand.name}</span>
-                        <ChevronRight size={24} className={styles.brandItemChevron} />
                       </button>
                     </li>
                   );
@@ -180,7 +178,7 @@ export default function BrandSearch() {
           ) : (
             <div className={styles.placeholder}>
               <p className={`typo-label4 ${styles.placeholderText}`}>
-                브랜드명을 검색하면 결과를 바로 확인할 수 있어요
+                찾으시는 브랜드를 검색해 주세요
               </p>
             </div>
           )}

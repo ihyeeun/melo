@@ -1,5 +1,6 @@
-import { Camera } from "lucide-react";
 import * as React from "react";
+
+import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 
 import styles from "./FloatingCameraButton.module.css";
 
@@ -59,7 +60,7 @@ export function FloatingCameraButton({
         bottom: `calc(var(--safe-area-bottom) + ${bottomOffset}px)`,
       }}
     >
-      <Camera size={24} />
+      <SystemIcon name="camera" size={24} />
     </button>
   );
 }

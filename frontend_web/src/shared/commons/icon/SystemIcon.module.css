@@ -1,0 +1,25 @@
+.icon {
+  display: inline-block;
+  flex-shrink: 0;
+  height: var(--system-icon-size);
+  vertical-align: middle;
+  width: var(--system-icon-size);
+}
+
+.mask {
+  background-color: currentColor;
+  mask: var(--system-icon-url) center / contain no-repeat;
+  -webkit-mask: var(--system-icon-url) center / contain no-repeat;
+}
+
+.image {
+  align-items: center;
+  display: inline-flex;
+  justify-content: center;
+}
+
+.imageElement {
+  display: block;
+  height: 100%;
+  width: 100%;
+}

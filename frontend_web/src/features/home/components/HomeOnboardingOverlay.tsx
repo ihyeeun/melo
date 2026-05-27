@@ -1,8 +1,8 @@
-import { X } from "lucide-react";
 import { type CSSProperties, useEffect, useMemo, useRef, useState } from "react";
 
 import styles from "@/features/home/styles/HomeOnboardingOverlay.module.css";
 import { Button } from "@/shared/commons/button/Button";
+import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 
 type OnboardingTarget = "chat" | "menu-board-camera";
 
@@ -205,7 +205,7 @@ export default function HomeOnboardingOverlay({
         }}
         aria-label="온보딩 닫기"
       >
-        <X size={24} />
+        <SystemIcon name="close" size={24} />
       </button>
 
       <div

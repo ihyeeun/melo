@@ -293,6 +293,7 @@ export default function MealDetailPage() {
             onToggleDetail={() => setIsDetailOpen((prev) => !prev)}
             onSelectionChange={setSelection}
             onEditAndAdd={handleEditAndAdd}
+            showEditSection={meal.data_source === MENU_DATA_SOURCE.PUBLIC || meal.is_deleted === 0}
           />
         </div>
       </main>

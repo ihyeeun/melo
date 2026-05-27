@@ -1,9 +1,9 @@
-import { Minus, Plus } from "lucide-react";
 import { useState } from "react";
 
 import style from "@/features/home/styles/TodayBodyLogSection.module.css";
 import BottomSheet from "@/shared/commons/bottomSheet/BottomSheet";
 import { Button } from "@/shared/commons/button/Button";
+import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import NumberField from "@/shared/commons/input/NumberField";
 import { toast } from "@/shared/commons/toast/toast";
 import { toOneDecimalPlace } from "@/shared/utils/numberFormat";
@@ -74,8 +74,8 @@ export default function WeightLogBottomSheet({
           incrementAriaLabel="체중 0.1kg 증가"
           decrementDisabled={!canDecrease}
           incrementDisabled={!canIncrease}
-          decrementIcon={<Minus size={24} />}
-          incrementIcon={<Plus size={24} />}
+          decrementIcon={<SystemIcon name="circle-minus-large" mode="image" size={32} />}
+          incrementIcon={<SystemIcon name="circle-plus-large" mode="image" size={32} />}
           unit="kg"
           unstyled
           format={{

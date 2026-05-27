@@ -1,6 +1,7 @@
 import { Popover } from "@base-ui/react/popover";
-import { Info } from "lucide-react";
 import { Fragment } from "react";
+
+import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 
 import styles from "../styles/NutrientWarningPopover.module.css";
 
@@ -27,7 +28,7 @@ export function NutrientWarningPopover({
         className={`${styles.warningButton} ${className ?? ""}`}
         aria-label={ariaLabel}
       >
-        <Info size={19} aria-hidden="true" />
+        <SystemIcon name="circle-info" size={19} />
       </Popover.Trigger>
 
       <Popover.Portal>
