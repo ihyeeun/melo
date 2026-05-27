@@ -26,8 +26,9 @@ import { getTodayFormatDateKey } from "@/shared/utils/dateFormat";
 const METRIC_CONFIG: Record<
   WeeklyMetricType,
   {
+    domainMode?: "fit" | "zero";
     targetLabel?: string;
-    ticks: number[];
+    ticks?: number[];
     title: string;
     unit: string;
   }
@@ -35,7 +36,7 @@ const METRIC_CONFIG: Record<
   weight: {
     title: "체중",
     unit: "kg",
-    ticks: [0, 25, 50, 75, 100],
+    domainMode: "fit",
     targetLabel: "목표 체중",
   },
   calories: {
@@ -302,7 +303,10 @@ export default function ProfilePage() {
                   </span>
                   <WeeklyRecordChart
                     data={weeklyChartData}
+                    domainMode={metricConfig.domainMode}
+                    targetLabel={metricConfig.targetLabel}
                     unit={metricConfig.unit}
+                    valueLabel={metricConfig.title}
                     yTicks={metricConfig.ticks}
                   />
                 </section>
