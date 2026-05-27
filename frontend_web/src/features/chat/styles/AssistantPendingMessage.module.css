@@ -3,6 +3,7 @@
   display: inline-grid;
   max-width: 100%;
   min-height: 44px;
+  padding-left: 4px;
 }
 
 .typingLayer,

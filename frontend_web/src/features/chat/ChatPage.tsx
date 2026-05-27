@@ -858,6 +858,12 @@ export default function ChatPage() {
                     <div className={styles.assistantMessageContent}>
                       <AssistantMessageBubbles message={chatItem.response_payload.intro_message} />
 
+                      {chatItem.response_payload.chat_category === "general" ? (
+                        <AssistantMessageBubbles
+                          message={chatItem.response_payload.general_answer}
+                        />
+                      ) : null}
+
                       {chatItem.response_payload.chat_category === "recommendation" &&
                       chatItem.response_payload.recommendations.length > 0 ? (
                         <RecommendationSection
@@ -1758,7 +1764,11 @@ function getChatMealRecordMenus(chatItem: ChatHistoryItemResponseDto): ChatMealR
     return topRecommendation ? [topRecommendation] : [];
   }
 
-  return chatItem.response_payload.feedback.menus;
+  if (chatItem.response_payload.chat_category === "feedback") {
+    return chatItem.response_payload.feedback.menus;
+  }
+
+  return [];
 }
 
 function getUniqueMealRecordMenus(menus: ChatMealRecordMenu[]) {
@@ -1939,10 +1949,9 @@ function buildChatTimelineItems(
   chatList: ChatHistoryItemResponseDto[],
   mealRecords: MealRecordViewModel[],
 ): ChatTimelineItem[] {
-  return [
-    ...chatList.map(toChatTimelineItem),
-    ...mealRecords.map(toMealRecordTimelineItem),
-  ].sort(compareChatTimelineItems);
+  return [...chatList.map(toChatTimelineItem), ...mealRecords.map(toMealRecordTimelineItem)].sort(
+    compareChatTimelineItems,
+  );
 }
 
 function toChatTimelineItem(chatItem: ChatHistoryItemResponseDto): ChatTimelineItem {
@@ -2084,7 +2093,16 @@ function resolveErrorMessage(
 }
 
 function getAiCoachResponseAnalyticsProperties(response: ChatRecommendResponseDto) {
-  if (response.chat_category !== "recommendation") {
+  if (response.chat_category === "recommendation") {
+    return {
+      menu_ids: response.recommendations.map((menu) => menu.menu_id),
+      menu_names: response.recommendations.map((menu) => menu.menu_name),
+      has_menu: response.recommendations.length > 0,
+      chat_mode: "recommendation",
+    };
+  }
+
+  if (response.chat_category === "feedback") {
     return {
       menu_ids: response.feedback.menus.map((menu) => menu.menu_id),
       menu_names: response.feedback.menus.map((menu) => menu.menu_name),
@@ -2094,9 +2112,9 @@ function getAiCoachResponseAnalyticsProperties(response: ChatRecommendResponseDt
   }
 
   return {
-    menu_ids: response.recommendations.map((menu) => menu.menu_id),
-    menu_names: response.recommendations.map((menu) => menu.menu_name),
-    has_menu: response.recommendations.length > 0,
-    chat_mode: "recommendation",
+    menu_ids: [],
+    menu_names: [],
+    has_menu: false,
+    chat_mode: "general",
   };
 }
