@@ -204,8 +204,9 @@
   color: var(--label-normal);
   flex: 1 1 auto;
   min-width: 0;
-  overflow-wrap: normal;
-  word-break: keep-all;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .foodMarkerScore {
@@ -228,6 +229,189 @@
 
 .foodMarkerScoreError {
   color: var(--label-disable);
+}
+
+.foodClusterMarker {
+  display: flex;
+  flex-direction: column;
+  z-index: 3;
+}
+
+.foodMarkerAlignCenter.foodClusterMarker {
+  align-items: center;
+}
+
+.foodMarkerAlignStart.foodClusterMarker {
+  align-items: flex-start;
+}
+
+.foodMarkerAlignEnd.foodClusterMarker {
+  align-items: flex-end;
+}
+
+.foodClusterMarkerOpen {
+  z-index: 4;
+}
+
+.foodClusterButton {
+  align-items: center;
+  background-color: var(--primary-normal);
+  border: 0;
+  border-radius: 4px;
+  color: var(--static-white);
+  cursor: pointer;
+  display: inline-flex;
+  min-height: 40px;
+  padding: 9px 12px;
+  position: relative;
+  width: fit-content;
+}
+
+.foodClusterButton:disabled {
+  cursor: default;
+}
+
+.foodClusterButton::after {
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  content: "";
+  height: 0;
+  left: 50%;
+  position: absolute;
+  transform: translateX(-50%);
+  width: 0;
+}
+
+.foodMarkerAbove .foodClusterButton::after {
+  border-top: 10px solid var(--primary-normal);
+  bottom: -9px;
+}
+
+.foodMarkerBelow .foodClusterButton::after {
+  border-bottom: 10px solid var(--primary-normal);
+  top: -9px;
+}
+
+.foodMarkerAlignStart .foodClusterButton::after {
+  left: 24px;
+  transform: none;
+}
+
+.foodMarkerAlignEnd .foodClusterButton::after {
+  left: auto;
+  right: 24px;
+  transform: none;
+}
+
+.foodClusterCount {
+  color: var(--static-white);
+  white-space: nowrap;
+}
+
+.foodClusterPanel {
+  background-color: var(--bg-white);
+  border: 1px solid var(--border-neutral);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  max-width: min(240px, calc(100vw - 48px));
+  overflow: hidden;
+  position: absolute;
+  width: max-content;
+}
+
+.foodMarkerAbove .foodClusterPanel {
+  bottom: calc(100% + 10px);
+}
+
+.foodMarkerBelow .foodClusterPanel {
+  top: calc(100% + 10px);
+}
+
+.foodMarkerAlignCenter .foodClusterPanel {
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.foodMarkerAlignStart .foodClusterPanel {
+  left: 0;
+}
+
+.foodMarkerAlignEnd .foodClusterPanel {
+  right: 0;
+}
+
+.foodClusterOption {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  color: var(--label-normal);
+  cursor: pointer;
+  display: flex;
+  gap: 8px;
+  min-height: 44px;
+  padding: 10px 12px;
+  text-align: left;
+  width: 100%;
+}
+
+.foodClusterOptionPin {
+  align-items: center;
+  background-color: var(--primary-normal);
+  border-radius: 999px;
+  color: var(--static-white);
+  display: inline-flex;
+  flex: 0 0 auto;
+  height: 22px;
+  justify-content: center;
+  min-width: 22px;
+  padding: 0 6px;
+}
+
+.foodClusterOption + .foodClusterOption {
+  border-top: 1px solid var(--border-neutral);
+}
+
+.foodClusterOption:disabled {
+  cursor: default;
+}
+
+.foodClusterOptionName {
+  color: var(--label-normal);
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.foodClusterSourcePin {
+  align-items: center;
+  background-color: var(--primary-normal);
+  border: 2px solid var(--static-white);
+  border-radius: 999px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.24);
+  color: var(--static-white);
+  cursor: pointer;
+  display: inline-flex;
+  height: 28px;
+  justify-content: center;
+  min-width: 28px;
+  padding: 0 7px;
+  position: absolute;
+  transform: translate(-50%, -50%);
+  z-index: 2;
+}
+
+.foodClusterSourcePin:disabled {
+  cursor: default;
+}
+
+.foodClusterSourcePinLabel {
+  color: var(--static-white);
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
 }
 
 .resultList {
