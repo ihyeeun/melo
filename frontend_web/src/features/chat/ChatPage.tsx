@@ -16,6 +16,7 @@ import {
   getFallbackMealTime,
   getNextDiaryMenusByCandidateIds,
   getSelectedDiaryMenusByTime,
+  getSelectedDiaryMenusFromCandidateMenus,
   type SelectedDiaryMealRecordMenu,
 } from "@/features/chat/utils/chatDiaryMealRecord";
 import { isChatHistoryItemResponse } from "@/features/chat/utils/chatHistoryItem";
@@ -705,7 +706,15 @@ export default function ChatPage() {
         });
       });
 
-      toast.success(hadMealRecord ? "식사 기록에 메뉴를 추가했어요." : "식사 기록이 등록되었어요.");
+      let successMessage = "식사 기록이 수정되었어요.";
+
+      if (nextMealRecord.addedMenus.length > 0) {
+        successMessage = hadMealRecord
+          ? "식사 기록에 메뉴를 추가했어요."
+          : "식사 기록이 등록되었어요.";
+      }
+
+      toast.success(successMessage);
       commitMealRecordScroll(scrollTargetKey);
     } catch (error) {
       cancelMealRecordScroll(scrollTargetKey);
@@ -1081,12 +1090,27 @@ export default function ChatPage() {
                         <p className={`${styles.userBubble} typo-body2`}>{chatItem.input_text}</p>
                       )}
                       {userImageUrl ? (
-                        <img
-                          src={userImageUrl}
-                          alt="사용자가 업로드한 이미지"
-                          aria-hidden="true"
-                          className={styles.userImageBubble}
-                        />
+                        chatItem.response_payload.chat_category === "feedback" ? (
+                          <button
+                            type="button"
+                            className={styles.userImageButton}
+                            aria-label="피드백 결과 보기"
+                            onClick={() => navigate(getFeedbackResultPath(chatItem.id))}
+                          >
+                            <img
+                              src={userImageUrl}
+                              alt=""
+                              aria-hidden="true"
+                              className={styles.userImageBubble}
+                            />
+                          </button>
+                        ) : (
+                          <img
+                            src={userImageUrl}
+                            alt="사용자가 업로드한 이미지"
+                            className={styles.userImageBubble}
+                          />
+                        )
                       ) : null}
                     </div>
                   </div>
@@ -1133,6 +1157,7 @@ export default function ChatPage() {
                         <FeedbackSection
                           chatId={chatItem.id}
                           feedback={chatItem.response_payload.feedback}
+                          hasImage={userImageUrl !== null}
                           timeText={assistantTimeText}
                           onMealRecordClick={() =>
                             handleMenuRecordClick(
@@ -1568,7 +1593,7 @@ function MealRecordCard({
       </button>
 
       {hasMultipleMenus && isOpen ? (
-        <div className={styles.mealRecordMenuList}>
+        <button type="button" onClick={onEditClick} className={styles.mealRecordMenuList}>
           {menus.map((menu) => (
             <div key={menu.menu_id} className={styles.mealRecordMenuItem}>
               <p className={`${styles.mealRecordMenuName} ${styles.textNormal} typo-body3`}>
@@ -1581,7 +1606,7 @@ function MealRecordCard({
               </span>
             </div>
           ))}
-        </div>
+        </button>
       ) : null}
 
       <div className={styles.mealRecordAction}>
@@ -1752,6 +1777,7 @@ function RecommendationSection({
 function FeedbackSection({
   chatId,
   feedback,
+  hasImage,
   timeText,
   onMealRecordClick,
   onMealRecordCancelClick,
@@ -1759,6 +1785,7 @@ function FeedbackSection({
 }: {
   chatId: number;
   feedback: FeedbackDto;
+  hasImage: boolean;
   timeText: string;
   onMealRecordClick: () => void;
   onMealRecordCancelClick: () => void;
@@ -1774,7 +1801,7 @@ function FeedbackSection({
   const handleFeedbackDetailClick = (event?: MouseEvent<HTMLElement>) => {
     event?.stopPropagation();
 
-    if (hasMultipleMenus) {
+    if (hasImage || hasMultipleMenus) {
       navigate(getFeedbackResultPath(chatId));
       return;
     }
@@ -2067,16 +2094,28 @@ function getMergedMealRecordPayload(
   wasAdded: boolean;
 } {
   const time = mealRecord?.time ?? getFallbackMealTime(chatItem);
-  const menus = mealRecord ? mealRecord.menus : getSelectedDiaryMenusByTime(dayMeals, time);
-  const existingMenuIds = new Set(menus.map((recordedMenu) => recordedMenu.id));
-  const addedMenus = getUniqueMealRecordMenus(mealRecordMenus).filter(
-    (menu) => !existingMenuIds.has(menu.menu_id),
+  const previousMenus = mealRecord
+    ? mealRecord.menus
+    : getSelectedDiaryMenusByTime(dayMeals, time);
+  const candidateMenus = getUniqueMealRecordMenus(mealRecordMenus);
+  const candidateMenuIds = candidateMenus.map((menu) => menu.menu_id);
+  const nextSelectedMenus = getSelectedDiaryMenusFromCandidateMenus(candidateMenus);
+  const menus = getNextDiaryMenusByCandidateIds({
+    dayMeals,
+    time,
+    selectedMenus: nextSelectedMenus,
+    candidateIds: candidateMenuIds,
+  });
+  const previousMenuById = new Map(previousMenus.map((menu) => [menu.id, menu]));
+  const addedMenus = candidateMenus.filter((menu) => !previousMenuById.has(menu.menu_id));
+  const wasChanged = nextSelectedMenus.some((menu) =>
+    isSelectedDiaryMealRecordMenuChanged(menu, previousMenuById.get(menu.id)),
   );
 
-  if (addedMenus.length === 0) {
+  if (!wasChanged) {
     return {
       time,
-      menus,
+      menus: previousMenus,
       addedMenus,
       wasAdded: false,
     };
@@ -2084,17 +2123,21 @@ function getMergedMealRecordPayload(
 
   return {
     time,
-    menus: [
-      ...menus,
-      ...addedMenus.map((menu) => ({
-        id: menu.menu_id,
-        quantity: menu.weight,
-        mode: "unit" as const,
-      })),
-    ],
+    menus,
     addedMenus,
     wasAdded: true,
   };
+}
+
+function isSelectedDiaryMealRecordMenuChanged(
+  nextMenu: SelectedDiaryMealRecordMenu,
+  previousMenu: SelectedDiaryMealRecordMenu | undefined,
+) {
+  return (
+    !previousMenu ||
+    previousMenu.quantity !== nextMenu.quantity ||
+    previousMenu.mode !== nextMenu.mode
+  );
 }
 
 function getRemainingMealRecordMenus(

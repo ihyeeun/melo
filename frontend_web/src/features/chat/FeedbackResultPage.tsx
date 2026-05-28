@@ -9,6 +9,7 @@ import {
   getDiaryMealRecordSelectionByMenuIds,
   getFallbackMealTime,
   getNextDiaryMenusByCandidateIds,
+  getSelectedDiaryMenusFromCandidateMenus,
   type SelectedDiaryMealRecordMenu,
 } from "@/features/chat/utils/chatDiaryMealRecord";
 import { getMealTypeFromChatMealTime } from "@/features/chat/utils/chatMeal";
@@ -123,9 +124,13 @@ function FeedbackResultContent({
   );
   const targetMealTime = diaryMealRecordSelection?.time ?? getFallbackMealTime(chatItem);
   const mealType: MealType = getMealTypeFromChatMealTime(targetMealTime);
+  const defaultSelectedMenus = useMemo(
+    () => getSelectedDiaryMenusFromCandidateMenus(menus),
+    [menus],
+  );
   const selectedMenus = useMemo(
-    () => selectedMenusOverride ?? diaryMealRecordSelection?.menus ?? [],
-    [diaryMealRecordSelection, selectedMenusOverride],
+    () => selectedMenusOverride ?? defaultSelectedMenus,
+    [defaultSelectedMenus, selectedMenusOverride],
   );
   const selectedMenuIds = useMemo(() => {
     return new Set(selectedMenus.map((menu) => menu.id));
@@ -137,7 +142,7 @@ function FeedbackResultContent({
     }
 
     setSelectedMenusOverride((prev) => {
-      const currentMenus = prev ?? diaryMealRecordSelection?.menus ?? [];
+      const currentMenus = prev ?? selectedMenus;
       const nextMenu: SelectedMealRecordMenu = {
         id: selection.menuId,
         quantity: selection.quantity,
@@ -179,7 +184,7 @@ function FeedbackResultContent({
     }
 
     setSelectedMenusOverride((prev) => {
-      const currentMenus = prev ?? diaryMealRecordSelection?.menus ?? [];
+      const currentMenus = prev ?? selectedMenus;
       const isAlreadySelected = currentMenus.some((item) => item.id === menu.menu_id);
 
       if (isAlreadySelected) {

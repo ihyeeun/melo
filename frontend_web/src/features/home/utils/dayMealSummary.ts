@@ -52,6 +52,31 @@ function scaleOptionalNutrient(value: OptionalNutrientValue, scaleFactor: number
   return nutrient === null ? undefined : nutrient * scaleFactor;
 }
 
+function compareMealRecordSavedAt(a: MealResponseDto, b: MealResponseDto) {
+  const aTime = getMealRecordSavedAtTime(a);
+  const bTime = getMealRecordSavedAtTime(b);
+
+  if (aTime !== null && bTime !== null && aTime !== bTime) {
+    return aTime - bTime;
+  }
+
+  if (aTime === null && bTime !== null) return -1;
+  if (aTime !== null && bTime === null) return 1;
+  return 0;
+}
+
+function getMealRecordSavedAtTime(meal: MealResponseDto) {
+  const updatedAt = Date.parse(meal.updatedAt);
+
+  if (Number.isFinite(updatedAt)) {
+    return updatedAt;
+  }
+
+  const createdAt = Date.parse(meal.createdAt);
+
+  return Number.isFinite(createdAt) ? createdAt : null;
+}
+
 export type MenuWithQuantity = MenuSimpleResponseDto & {
   quantity: number;
   serving_input_mode: MealServingInputMode;
@@ -219,7 +244,60 @@ export function dayMealSummary(meals: MealRecordResponseDto): DayMealSummary {
     return 1;
   };
 
-  meals.meal_list.forEach((meal) => {
+  const mealList = [...meals.meal_list].sort(compareMealRecordSavedAt);
+  const applyMenuNutrients = (
+    mealTime: MealTimeKey,
+    menu: Pick<MenuWithQuantity, "calories" | "carbs" | "protein" | "fat">,
+    multiplier: 1 | -1,
+  ) => {
+    totalCalories += menu.calories * multiplier;
+    totalNutrients.carbs += menu.carbs * multiplier;
+    totalNutrients.protein += menu.protein * multiplier;
+    totalNutrients.fat += menu.fat * multiplier;
+
+    switch (mealTime) {
+      case 0: {
+        caloriesByTime.breakfast += menu.calories * multiplier;
+        nutrientsByTime.breakfast.carbs += menu.carbs * multiplier;
+        nutrientsByTime.breakfast.protein += menu.protein * multiplier;
+        nutrientsByTime.breakfast.fat += menu.fat * multiplier;
+        break;
+      }
+      case 1: {
+        caloriesByTime.lunch += menu.calories * multiplier;
+        nutrientsByTime.lunch.carbs += menu.carbs * multiplier;
+        nutrientsByTime.lunch.protein += menu.protein * multiplier;
+        nutrientsByTime.lunch.fat += menu.fat * multiplier;
+        break;
+      }
+      case 2: {
+        caloriesByTime.dinner += menu.calories * multiplier;
+        nutrientsByTime.dinner.carbs += menu.carbs * multiplier;
+        nutrientsByTime.dinner.protein += menu.protein * multiplier;
+        nutrientsByTime.dinner.fat += menu.fat * multiplier;
+        break;
+      }
+      case 3: {
+        caloriesByTime.snack += menu.calories * multiplier;
+        nutrientsByTime.snack.carbs += menu.carbs * multiplier;
+        nutrientsByTime.snack.protein += menu.protein * multiplier;
+        nutrientsByTime.snack.fat += menu.fat * multiplier;
+        break;
+      }
+      case 4: {
+        caloriesByTime.lateNight += menu.calories * multiplier;
+        nutrientsByTime.lateNight.carbs += menu.carbs * multiplier;
+        nutrientsByTime.lateNight.protein += menu.protein * multiplier;
+        nutrientsByTime.lateNight.fat += menu.fat * multiplier;
+        break;
+      }
+      default: {
+        break;
+      }
+    }
+  };
+
+  mealList.forEach((meal) => {
     recordCountByTime[meal.time] += 1;
     mealRecordTimestampsByTime[meal.time] = {
       createdAt: meal.createdAt,
@@ -227,7 +305,7 @@ export function dayMealSummary(meals: MealRecordResponseDto): DayMealSummary {
     };
 
     if (typeof meal.image === "string" && meal.image.trim().length > 0) {
-      // 같은 time에 여러 건이면 마지막 이미지로 덮어씀
+      // 같은 time에 여러 건이면 최신 이미지로 덮어씀
       imagesByTime[meal.time] = meal.image;
     }
 
@@ -280,53 +358,16 @@ export function dayMealSummary(meals: MealRecordResponseDto): DayMealSummary {
         serving_input_mode: servingInputMode,
       };
 
-      menusByTime[meal.time].push(menuItem);
-
-      totalCalories += calories;
-      totalNutrients.carbs += carbs;
-      totalNutrients.protein += protein;
-      totalNutrients.fat += fat;
-
-      switch (meal.time) {
-        case 0: {
-          caloriesByTime.breakfast += calories;
-          nutrientsByTime.breakfast.carbs += carbs;
-          nutrientsByTime.breakfast.protein += protein;
-          nutrientsByTime.breakfast.fat += fat;
-          break;
-        }
-        case 1: {
-          caloriesByTime.lunch += calories;
-          nutrientsByTime.lunch.carbs += carbs;
-          nutrientsByTime.lunch.protein += protein;
-          nutrientsByTime.lunch.fat += fat;
-          break;
-        }
-        case 2: {
-          caloriesByTime.dinner += calories;
-          nutrientsByTime.dinner.carbs += carbs;
-          nutrientsByTime.dinner.protein += protein;
-          nutrientsByTime.dinner.fat += fat;
-          break;
-        }
-        case 3: {
-          caloriesByTime.snack += calories;
-          nutrientsByTime.snack.carbs += carbs;
-          nutrientsByTime.snack.protein += protein;
-          nutrientsByTime.snack.fat += fat;
-          break;
-        }
-        case 4: {
-          caloriesByTime.lateNight += calories;
-          nutrientsByTime.lateNight.carbs += carbs;
-          nutrientsByTime.lateNight.protein += protein;
-          nutrientsByTime.lateNight.fat += fat;
-          break;
-        }
-        default: {
-          break;
+      const existingMenuIndex = menusByTime[meal.time].findIndex((item) => item.id === menu.id);
+      if (existingMenuIndex !== -1) {
+        const [existingMenu] = menusByTime[meal.time].splice(existingMenuIndex, 1);
+        if (existingMenu) {
+          applyMenuNutrients(meal.time, existingMenu, -1);
         }
       }
+
+      menusByTime[meal.time].push(menuItem);
+      applyMenuNutrients(meal.time, menuItem, 1);
     });
   });
 

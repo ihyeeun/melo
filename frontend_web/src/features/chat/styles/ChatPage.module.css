@@ -43,6 +43,10 @@
   z-index: 5;
 }
 
+.floatingCameraBackdrop:active {
+  transform: none;
+}
+
 .floatingCameraActionContainer {
   align-items: flex-end;
   display: flex;
@@ -212,6 +216,15 @@
   white-space: pre-wrap;
 }
 
+.userImageButton {
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  display: block;
+  max-width: 100%;
+  padding: 0;
+}
+
 .userImageBubble {
   background-color: var(--bg-white);
   border-radius: 12px;
@@ -235,7 +248,7 @@
   display: flex;
   gap: 6px;
   width: 100%;
-  max-width: 88%;
+  max-width: 85%;
 }
 
 .assistantMessageContent {
@@ -541,18 +554,6 @@
   transition:
     height 220ms ease,
     opacity 180ms ease;
-}
-
-.chipSectionVisible {
-  height: 58px;
-  opacity: 1;
-}
-
-.chipSectionHidden {
-  height: 0;
-  opacity: 0;
-  pointer-events: none;
-  overflow: hidden;
 }
 
 .chipContainer {
