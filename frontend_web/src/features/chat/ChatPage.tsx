@@ -2062,9 +2062,7 @@ function getUniqueMealRecordMenus(menus: ChatMealRecordMenu[]) {
   const menuById = new Map<number, ChatMealRecordMenu>();
 
   menus.forEach((menu) => {
-    if (!menuById.has(menu.menu_id)) {
-      menuById.set(menu.menu_id, menu);
-    }
+    menuById.set(menu.menu_id, menu);
   });
 
   return [...menuById.values()];

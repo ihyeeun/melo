@@ -117,9 +117,15 @@ export function getNextDiaryMenusByCandidateIds({
 export function getSelectedDiaryMenusFromCandidateMenus(
   menus: DiaryMealRecordCandidateMenu[],
 ): SelectedDiaryMealRecordMenu[] {
+  const latestMenusById = new Map<number, DiaryMealRecordCandidateMenu>();
+
+  menus.forEach((menu) => {
+    latestMenusById.set(menu.menu_id, menu);
+  });
+
   return mergeSelectedDiaryMenus(
     [],
-    menus.map((menu) => ({
+    [...latestMenusById.values()].map((menu) => ({
       id: menu.menu_id,
       quantity: menu.weight,
       mode: "unit",
