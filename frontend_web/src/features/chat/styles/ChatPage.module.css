@@ -247,8 +247,7 @@
   align-items: flex-end;
   display: flex;
   gap: 6px;
-  width: 100%;
-  max-width: 85%;
+  width: 88%;
 }
 
 .assistantMessageContent {
@@ -267,6 +266,7 @@
   overflow-wrap: anywhere;
   padding: 8px 16px;
   white-space: pre-wrap;
+  max-width: 96%;
 }
 
 .assistantBubbleWithTime,
@@ -508,6 +508,7 @@
 .feedbackMenuItem {
   align-items: center;
   display: flex;
+  gap: 8px;
 }
 
 .feedbackMenuItemName {

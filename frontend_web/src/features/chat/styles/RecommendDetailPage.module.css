@@ -48,7 +48,6 @@
 
 .caloriesText {
   color: var(--label-normal);
-  flex-shrink: 0;
   margin-left: auto;
 }
 

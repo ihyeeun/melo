@@ -16,7 +16,7 @@ export function MealMenuNutrientDetailSkeleton({
           <Skeleton width="58%" height={24} radius={999} />
           <div className={styles.summarySecond}>
             <Skeleton width="36%" height={18} radius={999} />
-            <Skeleton className={styles.calories} width="28%" height={28} radius={999} />
+            <Skeleton className={`${styles.calories} textNoWrap`} width="28%" height={28} radius={999} />
           </div>
         </div>
 

@@ -321,7 +321,7 @@ function RecommendResultSkeleton() {
                   <div className={styles.metaRow}>
                     <Skeleton width="30%" height={16} radius={999} />
                     <Skeleton width="26%" height={16} radius={999} />
-                    <Skeleton className={styles.calories} width="26%" height={22} radius={999} />
+                    <Skeleton className={`${styles.calories} textNoWrap`} width="26%" height={22} radius={999} />
                   </div>
                 </div>
               </div>

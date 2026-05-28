@@ -201,7 +201,7 @@ function RecommendDetailSkeleton() {
             <Skeleton width={80} height={16} radius={999} />
             <Skeleton width={110} height={16} radius={999} />
           </div>
-          <Skeleton className={styles.caloriesText} width={96} height={28} radius={999} />
+          <Skeleton className={`${styles.caloriesText} textNoWrap`} width={96} height={28} radius={999} />
         </div>
         <Skeleton width={64} height={24} radius={4} />
       </section>

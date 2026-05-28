@@ -1903,9 +1903,8 @@ function FeedbackSection({
                   key={`${menu.menu_id}-${menu.input_menu_name}-${index}`}
                   className={styles.feedbackMenuItem}
                 >
-                  <div>
-                    <p className={`${styles.feedbackMenuItemName} typo-body3`}>{menu.menu_name}</p>
-                  </div>
+                  <p className={`${styles.feedbackMenuItemName} typo-body3`}>{menu.menu_name}</p>
+
                   <span className={`${styles.feedbackMenuItemCalories} textNoWrap typo-body3`}>
                     {formatNumberWithMaxOneDecimal(menu.calories)}kcal
                   </span>
@@ -2092,9 +2091,7 @@ function getMergedMealRecordPayload(
   wasAdded: boolean;
 } {
   const time = mealRecord?.time ?? getFallbackMealTime(chatItem);
-  const previousMenus = mealRecord
-    ? mealRecord.menus
-    : getSelectedDiaryMenusByTime(dayMeals, time);
+  const previousMenus = mealRecord ? mealRecord.menus : getSelectedDiaryMenusByTime(dayMeals, time);
   const candidateMenus = getUniqueMealRecordMenus(mealRecordMenus);
   const candidateMenuIds = candidateMenus.map((menu) => menu.menu_id);
   const nextSelectedMenus = getSelectedDiaryMenusFromCandidateMenus(candidateMenus);

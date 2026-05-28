@@ -121,7 +121,6 @@
 
 .calories {
   color: var(--label-normal);
-  flex-shrink: 0;
 }
 
 .brand {

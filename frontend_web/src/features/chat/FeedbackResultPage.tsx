@@ -602,7 +602,7 @@ function FeedbackResultSkeleton() {
                   <Skeleton width="34%" height={16} radius={999} />
                   <div className={styles.metaRow}>
                     <Skeleton width="38%" height={16} radius={999} />
-                    <Skeleton className={styles.calories} width="28%" height={22} radius={999} />
+                    <Skeleton className={`${styles.calories} textNoWrap`} width="28%" height={22} radius={999} />
                   </div>
                 </div>
               </div>
