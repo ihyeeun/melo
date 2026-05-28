@@ -1,3 +1,4 @@
+import { resolveApiErrorMessage } from "@/shared/api/apiErrorMessage";
 import { isNativeApp, requestToApp } from "@/shared/api/bridge/nativeBridge";
 import {
   type ApiFailResponse,
@@ -214,7 +215,7 @@ export class AppApiError extends Error {
   error: string;
 
   constructor(payload: ApiFailResponse) {
-    super(payload.message);
+    super(resolveApiErrorMessage(payload));
     this.name = "AppApiError";
     this.statusCode = payload.statusCode;
     this.error = payload.error;

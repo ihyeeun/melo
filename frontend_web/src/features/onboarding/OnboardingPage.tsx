@@ -9,6 +9,7 @@ import {
 import { useRegisterUserInfoMutation } from "@/features/onboarding/hooks/mutations/useRegisterUserInfoMutation";
 import styles from "@/features/onboarding/styles/OnboardingPage.module.css";
 import { PATH } from "@/router/path";
+import { API_ERROR_MESSAGE } from "@/shared/api/apiErrorMessage";
 import { AppApiError } from "@/shared/api/appApi";
 import { isNativeApp, syncAppTab } from "@/shared/api/bridge/nativeBridge";
 import { Button } from "@/shared/commons/button/Button";
@@ -21,7 +22,6 @@ import { getOnboardingSteps, STEP_COMPONENTS } from "./components/steps/steps";
 import type { OnboardingData, StepId } from "./onboarding.types";
 
 type RegisterUserInfoErrorResolution = {
-  message: string;
   openNutrientTotalModal?: boolean;
   shouldGoHome?: boolean;
   stepId?: StepId;
@@ -29,66 +29,68 @@ type RegisterUserInfoErrorResolution = {
 
 function resolveRegisterUserInfoError(error: Error): RegisterUserInfoErrorResolution {
   if (!(error instanceof AppApiError)) {
-    return {
-      message: "회원 정보 등록에 실패했어요",
-    };
+    return {};
   }
 
-  if (error.statusCode === 400 && error.message === "ratio sum must be 100") {
+  if (error.statusCode === 400 && error.message === API_ERROR_MESSAGE.NUTRIENT_RATIO_TOTAL) {
     return {
-      message: "탄단지 비율의 합을 100으로 맞춰주세요",
       openNutrientTotalModal: true,
       stepId: "nutrient",
     };
   }
 
-  if (error.statusCode === 400 && error.message === "Subscription code is not active") {
+  if (
+    error.statusCode === 400 &&
+    error.message === API_ERROR_MESSAGE.SUB_CODE_INACTIVE
+  ) {
     return {
-      message: "사용 기간이 지났거나 비활성화된 구독 코드예요",
       stepId: "subscribedCode",
     };
   }
 
   if (
     error.statusCode === 403 &&
-    error.message === "Not a member of the USER (only USER can call this api)"
+    error.message === API_ERROR_MESSAGE.USER_AUTH_REQUIRED
   ) {
-    return {
-      message: "회원 인증이 필요해요. 다시 로그인해주세요",
-    };
+    return {};
   }
 
-  if (error.statusCode === 404 && error.message === "Subscription code not found") {
+  if (error.statusCode === 404 && error.message === API_ERROR_MESSAGE.SUB_CODE_NOT_FOUND) {
     return {
-      message: "존재하지 않는 구독 코드예요",
       stepId: "subscribedCode",
     };
   }
 
-  if (error.statusCode === 409 && error.message === "Your profile already exists") {
+  if (error.statusCode === 409 && error.message === API_ERROR_MESSAGE.PROFILE_ALREADY_EXISTS) {
     return {
-      message: "이미 등록된 프로필이 있어요",
       shouldGoHome: true,
     };
   }
 
-  if (error.statusCode === 409 && error.message === "Your subCode already exists") {
+  if (error.statusCode === 409 && error.message === API_ERROR_MESSAGE.SUB_CODE_ALREADY_EXISTS) {
     return {
-      message: "이미 등록한 구독 코드예요",
       stepId: "subscribedCode",
     };
   }
 
-  if (error.statusCode === 409 && error.message === "Subscription code usage limit exceeded") {
+  if (
+    error.statusCode === 409 &&
+    error.message === API_ERROR_MESSAGE.SUB_CODE_LIMIT_EXCEEDED
+  ) {
     return {
-      message: "사용 한도가 초과된 구독 코드예요",
       stepId: "subscribedCode",
     };
   }
 
-  return {
-    message: "회원 정보 등록에 실패했어요",
-  };
+  return {};
+}
+
+function resolveRegisterUserInfoErrorMessage(error: Error) {
+  if (error instanceof AppApiError) {
+    return error.message;
+  }
+
+  return API_ERROR_MESSAGE.DEFAULT;
 }
 
 function isBodyRangeValid(data: OnboardingData) {
@@ -131,7 +133,7 @@ export default function OnboardingPage() {
     onError: (error) => {
       const resolved = resolveRegisterUserInfoError(error);
 
-      toast.warning(resolved.message);
+      toast.warning(resolveRegisterUserInfoErrorMessage(error));
 
       if (resolved.openNutrientTotalModal) {
         setIsNutrientTotalModalOpen(true);
@@ -240,7 +242,7 @@ export default function OnboardingPage() {
         open={isNutrientTotalModalOpen}
         onOpenChange={setIsNutrientTotalModalOpen}
         title="영양소 비율 확인"
-        description="탄단지 비율의 합을 100으로 맞춰주세요"
+        description={API_ERROR_MESSAGE.NUTRIENT_RATIO_TOTAL}
       />
     </div>
   );
