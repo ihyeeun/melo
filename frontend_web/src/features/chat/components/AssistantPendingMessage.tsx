@@ -1,20 +1,17 @@
 import { useEffect, useState } from "react";
 
 import styles from "@/features/chat/styles/AssistantPendingMessage.module.css";
-import { useGetProfileQuery } from "@/features/profile/hooks/queries/useProfileQuery";
 
 const LONG_WAIT_DELAY_MS = 5000;
 const LONG_WAIT_TRANSITION_MS = 320;
 const STATUS_ROTATE_INTERVAL_MS = 5000;
 
-const PENDING_STATUS_MESSAGE_COUNT = 3;
+const PENDING_STATUS_MESSAGE_COUNT = 4;
 
 export function AssistantPendingMessage() {
-  const { data: profile } = useGetProfileQuery();
   const [isLongWaitVisible, setIsLongWaitVisible] = useState(false);
   const [isTypingVisible, setIsTypingVisible] = useState(true);
   const [messageIndex, setMessageIndex] = useState(0);
-  const displayNickname = profile?.nickname.trim() || "사용자";
 
   useEffect(() => {
     let transitionTimerId: number | undefined;
@@ -72,7 +69,7 @@ export function AssistantPendingMessage() {
             <span className={styles.longWaitDot} />
           </div>
           <p key={messageIndex} className={`${styles.longWaitText} typo-body3`}>
-            {getPendingStatusMessage(messageIndex, displayNickname)}
+            {getPendingStatusMessage(messageIndex)}
           </p>
         </div>
       ) : null}
@@ -80,13 +77,15 @@ export function AssistantPendingMessage() {
   );
 }
 
-function getPendingStatusMessage(index: number, nickname: string) {
+function getPendingStatusMessage(index: number) {
   switch (index) {
     case 1:
-      return `${nickname}님을 위한\n최적의 메뉴를 찾는 중이에요`;
+      return `필요한 내용을 정리하고 있어요`;
     case 2:
-      return "답변을 준비하고 있어요";
+      return "답변을 준비 중이에요";
+    case 3:
+      return "더 정확한 답변을 위해 확인하고 있어요";
     default:
-      return "영양성분을 꼼꼼히 분석하고 있어요";
+      return "꼼꼼하게 살펴보고 있어요";
   }
 }
