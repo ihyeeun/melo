@@ -15,7 +15,9 @@ import { initInputCharacterRestriction } from "@/shared/utils/inputCharacterRest
 
 function getCurrentPathname() {
   if (typeof window === "undefined") return PATH.ROOT;
-  return window.location.pathname;
+  const pathname = window.location.pathname;
+
+  return pathname !== PATH.ROOT && pathname.endsWith("/") ? pathname.slice(0, -1) : pathname;
 }
 
 export default function App() {

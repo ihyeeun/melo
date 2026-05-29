@@ -2,7 +2,7 @@ export const PATH = {
   ROOT: "/",
   HOME: "/home",
   KAKAO_WEB_LOGIN: "/auth/kakao/login",
-  KAKAO_WEB_CALLBACK: "/userAuth/kakao/web/callback",
+  KAKAO_WEB_CALLBACK: "/auth/kakao/callback",
   TODAY_MEAL_SCORE: "/home/date-meal-score",
   ONBOARDING: "/onboarding",
   RECOMMEND: "/recommend",
