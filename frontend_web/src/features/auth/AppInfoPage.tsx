@@ -15,19 +15,19 @@ function isAndroid() {
   return /Android/.test(window.navigator.userAgent);
 }
 
-function getInstallUrl() {
+function getInstallUrl(): string | null {
   const iosStoreUrl = import.meta.env.VITE_IOS_APP_STORE_URL;
   const androidStoreUrl = import.meta.env.VITE_ANDROID_PLAY_STORE_URL || DEFAULT_ANDROID_STORE_URL;
   const commonDownloadUrl = import.meta.env.VITE_APP_DOWNLOAD_URL;
 
-  if (isIos()) return iosStoreUrl || commonDownloadUrl || window.location.origin;
+  if (isIos()) return iosStoreUrl || commonDownloadUrl || null;
   if (isAndroid()) return androidStoreUrl || commonDownloadUrl || window.location.origin;
 
-  return commonDownloadUrl || iosStoreUrl || androidStoreUrl || window.location.origin;
+  return commonDownloadUrl || iosStoreUrl || androidStoreUrl || null;
 }
 
-function getAppOpenUrl(installUrl: string) {
-  if (!isAndroid()) return APP_SCHEME_URL;
+function getAppOpenUrl(installUrl: string | null) {
+  if (!isAndroid() || installUrl === null) return APP_SCHEME_URL;
 
   return [
     "intent://open",
@@ -43,14 +43,17 @@ function openAppOrInstall() {
   const installUrl = getInstallUrl();
   const appOpenUrl = getAppOpenUrl(installUrl);
 
-  const fallbackTimer = window.setTimeout(() => {
-    if (!document.hidden) {
-      window.location.assign(installUrl);
-    }
-  }, APP_OPEN_FALLBACK_DELAY_MS);
+  const fallbackTimer =
+    installUrl === null
+      ? null
+      : window.setTimeout(() => {
+          if (!document.hidden) {
+            window.location.assign(installUrl);
+          }
+        }, APP_OPEN_FALLBACK_DELAY_MS);
 
   const clearFallback = () => {
-    if (document.hidden) {
+    if (document.hidden && fallbackTimer !== null) {
       window.clearTimeout(fallbackTimer);
       document.removeEventListener("visibilitychange", clearFallback);
     }
@@ -60,11 +63,13 @@ function openAppOrInstall() {
   window.location.assign(appOpenUrl);
 }
 
-function openInstallPage() {
-  window.location.assign(getInstallUrl());
+function openInstallPage(installUrl: string) {
+  window.location.assign(installUrl);
 }
 
 export default function AppInfoPage() {
+  const installUrl = getInstallUrl();
+
   return (
     <main className={styles.loginContainer}>
       <div className={styles.phoneFrame}>
@@ -79,9 +84,15 @@ export default function AppInfoPage() {
             <Button fullWidth onClick={openAppOrInstall}>
               앱에서 계속하기
             </Button>
-            <button className={styles.storeLinkButton} type="button" onClick={openInstallPage}>
-              앱이 안 열리나요? 스토어에서 설치하기
-            </button>
+            {installUrl !== null ? (
+              <button
+                className={styles.storeLinkButton}
+                type="button"
+                onClick={() => openInstallPage(installUrl)}
+              >
+                앱이 안 열리나요? 스토어에서 설치하기
+              </button>
+            ) : null}
           </section>
 
           <img src="/login/login-image.svg" alt="logo" />

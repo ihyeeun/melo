@@ -24,10 +24,21 @@ import {
 
 const StackComponent = getStackflowStackComponent();
 
+const PROFILE_SYNC_EXCLUDED_PATHS = new Set([PATH.ONBOARDING, PATH.APP_INFO]);
+
+function normalizePathname(pathname: string) {
+  if (pathname === "/") return pathname;
+  return pathname.endsWith("/") ? pathname.slice(0, -1) : pathname;
+}
+
+function shouldFetchProfileForCurrentPath() {
+  if (typeof window === "undefined") return true;
+
+  return !PROFILE_SYNC_EXCLUDED_PATHS.has(normalizePathname(window.location.pathname));
+}
+
 function useSyncFeatureGuardFromProfile() {
-  const isOnboardingPath =
-    typeof window !== "undefined" && window.location.pathname === PATH.ONBOARDING;
-  const shouldFetchProfile = !isOnboardingPath;
+  const shouldFetchProfile = shouldFetchProfileForCurrentPath();
   const { data: profile, isError } = useGetProfileQuery({ enabled: shouldFetchProfile });
   const isSubscribed = profile?.is_subscribed;
 
@@ -46,9 +57,8 @@ function useSyncTargetsFromProfile() {
   const hasTargetsLoaded = useTargetsLoadedState();
   const targets = useTargetsState();
   const setTargets = useSetTargets();
-  const isOnboardingPath =
-    typeof window !== "undefined" && window.location.pathname === PATH.ONBOARDING;
-  const shouldFetchProfile = hasTargetsLoaded && !targets && isNativeApp() && !isOnboardingPath;
+  const shouldFetchProfile =
+    hasTargetsLoaded && !targets && isNativeApp() && shouldFetchProfileForCurrentPath();
   const { data: profile } = useGetProfileQuery({ enabled: shouldFetchProfile });
 
   useEffect(() => {
