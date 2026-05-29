@@ -1,6 +1,6 @@
 import "./App.css";
 
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 
 import KakaoWebCallbackPage from "@/features/auth/KakaoWebCallbackPage";
 import KakaoWebLoginPage from "@/features/auth/KakaoWebLoginPage";
@@ -9,9 +9,14 @@ import { initAnalytics, track } from "@/shared/analytics/analytics";
 import { EVENT_NAME } from "@/shared/analytics/analytics.constants";
 import { initNativeBridgeListener } from "@/shared/api/bridge/nativeBridge";
 import { syncFeatureGuardStateToApp } from "@/shared/guards/featureGuard";
-import { StackflowRuntime } from "@/shared/navigation/StackflowRuntime";
 import { initContentInteractionGuard } from "@/shared/utils/contentInteractionGuard";
 import { initInputCharacterRestriction } from "@/shared/utils/inputCharacterRestriction";
+
+const StackflowRuntime = lazy(() =>
+  import("@/shared/navigation/StackflowRuntime").then((module) => ({
+    default: module.StackflowRuntime,
+  })),
+);
 
 function getCurrentPathname() {
   if (typeof window === "undefined") return PATH.ROOT;
@@ -68,7 +73,9 @@ export default function App() {
 
   return (
     <div className="app-container">
-      <StackflowRuntime />
+      <Suspense fallback={null}>
+        <StackflowRuntime />
+      </Suspense>
     </div>
   );
 }
