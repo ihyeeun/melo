@@ -289,10 +289,11 @@ export default function ChatPage() {
     todayMealQueryIndex >= 0 ? (dayMealQueries[todayMealQueryIndex]?.isPending ?? false) : false;
   const editingMealRecordMenus = editingMealRecordContext?.menus ?? [];
 
-  const hasTimelineContent = timelineItems.length > 0 || pendingInput !== null;
-  const isTypingPending = pendingInput !== null && isSendPending;
+  const isAwaitingChatResponse = pendingInput !== null;
+  const hasTimelineContent = timelineItems.length > 0 || isAwaitingChatResponse;
+  const isTypingPending = isAwaitingChatResponse && isSendPending;
   const isInputEmpty = inputValue.trim().length === 0;
-  const isQuickActionVisible = isInputEmpty && !isInputFocused;
+  const isQuickActionVisible = isInputEmpty && !isInputFocused && !isAwaitingChatResponse;
   const isScrollToBottomButtonVisible = hasTimelineContent && isScrolledAwayFromBottom;
   const isFloatingButtonVisible =
     !isInputFocused && (isQuickActionVisible || isScrollToBottomButtonVisible);
@@ -551,6 +552,7 @@ export default function ChatPage() {
       saveCameraHintDismissedInSession();
     }
 
+    setIsCameraActionMenuOpen(false);
     setLocalResponseChatItem(null);
     prepareChatResponseScroll();
     setPendingInput(text);
@@ -989,7 +991,7 @@ export default function ChatPage() {
     <div className={styles.page}>
       <PageHeader onBack={handleBack} />
 
-      {isCameraActionMenuOpen && !isScrollToBottomButtonVisible ? (
+      {isCameraActionMenuOpen && isQuickActionVisible && !isScrollToBottomButtonVisible ? (
         <button
           type="button"
           className={styles.floatingCameraBackdrop}
@@ -1269,7 +1271,7 @@ export default function ChatPage() {
           </div>
         )}
         <div>
-          {!isInputFocused && (
+          {!isInputFocused && !isAwaitingChatResponse && (
             <section className={`${styles.chipSection}`}>
               {QUICK_CHIP_LIST.map((chip) => (
                 <button
