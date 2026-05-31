@@ -194,13 +194,19 @@
   flex-direction: column;
   height: min(40px, 100%);
   justify-content: center;
+  position: relative;
   width: min(40px, 100%);
 }
 
 .calendar-dots {
   align-items: center;
+  bottom: 4px;
   display: flex;
+  height: 4px;
   justify-content: center;
+  left: 0;
+  position: absolute;
+  right: 0;
   width: 100%;
 }
 
