@@ -47,6 +47,12 @@
   color: var(--label-assistive);
 }
 
+.input::-webkit-search-cancel-button,
+.input::-webkit-search-decoration {
+  appearance: none;
+  -webkit-appearance: none;
+}
+
 .input:focus {
   outline: none;
 }
