@@ -1441,8 +1441,6 @@ function ChatHistorySkeleton() {
 }
 
 function AssistantMessageBubbles({ message, timeText }: { message: string; timeText?: string }) {
-  const displayMessage = message.replace(/\n/g, "\n\n");
-
   return (
     <p
       className={`${styles.assistantBubble} ${
@@ -1450,7 +1448,7 @@ function AssistantMessageBubbles({ message, timeText }: { message: string; timeT
       } typo-body2`}
       data-time={timeText}
     >
-      {displayMessage}
+      {message}
     </p>
   );
 }
