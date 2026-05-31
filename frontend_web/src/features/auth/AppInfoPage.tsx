@@ -75,8 +75,13 @@ export default function AppInfoPage() {
       <div className={styles.phoneFrame}>
         <div className={styles.loginWrapper}>
           <section className={styles.imageSection}>
-            <img src="/login/login-logo.svg" alt="logo" height={70} />
-            <img src="/login/login-image.png" alt="logo" className={styles.loginImage} />
+            <img src="/login/login-logo.svg" height={70} alt="" aria-hidden="true" />
+            <img
+              src="/login/login-image.png"
+              className={styles.loginImage}
+              alt=""
+              aria-hidden="true"
+            />
           </section>
 
           <section className={styles.loginActions}>

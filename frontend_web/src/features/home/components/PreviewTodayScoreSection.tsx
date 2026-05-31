@@ -108,7 +108,7 @@ export default function PreviewTodayScoreSection({ selectedDate }: { selectedDat
     <ActionCard className={style.content} onClick={handleTodayMealScoreClick}>
       <section className={style.scoreContainer}>
         <div className={style.scoreText}>
-          <img src="/icons/face-2.svg" width={50} />
+          <img src="/icons/face-2.svg" width={50} alt="" aria-hidden="true" />
           <span className={`typo-title1`}>{score ?? "--"}점</span>
         </div>
         {!isTargetInfoPending ? (
