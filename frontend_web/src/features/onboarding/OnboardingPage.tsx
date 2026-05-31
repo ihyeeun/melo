@@ -19,8 +19,8 @@ import { CheckButtonModal } from "@/shared/commons/modals/CheckButtonModal";
 import { toast } from "@/shared/commons/toast/toast";
 import { useNavigate } from "@/shared/navigation/stackflowNavigation";
 
-import { getOnboardingSteps, STEP_COMPONENTS } from "./components/steps/steps";
-import type { OnboardingData, StepId } from "./onboarding.types";
+import { getOnboardingSteps } from "./components/steps/steps";
+import type { OnboardingData, StepId, UserInfoRequest } from "./onboarding.types";
 
 type RegisterUserInfoErrorResolution = {
   openNutrientTotalModal?: boolean;
@@ -42,20 +42,17 @@ function resolveRegisterUserInfoError(error: Error): RegisterUserInfoErrorResolu
 
   if (error.message === API_ERROR_MESSAGE.SUB_CODE_INACTIVE) {
     return {
-      stepId: "subscribedCode",
+      stepId: "subCode",
     };
   }
 
-  if (
-    error.statusCode === 403 &&
-    error.message === API_ERROR_MESSAGE.USER_AUTH_REQUIRED
-  ) {
+  if (error.statusCode === 403 && error.message === API_ERROR_MESSAGE.USER_AUTH_REQUIRED) {
     return {};
   }
 
   if (error.message === API_ERROR_MESSAGE.SUB_CODE_NOT_FOUND) {
     return {
-      stepId: "subscribedCode",
+      stepId: "subCode",
     };
   }
 
@@ -67,13 +64,13 @@ function resolveRegisterUserInfoError(error: Error): RegisterUserInfoErrorResolu
 
   if (error.message === API_ERROR_MESSAGE.SUB_CODE_ALREADY_EXISTS) {
     return {
-      stepId: "subscribedCode",
+      stepId: "subCode",
     };
   }
 
   if (error.message === API_ERROR_MESSAGE.SUB_CODE_LIMIT_EXCEEDED) {
     return {
-      stepId: "subscribedCode",
+      stepId: "subCode",
     };
   }
 
@@ -197,7 +194,7 @@ export default function OnboardingPage() {
       return;
     }
 
-    const registerUserInfoPayload = {
+    const registerUserInfoPayload: UserInfoRequest = {
       gender: userData.gender!,
       birthYear: userData.birthYear!,
       height: userData.height!,
@@ -206,15 +203,20 @@ export default function OnboardingPage() {
       goal: userData.goal!,
       target_weight: userData.target_weight!,
       target_calories: userData.target_calories!,
-      target_ratio: [userData.carbs!, userData.protein!, userData.fat!] as [
-        number,
-        number,
-        number,
-      ],
+      target_ratio: [
+        userData.carbs!,
+        userData.protein!,
+        userData.fat!,
+      ] as UserInfoRequest["target_ratio"],
+      diet_management_status: userData.diet_management_status ?? 0,
+      persona_type: userData.persona_type ?? 0,
+      eating_out_freq_weekly: userData.eating_out_freq_weekly ?? 0,
+      job_type: userData.job_type ?? 0,
+      lunch_location: userData.lunch_location ?? 0,
     };
 
     if (isWebOnboarding) {
-      const subCode = userData.subscribedCode?.trim() ?? "";
+      const subCode = userData.subCode?.trim() ?? "";
       const webRegisterUserInfoPayload = {
         ...registerUserInfoPayload,
         subCode,
@@ -238,7 +240,7 @@ export default function OnboardingPage() {
     }
   };
 
-  const StepComponent = STEP_COMPONENTS[step.id];
+  const StepComponent = step.component;
 
   const onboardingContent = (
     <div className={styles.page}>

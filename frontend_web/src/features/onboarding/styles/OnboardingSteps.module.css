@@ -285,15 +285,34 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
-  padding: 0 20px 16px;
+  padding: 0 20px;
 }
 
 .onboardingBirthYearPicker {
   --wheel-highlight-height: 72px;
 
   flex: 1;
-  height: 320px;
-  min-height: 320px;
+}
+
+.onboardingChipGroup {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 24px;
+}
+
+.onboardingChoiceChip {
+  background: var(--onboarding-card-bg, var(--bg-white));
+  border: 1px solid var(--onboarding-muted-border, var(--border-neutral));
+  border-radius: 100px;
+  color: var(--label-normal);
+  cursor: pointer;
+  padding: 8px 16px;
+}
+
+.onboardingChoiceChipActive {
+  background: var(--interaction-primary);
+  border-color: var(--border-primary);
 }
 
 .onboardingStepReadable .onboardingBodyList {
@@ -358,10 +377,6 @@
 .onboardingNutrientUnit,
 .onboardingNutrientInput {
   color: var(--label-normal);
-  font-size: 16px;
-  font-weight: var(--fw-bold);
-  letter-spacing: var(--letter-spacing-normal);
-  line-height: var(--line-height-140);
 }
 
 .textPrimary {

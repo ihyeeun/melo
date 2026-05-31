@@ -18,8 +18,8 @@ export default function StepSubscribedCode({ data, update }: StepComponentProps)
           placeholder="구독코드"
           aria-label="구독 코드"
           className={`input ${styles.onboardingSubscribeInput}`}
-          value={data.subscribedCode ?? ""}
-          onChange={(e) => update({ subscribedCode: e.target.value })}
+          value={data.subCode ?? ""}
+          onChange={(e) => update({ subCode: e.target.value })}
         />
       </Field.Root>
     </section>

@@ -59,6 +59,7 @@ p {
   min-width: 0;
   overflow-wrap: anywhere;
   word-break: keep-all;
+  white-space: pre-line;
 }
 
 h1,

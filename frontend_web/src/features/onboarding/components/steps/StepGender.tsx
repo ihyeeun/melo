@@ -89,7 +89,7 @@ export default function StepGender({ data, update }: StepComponentProps) {
               value={String(draftBirthYear)}
               options={birthYearOptions}
               suffix="년"
-              height={450}
+              height={400}
               itemHeight={80}
               onChange={(value) => setDraftBirthYear(Number(value))}
             />
