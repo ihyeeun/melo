@@ -1,6 +1,7 @@
+import { useActivity } from "@stackflow/react";
 import { useQueries } from "@tanstack/react-query";
 import type { FormEvent, KeyboardEvent, MouseEvent } from "react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 
 import { AssistantPendingMessage } from "@/features/chat/components/AssistantPendingMessage";
 import {
@@ -177,6 +178,7 @@ function saveCameraHintDismissedInSession() {
 
 export default function ChatPage() {
   const navigate = useNavigate();
+  const { isTop } = useActivity();
   const todayDateKey = getTodayFormatDateKey();
   const mainRef = useRef<HTMLElement>(null);
   const endAnchorRef = useRef<HTMLDivElement>(null);
@@ -185,6 +187,8 @@ export default function ChatPage() {
   const pendingChatResponseAfterIdRef = useRef<number | null>(null);
   const pendingMealRecordScrollKeyRef = useRef<string | null>(null);
   const skipNextAutoBottomScrollRef = useRef(false);
+  const hiddenScrollTopSnapshotRef = useRef<number | null>(null);
+  const previousIsTopRef = useRef(isTop);
   const wasQuickActionVisibleRef = useRef(false);
 
   const [inputValue, setInputValue] = useState("");
@@ -385,6 +389,29 @@ export default function ChatPage() {
     [cancelTimelineScroll],
   );
 
+  useLayoutEffect(() => {
+    const main = mainRef.current;
+    const wasTop = previousIsTopRef.current;
+    previousIsTopRef.current = isTop;
+
+    if (!main) {
+      return;
+    }
+
+    if (wasTop && !isTop) {
+      hiddenScrollTopSnapshotRef.current = main.scrollTop;
+      return;
+    }
+
+    if (!wasTop && isTop && hiddenScrollTopSnapshotRef.current !== null) {
+      const maxScrollTop = Math.max(0, main.scrollHeight - main.clientHeight);
+      main.scrollTop = Math.min(hiddenScrollTopSnapshotRef.current, maxScrollTop);
+      hiddenScrollTopSnapshotRef.current = null;
+      skipNextAutoBottomScrollRef.current = true;
+      updateIsScrolledAwayFromBottom();
+    }
+  }, [isTop, updateIsScrolledAwayFromBottom]);
+
   useEffect(() => {
     if (
       pendingMealRecordScrollKeyRef.current !== null ||
@@ -394,8 +421,18 @@ export default function ChatPage() {
       return;
     }
 
+    if (!isTop) {
+      updateIsScrolledAwayFromBottom();
+      return;
+    }
+
     if (skipNextAutoBottomScrollRef.current) {
       skipNextAutoBottomScrollRef.current = false;
+      updateIsScrolledAwayFromBottom();
+      return;
+    }
+
+    if (isScrolledAwayFromBottom) {
       updateIsScrolledAwayFromBottom();
       return;
     }
@@ -406,10 +443,16 @@ export default function ChatPage() {
     });
 
     updateIsScrolledAwayFromBottom();
-  }, [timelineScrollTarget, timelineSignature, updateIsScrolledAwayFromBottom]);
+  }, [
+    isScrolledAwayFromBottom,
+    isTop,
+    timelineScrollTarget,
+    timelineSignature,
+    updateIsScrolledAwayFromBottom,
+  ]);
 
   useEffect(() => {
-    if (!timelineScrollTarget || typeof window === "undefined") {
+    if (!isTop || !timelineScrollTarget || typeof window === "undefined") {
       return;
     }
 
@@ -459,6 +502,7 @@ export default function ChatPage() {
     };
   }, [
     cancelTimelineScroll,
+    isTop,
     timelineScrollTarget,
     timelineSignature,
     updateIsScrolledAwayFromBottom,
@@ -497,6 +541,7 @@ export default function ChatPage() {
   useEffect(() => {
     if (
       pendingInput === null ||
+      !isTop ||
       pendingMealRecordScrollKeyRef.current !== null ||
       timelineScrollTarget !== null
     ) {
@@ -507,7 +552,7 @@ export default function ChatPage() {
       behavior: "smooth",
       block: "end",
     });
-  }, [pendingInput, timelineScrollTarget]);
+  }, [isTop, pendingInput, timelineScrollTarget]);
 
   useEffect(() => {
     updateIsScrolledAwayFromBottom();
@@ -528,10 +573,12 @@ export default function ChatPage() {
   }, [updateIsScrolledAwayFromBottom]);
 
   useEffect(() => {
-    const becameQuickActionVisible = isQuickActionVisible && !wasQuickActionVisibleRef.current;
+    const becameQuickActionVisible =
+      isTop && isQuickActionVisible && !wasQuickActionVisibleRef.current;
     wasQuickActionVisibleRef.current = isQuickActionVisible;
 
     if (
+      !isTop ||
       !becameQuickActionVisible ||
       isScrolledAwayFromBottom ||
       pendingMealRecordScrollKeyRef.current !== null ||
@@ -557,6 +604,7 @@ export default function ChatPage() {
       window.clearTimeout(timeoutId);
     };
   }, [
+    isTop,
     isQuickActionVisible,
     isScrolledAwayFromBottom,
     timelineScrollTarget,
