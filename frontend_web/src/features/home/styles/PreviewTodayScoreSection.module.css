@@ -2,7 +2,7 @@
   display: flex;
   flex-direction: column;
   background-color: var(--bg-primary-2);
-  gap: 10px;
+  gap: 16px;
   padding: 24px 20px;
   border: none;
 }
@@ -10,25 +10,27 @@
 .scoreContainer {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  width: 100%;
-}
-
-.scoreTextContainer {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+  gap: 4px;
+  background-color: var(--bg-white);
+  border-radius: 8px;
+  padding: 12px 24px;
+  align-items: center;
 }
 
 .scoreText {
   align-items: center;
   display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
+  gap: 16px;
 }
 
 .score {
   color: var(--label-primary);
+}
+
+.caloriesContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .calorieText {
@@ -38,22 +40,17 @@
   gap: 4px;
 }
 
-.dividerContainer {
-  height: 24px;
-  background-color: var(--static-white);
-  width: 1px;
-}
-
-.badgeContentContainer {
-  background-color: var(--bg-white);
-  border-radius: 100px;
-  color: var(--label-alternative);
-  padding: 6px 16px;
-  white-space: nowrap;
-  width: fit-content;
+.skeletonContent {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
 .icon {
   margin-left: auto;
   color: var(--interaction-normal);
+}
+
+.textAssistive {
+  color: var(--label-assistive);
 }

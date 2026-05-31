@@ -1,12 +1,8 @@
-import { useQueryClient } from "@tanstack/react-query";
-import type { ReactNode } from "react";
 import { useEffect } from "react";
 
 import ActionCard from "@/features/home/components/cards/ActionCard";
-import { queryKeys } from "@/features/home/hooks/queries/queryKey";
 import { useDayMealsQuery } from "@/features/home/hooks/queries/useDayMealsQuery";
 import style from "@/features/home/styles/PreviewTodayScoreSection.module.css";
-import type { DayMealSummary } from "@/features/home/utils/dayMealSummary";
 import {
   getCalorieSummary,
   hasValidTargets,
@@ -32,12 +28,7 @@ import {
 export default function PreviewTodayScoreSection({ selectedDate }: { selectedDate: string }) {
   const navigation = useNavigate();
 
-  const { isPending: isSummaryPending } = useDayMealsQuery(selectedDate);
-
-  const queryClient = useQueryClient();
-  const dayMealSummary = queryClient.getQueryData<DayMealSummary>(
-    queryKeys.dayMeals.byDate(selectedDate),
-  );
+  const { data: dayMealSummary, isPending: isSummaryPending } = useDayMealsQuery(selectedDate);
 
   const targets = useTargetsState();
   const setTargets = useSetTargets();
@@ -93,14 +84,15 @@ export default function PreviewTodayScoreSection({ selectedDate }: { selectedDat
       return;
     }
 
-    if (score === null || !dayMealSummary) {
-      // TODO 새로고침하거나 그런 동작을 넣어야할거같은데
+    if (!dayMealSummary) {
       return;
     }
 
+    const scoreForNavigation = nutritionMetrics?.score.totalScore ?? 0;
+
     navigation(PATH.TODAY_MEAL_SCORE, {
       state: {
-        score,
+        score: scoreForNavigation,
         targets: targets,
         currents: dayMealSummary,
         calorieMessage: calorieSummary.message,
@@ -114,44 +106,36 @@ export default function PreviewTodayScoreSection({ selectedDate }: { selectedDat
 
   return (
     <ActionCard className={style.content} onClick={handleTodayMealScoreClick}>
-      <div className={style.scoreContainer}>
-        <div className={style.scoreTextContainer}>
-          <div className={style.scoreText}>
-            <p className={`${style.calorieText} textNoWrap typo-title2`}>
-              <span className={`${style.score} typo-h2`}>
-                {calorieSummary.roundedCurrentCalories.toLocaleString("ko-KR")}
-              </span>
-              {"/ "}
-              {calorieSummary.roundedTargetCalories !== null
-                ? calorieSummary.roundedTargetCalories.toLocaleString("ko-KR")
-                : "--"}{" "}
-              kcal
-            </p>
-
-            <div className={style.dividerContainer} />
-
-            <span className={`typo-title2`}>{score ?? "--"}점</span>
-
-            <SystemIcon name="chevron-right-normal" size={24} className={style.icon} />
-          </div>
-
-          <ScoreProgress
-            value={
-              nutritionMetrics?.calorieProgressPercent ??
-              getCalorieProgressPercent(dayMealSummary?.totalCalories || 0, targetCalories ?? 0)
-            }
-            variant={isCalorieExceeded ? "danger-white" : "primary-white"}
-          />
+      <section className={style.scoreContainer}>
+        <div className={style.scoreText}>
+          <img src="/icons/face-2.svg" width={50} />
+          <span className={`typo-title1`}>{score ?? "--"}점</span>
         </div>
+        {!isTargetInfoPending ? (
+          <p className={`typo-body3 ${style.textAssistive}`}>{calorieSummary.message}</p>
+        ) : null}
+      </section>
 
-        {isTargetInfoPending ? (
-          <div className={style.badgeContentContainer}>
-            <Skeleton width={154} height={18} radius={999} />
-          </div>
-        ) : (
-          <Badge>{calorieSummary.message}</Badge>
-        )}
-      </div>
+      <section className={style.caloriesContainer}>
+        <p className={`${style.calorieText} textNoWrap typo-title2`}>
+          <span className={`${style.score} typo-h2`}>
+            {calorieSummary.roundedCurrentCalories.toLocaleString("ko-KR")}
+          </span>
+          {"/ "}
+          {calorieSummary.roundedTargetCalories !== null
+            ? calorieSummary.roundedTargetCalories.toLocaleString("ko-KR")
+            : "--"}{" "}
+          kcal
+          <SystemIcon name="chevron-right-normal" size={24} className={style.icon} />
+        </p>
+        <ScoreProgress
+          value={
+            nutritionMetrics?.calorieProgressPercent ??
+            getCalorieProgressPercent(dayMealSummary?.totalCalories || 0, targetCalories ?? 0)
+          }
+          variant={isCalorieExceeded ? "danger-white" : "primary-white"}
+        />
+      </section>
     </ActionCard>
   );
 }
@@ -159,30 +143,23 @@ export default function PreviewTodayScoreSection({ selectedDate }: { selectedDat
 function PreviewTodayScoreSkeleton() {
   return (
     <ActionCard className={style.content}>
-      <SkeletonStatus className={style.scoreContainer} label="오늘 식사 점수를 불러오는 중입니다.">
-        <div className={style.scoreTextContainer}>
+      <SkeletonStatus className={style.skeletonContent} label="오늘 식사 점수를 불러오는 중입니다.">
+        <section className={style.scoreContainer}>
           <div className={style.scoreText}>
-            <Skeleton width={168} height={36} radius={999} />
-            <span className={style.dividerContainer} />
-            <Skeleton width={52} height={28} radius={999} />
-            <Skeleton className={style.icon} width={24} height={24} variant="circle" />
+            <Skeleton width={50} height={50} variant="circle" />
+            <Skeleton width={68} height={30} radius={999} />
+          </div>
+        </section>
+
+        <section className={style.caloriesContainer}>
+          <div className={`${style.calorieText} textNoWrap`}>
+            <Skeleton width={92} height={24} radius={999} />
+            <Skeleton width={112} height={24} radius={999} />
           </div>
 
-          <Skeleton width="100%" height={8} radius={999} />
-        </div>
-
-        <div className={style.badgeContentContainer}>
-          <Skeleton width={164} height={18} radius={999} />
-        </div>
+          <Skeleton width="100%" height={12} radius={999} />
+        </section>
       </SkeletonStatus>
     </ActionCard>
-  );
-}
-
-function Badge({ children }: { children: ReactNode }) {
-  return (
-    <div className={style.badgeContentContainer}>
-      <p className="typo-body3">{children}</p>
-    </div>
   );
 }
