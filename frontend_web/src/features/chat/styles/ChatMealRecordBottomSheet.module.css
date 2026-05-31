@@ -10,6 +10,11 @@
   padding: 20px;
 }
 
+.dateText {
+  color: var(--label-normal);
+  margin-bottom: 8px;
+}
+
 .calorieCard {
   align-items: center;
   background-color: var(--bg-primary-2);
@@ -72,8 +77,34 @@
 
 .menuNameRow {
   align-items: center;
+  display: flex;
+  gap: 6px;
+  justify-content: space-between;
+  min-width: 0;
+}
+
+.menuTitleGroup {
+  align-items: center;
   display: inline-flex;
   gap: 8px;
+  min-width: 0;
+}
+
+.menuName {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.menuBrand {
+  flex-shrink: 0;
+}
+
+.menuRemoveButton {
+  align-items: center;
+  color: var(--interaction-normal);
+  display: inline-flex;
+  flex-shrink: 0;
+  justify-content: center;
 }
 
 .quantityControlRow {

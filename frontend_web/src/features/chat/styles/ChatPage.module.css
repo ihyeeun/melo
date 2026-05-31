@@ -836,3 +836,7 @@
   padding: 16px 20px;
   width: 95%;
 }
+
+.datelabel {
+  margin-bottom: 2px;
+}

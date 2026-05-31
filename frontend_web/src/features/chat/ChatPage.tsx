@@ -66,6 +66,7 @@ import { navigateBack, useNavigate } from "@/shared/navigation/stackflowNavigati
 import {
   formatDateDividerText,
   formatDateKey,
+  formatDateKeyToMonthDayWeekdayLabel,
   formatTimeText,
   getTodayFormatDateKey,
   parseDate,
@@ -1038,6 +1039,7 @@ export default function ChatPage() {
                       <MealRecordCard
                         menus={mealRecord.recordedMenus}
                         mealRecordTime={mealRecord.time}
+                        dateKey={mealRecord.dateKey}
                         timeText={formatTimeText(getMealRecordSavedAt(mealRecord))}
                         onCancelClick={() => handleMealRecordCancelRequest(mealRecord)}
                         onEditClick={() => handleMealRecordEditClick(mealRecord)}
@@ -1307,6 +1309,7 @@ export default function ChatPage() {
         recommendations={editingMealRecordMenus}
         selectedMenus={editingSelectedMenus}
         mealType={editingMealType}
+        dateKey={editingMealRecordContext?.dateKey}
         submitLabel="수정하기"
         isSubmitPending={isMealRecordEditPending}
         onMealTypeChange={setEditingMealType}
@@ -1515,12 +1518,14 @@ function ChatInput({
 function MealRecordCard({
   menus,
   mealRecordTime,
+  dateKey,
   timeText,
   onCancelClick,
   onEditClick,
 }: {
   menus: RecordedMenuSummary[];
   mealRecordTime: MealTime;
+  dateKey: string;
   timeText: string;
   onCancelClick: () => void;
   onEditClick: () => void;
@@ -1545,6 +1550,9 @@ function MealRecordCard({
       className={`${styles.mealRecordCard} ${styles.mealRecordCardWithTime}`}
       data-time={timeText}
     >
+      <p className={`${styles.textAssistive} ${styles.datelabel}  typo-caption4`}>
+        {formatDateKeyToMonthDayWeekdayLabel(dateKey)}
+      </p>
       <p className={`${styles.textPrimary} typo-title2`}>{mealTimeLabel} 기록 완료!</p>
 
       <button

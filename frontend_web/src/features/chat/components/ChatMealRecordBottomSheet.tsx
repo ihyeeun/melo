@@ -13,6 +13,7 @@ import BottomSheet from "@/shared/commons/bottomSheet/BottomSheet";
 import { Button } from "@/shared/commons/button/Button";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import NumberField from "@/shared/commons/input/NumberField";
+import { formatDateKeyToMonthDayWeekdayLabel } from "@/shared/utils/dateFormat";
 import { formatNumberWithMaxOneDecimal } from "@/shared/utils/numberFormat";
 
 type SelectedMenuItem = {
@@ -48,6 +49,7 @@ type ChatMealRecordBottomSheetProps = {
   recommendations: ChatMealRecordMenu[];
   selectedMenus: SelectedMenuItem[];
   mealType: MealType;
+  dateKey?: string;
   isSubmitPending?: boolean;
   submitLabel?: string;
   onMealTypeChange: (mealType: MealType) => void;
@@ -133,6 +135,7 @@ export function ChatMealRecordBottomSheet({
   recommendations,
   selectedMenus,
   mealType,
+  dateKey,
   isSubmitPending = false,
   submitLabel = "담기",
   onMealTypeChange,
@@ -171,20 +174,25 @@ export function ChatMealRecordBottomSheet({
       sum + getScaledCalories(item.recommendation.calories, item.quantity, item.servingContext)
     );
   }, 0);
+  const dateLabel = dateKey ? formatDateKeyToMonthDayWeekdayLabel(dateKey) : null;
 
   return (
     <BottomSheet isOpen={isOpen} onClose={onClose}>
       <section className={styles.container}>
         <div className={styles.scrollArea}>
-          <article className={styles.calorieCard}>
-            <span className="typo-title2">총 칼로리</span>
-            <div className={`${styles.calorieValueWrapper} textNoWrap`}>
-              <span className={`${styles.calorieValue} typo-h2`}>
-                {formatNumberWithMaxOneDecimal(totalCalories)}
-              </span>
-              <span className="typo-caption1">kcal</span>
-            </div>
-          </article>
+          <div>
+            {dateLabel ? <p className={`${styles.dateText} typo-title3`}>{dateLabel}</p> : null}
+
+            <article className={styles.calorieCard}>
+              <span className="typo-title2">총 칼로리</span>
+              <div className={`${styles.calorieValueWrapper} textNoWrap`}>
+                <span className={`${styles.calorieValue} typo-h2`}>
+                  {formatNumberWithMaxOneDecimal(totalCalories)}
+                </span>
+                <span className="typo-caption1">kcal</span>
+              </div>
+            </article>
+          </div>
 
           <section>
             <p className={`${styles.sectionTitle} typo-title4`}>섭취시간대</p>
@@ -226,12 +234,24 @@ export function ChatMealRecordBottomSheet({
               return (
                 <article key={item.id} className={styles.menuItem}>
                   <div className={styles.menuNameRow}>
-                    <p className="typo-title4">{item.recommendation.menu_name}</p>
-                    {item.recommendation.brand && (
-                      <p className={`${styles.tertiaryText} typo-label4`}>
-                        {item.recommendation.brand}
+                    <div className={styles.menuTitleGroup}>
+                      <p className={`${styles.menuName} typo-title4`}>
+                        {item.recommendation.menu_name}
                       </p>
-                    )}
+                      {item.recommendation.brand && (
+                        <p className={`${styles.tertiaryText} ${styles.menuBrand} typo-label4`}>
+                          {item.recommendation.brand}
+                        </p>
+                      )}
+                    </div>
+                    <button
+                      type="button"
+                      className={styles.menuRemoveButton}
+                      onClick={() => onRemoveMenu(item.id)}
+                      aria-label={`${item.recommendation.menu_name} 삭제`}
+                    >
+                      <SystemIcon name="trash" size={20} />
+                    </button>
                   </div>
 
                   <div className={styles.quantityControlRow}>

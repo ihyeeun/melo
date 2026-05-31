@@ -57,3 +57,12 @@ export function formatDateDividerText(date: Date) {
 
   return `${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일 ${weekday}`;
 }
+
+export function formatDateKeyToMonthDayWeekdayLabel(dateKey: string) {
+  const date = parseDateKey(dateKey);
+  const month = String(date.getMonth() + 1);
+  const day = String(date.getDate());
+  const weekday = date.toLocaleDateString("ko-KR", { weekday: "long" });
+
+  return `${month}월 ${day}일 ${weekday}`;
+}
