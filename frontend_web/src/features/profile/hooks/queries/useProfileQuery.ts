@@ -3,7 +3,7 @@ import { useEffect } from "react";
 
 import { getProfile } from "@/features/profile/api/profile";
 import { queryKeys } from "@/features/profile/hooks/queries/queryKey";
-import { identifyNickname } from "@/shared/analytics/analytics";
+import { identifyUserProperties } from "@/shared/analytics/analytics";
 
 type UseGetProfileQueryOptions = {
   enabled?: boolean;
@@ -19,8 +19,8 @@ export function useGetProfileQuery(options?: UseGetProfileQueryOptions) {
 
   useEffect(() => {
     if (!query.data?.nickname) return;
-    identifyNickname(query.data.nickname, query.data.role === "ADMIN");
-  }, [query.data?.nickname, query.data?.role]);
+    identifyUserProperties(query.data);
+  }, [query.data]);
 
   return query;
 }

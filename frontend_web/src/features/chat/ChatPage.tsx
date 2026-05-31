@@ -48,6 +48,7 @@ import { PATH } from "@/router/path";
 import { getMealRecordPath, getMealSearchPath } from "@/router/pathHelpers";
 import { track } from "@/shared/analytics/analytics";
 import { EVENT_NAME } from "@/shared/analytics/analytics.constants";
+import { trackRecommendMenuSave } from "@/shared/analytics/recommendMenuEvents";
 import { AppApiError } from "@/shared/api/appApi";
 import { isNativeApp } from "@/shared/api/bridge/nativeBridge";
 import {
@@ -820,12 +821,7 @@ export default function ChatPage() {
           image: mealRecord?.image ?? getDiaryMealImage(dayMeals, nextMealRecord.time),
         }),
       );
-      nextMealRecord.addedMenus.forEach((menu) => {
-        track(EVENT_NAME.RECOMMEND_MENU_SAVE, {
-          menu_name: menu.menu_name,
-          menu_id: menu.menu_id,
-        });
-      });
+      trackRecommendMenuSave(nextMealRecord.addedMenus);
 
       let successMessage = "식사 기록이 수정되었어요.";
 

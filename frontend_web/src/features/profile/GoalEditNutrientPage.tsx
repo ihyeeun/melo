@@ -25,6 +25,11 @@ import { queryKeys } from "@/features/profile/hooks/queries/queryKey";
 import { useGetProfileQuery } from "@/features/profile/hooks/queries/useProfileQuery";
 import styles from "@/features/profile/styles/GoalEditPage.module.css";
 import { PATH } from "@/router/path";
+import { identifyUserProperties } from "@/shared/analytics/analytics";
+import {
+  trackUserProfileUpdated,
+  type UserProfileUpdatedField,
+} from "@/shared/analytics/userProfileEvents";
 import type { ProfileResponseDto, WeightStepsResponseDto } from "@/shared/api/types/api.dto";
 import { Button } from "@/shared/commons/button/Button";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
@@ -94,17 +99,21 @@ export default function GoalEditNutrientPage() {
 
     const today = getTodayFormatDateKey();
     const updateTasks: Array<() => Promise<ProfileResponseDto>> = [];
+    const updatedFields: UserProfileUpdatedField[] = [];
 
     if (visibleDraft.gender !== undefined && visibleDraft.gender !== initialDraft.gender) {
       updateTasks.push(() => updateGender(visibleDraft.gender!));
+      updatedFields.push("gender");
     }
 
     if (visibleDraft.birthYear !== undefined && visibleDraft.birthYear !== initialDraft.birthYear) {
       updateTasks.push(() => updateBirthYear(visibleDraft.birthYear!));
+      updatedFields.push("birth_year");
     }
 
     if (visibleDraft.height !== undefined && visibleDraft.height !== initialDraft.height) {
       updateTasks.push(() => updateHeight(visibleDraft.height!));
+      updatedFields.push("height_cm");
     }
 
     if (visibleDraft.weight !== undefined && visibleDraft.weight !== initialDraft.weight) {
@@ -139,14 +148,17 @@ export default function GoalEditNutrientPage() {
 
         return updatedProfile;
       });
+      updatedFields.push("weight_kg");
     }
 
     if (visibleDraft.activity !== undefined && visibleDraft.activity !== initialDraft.activity) {
       updateTasks.push(() => updateActivity(visibleDraft.activity!));
+      updatedFields.push("activity_level");
     }
 
     if (visibleDraft.goal !== undefined && visibleDraft.goal !== initialDraft.goal) {
       updateTasks.push(() => updateGoal(visibleDraft.goal!));
+      updatedFields.push("health_goal");
     }
 
     if (
@@ -154,6 +166,7 @@ export default function GoalEditNutrientPage() {
       visibleDraft.target_weight !== initialDraft.target_weight
     ) {
       updateTasks.push(() => updateTargetWeight(visibleDraft.target_weight!));
+      updatedFields.push("goal_weight_kg");
     }
 
     if (
@@ -161,12 +174,14 @@ export default function GoalEditNutrientPage() {
       visibleDraft.target_calories !== initialDraft.target_calories
     ) {
       updateTasks.push(() => updateTargetCalories(visibleDraft.target_calories!));
+      updatedFields.push("daily_calorie_target");
     }
 
     if (isRatioChanged(initialDraft, visibleDraft)) {
       updateTasks.push(() =>
         updateTargetRatio([visibleDraft.carbs!, visibleDraft.protein!, visibleDraft.fat!]),
       );
+      updatedFields.push("goal_carb_pct", "goal_protein_pct", "goal_fat_pct");
     }
 
     if (updateTasks.length === 0) {
@@ -186,6 +201,10 @@ export default function GoalEditNutrientPage() {
 
         return toUpdatedProfile(previous, visibleDraft);
       });
+      if (profile) {
+        identifyUserProperties(toUpdatedProfile(profile, visibleDraft));
+      }
+      trackUserProfileUpdated(updatedFields);
 
       setTargets({
         target_calories: visibleDraft.target_calories!,

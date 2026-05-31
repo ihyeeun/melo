@@ -6,11 +6,22 @@ export type RecommendMenuAnalyticsItem = {
   menu_name: string;
 };
 
-export function trackRecommendMenuCancel(menus: RecommendMenuAnalyticsItem[]) {
+function trackRecommendMenuEvent(
+  eventName: typeof EVENT_NAME.RECOMMEND_MENU_SAVE | typeof EVENT_NAME.RECOMMEND_MENU_CANCEL,
+  menus: RecommendMenuAnalyticsItem[],
+) {
   menus.forEach((menu) => {
-    track(EVENT_NAME.RECOMMEND_MENU_CANCEL, {
+    track(eventName, {
       menu_name: menu.menu_name,
       menu_id: menu.menu_id,
     });
   });
+}
+
+export function trackRecommendMenuSave(menus: RecommendMenuAnalyticsItem[]) {
+  trackRecommendMenuEvent(EVENT_NAME.RECOMMEND_MENU_SAVE, menus);
+}
+
+export function trackRecommendMenuCancel(menus: RecommendMenuAnalyticsItem[]) {
+  trackRecommendMenuEvent(EVENT_NAME.RECOMMEND_MENU_CANCEL, menus);
 }

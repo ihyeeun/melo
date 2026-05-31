@@ -18,8 +18,7 @@ import { useDayMealsQuery } from "@/features/home/hooks/queries/useDayMealsQuery
 import { useTodayMealRecordRegisterMutation } from "@/features/meal-record/hooks/mutations/useTodayMealRecordMutation";
 import { useGetProfileQuery } from "@/features/profile/hooks/queries/useProfileQuery";
 import { PATH } from "@/router/path";
-import { track } from "@/shared/analytics/analytics";
-import { EVENT_NAME } from "@/shared/analytics/analytics.constants";
+import { trackRecommendMenuSave } from "@/shared/analytics/recommendMenuEvents";
 import { AppApiError } from "@/shared/api/appApi";
 import {
   type ChatHistoryItemResponseDto,
@@ -213,14 +212,7 @@ function RecommendResultContent({
         },
       );
 
-      recommendations
-        .filter((menu) => selectedMenuIds.has(menu.menu_id))
-        .forEach((menu) => {
-          track(EVENT_NAME.RECOMMEND_MENU_SAVE, {
-            menu_name: menu.menu_name,
-            menu_id: menu.menu_id,
-          });
-        });
+      trackRecommendMenuSave(recommendations.filter((menu) => selectedMenuIds.has(menu.menu_id)));
 
       toast.success("식사 기록이 등록되었어요.");
       requestChatMealRecordFocus({
