@@ -540,7 +540,12 @@ export async function handleWebMessage(
       return;
     }
 
+    const shouldEndSession = shouldTerminateSession(message.payload.endpoint);
     const result = await requestFromWeb(message.payload);
+
+    if (shouldEndSession) {
+      await clearTokens();
+    }
 
     sendToWeb(webViewRef, {
       id: requestId,
@@ -548,12 +553,8 @@ export async function handleWebMessage(
       payload: result,
     });
 
-    if (shouldTerminateSession(message.payload.endpoint)) {
-      try {
-        await clearTokens();
-      } finally {
-        emitAuthExpired();
-      }
+    if (shouldEndSession) {
+      emitAuthExpired();
     }
   } catch (error) {
     if (isBridgeHandledError(error)) {

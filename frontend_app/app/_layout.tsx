@@ -5,10 +5,17 @@ import { useFonts } from "expo-font";
 import { router, Stack, useSegments } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 
+function isRootRoute(segments: string[]) {
+  return segments.length === 0 || (segments.length === 1 && segments[0] === "index");
+}
+
+function isProtectedRoute(segments: string[]) {
+  return segments[0] === "(tabs)" || segments[0] === "camera-capture";
+}
+
 export default function RootLayout() {
   const segments = useSegments();
   const segmentRef = useRef<string[]>([]);
-  const didBootstrapRef = useRef(false);
   const [isBootstrapping, setIsBootstrapping] = useState(true);
   const [fontsLoaded, fontError] = useFonts(pretendardFonts);
 
@@ -36,28 +43,25 @@ export default function RootLayout() {
     let cancelled = false;
 
     (async () => {
-      const currentRoute = segments.join("/");
-      const shouldBootstrapRoute = currentRoute === "" || currentRoute === "index";
-      if (!shouldBootstrapRoute) {
-        if (!cancelled) setIsBootstrapping(false);
-        return;
-      }
+      const currentSegments = segments as string[];
+      const shouldCheckToken =
+        isRootRoute(currentSegments) || isProtectedRoute(currentSegments);
 
-      if (didBootstrapRef.current) {
+      if (!shouldCheckToken) {
         if (!cancelled) setIsBootstrapping(false);
         return;
       }
-      didBootstrapRef.current = true;
 
       const token = await loadAccessToken();
 
       if (cancelled) return;
 
-      if (token) {
+      if (isRootRoute(currentSegments) && token) {
         router.replace("/(tabs)/home");
-      } else {
+      } else if (!token) {
         router.replace("/(auth)/login");
       }
+
       setIsBootstrapping(false);
     })();
 
