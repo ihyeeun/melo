@@ -175,6 +175,7 @@ export function ChatMealRecordBottomSheet({
     );
   }, 0);
   const dateLabel = dateKey ? formatDateKeyToMonthDayWeekdayLabel(dateKey) : null;
+  const actionLabel = selectedItems.length === 0 ? "수정하기" : submitLabel;
 
   return (
     <BottomSheet isOpen={isOpen} onClose={onClose}>
@@ -362,14 +363,14 @@ export function ChatMealRecordBottomSheet({
           <div className={styles.actionBar}>
             <Button
               variant="filled"
-              interaction={selectedItems.length > 0 && !isSubmitPending ? "normal" : "disable"}
+              interaction={isSubmitPending ? "disable" : "normal"}
               size="large"
               color="primary"
               fullWidth
-              disabled={selectedItems.length === 0 || isSubmitPending}
+              disabled={isSubmitPending}
               onClick={onSubmit}
             >
-              {isSubmitPending ? "저장 중..." : submitLabel}
+              {isSubmitPending ? "저장 중..." : actionLabel}
             </Button>
           </div>
         </div>

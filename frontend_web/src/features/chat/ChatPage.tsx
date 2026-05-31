@@ -929,6 +929,33 @@ export default function ChatPage() {
             selectedMenus: editingSelectedMenus,
             candidateIds: editingSelectedMenus.map((menu) => menu.id),
           });
+
+    if (nextMenus.length === 0) {
+      try {
+        const deleteResult = await deleteDiaryMealRecordMutate({
+          dateKey: editingMealRecordContext.dateKey,
+          request: buildDiaryMealRecordRequest({
+            dateKey: editingMealRecordContext.dateKey,
+            mealType: previousMealType,
+            selectedMenus: [],
+            image: editingMealRecordContext.image,
+          }),
+          currentMenusByTime: editingMealRecordContext.dayMeals.menusByTime,
+        });
+
+        if (deleteResult !== DELETE_MEAL_RECORD_RESULT.DELETED) {
+          toast.warning("식사 기록 저장에 실패했어요. 잠시 후 다시 시도해주세요.");
+          return;
+        }
+
+        toast.success("식사 기록을 취소했어요.");
+        handleMealRecordEditClose();
+      } catch {
+        toast.warning("식사 기록 저장에 실패했어요. 잠시 후 다시 시도해주세요.");
+      }
+      return;
+    }
+
     const scrollTargetKey = prepareMealRecordScroll(editingMealRecordContext.dateKey, nextTime);
 
     try {

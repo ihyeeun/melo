@@ -18,7 +18,6 @@ import {
   useMenuDraftRemove,
   useMenuDraftRemoveImage,
   useMenuDraftStore,
-  useMenuDraftUpsert,
   useMenuDraftUpsertPreviews,
 } from "@/features/meal-record/stores/menuDraft.store";
 import {
@@ -136,7 +135,6 @@ export default function MealRecordPage() {
   const { mutateAsync: deleteWithRollbackAsync, isPending: isDeletePending } =
     useTodayMealRecordDeleteWithRollbackMutation();
   const initDraft = useMenuDraftInit();
-  const upsertMenu = useMenuDraftUpsert();
   const upsertPreviews = useMenuDraftUpsertPreviews();
   const removeMenu = useMenuDraftRemove();
   const removeImage = useMenuDraftRemoveImage();
@@ -191,10 +189,7 @@ export default function MealRecordPage() {
       return;
     }
 
-    const nextMenuIds = new Set(currentSeedMenus.map((menu) => menu.id));
-    transferState.menus.forEach((menu) => {
-      nextMenuIds.add(menu.id);
-    });
+    const nextMenuIds = new Set(transferState.menus.map((menu) => menu.id));
 
     if (nextMenuIds.size > MAX_MEAL_RECORD_MENUS) {
       toast.warning(MEAL_RECORD_MENU_LIMIT_MESSAGE);
@@ -203,21 +198,13 @@ export default function MealRecordPage() {
       return;
     }
 
+    clearDraft(draftKey);
     initDraft({
       key: draftKey,
       existingMenuCount: currentSeedMenus.length,
-      seedMenus: currentSeedMenus,
+      seedMenus: transferState.menus,
       image: currentMenus.imagesByTime[mealType],
       serverSignature: currentServerSignature,
-    });
-
-    transferState.menus.forEach((menu) => {
-      upsertMenu({
-        key: draftKey,
-        id: menu.id,
-        quantity: menu.quantity,
-        mode: menu.mode,
-      });
     });
 
     upsertPreviews({
@@ -232,12 +219,12 @@ export default function MealRecordPage() {
     currentSeedMenus,
     currentServerSignature,
     dateKey,
+    clearDraft,
     draftKey,
     initDraft,
     mealType,
     navigate,
     transferState,
-    upsertMenu,
     upsertPreviews,
   ]);
 
