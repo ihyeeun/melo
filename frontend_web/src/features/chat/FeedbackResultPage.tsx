@@ -9,7 +9,6 @@ import {
   getDiaryMealRecordSelectionByMenuIds,
   getFallbackMealTime,
   getNextDiaryMenusByCandidateIds,
-  getSelectedDiaryMenusFromCandidateMenus,
   type SelectedDiaryMealRecordMenu,
 } from "@/features/chat/utils/chatDiaryMealRecord";
 import { getMealTypeFromChatMealTime } from "@/features/chat/utils/chatMeal";
@@ -51,6 +50,7 @@ const FOOD_MARKER_BUBBLE_ANCHOR_GAP = 10;
 const FOOD_MARKER_BUBBLE_HORIZONTAL_PADDING = 24;
 const FOOD_MARKER_BUBBLE_CONTENT_GAP = 8;
 const FOOD_MARKER_SCORE_TEXT_WIDTH = 35;
+const FOOD_MARKER_BUBBLE_TEXT_LINE_HEIGHT = 20;
 const FOOD_MARKER_FALLBACK_LAYOUT_SIZE = 360;
 
 type FoodMarkerItem = {
@@ -166,13 +166,9 @@ function FeedbackResultContent({
   );
   const targetMealTime = diaryMealRecordSelection?.time ?? getFallbackMealTime(chatItem);
   const mealType: MealType = getMealTypeFromChatMealTime(targetMealTime);
-  const defaultSelectedMenus = useMemo(
-    () => getSelectedDiaryMenusFromCandidateMenus(menus),
-    [menus],
-  );
   const selectedMenus = useMemo(
-    () => selectedMenusOverride ?? defaultSelectedMenus,
-    [defaultSelectedMenus, selectedMenusOverride],
+    () => selectedMenusOverride ?? diaryMealRecordSelection?.menus ?? [],
+    [diaryMealRecordSelection, selectedMenusOverride],
   );
   const selectedMenuIds = useMemo(() => {
     return new Set(selectedMenus.map((menu) => menu.id));
@@ -360,7 +356,7 @@ function FoodImageFeedbackPreview({
     height: 0,
     width: 0,
   });
-  const [openClusterId, setOpenClusterId] = useState<string | null>(null);
+  const [openSourceMarkerId, setOpenSourceMarkerId] = useState<string | null>(null);
   const menuById = useMemo(() => new Map(menus.map((menu) => [menu.menu_id, menu])), [menus]);
   const foodMarkers = useMemo(
     () =>
@@ -389,14 +385,16 @@ function FoodImageFeedbackPreview({
     () => clusterFoodMarkers(foodMarkers, imageFeedbackSize),
     [foodMarkers, imageFeedbackSize],
   );
-  const visibleOpenClusterId =
-    openClusterId &&
-    foodMarkerClusters.some((cluster) => cluster.id === openClusterId && cluster.markers.length > 1)
-      ? openClusterId
-      : null;
   const foodMarkerSourcePinClusters = foodMarkerClusters.filter(
     (cluster) => cluster.markers.length > 1,
   );
+  const visibleOpenSourceMarkerId =
+    openSourceMarkerId &&
+    foodMarkerSourcePinClusters.some((cluster) =>
+      cluster.markers.some((marker) => marker.id === openSourceMarkerId),
+    )
+      ? openSourceMarkerId
+      : null;
 
   useEffect(() => {
     const sectionElement = imageFeedbackSectionRef.current;
@@ -463,91 +461,97 @@ function FoodImageFeedbackPreview({
         const markerX = cluster.x;
         const markerY = cluster.y;
         const isCluster = cluster.markers.length > 1;
-        const isClusterOpen = visibleOpenClusterId === cluster.id;
         const markerClassName = [
           styles.foodMarker,
-          isCluster ? styles.foodClusterMarker : "",
-          isClusterOpen ? styles.foodClusterMarkerOpen : "",
           getHorizontalMarkerClass(markerX),
-          getVerticalMarkerClass(markerY, isCluster),
+          getVerticalMarkerClass(markerY, false),
         ].join(" ");
 
-        if (!isCluster) {
-          const marker = cluster.markers[0];
-
-          return (
-            <button
-              key={cluster.id}
-              type="button"
-              className={markerClassName}
-              style={{
-                left: `${markerX * 100}%`,
-                top: `${markerY * 100}%`,
-              }}
-              onClick={() => onMarkerClick(marker.food.menu_id)}
-              disabled={isDetailDisabled}
-              aria-label={`${marker.label}${
-                marker.scoreText ? ` ${marker.scoreText}` : ""
-              } 상세 보기`}
-            >
-              <span className={styles.foodMarkerBubble}>
-                <span className={`${styles.foodMarkerName} typo-body3`}>{marker.label}</span>
-                {marker.scoreText ? (
-                  <span
-                    className={`typo-body2 ${styles.foodMarkerScore} ${getScoreClass(marker.score ?? 0)}`}
-                  >
-                    {marker.scoreText}
-                  </span>
-                ) : null}
-              </span>
-            </button>
-          );
+        if (isCluster) {
+          return null;
         }
 
+        const marker = cluster.markers[0];
+
         return (
-          <div
+          <button
             key={cluster.id}
+            type="button"
             className={markerClassName}
             style={{
               left: `${markerX * 100}%`,
               top: `${markerY * 100}%`,
             }}
+            onClick={() => onMarkerClick(marker.food.menu_id)}
+            disabled={isDetailDisabled}
+            aria-label={`${marker.label}${marker.scoreText ? ` ${marker.scoreText}` : ""} 상세 보기`}
           >
-            <button
-              type="button"
-              className={styles.foodClusterButton}
-              onClick={() =>
-                setOpenClusterId((currentId) => (currentId === cluster.id ? null : cluster.id))
-              }
-              disabled={isDetailDisabled}
-              aria-expanded={isClusterOpen}
-              aria-controls={`food-cluster-${cluster.id}`}
-              aria-label={`${cluster.markers.length}개 음식 목록 ${isClusterOpen ? "닫기" : "열기"}`}
-            >
-              <span className={`${styles.foodClusterCount} typo-body2`}>
-                {cluster.markers.length}개 음식
-              </span>
-            </button>
+            <span className={styles.foodMarkerBubble}>
+              <span className={`${styles.foodMarkerName} typo-body3`}>{marker.label}</span>
+              {marker.scoreText ? (
+                <span
+                  className={`typo-body2 ${styles.foodMarkerScore} ${getScoreClass(marker.score ?? 0)}`}
+                >
+                  {marker.scoreText}
+                </span>
+              ) : null}
+            </span>
+          </button>
+        );
+      })}
 
-            {isClusterOpen ? (
-              <div id={`food-cluster-${cluster.id}`} className={styles.foodClusterPanel}>
-                {cluster.markers.map((marker, markerIndex) => (
-                  <button
-                    key={marker.id}
-                    type="button"
-                    className={styles.foodClusterOption}
-                    onClick={() => onMarkerClick(marker.food.menu_id)}
-                    disabled={isDetailDisabled}
-                    aria-label={`${marker.label}${
-                      marker.scoreText ? ` ${marker.scoreText}` : ""
-                    } 상세 보기`}
-                  >
-                    <span className={`${styles.foodClusterOptionPin} typo-body3`}>
-                      {markerIndex + 1}
-                    </span>
-                    <span className={`${styles.foodClusterOptionName} typo-body3`}>
-                      {marker.label}
-                    </span>
+      {foodMarkerSourcePinClusters.flatMap((cluster) =>
+        cluster.markers.map((marker, markerIndex) => {
+          const isSourceMarkerOpen = visibleOpenSourceMarkerId === marker.id;
+          const sourceMarkerClassName = [
+            styles.foodClusterSourceMarker,
+            isSourceMarkerOpen ? styles.foodClusterSourceMarkerOpen : "",
+            getHorizontalMarkerClass(marker.markerX),
+            getVerticalMarkerClass(marker.markerY, false),
+          ].join(" ");
+
+          return (
+            <div
+              key={`source-pin-${cluster.id}-${marker.id}`}
+              className={sourceMarkerClassName}
+              style={{
+                left: `${marker.markerX * 100}%`,
+                top: `${marker.markerY * 100}%`,
+              }}
+            >
+              <button
+                type="button"
+                className={styles.foodClusterSourcePin}
+                onClick={() => {
+                  setOpenSourceMarkerId((currentId) =>
+                    currentId === marker.id ? null : marker.id,
+                  );
+                }}
+                disabled={isDetailDisabled}
+                aria-expanded={isSourceMarkerOpen}
+                aria-controls={`food-source-marker-${marker.id}`}
+                aria-label={`${markerIndex + 1}번 ${marker.label}${
+                  marker.scoreText ? ` ${marker.scoreText}` : ""
+                } 말풍선 ${isSourceMarkerOpen ? "닫기" : "열기"}`}
+              >
+                <span className={`${styles.foodClusterSourcePinLabel} typo-body3`}>
+                  {markerIndex + 1}
+                </span>
+              </button>
+
+              {isSourceMarkerOpen ? (
+                <button
+                  type="button"
+                  id={`food-source-marker-${marker.id}`}
+                  className={styles.foodClusterSourceBubble}
+                  onClick={() => onMarkerClick(marker.food.menu_id)}
+                  disabled={isDetailDisabled}
+                  aria-label={`${marker.label}${
+                    marker.scoreText ? ` ${marker.scoreText}` : ""
+                  } 상세 보기`}
+                >
+                  <span className={styles.foodMarkerBubble}>
+                    <span className={`${styles.foodMarkerName} typo-body3`}>{marker.label}</span>
                     {marker.scoreText ? (
                       <span
                         className={`typo-body2 ${styles.foodMarkerScore} ${getScoreClass(marker.score ?? 0)}`}
@@ -555,35 +559,12 @@ function FoodImageFeedbackPreview({
                         {marker.scoreText}
                       </span>
                     ) : null}
-                  </button>
-                ))}
-              </div>
-            ) : null}
-          </div>
-        );
-      })}
-
-      {foodMarkerSourcePinClusters.flatMap((cluster) =>
-        cluster.markers.map((marker, markerIndex) => (
-          <button
-            key={`source-pin-${cluster.id}-${marker.id}`}
-            type="button"
-            className={styles.foodClusterSourcePin}
-            style={{
-              left: `${marker.markerX * 100}%`,
-              top: `${marker.markerY * 100}%`,
-            }}
-            onClick={() => onMarkerClick(marker.food.menu_id)}
-            disabled={isDetailDisabled}
-            aria-label={`${markerIndex + 1}번 ${marker.label}${
-              marker.scoreText ? ` ${marker.scoreText}` : ""
-            } 상세 보기`}
-          >
-            <span className={`${styles.foodClusterSourcePinLabel} typo-body3`}>
-              {markerIndex + 1}
-            </span>
-          </button>
-        )),
+                  </span>
+                </button>
+              ) : null}
+            </div>
+          );
+        }),
       )}
     </section>
   );
@@ -773,9 +754,18 @@ function getEstimatedFoodMarkerBubbleSize(marker: FoodMarkerItem) {
       labelWidth + scoreWidth + contentGap + FOOD_MARKER_BUBBLE_HORIZONTAL_PADDING,
     ),
   );
+  const labelContentWidth = Math.max(
+    FOOD_MARKER_BUBBLE_MIN_WIDTH,
+    width - scoreWidth - contentGap - FOOD_MARKER_BUBBLE_HORIZONTAL_PADDING,
+  );
+  const lineCount = Math.max(1, Math.ceil(labelWidth / labelContentWidth));
+  const height = Math.max(
+    FOOD_MARKER_BUBBLE_MIN_HEIGHT,
+    lineCount * FOOD_MARKER_BUBBLE_TEXT_LINE_HEIGHT + 20,
+  );
 
   return {
-    height: FOOD_MARKER_BUBBLE_MIN_HEIGHT,
+    height,
     width,
   };
 }
