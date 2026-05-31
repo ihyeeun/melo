@@ -42,12 +42,12 @@ const METRIC_CONFIG: Record<
   calories: {
     title: "섭취량",
     unit: "kcal",
-    ticks: [0, 1000, 2000, 3000, 4000],
+    domainMode: "fit",
     targetLabel: "목표 섭취량",
   },
   steps: {
     title: "걸음 수",
-    unit: "걸음",
+    unit: "보",
     ticks: [0, 3000, 6000, 9000, 12000],
   },
 };

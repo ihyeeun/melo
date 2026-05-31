@@ -46,6 +46,8 @@ type CustomTooltipProps = TooltipContentProps & {
 const DEFAULT_Y_TICKS = [0, 25, 50, 75, 100];
 const TARGET_TICK_COUNT = 5;
 const ACTIVE_DOT_RADIUS = 3;
+const MAX_TICK_FRACTION_DIGITS = 1;
+const MIN_DECIMAL_TICK_STEP = 1 / 10 ** MAX_TICK_FRACTION_DIGITS;
 
 function isFiniteNumber(value: number | null | undefined): value is number {
   return typeof value === "number" && Number.isFinite(value);
@@ -75,6 +77,16 @@ function roundTick(value: number) {
   return Number(value.toFixed(6));
 }
 
+function getSingleValuePadding(value: number) {
+  const absoluteValue = Math.abs(value);
+
+  if (absoluteValue < 1) {
+    return 0.1;
+  }
+
+  return Math.max(getNiceStep(absoluteValue * 0.01), 1);
+}
+
 function getDynamicYTicks(data: WeeklyRecordChartData[], domainMode: "fit" | "zero") {
   const values = data.flatMap((point) => [point.value, point.target]).filter(isFiniteNumber);
 
@@ -86,10 +98,13 @@ function getDynamicYTicks(data: WeeklyRecordChartData[], domainMode: "fit" | "ze
   const dataMax = Math.max(...values);
   const dataRange = dataMax - dataMin;
   const startAtZero = domainMode === "zero";
-  const padding = dataRange === 0 ? Math.max(Math.abs(dataMax) * 0.04, 1) : dataRange * 0.1;
+  const padding = dataRange === 0 ? getSingleValuePadding(dataMax) : dataRange * 0.1;
   const paddedMin = startAtZero ? 0 : Math.max(0, dataMin - padding);
   const paddedMax = dataMax + padding;
-  const step = getNiceStep((paddedMax - paddedMin) / (TARGET_TICK_COUNT - 1));
+  const step = Math.max(
+    getNiceStep((paddedMax - paddedMin) / (TARGET_TICK_COUNT - 1)),
+    MIN_DECIMAL_TICK_STEP,
+  );
   const tickMin = startAtZero ? 0 : Math.max(0, Math.floor(paddedMin / step) * step);
   const tickMax = Math.ceil(paddedMax / step) * step;
   const ticks: number[] = [];
@@ -101,18 +116,51 @@ function getDynamicYTicks(data: WeeklyRecordChartData[], domainMode: "fit" | "ze
   return ticks.length >= 2 ? ticks : DEFAULT_Y_TICKS;
 }
 
-function formatAxisTick(value: number | string | undefined) {
+function getFractionDigits(value: number) {
+  const roundedValue = roundTick(value);
+
+  if (Number.isInteger(roundedValue)) {
+    return 0;
+  }
+
+  return String(roundedValue).split(".")[1]?.length ?? 0;
+}
+
+function getTickFractionDigits(ticks: number[]) {
+  const fractionDigits = ticks.reduce((maxFractionDigits, tick, index) => {
+    const tickFractionDigits = getFractionDigits(tick);
+    const previousTick = ticks[index - 1];
+    const stepFractionDigits =
+      typeof previousTick === "number" ? getFractionDigits(tick - previousTick) : 0;
+
+    return Math.max(maxFractionDigits, tickFractionDigits, stepFractionDigits);
+  }, 0);
+
+  return Math.min(fractionDigits, MAX_TICK_FRACTION_DIGITS);
+}
+
+function hasDecimalData(data: WeeklyRecordChartData[]) {
+  return data.some((point) =>
+    [point.value, point.target].some((value) => isFiniteNumber(value) && !Number.isInteger(value)),
+  );
+}
+
+function formatAxisTick(value: number | string | undefined, fractionDigits: number) {
   const numberValue = typeof value === "number" ? value : Number(value);
 
   if (!Number.isFinite(numberValue)) {
     return value;
   }
 
-  return Number.isInteger(numberValue) ? String(numberValue) : numberValue.toFixed(1);
+  return numberValue.toLocaleString("ko-KR", {
+    maximumFractionDigits: fractionDigits,
+  });
 }
 
 function formatTooltipValue(value: unknown, unit: string) {
-  return typeof value === "number" ? `${value.toLocaleString("ko-KR")} ${unit}` : `- ${unit}`;
+  return typeof value === "number"
+    ? `${value.toLocaleString("ko-KR", { maximumFractionDigits: 1 })} ${unit}`
+    : `- ${unit}`;
 }
 
 function XAxisTick({ payload, x = 0, y = 0 }: AxisTickProps) {
@@ -136,10 +184,15 @@ function XAxisTick({ payload, x = 0, y = 0 }: AxisTickProps) {
   );
 }
 
-function YAxisTick({ payload, x = 0, y = 0 }: AxisTickProps) {
+function YAxisTick({
+  fractionDigits,
+  payload,
+  x = 0,
+  y = 0,
+}: AxisTickProps & { fractionDigits: number }) {
   return (
     <text className={`${styles.yAxisTick} typo-caption4`} textAnchor="end" x={x} y={y}>
-      {formatAxisTick(payload?.value)}
+      {formatAxisTick(payload?.value, fractionDigits)}
     </text>
   );
 }
@@ -217,7 +270,8 @@ export default function WeeklyRecordChart({
   );
   const yMin = yTicks[0] ?? 0;
   const yMax = yTicks[yTicks.length - 1] ?? 100;
-  const allowDecimals = yTicks.some((tick) => !Number.isInteger(tick));
+  const yTickFractionDigits = getTickFractionDigits(yTicks);
+  const allowDecimals = yTickFractionDigits > 0 || hasDecimalData(data);
   const hasTarget = data.some((point) => typeof point.target === "number");
 
   return (
@@ -256,7 +310,7 @@ export default function WeeklyRecordChart({
             allowDecimals={allowDecimals}
             axisLine={false}
             domain={[yMin, yMax]}
-            tick={<YAxisTick />}
+            tick={<YAxisTick fractionDigits={yTickFractionDigits} />}
             tickLine={false}
             ticks={yTicks}
             width={35}
