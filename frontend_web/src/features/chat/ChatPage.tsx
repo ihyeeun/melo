@@ -185,6 +185,7 @@ export default function ChatPage() {
   const pendingChatResponseAfterIdRef = useRef<number | null>(null);
   const pendingMealRecordScrollKeyRef = useRef<string | null>(null);
   const skipNextAutoBottomScrollRef = useRef(false);
+  const wasQuickActionVisibleRef = useRef(false);
 
   const [inputValue, setInputValue] = useState("");
   const [isInputFocused, setIsInputFocused] = useState(false);
@@ -525,6 +526,42 @@ export default function ChatPage() {
       window.removeEventListener("resize", updateIsScrolledAwayFromBottom);
     };
   }, [updateIsScrolledAwayFromBottom]);
+
+  useEffect(() => {
+    const becameQuickActionVisible = isQuickActionVisible && !wasQuickActionVisibleRef.current;
+    wasQuickActionVisibleRef.current = isQuickActionVisible;
+
+    if (
+      !becameQuickActionVisible ||
+      isScrolledAwayFromBottom ||
+      pendingMealRecordScrollKeyRef.current !== null ||
+      timelineScrollTarget !== null ||
+      typeof window === "undefined"
+    ) {
+      return;
+    }
+
+    const alignBottom = () => {
+      endAnchorRef.current?.scrollIntoView({
+        behavior: "instant",
+        block: "end",
+      });
+      updateIsScrolledAwayFromBottom();
+    };
+
+    const frameId = window.requestAnimationFrame(alignBottom);
+    const timeoutId = window.setTimeout(alignBottom, 180);
+
+    return () => {
+      window.cancelAnimationFrame(frameId);
+      window.clearTimeout(timeoutId);
+    };
+  }, [
+    isQuickActionVisible,
+    isScrolledAwayFromBottom,
+    timelineScrollTarget,
+    updateIsScrolledAwayFromBottom,
+  ]);
 
   useEffect(() => {
     if (typeof window === "undefined") {
