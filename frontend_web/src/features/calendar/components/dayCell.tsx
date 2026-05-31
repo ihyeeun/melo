@@ -1,3 +1,5 @@
+import EventDot from "@/features/calendar/components/EventDot";
+
 import type { CalendarDay } from "../types/calendar.types";
 import { formatDayNumber } from "../utils/format";
 
@@ -40,6 +42,7 @@ export default function DayCell({ day, weekdayLabel, onSelect, variant = "week" 
       )}
       <div className="calendar-day-number-container">
         <span className="calendar-day-number typo-title4">{formatDayNumber(day.date)}</span>
+        {variant === "month" ? <EventDot visible={day.hasRecord} /> : null}
       </div>
     </button>
   );

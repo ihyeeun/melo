@@ -191,9 +191,38 @@
   align-items: center;
   border-radius: 100px;
   display: flex;
+  flex-direction: column;
   height: min(40px, 100%);
   justify-content: center;
   width: min(40px, 100%);
+}
+
+.calendar-dots {
+  align-items: center;
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.calendar-dots--empty {
+  visibility: hidden;
+}
+
+.calendar-dot {
+  background: var(--static-white);
+  border-radius: 50%;
+  display: block;
+  height: 4px;
+  width: 4px;
+}
+
+.calendar-day-cell--month.is-selected .calendar-dot,
+.calendar-day-cell--month.is-today .calendar-dot {
+  background: var(--label-primary);
+}
+
+.calendar-day-cell--month.is-outside .calendar-dot {
+  opacity: 0.4;
 }
 
 .calendar-month-title {

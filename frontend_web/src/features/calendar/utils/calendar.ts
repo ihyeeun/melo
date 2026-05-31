@@ -13,7 +13,7 @@ import {
   subWeeks,
 } from "date-fns";
 
-import type { CalendarDay, DayRecordSummary, ViewMode } from "../types/calendar.types";
+import type { CalendarDay, ViewMode } from "../types/calendar.types";
 
 export function formatDateKey(date: Date) {
   const yyyy = date.getFullYear();
@@ -22,8 +22,8 @@ export function formatDateKey(date: Date) {
   return `${yyyy}-${mm}-${dd}`;
 }
 
-export function getSummaryMap(summaries: DayRecordSummary[] = []) {
-  return new Map(summaries.map((item) => [item.date, item]));
+export function getRecordedDateSet(recordedDates: string[] = []) {
+  return new Set(recordedDates);
 }
 
 export function getWeekDates(baseDate: Date, weekStartsOn: 0 | 1 = 1) {
@@ -53,15 +53,15 @@ export function getMonthDates(baseDate: Date, weekStartsOn: 0 | 1 = 1) {
 export function buildWeekCalendarDays({
   baseDate,
   selectedDate,
-  summaries = [],
+  recordedDates = [],
   weekStartsOn = 1,
 }: {
   baseDate: Date;
   selectedDate: Date;
-  summaries?: DayRecordSummary[];
+  recordedDates?: string[];
   weekStartsOn?: 0 | 1;
 }): CalendarDay[] {
-  const summaryMap = getSummaryMap(summaries);
+  const recordedDateSet = getRecordedDateSet(recordedDates);
 
   return getWeekDates(baseDate, weekStartsOn).map((date) => {
     const key = formatDateKey(date);
@@ -71,7 +71,7 @@ export function buildWeekCalendarDays({
       isToday: isToday(date),
       isSelected: isSameDay(date, selectedDate),
       isCurrentMonth: isSameMonth(date, baseDate),
-      summary: summaryMap.get(key),
+      hasRecord: recordedDateSet.has(key),
     };
   });
 }
@@ -79,15 +79,15 @@ export function buildWeekCalendarDays({
 export function buildMonthCalendarDays({
   baseDate,
   selectedDate,
-  summaries = [],
+  recordedDates = [],
   weekStartsOn = 1,
 }: {
   baseDate: Date;
   selectedDate: Date;
-  summaries?: DayRecordSummary[];
+  recordedDates?: string[];
   weekStartsOn?: 0 | 1;
 }): CalendarDay[] {
-  const summaryMap = getSummaryMap(summaries);
+  const recordedDateSet = getRecordedDateSet(recordedDates);
 
   return getMonthDates(baseDate, weekStartsOn).map((date) => {
     const key = formatDateKey(date);
@@ -97,7 +97,7 @@ export function buildMonthCalendarDays({
       isToday: isToday(date),
       isSelected: isSameDay(date, selectedDate),
       isCurrentMonth: isSameMonth(date, baseDate),
-      summary: summaryMap.get(key),
+      hasRecord: recordedDateSet.has(key),
     };
   });
 }

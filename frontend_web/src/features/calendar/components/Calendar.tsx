@@ -1,19 +1,29 @@
 import "@/features/calendar/styles/calendar.css";
 
+import { addMonths, startOfMonth } from "date-fns";
+import { useMemo } from "react";
+
 import CalendarHeader from "@/features/calendar/components/CalendarHeader";
 import MonthlyCalendar from "@/features/calendar/components/MonthlyCalendar";
 import WeeklyCalendar from "@/features/calendar/components/WeeklyCalendar";
 
+import { useCalendarRecordedDatesQuery } from "../hooks/queries/useCalendarRecordedDatesQuery";
 import { useCalendar } from "../hooks/useCalendar";
-import type { DayRecordSummary } from "../types/calendar.types";
+import { buildMonthCalendarDays, formatDateKey } from "../utils/calendar";
 
 type Props = {
   initialDate?: Date;
-  summaries?: DayRecordSummary[];
+  recordedDates?: string[];
   onSelectDate?: (date: Date) => void;
 };
 
-export default function Calendar({ initialDate, summaries = [], onSelectDate }: Props) {
+const EMPTY_RECORDED_DATES: string[] = [];
+
+export default function Calendar({
+  initialDate,
+  recordedDates: fallbackRecordedDates = EMPTY_RECORDED_DATES,
+  onSelectDate,
+}: Props) {
   const {
     viewMode,
     selectedDate,
@@ -28,8 +38,35 @@ export default function Calendar({ initialDate, summaries = [], onSelectDate }: 
   } = useCalendar({
     initialDate,
     initialViewMode: "week",
-    summaries,
+    recordedDates: fallbackRecordedDates,
   });
+
+  const monthDateRange = useMemo(() => {
+    const startDate = startOfMonth(viewDate);
+    const endDate = addMonths(startDate, 1);
+
+    return {
+      startDate: formatDateKey(startDate),
+      endDate: formatDateKey(endDate),
+    };
+  }, [viewDate]);
+
+  const { recordedDates } = useCalendarRecordedDatesQuery({
+    enabled: viewMode === "month",
+    startDate: monthDateRange.startDate,
+    endDate: monthDateRange.endDate,
+  });
+
+  const displayedMonthDays = useMemo(() => {
+    if (recordedDates.length === 0) return monthDays;
+
+    return buildMonthCalendarDays({
+      baseDate: viewDate,
+      selectedDate,
+      recordedDates,
+      weekStartsOn: 1,
+    });
+  }, [monthDays, recordedDates, selectedDate, viewDate]);
 
   const handleSelectDateInWeek = (date: Date) => {
     selectDate(date);
@@ -68,7 +105,7 @@ export default function Calendar({ initialDate, summaries = [], onSelectDate }: 
           />
         ) : (
           <MonthlyCalendar
-            days={monthDays}
+            days={displayedMonthDays}
             onSelectDate={handleSelectDateInMonth}
             onSwipePrev={goPrev}
             onSwipeNext={goNext}

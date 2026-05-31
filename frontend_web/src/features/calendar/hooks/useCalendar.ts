@@ -8,12 +8,12 @@ import {
   movePrev,
 } from "@/features/calendar/utils/calendar";
 
-import type { DayRecordSummary, ViewMode } from "../types/calendar.types";
+import type { ViewMode } from "../types/calendar.types";
 
 type UseCalendarParams = {
   initialDate?: Date;
   initialViewMode?: ViewMode;
-  summaries?: DayRecordSummary[];
+  recordedDates?: string[];
 };
 
 type SelectDateOptions = {
@@ -23,7 +23,7 @@ type SelectDateOptions = {
 export function useCalendar({
   initialDate = new Date(),
   initialViewMode = "week",
-  summaries = [],
+  recordedDates = [],
 }: UseCalendarParams = {}) {
   const weekStartsOn = 1 as const;
   const [viewMode, setViewMode] = useState<ViewMode>(initialViewMode);
@@ -34,19 +34,19 @@ export function useCalendar({
     return buildWeekCalendarDays({
       baseDate: viewDate,
       selectedDate,
-      summaries,
+      recordedDates,
       weekStartsOn,
     });
-  }, [viewDate, selectedDate, summaries, weekStartsOn]);
+  }, [viewDate, selectedDate, recordedDates, weekStartsOn]);
 
   const monthDays = useMemo(() => {
     return buildMonthCalendarDays({
       baseDate: viewDate,
       selectedDate,
-      summaries,
+      recordedDates,
       weekStartsOn,
     });
-  }, [viewDate, selectedDate, summaries, weekStartsOn]);
+  }, [viewDate, selectedDate, recordedDates, weekStartsOn]);
 
   const toggleViewMode = () => {
     setViewMode((prev) => (prev === "week" ? "month" : "week"));
