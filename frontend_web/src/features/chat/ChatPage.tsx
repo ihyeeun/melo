@@ -1411,35 +1411,18 @@ function ChatHistorySkeleton() {
 }
 
 function AssistantMessageBubbles({ message, timeText }: { message: string; timeText?: string }) {
-  const bubbleTexts = splitAssistantMessageIntoBubbles(message);
+  const displayMessage = message.replace(/\n/g, "\n\n");
 
   return (
-    <>
-      {bubbleTexts.map((bubbleText, index) => {
-        const hasTimeText = Boolean(timeText) && index === bubbleTexts.length - 1;
-
-        return (
-          <p
-            key={`${index}-${bubbleText}`}
-            className={`${styles.assistantBubble} ${
-              hasTimeText ? styles.assistantBubbleWithTime : ""
-            } typo-body2`}
-            data-time={hasTimeText ? timeText : undefined}
-          >
-            {bubbleText}
-          </p>
-        );
-      })}
-    </>
+    <p
+      className={`${styles.assistantBubble} ${
+        timeText ? styles.assistantBubbleWithTime : ""
+      } typo-body2`}
+      data-time={timeText}
+    >
+      {displayMessage}
+    </p>
   );
-}
-
-function splitAssistantMessageIntoBubbles(message: string) {
-  return message
-    .replace(/\r\n?/g, "\n")
-    .split(/\n+/)
-    .map((part) => part.trim())
-    .filter((part) => part.length > 0);
 }
 
 function ChatInput({
