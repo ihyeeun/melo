@@ -755,7 +755,7 @@ function getEstimatedFoodMarkerBubbleSize(marker: FoodMarkerItem) {
     ),
   );
   const labelContentWidth = Math.max(
-    FOOD_MARKER_BUBBLE_MIN_WIDTH,
+    1,
     width - scoreWidth - contentGap - FOOD_MARKER_BUBBLE_HORIZONTAL_PADDING,
   );
   const lineCount = Math.max(1, Math.ceil(labelWidth / labelContentWidth));
