@@ -6,6 +6,10 @@ import {
   postTodayMealRecordRegister,
 } from "@/features/meal-record/api/DayMeal";
 import {
+  type RecommendMenuAnalyticsItem,
+  trackRecommendMenuCancel,
+} from "@/shared/analytics/recommendMenuEvents";
+import {
   type MealServingInputMode,
   type MealTime,
   MENU_INPUT_MODE,
@@ -13,13 +17,32 @@ import {
 } from "@/shared/api/types/api.dto";
 import type { UseMutationCallback } from "@/shared/api/types/callback.types";
 
+type MealRecordMutationAnalytics = {
+  recommendMenuCancel?: RecommendMenuAnalyticsItem[];
+};
+
+type RegisterMealMutationParams = RegisterMealRequestDto & {
+  analytics?: MealRecordMutationAnalytics;
+};
+
+function trackMutationAnalytics(analytics?: MealRecordMutationAnalytics) {
+  if (analytics?.recommendMenuCancel) {
+    trackRecommendMenuCancel(analytics.recommendMenuCancel);
+  }
+}
+
 export function useTodayMealRecordRegisterMutation(callbacks?: UseMutationCallback) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: postTodayMealRecordRegister,
+    mutationFn: (variables: RegisterMealMutationParams) => {
+      const { analytics, ...request } = variables;
+      void analytics;
+      return postTodayMealRecordRegister(request);
+    },
     onSuccess: async (_data, variables) => {
       await queryClient.invalidateQueries({ queryKey: queryKeys.dayMeals.byDate(variables.date) });
+      trackMutationAnalytics(variables.analytics);
       callbacks?.onSuccess?.();
     },
     onError: async (error, variables) => {
@@ -56,6 +79,7 @@ type DeleteWithRollbackParams = {
   dateKey: string;
   request: RegisterMealRequestDto;
   currentMenusByTime: Record<MealTime, MenuSnapshot[]>;
+  analytics?: MealRecordMutationAnalytics;
 };
 
 export const DELETE_MEAL_RECORD_RESULT = {
@@ -120,6 +144,11 @@ export function useTodayMealRecordDeleteWithRollbackMutation() {
         return rollbackSucceeded
           ? DELETE_MEAL_RECORD_RESULT.FAILED_RECOVERED
           : DELETE_MEAL_RECORD_RESULT.FAILED_UNRECOVERED;
+      }
+    },
+    onSuccess: (deleteResult, variables) => {
+      if (deleteResult === DELETE_MEAL_RECORD_RESULT.DELETED) {
+        trackMutationAnalytics(variables.analytics);
       }
     },
   });

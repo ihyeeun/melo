@@ -255,14 +255,25 @@ function FeedbackResultContent({
         selectedMenus,
         candidateIds: feedbackMenuIds,
       });
+      const previousSelectedMenuIds = new Set(
+        diaryMealRecordSelection?.menus.map((menu) => menu.id) ?? [],
+      );
+      const canceledMenus = menus.filter(
+        (menu) => previousSelectedMenuIds.has(menu.menu_id) && !selectedMenuIds.has(menu.menu_id),
+      );
 
       await registerDiaryMealRecordMutate(
-        buildDiaryMealRecordRequest({
-          dateKey: chatDateKey,
-          mealType,
-          selectedMenus: nextMenus,
-          image: getDiaryMealImage(dayMeals, targetMealTime),
-        }),
+        {
+          ...buildDiaryMealRecordRequest({
+            dateKey: chatDateKey,
+            mealType,
+            selectedMenus: nextMenus,
+            image: getDiaryMealImage(dayMeals, targetMealTime),
+          }),
+          analytics: {
+            recommendMenuCancel: canceledMenus,
+          },
+        },
       );
 
       toast.success("식사 기록이 등록되었어요.");

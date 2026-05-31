@@ -192,14 +192,25 @@ function RecommendResultContent({
         selectedMenus,
         candidateIds: recommendationMenuIds,
       });
+      const previousSelectedMenuIds = new Set(
+        diaryMealRecordSelection?.menus.map((menu) => menu.id) ?? [],
+      );
+      const canceledMenus = recommendations.filter(
+        (menu) => previousSelectedMenuIds.has(menu.menu_id) && !selectedMenuIds.has(menu.menu_id),
+      );
 
       await registerDiaryMealRecordMutate(
-        buildDiaryMealRecordRequest({
-          dateKey: chatDateKey,
-          mealType,
-          selectedMenus: nextMenus,
-          image: getDiaryMealImage(dayMeals, targetMealTime),
-        }),
+        {
+          ...buildDiaryMealRecordRequest({
+            dateKey: chatDateKey,
+            mealType,
+            selectedMenus: nextMenus,
+            image: getDiaryMealImage(dayMeals, targetMealTime),
+          }),
+          analytics: {
+            recommendMenuCancel: canceledMenus,
+          },
+        },
       );
 
       recommendations

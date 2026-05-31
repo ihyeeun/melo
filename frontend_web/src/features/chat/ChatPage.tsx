@@ -893,6 +893,9 @@ export default function ChatPage() {
             image: mealRecord.image,
           }),
           currentMenusByTime: mealRecord.dayMeals.menusByTime,
+          analytics: {
+            recommendMenuCancel: mealRecordMenus,
+          },
         });
 
         if (deleteResult !== DELETE_MEAL_RECORD_RESULT.DELETED) {
@@ -911,12 +914,17 @@ export default function ChatPage() {
       const scrollTargetKey = prepareMealRecordScroll(mealRecord.dateKey, previousMealRecord.time);
 
       await registerDiaryMealRecordMutate(
-        buildDiaryMealRecordRequest({
-          dateKey: mealRecord.dateKey,
-          mealType: getMealTypeFromChatMealTime(previousMealRecord.time),
-          selectedMenus: remainingMenus,
-          image: mealRecord.image,
-        }),
+        {
+          ...buildDiaryMealRecordRequest({
+            dateKey: mealRecord.dateKey,
+            mealType: getMealTypeFromChatMealTime(previousMealRecord.time),
+            selectedMenus: remainingMenus,
+            image: mealRecord.image,
+          }),
+          analytics: {
+            recommendMenuCancel: mealRecordMenus,
+          },
+        },
       );
 
       toast.success("식사 기록에서 메뉴를 제거했어요.");
@@ -940,6 +948,9 @@ export default function ChatPage() {
           image: mealRecord.image,
         }),
         currentMenusByTime: mealRecord.dayMeals.menusByTime,
+        analytics: {
+          recommendMenuCancel: mealRecord.menus,
+        },
       });
 
       if (deleteResult !== DELETE_MEAL_RECORD_RESULT.DELETED) {
@@ -1047,6 +1058,11 @@ export default function ChatPage() {
             selectedMenus: editingSelectedMenus,
             candidateIds: editingSelectedMenus.map((menu) => menu.id),
           });
+    const removedMenus = getRemovedMealRecordMenus(
+      previousMealRecord.menus,
+      nextMenus,
+      editingMealRecordContext.menus,
+    );
 
     if (nextMenus.length === 0) {
       try {
@@ -1059,6 +1075,9 @@ export default function ChatPage() {
             image: editingMealRecordContext.image,
           }),
           currentMenusByTime: editingMealRecordContext.dayMeals.menusByTime,
+          analytics: {
+            recommendMenuCancel: removedMenus,
+          },
         });
 
         if (deleteResult !== DELETE_MEAL_RECORD_RESULT.DELETED) {
@@ -1097,15 +1116,20 @@ export default function ChatPage() {
       }
 
       await registerDiaryMealRecordMutate(
-        buildDiaryMealRecordRequest({
-          dateKey: editingMealRecordContext.dateKey,
-          mealType: editingMealType,
-          selectedMenus: nextMenus,
-          image:
-            previousMealRecord.time === nextTime
-              ? editingMealRecordContext.image
-              : getDiaryMealImage(editingMealRecordContext.dayMeals, nextTime),
-        }),
+        {
+          ...buildDiaryMealRecordRequest({
+            dateKey: editingMealRecordContext.dateKey,
+            mealType: editingMealType,
+            selectedMenus: nextMenus,
+            image:
+              previousMealRecord.time === nextTime
+                ? editingMealRecordContext.image
+                : getDiaryMealImage(editingMealRecordContext.dayMeals, nextTime),
+          }),
+          analytics: {
+            recommendMenuCancel: removedMenus,
+          },
+        },
       );
 
       toast.success("식사 기록이 수정되었어요.");
@@ -2277,6 +2301,19 @@ function getRemainingMealRecordMenus(
 ): SelectedDiaryMealRecordMenu[] {
   const removeMenuIdSet = new Set(removeMenuIds);
   return mealRecord.menus.filter((menu) => !removeMenuIdSet.has(menu.id));
+}
+
+function getRemovedMealRecordMenus(
+  previousMenus: SelectedDiaryMealRecordMenu[],
+  nextMenus: SelectedDiaryMealRecordMenu[],
+  menuDetails: ChatMealRecordMenu[],
+) {
+  const nextMenuIdSet = new Set(nextMenus.map((menu) => menu.id));
+  const removedMenuIdSet = new Set(
+    previousMenus.filter((menu) => !nextMenuIdSet.has(menu.id)).map((menu) => menu.id),
+  );
+
+  return menuDetails.filter((menu) => removedMenuIdSet.has(menu.menu_id));
 }
 
 function getMealRecordViewModelByTime(
