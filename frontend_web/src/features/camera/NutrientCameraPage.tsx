@@ -152,6 +152,18 @@ export default function NutrientCameraPage() {
     void handleCameraActions();
   }, [handleCameraActions, shouldAutoOpenCamera]);
 
+  const handleCaptureErrorModalOpenChange = useCallback(
+    (open: boolean) => {
+      if (open) return;
+
+      setCaptureErrorFeedback(null);
+      window.setTimeout(() => {
+        void handleCameraActions();
+      }, 0);
+    },
+    [handleCameraActions],
+  );
+
   return (
     <section className={styles.page}>
       {shouldHideWebCameraPrompt ? null : (
@@ -188,9 +200,7 @@ export default function NutrientCameraPage() {
 
       <CheckButtonModal
         open={captureErrorFeedback !== null}
-        onOpenChange={(open) => {
-          if (!open) setCaptureErrorFeedback(null);
-        }}
+        onOpenChange={handleCaptureErrorModalOpenChange}
         title={captureErrorFeedback?.title ?? ""}
         description={captureErrorFeedback?.description}
       />

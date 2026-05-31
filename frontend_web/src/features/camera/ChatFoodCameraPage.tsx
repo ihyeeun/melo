@@ -94,6 +94,18 @@ export default function ChatFoodCameraPage() {
     void handleCameraActions();
   }, [handleCameraActions]);
 
+  const handleCaptureErrorModalOpenChange = useCallback(
+    (open: boolean) => {
+      if (open) return;
+
+      setCaptureErrorFeedback(null);
+      window.setTimeout(() => {
+        void handleCameraActions();
+      }, 0);
+    },
+    [handleCameraActions],
+  );
+
   return (
     <section className={styles.page}>
       <PageHeader title="음식 촬영" onBack={() => navigateBack({ fallbackTo: PATH.CHAT })} />
@@ -128,9 +140,7 @@ export default function ChatFoodCameraPage() {
 
       <CheckButtonModal
         open={captureErrorFeedback !== null}
-        onOpenChange={(open) => {
-          if (!open) setCaptureErrorFeedback(null);
-        }}
+        onOpenChange={handleCaptureErrorModalOpenChange}
         title={captureErrorFeedback?.title ?? ""}
         description={captureErrorFeedback?.description}
       />
