@@ -123,7 +123,7 @@ export default function FeedbackResultPage() {
     return (
       <section className={styles.page}>
         <PageHeader
-          title="메뉴 추천 결과"
+          title="메뉴 결과"
           onBack={() => {
             navigateBack({ fallbackTo: PATH.CHAT });
           }}
