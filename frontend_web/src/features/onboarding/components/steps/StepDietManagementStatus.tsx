@@ -11,13 +11,25 @@ const DIET_MANAGEMENT_OPTIONS = [
   "기타",
 ] as const;
 
+const NO_MANAGEMENT_OPTION_INDEX = 3;
+
 export default function StepDietManagementStatus({ data, update }: StepComponentProps) {
   const selectedStatuses = data.diet_management_status ?? [];
 
   const toggleStatus = (index: number) => {
-    const nextStatuses = selectedStatuses.includes(index)
-      ? selectedStatuses.filter((value) => value !== index)
-      : [...selectedStatuses, index];
+    const isSelected = selectedStatuses.includes(index);
+
+    if (index === NO_MANAGEMENT_OPTION_INDEX) {
+      update({ diet_management_status: isSelected ? [] : [NO_MANAGEMENT_OPTION_INDEX] });
+      return;
+    }
+
+    const statusesWithoutNoManagement = selectedStatuses.filter(
+      (value) => value !== NO_MANAGEMENT_OPTION_INDEX,
+    );
+    const nextStatuses = isSelected
+      ? statusesWithoutNoManagement.filter((value) => value !== index)
+      : [...statusesWithoutNoManagement, index];
 
     update({ diet_management_status: nextStatuses });
   };
@@ -30,6 +42,7 @@ export default function StepDietManagementStatus({ data, update }: StepComponent
           <br />
           지금 하고 있는 것이 있나요?
         </h2>
+        <p className={`${styles.textAlternative} typo-body2`}>복수 선택 가능</p>
       </div>
 
       <div className={styles.onboardingOptionList}>
