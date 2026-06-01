@@ -4,28 +4,42 @@ import styles from "@/features/onboarding/styles/OnboardingSteps.module.css";
 import OnboardingOptionCard from "./OnboardingOptionCard";
 
 const DIET_MANAGEMENT_OPTIONS = [
-  "식단 앱으로\n칼로리·영양소를 기록하고 있어요",
-  "PT나 영양사 등\n전문가 가이드를 받고 있어요",
-  "따로 기록하진 않지만,\n메뉴 고를 때 의식적으로 신경 써요",
-  "딱히 하고 있는 건 없어요",
-  "기타",
+  {
+    title: "식단 앱으로\n칼로리·영양소를 기록하고 있어요",
+    isNoManagement: false,
+  },
+  {
+    title: "PT나 영양사 등\n전문가 가이드를 받고 있어요",
+    isNoManagement: false,
+  },
+  {
+    title: "따로 기록하진 않지만,\n메뉴 고를 때 의식적으로 신경 써요",
+    isNoManagement: false,
+  },
+  {
+    title: "딱히 하고 있는 건 없어요",
+    isNoManagement: true,
+  },
+  {
+    title: "기타",
+    isNoManagement: false,
+  },
 ] as const;
-
-const NO_MANAGEMENT_OPTION_INDEX = 3;
 
 export default function StepDietManagementStatus({ data, update }: StepComponentProps) {
   const selectedStatuses = data.diet_management_status ?? [];
 
   const toggleStatus = (index: number) => {
     const isSelected = selectedStatuses.includes(index);
+    const selectedOption = DIET_MANAGEMENT_OPTIONS[index];
 
-    if (index === NO_MANAGEMENT_OPTION_INDEX) {
-      update({ diet_management_status: isSelected ? [] : [NO_MANAGEMENT_OPTION_INDEX] });
+    if (selectedOption.isNoManagement) {
+      update({ diet_management_status: isSelected ? [] : [index] });
       return;
     }
 
     const statusesWithoutNoManagement = selectedStatuses.filter(
-      (value) => value !== NO_MANAGEMENT_OPTION_INDEX,
+      (value) => !DIET_MANAGEMENT_OPTIONS[value]?.isNoManagement,
     );
     const nextStatuses = isSelected
       ? statusesWithoutNoManagement.filter((value) => value !== index)
@@ -46,12 +60,12 @@ export default function StepDietManagementStatus({ data, update }: StepComponent
       </div>
 
       <div className={styles.onboardingOptionList}>
-        {DIET_MANAGEMENT_OPTIONS.map((title, index) => (
+        {DIET_MANAGEMENT_OPTIONS.map((option, index) => (
           <OnboardingOptionCard
-            key={title}
+            key={option.title}
             selected={selectedStatuses.includes(index)}
             onClick={() => toggleStatus(index)}
-            title={title}
+            title={option.title}
           />
         ))}
       </div>
