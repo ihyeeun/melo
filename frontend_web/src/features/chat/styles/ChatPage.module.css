@@ -558,8 +558,9 @@
 }
 
 .chipContainer {
-  background-color: var(--bg-primary-2);
+  background-color: var(--bg-white);
   color: var(--label-primary);
+  border: 1px solid var(--border-neutral);
   width: fit-content;
   padding: 8px 16px;
   border-radius: 100px;
