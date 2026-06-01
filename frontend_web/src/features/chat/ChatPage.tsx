@@ -244,6 +244,58 @@ function useEnsureBottomOnQuickAction({
   ]);
 }
 
+function useSoftKeyboardVisible(isInputFocused: boolean) {
+  const [isVisible, setIsVisible] = useState(false);
+  const baselineViewportHeightRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const viewport = window.visualViewport;
+    const getViewportHeight = () => viewport?.height ?? window.innerHeight;
+
+    const updateKeyboardVisibility = () => {
+      const currentHeight = getViewportHeight();
+
+      if (!isInputFocused) {
+        baselineViewportHeightRef.current = currentHeight;
+        setIsVisible((prev) => (prev ? false : prev));
+        return;
+      }
+
+      if (
+        baselineViewportHeightRef.current === null ||
+        currentHeight > baselineViewportHeightRef.current
+      ) {
+        baselineViewportHeightRef.current = currentHeight;
+      }
+
+      const keyboardHeight = baselineViewportHeightRef.current - currentHeight;
+      const nextIsVisible = keyboardHeight > 120;
+
+      setIsVisible((prev) => (prev === nextIsVisible ? prev : nextIsVisible));
+    };
+
+    updateKeyboardVisibility();
+
+    viewport?.addEventListener("resize", updateKeyboardVisibility);
+    viewport?.addEventListener("scroll", updateKeyboardVisibility);
+    window.addEventListener("resize", updateKeyboardVisibility);
+    window.addEventListener("orientationchange", updateKeyboardVisibility);
+
+    return () => {
+      viewport?.removeEventListener("resize", updateKeyboardVisibility);
+      viewport?.removeEventListener("scroll", updateKeyboardVisibility);
+      window.removeEventListener("resize", updateKeyboardVisibility);
+      window.removeEventListener("orientationchange", updateKeyboardVisibility);
+    };
+  }, [isInputFocused]);
+
+  return isVisible;
+}
+
 export default function ChatPage() {
   const navigate = useNavigate();
   const { isTop } = useActivity();
@@ -281,6 +333,7 @@ export default function ChatPage() {
   const [timelineScrollTarget, setTimelineScrollTarget] = useState<TimelineScrollTarget | null>(
     null,
   );
+  const isSoftKeyboardVisible = useSoftKeyboardVisible(isInputFocused);
 
   const { data, isPending: isHistoryPending } = useGetChatHistoryQuery();
   const { mutateAsync: sendMessageMutation, isPending: isSendPending } = useSendMessageMutation();
@@ -368,10 +421,10 @@ export default function ChatPage() {
   const hasTimelineContent = timelineItems.length > 0 || isAwaitingChatResponse;
   const isTypingPending = isAwaitingChatResponse && isSendPending;
   const isInputEmpty = inputValue.trim().length === 0;
-  const isQuickActionVisible = isInputEmpty && !isInputFocused && !isAwaitingChatResponse;
+  const isQuickActionVisible = isInputEmpty && !isSoftKeyboardVisible && !isAwaitingChatResponse;
   const isScrollToBottomButtonVisible = hasTimelineContent && isScrolledAwayFromBottom;
   const isFloatingButtonVisible =
-    !isInputFocused && (isQuickActionVisible || isScrollToBottomButtonVisible);
+    !isSoftKeyboardVisible && (isQuickActionVisible || isScrollToBottomButtonVisible);
 
   const updateIsScrolledAwayFromBottom = useCallback(() => {
     const main = mainRef.current;
@@ -690,7 +743,7 @@ export default function ChatPage() {
     };
   }, [
     hasTimelineContent,
-    isInputFocused,
+    isSoftKeyboardVisible,
     isQuickActionVisible,
     pendingInput,
     updateIsScrolledAwayFromBottom,
@@ -942,19 +995,17 @@ export default function ChatPage() {
     try {
       const scrollTargetKey = prepareMealRecordScroll(mealRecord.dateKey, previousMealRecord.time);
 
-      await registerDiaryMealRecordMutate(
-        {
-          ...buildDiaryMealRecordRequest({
-            dateKey: mealRecord.dateKey,
-            mealType: getMealTypeFromChatMealTime(previousMealRecord.time),
-            selectedMenus: remainingMenus,
-            image: mealRecord.image,
-          }),
-          analytics: {
-            recommendMenuCancel: mealRecordMenus,
-          },
+      await registerDiaryMealRecordMutate({
+        ...buildDiaryMealRecordRequest({
+          dateKey: mealRecord.dateKey,
+          mealType: getMealTypeFromChatMealTime(previousMealRecord.time),
+          selectedMenus: remainingMenus,
+          image: mealRecord.image,
+        }),
+        analytics: {
+          recommendMenuCancel: mealRecordMenus,
         },
-      );
+      });
 
       toast.success("식사 기록에서 메뉴를 제거했어요.");
       commitMealRecordScroll(scrollTargetKey);
@@ -1144,22 +1195,20 @@ export default function ChatPage() {
         }
       }
 
-      await registerDiaryMealRecordMutate(
-        {
-          ...buildDiaryMealRecordRequest({
-            dateKey: editingMealRecordContext.dateKey,
-            mealType: editingMealType,
-            selectedMenus: nextMenus,
-            image:
-              previousMealRecord.time === nextTime
-                ? editingMealRecordContext.image
-                : getDiaryMealImage(editingMealRecordContext.dayMeals, nextTime),
-          }),
-          analytics: {
-            recommendMenuCancel: removedMenus,
-          },
+      await registerDiaryMealRecordMutate({
+        ...buildDiaryMealRecordRequest({
+          dateKey: editingMealRecordContext.dateKey,
+          mealType: editingMealType,
+          selectedMenus: nextMenus,
+          image:
+            previousMealRecord.time === nextTime
+              ? editingMealRecordContext.image
+              : getDiaryMealImage(editingMealRecordContext.dayMeals, nextTime),
+        }),
+        analytics: {
+          recommendMenuCancel: removedMenus,
         },
-      );
+      });
 
       toast.success("식사 기록이 수정되었어요.");
       handleMealRecordEditClose();
@@ -1471,7 +1520,7 @@ export default function ChatPage() {
           </div>
         )}
         <div>
-          {!isInputFocused && !isAwaitingChatResponse && (
+          {!isSoftKeyboardVisible && !isAwaitingChatResponse && (
             <section className={`${styles.chipSection}`}>
               {QUICK_CHIP_LIST.map((chip) => (
                 <button
@@ -1490,7 +1539,9 @@ export default function ChatPage() {
         <div ref={endAnchorRef} />
       </main>
 
-      <footer className={`${styles.footer} ${isInputFocused ? styles.footerKeyboardOpen : ""}`}>
+      <footer
+        className={`${styles.footer} ${isSoftKeyboardVisible ? styles.footerKeyboardOpen : ""}`}
+      >
         <ChatInput
           value={inputValue}
           isInputEmpty={isInputEmpty}
