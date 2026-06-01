@@ -43,7 +43,7 @@ export default function SettingsSubCodePage() {
 
   return (
     <div className={styles.page}>
-      <PageHeader onBack={() => navigate(-1)} title="구독 코드 입력" />
+      <PageHeader onBack={() => navigate(-1)} />
 
       <main className={styles.main}>
         <div className={styles.content}>

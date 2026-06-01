@@ -84,7 +84,7 @@ export default function SettingsFeedbackPage() {
 
   return (
     <div className={styles.page}>
-      <PageHeader onBack={() => navigate(-1)} title="문의하기" />
+      <PageHeader onBack={() => navigate(-1)} />
 
       <main className={styles.main}>
         <div className={styles.content}>

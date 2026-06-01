@@ -10,7 +10,7 @@ import styles from "./TermsPage.module.css";
 export default function TermsPage() {
   return (
     <div className={styles.page}>
-      <PageHeader title="약관" onBack={() => navigateBack({ fallbackTo: PATH.HOME })} />
+      <PageHeader onBack={() => navigateBack({ fallbackTo: PATH.HOME })} />
 
       <section className={styles.container}>
         <div className={styles.accordionContainer}>

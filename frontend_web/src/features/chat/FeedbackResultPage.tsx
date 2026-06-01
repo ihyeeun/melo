@@ -262,19 +262,17 @@ function FeedbackResultContent({
         (menu) => previousSelectedMenuIds.has(menu.menu_id) && !selectedMenuIds.has(menu.menu_id),
       );
 
-      await registerDiaryMealRecordMutate(
-        {
-          ...buildDiaryMealRecordRequest({
-            dateKey: chatDateKey,
-            mealType,
-            selectedMenus: nextMenus,
-            image: getDiaryMealImage(dayMeals, targetMealTime),
-          }),
-          analytics: {
-            recommendMenuCancel: canceledMenus,
-          },
+      await registerDiaryMealRecordMutate({
+        ...buildDiaryMealRecordRequest({
+          dateKey: chatDateKey,
+          mealType,
+          selectedMenus: nextMenus,
+          image: getDiaryMealImage(dayMeals, targetMealTime),
+        }),
+        analytics: {
+          recommendMenuCancel: canceledMenus,
         },
-      );
+      });
 
       toast.success("식사 기록이 등록되었어요.");
       requestChatMealRecordFocus({
@@ -290,7 +288,7 @@ function FeedbackResultContent({
   return (
     <section className={styles.page}>
       <PageHeader
-        title="메뉴 추천 결과"
+        title="메뉴 결과"
         onBack={() => {
           navigateBack({ fallbackTo: PATH.CHAT });
         }}
@@ -600,7 +598,12 @@ function FeedbackResultSkeleton() {
                   <Skeleton width="34%" height={16} radius={999} />
                   <div className={styles.metaRow}>
                     <Skeleton width="38%" height={16} radius={999} />
-                    <Skeleton className={`${styles.calories} textNoWrap`} width="28%" height={22} radius={999} />
+                    <Skeleton
+                      className={`${styles.calories} textNoWrap`}
+                      width="28%"
+                      height={22}
+                      radius={999}
+                    />
                   </div>
                 </div>
               </div>
