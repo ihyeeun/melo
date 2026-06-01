@@ -59,10 +59,6 @@ export function setFreeUserGuardEnabled(enabled: boolean) {
   return freeUserGuardEnabledRuntime;
 }
 
-export function toggleFreeUserGuardEnabled() {
-  return setFreeUserGuardEnabled(!freeUserGuardEnabledRuntime);
-}
-
 export function subscribeFeatureGuardChange(listener: (enabled: boolean) => void) {
   featureGuardChangeListeners.add(listener);
   return () => {
