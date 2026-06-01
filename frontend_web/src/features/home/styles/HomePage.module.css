@@ -1,22 +1,17 @@
-.container {
+.page {
   display: flex;
   flex-direction: column;
   height: 100%;
-  overflow-y: auto;
+  min-height: 100dvh;
   width: 100%;
 }
 
-.calendarWrapper {
-  flex-shrink: 0;
-  overflow-x: hidden;
-  width: 100%;
-}
-
-.homeContainer {
-  background-color: var(--bg-normal);
+.main {
   display: flex;
   flex: 1;
   flex-direction: column;
+  overflow-y: auto;
+  background-color: var(--bg-normal);
   padding: 20px;
   gap: 20px;
 }

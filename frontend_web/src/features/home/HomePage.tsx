@@ -32,18 +32,16 @@ export default function HomePage() {
   };
 
   return (
-    <div className={style.container}>
-      <div className={style.calendarWrapper}>
-        <Calendar initialDate={selectedDate} onSelectDate={setSelectedDate} />
-      </div>
-      <section className={style.homeContainer}>
+    <div className={style.page}>
+      <Calendar initialDate={selectedDate} onSelectDate={setSelectedDate} />
+      <main className={style.main}>
         <PreviewTodayScoreSection selectedDate={selectedDateKey} />
         <MenuActionSection
           selectedDate={selectedDateKey}
           showMenuBoardCameraCard={showMenuBoardCameraCard}
           showChatCard={showChatCard}
         />
-      </section>
+      </main>
       {isOnboardingVisible && hasOnboardingTargets ? (
         <HomeOnboardingOverlay
           onFinish={finishOnboarding}
