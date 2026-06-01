@@ -340,13 +340,8 @@ function useSoftKeyboardVisible(isInputFocused: boolean, clientOsName: ClientOsN
       updateBaselineViewport(currentHeight, currentWidth);
 
       if (isAndroid) {
-        if (isInputFocused) {
-          setIsVisible(true);
-          return;
-        }
-
         if (baselineViewportHeightRef.current === null) {
-          setIsVisible(false);
+          setIsVisible(isInputFocused);
           return;
         }
 
