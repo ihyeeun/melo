@@ -94,7 +94,7 @@ export default function NutrientAddPage() {
     const params = new URLSearchParams({
       date: dateKey,
       mealType,
-      name: foodName.trim(),
+      name: foodName.trim().slice(0, 300),
     });
 
     if (brandName.trim()) {

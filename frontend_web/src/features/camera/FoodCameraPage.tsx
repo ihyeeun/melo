@@ -134,6 +134,8 @@ export default function FoodCameraPage() {
 
       if (nextMenuIds.size > MAX_MEAL_RECORD_MENUS) {
         toast.warning(MEAL_RECORD_MENU_LIMIT_MESSAGE);
+        setCapturedPreviewSrc(null);
+        setIsUploading(false);
         return;
       }
 
