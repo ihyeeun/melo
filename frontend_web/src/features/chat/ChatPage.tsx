@@ -91,6 +91,7 @@ const FEEDBACK_GAUGE_END_ANGLE = 10;
 const FEEDBACK_GAUGE_PATH = getFeedbackGaugePath();
 const CAMERA_HINT_DISMISSED_SESSION_KEY = "chat.cameraHintDismissed";
 const SCROLL_BOTTOM_THRESHOLD = 24;
+const SOFT_KEYBOARD_VISIBLE_HEIGHT_THRESHOLD = 120;
 const MEAL_TIME_LIST: MealTime[] = [0, 1, 2, 3, 4];
 
 type RecordedMenuSummary = {
@@ -247,6 +248,7 @@ function useEnsureBottomOnQuickAction({
 function useSoftKeyboardVisible(isInputFocused: boolean) {
   const [isVisible, setIsVisible] = useState(false);
   const baselineViewportHeightRef = useRef<number | null>(null);
+  const lastViewportWidthRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (typeof window === "undefined") {
@@ -255,15 +257,14 @@ function useSoftKeyboardVisible(isInputFocused: boolean) {
 
     const viewport = window.visualViewport;
     const getViewportHeight = () => viewport?.height ?? window.innerHeight;
+    const getViewportWidth = () => viewport?.width ?? window.innerWidth;
 
-    const updateKeyboardVisibility = () => {
-      const currentHeight = getViewportHeight();
-
-      if (!isInputFocused) {
-        baselineViewportHeightRef.current = currentHeight;
-        setIsVisible((prev) => (prev ? false : prev));
-        return;
+    const updateBaselineViewport = (currentHeight: number, currentWidth: number) => {
+      if (lastViewportWidthRef.current !== null && lastViewportWidthRef.current !== currentWidth) {
+        baselineViewportHeightRef.current = null;
       }
+
+      lastViewportWidthRef.current = currentWidth;
 
       if (
         baselineViewportHeightRef.current === null ||
@@ -271,11 +272,28 @@ function useSoftKeyboardVisible(isInputFocused: boolean) {
       ) {
         baselineViewportHeightRef.current = currentHeight;
       }
+    };
+
+    const updateKeyboardVisibility = () => {
+      const currentHeight = getViewportHeight();
+      const currentWidth = getViewportWidth();
+
+      updateBaselineViewport(currentHeight, currentWidth);
+
+      if (!isInputFocused) {
+        setIsVisible(false);
+        return;
+      }
+
+      if (baselineViewportHeightRef.current === null) {
+        setIsVisible(false);
+        return;
+      }
 
       const keyboardHeight = baselineViewportHeightRef.current - currentHeight;
-      const nextIsVisible = keyboardHeight > 120;
+      const nextIsVisible = keyboardHeight > SOFT_KEYBOARD_VISIBLE_HEIGHT_THRESHOLD;
 
-      setIsVisible((prev) => (prev === nextIsVisible ? prev : nextIsVisible));
+      setIsVisible(nextIsVisible);
     };
 
     updateKeyboardVisibility();
