@@ -66,7 +66,7 @@ export default function NutrientAddPage() {
   }, [brandSearchReturnKey, clearBrandSearchSelection]);
 
   const handleFoodNameChange = (event: ChangeEvent<HTMLInputElement>) => {
-    setFoodName(event.target.value);
+    setFoodName(event.target.value.slice(0, 300));
   };
 
   const handleOpenBrandSearch = () => {
