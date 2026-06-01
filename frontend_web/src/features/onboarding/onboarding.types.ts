@@ -11,7 +11,7 @@ export type UserInfoRequest = {
   target_calories: number;
   target_ratio: [carbs: number, protein: number, fat: number];
   subCode?: string;
-  diet_management_status: number;
+  diet_management_status: number[];
   persona_type: number;
   eating_out_freq_weekly: number;
   job_type: number;

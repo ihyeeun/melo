@@ -7,7 +7,5 @@ export type UserProfileUpdatedField = Exclude<AnalyticsUserPropertyKey, "is_test
 export function trackUserProfileUpdated(updatedFields: UserProfileUpdatedField[]) {
   if (updatedFields.length === 0) return;
 
-  track(EVENT_NAME.USER_PROFILE_UPDATED, {
-    updated_fields: updatedFields,
-  });
+  track(EVENT_NAME.USER_PROFILE_UPDATED);
 }

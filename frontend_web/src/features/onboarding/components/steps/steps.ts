@@ -14,6 +14,8 @@ import type { StepMeta } from "@/features/onboarding/onboarding.types";
 import { isValidBirthYear } from "@/shared/commons/picker/yearOptions";
 
 const hasSelectedValue = (value?: number | null) => value !== undefined && value !== null;
+const hasSelectedValues = (value?: readonly number[] | null) =>
+  Array.isArray(value) && value.length > 0;
 
 const BASE_STEPS: StepMeta[] = [
   {
@@ -62,7 +64,7 @@ const BASE_STEPS: StepMeta[] = [
     id: "diet_management_status",
     title: "식단 관리 상태",
     component: StepDietManagementStatus,
-    isValid: (d) => hasSelectedValue(d.diet_management_status),
+    isValid: (d) => hasSelectedValues(d.diet_management_status),
   },
   {
     id: "persona_type",

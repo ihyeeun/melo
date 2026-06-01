@@ -208,7 +208,7 @@ export default function OnboardingPage() {
         userData.protein!,
         userData.fat!,
       ] as UserInfoRequest["target_ratio"],
-      diet_management_status: userData.diet_management_status ?? 0,
+      diet_management_status: userData.diet_management_status ?? [],
       persona_type: userData.persona_type ?? 0,
       eating_out_freq_weekly: userData.eating_out_freq_weekly ?? 0,
       job_type: userData.job_type ?? 0,

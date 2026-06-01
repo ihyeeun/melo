@@ -5,6 +5,7 @@ const DIET_MANAGEMENT_STATUS_VALUES = [
   "pro_guidance",
   "conscious_choosing",
   "none",
+  "other",
 ] as const;
 
 const PERSONA_TYPE_VALUES = ["data_driven", "safety_seeker", "efficiency_seeker"] as const;
@@ -13,12 +14,18 @@ const EATING_OUT_FREQ_WEEKLY_VALUES = ["0_2_times", "3_4_times", "5_plus_times"]
 
 const JOB_TYPE_VALUES = ["office_worker", "freelancer", "student", "other"] as const;
 
-const LUNCH_LOCATION_VALUES = ["restaurant", "cafeteria", "packed_lunch", "home"] as const;
+const LUNCH_LOCATION_VALUES = [
+  "restaurant",
+  "cafeteria",
+  "packed_lunch",
+  "home",
+  "other",
+] as const;
 
 type OnboardingAnalyticsValue<T extends readonly string[]> = T[number] | null;
 
 type OnboardingAnalyticsProperties = {
-  diet_management_status: OnboardingAnalyticsValue<typeof DIET_MANAGEMENT_STATUS_VALUES>;
+  diet_management_status: OnboardingAnalyticsValue<typeof DIET_MANAGEMENT_STATUS_VALUES>[];
   persona_type: OnboardingAnalyticsValue<typeof PERSONA_TYPE_VALUES>;
   eating_out_freq_weekly: OnboardingAnalyticsValue<typeof EATING_OUT_FREQ_WEEKLY_VALUES>;
   job_type: OnboardingAnalyticsValue<typeof JOB_TYPE_VALUES>;
@@ -45,13 +52,24 @@ function getOptionValue<T extends readonly string[]>(
   return values[selectedIndex] ?? null;
 }
 
+function getOptionValues<T extends readonly string[]>(
+  values: T,
+  selectedIndexes?: readonly number[] | null,
+): OnboardingAnalyticsValue<T>[] {
+  if (!selectedIndexes) {
+    return [];
+  }
+
+  return selectedIndexes.map((selectedIndex) => values[selectedIndex] ?? null);
+}
+
 export function getOnboardingAnalyticsProperties(
   data: OnboardingAnalyticsSource,
 ): OnboardingAnalyticsProperties {
   const jobType = getOptionValue(JOB_TYPE_VALUES, data.job_type);
 
   return {
-    diet_management_status: getOptionValue(
+    diet_management_status: getOptionValues(
       DIET_MANAGEMENT_STATUS_VALUES,
       data.diet_management_status,
     ),

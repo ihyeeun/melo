@@ -10,6 +10,7 @@ const LUNCH_LOCATION_OPTIONS = [
   "구내식당",
   "도시락 지참",
   "재택으로 집에서",
+  "기타",
 ] as const;
 
 export default function StepJobAndLunchLocation({ data, update }: StepComponentProps) {
