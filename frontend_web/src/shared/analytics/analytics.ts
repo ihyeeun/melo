@@ -12,11 +12,15 @@ type PendingEvent = {
   eventName: AnalyticsEventName;
   properties?: AnalyticsProperties;
 };
+type AnalyticsUserIdentitySource = Parameters<typeof buildAnalyticsUserProperties>[0] & {
+  user_id: number | string;
+};
 
 let initialized = false;
 let analyticsUnavailable = false;
 let currentNickname: string | null = null;
 let identifiedUserPropertiesKey: string | null = null;
+let currentUserId: string | null = null;
 let currentUserProperties: AnalyticsUserProperties = {};
 const pendingEvents: PendingEvent[] = [];
 const trackedOnceKeys = new Set<string>();
@@ -70,6 +74,10 @@ export function initAnalytics() {
 
   initialized = true;
 
+  if (currentUserId) {
+    amplitude.setUserId(currentUserId);
+  }
+
   if (Object.keys(currentUserProperties).length > 0) {
     syncUserProperties(currentUserProperties);
   }
@@ -77,6 +85,17 @@ export function initAnalytics() {
   pendingEvents.splice(0).forEach(({ eventName, properties }) => {
     sendTrack(eventName, properties);
   });
+}
+
+export function identifyAnalyticsUser(source: AnalyticsUserIdentitySource) {
+  const userId = String(source.user_id);
+  currentUserId = userId;
+
+  if (initialized) {
+    amplitude.setUserId(userId);
+  }
+
+  syncUserProperties(buildAnalyticsUserProperties(source));
 }
 
 export function identifyUserProperties(source: Parameters<typeof buildAnalyticsUserProperties>[0]) {
@@ -98,6 +117,19 @@ export function identifyNickname(nickname?: string | null, isTestUser?: boolean)
 
 export function clearAnalyticsUserProperties() {
   syncUserProperties({});
+}
+
+export function resetAnalyticsIdentity() {
+  pendingEvents.length = 0;
+  trackedOnceKeys.clear();
+  currentNickname = null;
+  currentUserId = null;
+  currentUserProperties = {};
+  identifiedUserPropertiesKey = null;
+
+  if (!initialized) return;
+
+  amplitude.reset();
 }
 
 function sendTrack(eventName: AnalyticsEventName, properties?: AnalyticsProperties) {
