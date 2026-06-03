@@ -665,6 +665,7 @@ export default function AppWebViewScreen({
   const retryWebViewLoad = useCallback(() => {
     hasWebViewLoadErrorRef.current = false;
     didLoadOnceRef.current = false;
+    latestWebPathRef.current = null;
     pendingTabPathRef.current = isTabWebView ? normalizedTabPath : null;
     setWebViewLoadError(null);
     setIsWebViewLoading(true);
