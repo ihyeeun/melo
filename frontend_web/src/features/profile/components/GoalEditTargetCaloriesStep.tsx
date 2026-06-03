@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { useTargetCaloriesMutation } from "@/features/onboarding/hooks/mutations/useRecommendMutation";
 import {
@@ -88,6 +88,10 @@ function showInvalidGoalCaloriesToast(goalWeekEstimate: GoalWeekEstimateResult) 
 export default function GoalEditTargetCaloriesStep({ data, update }: Props) {
   const [open, setOpen] = useState(false);
   const [draftTargetCalories, setDraftTargetCalories] = useState<number | undefined>(undefined);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const focusInput = () => {
+    inputRef.current?.focus();
+  };
 
   const {
     mutate,
@@ -222,7 +226,7 @@ export default function GoalEditTargetCaloriesStep({ data, update }: Props) {
 
         <p className={`${styles.goalKcalHelper} typo-body1`}>{goalWeekMessage}</p>
       </div>
-      <BottomSheet isOpen={open} onClose={() => setOpen(false)}>
+      <BottomSheet isOpen={open} onClose={() => setOpen(false)} onOpenEnd={focusInput}>
         <div className={styles.goalKcalSheet}>
           <h3 className="typo-title2">목표 칼로리</h3>
           <EditorInput
@@ -240,6 +244,7 @@ export default function GoalEditTargetCaloriesStep({ data, update }: Props) {
             onChange={(value) => {
               setDraftTargetCalories(value === undefined ? undefined : toInteger(value));
             }}
+            inputRef={inputRef}
           />
           <div className={styles.goalKcalActions}>
             <Button

@@ -7,6 +7,7 @@ import { useTabBarVisibilitySync } from "@/shared/api/bridge/useTabBarVisibility
 type BottomSheetProps = {
   isOpen: boolean;
   onClose: () => void;
+  onOpenEnd?: () => void;
   title?: string;
   className?: string;
   disableContentDrag?: boolean;
@@ -28,6 +29,7 @@ function blurActiveElement() {
 export default function BottomSheet({
   isOpen,
   onClose,
+  onOpenEnd,
   title,
   className,
   disableContentDrag = false,
@@ -36,7 +38,13 @@ export default function BottomSheet({
   useTabBarVisibilitySync(isOpen);
 
   return (
-    <Sheet isOpen={isOpen} onClose={onClose} detent="content" className={className}>
+    <Sheet
+      isOpen={isOpen}
+      onClose={onClose}
+      onOpenEnd={onOpenEnd}
+      detent="content"
+      className={className}
+    >
       <Sheet.Container
         style={{
           paddingBottom:

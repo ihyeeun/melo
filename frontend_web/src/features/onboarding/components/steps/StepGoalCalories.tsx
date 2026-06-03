@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { useTargetCaloriesMutation } from "@/features/onboarding/hooks/mutations/useRecommendMutation";
 import type { StepComponentProps } from "@/features/onboarding/onboarding.types";
@@ -82,6 +82,11 @@ function showInvalidGoalCaloriesToast(goalWeekEstimate: GoalWeekEstimateResult) 
 export default function SteptargetCalories({ data, update }: StepComponentProps) {
   const [open, setOpen] = useState(false);
   const [drafttargetCalories, setDrafttargetCalories] = useState<number | undefined>(undefined);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const focusInput = () => {
+    inputRef.current?.focus();
+  };
 
   const {
     mutate,
@@ -220,10 +225,11 @@ export default function SteptargetCalories({ data, update }: StepComponentProps)
 
         <p className={`${styles.onboardingGoalKcalHelper} typo-body1`}>{goalWeekMessage}</p>
       </div>
-      <BottomSheet isOpen={open} onClose={() => setOpen(false)}>
+      <BottomSheet isOpen={open} onClose={() => setOpen(false)} onOpenEnd={focusInput}>
         <div className={`${styles.onboardingGoalKcalSheet}`}>
           <h3 className="typo-title2">목표 칼로리</h3>
           <EditorInput
+            inputRef={inputRef}
             type="number"
             inputMode="numeric"
             value={drafttargetCalories}

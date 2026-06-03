@@ -709,6 +709,7 @@ export default function AppWebViewScreen({
         style={styles.webview}
         webviewDebuggingEnabled={true}
         hideKeyboardAccessoryView
+        keyboardDisplayRequiresUserAction={false}
         showsHorizontalScrollIndicator={false}
         showsVerticalScrollIndicator={false}
         onOpenWindow={onOpenWindow}
@@ -716,9 +717,6 @@ export default function AppWebViewScreen({
       {isWebViewLoading && !webViewLoadError ? (
         <View pointerEvents="none" style={styles.loadingOverlay}>
           <ActivityIndicator size="small" color="#ff8000" />
-          <Text allowFontScaling={false} style={styles.loadingText}>
-            화면을 불러오는 중이에요
-          </Text>
         </View>
       ) : null}
       {webViewLoadError ? (

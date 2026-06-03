@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import ActionCard from "@/features/home/components/cards/ActionCard";
 import { useGetBodyLog } from "@/features/home/hooks/queries/useBodyLogQuery";
@@ -69,6 +69,11 @@ export default function ProfilePage() {
   const [nickNameErrorMessage, setNickNameErrorMessage] = useState("");
   const [selectedMetric, setSelectedMetric] = useState<WeeklyMetricType>("weight");
   const { mutate: updateNickName, isPending: isNickNamePending } = useNickNameUpdateMutation();
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const focusInput = () => {
+    inputRef.current?.focus();
+  };
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- Keep sheet input synced with async profile data.
@@ -300,6 +305,7 @@ export default function ProfilePage() {
 
           <BottomSheet
             isOpen={sheetOpen}
+            onOpenEnd={focusInput}
             onClose={() => {
               setSheetOpen(false);
               setNickName(sanitizeNickName(profile?.nickname ?? ""));
@@ -322,6 +328,7 @@ export default function ProfilePage() {
                     aria-describedby={
                       nickNameErrorMessage ? "profile-nickname-error-message" : undefined
                     }
+                    ref={inputRef}
                   />
                   {nickNameErrorMessage ? (
                     <p

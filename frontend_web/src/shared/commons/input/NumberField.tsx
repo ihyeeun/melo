@@ -29,6 +29,7 @@ type Props = {
   incrementIcon?: React.ReactNode;
   normalizeValue?: (value: number) => number;
   isInputTextAllowed?: (nextInputValue: string) => boolean;
+  inputRef?: React.Ref<HTMLInputElement>;
   inputProps?: Omit<React.InputHTMLAttributes<HTMLInputElement>, "value" | "onChange" | "type">;
   classNames?: {
     root?: string;
@@ -98,6 +99,7 @@ export default function NumberField({
   incrementIcon,
   normalizeValue = toOneDecimalPlace,
   isInputTextAllowed,
+  inputRef,
   inputProps,
   classNames,
 }: Props) {
@@ -169,6 +171,7 @@ export default function NumberField({
           )}
         >
           <BaseNumberField.Input
+            ref={inputRef}
             className={cx(unstyled ? undefined : styles.input, classNames?.input, inputClassName)}
             inputMode={inputMode ?? "decimal"}
             {...restInputProps}

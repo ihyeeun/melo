@@ -1,10 +1,7 @@
 import { useEffect } from "react";
 
 import GoalEditTargetCaloriesStep from "@/features/profile/components/GoalEditTargetCaloriesStep";
-import {
-  GOAL_CALORIES_MAX,
-  GOAL_CALORIES_MIN,
-} from "@/features/profile/goalEdit.model";
+import { GOAL_CALORIES_MAX, GOAL_CALORIES_MIN } from "@/features/profile/goalEdit.model";
 import { useGetProfileQuery } from "@/features/profile/hooks/queries/useProfileQuery";
 import styles from "@/features/profile/styles/GoalEditPage.module.css";
 import { PATH } from "@/router/path";
@@ -68,7 +65,9 @@ export default function GoalEditTargetCaloriesPage() {
         {isPending && !visibleDraft && (
           <p className={styles.loadingText}>프로필 목표 정보를 불러오는 중입니다.</p>
         )}
-        {!isPending && !visibleDraft && <p className={styles.loadingText}>프로필을 불러오지 못했어요</p>}
+        {!isPending && !visibleDraft && (
+          <p className={styles.loadingText}>프로필을 불러오지 못했어요</p>
+        )}
 
         {visibleDraft && (
           <section className={styles.stageSection}>

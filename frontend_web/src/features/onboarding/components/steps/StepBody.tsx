@@ -1,4 +1,5 @@
 import { Field } from "@base-ui/react";
+import { useEffect, useRef } from "react";
 
 import {
   ONBOARDING_HEIGHT_RANGE,
@@ -9,6 +10,18 @@ import styles from "@/features/onboarding/styles/OnboardingSteps.module.css";
 import { NumberInput } from "@/shared/commons/input/NumberInput";
 
 export default function StepBody({ data, update }: StepComponentProps) {
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const frameId = window.requestAnimationFrame(() => {
+      inputRef.current?.focus();
+    });
+
+    return () => {
+      window.cancelAnimationFrame(frameId);
+    };
+  }, []);
+
   return (
     <section className={`${styles.content} ${styles.onboardingStepReadable}`}>
       <div className={styles.onboardingTitle}>
@@ -26,6 +39,7 @@ export default function StepBody({ data, update }: StepComponentProps) {
           step={1}
           unit="cm"
           normalizeOnBlur={false}
+          inputRef={inputRef}
         />
 
         <InputCard
@@ -55,6 +69,7 @@ type InputCardProps = {
   step?: number;
   unit?: string;
   normalizeOnBlur?: boolean;
+  inputRef?: React.Ref<HTMLInputElement>;
 };
 
 export function InputCard({
@@ -67,6 +82,7 @@ export function InputCard({
   step,
   unit,
   normalizeOnBlur,
+  inputRef,
 }: InputCardProps) {
   return (
     <Field.Root className={styles.onboardingInputCard}>
@@ -82,6 +98,7 @@ export function InputCard({
           step={step}
           unit={unit}
           normalizeOnBlur={normalizeOnBlur}
+          inputRef={inputRef}
         />
       </div>
     </Field.Root>
