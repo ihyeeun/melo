@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 
 import Calendar from "@/features/calendar/components/Calendar";
 import HomeOnboardingOverlay from "@/features/home/components/HomeOnboardingOverlay";
@@ -20,12 +20,21 @@ export default function HomePage() {
   const showMenuBoardCameraCard = !isMenuBoardCameraBlocked;
   const showChatCard = !isChatBlocked;
   const hasOnboardingTargets = showMenuBoardCameraCard || showChatCard;
+  const [readyHomeContentDateKey, setReadyHomeContentDateKey] = useState<string | null>(null);
   const [isOnboardingVisible, setIsOnboardingVisible] = useState(() => {
     if (typeof window === "undefined") return false;
     return window.localStorage.getItem(HOME_ONBOARDING_STORAGE_KEY) !== "done";
   });
-  const shouldShowOnboarding = isOnboardingVisible && hasOnboardingTargets;
+  const isHomeContentReady = readyHomeContentDateKey === selectedDateKey;
+  const shouldShowOnboarding = isOnboardingVisible && hasOnboardingTargets && isHomeContentReady;
   useTabBarVisibilitySync(shouldShowOnboarding);
+
+  const handleHomeContentReadyChange = useCallback((dateKey: string, isReady: boolean) => {
+    setReadyHomeContentDateKey((previousDateKey) => {
+      if (isReady) return dateKey;
+      return previousDateKey === dateKey ? null : previousDateKey;
+    });
+  }, []);
 
   const finishOnboarding = () => {
     window.localStorage.setItem(HOME_ONBOARDING_STORAGE_KEY, "done");
@@ -36,7 +45,10 @@ export default function HomePage() {
     <div className={style.page}>
       <Calendar initialDate={selectedDate} onSelectDate={setSelectedDate} />
       <main className={style.main}>
-        <PreviewTodayScoreSection selectedDate={selectedDateKey} />
+        <PreviewTodayScoreSection
+          selectedDate={selectedDateKey}
+          onReadyChange={handleHomeContentReadyChange}
+        />
         <MenuActionSection
           selectedDate={selectedDateKey}
           showMenuBoardCameraCard={showMenuBoardCameraCard}

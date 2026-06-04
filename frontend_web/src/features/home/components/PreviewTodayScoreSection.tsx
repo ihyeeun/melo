@@ -25,7 +25,15 @@ import {
   getCalorieProgressPercent,
 } from "@/shared/utils/nutrientScore";
 
-export default function PreviewTodayScoreSection({ selectedDate }: { selectedDate: string }) {
+type PreviewTodayScoreSectionProps = {
+  onReadyChange?: (selectedDate: string, isReady: boolean) => void;
+  selectedDate: string;
+};
+
+export default function PreviewTodayScoreSection({
+  onReadyChange,
+  selectedDate,
+}: PreviewTodayScoreSectionProps) {
   const navigation = useNavigate();
 
   const { data: dayMealSummary, isPending: isSummaryPending } = useDayMealsQuery(selectedDate);
@@ -77,6 +85,11 @@ export default function PreviewTodayScoreSection({ selectedDate }: { selectedDat
   const isCalorieExceeded =
     targetCalories !== null && (dayMealSummary?.totalCalories ?? 0) > targetCalories;
   const isTargetInfoPending = shouldFetchProfile && isProfilePending;
+  const isSectionReady = !isSummaryPending && hasTargetsLoaded && !isTargetInfoPending;
+
+  useEffect(() => {
+    onReadyChange?.(selectedDate, isSectionReady);
+  }, [isSectionReady, onReadyChange, selectedDate]);
 
   const handleTodayMealScoreClick = () => {
     if (!hasValidTargets(targets)) {
