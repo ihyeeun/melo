@@ -1469,11 +1469,7 @@ export default function ChatPage() {
                     <div className={styles.assistantMessageContent}>
                       <AssistantMessageBubbles
                         message={chatItem.response_payload.intro_message}
-                        timeText={
-                          chatItem.response_payload.chat_category === "recommendation"
-                            ? assistantTimeText
-                            : undefined
-                        }
+                        timeText={assistantTimeText}
                       />
 
                       {chatItem.response_payload.chat_category === "general" ? (
@@ -2117,7 +2113,6 @@ function FeedbackSection({
   chatId,
   feedback,
   hasImage,
-  timeText,
   onMealRecordClick,
   onMealRecordCancelClick,
   isMealRecorded,
@@ -2277,9 +2272,6 @@ function FeedbackSection({
           </div>
         </div>
       </article>
-
-      <AssistantMessageBubbles message={feedback.feedback_summary} />
-      <AssistantMessageBubbles message={feedback.feedback_reason} timeText={timeText} />
     </div>
   );
 }

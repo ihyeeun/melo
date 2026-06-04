@@ -324,8 +324,6 @@ export interface FeedbackDto {
   total_calories: number;
   score: number;
   is_appropriate: boolean;
-  feedback_summary: string;
-  feedback_reason: string;
 }
 
 export interface ChatFeedbackMenuResponseDto {
