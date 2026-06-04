@@ -418,7 +418,7 @@ export function MealMenuNutrientDetail({
               value="unit"
               className={`${styles.TabsTab} ${inputMode === "unit" ? "typo-label1" : "typo-label2"}`}
             >
-              1{menu.unit_quantity.trim() === "인분" ? menu.unit_quantity : "기준량"} ({menu.weight}
+              1{menu.unit_quantity === "인분" ? menu.unit_quantity : "기준량"} ({menu.weight}
               {menu.unit === MENU_UNIT.GRAM ? "g" : "ml"})
             </Tabs.Tab>
             <Tabs.Tab
