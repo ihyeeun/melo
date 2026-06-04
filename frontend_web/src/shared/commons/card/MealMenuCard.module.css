@@ -71,12 +71,6 @@
   color: var(--label-assistive);
 }
 
-.suggestionChipLabel {
-  background-color: var(--interaction-primary);
-  border: 1px solid var(--border-primary);
-  color: var(--label-primary);
-}
-
 .iconButton {
   align-items: center;
   border-radius: 6px;
