@@ -122,6 +122,7 @@ export function MealMenuCard({
   const displayedCalories =
     typeof calories === "number" && Number.isFinite(calories) ? calories : null;
   const weightUnitText = unit === 1 ? "ml" : "g";
+  const shouldShowUnitQuantity = unit_quantity?.trim() === "인분";
 
   return (
     <article
@@ -162,10 +163,12 @@ export function MealMenuCard({
                 {brand}
               </span>
             )}
-            <span className={`${styles.unitAmount} typo-label4`}>
-              {formatQuantity(safeDisplayUnitCount)}
-              {unit_quantity}
-            </span>
+            {shouldShowUnitQuantity && (
+              <span className={`${styles.unitAmount} typo-label4`}>
+                {formatQuantity(safeDisplayUnitCount)}
+                {unit_quantity}
+              </span>
+            )}
             <span
               className={`${styles.unitAmount} typo-label4`}
             >{`(${formatQuantity(resolvedConsumedWeight)}${weightUnitText})`}</span>

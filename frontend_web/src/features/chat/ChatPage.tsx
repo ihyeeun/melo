@@ -2050,7 +2050,7 @@ function RecommendationSection({
                 </span>
               )}
               <span className={`${styles.recommendAmount} typo-label4`}>
-                1{topRecommendation.unit_quantity} ({topRecommendation.weight}
+                1{getServingUnitLabel(topRecommendation.unit_quantity)} ({topRecommendation.weight}
                 {topRecommendation.unit === 0 ? "g" : "ml"})
               </span>
             </p>
@@ -2779,8 +2779,12 @@ function parseDateValue(value: Date | string | null | undefined) {
   return date ? date.getTime() : null;
 }
 
+function getServingUnitLabel(unitQuantity: string) {
+  return unitQuantity.trim() === "인분" ? unitQuantity : "기준량";
+}
+
 function formatMenuServing(menu: FeedbackDto["menus"][number]) {
-  return `1${menu.unit_quantity} (${formatNumberWithMaxOneDecimal(menu.weight)}${menu.unit === 0 ? "g" : "ml"})`;
+  return `1${getServingUnitLabel(menu.unit_quantity)} (${formatNumberWithMaxOneDecimal(menu.weight)}${menu.unit === 0 ? "g" : "ml"})`;
 }
 
 function resolveErrorMessage(

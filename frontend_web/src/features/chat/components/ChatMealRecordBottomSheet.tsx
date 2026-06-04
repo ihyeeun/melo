@@ -238,10 +238,10 @@ export function ChatMealRecordBottomSheet({
           <section className={styles.menuSection}>
             {selectedItems.map((item) => {
               const displayValue = getDisplayValue(item.quantity, item.mode, item.servingContext);
+              const unitSelectLabel =
+                item.servingContext.unitLabel === "인분" ? "인분" : "기준량";
               const selectLabel =
-                item.mode === "unit"
-                  ? item.servingContext.unitLabel
-                  : item.servingContext.weightUnit;
+                item.mode === "unit" ? unitSelectLabel : item.servingContext.weightUnit;
 
               return (
                 <article key={item.id} className={styles.menuItem}>
@@ -342,7 +342,7 @@ export function ChatMealRecordBottomSheet({
                                 value="unit"
                                 className={`${styles.selectItem} typo-body2`}
                               >
-                                <Select.ItemText>{item.servingContext.unitLabel}</Select.ItemText>
+                                <Select.ItemText>{unitSelectLabel}</Select.ItemText>
                               </Select.Item>
                               <Select.Item
                                 value="weight"

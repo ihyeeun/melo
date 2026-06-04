@@ -96,6 +96,8 @@ export default function RecommendDetailPage() {
   }
 
   const visibleNutrientSource = nutrientSource ?? recommendation;
+  const servingUnitLabel =
+    recommendation.unit_quantity.trim() === "인분" ? recommendation.unit_quantity : "기준량";
 
   return (
     <section className={styles.page}>
@@ -118,7 +120,7 @@ export default function RecommendDetailPage() {
                     </span>
                   )}
                   <p className={`${styles.secondaryText} typo-label4`}>
-                    1{recommendation.unit_quantity} ({recommendation.weight}
+                    1{servingUnitLabel} ({recommendation.weight}
                     {recommendation.unit === 0 ? "g" : "ml"})
                   </p>
                 </div>
