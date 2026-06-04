@@ -264,8 +264,6 @@ export function requestNativeImageUpload<T = unknown>(payload: ImageUploadReques
       type: "IMAGE_UPLOAD_REQUEST",
       payload,
     }),
-    {
-      timeoutMs: 240000,
-    },
+    { timeoutMs: 0 },
   );
 }
