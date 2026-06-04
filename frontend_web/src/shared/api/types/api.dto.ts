@@ -152,6 +152,15 @@ export interface MealRecordResponseDto {
 
 export type DateRequestDto = DateField;
 
+export interface MealRecordedDatesRequestDto {
+  startDate: ApiDate;
+  endDate: ApiDate;
+}
+
+export interface MealRecordedDatesResponseDto {
+  "recorded-dates": ApiDate[];
+}
+
 export type RegisterMenuRequestDto = Pick<
   MenuBaseFields,
   "name" | "brand" | "unit" | "weight" | "calories"
