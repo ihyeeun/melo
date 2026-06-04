@@ -61,7 +61,7 @@ export default function KakaoWebLoginPage() {
             <p className={`${styles.loginFooter} typo-body3`}>
               가입하면 melo의 <br />
               <a
-                href="https://third-princess-d57.notion.site/privacypolicy"
+                href="https://third-princess-d57.notion.site/termsofuseandprivacypolicy"
                 rel="noreferrer"
                 target="_blank"
                 className={styles.link}

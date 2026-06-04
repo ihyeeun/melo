@@ -31,6 +31,7 @@ export const API_ERROR_MESSAGE = {
   SUB_CODE_ALREADY_EXISTS: "이미 등록한 구독 코드예요",
   SUB_CODE_LIMIT_EXCEEDED: "사용 한도가 초과된 구독 코드예요",
   REQUEST_TIMEOUT: "요청 시간이 초과되었습니다 잠시 후 다시 시도해주세요",
+  NETWORK_ERROR: "서버에 연결할 수 없어요 네트워크 상태를 확인해주세요",
   SERVICE_UNAVAILABLE: "서버가 일시적으로 불안정해요 잠시 후 다시 시도해주세요",
 } as const;
 
@@ -163,6 +164,7 @@ const API_ERROR_USER_MESSAGE_RULES: ApiErrorUserMessageRule[] = [
 ];
 
 const API_ERROR_USER_MESSAGE_BY_ERROR_CODE: Record<string, string> = {
+  NETWORK_ERROR: API_ERROR_MESSAGE.NETWORK_ERROR,
   REQUEST_TIMEOUT: API_ERROR_MESSAGE.REQUEST_TIMEOUT,
 };
 

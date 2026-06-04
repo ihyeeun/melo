@@ -20,17 +20,23 @@ export default function OnboardingScreen() {
       isLoggingOutRef.current = true;
 
       void (async () => {
-        try {
-          const refreshToken = await loadRefreshToken();
+        let refreshToken: string | null = null;
 
-          if (refreshToken) {
-            await signOut(refreshToken);
-          }
+        try {
+          refreshToken = await loadRefreshToken();
         } catch (error) {
-          console.warn("온보딩 이탈 로그아웃 요청 실패", error);
+          console.warn("온보딩 이탈 refreshToken 조회 실패", error);
         } finally {
           await clearTokens();
           router.replace("/(auth)/login");
+        }
+
+        if (!refreshToken) return;
+
+        try {
+          await signOut(refreshToken);
+        } catch (error) {
+          console.warn("온보딩 이탈 로그아웃 요청 실패", error);
         }
       })();
     });

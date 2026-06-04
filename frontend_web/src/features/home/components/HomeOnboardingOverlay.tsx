@@ -1,4 +1,10 @@
-import { type CSSProperties, useEffect, useMemo, useRef, useState } from "react";
+import {
+  type CSSProperties,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
 import styles from "@/features/home/styles/HomeOnboardingOverlay.module.css";
 import { Button } from "@/shared/commons/button/Button";
@@ -30,6 +36,15 @@ type SpotlightMetrics = {
   y: number;
 };
 
+type CommittedSpotlightMetrics = SpotlightMetrics & {
+  stepIndex: number;
+  target: OnboardingTarget;
+};
+
+const SPOTLIGHT_PADDING = 2;
+const AFTER_READY_FRAME_DELAY = 2;
+const METRIC_CHANGE_TOLERANCE = 0.5;
+
 function clamp(value: number, min: number, max: number) {
   if (value < min) return min;
   if (value > max) return max;
@@ -38,6 +53,41 @@ function clamp(value: number, min: number, max: number) {
 
 function findTargetElement(target: OnboardingTarget) {
   return document.querySelector<HTMLElement>(`[data-home-onboarding-target="${target}"]`);
+}
+
+function readSpotlightMetrics(target: OnboardingTarget): SpotlightMetrics | null {
+  const targetElement = findTargetElement(target);
+
+  if (!targetElement) return null;
+
+  const rect = targetElement.getBoundingClientRect();
+
+  if (rect.width <= 0 || rect.height <= 0) return null;
+
+  return {
+    x: Math.max(rect.left - SPOTLIGHT_PADDING, 0),
+    y: Math.max(rect.top - SPOTLIGHT_PADDING, 0),
+    width: rect.width + SPOTLIGHT_PADDING * 2,
+    height: rect.height + SPOTLIGHT_PADDING * 2,
+    targetCenterX: rect.left + rect.width / 2,
+    targetRight: rect.right,
+    targetTop: rect.top,
+    viewportWidth: window.innerWidth,
+    viewportHeight: window.innerHeight,
+  };
+}
+
+function hasMetricSettled(previous: SpotlightMetrics | null, next: SpotlightMetrics | null) {
+  if (!previous || !next) return false;
+
+  return (
+    Math.abs(previous.x - next.x) < METRIC_CHANGE_TOLERANCE &&
+    Math.abs(previous.y - next.y) < METRIC_CHANGE_TOLERANCE &&
+    Math.abs(previous.width - next.width) < METRIC_CHANGE_TOLERANCE &&
+    Math.abs(previous.height - next.height) < METRIC_CHANGE_TOLERANCE &&
+    Math.abs(previous.viewportWidth - next.viewportWidth) < METRIC_CHANGE_TOLERANCE &&
+    Math.abs(previous.viewportHeight - next.viewportHeight) < METRIC_CHANGE_TOLERANCE
+  );
 }
 
 export default function HomeOnboardingOverlay({
@@ -68,47 +118,54 @@ export default function HomeOnboardingOverlay({
   }, [showChatCard, showMenuBoardCameraCard]);
 
   const [stepIndex, setStepIndex] = useState(0);
-  const [metrics, setMetrics] = useState<SpotlightMetrics | null>(null);
+  const [committedMetrics, setCommittedMetrics] = useState<CommittedSpotlightMetrics | null>(null);
   const [bubbleMeasure, setBubbleMeasure] = useState({ stepIndex: 0, width: 0 });
   const bubbleRef = useRef<HTMLElement | null>(null);
   const currentStep = onboardingSteps[stepIndex] ?? null;
+  const metrics =
+    currentStep &&
+    committedMetrics?.stepIndex === stepIndex &&
+    committedMetrics.target === currentStep.target
+      ? committedMetrics
+      : null;
   const bubbleWidth = bubbleMeasure.stepIndex === stepIndex ? bubbleMeasure.width : 0;
 
   useEffect(() => {
     if (!currentStep) return;
 
+    let animationFrameId = 0;
+
     const updateMetrics = () => {
-      const targetElement = findTargetElement(currentStep.target);
+      const nextMetrics = readSpotlightMetrics(currentStep.target);
 
-      if (!targetElement) {
-        setMetrics(null);
-        return;
-      }
+      if (!nextMetrics) return;
 
-      const rect = targetElement.getBoundingClientRect();
-      const padding = 2;
+      setCommittedMetrics((previousMetrics) =>
+        previousMetrics?.stepIndex === stepIndex &&
+        previousMetrics.target === currentStep.target &&
+        hasMetricSettled(previousMetrics, nextMetrics)
+          ? previousMetrics
+          : { ...nextMetrics, stepIndex, target: currentStep.target },
+      );
+    };
 
-      setMetrics({
-        x: Math.max(rect.left - padding, 0),
-        y: Math.max(rect.top - padding, 0),
-        width: rect.width + padding * 2,
-        height: rect.height + padding * 2,
-        targetCenterX: rect.left + rect.width / 2,
-        targetRight: rect.right,
-        targetTop: rect.top,
-        viewportWidth: window.innerWidth,
-        viewportHeight: window.innerHeight,
+    const scheduleMeasureAfterReadyPaint = (remainingFrames = AFTER_READY_FRAME_DELAY) => {
+      animationFrameId = requestAnimationFrame(() => {
+        if (remainingFrames > 1) {
+          scheduleMeasureAfterReadyPaint(remainingFrames - 1);
+          return;
+        }
+
+        updateMetrics();
       });
     };
 
-    updateMetrics();
-
-    let animationFrameId = 0;
     const scheduleUpdate = () => {
       cancelAnimationFrame(animationFrameId);
-      animationFrameId = requestAnimationFrame(updateMetrics);
+      scheduleMeasureAfterReadyPaint();
     };
 
+    scheduleUpdate();
     window.addEventListener("resize", scheduleUpdate);
     window.addEventListener("scroll", scheduleUpdate, true);
 
@@ -117,7 +174,7 @@ export default function HomeOnboardingOverlay({
       window.removeEventListener("resize", scheduleUpdate);
       window.removeEventListener("scroll", scheduleUpdate, true);
     };
-  }, [currentStep]);
+  }, [currentStep, stepIndex]);
 
   useEffect(() => {
     if (!currentStep || !metrics) return;

@@ -15,8 +15,17 @@ import {
   DEFAULT_TAB_BACK_FALLBACK_PATH,
 } from "@/src/shared/navigation/webNavigationCommand";
 import { router } from "expo-router";
-import { useCallback, useEffect, useMemo, useRef } from "react";
-import { BackHandler, Linking, Platform, StyleSheet } from "react-native";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  ActivityIndicator,
+  BackHandler,
+  Linking,
+  Platform,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import WebView, {
@@ -45,6 +54,13 @@ type AppWebViewScreenProps = {
 };
 
 type WebViewOpenWindowEvent = Parameters<NonNullable<WebViewProps["onOpenWindow"]>>[0];
+type WebViewLoadErrorEvent = Parameters<NonNullable<WebViewProps["onError"]>>[0];
+type WebViewHttpErrorEvent = Parameters<NonNullable<WebViewProps["onHttpError"]>>[0];
+type WebViewLoadError = {
+  description: string;
+  detail: string | null;
+  title: string;
+};
 
 function buildWebAppUrl(path?: string) {
   if (!path) return webAppUrl;
@@ -143,11 +159,7 @@ function navigateToTabRoute(
   const action = getNativeTabHistoryAction(targetTab, currentTab);
   if (!action) return;
 
-  if (
-    preferBackFromChat &&
-    currentTab &&
-    shouldUseNativeBackOnTabExit(currentTab, targetTab)
-  ) {
+  if (preferBackFromChat && currentTab && shouldUseNativeBackOnTabExit(currentTab, targetTab)) {
     router.dismissTo(getTabRoute(targetTab));
     return;
   }
@@ -288,6 +300,31 @@ function createSafeAreaSyncScript(topInset: number, bottomInset: number) {
   `;
 }
 
+function formatWebViewLoadError(event: WebViewLoadErrorEvent): WebViewLoadError {
+  const { code, description, url } = event.nativeEvent;
+  const detail = [typeof code === "number" ? `code=${code}` : null, description, url]
+    .filter(Boolean)
+    .join(" · ");
+
+  return {
+    title: "웹 화면을 불러오지 못했어요",
+    description: "서버 연결이나 네트워크 상태를 확인한 뒤 다시 시도해주세요.",
+    detail: detail || null,
+  };
+}
+
+function formatWebViewHttpError(event: WebViewHttpErrorEvent): WebViewLoadError | null {
+  const { statusCode, url } = event.nativeEvent;
+
+  if (statusCode < 500) return null;
+
+  return {
+    title: "서버 연결이 불안정해요",
+    description: "서버 응답이 정상적이지 않아요. 잠시 후 다시 시도해주세요.",
+    detail: `status=${statusCode}${url ? ` · ${url}` : ""}`,
+  };
+}
+
 export default function AppWebViewScreen({
   path,
   currentTab,
@@ -300,12 +337,16 @@ export default function AppWebViewScreen({
   const canGoBackRef = useRef(false);
   const didLoadOnceRef = useRef(false);
   const didInitializeTabPathSyncRef = useRef(false);
+  const hasWebViewLoadErrorRef = useRef(false);
   const pendingTabPathRef = useRef<string | null>(null);
   const previousChatBackRequestKeyRef = useRef(chatBackRequestKey);
   const previousTabRef = useRef<AppTabName | undefined>(currentTab);
   const latestWebPathRef = useRef<string | null>(null);
   const tabBarHiddenByPathRef = useRef(false);
   const tabBarHiddenByWebRef = useRef(false);
+  const [webViewKey, setWebViewKey] = useState(0);
+  const [isWebViewLoading, setIsWebViewLoading] = useState(true);
+  const [webViewLoadError, setWebViewLoadError] = useState<WebViewLoadError | null>(null);
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
   const isTabWebView = Boolean(currentTab);
@@ -519,7 +560,10 @@ export default function AppWebViewScreen({
           return;
         }
 
-        if (rawData.type === "FEATURE_GUARD_SYNC" && typeof rawData.payload?.enabled === "boolean") {
+        if (
+          rawData.type === "FEATURE_GUARD_SYNC" &&
+          typeof rawData.payload?.enabled === "boolean"
+        ) {
           onFeatureGuardEnabledChange?.(rawData.payload.enabled);
           return;
         }
@@ -579,13 +623,54 @@ export default function AppWebViewScreen({
     webViewRef.current?.injectJavaScript(`${safeAreaSyncScript}true;`);
   }, [safeAreaSyncScript]);
 
+  const onLoadStart = useCallback(() => {
+    hasWebViewLoadErrorRef.current = false;
+    setIsWebViewLoading(true);
+    setWebViewLoadError(null);
+  }, []);
+
   const onLoadEnd = useCallback(() => {
+    setIsWebViewLoading(false);
+
+    if (hasWebViewLoadErrorRef.current) {
+      return;
+    }
+
     didLoadOnceRef.current = true;
     webViewRef.current?.injectJavaScript(`${safeAreaSyncScript}true;`);
 
     if (!isTabWebView) return;
     flushPendingTabPathSync();
   }, [flushPendingTabPathSync, isTabWebView, safeAreaSyncScript]);
+
+  const onLoadError = useCallback((event: WebViewLoadErrorEvent) => {
+    const error = formatWebViewLoadError(event);
+
+    hasWebViewLoadErrorRef.current = true;
+    setIsWebViewLoading(false);
+    setWebViewLoadError(error);
+    console.warn("[WebView] load failed", event.nativeEvent);
+  }, []);
+
+  const onHttpError = useCallback((event: WebViewHttpErrorEvent) => {
+    const error = formatWebViewHttpError(event);
+    if (!error) return;
+
+    hasWebViewLoadErrorRef.current = true;
+    setIsWebViewLoading(false);
+    setWebViewLoadError(error);
+    console.warn("[WebView] http error", event.nativeEvent);
+  }, []);
+
+  const retryWebViewLoad = useCallback(() => {
+    hasWebViewLoadErrorRef.current = false;
+    didLoadOnceRef.current = false;
+    latestWebPathRef.current = null;
+    pendingTabPathRef.current = isTabWebView ? normalizedTabPath : null;
+    setWebViewLoadError(null);
+    setIsWebViewLoading(true);
+    setWebViewKey((key) => key + 1);
+  }, [isTabWebView, normalizedTabPath]);
 
   const onOpenWindow = useCallback(async (event: WebViewOpenWindowEvent) => {
     const targetUrl = event.nativeEvent.targetUrl?.trim();
@@ -608,11 +693,15 @@ export default function AppWebViewScreen({
   return (
     <SafeAreaView style={styles.container} edges={["left", "right"]}>
       <WebView
+        key={webViewKey}
         ref={webViewRef}
         source={webViewSource}
         injectedJavaScriptBeforeContentLoaded={injectedScriptBeforeContentLoaded}
         onMessage={onMessage}
+        onLoadStart={onLoadStart}
         onLoadEnd={onLoadEnd}
+        onError={onLoadError}
+        onHttpError={onHttpError}
         onNavigationStateChange={onNavigationStateChange}
         allowsBackForwardNavigationGestures={false}
         javaScriptEnabled
@@ -621,10 +710,44 @@ export default function AppWebViewScreen({
         style={styles.webview}
         webviewDebuggingEnabled={true}
         hideKeyboardAccessoryView
+        keyboardDisplayRequiresUserAction={false}
         showsHorizontalScrollIndicator={false}
         showsVerticalScrollIndicator={false}
         onOpenWindow={onOpenWindow}
       />
+      {isWebViewLoading && !webViewLoadError ? (
+        <View pointerEvents="none" style={styles.loadingOverlay}>
+          <ActivityIndicator size="small" color="#ff8000" />
+        </View>
+      ) : null}
+      {webViewLoadError ? (
+        <View style={styles.errorOverlay}>
+          <View style={styles.errorContent}>
+            <Text allowFontScaling={false} style={styles.errorTitle}>
+              {webViewLoadError.title}
+            </Text>
+            <Text allowFontScaling={false} style={styles.errorDescription}>
+              {webViewLoadError.description}
+            </Text>
+            {__DEV__ && webViewLoadError.detail ? (
+              <Text allowFontScaling={false} style={styles.errorDetail}>
+                {webViewLoadError.detail}
+              </Text>
+            ) : null}
+            <Pressable
+              onPress={retryWebViewLoad}
+              style={({ pressed }) => [
+                styles.retryButton,
+                pressed ? styles.retryButtonPressed : null,
+              ]}
+            >
+              <Text allowFontScaling={false} style={styles.retryButtonText}>
+                다시 시도
+              </Text>
+            </Pressable>
+          </View>
+        </View>
+      ) : null}
     </SafeAreaView>
   );
 }
@@ -636,5 +759,79 @@ const styles = StyleSheet.create({
   },
   webview: {
     flex: 1,
+  },
+  loadingOverlay: {
+    alignItems: "center",
+    backgroundColor: "#ffffff",
+    bottom: 0,
+    gap: 10,
+    justifyContent: "center",
+    left: 0,
+    position: "absolute",
+    right: 0,
+    top: 0,
+  },
+  loadingText: {
+    color: "#595959",
+    fontSize: 14,
+    fontWeight: "500",
+    lineHeight: 20,
+  },
+  errorOverlay: {
+    alignItems: "center",
+    backgroundColor: "#ffffff",
+    bottom: 0,
+    justifyContent: "center",
+    left: 0,
+    paddingHorizontal: 24,
+    position: "absolute",
+    right: 0,
+    top: 0,
+  },
+  errorContent: {
+    alignItems: "center",
+    maxWidth: 360,
+    width: "100%",
+  },
+  errorTitle: {
+    color: "#1f1f1f",
+    fontSize: 20,
+    fontWeight: "600",
+    lineHeight: 29,
+    textAlign: "center",
+  },
+  errorDescription: {
+    color: "#595959",
+    fontSize: 15,
+    fontWeight: "400",
+    lineHeight: 22,
+    marginTop: 8,
+    textAlign: "center",
+  },
+  errorDetail: {
+    color: "#8c8c8c",
+    fontSize: 12,
+    fontWeight: "400",
+    lineHeight: 17,
+    marginTop: 10,
+    textAlign: "center",
+  },
+  retryButton: {
+    alignItems: "center",
+    backgroundColor: "#ff8000",
+    borderRadius: 8,
+    justifyContent: "center",
+    marginTop: 24,
+    minHeight: 48,
+    paddingHorizontal: 22,
+  },
+  retryButtonPressed: {
+    opacity: 0.82,
+  },
+  retryButtonText: {
+    color: "#ffffff",
+    fontSize: 16,
+    fontWeight: "600",
+    lineHeight: 22,
   },
 });

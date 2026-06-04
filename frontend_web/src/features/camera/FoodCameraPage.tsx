@@ -12,6 +12,10 @@ import {
   getRecognitionErrorFeedback,
   isCameraCaptureCancelled,
 } from "@/features/camera/utils/cameraCapture";
+import {
+  MAX_MEAL_RECORD_MENUS,
+  MEAL_RECORD_MENU_LIMIT_MESSAGE,
+} from "@/features/meal-record/constants/menu.constants";
 import { useTodayMealRecordRegisterMutation } from "@/features/meal-record/hooks/mutations/useTodayMealRecordMutation";
 import {
   formatMenuDraftKey,
@@ -121,6 +125,19 @@ export default function FoodCameraPage() {
       track(EVENT_NAME.FOOD_SCAN_SUCCESS, {
         source: "meal_record_camera",
       });
+
+      const currentMenus = useMenuDraftStore.getState().drafts[draftKey]?.existingMenus ?? [];
+      const nextMenuIds = new Set(currentMenus.map((menu) => menu.id));
+      imageData.menu_ids.forEach((id) => {
+        nextMenuIds.add(id);
+      });
+
+      if (nextMenuIds.size > MAX_MEAL_RECORD_MENUS) {
+        toast.warning(MEAL_RECORD_MENU_LIMIT_MESSAGE);
+        setCapturedPreviewSrc(null);
+        setIsUploading(false);
+        return;
+      }
 
       imageData.menu_ids.forEach((id, idx) => {
         upsertMenu({

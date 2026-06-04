@@ -1,5 +1,5 @@
 import { Select } from "@base-ui/react";
-import { useMemo } from "react";
+import { type FocusEvent, useMemo } from "react";
 
 import styles from "@/features/chat/styles/ChatMealRecordBottomSheet.module.css";
 import {
@@ -177,6 +177,17 @@ export function ChatMealRecordBottomSheet({
   const dateLabel = dateKey ? formatDateKeyToMonthDayWeekdayLabel(dateKey) : null;
   const actionLabel = selectedItems.length === 0 ? "수정하기" : submitLabel;
 
+  const handleQuantityInputFocus = (event: FocusEvent<HTMLInputElement>) => {
+    const input = event.currentTarget;
+    window.requestAnimationFrame(() => {
+      input.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+        inline: "nearest",
+      });
+    });
+  };
+
   return (
     <BottomSheet isOpen={isOpen} onClose={onClose}>
       <section className={styles.container}>
@@ -300,6 +311,7 @@ export function ChatMealRecordBottomSheet({
                         inputProps={{
                           inputMode: "decimal",
                           "aria-label": `${item.recommendation.menu_name} 수량 입력`,
+                          onFocus: handleQuantityInputFocus,
                         }}
                       />
                     </div>

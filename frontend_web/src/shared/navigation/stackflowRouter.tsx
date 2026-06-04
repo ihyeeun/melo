@@ -26,6 +26,7 @@ import { PATH } from "@/router/path";
 import { track } from "@/shared/analytics/analytics";
 import { EVENT_NAME } from "@/shared/analytics/analytics.constants";
 import { isNativeApp, requestAppBack } from "@/shared/api/bridge/nativeBridge";
+import { LoadingScreen } from "@/shared/commons/loading/Loading";
 import {
   FEATURE_GUARD,
   type FeatureGuardTarget,
@@ -232,7 +233,8 @@ function createLazyActivity(loader: () => Promise<{ default: ComponentType }>) {
 
   return function LazyActivity() {
     return (
-      <Suspense fallback={null}>
+      // 페이지 이동마다 생기는 로딩. 각 탭 페이지의 chunk가 로드되면 보여지지 않음
+      <Suspense fallback={<LoadingScreen background="var(--bg-normal)" />}>
         <LazyPage />
       </Suspense>
     );

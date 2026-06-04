@@ -15,7 +15,7 @@ export type UserInfoRequest = {
   persona_type: number;
   eating_out_freq_weekly: number;
   job_type: number;
-  lunch_location: number;
+  lunch_location: number | null;
 };
 
 export type UserInfoResponse = {

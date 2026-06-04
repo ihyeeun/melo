@@ -2,14 +2,14 @@ import type { QueryClient } from "@tanstack/react-query";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { logout, withdraw } from "@/features/settings/api/account";
-import { clearAnalyticsUserProperties } from "@/shared/analytics/analytics";
+import { resetAnalyticsIdentity } from "@/shared/analytics/analytics";
 import type { UseMutationCallback } from "@/shared/api/types/callback.types";
 
 const TARGETS_STORAGE_KEY = "targets";
 
 function clearClientSession(queryClient: QueryClient) {
   queryClient.clear();
-  clearAnalyticsUserProperties();
+  resetAnalyticsIdentity();
 
   if (typeof window === "undefined") return;
 

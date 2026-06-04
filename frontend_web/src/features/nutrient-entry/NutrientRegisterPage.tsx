@@ -94,7 +94,7 @@ export default function NutrientRegisterPage() {
   const handleFoodNameChange = (event: ChangeEvent<HTMLInputElement>) => {
     setFormState((prev) => ({
       ...prev,
-      name: event.target.value,
+      name: event.target.value.slice(0, 300),
     }));
   };
 

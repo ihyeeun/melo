@@ -406,6 +406,13 @@ export default function MealRecordPage() {
         return;
       }
 
+      if (
+        changedRequests.some((request) => (request.menu_ids?.length ?? 0) > MAX_MEAL_RECORD_MENUS)
+      ) {
+        toast.warning(MEAL_RECORD_MENU_LIMIT_MESSAGE);
+        return;
+      }
+
       for (const request of changedRequests) {
         const canceledMenus = getCanceledMenusFromRequest(request);
 
@@ -446,7 +453,7 @@ export default function MealRecordPage() {
       navigateBack({ fallbackTo: PATH.DIARY, skipBackHandler: true });
       toast.success("식사 기록이 저장되었어요");
     } catch {
-      toast.warning("식사 기록 저장에 실패했어요. 잠시 후 다시 시도해주세요.");
+      toast.warning("식사 기록 저장에 실패했어요", "잠시 후 다시 시도해주세요.");
     }
   };
 

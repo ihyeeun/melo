@@ -152,6 +152,15 @@ export interface MealRecordResponseDto {
 
 export type DateRequestDto = DateField;
 
+export interface MealRecordedDatesRequestDto {
+  startDate: ApiDate;
+  endDate: ApiDate;
+}
+
+export interface MealRecordedDatesResponseDto {
+  "recorded-dates": ApiDate[];
+}
+
 export type RegisterMenuRequestDto = Pick<
   MenuBaseFields,
   "name" | "brand" | "unit" | "weight" | "calories"
@@ -217,6 +226,7 @@ export type CapturedImage = {
 // Profile
 export type TargetRatio = [carb: number, protein: number, fat: number];
 export interface ProfileResponseDto {
+  user_id: number;
   nickname: string;
   name?: string; //소셜 프로필명
   role: string; //USER, ADMIN

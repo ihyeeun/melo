@@ -24,7 +24,8 @@ export default function HomePage() {
     if (typeof window === "undefined") return false;
     return window.localStorage.getItem(HOME_ONBOARDING_STORAGE_KEY) !== "done";
   });
-  useTabBarVisibilitySync(isOnboardingVisible && hasOnboardingTargets);
+  const shouldShowOnboarding = isOnboardingVisible && hasOnboardingTargets;
+  useTabBarVisibilitySync(shouldShowOnboarding);
 
   const finishOnboarding = () => {
     window.localStorage.setItem(HOME_ONBOARDING_STORAGE_KEY, "done");
@@ -42,7 +43,7 @@ export default function HomePage() {
           showChatCard={showChatCard}
         />
       </main>
-      {isOnboardingVisible && hasOnboardingTargets ? (
+      {shouldShowOnboarding ? (
         <HomeOnboardingOverlay
           onFinish={finishOnboarding}
           showMenuBoardCameraCard={showMenuBoardCameraCard}

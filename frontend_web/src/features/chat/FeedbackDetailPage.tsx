@@ -24,6 +24,10 @@ import {
   type MealMenuNutrientSelection,
 } from "@/features/meal-record/components/MealMenuNutrientDetail";
 import { MealMenuNutrientDetailSkeleton } from "@/features/meal-record/components/MealMenuNutrientDetailSkeleton";
+import {
+  MAX_MEAL_RECORD_MENUS,
+  MEAL_RECORD_MENU_LIMIT_MESSAGE,
+} from "@/features/meal-record/constants/menu.constants";
 import { useTodayMealRecordRegisterMutation } from "@/features/meal-record/hooks/mutations/useTodayMealRecordMutation";
 import { useMealDetailQuery } from "@/features/meal-record/hooks/queries/useMealDetailQuery";
 import { PATH } from "@/router/path";
@@ -129,6 +133,11 @@ export default function FeedbackDetailPage() {
         ],
         candidateIds: [menuId],
       });
+
+      if (nextMenus.length > MAX_MEAL_RECORD_MENUS) {
+        toast.warning(MEAL_RECORD_MENU_LIMIT_MESSAGE);
+        return;
+      }
 
       await registerDiaryMealRecordMutate(
         buildDiaryMealRecordRequest({

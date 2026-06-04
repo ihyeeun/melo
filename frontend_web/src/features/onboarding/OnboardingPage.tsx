@@ -6,7 +6,6 @@ import {
   ONBOARDING_HEIGHT_RANGE,
   ONBOARDING_WEIGHT_RANGE,
 } from "@/features/onboarding/constants/inputRanges";
-import { useAuthorizeSubCodeMutation } from "@/features/onboarding/hooks/mutations/useAuthorizeSubCodeMutation";
 import { useRegisterUserInfoMutation } from "@/features/onboarding/hooks/mutations/useRegisterUserInfoMutation";
 import styles from "@/features/onboarding/styles/OnboardingPage.module.css";
 import { PATH } from "@/router/path";
@@ -149,11 +148,7 @@ export default function OnboardingPage() {
     onSuccess: navigateAfterOnboarding,
     onError: handleOnboardingMutationError,
   });
-  const { mutate: authorizeSubCode, isPending: isAuthorizeSubCodePending } =
-    useAuthorizeSubCodeMutation({
-      onError: handleOnboardingMutationError,
-    });
-  const isSubmitting = isRegisterPending || isAuthorizeSubCodePending;
+  const isSubmitting = isRegisterPending;
 
   const update = useCallback((patch: Partial<OnboardingData>) => {
     setUserData((d) => ({ ...d, ...patch }));
@@ -212,7 +207,7 @@ export default function OnboardingPage() {
       persona_type: userData.persona_type ?? 0,
       eating_out_freq_weekly: userData.eating_out_freq_weekly ?? 0,
       job_type: userData.job_type ?? 0,
-      lunch_location: userData.lunch_location ?? 0,
+      lunch_location: userData.job_type === 0 ? userData.lunch_location ?? null : null,
     };
 
     if (isWebOnboarding) {
@@ -222,12 +217,7 @@ export default function OnboardingPage() {
         subCode,
       };
 
-      authorizeSubCode(
-        { subCode },
-        {
-          onSuccess: () => mutate(webRegisterUserInfoPayload),
-        },
-      );
+      mutate(webRegisterUserInfoPayload);
       return;
     }
 
@@ -264,7 +254,6 @@ export default function OnboardingPage() {
         </Button>
       </footer>
 
-      {isAuthorizeSubCodePending ? <LoadingOverlay label="구독 코드를 확인하는 중입니다." /> : null}
       {isRegisterPending ? <LoadingOverlay label="회원 정보를 저장하는 중입니다." /> : null}
 
       <CheckButtonModal

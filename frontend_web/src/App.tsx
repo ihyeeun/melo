@@ -8,6 +8,7 @@ import { PATH } from "@/router/path";
 import { initAnalytics, track } from "@/shared/analytics/analytics";
 import { EVENT_NAME } from "@/shared/analytics/analytics.constants";
 import { initNativeBridgeListener } from "@/shared/api/bridge/nativeBridge";
+import { LoadingScreen } from "@/shared/commons/loading/Loading";
 import { syncFeatureGuardStateToApp } from "@/shared/guards/featureGuard";
 import { initContentInteractionGuard } from "@/shared/utils/contentInteractionGuard";
 import { initInputCharacterRestriction } from "@/shared/utils/inputCharacterRestriction";
@@ -73,7 +74,7 @@ export default function App() {
 
   return (
     <div className="app-container">
-      <Suspense fallback={null}>
+      <Suspense fallback={<LoadingScreen background="var(--bg-normal)" />}>
         <StackflowRuntime />
       </Suspense>
     </div>

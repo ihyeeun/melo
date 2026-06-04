@@ -4,6 +4,7 @@ import { pretendardFonts } from "@/src/shared/styles/fonts";
 import { useFonts } from "expo-font";
 import { router, Stack, useSegments } from "expo-router";
 import { useEffect, useRef, useState } from "react";
+import { ActivityIndicator, StyleSheet, View } from "react-native";
 
 function isRootRoute(segments: string[]) {
   return segments.length === 0 || (segments.length === 1 && segments[0] === "index");
@@ -47,22 +48,29 @@ export default function RootLayout() {
       const shouldCheckToken =
         isRootRoute(currentSegments) || isProtectedRoute(currentSegments);
 
-      if (!shouldCheckToken) {
-        if (!cancelled) setIsBootstrapping(false);
-        return;
-      }
+      try {
+        if (!shouldCheckToken) {
+          return;
+        }
 
-      const token = await loadAccessToken();
+        const token = await loadAccessToken();
 
-      if (cancelled) return;
+        if (cancelled) return;
 
-      if (isRootRoute(currentSegments) && token) {
-        router.replace("/(tabs)/home");
-      } else if (!token) {
+        if (isRootRoute(currentSegments) && token) {
+          router.replace("/(tabs)/home");
+        } else if (!token) {
+          router.replace("/(auth)/login");
+        }
+      } catch (error) {
+        console.error("Failed to bootstrap auth session:", error);
+        if (cancelled) return;
         router.replace("/(auth)/login");
+      } finally {
+        if (!cancelled) {
+          setIsBootstrapping(false);
+        }
       }
-
-      setIsBootstrapping(false);
     })();
 
     return () => {
@@ -70,14 +78,34 @@ export default function RootLayout() {
     };
   }, [segments]);
 
-  if ((!fontsLoaded && !fontError) || isBootstrapping) return null;
+  const shouldShowBootOverlay = (!fontsLoaded && !fontError) || isBootstrapping;
 
   return (
-    <Stack>
-      <Stack.Screen name="index" options={{ headerShown: false }} />
-      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-      <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-      <Stack.Screen name="camera-capture" options={{ headerShown: false }} />
-    </Stack>
+    <View style={styles.container}>
+      <Stack>
+        <Stack.Screen name="index" options={{ headerShown: false }} />
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+        <Stack.Screen name="camera-capture" options={{ headerShown: false }} />
+      </Stack>
+      {shouldShowBootOverlay ? (
+        <View style={styles.bootOverlay}>
+          <ActivityIndicator size="small" color="#ff8000" />
+        </View>
+      ) : null}
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#ffffff",
+  },
+  bootOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    alignItems: "center",
+    backgroundColor: "#ffffff",
+    justifyContent: "center",
+  },
+});

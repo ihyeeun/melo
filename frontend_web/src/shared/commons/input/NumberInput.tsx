@@ -12,6 +12,7 @@ type Props = {
   unit?: string;
   inputMode?: "numeric" | "decimal";
   normalizeOnBlur?: boolean;
+  inputRef?: React.Ref<HTMLInputElement>;
 };
 
 function clamp(n: number, min?: number, max?: number) {
@@ -31,10 +32,12 @@ export function NumberInput({
   unit,
   inputMode = "decimal",
   normalizeOnBlur = true,
+  inputRef,
 }: Props) {
   return (
     <div className={`${styles.inputBox} typo-h1`}>
       <Input
+        ref={inputRef}
         className={`${styles.input} typo-h1`}
         type="number"
         inputMode={inputMode}

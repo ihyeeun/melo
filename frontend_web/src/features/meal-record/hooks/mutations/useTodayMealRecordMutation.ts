@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
+import { queryKeys as calendarQueryKeys } from "@/features/calendar/hooks/queries/queryKey";
 import { queryKeys } from "@/features/home/hooks/queries/queryKey";
 import {
   deleteTodayMealRecord,
@@ -41,12 +42,18 @@ export function useTodayMealRecordRegisterMutation(callbacks?: UseMutationCallba
       return postTodayMealRecordRegister(request);
     },
     onSuccess: async (_data, variables) => {
-      await queryClient.invalidateQueries({ queryKey: queryKeys.dayMeals.byDate(variables.date) });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: queryKeys.dayMeals.byDate(variables.date) }),
+        queryClient.invalidateQueries({ queryKey: calendarQueryKeys.recordedDates.all }),
+      ]);
       trackMutationAnalytics(variables.analytics);
       callbacks?.onSuccess?.();
     },
     onError: async (error, variables) => {
-      await queryClient.invalidateQueries({ queryKey: queryKeys.dayMeals.byDate(variables.date) });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: queryKeys.dayMeals.byDate(variables.date) }),
+        queryClient.invalidateQueries({ queryKey: calendarQueryKeys.recordedDates.all }),
+      ]);
       callbacks?.onError?.(error);
     },
   });
@@ -58,11 +65,17 @@ export function useTodayMealRecordDeleteMutation(callbacks?: UseMutationCallback
   return useMutation({
     mutationFn: deleteTodayMealRecord,
     onSuccess: async (_data, variables) => {
-      await queryClient.invalidateQueries({ queryKey: queryKeys.dayMeals.byDate(variables.date) });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: queryKeys.dayMeals.byDate(variables.date) }),
+        queryClient.invalidateQueries({ queryKey: calendarQueryKeys.recordedDates.all }),
+      ]);
       callbacks?.onSuccess?.();
     },
     onError: async (error, variables) => {
-      await queryClient.invalidateQueries({ queryKey: queryKeys.dayMeals.byDate(variables.date) });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: queryKeys.dayMeals.byDate(variables.date) }),
+        queryClient.invalidateQueries({ queryKey: calendarQueryKeys.recordedDates.all }),
+      ]);
       callbacks?.onError?.(error);
     },
   });
@@ -127,6 +140,7 @@ export function useTodayMealRecordDeleteWithRollbackMutation() {
         }
 
         await queryClient.invalidateQueries({ queryKey: queryKeys.dayMeals.byDate(dateKey) });
+        await queryClient.invalidateQueries({ queryKey: calendarQueryKeys.recordedDates.all });
         return DELETE_MEAL_RECORD_RESULT.DELETED;
       } catch {
         let rollbackSucceeded = true;
@@ -140,6 +154,7 @@ export function useTodayMealRecordDeleteWithRollbackMutation() {
         }
 
         await queryClient.invalidateQueries({ queryKey: queryKeys.dayMeals.byDate(dateKey) });
+        await queryClient.invalidateQueries({ queryKey: calendarQueryKeys.recordedDates.all });
 
         return rollbackSucceeded
           ? DELETE_MEAL_RECORD_RESULT.FAILED_RECOVERED

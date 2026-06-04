@@ -26,6 +26,7 @@ const ALLOWED_IMAGE_EXTENSIONS = new Set(["jpg", "jpeg", "png", "heic", "heif"])
 const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024;
 const DEFAULT_UPLOAD_FIELD_NAME = "file";
 const SESSION_TERMINATION_ENDPOINTS = new Set(["/commonAuth/signout", "/commonAuth/delete"]);
+const LOCAL_SESSION_CLEAR_ON_FAILURE_ENDPOINTS = new Set(["/commonAuth/signout"]);
 
 type ImageFileSource = {
   uri: string;
@@ -309,6 +310,10 @@ function shouldTerminateSession(endpoint: string) {
   return SESSION_TERMINATION_ENDPOINTS.has(endpoint);
 }
 
+function shouldClearLocalSessionOnFailure(endpoint: string | null) {
+  return endpoint !== null && LOCAL_SESSION_CLEAR_ON_FAILURE_ENDPOINTS.has(endpoint);
+}
+
 function resolveAppVersion() {
   const appVersion = Constants.expoConfig?.version;
   if (typeof appVersion === "string" && appVersion.trim().length > 0) {
@@ -477,6 +482,7 @@ export async function handleWebMessage(
   webViewRef: RefObject<WebView | null>,
 ) {
   let requestId = "unknown";
+  let currentEndpoint: string | null = null;
 
   try {
     const rawMessage: unknown = JSON.parse(event.nativeEvent.data);
@@ -540,7 +546,8 @@ export async function handleWebMessage(
       return;
     }
 
-    const shouldEndSession = shouldTerminateSession(message.payload.endpoint);
+    currentEndpoint = message.payload.endpoint;
+    const shouldEndSession = shouldTerminateSession(currentEndpoint);
     const result = await requestFromWeb(message.payload);
 
     if (shouldEndSession) {
@@ -557,6 +564,8 @@ export async function handleWebMessage(
       emitAuthExpired();
     }
   } catch (error) {
+    const shouldClearLocalSession = shouldClearLocalSessionOnFailure(currentEndpoint);
+
     if (isBridgeHandledError(error)) {
       sendToWeb(webViewRef, {
         id: requestId,
@@ -567,6 +576,10 @@ export async function handleWebMessage(
           error: error.errorCode,
         },
       });
+      if (shouldClearLocalSession) {
+        await clearTokens();
+        emitAuthExpired();
+      }
       return;
     }
 
@@ -577,11 +590,19 @@ export async function handleWebMessage(
         id: requestId,
         type: "API_ERROR",
         payload: {
-          message: serverData?.message ?? "요청 처리 중 오류가 발생했습니다.",
-          statusCode: serverData?.statusCode ?? error.response?.status ?? 500,
-          error: serverData?.error ?? "API_REQUEST_FAILED",
+          message:
+            serverData?.message ??
+            (error.response
+              ? "요청 처리 중 오류가 발생했습니다."
+              : "서버에 연결할 수 없습니다."),
+          statusCode: serverData?.statusCode ?? error.response?.status ?? 503,
+          error: serverData?.error ?? (error.response ? "API_REQUEST_FAILED" : "NETWORK_ERROR"),
         },
       });
+      if (shouldClearLocalSession) {
+        await clearTokens();
+        emitAuthExpired();
+      }
       return;
     }
 
@@ -594,5 +615,9 @@ export async function handleWebMessage(
         error: "APP_INTERNAL_ERROR",
       },
     });
+    if (shouldClearLocalSession) {
+      await clearTokens();
+      emitAuthExpired();
+    }
   }
 }

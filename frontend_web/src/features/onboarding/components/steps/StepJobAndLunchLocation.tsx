@@ -43,20 +43,24 @@ export default function StepJobAndLunchLocation({ data, update }: StepComponentP
         })}
       </div>
 
-      <div className={styles.onboardingTitle}>
-        <h2 className="typo-title1">주로 어디서 점심을 드시나요?</h2>
-      </div>
+      {data.job_type === 0 && (
+        <section>
+          <div className={styles.onboardingTitle}>
+            <h2 className="typo-title1">주로 어디서 점심을 드시나요?</h2>
+          </div>
 
-      <div className={styles.onboardingOptionList}>
-        {LUNCH_LOCATION_OPTIONS.map((title, index) => (
-          <OnboardingOptionCard
-            key={title}
-            selected={data.lunch_location === index}
-            onClick={() => update({ lunch_location: index })}
-            title={title}
-          />
-        ))}
-      </div>
+          <div className={styles.onboardingOptionList}>
+            {LUNCH_LOCATION_OPTIONS.map((title, index) => (
+              <OnboardingOptionCard
+                key={title}
+                selected={data.lunch_location === index}
+                onClick={() => update({ lunch_location: index })}
+                title={title}
+              />
+            ))}
+          </div>
+        </section>
+      )}
     </section>
   );
 }

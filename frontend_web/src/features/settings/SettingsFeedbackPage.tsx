@@ -28,7 +28,7 @@ export default function SettingsFeedbackPage() {
     ? "앱 환경이 아니어서 앱/OS 정보를 표시하지 않습니다."
     : appDeviceInfo === null
       ? "앱/OS 정보를 불러오지 못했어요."
-      : `앱 버전 ${appDeviceInfo.appVersion}${appDeviceInfo.appBuild ? ` (${appDeviceInfo.appBuild})` : ""} · ${appDeviceInfo.osName} ${appDeviceInfo.osVersion ?? "-"}`;
+      : "";
 
   useEffect(() => {
     let isActive = true;

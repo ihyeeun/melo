@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { useGetProfileQuery } from "@/features/profile/hooks/queries/useProfileQuery";
 import { PATH } from "@/router/path";
 import { isNativeApp } from "@/shared/api/bridge/nativeBridge";
+import { LoadingScreen } from "@/shared/commons/loading/Loading";
 import { setFreeUserGuardEnabled } from "@/shared/guards/featureGuard";
 import {
   useSetTargets,
@@ -17,10 +18,7 @@ import {
   resetStackflowWithCurrentBrowserPath,
   syncStackflowWithCurrentBrowserPath,
 } from "./stackflowRouter";
-import {
-  getWebNavigationCommand,
-  WEB_NAVIGATION_COMMAND_EVENT,
-} from "./webNavigationCommand";
+import { getWebNavigationCommand, WEB_NAVIGATION_COMMAND_EVENT } from "./webNavigationCommand";
 
 const StackComponent = getStackflowStackComponent();
 
@@ -111,7 +109,8 @@ export function StackflowRuntime() {
   }, []);
 
   if (!isFeatureGuardReady) {
-    return null;
+    // 웹앱 최초 진입 시 한 번, 프로필 구독 상태 기반 가드 설정 준비될 때까지 뜨는 로딩
+    return <LoadingScreen background="var(--bg-normal)" />;
   }
 
   return <StackComponent />;

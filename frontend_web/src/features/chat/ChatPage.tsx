@@ -40,6 +40,10 @@ import { getDayMeals } from "@/features/home/api/dayMeal";
 import { queryKeys as homeQueryKeys } from "@/features/home/hooks/queries/queryKey";
 import type { DayMealSummary, MenuWithQuantity } from "@/features/home/utils/dayMealSummary";
 import {
+  MAX_MEAL_RECORD_MENUS,
+  MEAL_RECORD_MENU_LIMIT_MESSAGE,
+} from "@/features/meal-record/constants/menu.constants";
+import {
   DELETE_MEAL_RECORD_RESULT,
   useTodayMealRecordDeleteWithRollbackMutation,
   useTodayMealRecordRegisterMutation,
@@ -50,7 +54,8 @@ import { track } from "@/shared/analytics/analytics";
 import { EVENT_NAME } from "@/shared/analytics/analytics.constants";
 import { trackRecommendMenuSave } from "@/shared/analytics/recommendMenuEvents";
 import { AppApiError } from "@/shared/api/appApi";
-import { isNativeApp } from "@/shared/api/bridge/nativeBridge";
+import { isNativeApp, requestNativeAppDeviceInfo } from "@/shared/api/bridge/nativeBridge";
+import type { AppDeviceInfoPayload } from "@/shared/api/bridge/nativeBridge.types";
 import {
   type ChatHistoryItemResponseDto,
   type ChatRecommendItemResponseDto,
@@ -158,6 +163,55 @@ type TimelineScrollTarget = {
   requestId: number;
 };
 
+type ClientOsName = AppDeviceInfoPayload["osName"] | "unknown";
+
+function getUserAgentOsName(): ClientOsName {
+  if (typeof window === "undefined") {
+    return "unknown";
+  }
+
+  const { maxTouchPoints, platform, userAgent } = window.navigator;
+
+  if (/Android/i.test(userAgent)) {
+    return "android";
+  }
+
+  if (/iPad|iPhone|iPod/i.test(userAgent) || (platform === "MacIntel" && maxTouchPoints > 1)) {
+    return "ios";
+  }
+
+  return "unknown";
+}
+
+function useClientOsName() {
+  const [clientOsName, setClientOsName] = useState<ClientOsName>(getUserAgentOsName);
+
+  useEffect(() => {
+    let isActive = true;
+
+    if (!isNativeApp()) {
+      return () => {
+        isActive = false;
+      };
+    }
+
+    void requestNativeAppDeviceInfo()
+      .then((deviceInfo) => {
+        if (!isActive) return;
+        setClientOsName(deviceInfo.osName);
+      })
+      .catch(() => {
+        // Keep the user-agent fallback when the app bridge cannot return device info.
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
+
+  return clientOsName;
+}
+
 function getIsCameraHintDismissedInSession() {
   if (typeof window === "undefined") {
     return false;
@@ -245,16 +299,21 @@ function useEnsureBottomOnQuickAction({
   ]);
 }
 
-function useSoftKeyboardVisible(isInputFocused: boolean) {
+function useSoftKeyboardVisible(isInputFocused: boolean, clientOsName: ClientOsName) {
   const [isVisible, setIsVisible] = useState(false);
   const baselineViewportHeightRef = useRef<number | null>(null);
   const lastViewportWidthRef = useRef<number | null>(null);
 
   useEffect(() => {
+    if (clientOsName === "ios") {
+      return;
+    }
+
     if (typeof window === "undefined") {
       return;
     }
 
+    const isAndroid = clientOsName === "android";
     const viewport = window.visualViewport;
     const getViewportHeight = () => viewport?.height ?? window.innerHeight;
     const getViewportWidth = () => viewport?.width ?? window.innerWidth;
@@ -279,6 +338,17 @@ function useSoftKeyboardVisible(isInputFocused: boolean) {
       const currentWidth = getViewportWidth();
 
       updateBaselineViewport(currentHeight, currentWidth);
+
+      if (isAndroid) {
+        if (baselineViewportHeightRef.current === null) {
+          setIsVisible(isInputFocused);
+          return;
+        }
+
+        const keyboardHeight = baselineViewportHeightRef.current - currentHeight;
+        setIsVisible(keyboardHeight > SOFT_KEYBOARD_VISIBLE_HEIGHT_THRESHOLD);
+        return;
+      }
 
       if (!isInputFocused) {
         setIsVisible(false);
@@ -309,9 +379,9 @@ function useSoftKeyboardVisible(isInputFocused: boolean) {
       window.removeEventListener("resize", updateKeyboardVisibility);
       window.removeEventListener("orientationchange", updateKeyboardVisibility);
     };
-  }, [isInputFocused]);
+  }, [clientOsName, isInputFocused]);
 
-  return isVisible;
+  return clientOsName === "ios" ? isInputFocused : isVisible;
 }
 
 export default function ChatPage() {
@@ -351,7 +421,8 @@ export default function ChatPage() {
   const [timelineScrollTarget, setTimelineScrollTarget] = useState<TimelineScrollTarget | null>(
     null,
   );
-  const isSoftKeyboardVisible = useSoftKeyboardVisible(isInputFocused);
+  const clientOsName = useClientOsName();
+  const isSoftKeyboardVisible = useSoftKeyboardVisible(isInputFocused, clientOsName);
 
   const { data, isPending: isHistoryPending } = useGetChatHistoryQuery();
   const { mutateAsync: sendMessageMutation, isPending: isSendPending } = useSendMessageMutation();
@@ -913,6 +984,11 @@ export default function ChatPage() {
       return;
     }
 
+    if (nextMealRecord.menus.length > MAX_MEAL_RECORD_MENUS) {
+      toast.warning(MEAL_RECORD_MENU_LIMIT_MESSAGE);
+      return;
+    }
+
     const hadMealRecord = getSelectedDiaryMenusByTime(dayMeals, nextMealRecord.time).length > 0;
     const scrollTargetKey = prepareMealRecordScroll(dateKey, nextMealRecord.time);
 
@@ -1188,6 +1264,11 @@ export default function ChatPage() {
       } catch {
         toast.warning("식사 기록 저장에 실패했어요. 잠시 후 다시 시도해주세요.");
       }
+      return;
+    }
+
+    if (nextMenus.length > MAX_MEAL_RECORD_MENUS) {
+      toast.warning(MEAL_RECORD_MENU_LIMIT_MESSAGE);
       return;
     }
 

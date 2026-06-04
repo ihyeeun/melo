@@ -118,6 +118,7 @@ export default function GoalEditPage() {
   const startGoalEditFlow = useStartGoalEditFlow();
   const updateDraft = useUpdateGoalEditDraft();
   const hasInitializedRef = useRef(false);
+  const editorInputRef = useRef<HTMLInputElement>(null);
   const [editingField, setEditingField] = useState<EditableField | null>(null);
   const [sheetData, setSheetData] = useState<GoalEditDraft>({});
 
@@ -164,6 +165,14 @@ export default function GoalEditPage() {
   const applyInstantSelection = (patch: Partial<OnboardingData>) => {
     updateDraft(patch);
     closeEditor();
+  };
+
+  const focusEditorInput = () => {
+    if (editingField !== "height" && editingField !== "weight" && editingField !== "goalWeight") {
+      return;
+    }
+
+    editorInputRef.current?.focus();
   };
 
   const applyEditor = () => {
@@ -342,6 +351,7 @@ export default function GoalEditPage() {
         <section className={styles.editorSection}>
           <h2 className={styles.editorTitle}>키</h2>
           <EditorInput
+            inputRef={editorInputRef}
             type="number"
             inputMode="decimal"
             value={sheetData.height}
@@ -365,6 +375,7 @@ export default function GoalEditPage() {
         <section className={styles.editorSection}>
           <h2 className={styles.editorTitle}>현재 몸무게</h2>
           <EditorInput
+            inputRef={editorInputRef}
             type="number"
             inputMode="decimal"
             value={sheetData.weight}
@@ -433,6 +444,7 @@ export default function GoalEditPage() {
       <section className={styles.editorSection}>
         <h2 className={styles.editorTitle}>목표 몸무게</h2>
         <EditorInput
+          inputRef={editorInputRef}
           type="number"
           inputMode="decimal"
           value={sheetData.target_weight}
@@ -505,6 +517,7 @@ export default function GoalEditPage() {
       <BottomSheet
         isOpen={editingField !== null}
         onClose={closeEditor}
+        onOpenEnd={focusEditorInput}
         className={styles.goalEditBottomSheet}
         disableContentDrag
       >

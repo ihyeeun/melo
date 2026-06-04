@@ -1,4 +1,5 @@
 import { Field } from "@base-ui/react";
+import { useEffect, useRef } from "react";
 
 import { ONBOARDING_WEIGHT_RANGE } from "@/features/onboarding/constants/inputRanges";
 import type { StepComponentProps } from "@/features/onboarding/onboarding.types";
@@ -13,6 +14,18 @@ export default function StepGoalWeight({ data, update }: StepComponentProps) {
 
   const diffLabel =
     diff === undefined ? undefined : Number.isInteger(diff) ? diff.toString() : diff.toFixed(1);
+
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const frameId = window.requestAnimationFrame(() => {
+      inputRef.current?.focus();
+    });
+
+    return () => {
+      window.cancelAnimationFrame(frameId);
+    };
+  }, []);
 
   return (
     <section className={`${styles.content} ${styles.onboardingStepReadable}`}>
@@ -37,6 +50,7 @@ export default function StepGoalWeight({ data, update }: StepComponentProps) {
             step={0.1}
             unit="kg"
             normalizeOnBlur={false}
+            inputRef={inputRef}
           />
         </div>
       </Field.Root>

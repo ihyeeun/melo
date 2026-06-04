@@ -82,7 +82,9 @@ const BASE_STEPS: StepMeta[] = [
     id: "job_type_and_lunch_location",
     title: "하는 일 및 점심 위치",
     component: StepJobAndLunchLocation,
-    isValid: (d) => hasSelectedValue(d.job_type) && hasSelectedValue(d.lunch_location),
+    isValid: (d) =>
+      hasSelectedValue(d.job_type) &&
+      (Number(d.job_type) !== 0 || hasSelectedValue(d.lunch_location)),
   },
 ];
 

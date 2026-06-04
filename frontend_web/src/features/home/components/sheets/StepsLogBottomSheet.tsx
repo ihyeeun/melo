@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 import style from "@/features/home/styles/TodayBodyLogSection.module.css";
 import BottomSheet from "@/shared/commons/bottomSheet/BottomSheet";
@@ -33,6 +33,11 @@ export default function StepsLogBottomSheet({
   onSubmit,
 }: StepsLogBottomSheetProps) {
   const [draftSteps, setDraftSteps] = useState<number | undefined>(initialSteps);
+  const stepsInputRef = useRef<HTMLInputElement>(null);
+
+  const focusStepsInput = () => {
+    stepsInputRef.current?.focus();
+  };
 
   const handleSubmit = () => {
     if (draftSteps === undefined) {
@@ -50,7 +55,7 @@ export default function StepsLogBottomSheet({
   };
 
   return (
-    <BottomSheet isOpen onClose={onClose}>
+    <BottomSheet isOpen onClose={onClose} onOpenEnd={focusStepsInput}>
       <div className={style.sheetContainer}>
         <h3 className={`${style.sheetTitle} typo-title2`}>오늘의 걸음 수</h3>
         <NumberField
@@ -70,6 +75,7 @@ export default function StepsLogBottomSheet({
           allowOutOfRange={false}
           normalizeValue={toInteger}
           isInputTextAllowed={isStepsInputAllowed}
+          inputRef={stepsInputRef}
           showControls={false}
           unstyled
           classNames={{

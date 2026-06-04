@@ -111,9 +111,9 @@ export default function PreviewTodayScoreSection({ selectedDate }: { selectedDat
           <img src="/icons/face-2.svg" width={50} alt="" aria-hidden="true" />
           <span className={`typo-title1`}>{score ?? "--"}점</span>
         </div>
-        {!isTargetInfoPending ? (
-          <p className={`typo-body3 ${style.textAssistive}`}>{calorieSummary.message}</p>
-        ) : null}
+        <p className={`typo-body3 ${style.textAssistive}`}>
+          {isTargetInfoPending ? "목표 정보를 불러오는 중입니다." : calorieSummary.message}
+        </p>
       </section>
 
       <section className={style.caloriesContainer}>
@@ -149,6 +149,7 @@ function PreviewTodayScoreSkeleton() {
             <Skeleton width={50} height={50} variant="circle" />
             <Skeleton width={68} height={30} radius={999} />
           </div>
+          <Skeleton width={136} height={18} radius={999} />
         </section>
 
         <section className={style.caloriesContainer}>

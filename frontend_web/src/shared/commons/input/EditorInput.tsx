@@ -11,6 +11,7 @@ type Props = Omit<React.ComponentProps<"input">, "onChange" | "value" | "min" | 
   blockOutOfRangeInput?: boolean;
   clampOnChange?: boolean;
   normalizeOnBlur?: boolean;
+  inputRef?: React.Ref<HTMLInputElement>;
   onChange: (v?: number) => void;
 };
 
@@ -31,12 +32,14 @@ export function EditorInput({
   blockOutOfRangeInput = false,
   clampOnChange = true,
   normalizeOnBlur = true,
+  inputRef,
   ...props
 }: Props) {
   return (
     <div className={styles.inputBox}>
       <Input
         {...props}
+        ref={inputRef}
         className={`typo-body3 ${styles.input}`}
         value={value ?? ""}
         min={min}

@@ -98,6 +98,12 @@ function createApiFailResponseFromUnknown(
   };
 }
 
+function isLikelyNetworkError(error: unknown) {
+  if (typeof navigator !== "undefined" && navigator.onLine === false) return true;
+
+  return error instanceof TypeError;
+}
+
 async function parseApiResponse<T>(response: Response): Promise<ApiResponse<T>> {
   const text = await response.text();
 
@@ -192,6 +198,14 @@ export async function webApi<T>(
         message: "요청 시간이 초과되었습니다.",
         statusCode: 408,
         error: "REQUEST_TIMEOUT",
+      };
+    }
+
+    if (isLikelyNetworkError(error)) {
+      return {
+        message: "서버에 연결할 수 없습니다.",
+        statusCode: 503,
+        error: "NETWORK_ERROR",
       };
     }
 

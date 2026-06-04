@@ -15,6 +15,10 @@ import {
 import { getMealTypeFromChatMealTime } from "@/features/chat/utils/chatMeal";
 import { getRecommendDetailPath, getSafeChatId } from "@/features/chat/utils/recommendNavigation";
 import { useDayMealsQuery } from "@/features/home/hooks/queries/useDayMealsQuery";
+import {
+  MAX_MEAL_RECORD_MENUS,
+  MEAL_RECORD_MENU_LIMIT_MESSAGE,
+} from "@/features/meal-record/constants/menu.constants";
 import { useTodayMealRecordRegisterMutation } from "@/features/meal-record/hooks/mutations/useTodayMealRecordMutation";
 import { useGetProfileQuery } from "@/features/profile/hooks/queries/useProfileQuery";
 import { PATH } from "@/router/path";
@@ -191,6 +195,12 @@ function RecommendResultContent({
         selectedMenus,
         candidateIds: recommendationMenuIds,
       });
+
+      if (nextMenus.length > MAX_MEAL_RECORD_MENUS) {
+        toast.warning(MEAL_RECORD_MENU_LIMIT_MESSAGE);
+        return;
+      }
+
       const previousSelectedMenuIds = new Set(
         diaryMealRecordSelection?.menus.map((menu) => menu.id) ?? [],
       );

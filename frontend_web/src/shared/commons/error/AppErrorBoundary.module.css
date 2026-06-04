@@ -1,0 +1,34 @@
+.screen {
+  align-items: center;
+  background: var(--bg-normal);
+  display: flex;
+  height: 100%;
+  justify-content: center;
+  min-height: 100dvh;
+  padding: calc(var(--safe-area-top) + 32px) 24px calc(var(--safe-area-bottom) + 32px);
+  width: 100%;
+}
+
+.content {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  max-width: 360px;
+  text-align: center;
+  width: 100%;
+  gap: 10px;
+}
+
+.title {
+  color: var(--label-normal);
+}
+
+.description {
+  color: var(--label-alternative);
+  margin-top: 10px;
+}
+
+.detail {
+  color: var(--label-assistive);
+  margin-top: 10px;
+}
