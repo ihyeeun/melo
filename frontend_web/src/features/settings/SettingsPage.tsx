@@ -110,6 +110,7 @@ export default function SettingsPage() {
         title="로그아웃 하시겠어요?"
         cancelText="취소"
         confirmText="확인"
+        actionOrder="confirm-cancel"
         confirmDisabled={isLogoutPending}
         closeOnConfirm={false}
         onConfirm={async () => {
@@ -129,6 +130,7 @@ export default function SettingsPage() {
         description={"기록한 데이터가 완전히 삭제되며\n복구할 수 없어요"}
         cancelText="취소"
         confirmText="확인"
+        actionOrder="confirm-cancel"
         confirmDisabled={isWithdrawPending}
         closeOnConfirm={false}
         onConfirm={async () => {
