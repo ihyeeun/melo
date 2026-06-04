@@ -2,6 +2,7 @@ import type { TargetRatio } from "@/shared/api/types/api.dto";
 
 export const ANALYTICS_USER_PROPERTY_KEYS = [
   "is_test_user",
+  "is_subscribed",
   "nickname",
   "gender",
   "birth_year",
@@ -20,6 +21,7 @@ export type AnalyticsUserPropertyKey = (typeof ANALYTICS_USER_PROPERTY_KEYS)[num
 
 export type AnalyticsUserProperties = Partial<{
   is_test_user: boolean;
+  is_subscribed: boolean;
   nickname: string;
   gender: "male" | "female";
   birth_year: number;
@@ -37,6 +39,7 @@ export type AnalyticsUserProperties = Partial<{
 type AnalyticsUserPropertiesSource = Partial<{
   is_test_user: boolean | null;
   isTestUser: boolean | null;
+  is_subscribed: boolean | null;
   nickname: string | null;
   role: string | null;
   gender: number | null;
@@ -84,6 +87,7 @@ export function buildAnalyticsUserProperties(
   const nickname = source.nickname?.trim();
   const targetRatio = source.target_ratio;
   const isTestUser = getIsTestUser(source);
+  const isSubscribed = source.is_subscribed;
   const gender = getIndexedValue(GENDER_VALUES, source.gender);
   const birthYear = getFiniteNumber(source.birthYear);
   const height = getFiniteNumber(source.height);
@@ -98,6 +102,7 @@ export function buildAnalyticsUserProperties(
 
   return {
     ...(isTestUser !== undefined ? { is_test_user: isTestUser } : {}),
+    ...(typeof isSubscribed === "boolean" ? { is_subscribed: isSubscribed } : {}),
     ...(nickname ? { nickname } : {}),
     ...(gender ? { gender } : {}),
     ...(birthYear !== undefined ? { birth_year: birthYear } : {}),
