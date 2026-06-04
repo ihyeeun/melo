@@ -155,6 +155,7 @@
   background-color: transparent;
   border: 0;
   color: var(--label-normal);
+  scroll-margin-bottom: calc(50px + 24px);
   text-align: center;
   width: 100%;
 }
