@@ -16,6 +16,8 @@ type AnalyticsUserIdentitySource = Parameters<typeof buildAnalyticsUserPropertie
   user_id: number | string;
 };
 
+const ANALYTICS_USER_ID_PREFIX = "melo_user_";
+
 let initialized = false;
 let analyticsUnavailable = false;
 let currentNickname: string | null = null;
@@ -58,6 +60,13 @@ function syncUserProperties(properties: AnalyticsUserProperties) {
   identifiedUserPropertiesKey = userPropertiesKey;
 }
 
+function getAnalyticsUserId(userId: number | string) {
+  const stringUserId = String(userId);
+  return stringUserId.startsWith(ANALYTICS_USER_ID_PREFIX)
+    ? stringUserId
+    : `${ANALYTICS_USER_ID_PREFIX}${stringUserId}`;
+}
+
 export function initAnalytics() {
   if (initialized || analyticsUnavailable) return;
 
@@ -88,7 +97,7 @@ export function initAnalytics() {
 }
 
 export function identifyAnalyticsUser(source: AnalyticsUserIdentitySource) {
-  const userId = String(source.user_id);
+  const userId = getAnalyticsUserId(source.user_id);
   currentUserId = userId;
 
   if (initialized) {
