@@ -2643,6 +2643,11 @@ function getMealRecordTimelineItemKey(dateKey: string, mealTime: MealTime) {
 }
 
 function compareChatTimelineItems(a: ChatTimelineItem, b: ChatTimelineItem) {
+  const dateOrderDifference = compareTimelineItemDates(a, b);
+  if (dateOrderDifference !== 0) {
+    return dateOrderDifference;
+  }
+
   if (a.sortTime !== null && b.sortTime !== null && a.sortTime !== b.sortTime) {
     return a.sortTime - b.sortTime;
   }
@@ -2656,6 +2661,23 @@ function compareChatTimelineItems(a: ChatTimelineItem, b: ChatTimelineItem) {
   }
 
   return a.key.localeCompare(b.key);
+}
+
+function compareTimelineItemDates(a: ChatTimelineItem, b: ChatTimelineItem) {
+  if (a.date && b.date) {
+    const aDateKey = formatDateKey(a.date);
+    const bDateKey = formatDateKey(b.date);
+
+    if (aDateKey !== bDateKey) {
+      return aDateKey.localeCompare(bDateKey);
+    }
+
+    return 0;
+  }
+
+  if (!a.date && b.date) return -1;
+  if (a.date && !b.date) return 1;
+  return 0;
 }
 
 function getTimelineItemTypeOrder(item: ChatTimelineItem) {
@@ -2704,6 +2726,10 @@ function getMealRecordSortDate(mealRecord: MealRecordViewModel) {
 
 function getMealRecordDateWithSavedTime(dateKey: string, savedAtDate: Date) {
   const date = parseDateKey(dateKey);
+  const savedAtDateKey = formatDateKey(savedAtDate);
+  const dayOffset = getDateKeyDayDifference(dateKey, savedAtDateKey);
+
+  date.setDate(date.getDate() + dayOffset);
   date.setHours(
     savedAtDate.getHours(),
     savedAtDate.getMinutes(),
@@ -2711,6 +2737,14 @@ function getMealRecordDateWithSavedTime(dateKey: string, savedAtDate: Date) {
     savedAtDate.getMilliseconds(),
   );
   return date;
+}
+
+function getDateKeyDayDifference(fromDateKey: string, toDateKey: string) {
+  const fromDate = parseDateKey(fromDateKey);
+  const toDate = parseDateKey(toDateKey);
+  const millisecondsPerDay = 24 * 60 * 60 * 1000;
+
+  return Math.round((toDate.getTime() - fromDate.getTime()) / millisecondsPerDay);
 }
 
 function getMealRecordFallbackDate(mealRecord: Pick<MealRecordViewModel, "dateKey" | "time">) {
