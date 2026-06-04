@@ -399,15 +399,20 @@ function FoodImageFeedbackPreview({
   });
   const [openSourceMarkerId, setOpenSourceMarkerId] = useState<string | null>(null);
   const menuById = useMemo(() => new Map(menus.map((menu) => [menu.menu_id, menu])), [menus]);
+  const markerLayout = useMemo(() => getFoodMarkerLayout(imageFeedbackSize), [imageFeedbackSize]);
   const foodMarkers = useMemo(
     () =>
       recognizedFoods.map((food, index) => {
         const matchedMenu = menuById.get(food.menu_id);
-        const markerX = getMarkerPosition(food.position?.x ?? 0.5);
-        const markerY = getMarkerPosition(food.position?.y ?? 0.5);
         const score = matchedMenu?.score;
         const label = matchedMenu?.menu_name ?? food.menu_name;
         const scoreText = typeof score === "number" ? `${Math.round(score)}점` : null;
+        const markerBubbleSize = getEstimatedFoodMarkerBubbleSize({ label, scoreText });
+        const markerX = getMarkerPosition(food.position?.x ?? 0.5, {
+          bubbleWidth: markerBubbleSize.width,
+          markerLayout,
+        });
+        const markerY = getMarkerPosition(food.position?.y ?? 0.5);
 
         return {
           id: `food-${food.menu_id}-${index}`,
@@ -420,13 +425,12 @@ function FoodImageFeedbackPreview({
           scoreText,
         };
       }),
-    [menuById, recognizedFoods],
+    [markerLayout, menuById, recognizedFoods],
   );
   const foodMarkerClusters = useMemo(
     () => clusterFoodMarkers(foodMarkers, imageFeedbackSize),
     [foodMarkers, imageFeedbackSize],
   );
-  const markerLayout = useMemo(() => getFoodMarkerLayout(imageFeedbackSize), [imageFeedbackSize]);
   const foodMarkerSourcePinClusters = foodMarkerClusters.filter(
     (cluster) => cluster.markers.length > 1,
   );
@@ -719,12 +723,43 @@ function resolveErrorMessage(error: unknown) {
   return "식사 기록 저장에 실패했어요. 잠시 후 다시 시도해주세요.";
 }
 
-function getMarkerPosition(value: number) {
-  if (!Number.isFinite(value)) {
+function getMarkerPosition(value: number, options?: FoodMarkerHorizontalClassOptions) {
+  const position = Number.isFinite(value) ? value : 0.5;
+  const clampedPosition = clamp(position, 0, 1);
+
+  if (!options || options.markerLayout.width <= 0 || options.bubbleWidth <= 0) {
+    return clampedPosition;
+  }
+
+  const markerLayoutWidth = options.markerLayout.width;
+  const anchorX = clampedPosition * markerLayoutWidth;
+  const halfBubbleWidth = options.bubbleWidth / 2;
+  const sideOffset = Math.min(FOOD_MARKER_BUBBLE_SIDE_OFFSET, options.bubbleWidth / 2);
+  const safeAnchorRangeCandidates: [number, number][] = [
+    [sideOffset, Math.min(halfBubbleWidth, markerLayoutWidth - options.bubbleWidth + sideOffset)],
+    [halfBubbleWidth, markerLayoutWidth - halfBubbleWidth],
+    [
+      Math.max(markerLayoutWidth - halfBubbleWidth, options.bubbleWidth - sideOffset),
+      markerLayoutWidth - sideOffset,
+    ],
+  ];
+  const safeAnchorRanges = safeAnchorRangeCandidates.filter(
+    ([minAnchorX, maxAnchorX]) => minAnchorX <= maxAnchorX,
+  );
+
+  if (safeAnchorRanges.length === 0) {
     return 0.5;
   }
 
-  return value;
+  const clampedAnchorX = safeAnchorRanges.reduce((closestAnchorX, [minAnchorX, maxAnchorX]) => {
+    const candidateAnchorX = clamp(anchorX, minAnchorX, maxAnchorX);
+
+    return Math.abs(candidateAnchorX - anchorX) < Math.abs(closestAnchorX - anchorX)
+      ? candidateAnchorX
+      : closestAnchorX;
+  }, clamp(anchorX, safeAnchorRanges[0][0], safeAnchorRanges[0][1]));
+
+  return clampedAnchorX / markerLayoutWidth;
 }
 
 function clusterFoodMarkers(
@@ -847,7 +882,9 @@ function getFoodMarkerBubbleRect(
   };
 }
 
-function getEstimatedFoodMarkerBubbleSize(marker: FoodMarkerItem) {
+function getEstimatedFoodMarkerBubbleSize(
+  marker: Pick<FoodMarkerItem, "label" | "scoreText">,
+) {
   const scoreWidth = marker.scoreText ? FOOD_MARKER_SCORE_TEXT_WIDTH : 0;
   const contentGap = marker.scoreText ? FOOD_MARKER_BUBBLE_CONTENT_GAP : 0;
   const labelWidth = getEstimatedTextWidth(marker.label);
@@ -933,6 +970,10 @@ function getCombinedFoodMarkerRect(firstRect: FoodMarkerRect, secondRect: FoodMa
 
 function getFoodMarkerClusterId(markers: FoodMarkerItem[]) {
   return markers.map((marker) => marker.id).join("__");
+}
+
+function clamp(value: number, min: number, max: number) {
+  return Math.min(Math.max(value, min), max);
 }
 
 function getHorizontalMarkerClass(x: number, options?: FoodMarkerHorizontalClassOptions) {
