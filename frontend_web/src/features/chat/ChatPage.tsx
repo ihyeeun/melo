@@ -2669,7 +2669,7 @@ function compareTimelineItemDates(a: ChatTimelineItem, b: ChatTimelineItem) {
     const bDateKey = formatDateKey(b.date);
 
     if (aDateKey !== bDateKey) {
-      return aDateKey.localeCompare(bDateKey);
+      return aDateKey < bDateKey ? -1 : 1;
     }
 
     return 0;
