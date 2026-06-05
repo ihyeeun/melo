@@ -89,7 +89,7 @@ export default function AppInfoPage() {
 
           <section className={styles.loginActions}>
             <div className={styles.completeCopy}>
-              <p className={styles.completeTitle}>{isInstallMode ? "" : "회원가입이 완료됐어요"}</p>
+              {!isInstallMode && <p className={styles.completeTitle}>회원가입이 완료됐어요</p>}
               <p className={styles.completeDescription}>
                 {isInstallMode ? "앱을 열거나 설치해 주세요" : "멜로에서 만나요!"}
               </p>
