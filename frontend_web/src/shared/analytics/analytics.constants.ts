@@ -5,6 +5,7 @@ export const EVENT_NAME = {
   OCR_SCAN_START: "ocr_scan_start",
   OCR_SCAN_SUCCESS: "ocr_scan_success",
   OCR_SCAN_FAIL: "ocr_scan_fail",
+  OCR_SCAN_CANCEL: "ocr_scan_cancel",
 
   OCR_RESULT_VIEW: "ocr_result_view",
   OCR_RESULT_CONFIRM: "ocr_result_confirm",
@@ -12,6 +13,7 @@ export const EVENT_NAME = {
   FOOD_SCAN_START: "food_scan_start",
   FOOD_SCAN_SUCCESS: "food_scan_success",
   FOOD_SCAN_FAIL: "food_scan_fail",
+  FOOD_SCAN_CANCEL: "food_scan_cancel",
 
   AI_COACH_CHAT: "ai_coach_chat",
   AI_COACH_RESPONSE_SUCCESS: "ai_coach_response_success",

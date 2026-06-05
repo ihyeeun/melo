@@ -68,8 +68,7 @@ export default function MenuBoardCameraPage() {
     } catch (error) {
       setIsAutoOpenPending(false);
       if (isCameraCaptureCancelled(error)) {
-        track(EVENT_NAME.OCR_SCAN_FAIL, {
-          reason: "user_cancelled",
+        track(EVENT_NAME.OCR_SCAN_CANCEL, {
           source: "menu_board_camera",
         });
         if (shouldAutoOpenCamera) {

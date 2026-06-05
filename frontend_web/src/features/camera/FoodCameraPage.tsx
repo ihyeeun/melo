@@ -88,8 +88,7 @@ export default function FoodCameraPage() {
     } catch (error) {
       setIsAutoOpenPending(false);
       if (isCameraCaptureCancelled(error)) {
-        track(EVENT_NAME.FOOD_SCAN_FAIL, {
-          reason: "user_cancelled",
+        track(EVENT_NAME.FOOD_SCAN_CANCEL, {
           source: "meal_record_camera",
         });
         if (shouldAutoOpenCamera) {

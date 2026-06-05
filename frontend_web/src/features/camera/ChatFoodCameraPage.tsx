@@ -49,8 +49,7 @@ export default function ChatFoodCameraPage() {
     } catch (error) {
       setIsOpeningCamera(false);
       if (isCameraCaptureCancelled(error)) {
-        track(EVENT_NAME.FOOD_SCAN_FAIL, {
-          reason: "user_cancelled",
+        track(EVENT_NAME.FOOD_SCAN_CANCEL, {
           source: "chat_food_camera",
         });
         return;
