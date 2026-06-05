@@ -111,7 +111,7 @@ export function identifyUserProperties(source: Parameters<typeof buildAnalyticsU
   syncUserProperties(buildAnalyticsUserProperties(source));
 }
 
-export function identifyNickname(nickname?: string | null, isTestUser?: boolean) {
+export function identifyNickname(nickname?: string | null) {
   const normalizedNickname = nickname?.trim() ?? null;
   if (!normalizedNickname) {
     clearAnalyticsUserProperties();
@@ -120,7 +120,6 @@ export function identifyNickname(nickname?: string | null, isTestUser?: boolean)
 
   identifyUserProperties({
     nickname: normalizedNickname,
-    ...(isTestUser !== undefined ? { is_test_user: isTestUser } : {}),
   });
 }
 

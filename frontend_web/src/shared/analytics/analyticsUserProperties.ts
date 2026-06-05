@@ -1,4 +1,4 @@
-import type { TargetRatio } from "@/shared/api/types/api.dto";
+import type { ProfileResponseDto } from "@/shared/api/types/api.dto";
 
 export const ANALYTICS_USER_PROPERTY_KEYS = [
   "is_test_user",
@@ -43,30 +43,10 @@ export type AnalyticsUserProperties = Partial<{
   persona_type: PersonaTypeValue;
   eating_out_freq_weekly: EatingOutFrequencyValue;
   job_type: JobTypeValue;
-  lunch_location: LunchLocationValue | null;
+  lunch_location: LunchLocationValue;
 }>;
 
-type AnalyticsUserPropertiesSource = Partial<{
-  is_test_user: boolean | null;
-  isTestUser: boolean | null;
-  is_subscribed: boolean | null;
-  nickname: string | null;
-  role: string | null;
-  gender: number | null;
-  birthYear: number | null;
-  height: number | null;
-  weight: number | null;
-  activity: number | null;
-  goal: number | null;
-  target_weight: number | null;
-  target_calories: number | null;
-  target_ratio: TargetRatio | null;
-  diet_management_status: number[] | null;
-  persona_type: number | null;
-  eating_out_freq_weekly: number | null;
-  job_type: number | null;
-  lunch_location: number | null;
-}>;
+type AnalyticsUserPropertiesSource = Partial<ProfileResponseDto>;
 
 const GENDER_VALUES = ["male", "female"] as const;
 const ACTIVITY_LEVEL_VALUES = [
@@ -86,19 +66,13 @@ const DIET_MANAGEMENT_STATUS_VALUES = [
 const PERSONA_TYPE_VALUES = ["data_driven", "safety_seeker", "efficiency_seeker"] as const;
 const EATING_OUT_FREQUENCY_VALUES = ["0_2_times", "3_4_times", "5_plus_times"] as const;
 const JOB_TYPE_VALUES = ["office_worker", "freelancer", "student", "other"] as const;
-const LUNCH_LOCATION_VALUES = [
-  "restaurant",
-  "cafeteria",
-  "packed_lunch",
-  "home",
-  "other",
-] as const;
+const LUNCH_LOCATION_VALUES = ["restaurant", "cafeteria", "packed_lunch", "home", "other"] as const;
 
 type DietManagementStatusValue = (typeof DIET_MANAGEMENT_STATUS_VALUES)[number];
 type PersonaTypeValue = (typeof PERSONA_TYPE_VALUES)[number];
 type EatingOutFrequencyValue = (typeof EATING_OUT_FREQUENCY_VALUES)[number];
 type JobTypeValue = (typeof JOB_TYPE_VALUES)[number];
-type LunchLocationValue = (typeof LUNCH_LOCATION_VALUES)[number];
+type LunchLocationValue = (typeof LUNCH_LOCATION_VALUES)[number] | "null";
 
 function getFiniteNumber(value: number | null | undefined) {
   return typeof value === "number" && Number.isFinite(value) ? value : undefined;
@@ -128,19 +102,12 @@ function getIndexedValues<T extends readonly string[]>(
   }, []);
 }
 
-function getIsTestUser(source: AnalyticsUserPropertiesSource) {
-  if (typeof source.is_test_user === "boolean") return source.is_test_user;
-  if (typeof source.isTestUser === "boolean") return source.isTestUser;
-  if (typeof source.role === "string") return source.role === "ADMIN";
-  return undefined;
-}
-
 export function buildAnalyticsUserProperties(
   source: AnalyticsUserPropertiesSource,
 ): AnalyticsUserProperties {
   const nickname = source.nickname?.trim();
   const targetRatio = source.target_ratio;
-  const isTestUser = getIsTestUser(source);
+  const isTestUser = typeof source.role === "string" ? source.role === "ADMIN" : undefined;
   const isSubscribed = source.is_subscribed;
   const gender = getIndexedValue(GENDER_VALUES, source.gender);
   const birthYear = getFiniteNumber(source.birthYear);
@@ -164,11 +131,9 @@ export function buildAnalyticsUserProperties(
   );
   const jobType = getIndexedValue(JOB_TYPE_VALUES, source.job_type);
   const lunchLocation =
-    jobType === undefined
-      ? undefined
-      : jobType === "office_worker"
-        ? getIndexedValue(LUNCH_LOCATION_VALUES, source.lunch_location) ?? null
-        : null;
+    jobType === "office_worker"
+      ? (getIndexedValue(LUNCH_LOCATION_VALUES, source.lunch_location) ?? "null")
+      : "null";
 
   return {
     ...(isTestUser !== undefined ? { is_test_user: isTestUser } : {}),
