@@ -404,7 +404,7 @@ export default function MealSearchPage() {
                 <div className={styles.emptyResultContainer}>
                   {searchMenuList.length === 0 && (
                     <section className={styles.emptyResult}>
-                      <p className="typo-body3">일치하는 메뉴가 없어요</p>
+                      <p className="typo-body2">검색 결과가 없어요</p>
                       <div className={styles.buttonContainer}>
                         <Button
                           variant="text"

@@ -84,9 +84,7 @@
 }
 
 .menuTitleGroup {
-  align-items: center;
-  display: inline-flex;
-  gap: 8px;
+  display: block;
   min-width: 0;
 }
 
@@ -96,7 +94,7 @@
 }
 
 .menuBrand {
-  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .menuRemoveButton {
@@ -171,9 +169,10 @@
   border-radius: 8px;
   color: var(--label-normal);
   display: inline-flex;
-  gap: 10px;
+  gap: 8px;
   justify-content: space-between;
-  padding: 16px;
+  padding: 17px 16px;
+  min-width: 94px;
 }
 
 .unitSelectTrigger:focus {

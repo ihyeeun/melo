@@ -249,12 +249,17 @@ export function ChatMealRecordBottomSheet({
                     <div className={styles.menuTitleGroup}>
                       <p className={`${styles.menuName} typo-title4`}>
                         {item.recommendation.menu_name}
+                        {item.recommendation.brand && (
+                          <>
+                            {" "}
+                            <span
+                              className={`${styles.tertiaryText} ${styles.menuBrand} typo-label4`}
+                            >
+                              {item.recommendation.brand}
+                            </span>
+                          </>
+                        )}
                       </p>
-                      {item.recommendation.brand && (
-                        <p className={`${styles.tertiaryText} ${styles.menuBrand} typo-label4`}>
-                          {item.recommendation.brand}
-                        </p>
-                      )}
                     </div>
                     <button
                       type="button"
