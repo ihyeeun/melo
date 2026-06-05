@@ -83,6 +83,13 @@ type RenderableStack = Stack & {
 };
 
 type StackflowBackHandler = () => boolean | void;
+type SwipeBackTransitionOptions = {
+  count?: number;
+  fallbackOptions?: NavigateOptions;
+  fallbackTo?: To;
+  skipBackHandler?: boolean;
+};
+type SwipeBackTransitionRequester = (options: SwipeBackTransitionOptions) => boolean;
 
 const HomePage = createLazyActivity(() => import("@/features/home/HomePage"));
 const TodayMealScorePage = createLazyActivity(() => import("@/features/home/TodayMealScorePage"));
@@ -227,6 +234,7 @@ const activityNavigationStateMap = new Map<string, unknown>();
 const stackflowBackHandlerMap = new Map<string, StackflowBackHandler>();
 let lastScreenViewKey: string | null = null;
 let pruneActivityNavigationStateTimeoutId: number | null = null;
+let activeSwipeBackTransitionRequester: SwipeBackTransitionRequester | null = null;
 
 function createLazyActivity(loader: () => Promise<{ default: ComponentType }>) {
   const LazyPage = lazy(loader);
@@ -575,6 +583,7 @@ function StackActivityFrame({
     velocity: number;
     width: number;
   } | null>(null);
+  const pendingSwipeBackTransitionOptionsRef = useRef<SwipeBackTransitionOptions | null>(null);
   const [dragX, setDragX] = useState(0);
   const [isSwipePending, setIsSwipePending] = useState(false);
   const [isSwipeCompleting, setIsSwipeCompleting] = useState(false);
@@ -588,6 +597,7 @@ function StackActivityFrame({
 
   const clearSwipe = useCallback(() => {
     swipeRef.current = null;
+    pendingSwipeBackTransitionOptionsRef.current = null;
     setDragX(0);
     setIsSwipePending(false);
     setIsSwipeCompleting(false);
@@ -597,6 +607,7 @@ function StackActivityFrame({
 
   const snapBackSwipe = useCallback(() => {
     swipeRef.current = null;
+    pendingSwipeBackTransitionOptionsRef.current = null;
     setIsSwipePending(false);
     setIsSwipeCompleting(false);
     setIsDragging(false);
@@ -607,6 +618,7 @@ function StackActivityFrame({
   useEffect(() => {
     if (activity.transitionState === "enter-done") return;
     swipeRef.current = null;
+    pendingSwipeBackTransitionOptionsRef.current = null;
 
     const frameId = window.requestAnimationFrame(() => {
       setDragX(0);
@@ -620,6 +632,45 @@ function StackActivityFrame({
       window.cancelAnimationFrame(frameId);
     };
   }, [activity.key, activity.transitionState]);
+
+  const startSwipeBackTransition = useCallback(
+    (options: SwipeBackTransitionOptions) => {
+      if (
+        !canSwipeBack ||
+        isSwipePending ||
+        isSwipeCompleting ||
+        isDragging ||
+        isResetting
+      ) {
+        return false;
+      }
+
+      const frameWidth = frameRef.current?.getBoundingClientRect().width ?? window.innerWidth;
+      pendingSwipeBackTransitionOptionsRef.current = options;
+      swipeRef.current = null;
+      setDragX(frameWidth);
+      setIsSwipePending(false);
+      setIsSwipeCompleting(true);
+      setIsDragging(false);
+      setIsResetting(false);
+      return true;
+    },
+    [canSwipeBack, isDragging, isResetting, isSwipeCompleting, isSwipePending],
+  );
+
+  useEffect(() => {
+    if (!canSwipeBack) {
+      return;
+    }
+
+    activeSwipeBackTransitionRequester = startSwipeBackTransition;
+
+    return () => {
+      if (activeSwipeBackTransitionRequester === startSwipeBackTransition) {
+        activeSwipeBackTransitionRequester = null;
+      }
+    };
+  }, [canSwipeBack, startSwipeBackTransition]);
 
   useEffect(() => {
     if (!activity.isTop || activity.transitionState !== "enter-done") {
@@ -726,6 +777,7 @@ function StackActivityFrame({
       setIsDragging(false);
 
       if (shouldPop) {
+        pendingSwipeBackTransitionOptionsRef.current = null;
         setDragX(swipe.width);
         setIsSwipeCompleting(true);
         return;
@@ -767,7 +819,12 @@ function StackActivityFrame({
       if (event.propertyName !== "transform") return;
 
       if (isSwipeCompleting) {
-        const didNavigateBack = navigateBack({ animate: false });
+        const pendingOptions = pendingSwipeBackTransitionOptionsRef.current;
+        pendingSwipeBackTransitionOptionsRef.current = null;
+        const didNavigateBack = navigateBack({
+          animate: false,
+          ...(pendingOptions ?? {}),
+        });
 
         if (!didNavigateBack) {
           setIsSwipeCompleting(false);
@@ -948,12 +1005,25 @@ export function navigateBack({
   fallbackTo?: To;
   skipBackHandler?: boolean;
 } = {}) {
+  const backStackDepth = getBackStackDepth(stackflowActions.getStack());
+  const safeCount = Math.min(Math.max(1, count), Math.max(0, backStackDepth - 1));
+
+  if (
+    animate &&
+    safeCount === 1 &&
+    activeSwipeBackTransitionRequester?.({
+      count: safeCount,
+      fallbackOptions,
+      fallbackTo,
+      skipBackHandler,
+    }) === true
+  ) {
+    return true;
+  }
+
   if (runActiveBackHandler(skipBackHandler)) {
     return false;
   }
-
-  const backStackDepth = getBackStackDepth(stackflowActions.getStack());
-  const safeCount = Math.min(Math.max(1, count), Math.max(0, backStackDepth - 1));
 
   if (safeCount > 0) {
     stackflowActions.pop(safeCount, { animate });
