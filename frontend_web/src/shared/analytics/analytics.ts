@@ -114,7 +114,7 @@ export function identifyNickname(nickname?: string | null) {
     return;
   }
 
-  syncUserProperties({ nickname: normalizedNickname });
+  syncUserProperties({ ...currentUserProperties, nickname: normalizedNickname });
 }
 
 export function clearAnalyticsUserProperties() {
