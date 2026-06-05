@@ -1,6 +1,6 @@
 import { useActivity } from "@stackflow/react";
 import { useQueries } from "@tanstack/react-query";
-import type { FormEvent, KeyboardEvent, MouseEvent } from "react";
+import type { FormEvent, KeyboardEvent, MouseEvent, PointerEvent } from "react";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 
 import { AssistantPendingMessage } from "@/features/chat/components/AssistantPendingMessage";
@@ -1788,6 +1788,8 @@ function ChatInput({
   onSubmit: (event?: FormEvent<HTMLFormElement>) => void | Promise<void>;
 }) {
   const [isAddActionOpen, setIsAddActionOpen] = useState(false);
+  const textInputRef = useRef<HTMLTextAreaElement>(null);
+  const lastPointerSubmitAtRef = useRef(0);
   const isSendDisabled = isInputEmpty || isSendPending;
 
   const handleInputChange = (nextValue: string) => {
@@ -1796,6 +1798,36 @@ function ChatInput({
     }
 
     onChange(nextValue);
+  };
+
+  const submitMessage = () => {
+    if (isSendDisabled) {
+      return;
+    }
+
+    void onSubmit();
+    textInputRef.current?.blur();
+  };
+
+  const handleSendPointerDown = (event: PointerEvent<HTMLButtonElement>) => {
+    if (isSendDisabled) {
+      return;
+    }
+
+    event.preventDefault();
+    lastPointerSubmitAtRef.current = Date.now();
+    submitMessage();
+  };
+
+  const handleSendClick = (event: MouseEvent<HTMLButtonElement>) => {
+    const wasHandledByPointerDown =
+      event.detail > 0 && Date.now() - lastPointerSubmitAtRef.current < 750;
+
+    if (wasHandledByPointerDown) {
+      return;
+    }
+
+    submitMessage();
   };
 
   return (
@@ -1816,6 +1848,7 @@ function ChatInput({
 
         <div className={styles.textInputWrapper}>
           <textarea
+            ref={textInputRef}
             rows={1}
             value={value}
             className={`${styles.textInput} typo-body2`}
@@ -1828,9 +1861,11 @@ function ChatInput({
           />
           {value.trim() !== "" && (
             <button
-              type="submit"
+              type="button"
               className={`${styles.sendIconContainer} ${isSendDisabled ? styles.sendIconContainerDisabled : ""}`}
               disabled={isSendDisabled}
+              onPointerDown={handleSendPointerDown}
+              onClick={handleSendClick}
               aria-label="메시지 전송"
             >
               <SystemIcon name="chevron-up-normal" size={24} />
