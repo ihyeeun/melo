@@ -11,7 +11,9 @@ function isRootRoute(segments: string[]) {
 }
 
 function isProtectedRoute(segments: string[]) {
-  return segments[0] === "(tabs)" || segments[0] === "camera-capture";
+  return (
+    segments[0] === "(tabs)" || segments[0] === "camera-capture" || segments[0] === "settings"
+  );
 }
 
 export default function RootLayout() {
@@ -87,6 +89,7 @@ export default function RootLayout() {
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="(auth)" options={{ headerShown: false }} />
         <Stack.Screen name="camera-capture" options={{ headerShown: false }} />
+        <Stack.Screen name="settings/feedback" options={{ headerShown: false }} />
       </Stack>
       {shouldShowBootOverlay ? (
         <View style={styles.bootOverlay}>

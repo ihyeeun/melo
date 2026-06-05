@@ -240,6 +240,11 @@ export interface ProfileResponseDto {
   target_weight: number;
   target_calories: number;
   target_ratio: TargetRatio;
+  diet_management_status?: number[];
+  persona_type?: number;
+  eating_out_freq_weekly?: number;
+  job_type?: number;
+  lunch_location?: number | null;
 }
 export interface UserGoalSnapshotResponseDto {
   id: number; //목표 스냅샷 id

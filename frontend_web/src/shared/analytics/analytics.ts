@@ -48,7 +48,7 @@ function syncUserProperties(properties: AnalyticsUserProperties) {
   ANALYTICS_USER_PROPERTY_KEYS.forEach((propertyKey) => {
     const value = properties[propertyKey];
 
-    if (value === undefined) {
+    if (value === undefined || value === null) {
       identify.unset(propertyKey);
       return;
     }

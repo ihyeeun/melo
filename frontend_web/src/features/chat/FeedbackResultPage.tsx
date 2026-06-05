@@ -344,7 +344,6 @@ function FeedbackResultContent({
                     unit_quantity={menu.unit_quantity}
                     brand={menu.brand}
                     data_source={menu.data_source}
-                    isAiEstimated={menu.is_appropriate}
                     weight={menu.weight}
                     unit={menu.unit}
                     icon={isSelected ? "check" : "add"}
@@ -751,13 +750,16 @@ function getMarkerPosition(value: number, options?: FoodMarkerHorizontalClassOpt
     return 0.5;
   }
 
-  const clampedAnchorX = safeAnchorRanges.reduce((closestAnchorX, [minAnchorX, maxAnchorX]) => {
-    const candidateAnchorX = clamp(anchorX, minAnchorX, maxAnchorX);
+  const clampedAnchorX = safeAnchorRanges.reduce(
+    (closestAnchorX, [minAnchorX, maxAnchorX]) => {
+      const candidateAnchorX = clamp(anchorX, minAnchorX, maxAnchorX);
 
-    return Math.abs(candidateAnchorX - anchorX) < Math.abs(closestAnchorX - anchorX)
-      ? candidateAnchorX
-      : closestAnchorX;
-  }, clamp(anchorX, safeAnchorRanges[0][0], safeAnchorRanges[0][1]));
+      return Math.abs(candidateAnchorX - anchorX) < Math.abs(closestAnchorX - anchorX)
+        ? candidateAnchorX
+        : closestAnchorX;
+    },
+    clamp(anchorX, safeAnchorRanges[0][0], safeAnchorRanges[0][1]),
+  );
 
   return clampedAnchorX / markerLayoutWidth;
 }
@@ -882,9 +884,7 @@ function getFoodMarkerBubbleRect(
   };
 }
 
-function getEstimatedFoodMarkerBubbleSize(
-  marker: Pick<FoodMarkerItem, "label" | "scoreText">,
-) {
+function getEstimatedFoodMarkerBubbleSize(marker: Pick<FoodMarkerItem, "label" | "scoreText">) {
   const scoreWidth = marker.scoreText ? FOOD_MARKER_SCORE_TEXT_WIDTH : 0;
   const contentGap = marker.scoreText ? FOOD_MARKER_BUBBLE_CONTENT_GAP : 0;
   const labelWidth = getEstimatedTextWidth(marker.label);
@@ -1009,8 +1009,7 @@ function getVerticalMarkerClass(y: number, options?: FoodMarkerVerticalClassOpti
   if (options && options.markerLayout.height > 0 && options.bubbleHeight > 0) {
     const anchorY = y * options.markerLayout.height;
     const anchorEdgeOffset = options.anchorEdgeOffset ?? 0;
-    const requiredSpace =
-      options.bubbleHeight + FOOD_MARKER_BUBBLE_ANCHOR_GAP + anchorEdgeOffset;
+    const requiredSpace = options.bubbleHeight + FOOD_MARKER_BUBBLE_ANCHOR_GAP + anchorEdgeOffset;
     const hasSpaceAbove = anchorY >= requiredSpace;
     const hasSpaceBelow = options.markerLayout.height - anchorY >= requiredSpace;
 

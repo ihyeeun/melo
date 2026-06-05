@@ -20,7 +20,6 @@ type MealMenuCardProps = {
   unit?: number;
   weight?: number;
   quantity?: number;
-  isAiEstimated?: boolean;
   data_source?: MenuDataSource | number;
   icon?: MealMenuCardIcon;
   state?: MealMenuCardState;
@@ -79,7 +78,6 @@ export function MealMenuCard({
   weight,
   quantity,
   data_source,
-  isAiEstimated,
   icon = "delete",
   state = "default",
   className,
@@ -110,7 +108,7 @@ export function MealMenuCard({
 
   const isSelected = state === "select";
   const isPersonalMenu = data_source === MENU_DATA_SOURCE.PERSONAL;
-  const shouldShowChipList = isPersonalMenu || isAiEstimated;
+  const shouldShowChipList = isPersonalMenu;
   const safeQuantityInput =
     typeof quantity === "number" && Number.isFinite(quantity) && quantity > 0 ? quantity : null;
   const safeWeight = toPositiveNumber(weight);
@@ -184,9 +182,6 @@ export function MealMenuCard({
       {shouldShowChipList && (
         <div className={styles.chipList}>
           {isPersonalMenu && <DataSourceBadge variant="personal" active={isSelected} />}
-          {isAiEstimated && (
-            <DataSourceBadge variant="aiEstimated" active={isSelected} label={"AI 추정치"} />
-          )}
         </div>
       )}
     </article>

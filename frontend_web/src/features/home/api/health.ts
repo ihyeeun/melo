@@ -7,6 +7,7 @@ import type {
   ProfileResponseDto,
   WeightStepsResponseDto,
 } from "@/shared/api/types/api.dto";
+import { isFutureDateKey } from "@/shared/utils/dateFormat";
 
 const END_POINT = {
   BODY_STATS: "/home/weightSteps",
@@ -36,7 +37,7 @@ export async function getBodyStats(date: DateRequestDto) {
     body: date,
   });
 
-  if (response.weight === null) {
+  if (response.weight === null && !isFutureDateKey(date.date)) {
     const currentWeight = await getCurrentWeight();
     await registerWeight({
       date: date.date,
