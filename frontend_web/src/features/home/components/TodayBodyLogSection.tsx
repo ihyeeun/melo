@@ -13,12 +13,16 @@ import { useGetProfileQuery } from "@/features/profile/hooks/queries/useProfileQ
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import { LoadingOverlay } from "@/shared/commons/loading/Loading";
 import { toast } from "@/shared/commons/toast/toast";
+import { isFutureDateKey } from "@/shared/utils/dateFormat";
 
 type TodayMetricType = "weight" | "steps";
 
 export default function TodayBodyLogSection({ date }: { date: string }) {
   const { data: bodyLog } = useGetBodyLog(date);
   const { data: profile } = useGetProfileQuery();
+  const isFutureDate = isFutureDateKey(date);
+  const displayWeight = bodyLog?.weight ?? (isFutureDate ? 0 : profile?.weight ?? 0);
+  const initialWeight = bodyLog?.weight ?? (isFutureDate ? undefined : profile?.weight ?? 0);
 
   const { mutate: registerWeight, isPending: isWeightPending } = useRegisterWeightMutation({
     onSuccess: () => {
@@ -67,7 +71,7 @@ export default function TodayBodyLogSection({ date }: { date: string }) {
       <div className={style.todayContainer}>
         <TodayMetricCard
           title="체중"
-          value={bodyLog?.weight ?? profile?.weight ?? 0}
+          value={displayWeight}
           unit="kg"
           onClick={openWeightEditor}
         />
@@ -81,7 +85,7 @@ export default function TodayBodyLogSection({ date }: { date: string }) {
 
       {editingMetric === "weight" ? (
         <WeightLogBottomSheet
-          initialWeight={bodyLog?.weight ?? profile?.weight ?? 0}
+          initialWeight={initialWeight}
           onClose={closeEditor}
           onSubmit={submitWeight}
         />
