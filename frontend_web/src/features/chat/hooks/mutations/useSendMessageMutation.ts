@@ -5,20 +5,25 @@ import { appendMissingChatHistoryItemsToCache } from "@/features/chat/hooks/quer
 import { isChatHistoryItemResponse } from "@/features/chat/utils/chatHistoryItem";
 import type { UseMutationCallback } from "@/shared/api/types/callback.types";
 
-export function useSendMessageMutation(callbacks?: UseMutationCallback) {
+type UseSendMessageMutationOptions = UseMutationCallback & {
+  appendToCache?: boolean;
+};
+
+export function useSendMessageMutation(options?: UseSendMessageMutationOptions) {
   const queryClient = useQueryClient();
+  const shouldAppendToCache = options?.appendToCache ?? true;
 
   return useMutation({
     mutationFn: sendMessage,
     onSuccess: (response) => {
-      if (isChatHistoryItemResponse(response)) {
+      if (shouldAppendToCache && isChatHistoryItemResponse(response)) {
         appendMissingChatHistoryItemsToCache(queryClient, [response]);
       }
 
-      if (callbacks?.onSuccess) callbacks.onSuccess();
+      if (options?.onSuccess) options.onSuccess();
     },
     onError: (error) => {
-      if (callbacks?.onError) callbacks.onError(error);
+      if (options?.onError) options.onError(error);
     },
   });
 }

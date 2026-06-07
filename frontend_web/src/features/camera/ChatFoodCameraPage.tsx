@@ -21,6 +21,10 @@ import { PageHeader } from "@/shared/commons/header/PageHeader";
 import { CheckButtonModal } from "@/shared/commons/modals/CheckButtonModal";
 import { navigateBack, useNavigate } from "@/shared/navigation/stackflowNavigation";
 
+type ChatFoodCameraToChatLocationState = {
+  playbackChatItemId?: number;
+};
+
 export default function ChatFoodCameraPage() {
   const [isOpeningCamera, setIsOpeningCamera] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -67,12 +71,16 @@ export default function ChatFoodCameraPage() {
     try {
       setPreviewSrc(getCapturedImagePreviewSrc(image)); // 이미지 미리보기 설정
       setIsProcessing(true);
-      await uploadFoodImage(image);
+      const uploadResult = await uploadFoodImage(image);
+      const playbackChatItemId = getLatestAppendedChatItemId(uploadResult.appendedChatItems);
       track(EVENT_NAME.FOOD_SCAN_SUCCESS, { source: "chat_food_camera" });
       syncAppTab("chat");
 
       navigate(PATH.CHAT, {
         replace: true,
+        state: {
+          playbackChatItemId,
+        } satisfies ChatFoodCameraToChatLocationState,
       });
     } catch (error) {
       track(EVENT_NAME.FOOD_SCAN_FAIL, {
@@ -145,4 +153,8 @@ export default function ChatFoodCameraPage() {
       />
     </section>
   );
+}
+
+function getLatestAppendedChatItemId(appendedChatItems: { id: number }[]) {
+  return appendedChatItems[appendedChatItems.length - 1]?.id;
 }

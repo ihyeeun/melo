@@ -17,7 +17,6 @@ import { track } from "@/shared/analytics/analytics";
 import { EVENT_NAME } from "@/shared/analytics/analytics.constants";
 import { syncAppTab } from "@/shared/api/bridge/nativeBridge";
 import { requestNativeCameraCapture } from "@/shared/api/bridge/nativeBridge";
-import type { ChatMenuBoardRecommendResponseDto } from "@/shared/api/types/api.dto";
 import { Button } from "@/shared/commons/button/Button";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
 import { CheckButtonModal } from "@/shared/commons/modals/CheckButtonModal";
@@ -29,8 +28,7 @@ type MenuBoardCameraLocationState = {
 };
 
 type MenuBoardToChatLocationState = {
-  source: "menu-board-camera";
-  menuBoardResponse: ChatMenuBoardRecommendResponseDto;
+  playbackChatItemId?: number;
 };
 
 export default function MenuBoardCameraPage() {
@@ -88,15 +86,15 @@ export default function MenuBoardCameraPage() {
     try {
       setCapturedPreviewSrc(getCapturedImagePreviewSrc(capturedImage));
       setIsProcessing(true);
-      const response = await uploadMenuBoardImage(capturedImage);
+      const uploadResult = await uploadMenuBoardImage(capturedImage);
+      const playbackChatItemId = getLatestAppendedChatItemId(uploadResult.appendedChatItems);
       track(EVENT_NAME.OCR_SCAN_SUCCESS, { source: "menu_board_camera" });
       syncAppTab("chat");
 
       navigate(PATH.CHAT, {
         replace: true,
         state: {
-          source: "menu-board-camera",
-          menuBoardResponse: response,
+          playbackChatItemId,
         } satisfies MenuBoardToChatLocationState,
       });
 
@@ -176,4 +174,8 @@ export default function MenuBoardCameraPage() {
       />
     </section>
   );
+}
+
+function getLatestAppendedChatItemId(appendedChatItems: { id: number }[]) {
+  return appendedChatItems[appendedChatItems.length - 1]?.id;
 }

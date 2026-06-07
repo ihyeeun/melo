@@ -44,10 +44,15 @@ export function useNutritionLabelMutation(callbacks?: UseMutationCallback) {
 export function useMenuBoardMutation(callbacks?: UseMutationCallback) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: uploadMenuBoardImage,
-    onSuccess: async () => {
-      await refetchAndMergeChatHistoryIntoCache(queryClient);
+    mutationFn: async (image: Parameters<typeof uploadMenuBoardImage>[0]) => {
+      await uploadMenuBoardImage(image);
+      const appendedChatItems = await refetchAndMergeChatHistoryIntoCache(queryClient);
 
+      return {
+        appendedChatItems,
+      };
+    },
+    onSuccess: () => {
       if (callbacks?.onSuccess) {
         callbacks.onSuccess();
       }
@@ -64,10 +69,15 @@ export function useChatFoodImageFeedbackMutation(callbacks?: UseMutationCallback
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: uploadChatFoodImageFeedback,
-    onSuccess: async () => {
-      await refetchAndMergeChatHistoryIntoCache(queryClient);
+    mutationFn: async (image: Parameters<typeof uploadChatFoodImageFeedback>[0]) => {
+      await uploadChatFoodImageFeedback(image);
+      const appendedChatItems = await refetchAndMergeChatHistoryIntoCache(queryClient);
 
+      return {
+        appendedChatItems,
+      };
+    },
+    onSuccess: () => {
       if (callbacks?.onSuccess) {
         callbacks.onSuccess();
       }

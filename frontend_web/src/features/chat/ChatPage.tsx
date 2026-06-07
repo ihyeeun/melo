@@ -1,5 +1,5 @@
 import { useActivity } from "@stackflow/react";
-import { useQueries } from "@tanstack/react-query";
+import { type QueryClient, useQueries, useQueryClient } from "@tanstack/react-query";
 import type { FormEvent, KeyboardEvent, MouseEvent, PointerEvent } from "react";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 
@@ -10,6 +10,10 @@ import {
   type ChatMealRecordMenu,
 } from "@/features/chat/components/ChatMealRecordBottomSheet";
 import { useSendMessageMutation } from "@/features/chat/hooks/mutations/useSendMessageMutation";
+import {
+  appendMissingChatHistoryItemsToCache,
+  refetchAndMergeChatHistoryIntoCache,
+} from "@/features/chat/hooks/queries/chatHistoryCache";
 import { useGetChatHistoryQuery } from "@/features/chat/hooks/queries/useGetChatQuery";
 import {
   useChatMealRecordFocusRequest,
@@ -74,7 +78,7 @@ import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import { ConfirmModal } from "@/shared/commons/modals/ConfirmModal";
 import { Skeleton, SkeletonStatus } from "@/shared/commons/skeleton/Skeleton";
 import { toast } from "@/shared/commons/toast/toast";
-import { navigateBack, useNavigate } from "@/shared/navigation/stackflowNavigation";
+import { navigateBack, useLocation, useNavigate } from "@/shared/navigation/stackflowNavigation";
 import {
   formatDateDividerText,
   formatDateKey,
@@ -99,6 +103,11 @@ const CAMERA_HINT_DISMISSED_SESSION_KEY = "chat.cameraHintDismissed";
 const SCROLL_BOTTOM_THRESHOLD = 24;
 const SOFT_KEYBOARD_VISIBLE_HEIGHT_THRESHOLD = 120;
 const MEAL_TIME_LIST: MealTime[] = [0, 1, 2, 3, 4];
+const ASSISTANT_PLAYBACK_START_DELAY_MS = 320;
+const ASSISTANT_MESSAGE_GAP_MS = 520;
+const ASSISTANT_RESULT_REVEAL_DELAY_MS = 620;
+const ASSISTANT_RESULT_CARD_GAP_MS = 460;
+const ASSISTANT_TYPING_INTERVAL_MS = 90;
 
 type RecordedMenuSummary = {
   menu_id: number;
@@ -162,6 +171,19 @@ type TimelineScrollTarget = {
   block: ScrollLogicalPosition;
   key: string;
   requestId: number;
+};
+
+type AssistantPlaybackState = {
+  chatItemId: number;
+  generalAnswer: string;
+  introMessage: string;
+  isGeneralComplete: boolean;
+  isIntroComplete: boolean;
+  resultVisibleCount: number;
+};
+
+type ChatLocationState = {
+  playbackChatItemId?: number;
 };
 
 type ClientOsName = AppDeviceInfoPayload["osName"] | "unknown";
@@ -387,12 +409,17 @@ function useSoftKeyboardVisible(isInputFocused: boolean, clientOsName: ClientOsN
 
 export default function ChatPage() {
   const navigate = useNavigate();
+  const location = useLocation<ChatLocationState>();
+  const queryClient = useQueryClient();
   const { isTop } = useActivity();
   const todayDateKey = getTodayFormatDateKey();
   const mainRef = useRef<HTMLElement>(null);
   const endAnchorRef = useRef<HTMLDivElement>(null);
   const timelineScrollElementRefs = useRef(new Map<string, HTMLElement>());
   const timelineScrollRequestIdRef = useRef(0);
+  const assistantPlaybackRunIdRef = useRef(0);
+  const assistantPlaybackChatItemIdsRef = useRef(new Set<number>());
+  const knownHistoryChatItemIdsRef = useRef<Set<number> | null>(null);
   const pendingMealRecordScrollKeyRef = useRef<string | null>(null);
   const skipNextAutoBottomScrollRef = useRef(false);
   const hiddenScrollTopSnapshotRef = useRef<number | null>(null);
@@ -403,6 +430,10 @@ export default function ChatPage() {
   const [pendingInput, setPendingInput] = useState<string | null>(null);
   const [localResponseChatItem, setLocalResponseChatItem] =
     useState<ChatHistoryItemResponseDto | null>(null);
+  const [assistantPlayback, setAssistantPlayback] = useState<AssistantPlaybackState | null>(null);
+  const [playedAssistantPlaybackChatItemIds, setPlayedAssistantPlaybackChatItemIds] = useState(
+    () => new Set<number>(),
+  );
   const [isCameraActionMenuOpen, setIsCameraActionMenuOpen] = useState(false);
   const [isCameraHintDismissed, setIsCameraHintDismissed] = useState(
     getIsCameraHintDismissedInSession,
@@ -425,13 +456,16 @@ export default function ChatPage() {
   const isSoftKeyboardVisible = useSoftKeyboardVisible(isInputFocused, clientOsName);
 
   const { data, isPending: isHistoryPending } = useGetChatHistoryQuery();
-  const { mutateAsync: sendMessageMutation, isPending: isSendPending } = useSendMessageMutation();
+  const { mutateAsync: sendMessageMutation, isPending: isSendPending } = useSendMessageMutation({
+    appendToCache: false,
+  });
   const { mutateAsync: registerDiaryMealRecordMutate, isPending: isDiaryMealRegisterPending } =
     useTodayMealRecordRegisterMutation();
   const { mutateAsync: deleteDiaryMealRecordMutate, isPending: isDiaryMealDeletePending } =
     useTodayMealRecordDeleteWithRollbackMutation();
   const chatMealRecordFocusRequest = useChatMealRecordFocusRequest();
   const clearChatMealRecordFocusRequest = useClearChatMealRecordFocusRequest();
+  const navigationPlaybackChatItemId = location.state?.playbackChatItemId;
 
   const isMealRecordEditPending = isDiaryMealRegisterPending || isDiaryMealDeletePending;
 
@@ -506,7 +540,19 @@ export default function ChatPage() {
     todayMealQueryIndex >= 0 ? (dayMealQueries[todayMealQueryIndex]?.isPending ?? false) : false;
   const editingMealRecordMenus = editingMealRecordContext?.menus ?? [];
 
-  const isAwaitingChatResponse = pendingInput !== null;
+  const assistantPlaybackSignature = assistantPlayback
+    ? [
+        assistantPlayback.chatItemId,
+        assistantPlayback.introMessage.length,
+        assistantPlayback.generalAnswer.length,
+        assistantPlayback.isIntroComplete,
+        assistantPlayback.isGeneralComplete,
+        assistantPlayback.resultVisibleCount,
+      ].join(":")
+    : "idle";
+  const isAssistantPlaybackActive = assistantPlayback !== null;
+  const isChatSendDisabled = isSendPending || isAssistantPlaybackActive;
+  const isAwaitingChatResponse = pendingInput !== null || isAssistantPlaybackActive;
   const hasTimelineContent = timelineItems.length > 0 || isAwaitingChatResponse;
   const isTypingPending = isAwaitingChatResponse && isSendPending;
   const isInputEmpty = inputValue.trim().length === 0;
@@ -656,6 +702,7 @@ export default function ChatPage() {
 
     updateIsScrolledAwayFromBottom();
   }, [
+    assistantPlaybackSignature,
     isScrolledAwayFromBottom,
     isTop,
     timelineScrollTarget,
@@ -754,6 +801,12 @@ export default function ChatPage() {
     };
   }, [updateIsScrolledAwayFromBottom]);
 
+  useEffect(() => {
+    return () => {
+      assistantPlaybackRunIdRef.current += 1;
+    };
+  }, []);
+
   useEnsureBottomOnQuickAction({
     isTop,
     isQuickActionVisible,
@@ -775,6 +828,7 @@ export default function ChatPage() {
       window.cancelAnimationFrame(frameId);
     };
   }, [
+    assistantPlaybackSignature,
     hasTimelineContent,
     isSoftKeyboardVisible,
     isQuickActionVisible,
@@ -782,15 +836,210 @@ export default function ChatPage() {
     updateIsScrolledAwayFromBottom,
   ]);
 
+  const playAssistantResponse = useCallback(
+    async (
+      responseChatItem: ChatHistoryItemResponseDto,
+      options: { clearLocalResponseOnComplete: boolean },
+    ) => {
+      const playbackRunId = assistantPlaybackRunIdRef.current + 1;
+      const responsePayload = responseChatItem.response_payload;
+      const isCurrentPlayback = () => assistantPlaybackRunIdRef.current === playbackRunId;
+      const updatePlayback = (
+        updater: (current: AssistantPlaybackState) => AssistantPlaybackState,
+      ) => {
+        setAssistantPlayback((current) => {
+          if (!current || current.chatItemId !== responseChatItem.id) {
+            return current;
+          }
+
+          return updater(current);
+        });
+      };
+
+      assistantPlaybackRunIdRef.current = playbackRunId;
+      assistantPlaybackChatItemIdsRef.current.add(responseChatItem.id);
+      setPlayedAssistantPlaybackChatItemIds((current) => {
+        const next = new Set(current);
+        next.add(responseChatItem.id);
+        return next;
+      });
+      setAssistantPlayback({
+        chatItemId: responseChatItem.id,
+        generalAnswer: "",
+        introMessage: "",
+        isGeneralComplete: responsePayload.chat_category !== "general",
+        isIntroComplete: false,
+        resultVisibleCount: 0,
+      });
+
+      await delayAssistantPlayback(ASSISTANT_PLAYBACK_START_DELAY_MS);
+      if (!isCurrentPlayback()) return;
+
+      const didIntroComplete = await revealAssistantText({
+        isCurrent: isCurrentPlayback,
+        onTextChange: (introMessage) => {
+          updatePlayback((current) => ({ ...current, introMessage }));
+        },
+        text: responsePayload.intro_message,
+      });
+
+      if (!didIntroComplete || !isCurrentPlayback()) return;
+
+      updatePlayback((current) => ({
+        ...current,
+        introMessage: responsePayload.intro_message,
+        isIntroComplete: true,
+      }));
+
+      if (responsePayload.chat_category === "general") {
+        await delayAssistantPlayback(ASSISTANT_MESSAGE_GAP_MS);
+        if (!isCurrentPlayback()) return;
+
+        const didGeneralComplete = await revealAssistantText({
+          isCurrent: isCurrentPlayback,
+          onTextChange: (generalAnswer) => {
+            updatePlayback((current) => ({ ...current, generalAnswer }));
+          },
+          text: responsePayload.general_answer,
+        });
+
+        if (!didGeneralComplete || !isCurrentPlayback()) return;
+
+        updatePlayback((current) => ({
+          ...current,
+          generalAnswer: responsePayload.general_answer,
+          isGeneralComplete: true,
+        }));
+      } else {
+        await delayAssistantPlayback(ASSISTANT_RESULT_REVEAL_DELAY_MS);
+        if (!isCurrentPlayback()) return;
+
+        const resultRevealCount = getAssistantResultRevealCount(responsePayload);
+
+        for (
+          let resultVisibleCount = 1;
+          resultVisibleCount <= resultRevealCount;
+          resultVisibleCount += 1
+        ) {
+          if (!isCurrentPlayback()) return;
+
+          updatePlayback((current) => ({ ...current, resultVisibleCount }));
+
+          if (resultVisibleCount < resultRevealCount) {
+            await delayAssistantPlayback(ASSISTANT_RESULT_CARD_GAP_MS);
+          }
+        }
+      }
+
+      if (options.clearLocalResponseOnComplete) {
+        setLocalResponseChatItem((current) =>
+          current?.id === responseChatItem.id ? null : current,
+        );
+      }
+
+      setAssistantPlayback((current) =>
+        current?.chatItemId === responseChatItem.id ? null : current,
+      );
+    },
+    [],
+  );
+
+  useEffect(() => {
+    if (
+      navigationPlaybackChatItemId === undefined ||
+      isHistoryPending ||
+      assistantPlayback !== null ||
+      pendingInput !== null ||
+      assistantPlaybackChatItemIdsRef.current.has(navigationPlaybackChatItemId)
+    ) {
+      return;
+    }
+
+    const chatItem = chatList.find((item) => item.id === navigationPlaybackChatItemId);
+
+    if (!chatItem) {
+      return;
+    }
+
+    if (knownHistoryChatItemIdsRef.current === null) {
+      knownHistoryChatItemIdsRef.current = new Set(chatList.map((item) => item.id));
+    } else {
+      knownHistoryChatItemIdsRef.current.add(chatItem.id);
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      void playAssistantResponse(chatItem, {
+        clearLocalResponseOnComplete: false,
+      });
+    }, 0);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [
+    assistantPlayback,
+    chatList,
+    isHistoryPending,
+    navigationPlaybackChatItemId,
+    pendingInput,
+    playAssistantResponse,
+  ]);
+
+  useLayoutEffect(() => {
+    if (isHistoryPending) {
+      return;
+    }
+
+    const currentChatItemIds = new Set(chatList.map((chatItem) => chatItem.id));
+
+    if (knownHistoryChatItemIdsRef.current === null) {
+      knownHistoryChatItemIdsRef.current = currentChatItemIds;
+      return;
+    }
+
+    const knownChatItemIds = knownHistoryChatItemIdsRef.current;
+
+    currentChatItemIds.forEach((chatItemId) => {
+      if (assistantPlaybackChatItemIdsRef.current.has(chatItemId)) {
+        knownChatItemIds.add(chatItemId);
+      }
+    });
+
+    const newChatItems = chatList
+      .filter(
+        (chatItem) =>
+          !knownChatItemIds.has(chatItem.id) &&
+          !assistantPlaybackChatItemIdsRef.current.has(chatItem.id),
+      )
+      .sort(compareChatHistoryItems);
+
+    if (
+      newChatItems.length === 0 ||
+      !isTop ||
+      pendingInput !== null ||
+      assistantPlayback !== null
+    ) {
+      return;
+    }
+
+    const nextChatItem = newChatItems[0];
+    knownChatItemIds.add(nextChatItem.id);
+    void playAssistantResponse(nextChatItem, {
+      clearLocalResponseOnComplete: false,
+    });
+  }, [assistantPlayback, chatList, isHistoryPending, isTop, pendingInput, playAssistantResponse]);
+
   const sendChatMessage = async (rawInput: string) => {
     const text = rawInput.trim();
-    if (!text || isSendPending) return;
+    if (!text || isChatSendDisabled) return;
 
     if (!isCameraHintDismissed) {
       setIsCameraHintDismissed(true);
       saveCameraHintDismissedInSession();
     }
 
+    assistantPlaybackRunIdRef.current += 1;
+    setAssistantPlayback(null);
     setIsCameraActionMenuOpen(false);
     setLocalResponseChatItem(null);
     setPendingInput(text);
@@ -800,22 +1049,33 @@ export default function ChatPage() {
     try {
       const response = await sendMessageMutation({ input: text });
       const responsePayload = getSendMessageResponsePayload(response);
-      const historyChatItem = isChatHistoryItemResponse(response) ? response : null;
+      const directHistoryChatItem = isChatHistoryItemResponse(response) ? response : null;
+      const historyChatItem =
+        directHistoryChatItem ??
+        (await resolveHistoryChatItemFromResponse(queryClient, text, responsePayload));
       const responseChatItem = historyChatItem ?? buildLocalChatHistoryItem(text, responsePayload);
 
-      if (!historyChatItem) {
-        setLocalResponseChatItem(responseChatItem);
+      setLocalResponseChatItem(responseChatItem);
+      setPendingInput(null);
+      const playbackPromise = playAssistantResponse(responseChatItem, {
+        clearLocalResponseOnComplete: historyChatItem !== null,
+      });
+
+      if (directHistoryChatItem) {
+        appendMissingChatHistoryItemsToCache(queryClient, [directHistoryChatItem]);
       }
 
-      setPendingInput(null);
       track(
         EVENT_NAME.AI_COACH_RESPONSE_SUCCESS,
         getAiCoachResponseAnalyticsProperties(responsePayload),
       );
+      await playbackPromise;
     } catch (error) {
       track(EVENT_NAME.AI_COACH_RESPONSE_FAIL, {
         reason: resolveErrorMessage(error),
       });
+      assistantPlaybackRunIdRef.current += 1;
+      setAssistantPlayback(null);
       setLocalResponseChatItem(null);
       setPendingInput(null);
       toast.warning(resolveErrorMessage(error));
@@ -1356,6 +1616,40 @@ export default function ChatPage() {
                   : null;
               const userImageUrl = getChatItemImageUrl(chatItem);
               const assistantTimeText = formatTimeText(chatItem.createdAt);
+              const chatItemPlayback =
+                assistantPlayback?.chatItemId === chatItem.id
+                  ? assistantPlayback
+                  : navigationPlaybackChatItemId === chatItem.id &&
+                      !playedAssistantPlaybackChatItemIds.has(chatItem.id)
+                    ? getInitialAssistantPlaybackState(chatItem)
+                    : null;
+              const introMessage = chatItemPlayback
+                ? chatItemPlayback.introMessage
+                : chatItem.response_payload.intro_message;
+              const generalAnswer =
+                chatItem.response_payload.chat_category === "general"
+                  ? chatItemPlayback
+                    ? chatItemPlayback.generalAnswer
+                    : chatItem.response_payload.general_answer
+                  : "";
+              const shouldShowAssistantPending =
+                chatItemPlayback !== null &&
+                !chatItemPlayback.isIntroComplete &&
+                introMessage.trim().length === 0;
+              const shouldShowIntroMessage =
+                chatItemPlayback === null ||
+                introMessage.trim().length > 0 ||
+                chatItemPlayback.isIntroComplete;
+              const shouldShowGeneralAnswer =
+                chatItem.response_payload.chat_category === "general" &&
+                (chatItemPlayback === null ||
+                  generalAnswer.trim().length > 0 ||
+                  chatItemPlayback.isGeneralComplete);
+              const resultVisibleCount =
+                chatItemPlayback === null
+                  ? Number.POSITIVE_INFINITY
+                  : chatItemPlayback.resultVisibleCount;
+              const shouldShowResultSection = resultVisibleCount > 0;
 
               return (
                 <section key={timelineItem.key} className={styles.conversationSection}>
@@ -1403,23 +1697,29 @@ export default function ChatPage() {
 
                   <div className={styles.assistantMessageRow}>
                     <div className={styles.assistantMessageContent}>
-                      <AssistantMessageBubbles
-                        message={chatItem.response_payload.intro_message}
-                        timeText={assistantTimeText}
-                      />
+                      {shouldShowAssistantPending ? <AssistantPendingMessage /> : null}
 
-                      {chatItem.response_payload.chat_category === "general" ? (
+                      {shouldShowIntroMessage ? (
                         <AssistantMessageBubbles
-                          message={chatItem.response_payload.general_answer}
+                          message={introMessage}
+                          timeText={assistantTimeText}
+                        />
+                      ) : null}
+
+                      {shouldShowGeneralAnswer ? (
+                        <AssistantMessageBubbles
+                          message={generalAnswer}
                           timeText={assistantTimeText}
                         />
                       ) : null}
 
                       {chatItem.response_payload.chat_category === "recommendation" &&
-                      chatItem.response_payload.recommendations.length > 0 ? (
+                      chatItem.response_payload.recommendations.length > 0 &&
+                      shouldShowResultSection ? (
                         <RecommendationSection
                           chatId={chatItem.id}
                           recommendations={chatItem.response_payload.recommendations}
+                          visibleCardCount={resultVisibleCount}
                           onMealRecordClick={() =>
                             handleMenuRecordClick(
                               chatItem,
@@ -1435,7 +1735,8 @@ export default function ChatPage() {
                         />
                       ) : null}
 
-                      {chatItem.response_payload.chat_category === "feedback" ? (
+                      {chatItem.response_payload.chat_category === "feedback" &&
+                      shouldShowResultSection ? (
                         <FeedbackSection
                           chatId={chatItem.id}
                           feedback={chatItem.response_payload.feedback}
@@ -1559,7 +1860,7 @@ export default function ChatPage() {
                   type="button"
                   className={styles.chipContainer}
                   onClick={() => sendChatMessage(chip)}
-                  disabled={isSendPending}
+                  disabled={isChatSendDisabled}
                 >
                   <p className="typo-body2">{chip}</p>
                 </button>
@@ -1576,7 +1877,7 @@ export default function ChatPage() {
         <ChatInput
           value={inputValue}
           isInputEmpty={isInputEmpty}
-          isSendPending={isSendPending}
+          isSendPending={isChatSendDisabled}
           onChange={handleInputValueChange}
           onInputFocusChange={handleInputFocusChange}
           onDirectMenuRecordClick={handleNavigateDirectMenuRecord}
@@ -1617,6 +1918,86 @@ export default function ChatPage() {
       />
     </div>
   );
+}
+
+function delayAssistantPlayback(delayMs: number) {
+  return new Promise<void>((resolve) => {
+    globalThis.setTimeout(resolve, delayMs);
+  });
+}
+
+function getInitialAssistantPlaybackState(chatItem: ChatHistoryItemResponseDto) {
+  return {
+    chatItemId: chatItem.id,
+    generalAnswer: "",
+    introMessage: "",
+    isGeneralComplete: chatItem.response_payload.chat_category !== "general",
+    isIntroComplete: false,
+    resultVisibleCount: 0,
+  } satisfies AssistantPlaybackState;
+}
+
+async function revealAssistantText({
+  isCurrent,
+  onTextChange,
+  text,
+}: {
+  isCurrent: () => boolean;
+  onTextChange: (text: string) => void;
+  text: string;
+}) {
+  const revealTokens = getAssistantRevealTokens(text);
+
+  if (revealTokens.length === 0) {
+    onTextChange("");
+    return true;
+  }
+
+  const chunkSize = getAssistantTypingChunkSize(revealTokens.length);
+
+  for (let visibleCount = chunkSize; visibleCount < revealTokens.length; visibleCount += chunkSize) {
+    if (!isCurrent()) {
+      return false;
+    }
+
+    onTextChange(revealTokens.slice(0, visibleCount).join(""));
+    await delayAssistantPlayback(ASSISTANT_TYPING_INTERVAL_MS);
+  }
+
+  if (!isCurrent()) {
+    return false;
+  }
+
+  onTextChange(text);
+  return true;
+}
+
+function getAssistantRevealTokens(text: string) {
+  return text.match(/\S+\s*/g) ?? [];
+}
+
+function getAssistantTypingChunkSize(tokenCount: number) {
+  if (tokenCount > 120) {
+    return 2;
+  }
+
+  return 1;
+}
+
+function getAssistantResultRevealCount(responsePayload: ChatRecommendResponseDto) {
+  if (responsePayload.chat_category === "recommendation") {
+    if (responsePayload.recommendations.length === 0) {
+      return 0;
+    }
+
+    return responsePayload.recommendations.length > 1 ? 2 : 1;
+  }
+
+  if (responsePayload.chat_category === "feedback") {
+    return responsePayload.feedback.menus.length > 0 ? 1 : 0;
+  }
+
+  return 0;
 }
 
 function getMealRecordCancelDescription(target: MealRecordCancelTarget | null) {
@@ -1703,7 +2084,7 @@ function AssistantMessageBubbles({ message, timeText }: { message: string; timeT
 
         return (
           <p
-            key={`${index}-${bubbleMessage}`}
+            key={index}
             className={`${styles.assistantBubble} ${
               timeText && isLastBubble ? styles.assistantBubbleWithTime : ""
             } typo-body2`}
@@ -1953,12 +2334,14 @@ function MealRecordCard({
 function RecommendationSection({
   chatId,
   recommendations,
+  visibleCardCount,
   onMealRecordClick,
   onMealRecordCancelClick,
   isMealRecorded,
 }: {
   chatId: number;
   recommendations: ChatRecommendItemResponseDto[];
+  visibleCardCount: number;
   onMealRecordClick: () => void;
   onMealRecordCancelClick: () => void;
   isMealRecorded: boolean;
@@ -2009,66 +2392,71 @@ function RecommendationSection({
 
   return (
     <div className={styles.recommendationSection}>
-      <article
-        className={`${styles.recommendCard} ${isMealRecorded ? styles.cardSelected : ""}`}
-        role="button"
-        tabIndex={0}
-        aria-label="추천 상세 보기"
-        onClick={handleRecommendationCardClick}
-        onKeyDown={handleRecommendationCardKeyDown}
-      >
-        <span className={`${styles.rankBadge} typo-label6`}>{topBadgeText}</span>
+      {visibleCardCount >= 1 ? (
+        <article
+          className={`${styles.recommendCard} ${isMealRecorded ? styles.cardSelected : ""}`}
+          role="button"
+          tabIndex={0}
+          aria-label="추천 상세 보기"
+          onClick={handleRecommendationCardClick}
+          onKeyDown={handleRecommendationCardKeyDown}
+        >
+          <span className={`${styles.rankBadge} typo-label6`}>{topBadgeText}</span>
 
-        <div className={styles.recommendContents}>
-          <p className={`${styles.recommendMenuName} typo-title2`}>{topRecommendation.menu_name}</p>
-          <div className={styles.recommendMetaRow}>
-            <p className={styles.menuInfoRow}>
-              {topRecommendation.brand && (
-                <span className={`${styles.recommendBrand} typo-label4`}>
-                  {topRecommendation.brand}
-                </span>
-              )}
-              <span className={`${styles.recommendAmount} typo-label4`}>
-                1{getServingUnitLabel(topRecommendation.unit_quantity)} ({topRecommendation.weight}
-                {topRecommendation.unit === 0 ? "g" : "ml"})
-              </span>
+          <div className={styles.recommendContents}>
+            <p className={`${styles.recommendMenuName} typo-title2`}>
+              {topRecommendation.menu_name}
             </p>
-            <span className={`${styles.recommendCalories} textNoWrap typo-title2`}>
-              {formatNumberWithMaxOneDecimal(topRecommendation.calories)}kcal
-            </span>
-          </div>
-          {topRecommendation.data_source === 1 && (
-            <div className={styles.dataSourceBadgeWrapper}>
-              <DataSourceBadge variant="personal" active={isMealRecorded} />
+            <div className={styles.recommendMetaRow}>
+              <p className={styles.menuInfoRow}>
+                {topRecommendation.brand && (
+                  <span className={`${styles.recommendBrand} typo-label4`}>
+                    {topRecommendation.brand}
+                  </span>
+                )}
+                <span className={`${styles.recommendAmount} typo-label4`}>
+                  1{getServingUnitLabel(topRecommendation.unit_quantity)} (
+                  {topRecommendation.weight}
+                  {topRecommendation.unit === 0 ? "g" : "ml"})
+                </span>
+              </p>
+              <span className={`${styles.recommendCalories} textNoWrap typo-title2`}>
+                {formatNumberWithMaxOneDecimal(topRecommendation.calories)}kcal
+              </span>
             </div>
-          )}
+            {topRecommendation.data_source === 1 && (
+              <div className={styles.dataSourceBadgeWrapper}>
+                <DataSourceBadge variant="personal" active={isMealRecorded} />
+              </div>
+            )}
 
-          <div className={styles.recommendAction}>
-            <Button
-              size="small"
-              aria-pressed={isMealRecorded}
-              onClick={handleMealRecordToggleClick}
-            >
-              식사 기록
-              {isMealRecorded ? (
-                <SystemIcon name="check" size={16} className={styles.recommendActionIcon} />
-              ) : (
-                <SystemIcon name="plus" size={16} className={styles.recommendActionIcon} />
-              )}
-            </Button>
-            <Button size="small" variant="outlined" onClick={handleRecommendationDetailClick}>
-              자세히 보기
-              <SystemIcon
-                name="chevron-right-normal"
-                size={16}
-                className={styles.recommendActionIcon}
-              />
-            </Button>
+            <div className={styles.recommendAction}>
+              <Button
+                size="small"
+                aria-pressed={isMealRecorded}
+                onClick={handleMealRecordToggleClick}
+              >
+                식사 기록
+                {isMealRecorded ? (
+                  <SystemIcon name="check" size={16} className={styles.recommendActionIcon} />
+                ) : (
+                  <SystemIcon name="plus" size={16} className={styles.recommendActionIcon} />
+                )}
+              </Button>
+              <Button size="small" variant="outlined" onClick={handleRecommendationDetailClick}>
+                자세히 보기
+                <SystemIcon
+                  name="chevron-right-normal"
+                  size={16}
+                  className={styles.recommendActionIcon}
+                />
+              </Button>
+            </div>
           </div>
-        </div>
-      </article>
+        </article>
+      ) : null}
 
-      {remaining.length > 0 ? (
+      {remaining.length > 0 && visibleCardCount >= 2 ? (
         <button
           type="button"
           className={styles.moreRecommendCard}
@@ -2781,6 +3169,15 @@ function resolveErrorMessage(
   return fallbackMessage;
 }
 
+async function resolveHistoryChatItemFromResponse(
+  queryClient: QueryClient,
+  inputText: string,
+  responsePayload: ChatRecommendResponseDto,
+) {
+  const appendedChatItems = await refetchAndMergeChatHistoryIntoCache(queryClient);
+  return findMatchingHistoryChatItem(appendedChatItems, inputText, responsePayload);
+}
+
 function getSendMessageResponsePayload(
   response: ChatHistoryItemResponseDto | ChatRecommendResponseDto,
 ) {
@@ -2797,6 +3194,58 @@ function buildLocalChatHistoryItem(
     createdAt: new Date().toISOString(),
     response_payload: responsePayload,
   };
+}
+
+function findMatchingHistoryChatItem(
+  chatItems: ChatHistoryItemResponseDto[],
+  inputText: string,
+  responsePayload: ChatRecommendResponseDto,
+) {
+  if (chatItems.length === 0) {
+    return null;
+  }
+
+  const normalizedInputText = inputText.trim();
+  const matchingChatItems = chatItems.filter(
+    (chatItem) =>
+      chatItem.input_text.trim() === normalizedInputText &&
+      isSameChatResponsePayload(chatItem.response_payload, responsePayload),
+  );
+
+  return matchingChatItems.at(-1) ?? null;
+}
+
+function isSameChatResponsePayload(
+  left: ChatRecommendResponseDto,
+  right: ChatRecommendResponseDto,
+) {
+  if (left.chat_category !== right.chat_category) {
+    return false;
+  }
+
+  if (left.chat_category === "recommendation" && right.chat_category === "recommendation") {
+    return areNumberArraysEqual(
+      left.recommendations.map((menu) => menu.menu_id),
+      right.recommendations.map((menu) => menu.menu_id),
+    );
+  }
+
+  if (left.chat_category === "feedback" && right.chat_category === "feedback") {
+    return areNumberArraysEqual(
+      left.feedback.menus.map((menu) => menu.menu_id),
+      right.feedback.menus.map((menu) => menu.menu_id),
+    );
+  }
+
+  if (left.chat_category === "general" && right.chat_category === "general") {
+    return left.general_answer === right.general_answer;
+  }
+
+  return false;
+}
+
+function areNumberArraysEqual(left: number[], right: number[]) {
+  return left.length === right.length && left.every((value, index) => value === right[index]);
 }
 
 function getAiCoachResponseAnalyticsProperties(response: ChatRecommendResponseDto) {

@@ -10,20 +10,24 @@ import type {
 export function appendMissingChatHistoryItemsToCache(
   queryClient: QueryClient,
   incomingItems: ChatHistoryItemResponseDto[],
-) {
+): ChatHistoryItemResponseDto[] {
   if (incomingItems.length === 0) {
-    return;
+    return [];
   }
+
+  let appendedChatList: ChatHistoryItemResponseDto[] = [];
 
   queryClient.setQueryData<ChatHistoryResponseDto>(queryKeys.chatHistory, (previous) => {
     if (!previous) {
+      appendedChatList = [...incomingItems];
+
       return {
         chat_list: [...incomingItems],
       };
     }
 
     const previousItemIds = new Set(previous.chat_list.map((item) => item.id));
-    const appendedChatList = incomingItems.filter((item) => !previousItemIds.has(item.id));
+    appendedChatList = incomingItems.filter((item) => !previousItemIds.has(item.id));
 
     if (appendedChatList.length === 0) {
       return previous;
@@ -34,20 +38,23 @@ export function appendMissingChatHistoryItemsToCache(
       chat_list: [...previous.chat_list, ...appendedChatList],
     };
   });
+
+  return appendedChatList;
 }
 
 export function mergeChatHistoryResponseIntoCache(
   queryClient: QueryClient,
   chatHistory: ChatHistoryResponseDto,
 ) {
-  appendMissingChatHistoryItemsToCache(queryClient, chatHistory.chat_list);
+  return appendMissingChatHistoryItemsToCache(queryClient, chatHistory.chat_list);
 }
 
 export async function refetchAndMergeChatHistoryIntoCache(queryClient: QueryClient) {
   try {
     const chatHistory = await getChatHistory();
-    mergeChatHistoryResponseIntoCache(queryClient, chatHistory);
+    return mergeChatHistoryResponseIntoCache(queryClient, chatHistory);
   } catch (error) {
     console.error("[ChatHistory] failed to refetch and merge chat history", error);
+    return [];
   }
 }
