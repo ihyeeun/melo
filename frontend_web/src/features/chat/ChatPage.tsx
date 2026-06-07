@@ -104,10 +104,10 @@ const SCROLL_BOTTOM_THRESHOLD = 24;
 const SOFT_KEYBOARD_VISIBLE_HEIGHT_THRESHOLD = 120;
 const MEAL_TIME_LIST: MealTime[] = [0, 1, 2, 3, 4];
 const ASSISTANT_PLAYBACK_START_DELAY_MS = 320;
-const ASSISTANT_MESSAGE_GAP_MS = 520;
+const ASSISTANT_MESSAGE_GAP_MS = 500;
 const ASSISTANT_RESULT_REVEAL_DELAY_MS = 620;
 const ASSISTANT_RESULT_CARD_GAP_MS = 460;
-const ASSISTANT_TYPING_INTERVAL_MS = 90;
+const ASSISTANT_TYPING_INTERVAL_MS = 200;
 
 type RecordedMenuSummary = {
   menu_id: number;
@@ -1645,6 +1645,10 @@ export default function ChatPage() {
                 (chatItemPlayback === null ||
                   generalAnswer.trim().length > 0 ||
                   chatItemPlayback.isGeneralComplete);
+              const isIntroMessageStreaming =
+                chatItemPlayback !== null && !chatItemPlayback.isIntroComplete;
+              const isGeneralAnswerStreaming =
+                chatItemPlayback !== null && !chatItemPlayback.isGeneralComplete;
               const resultVisibleCount =
                 chatItemPlayback === null
                   ? Number.POSITIVE_INFINITY
@@ -1701,6 +1705,7 @@ export default function ChatPage() {
 
                       {shouldShowIntroMessage ? (
                         <AssistantMessageBubbles
+                          isStreaming={isIntroMessageStreaming}
                           message={introMessage}
                           timeText={assistantTimeText}
                         />
@@ -1708,6 +1713,7 @@ export default function ChatPage() {
 
                       {shouldShowGeneralAnswer ? (
                         <AssistantMessageBubbles
+                          isStreaming={isGeneralAnswerStreaming}
                           message={generalAnswer}
                           timeText={assistantTimeText}
                         />
@@ -1955,7 +1961,11 @@ async function revealAssistantText({
 
   const chunkSize = getAssistantTypingChunkSize(revealTokens.length);
 
-  for (let visibleCount = chunkSize; visibleCount < revealTokens.length; visibleCount += chunkSize) {
+  for (
+    let visibleCount = chunkSize;
+    visibleCount < revealTokens.length;
+    visibleCount += chunkSize
+  ) {
     if (!isCurrent()) {
       return false;
     }
@@ -2074,13 +2084,22 @@ function ChatHistorySkeleton() {
   );
 }
 
-function AssistantMessageBubbles({ message, timeText }: { message: string; timeText?: string }) {
+function AssistantMessageBubbles({
+  isStreaming = false,
+  message,
+  timeText,
+}: {
+  isStreaming?: boolean;
+  message: string;
+  timeText?: string;
+}) {
   const bubbleMessages = message.split(/\r?\n/).filter((bubbleMessage) => bubbleMessage.trim());
 
   return (
     <>
       {bubbleMessages.map((bubbleMessage, index) => {
         const isLastBubble = index === bubbleMessages.length - 1;
+        const isBubbleStreaming = isStreaming && isLastBubble;
 
         return (
           <p
@@ -2088,9 +2107,14 @@ function AssistantMessageBubbles({ message, timeText }: { message: string; timeT
             className={`${styles.assistantBubble} ${
               timeText && isLastBubble ? styles.assistantBubbleWithTime : ""
             } typo-body2`}
+            data-streaming={isBubbleStreaming ? "true" : undefined}
             data-time={timeText && isLastBubble ? timeText : undefined}
           >
-            <AssistantMessageText text={bubbleMessage} />
+            <AssistantMessageText
+              animatedTailClassName={styles.assistantTextTail}
+              isStreaming={isBubbleStreaming}
+              text={bubbleMessage}
+            />
           </p>
         );
       })}

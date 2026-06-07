@@ -263,14 +263,21 @@
   background-color: var(--bg-white);
   border: 1px solid var(--border-neutral);
   border-radius: 8px;
-  overflow-wrap: anywhere;
+  line-break: auto;
+  max-width: 96%;
+  overflow-wrap: break-word;
   padding: 8px 16px;
   white-space: pre-wrap;
-  max-width: 96%;
+  word-break: keep-all;
 }
 
 .assistantBubble strong {
   font-weight: var(--fw-bold);
+}
+
+.assistantTextTail {
+  animation: assistant-text-tail-reveal 180ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  position: relative;
 }
 
 .assistantBubbleWithTime,
@@ -679,8 +686,22 @@
   .floatingCameraButtonWrapper,
   .chipSection,
   .plusIcon,
-  .addActionPanel {
+  .addActionPanel,
+  .assistantTextTail {
+    animation: none;
     transition: none;
+  }
+}
+
+@keyframes assistant-text-tail-reveal {
+  from {
+    opacity: 0;
+    top: 0.18em;
+  }
+
+  to {
+    opacity: 1;
+    top: 0;
   }
 }
 

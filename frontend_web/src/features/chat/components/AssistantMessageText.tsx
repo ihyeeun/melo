@@ -1,11 +1,65 @@
 import type { ReactNode } from "react";
 
 type AssistantMessageTextProps = {
+  animatedTailClassName?: string;
+  isStreaming?: boolean;
   text: string;
 };
 
-export function AssistantMessageText({ text }: AssistantMessageTextProps) {
-  return <>{formatBoldText(text)}</>;
+type AssistantMessageTextParts = {
+  animatedText: string;
+  stableText: string;
+};
+
+export function AssistantMessageText({
+  animatedTailClassName,
+  isStreaming = false,
+  text,
+}: AssistantMessageTextProps) {
+  const { animatedText, stableText } = getAssistantMessageTextParts(text, isStreaming);
+
+  if (!animatedText) {
+    return <>{formatBoldText(text)}</>;
+  }
+
+  return (
+    <>
+      {formatBoldText(stableText)}
+      <span key={text} className={animatedTailClassName}>
+        {formatBoldText(animatedText)}
+      </span>
+    </>
+  );
+}
+
+function getAssistantMessageTextParts(text: string, isStreaming: boolean): AssistantMessageTextParts {
+  if (!isStreaming || text.length === 0) {
+    return {
+      animatedText: "",
+      stableText: text,
+    };
+  }
+
+  const animatedTextMatch = text.match(/\S+\s*$/);
+  const splitIndex = animatedTextMatch?.index ?? 0;
+  const stableText = text.slice(0, splitIndex);
+  const animatedText = text.slice(splitIndex);
+
+  if (!animatedText || animatedText.includes("**") || !hasBalancedBoldMarkers(stableText)) {
+    return {
+      animatedText: "",
+      stableText: text,
+    };
+  }
+
+  return {
+    animatedText,
+    stableText,
+  };
+}
+
+function hasBalancedBoldMarkers(text: string) {
+  return (text.match(/\*\*/g)?.length ?? 0) % 2 === 0;
 }
 
 function formatBoldText(text: string): ReactNode[] {
