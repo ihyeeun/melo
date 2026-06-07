@@ -1,6 +1,9 @@
-import { useMemo, useState } from "react";
+import { useStack } from "@stackflow/react";
+import { useCallback, useMemo, useState } from "react";
 
 import { useGetProfileQuery } from "@/features/profile/hooks/queries/useProfileQuery";
+import { PATH } from "@/router/path";
+import { isNativeApp, syncAppTab } from "@/shared/api/bridge/nativeBridge";
 import { Button } from "@/shared/commons/button/Button";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
 import { LoadingIndicator } from "@/shared/commons/loading/Loading";
@@ -20,6 +23,7 @@ function getTallyFormUrl(userId: number) {
 
 export default function SettingsFeedbackPage() {
   const navigate = useNavigate();
+  const stack = useStack();
   const [loadedFormUrl, setLoadedFormUrl] = useState<string | null>(null);
   const {
     data: profile,
@@ -33,10 +37,24 @@ export default function SettingsFeedbackPage() {
     [profile],
   );
   const isFormLoading = tallyFormUrl !== null && loadedFormUrl !== tallyFormUrl;
+  const canGoBack = stack.activities.filter((activity) => !activity.exitedBy).length > 1;
+  const handleBack = useCallback(() => {
+    if (canGoBack) {
+      navigate(-1);
+      return;
+    }
+
+    if (isNativeApp()) {
+      syncAppTab("home");
+      return;
+    }
+
+    navigate(PATH.HOME, { replace: true });
+  }, [canGoBack, navigate]);
 
   return (
     <div className={styles.page}>
-      <PageHeader onBack={() => navigate(-1)} />
+      <PageHeader onBack={handleBack} />
 
       <main className={styles.formMain}>
         {isProfilePending ? (
