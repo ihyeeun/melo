@@ -15,6 +15,7 @@ import { getMealTypeFromChatMealTime } from "@/features/chat/utils/chatMeal";
 import {
   type ChatMenuDetailNavigationState,
   getFeedbackResultPath,
+  getRecommendResultPath,
   getSafeChatId,
   getSafeMenuId,
 } from "@/features/chat/utils/recommendNavigation";
@@ -55,7 +56,11 @@ export default function ChatMenuDetailPage() {
   const hasSelectionCallback = typeof onConfirmSelection === "function";
   const fallbackTo =
     location.state?.fallbackTo ??
-    (chatId === null || !hasSelectionCallback ? PATH.CHAT : getFeedbackResultPath(chatId));
+    (chatId === null || !hasSelectionCallback
+      ? PATH.CHAT
+      : location.pathname.startsWith(PATH.RECOMMEND_DETAIL)
+        ? getRecommendResultPath(chatId)
+        : getFeedbackResultPath(chatId));
   const initialSelection =
     location.state?.initialSelection?.menuId === menuId ? location.state.initialSelection : null;
 
@@ -149,9 +154,7 @@ export default function ChatMenuDetailPage() {
         }),
       );
 
-      toast.success(
-        diaryMenuSelection ? "식사 기록이 수정되었어요." : "식사 기록이 등록되었어요.",
-      );
+      toast.success(diaryMenuSelection ? "식사 기록이 수정되었어요." : "식사 기록이 등록되었어요.");
       requestChatMealRecordFocus({
         dateKey: chatDateKey,
         mealTime: targetMealTime,
@@ -233,9 +236,7 @@ export default function ChatMenuDetailPage() {
           fullWidth
           onClick={handleConfirmSelection}
           interaction={
-            selection && !isMealRegisterPending && !isDirectSubmitPending
-              ? "normal"
-              : "disable"
+            selection && !isMealRegisterPending && !isDirectSubmitPending ? "normal" : "disable"
           }
           disabled={!selection || isMealRegisterPending || isDirectSubmitPending}
         >

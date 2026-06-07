@@ -1035,7 +1035,7 @@ export default function ChatPage() {
       const directHistoryChatItem = isChatHistoryItemResponse(response) ? response : null;
       const historyChatItem =
         directHistoryChatItem ??
-        (await resolveHistoryChatItemFromResponse(queryClient, text, responsePayload));
+        (await resolveHistoryChatItemFromResponse(queryClient, text, responsePayload, chatList));
       const responseChatItem = historyChatItem ?? buildLocalChatHistoryItem(text, responsePayload);
 
       setLocalResponseChatItem(responseChatItem);
@@ -1582,11 +1582,7 @@ export default function ChatPage() {
               const chatDayMeals = chatDateKey ? dayMealsByDate.get(chatDateKey) : undefined;
               const fallbackMealRecord =
                 chatDateKey && chatDayMeals
-                  ? getMealRecordViewModelByTime(
-                      chatDayMeals,
-                      chatDateKey,
-                      currentMealTime,
-                    )
+                  ? getMealRecordViewModelByTime(chatDayMeals, chatDateKey, currentMealTime)
                   : null;
               const mealRecordMenus = getChatMealRecordMenus(chatItem);
               const chatMealRecord =
@@ -1617,10 +1613,7 @@ export default function ChatPage() {
                   ? Number.POSITIVE_INFINITY
                   : chatItemPlayback.visibleBubbleCount;
               const visibleIntroBubbleCount = Math.min(visibleBubbleCount, introBubbleCount);
-              const visibleGeneralBubbleCount = Math.max(
-                0,
-                visibleBubbleCount - introBubbleCount,
-              );
+              const visibleGeneralBubbleCount = Math.max(0, visibleBubbleCount - introBubbleCount);
               const shouldAnimateAssistantResponse = chatItemPlayback !== null;
               const shouldShowIntroMessage =
                 introMessage.trim().length > 0 && visibleIntroBubbleCount > 0;
@@ -3149,9 +3142,13 @@ async function resolveHistoryChatItemFromResponse(
   queryClient: QueryClient,
   inputText: string,
   responsePayload: ChatRecommendResponseDto,
+  currentChatItems: ChatHistoryItemResponseDto[],
 ) {
   const appendedChatItems = await refetchAndMergeChatHistoryIntoCache(queryClient);
-  return findMatchingHistoryChatItem(appendedChatItems, inputText, responsePayload);
+  return (
+    findMatchingHistoryChatItem(appendedChatItems, inputText, responsePayload) ??
+    findMatchingHistoryChatItem(currentChatItems, inputText, responsePayload)
+  );
 }
 
 function getSendMessageResponsePayload(

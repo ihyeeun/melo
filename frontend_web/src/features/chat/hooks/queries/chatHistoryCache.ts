@@ -54,7 +54,6 @@ export async function refetchAndMergeChatHistoryIntoCache(queryClient: QueryClie
     const chatHistory = await getChatHistory();
     return mergeChatHistoryResponseIntoCache(queryClient, chatHistory);
   } catch (error) {
-    console.error("[ChatHistory] failed to refetch and merge chat history", error);
-    return [];
+    throw new Error("결과를 불러오지 못했어요. 다시 시도해주세요.", { cause: error });
   }
 }
