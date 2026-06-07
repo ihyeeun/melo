@@ -103,15 +103,10 @@ const CAMERA_HINT_DISMISSED_SESSION_KEY = "chat.cameraHintDismissed";
 const SCROLL_BOTTOM_THRESHOLD = 24;
 const SOFT_KEYBOARD_VISIBLE_HEIGHT_THRESHOLD = 120;
 const MEAL_TIME_LIST: MealTime[] = [0, 1, 2, 3, 4];
-const ASSISTANT_PLAYBACK_START_DELAY_MS = 320;
-const ASSISTANT_MESSAGE_GAP_MS = 500;
-const ASSISTANT_RESULT_REVEAL_DELAY_MS = 620;
+const ASSISTANT_BUBBLE_REVEAL_START_DELAY_MS = 180;
+const ASSISTANT_BUBBLE_GAP_MS = 1000;
+const ASSISTANT_RESULT_REVEAL_DELAY_MS = 520;
 const ASSISTANT_RESULT_CARD_GAP_MS = 460;
-const ASSISTANT_REVEAL_BASE_DELAY_MS = 42;
-const ASSISTANT_REVEAL_FAST_DELAY_MS = 28;
-const ASSISTANT_REVEAL_COMMA_PAUSE_MS = 86;
-const ASSISTANT_REVEAL_SENTENCE_PAUSE_MS = 150;
-const ASSISTANT_REVEAL_LINE_BREAK_PAUSE_MS = 180;
 
 type RecordedMenuSummary = {
   menu_id: number;
@@ -179,16 +174,8 @@ type TimelineScrollTarget = {
 
 type AssistantPlaybackState = {
   chatItemId: number;
-  generalAnswer: string;
-  introMessage: string;
-  isGeneralComplete: boolean;
-  isIntroComplete: boolean;
+  visibleBubbleCount: number;
   resultVisibleCount: number;
-};
-
-type AssistantRevealStep = {
-  delayMs: number;
-  text: string;
 };
 
 type ChatLocationState = {
@@ -552,10 +539,7 @@ export default function ChatPage() {
   const assistantPlaybackSignature = assistantPlayback
     ? [
         assistantPlayback.chatItemId,
-        assistantPlayback.introMessage.length,
-        assistantPlayback.generalAnswer.length,
-        assistantPlayback.isIntroComplete,
-        assistantPlayback.isGeneralComplete,
+        assistantPlayback.visibleBubbleCount,
         assistantPlayback.resultVisibleCount,
       ].join(":")
     : "idle";
@@ -853,16 +837,26 @@ export default function ChatPage() {
     ) => {
       const playbackRunId = assistantPlaybackRunIdRef.current + 1;
       const responsePayload = responseChatItem.response_payload;
+      const bubbleRevealCount = getAssistantBubbleRevealCount(responsePayload);
+      const resultRevealCount = getAssistantResultRevealCount(responsePayload);
+      const shouldPlayResponse = bubbleRevealCount > 0 || resultRevealCount > 0;
       const isCurrentPlayback = () => assistantPlaybackRunIdRef.current === playbackRunId;
-      const updatePlayback = (
-        updater: (current: AssistantPlaybackState) => AssistantPlaybackState,
-      ) => {
+      const updateVisibleBubbleCount = (visibleBubbleCount: number) => {
         setAssistantPlayback((current) => {
           if (!current || current.chatItemId !== responseChatItem.id) {
             return current;
           }
 
-          return updater(current);
+          return { ...current, visibleBubbleCount };
+        });
+      };
+      const updateResultVisibleCount = (resultVisibleCount: number) => {
+        setAssistantPlayback((current) => {
+          if (!current || current.chatItemId !== responseChatItem.id) {
+            return current;
+          }
+
+          return { ...current, resultVisibleCount };
         });
       };
 
@@ -873,58 +867,37 @@ export default function ChatPage() {
         next.add(responseChatItem.id);
         return next;
       });
-      setAssistantPlayback({
-        chatItemId: responseChatItem.id,
-        generalAnswer: "",
-        introMessage: "",
-        isGeneralComplete: responsePayload.chat_category !== "general",
-        isIntroComplete: false,
-        resultVisibleCount: 0,
-      });
 
-      await delayAssistantPlayback(ASSISTANT_PLAYBACK_START_DELAY_MS);
-      if (!isCurrentPlayback()) return;
+      if (shouldPlayResponse) {
+        setAssistantPlayback({
+          chatItemId: responseChatItem.id,
+          visibleBubbleCount: 0,
+          resultVisibleCount: 0,
+        });
+      }
 
-      const didIntroComplete = await revealAssistantText({
-        isCurrent: isCurrentPlayback,
-        onTextChange: (introMessage) => {
-          updatePlayback((current) => ({ ...current, introMessage }));
-        },
-        text: responsePayload.intro_message,
-      });
-
-      if (!didIntroComplete || !isCurrentPlayback()) return;
-
-      updatePlayback((current) => ({
-        ...current,
-        introMessage: responsePayload.intro_message,
-        isIntroComplete: true,
-      }));
-
-      if (responsePayload.chat_category === "general") {
-        await delayAssistantPlayback(ASSISTANT_MESSAGE_GAP_MS);
+      if (bubbleRevealCount > 0) {
+        await delayAssistantPlayback(ASSISTANT_BUBBLE_REVEAL_START_DELAY_MS);
         if (!isCurrentPlayback()) return;
 
-        const didGeneralComplete = await revealAssistantText({
-          isCurrent: isCurrentPlayback,
-          onTextChange: (generalAnswer) => {
-            updatePlayback((current) => ({ ...current, generalAnswer }));
-          },
-          text: responsePayload.general_answer,
-        });
+        for (
+          let visibleBubbleCount = 1;
+          visibleBubbleCount <= bubbleRevealCount;
+          visibleBubbleCount += 1
+        ) {
+          if (!isCurrentPlayback()) return;
 
-        if (!didGeneralComplete || !isCurrentPlayback()) return;
+          updateVisibleBubbleCount(visibleBubbleCount);
 
-        updatePlayback((current) => ({
-          ...current,
-          generalAnswer: responsePayload.general_answer,
-          isGeneralComplete: true,
-        }));
-      } else {
+          if (visibleBubbleCount < bubbleRevealCount) {
+            await delayAssistantPlayback(ASSISTANT_BUBBLE_GAP_MS);
+          }
+        }
+      }
+
+      if (resultRevealCount > 0) {
         await delayAssistantPlayback(ASSISTANT_RESULT_REVEAL_DELAY_MS);
         if (!isCurrentPlayback()) return;
-
-        const resultRevealCount = getAssistantResultRevealCount(responsePayload);
 
         for (
           let resultVisibleCount = 1;
@@ -933,7 +906,7 @@ export default function ChatPage() {
         ) {
           if (!isCurrentPlayback()) return;
 
-          updatePlayback((current) => ({ ...current, resultVisibleCount }));
+          updateResultVisibleCount(resultVisibleCount);
 
           if (resultVisibleCount < resultRevealCount) {
             await delayAssistantPlayback(ASSISTANT_RESULT_CARD_GAP_MS);
@@ -1633,32 +1606,28 @@ export default function ChatPage() {
                       !playedAssistantPlaybackChatItemIds.has(chatItem.id)
                     ? getInitialAssistantPlaybackState(chatItem)
                     : null;
-              const introMessage = chatItemPlayback
-                ? chatItemPlayback.introMessage
-                : chatItem.response_payload.intro_message;
+              const introMessage = chatItem.response_payload.intro_message;
               const generalAnswer =
                 chatItem.response_payload.chat_category === "general"
-                  ? chatItemPlayback
-                    ? chatItemPlayback.generalAnswer
-                    : chatItem.response_payload.general_answer
+                  ? chatItem.response_payload.general_answer
                   : "";
-              const shouldShowAssistantPending =
-                chatItemPlayback !== null &&
-                !chatItemPlayback.isIntroComplete &&
-                introMessage.trim().length === 0;
+              const introBubbleCount = getAssistantMessageBubbleCount(introMessage);
+              const visibleBubbleCount =
+                chatItemPlayback === null
+                  ? Number.POSITIVE_INFINITY
+                  : chatItemPlayback.visibleBubbleCount;
+              const visibleIntroBubbleCount = Math.min(visibleBubbleCount, introBubbleCount);
+              const visibleGeneralBubbleCount = Math.max(
+                0,
+                visibleBubbleCount - introBubbleCount,
+              );
+              const shouldAnimateAssistantResponse = chatItemPlayback !== null;
               const shouldShowIntroMessage =
-                chatItemPlayback === null ||
-                introMessage.trim().length > 0 ||
-                chatItemPlayback.isIntroComplete;
+                introMessage.trim().length > 0 && visibleIntroBubbleCount > 0;
               const shouldShowGeneralAnswer =
                 chatItem.response_payload.chat_category === "general" &&
-                (chatItemPlayback === null ||
-                  generalAnswer.trim().length > 0 ||
-                  chatItemPlayback.isGeneralComplete);
-              const isIntroMessageStreaming =
-                chatItemPlayback !== null && !chatItemPlayback.isIntroComplete;
-              const isGeneralAnswerStreaming =
-                chatItemPlayback !== null && !chatItemPlayback.isGeneralComplete;
+                generalAnswer.trim().length > 0 &&
+                visibleGeneralBubbleCount > 0;
               const resultVisibleCount =
                 chatItemPlayback === null
                   ? Number.POSITIVE_INFINITY
@@ -1711,21 +1680,21 @@ export default function ChatPage() {
 
                   <div className={styles.assistantMessageRow}>
                     <div className={styles.assistantMessageContent}>
-                      {shouldShowAssistantPending ? <AssistantPendingMessage /> : null}
-
                       {shouldShowIntroMessage ? (
                         <AssistantMessageBubbles
-                          isStreaming={isIntroMessageStreaming}
+                          animate={shouldAnimateAssistantResponse}
                           message={introMessage}
                           timeText={assistantTimeText}
+                          visibleBubbleCount={visibleIntroBubbleCount}
                         />
                       ) : null}
 
                       {shouldShowGeneralAnswer ? (
                         <AssistantMessageBubbles
-                          isStreaming={isGeneralAnswerStreaming}
+                          animate={shouldAnimateAssistantResponse}
                           message={generalAnswer}
                           timeText={assistantTimeText}
+                          visibleBubbleCount={visibleGeneralBubbleCount}
                         />
                       ) : null}
 
@@ -1734,6 +1703,7 @@ export default function ChatPage() {
                       shouldShowResultSection ? (
                         <RecommendationSection
                           chatId={chatItem.id}
+                          animate={shouldAnimateAssistantResponse}
                           recommendations={chatItem.response_payload.recommendations}
                           visibleCardCount={resultVisibleCount}
                           onMealRecordClick={() =>
@@ -1755,6 +1725,7 @@ export default function ChatPage() {
                       shouldShowResultSection ? (
                         <FeedbackSection
                           chatId={chatItem.id}
+                          animate={shouldAnimateAssistantResponse}
                           feedback={chatItem.response_payload.feedback}
                           hasImage={userImageUrl !== null}
                           timeText={assistantTimeText}
@@ -1945,223 +1916,27 @@ function delayAssistantPlayback(delayMs: number) {
 function getInitialAssistantPlaybackState(chatItem: ChatHistoryItemResponseDto) {
   return {
     chatItemId: chatItem.id,
-    generalAnswer: "",
-    introMessage: "",
-    isGeneralComplete: chatItem.response_payload.chat_category !== "general",
-    isIntroComplete: false,
+    visibleBubbleCount: 0,
     resultVisibleCount: 0,
   } satisfies AssistantPlaybackState;
 }
 
-async function revealAssistantText({
-  isCurrent,
-  onTextChange,
-  text,
-}: {
-  isCurrent: () => boolean;
-  onTextChange: (text: string) => void;
-  text: string;
-}) {
-  if (text.length === 0 || shouldReduceAssistantRevealMotion()) {
-    onTextChange(text);
-    return true;
+function getAssistantBubbleRevealCount(responsePayload: ChatRecommendResponseDto) {
+  const introBubbleCount = getAssistantMessageBubbleCount(responsePayload.intro_message);
+
+  if (responsePayload.chat_category !== "general") {
+    return introBubbleCount;
   }
 
-  const revealSteps = getAssistantRevealSteps(text);
-  let visibleText = "";
-
-  for (let index = 0; index < revealSteps.length; index += 1) {
-    if (!isCurrent()) {
-      return false;
-    }
-
-    const step = revealSteps[index];
-    visibleText += step.text;
-    onTextChange(visibleText);
-
-    if (index < revealSteps.length - 1) {
-      await delayAssistantPlayback(step.delayMs);
-    }
-  }
-
-  if (!isCurrent()) {
-    return false;
-  }
-
-  if (visibleText !== text) {
-    onTextChange(text);
-  }
-
-  return true;
+  return introBubbleCount + getAssistantMessageBubbleCount(responsePayload.general_answer);
 }
 
-function shouldReduceAssistantRevealMotion() {
-  if (typeof window === "undefined") {
-    return false;
-  }
-
-  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+function getAssistantMessageBubbleCount(message: string) {
+  return getAssistantMessageBubbleTexts(message).length;
 }
 
-function getAssistantRevealSteps(text: string): AssistantRevealStep[] {
-  const characters = Array.from(text);
-  const steps: AssistantRevealStep[] = [];
-  let cursor = 0;
-
-  while (cursor < characters.length) {
-    const nextCursor = getNextAssistantRevealCursor(characters, cursor);
-    const stepText = characters.slice(cursor, nextCursor).join("");
-
-    if (stepText.length > 0) {
-      steps.push({
-        delayMs: getAssistantRevealDelay(stepText, characters.length - nextCursor),
-        text: stepText,
-      });
-    }
-
-    cursor = nextCursor;
-  }
-
-  return steps;
-}
-
-function getNextAssistantRevealCursor(characters: string[], cursor: number) {
-  const currentCharacter = characters[cursor];
-
-  if (isAssistantLineBreak(currentCharacter)) {
-    let nextCursor = cursor + 1;
-
-    while (nextCursor < characters.length && isAssistantLineBreak(characters[nextCursor])) {
-      nextCursor += 1;
-    }
-
-    return nextCursor;
-  }
-
-  const chunkSize = getAssistantRevealChunkSize(characters.length, cursor);
-  let nextCursor = normalizeAssistantMarkdownRevealCursor(
-    characters,
-    Math.min(characters.length, cursor + chunkSize),
-  );
-
-  while (nextCursor < characters.length && isAssistantClosingPunctuation(characters[nextCursor])) {
-    nextCursor += 1;
-  }
-
-  nextCursor = normalizeAssistantMarkdownRevealCursor(characters, nextCursor);
-
-  while (nextCursor < characters.length && isAssistantInlineWhitespace(characters[nextCursor])) {
-    nextCursor += 1;
-  }
-
-  return nextCursor;
-}
-
-function normalizeAssistantMarkdownRevealCursor(characters: string[], cursor: number) {
-  let nextCursor = cursor;
-
-  if (
-    nextCursor > 0 &&
-    nextCursor < characters.length &&
-    characters[nextCursor - 1] === "*" &&
-    characters[nextCursor] === "*"
-  ) {
-    nextCursor += 1;
-  }
-
-  const visibleText = characters.slice(0, nextCursor).join("");
-
-  if (
-    nextCursor < characters.length &&
-    visibleText.endsWith("**") &&
-    !hasBalancedAssistantBoldMarkers(visibleText)
-  ) {
-    nextCursor += 1;
-  }
-
-  return nextCursor;
-}
-
-function hasBalancedAssistantBoldMarkers(text: string) {
-  return (text.match(/\*\*/g)?.length ?? 0) % 2 === 0;
-}
-
-function getAssistantRevealChunkSize(totalLength: number, cursor: number) {
-  const remainingLength = totalLength - cursor;
-
-  if (totalLength > 700 || remainingLength > 520) {
-    return 7;
-  }
-
-  if (totalLength > 360 || remainingLength > 260) {
-    return 5;
-  }
-
-  if (totalLength < 80) {
-    return 2;
-  }
-
-  return 3;
-}
-
-function getAssistantRevealDelay(text: string, remainingLength: number) {
-  const pauseDelay = getAssistantRevealPauseDelay(text);
-  const scale = getAssistantRevealDelayScale(remainingLength);
-
-  if (pauseDelay !== null) {
-    return Math.round(pauseDelay * scale);
-  }
-
-  const baseDelay =
-    remainingLength > 260 ? ASSISTANT_REVEAL_FAST_DELAY_MS : ASSISTANT_REVEAL_BASE_DELAY_MS;
-
-  return Math.round(baseDelay * scale);
-}
-
-function getAssistantRevealDelayScale(remainingLength: number) {
-  if (remainingLength > 520) {
-    return 0.7;
-  }
-
-  if (remainingLength > 260) {
-    return 0.82;
-  }
-
-  return 1;
-}
-
-function getAssistantRevealPauseDelay(text: string) {
-  if (Array.from(text).some(isAssistantLineBreak)) {
-    return ASSISTANT_REVEAL_LINE_BREAK_PAUSE_MS;
-  }
-
-  const trimmedText = text.trimEnd();
-
-  if (trimmedText.length === 0) {
-    return ASSISTANT_REVEAL_FAST_DELAY_MS;
-  }
-
-  if (/[.!?。！？…]['")\]}]*$/.test(trimmedText)) {
-    return ASSISTANT_REVEAL_SENTENCE_PAUSE_MS;
-  }
-
-  if (/[,，、;:]['")\]}]*$/.test(trimmedText)) {
-    return ASSISTANT_REVEAL_COMMA_PAUSE_MS;
-  }
-
-  return null;
-}
-
-function isAssistantLineBreak(character: string | undefined) {
-  return character === "\n" || character === "\r";
-}
-
-function isAssistantInlineWhitespace(character: string | undefined) {
-  return character !== undefined && /\s/.test(character) && !isAssistantLineBreak(character);
-}
-
-function isAssistantClosingPunctuation(character: string | undefined) {
-  return character !== undefined && /[.!?。！？…,'"，、;:)\]}”’]/.test(character);
+function getAssistantMessageBubbleTexts(message: string) {
+  return message.split(/\r?\n/).filter((bubbleMessage) => bubbleMessage.trim());
 }
 
 function getAssistantResultRevealCount(responsePayload: ChatRecommendResponseDto) {
@@ -2255,36 +2030,33 @@ function ChatHistorySkeleton() {
 }
 
 function AssistantMessageBubbles({
-  isStreaming = false,
+  animate = false,
   message,
   timeText,
+  visibleBubbleCount = Number.POSITIVE_INFINITY,
 }: {
-  isStreaming?: boolean;
+  animate?: boolean;
   message: string;
   timeText?: string;
+  visibleBubbleCount?: number;
 }) {
-  const bubbleMessages = message.split(/\r?\n/).filter((bubbleMessage) => bubbleMessage.trim());
+  const bubbleMessages = getAssistantMessageBubbleTexts(message);
+  const visibleBubbleMessages = bubbleMessages.slice(0, visibleBubbleCount);
 
   return (
     <>
-      {bubbleMessages.map((bubbleMessage, index) => {
+      {visibleBubbleMessages.map((bubbleMessage, index) => {
         const isLastBubble = index === bubbleMessages.length - 1;
-        const isBubbleStreaming = isStreaming && isLastBubble;
 
         return (
           <p
             key={index}
             className={`${styles.assistantBubble} ${
               timeText && isLastBubble ? `${styles.assistantBubbleWithTime}` : ""
-            } typo-body2`}
-            data-streaming={isBubbleStreaming ? "true" : undefined}
+            } ${animate ? styles.assistantBubbleAnimated : ""} typo-body2`}
             data-time={timeText && isLastBubble ? timeText : undefined}
           >
-            <AssistantMessageText
-              animatedTailClassName={styles.assistantTextTail}
-              isStreaming={isBubbleStreaming}
-              text={bubbleMessage}
-            />
+            <AssistantMessageText text={bubbleMessage} />
           </p>
         );
       })}
@@ -2526,6 +2298,7 @@ function MealRecordCard({
 }
 
 function RecommendationSection({
+  animate = false,
   chatId,
   recommendations,
   visibleCardCount,
@@ -2533,6 +2306,7 @@ function RecommendationSection({
   onMealRecordCancelClick,
   isMealRecorded,
 }: {
+  animate?: boolean;
   chatId: number;
   recommendations: ChatRecommendItemResponseDto[];
   visibleCardCount: number;
@@ -2588,7 +2362,9 @@ function RecommendationSection({
     <div className={styles.recommendationSection}>
       {visibleCardCount >= 1 ? (
         <article
-          className={`${styles.recommendCard} ${isMealRecorded ? styles.cardSelected : ""}`}
+          className={`${styles.recommendCard} ${isMealRecorded ? styles.cardSelected : ""} ${
+            animate ? styles.assistantResultCardAnimated : ""
+          }`}
           role="button"
           tabIndex={0}
           aria-label="추천 상세 보기"
@@ -2653,7 +2429,9 @@ function RecommendationSection({
       {remaining.length > 0 && visibleCardCount >= 2 ? (
         <button
           type="button"
-          className={styles.moreRecommendCard}
+          className={`${styles.moreRecommendCard} ${
+            animate ? styles.assistantResultCardAnimated : ""
+          }`}
           aria-label="추천 목록 더보기"
           onClick={() => navigate(getRecommendResultPath(chatId))}
         >
@@ -2671,6 +2449,7 @@ function RecommendationSection({
 }
 
 function FeedbackSection({
+  animate = false,
   chatId,
   feedback,
   hasImage,
@@ -2678,6 +2457,7 @@ function FeedbackSection({
   onMealRecordCancelClick,
   isMealRecorded,
 }: {
+  animate?: boolean;
   chatId: number;
   feedback: FeedbackDto;
   hasImage: boolean;
@@ -2739,7 +2519,9 @@ function FeedbackSection({
   return (
     <div className={styles.feedbackSection}>
       <article
-        className={`${styles.feedbackCard} ${isMealRecorded ? styles.cardSelected : ""}`}
+        className={`${styles.feedbackCard} ${isMealRecorded ? styles.cardSelected : ""} ${
+          animate ? styles.assistantResultCardAnimated : ""
+        }`}
         role="button"
         tabIndex={0}
         aria-label="피드백 상세 보기"
