@@ -107,7 +107,11 @@ const ASSISTANT_PLAYBACK_START_DELAY_MS = 320;
 const ASSISTANT_MESSAGE_GAP_MS = 500;
 const ASSISTANT_RESULT_REVEAL_DELAY_MS = 620;
 const ASSISTANT_RESULT_CARD_GAP_MS = 460;
-const ASSISTANT_TYPING_INTERVAL_MS = 200;
+const ASSISTANT_REVEAL_BASE_DELAY_MS = 42;
+const ASSISTANT_REVEAL_FAST_DELAY_MS = 28;
+const ASSISTANT_REVEAL_COMMA_PAUSE_MS = 86;
+const ASSISTANT_REVEAL_SENTENCE_PAUSE_MS = 150;
+const ASSISTANT_REVEAL_LINE_BREAK_PAUSE_MS = 180;
 
 type RecordedMenuSummary = {
   menu_id: number;
@@ -180,6 +184,11 @@ type AssistantPlaybackState = {
   isGeneralComplete: boolean;
   isIntroComplete: boolean;
   resultVisibleCount: number;
+};
+
+type AssistantRevealStep = {
+  delayMs: number;
+  text: string;
 };
 
 type ChatLocationState = {
@@ -1952,46 +1961,206 @@ async function revealAssistantText({
   onTextChange: (text: string) => void;
   text: string;
 }) {
-  const revealTokens = getAssistantRevealTokens(text);
-
-  if (revealTokens.length === 0) {
-    onTextChange("");
+  if (text.length === 0 || shouldReduceAssistantRevealMotion()) {
+    onTextChange(text);
     return true;
   }
 
-  const chunkSize = getAssistantTypingChunkSize(revealTokens.length);
+  const revealSteps = getAssistantRevealSteps(text);
+  let visibleText = "";
 
-  for (
-    let visibleCount = chunkSize;
-    visibleCount < revealTokens.length;
-    visibleCount += chunkSize
-  ) {
+  for (let index = 0; index < revealSteps.length; index += 1) {
     if (!isCurrent()) {
       return false;
     }
 
-    onTextChange(revealTokens.slice(0, visibleCount).join(""));
-    await delayAssistantPlayback(ASSISTANT_TYPING_INTERVAL_MS);
+    const step = revealSteps[index];
+    visibleText += step.text;
+    onTextChange(visibleText);
+
+    if (index < revealSteps.length - 1) {
+      await delayAssistantPlayback(step.delayMs);
+    }
   }
 
   if (!isCurrent()) {
     return false;
   }
 
-  onTextChange(text);
+  if (visibleText !== text) {
+    onTextChange(text);
+  }
+
   return true;
 }
 
-function getAssistantRevealTokens(text: string) {
-  return text.match(/\S+\s*/g) ?? [];
+function shouldReduceAssistantRevealMotion() {
+  if (typeof window === "undefined") {
+    return false;
+  }
+
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
-function getAssistantTypingChunkSize(tokenCount: number) {
-  if (tokenCount > 120) {
+function getAssistantRevealSteps(text: string): AssistantRevealStep[] {
+  const characters = Array.from(text);
+  const steps: AssistantRevealStep[] = [];
+  let cursor = 0;
+
+  while (cursor < characters.length) {
+    const nextCursor = getNextAssistantRevealCursor(characters, cursor);
+    const stepText = characters.slice(cursor, nextCursor).join("");
+
+    if (stepText.length > 0) {
+      steps.push({
+        delayMs: getAssistantRevealDelay(stepText, characters.length - nextCursor),
+        text: stepText,
+      });
+    }
+
+    cursor = nextCursor;
+  }
+
+  return steps;
+}
+
+function getNextAssistantRevealCursor(characters: string[], cursor: number) {
+  const currentCharacter = characters[cursor];
+
+  if (isAssistantLineBreak(currentCharacter)) {
+    let nextCursor = cursor + 1;
+
+    while (nextCursor < characters.length && isAssistantLineBreak(characters[nextCursor])) {
+      nextCursor += 1;
+    }
+
+    return nextCursor;
+  }
+
+  const chunkSize = getAssistantRevealChunkSize(characters.length, cursor);
+  let nextCursor = normalizeAssistantMarkdownRevealCursor(
+    characters,
+    Math.min(characters.length, cursor + chunkSize),
+  );
+
+  while (nextCursor < characters.length && isAssistantClosingPunctuation(characters[nextCursor])) {
+    nextCursor += 1;
+  }
+
+  nextCursor = normalizeAssistantMarkdownRevealCursor(characters, nextCursor);
+
+  while (nextCursor < characters.length && isAssistantInlineWhitespace(characters[nextCursor])) {
+    nextCursor += 1;
+  }
+
+  return nextCursor;
+}
+
+function normalizeAssistantMarkdownRevealCursor(characters: string[], cursor: number) {
+  let nextCursor = cursor;
+
+  if (
+    nextCursor > 0 &&
+    nextCursor < characters.length &&
+    characters[nextCursor - 1] === "*" &&
+    characters[nextCursor] === "*"
+  ) {
+    nextCursor += 1;
+  }
+
+  const visibleText = characters.slice(0, nextCursor).join("");
+
+  if (
+    nextCursor < characters.length &&
+    visibleText.endsWith("**") &&
+    !hasBalancedAssistantBoldMarkers(visibleText)
+  ) {
+    nextCursor += 1;
+  }
+
+  return nextCursor;
+}
+
+function hasBalancedAssistantBoldMarkers(text: string) {
+  return (text.match(/\*\*/g)?.length ?? 0) % 2 === 0;
+}
+
+function getAssistantRevealChunkSize(totalLength: number, cursor: number) {
+  const remainingLength = totalLength - cursor;
+
+  if (totalLength > 700 || remainingLength > 520) {
+    return 7;
+  }
+
+  if (totalLength > 360 || remainingLength > 260) {
+    return 5;
+  }
+
+  if (totalLength < 80) {
     return 2;
   }
 
+  return 3;
+}
+
+function getAssistantRevealDelay(text: string, remainingLength: number) {
+  const pauseDelay = getAssistantRevealPauseDelay(text);
+  const scale = getAssistantRevealDelayScale(remainingLength);
+
+  if (pauseDelay !== null) {
+    return Math.round(pauseDelay * scale);
+  }
+
+  const baseDelay =
+    remainingLength > 260 ? ASSISTANT_REVEAL_FAST_DELAY_MS : ASSISTANT_REVEAL_BASE_DELAY_MS;
+
+  return Math.round(baseDelay * scale);
+}
+
+function getAssistantRevealDelayScale(remainingLength: number) {
+  if (remainingLength > 520) {
+    return 0.7;
+  }
+
+  if (remainingLength > 260) {
+    return 0.82;
+  }
+
   return 1;
+}
+
+function getAssistantRevealPauseDelay(text: string) {
+  if (Array.from(text).some(isAssistantLineBreak)) {
+    return ASSISTANT_REVEAL_LINE_BREAK_PAUSE_MS;
+  }
+
+  const trimmedText = text.trimEnd();
+
+  if (trimmedText.length === 0) {
+    return ASSISTANT_REVEAL_FAST_DELAY_MS;
+  }
+
+  if (/[.!?。！？…]['")\]}]*$/.test(trimmedText)) {
+    return ASSISTANT_REVEAL_SENTENCE_PAUSE_MS;
+  }
+
+  if (/[,，、;:]['")\]}]*$/.test(trimmedText)) {
+    return ASSISTANT_REVEAL_COMMA_PAUSE_MS;
+  }
+
+  return null;
+}
+
+function isAssistantLineBreak(character: string | undefined) {
+  return character === "\n" || character === "\r";
+}
+
+function isAssistantInlineWhitespace(character: string | undefined) {
+  return character !== undefined && /\s/.test(character) && !isAssistantLineBreak(character);
+}
+
+function isAssistantClosingPunctuation(character: string | undefined) {
+  return character !== undefined && /[.!?。！？…,'"，、;:)\]}”’]/.test(character);
 }
 
 function getAssistantResultRevealCount(responsePayload: ChatRecommendResponseDto) {
@@ -2105,7 +2274,7 @@ function AssistantMessageBubbles({
           <p
             key={index}
             className={`${styles.assistantBubble} ${
-              timeText && isLastBubble ? styles.assistantBubbleWithTime : ""
+              timeText && isLastBubble ? `${styles.assistantBubbleWithTime}` : ""
             } typo-body2`}
             data-streaming={isBubbleStreaming ? "true" : undefined}
             data-time={timeText && isLastBubble ? timeText : undefined}

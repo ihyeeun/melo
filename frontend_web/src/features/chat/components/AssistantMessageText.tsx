@@ -11,22 +11,25 @@ type AssistantMessageTextParts = {
   stableText: string;
 };
 
+const STREAMING_TAIL_CHARACTER_COUNT = 4;
+
 export function AssistantMessageText({
   animatedTailClassName,
   isStreaming = false,
   text,
 }: AssistantMessageTextProps) {
   const { animatedText, stableText } = getAssistantMessageTextParts(text, isStreaming);
+  const shouldRenderOpenBold = isStreaming;
 
   if (!animatedText) {
-    return <>{formatBoldText(text)}</>;
+    return <>{formatBoldText(text, { shouldRenderOpenBold })}</>;
   }
 
   return (
     <>
-      {formatBoldText(stableText)}
-      <span key={text} className={animatedTailClassName}>
-        {formatBoldText(animatedText)}
+      {formatBoldText(stableText, { shouldRenderOpenBold })}
+      <span key={`${text.length}:${animatedText}`} className={animatedTailClassName}>
+        {formatBoldText(animatedText, { shouldRenderOpenBold })}
       </span>
     </>
   );
@@ -40,8 +43,7 @@ function getAssistantMessageTextParts(text: string, isStreaming: boolean): Assis
     };
   }
 
-  const animatedTextMatch = text.match(/\S+\s*$/);
-  const splitIndex = animatedTextMatch?.index ?? 0;
+  const splitIndex = getStreamingTailSplitIndex(text);
   const stableText = text.slice(0, splitIndex);
   const animatedText = text.slice(splitIndex);
 
@@ -58,11 +60,27 @@ function getAssistantMessageTextParts(text: string, isStreaming: boolean): Assis
   };
 }
 
+function getStreamingTailSplitIndex(text: string) {
+  const trailingWhitespace = text.match(/\s*$/)?.[0] ?? "";
+  const visibleTextLength = text.length - trailingWhitespace.length;
+  const visibleCharacters = Array.from(text.slice(0, visibleTextLength));
+  const tailCharacterCount = Math.min(STREAMING_TAIL_CHARACTER_COUNT, visibleCharacters.length);
+
+  if (tailCharacterCount === 0) {
+    return 0;
+  }
+
+  return visibleCharacters.slice(0, -tailCharacterCount).join("").length;
+}
+
 function hasBalancedBoldMarkers(text: string) {
   return (text.match(/\*\*/g)?.length ?? 0) % 2 === 0;
 }
 
-function formatBoldText(text: string): ReactNode[] {
+function formatBoldText(
+  text: string,
+  options: { shouldRenderOpenBold?: boolean } = {},
+): ReactNode[] {
   const nodes: ReactNode[] = [];
   let cursor = 0;
   let nodeIndex = 0;
@@ -78,6 +96,22 @@ function formatBoldText(text: string): ReactNode[] {
     const endIndex = text.indexOf("**", startIndex + 2);
 
     if (endIndex === -1) {
+      if (options.shouldRenderOpenBold) {
+        if (startIndex > cursor) {
+          nodes.push(text.slice(cursor, startIndex));
+        }
+
+        const boldText = text.slice(startIndex + 2);
+
+        if (boldText.length === 0) {
+          nodes.push(text.slice(startIndex));
+        } else {
+          nodes.push(<strong key={nodeIndex}>{boldText}</strong>);
+        }
+
+        break;
+      }
+
       nodes.push(text.slice(cursor));
       break;
     }
