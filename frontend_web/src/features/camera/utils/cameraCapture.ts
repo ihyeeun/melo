@@ -93,10 +93,14 @@ export function getCameraCaptureErrorFeedback(error: unknown): CameraCaptureErro
 }
 
 const BRIDGE_TIMEOUT_CODE = "BRIDGE_TIMEOUT";
+const TIMEOUT_STATUS_CODES = new Set([408, 504]);
 
 function isBridgeTimeout(error: unknown) {
   const bridgeError = error as BridgeCameraError;
-  return bridgeError?.error === BRIDGE_TIMEOUT_CODE || bridgeError?.statusCode === 408;
+  return (
+    bridgeError?.error === BRIDGE_TIMEOUT_CODE ||
+    TIMEOUT_STATUS_CODES.has(bridgeError?.statusCode ?? 0)
+  );
 }
 
 function isServiceUnavailable(error: unknown) {

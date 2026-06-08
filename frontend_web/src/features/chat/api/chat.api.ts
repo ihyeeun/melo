@@ -21,7 +21,6 @@ export async function sendMessage({ input }: { input: string }) {
     endpoint: "/chat/recommend",
     method: "POST",
     body: { input },
-    timeoutMs: 60000,
   });
   return response;
 }

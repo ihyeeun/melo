@@ -67,6 +67,10 @@ const API_ERROR_USER_MESSAGE_RULES: ApiErrorUserMessageRule[] = [
     userMessage: API_ERROR_MESSAGE.SERVICE_UNAVAILABLE,
   },
   {
+    statusCode: 504,
+    userMessage: API_ERROR_MESSAGE.REQUEST_TIMEOUT,
+  },
+  {
     statusCode: 40010,
     messages: ["ratio sum must be 100"],
     userMessage: API_ERROR_MESSAGE.NUTRIENT_RATIO_TOTAL,
