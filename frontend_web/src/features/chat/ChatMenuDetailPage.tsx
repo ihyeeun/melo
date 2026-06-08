@@ -5,7 +5,6 @@ import { useRequestChatMealRecordFocus } from "@/features/chat/stores/mealRecord
 import styles from "@/features/chat/styles/ChatMenuDetailPage.module.css";
 import {
   buildDiaryMealRecordRequest,
-  getChatDateKey,
   getCurrentMealTime,
   getDiaryMealImage,
   getDiaryMealMenuSelection,
@@ -43,6 +42,7 @@ import {
   useNavigate,
   useSearchParams,
 } from "@/shared/navigation/stackflowNavigation";
+import { getTodayFormatDateKey } from "@/shared/utils/dateFormat";
 
 export default function ChatMenuDetailPage() {
   const navigate = useNavigate();
@@ -77,11 +77,12 @@ export default function ChatMenuDetailPage() {
     navigate(PATH.CHAT, { replace: true });
   }, [chatItem, hasSelectionCallback, isChatHistoryPending, navigate]);
 
-  const chatDateKey = useMemo(
-    () => (!hasSelectionCallback && chatItem ? getChatDateKey(chatItem) : ""),
+  const recordDateKey = useMemo(
+    () => (!hasSelectionCallback && chatItem ? getTodayFormatDateKey() : ""),
     [chatItem, hasSelectionCallback],
   );
-  const { data: dayMeals, isPending: isDayMealsPending } = useDayMealsQuery(chatDateKey);
+  const currentMealTime = getCurrentMealTime();
+  const { data: dayMeals, isPending: isDayMealsPending } = useDayMealsQuery(recordDateKey);
   const { mutateAsync: registerDiaryMealRecordMutate, isPending: isMealRegisterPending } =
     useTodayMealRecordRegisterMutation();
   const requestChatMealRecordFocus = useRequestChatMealRecordFocus();
@@ -90,8 +91,8 @@ export default function ChatMenuDetailPage() {
       return null;
     }
 
-    return getDiaryMealMenuSelection(dayMeals, menuId);
-  }, [dayMeals, hasSelectionCallback, menuId]);
+    return getDiaryMealMenuSelection(dayMeals, menuId, currentMealTime);
+  }, [currentMealTime, dayMeals, hasSelectionCallback, menuId]);
   const resolvedInitialSelection =
     initialSelection ??
     (diaryMenuSelection && menuId !== null
@@ -126,7 +127,7 @@ export default function ChatMenuDetailPage() {
     }
 
     try {
-      const targetMealTime = diaryMenuSelection?.time ?? getCurrentMealTime();
+      const targetMealTime = currentMealTime;
       const nextMenus = getNextDiaryMenusByCandidateIds({
         dayMeals,
         time: targetMealTime,
@@ -147,7 +148,7 @@ export default function ChatMenuDetailPage() {
 
       await registerDiaryMealRecordMutate(
         buildDiaryMealRecordRequest({
-          dateKey: chatDateKey,
+          dateKey: recordDateKey,
           mealType: getMealTypeFromChatMealTime(targetMealTime),
           selectedMenus: nextMenus,
           image: getDiaryMealImage(dayMeals, targetMealTime),
@@ -156,7 +157,7 @@ export default function ChatMenuDetailPage() {
 
       toast.success(diaryMenuSelection ? "식사 기록이 수정되었어요." : "식사 기록이 등록되었어요.");
       requestChatMealRecordFocus({
-        dateKey: chatDateKey,
+        dateKey: recordDateKey,
         mealTime: targetMealTime,
       });
       navigateBack({ fallbackTo: PATH.CHAT });

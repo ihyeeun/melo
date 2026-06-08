@@ -1544,19 +1544,20 @@ export default function ChatPage() {
               }
 
               const { chatItem } = timelineItem;
-              const chatDateKey = getChatDateKey(chatItem);
-              const chatDayMeals = chatDateKey ? dayMealsByDate.get(chatDateKey) : undefined;
+              const recordDateKey = todayDateKey;
+              const recordDayMeals = dayMealsByDate.get(recordDateKey);
               const fallbackMealRecord =
-                chatDateKey && chatDayMeals
-                  ? getMealRecordViewModelByTime(chatDayMeals, chatDateKey, currentMealTime)
+                recordDayMeals
+                  ? getMealRecordViewModelByTime(recordDayMeals, recordDateKey, currentMealTime)
                   : null;
               const mealRecordMenus = getChatMealRecordMenus(chatItem);
               const chatMealRecord =
-                chatDateKey && mealRecordMenus.length > 0
+                mealRecordMenus.length > 0
                   ? getMealRecordViewModelByMenuIds(
-                      chatDayMeals,
-                      chatDateKey,
+                      recordDayMeals,
+                      recordDateKey,
                       mealRecordMenus.map((menu) => menu.menu_id),
+                      currentMealTime,
                     )
                   : null;
               const userImageUrl = getChatItemImageUrl(chatItem);
@@ -1679,8 +1680,8 @@ export default function ChatPage() {
                           onMealRecordClick={() =>
                             handleMenuRecordClick(
                               chatItem,
-                              chatDateKey,
-                              chatDayMeals,
+                              recordDateKey,
+                              recordDayMeals,
                               fallbackMealRecord,
                             )
                           }
@@ -1702,8 +1703,8 @@ export default function ChatPage() {
                           onMealRecordClick={() =>
                             handleMenuRecordClick(
                               chatItem,
-                              chatDateKey,
-                              chatDayMeals,
+                              recordDateKey,
+                              recordDayMeals,
                               fallbackMealRecord,
                             )
                           }
@@ -2909,19 +2910,21 @@ function getMealRecordViewModelByMenuIds(
   dayMeals: DayMealSummary | undefined,
   dateKey: string,
   menuIds: number[],
+  mealTime?: MealTime,
 ) {
   if (!dayMeals || menuIds.length === 0) {
     return null;
   }
 
   const targetMenuIds = [...new Set(menuIds)];
+  const mealTimes = mealTime === undefined ? MEAL_TIME_LIST : [mealTime];
 
-  for (const mealTime of MEAL_TIME_LIST) {
-    const menus = dayMeals.menusByTime?.[mealTime] ?? [];
+  for (const targetMealTime of mealTimes) {
+    const menus = dayMeals.menusByTime?.[targetMealTime] ?? [];
     const recordedMenuIds = new Set(menus.map((menu) => menu.id));
 
     if (targetMenuIds.every((menuId) => recordedMenuIds.has(menuId))) {
-      return buildMealRecordViewModel(dateKey, dayMeals, mealTime);
+      return buildMealRecordViewModel(dateKey, dayMeals, targetMealTime);
     }
   }
 
