@@ -439,6 +439,7 @@ export default function ChatPage() {
   const [timelineScrollTarget, setTimelineScrollTarget] = useState<TimelineScrollTarget | null>(
     null,
   );
+  const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null);
   const clientOsName = useClientOsName();
   const isSoftKeyboardVisible = useSoftKeyboardVisible(isInputFocused, clientOsName);
 
@@ -1588,6 +1589,20 @@ export default function ChatPage() {
                   ? Number.POSITIVE_INFINITY
                   : chatItemPlayback.resultVisibleCount;
               const shouldShowResultSection = resultVisibleCount > 0;
+              const userImageAction =
+                userImageUrl === null
+                  ? null
+                  : chatItem.response_payload.chat_category === "feedback"
+                    ? {
+                        ariaLabel: "피드백 결과 보기",
+                        onClick: () => navigate(getFeedbackResultPath(chatItem.id)),
+                      }
+                    : chatItem.response_payload.chat_category === "recommendation"
+                      ? {
+                          ariaLabel: "업로드 이미지 크게 보기",
+                          onClick: () => setPreviewImageUrl(userImageUrl),
+                        }
+                      : null;
 
               return (
                 <section key={timelineItem.key} className={styles.conversationSection}>
@@ -1608,12 +1623,12 @@ export default function ChatPage() {
                         <p className={`${styles.userBubble} typo-body2`}>{chatItem.input_text}</p>
                       )}
                       {userImageUrl ? (
-                        chatItem.response_payload.chat_category === "feedback" ? (
+                        userImageAction ? (
                           <button
                             type="button"
                             className={styles.userImageButton}
-                            aria-label="피드백 결과 보기"
-                            onClick={() => navigate(getFeedbackResultPath(chatItem.id))}
+                            aria-label={userImageAction.ariaLabel}
+                            onClick={userImageAction.onClick}
                           >
                             <UserImageBubble
                               src={userImageUrl}
@@ -1858,6 +1873,12 @@ export default function ChatPage() {
         closeOnConfirm={false}
         onConfirm={handleMealRecordCancelConfirm}
       />
+      {previewImageUrl ? (
+        <UserImagePreviewOverlay
+          src={previewImageUrl}
+          onClose={() => setPreviewImageUrl(null)}
+        />
+      ) : null}
     </div>
   );
 }
@@ -2015,6 +2036,59 @@ function UserImageBubble({
         onError={handleLoadSettled}
       />
     </span>
+  );
+}
+
+function UserImagePreviewOverlay({ onClose, src }: { onClose: () => void; src: string }) {
+  const closeButtonRef = useRef<HTMLButtonElement | null>(null);
+
+  useEffect(() => {
+    closeButtonRef.current?.focus();
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const handleKeyDown = (event: globalThis.KeyboardEvent) => {
+      if (event.key === "Escape") {
+        onClose();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [onClose]);
+
+  const handleBackdropClick = (event: MouseEvent<HTMLDivElement>) => {
+    if (event.target === event.currentTarget) {
+      onClose();
+    }
+  };
+
+  return (
+    <div
+      className={styles.userImagePreviewOverlay}
+      role="dialog"
+      aria-modal="true"
+      aria-label="업로드 이미지 미리보기"
+      onClick={handleBackdropClick}
+    >
+      <button
+        ref={closeButtonRef}
+        type="button"
+        className={styles.userImagePreviewCloseButton}
+        aria-label="이미지 닫기"
+        onClick={onClose}
+      >
+        <SystemIcon name="close" size={24} />
+      </button>
+      <img src={src} alt="사용자가 업로드한 이미지" className={styles.userImagePreviewImage} />
+    </div>
   );
 }
 
