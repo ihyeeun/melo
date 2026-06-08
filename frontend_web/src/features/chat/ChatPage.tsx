@@ -412,6 +412,7 @@ export default function ChatPage() {
   const assistantPlaybackChatItemIdsRef = useRef(new Set<number>());
   const knownHistoryChatItemIdsRef = useRef<Set<number> | null>(null);
   const pendingMealRecordScrollKeyRef = useRef<string | null>(null);
+  const shouldFollowBottomRef = useRef(true);
   const skipNextAutoBottomScrollRef = useRef(false);
   const hiddenScrollTopSnapshotRef = useRef<number | null>(null);
   const previousIsTopRef = useRef(isTop);
@@ -533,7 +534,20 @@ export default function ChatPage() {
     !isSoftKeyboardVisible && (isQuickActionVisible || isScrollToBottomButtonVisible);
   const currentMealTime = getCurrentMealTime();
 
-  const updateIsScrolledAwayFromBottom = useCallback(() => {
+  const scrollToBottom = useCallback((behavior: ScrollBehavior = "instant") => {
+    const main = mainRef.current;
+
+    if (!main) {
+      return;
+    }
+
+    main.scrollTo({
+      behavior,
+      top: main.scrollHeight,
+    });
+  }, []);
+
+  const updateIsScrolledAwayFromBottom = useCallback((options?: { updateStickiness?: boolean }) => {
     const main = mainRef.current;
 
     if (!main) {
@@ -544,10 +558,49 @@ export default function ChatPage() {
     const isAwayFromBottom = distanceToBottom > SCROLL_BOTTOM_THRESHOLD;
     setIsScrolledAwayFromBottom(isAwayFromBottom);
 
+    if (options?.updateStickiness) {
+      shouldFollowBottomRef.current = !isAwayFromBottom;
+    }
+
     if (isAwayFromBottom) {
       setIsCameraActionMenuOpen(false);
     }
   }, []);
+
+  const handleMainScroll = useCallback(() => {
+    updateIsScrolledAwayFromBottom({ updateStickiness: true });
+  }, [updateIsScrolledAwayFromBottom]);
+
+  const handleWindowResize = useCallback(() => {
+    updateIsScrolledAwayFromBottom();
+  }, [updateIsScrolledAwayFromBottom]);
+
+  const keepBottomIfFollowing = useCallback(
+    (behavior: ScrollBehavior = "instant") => {
+      if (
+        !isTop ||
+        pendingMealRecordScrollKeyRef.current !== null ||
+        timelineScrollTarget !== null ||
+        !shouldFollowBottomRef.current
+      ) {
+        updateIsScrolledAwayFromBottom();
+        return;
+      }
+
+      scrollToBottom(behavior);
+
+      if (typeof window === "undefined") {
+        updateIsScrolledAwayFromBottom();
+        return;
+      }
+
+      window.requestAnimationFrame(() => {
+        scrollToBottom("instant");
+        updateIsScrolledAwayFromBottom();
+      });
+    },
+    [isTop, scrollToBottom, timelineScrollTarget, updateIsScrolledAwayFromBottom],
+  );
 
   const setTimelineScrollElementRef = useCallback((key: string, element: HTMLElement | null) => {
     if (element) {
@@ -559,6 +612,7 @@ export default function ChatPage() {
   }, []);
 
   const commitTimelineScroll = useCallback((key: string, block: ScrollLogicalPosition) => {
+    shouldFollowBottomRef.current = false;
     timelineScrollRequestIdRef.current += 1;
     setTimelineScrollTarget({
       block,
@@ -662,21 +716,16 @@ export default function ChatPage() {
       return;
     }
 
-    if (isScrolledAwayFromBottom) {
+    if (!shouldFollowBottomRef.current) {
       updateIsScrolledAwayFromBottom();
       return;
     }
 
-    endAnchorRef.current?.scrollIntoView({
-      behavior: "instant",
-      block: "end",
-    });
-
-    updateIsScrolledAwayFromBottom();
+    keepBottomIfFollowing("instant");
   }, [
     assistantPlaybackSignature,
-    isScrolledAwayFromBottom,
     isTop,
+    keepBottomIfFollowing,
     timelineScrollTarget,
     timelineSignature,
     updateIsScrolledAwayFromBottom,
@@ -749,11 +798,8 @@ export default function ChatPage() {
       return;
     }
 
-    endAnchorRef.current?.scrollIntoView({
-      behavior: "smooth",
-      block: "end",
-    });
-  }, [isTop, pendingInput, timelineScrollTarget]);
+    keepBottomIfFollowing("smooth");
+  }, [isTop, keepBottomIfFollowing, pendingInput, timelineScrollTarget]);
 
   useEffect(() => {
     updateIsScrolledAwayFromBottom();
@@ -764,14 +810,14 @@ export default function ChatPage() {
       return;
     }
 
-    main.addEventListener("scroll", updateIsScrolledAwayFromBottom, { passive: true });
-    window.addEventListener("resize", updateIsScrolledAwayFromBottom);
+    main.addEventListener("scroll", handleMainScroll, { passive: true });
+    window.addEventListener("resize", handleWindowResize);
 
     return () => {
-      main.removeEventListener("scroll", updateIsScrolledAwayFromBottom);
-      window.removeEventListener("resize", updateIsScrolledAwayFromBottom);
+      main.removeEventListener("scroll", handleMainScroll);
+      window.removeEventListener("resize", handleWindowResize);
     };
-  }, [updateIsScrolledAwayFromBottom]);
+  }, [handleMainScroll, handleWindowResize, updateIsScrolledAwayFromBottom]);
 
   useEffect(() => {
     return () => {
@@ -794,7 +840,9 @@ export default function ChatPage() {
       return;
     }
 
-    const frameId = window.requestAnimationFrame(updateIsScrolledAwayFromBottom);
+    const frameId = window.requestAnimationFrame(() => {
+      updateIsScrolledAwayFromBottom();
+    });
 
     return () => {
       window.cancelAnimationFrame(frameId);
@@ -943,6 +991,7 @@ export default function ChatPage() {
     }
 
     assistantPlaybackRunIdRef.current += 1;
+    shouldFollowBottomRef.current = true;
     setAssistantPlayback(null);
     setIsCameraActionMenuOpen(false);
     setPendingInput(text);
@@ -1028,11 +1077,13 @@ export default function ChatPage() {
 
   const handleScrollToBottom = () => {
     handleCloseCameraActionMenu();
-    endAnchorRef.current?.scrollIntoView({
-      behavior: "smooth",
-      block: "end",
-    });
+    shouldFollowBottomRef.current = true;
+    keepBottomIfFollowing("smooth");
   };
+
+  const handleTimelineImageLoad = useCallback(() => {
+    keepBottomIfFollowing("instant");
+  }, [keepBottomIfFollowing]);
 
   const handleNavigateMenuBoardCamera = () => {
     handleCloseCameraActionMenu();
@@ -1564,10 +1615,19 @@ export default function ChatPage() {
                             aria-label="피드백 결과 보기"
                             onClick={() => navigate(getFeedbackResultPath(chatItem.id))}
                           >
-                            <UserImageBubble src={userImageUrl} alt="" isDecorative />
+                            <UserImageBubble
+                              src={userImageUrl}
+                              alt=""
+                              isDecorative
+                              onLoad={handleTimelineImageLoad}
+                            />
                           </button>
                         ) : (
-                          <UserImageBubble src={userImageUrl} alt="사용자가 업로드한 이미지" />
+                          <UserImageBubble
+                            src={userImageUrl}
+                            alt="사용자가 업로드한 이미지"
+                            onLoad={handleTimelineImageLoad}
+                          />
                         )
                       ) : null}
                     </div>
@@ -1919,13 +1979,19 @@ function ChatHistorySkeleton() {
 function UserImageBubble({
   alt,
   isDecorative = false,
+  onLoad,
   src,
 }: {
   alt: string;
   isDecorative?: boolean;
+  onLoad?: () => void;
   src: string;
 }) {
   const [isLoaded, setIsLoaded] = useState(false);
+  const handleLoadSettled = () => {
+    setIsLoaded(true);
+    onLoad?.();
+  };
 
   return (
     <span className={styles.userImageBubbleFrame}>
@@ -1945,8 +2011,8 @@ function UserImageBubble({
           styles.userImageBubble,
           isLoaded ? styles.userImageBubbleLoaded : styles.userImageBubbleLoading,
         ].join(" ")}
-        onLoad={() => setIsLoaded(true)}
-        onError={() => setIsLoaded(true)}
+        onLoad={handleLoadSettled}
+        onError={handleLoadSettled}
       />
     </span>
   );
