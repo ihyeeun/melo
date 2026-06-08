@@ -13,16 +13,16 @@ import { useGetProfileQuery } from "@/features/profile/hooks/queries/useProfileQ
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import { LoadingOverlay } from "@/shared/commons/loading/Loading";
 import { toast } from "@/shared/commons/toast/toast";
-import { isFutureDateKey } from "@/shared/utils/dateFormat";
+import { getTodayFormatDateKey } from "@/shared/utils/dateFormat";
 
 type TodayMetricType = "weight" | "steps";
 
 export default function TodayBodyLogSection({ date }: { date: string }) {
   const { data: bodyLog } = useGetBodyLog(date);
   const { data: profile } = useGetProfileQuery();
-  const isFutureDate = isFutureDateKey(date);
-  const displayWeight = bodyLog?.weight ?? (isFutureDate ? 0 : profile?.weight ?? 0);
-  const initialWeight = bodyLog?.weight ?? (isFutureDate ? undefined : profile?.weight ?? 0);
+  const isToday = date === getTodayFormatDateKey();
+  const displayWeight = bodyLog?.weight ?? (isToday ? profile?.weight ?? 0 : 0);
+  const initialWeight = bodyLog?.weight ?? (isToday ? profile?.weight : undefined);
 
   const { mutate: registerWeight, isPending: isWeightPending } = useRegisterWeightMutation({
     onSuccess: () => {

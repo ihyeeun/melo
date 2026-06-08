@@ -81,7 +81,11 @@ export default function ProfilePage() {
   }, [profile?.nickname]);
 
   const nickname = profile?.nickname ?? "진득한 푸마";
-  const currentWeight = profile?.weight ?? 0;
+  const todayWeight =
+    typeof bodyLog?.weight === "number" && Number.isFinite(bodyLog.weight) && bodyLog.weight > 0
+      ? bodyLog.weight
+      : undefined;
+  const currentWeight = todayWeight ?? profile?.weight ?? 0;
   const targetWeight = profile?.target_weight ?? currentWeight;
   const targetCalories = profile?.target_calories ?? 2000;
   const remainingWeight = Math.abs(currentWeight - targetWeight);

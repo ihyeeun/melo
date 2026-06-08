@@ -6,25 +6,31 @@ import { updateWeight } from "@/features/profile/api/profile";
 import { queryKeys as profileQueryKeys } from "@/features/profile/hooks/queries/queryKey";
 import type { ProfileResponseDto, WeightStepsResponseDto } from "@/shared/api/types/api.dto";
 import type { UseMutationCallback } from "@/shared/api/types/callback.types";
+import { getTodayFormatDateKey } from "@/shared/utils/dateFormat";
 
 export function useRegisterWeightMutation(callbacks?: UseMutationCallback) {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async ({ date, weight }: { date: string; weight: number }) => {
-      const [, updatedProfile] = await Promise.all([
-        registerWeight({ date, weight }),
-        updateWeight(weight),
-      ]);
+      await registerWeight({ date, weight });
 
-      return updatedProfile;
+      if (date !== getTodayFormatDateKey()) {
+        return undefined;
+      }
+
+      return updateWeight(weight);
     },
     onSuccess: (updatedProfile, { date, weight }) => {
       queryClient.setQueryData<WeightStepsResponseDto>(homeQueryKeys.bodyStats(date), (previous) => ({
         weight,
         steps: previous?.steps ?? 0,
       }));
-      queryClient.setQueryData<ProfileResponseDto>(profileQueryKeys.profile, updatedProfile);
+
+      if (updatedProfile) {
+        queryClient.setQueryData<ProfileResponseDto>(profileQueryKeys.profile, updatedProfile);
+      }
+
       callbacks?.onSuccess?.();
     },
     onError: (error) => callbacks?.onError?.(error),
