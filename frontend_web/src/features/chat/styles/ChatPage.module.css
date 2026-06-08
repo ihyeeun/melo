@@ -218,15 +218,18 @@
   white-space: pre-wrap;
 }
 
+.userImageButton,
+.userImageBubbleFrame {
+  width: 240px;
+}
+
 .userImageButton {
   background: transparent;
   border: 0;
   border-radius: 12px;
   cursor: pointer;
   display: block;
-  max-width: 100%;
   padding: 0;
-  width: 240px;
 }
 
 .userImageBubbleFrame {
@@ -234,10 +237,8 @@
   background-color: var(--bg-white);
   border-radius: 12px;
   display: block;
-  max-width: 100%;
   overflow: hidden;
   position: relative;
-  width: 240px;
 }
 
 .userImageBubble {
