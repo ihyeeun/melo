@@ -1564,19 +1564,10 @@ export default function ChatPage() {
                             aria-label="피드백 결과 보기"
                             onClick={() => navigate(getFeedbackResultPath(chatItem.id))}
                           >
-                            <img
-                              src={userImageUrl}
-                              alt=""
-                              aria-hidden="true"
-                              className={styles.userImageBubble}
-                            />
+                            <UserImageBubble src={userImageUrl} alt="" isDecorative />
                           </button>
                         ) : (
-                          <img
-                            src={userImageUrl}
-                            alt="사용자가 업로드한 이미지"
-                            className={styles.userImageBubble}
-                          />
+                          <UserImageBubble src={userImageUrl} alt="사용자가 업로드한 이미지" />
                         )
                       ) : null}
                     </div>
@@ -1922,6 +1913,42 @@ function ChatHistorySkeleton() {
         </div>
       </section>
     </SkeletonStatus>
+  );
+}
+
+function UserImageBubble({
+  alt,
+  isDecorative = false,
+  src,
+}: {
+  alt: string;
+  isDecorative?: boolean;
+  src: string;
+}) {
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  return (
+    <span className={styles.userImageBubbleFrame}>
+      {!isLoaded ? (
+        <Skeleton
+          width="100%"
+          height="100%"
+          radius={12}
+          style={{ inset: 0, position: "absolute" }}
+        />
+      ) : null}
+      <img
+        src={src}
+        alt={isDecorative ? "" : alt}
+        aria-hidden={isDecorative ? "true" : undefined}
+        className={[
+          styles.userImageBubble,
+          isLoaded ? styles.userImageBubbleLoaded : styles.userImageBubbleLoading,
+        ].join(" ")}
+        onLoad={() => setIsLoaded(true)}
+        onError={() => setIsLoaded(true)}
+      />
+    </span>
   );
 }
 

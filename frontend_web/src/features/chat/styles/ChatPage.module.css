@@ -221,20 +221,41 @@
 .userImageButton {
   background: transparent;
   border: 0;
+  border-radius: 12px;
   cursor: pointer;
   display: block;
   max-width: 100%;
   padding: 0;
+  width: 240px;
 }
 
-.userImageBubble {
+.userImageBubbleFrame {
+  aspect-ratio: 1 / 1;
   background-color: var(--bg-white);
   border-radius: 12px;
   display: block;
-  max-height: 240px;
   max-width: 100%;
+  overflow: hidden;
+  position: relative;
+  width: 240px;
+}
+
+.userImageBubble {
+  display: block;
+  height: 100%;
+  inset: 0;
   object-fit: cover;
+  position: absolute;
+  transition: opacity 180ms ease;
   width: 100%;
+}
+
+.userImageBubbleLoading {
+  opacity: 0;
+}
+
+.userImageBubbleLoaded {
+  opacity: 1;
 }
 
 .assistantMessageGroup {
@@ -696,7 +717,8 @@
   .plusIcon,
   .addActionPanel,
   .assistantBubbleAnimated,
-  .assistantResultCardAnimated {
+  .assistantResultCardAnimated,
+  .userImageBubble {
     animation: none;
     transition: none;
   }
