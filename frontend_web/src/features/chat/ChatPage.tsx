@@ -1550,10 +1550,9 @@ export default function ChatPage() {
               const { chatItem } = timelineItem;
               const recordDateKey = todayDateKey;
               const recordDayMeals = dayMealsByDate.get(recordDateKey);
-              const fallbackMealRecord =
-                recordDayMeals
-                  ? getMealRecordViewModelByTime(recordDayMeals, recordDateKey, currentMealTime)
-                  : null;
+              const fallbackMealRecord = recordDayMeals
+                ? getMealRecordViewModelByTime(recordDayMeals, recordDateKey, currentMealTime)
+                : null;
               const mealRecordMenus = getChatMealRecordMenus(chatItem);
               const chatMealRecord =
                 mealRecordMenus.length > 0
@@ -1567,9 +1566,7 @@ export default function ChatPage() {
               const userImageUrl = getChatItemImageUrl(chatItem);
               const assistantTimeText = formatTimeText(chatItem.createdAt);
               const chatItemPlayback =
-                assistantPlayback?.chatItemId === chatItem.id
-                  ? assistantPlayback
-                  : null;
+                assistantPlayback?.chatItemId === chatItem.id ? assistantPlayback : null;
               const introMessage = chatItem.response_payload.intro_message;
               const generalAnswer =
                 chatItem.response_payload.chat_category === "general"
@@ -1879,10 +1876,7 @@ export default function ChatPage() {
         onConfirm={handleMealRecordCancelConfirm}
       />
       {previewImageUrl ? (
-        <UserImagePreviewOverlay
-          src={previewImageUrl}
-          onClose={() => setPreviewImageUrl(null)}
-        />
+        <UserImagePreviewOverlay src={previewImageUrl} onClose={() => setPreviewImageUrl(null)} />
       ) : null}
     </div>
   );
@@ -2300,9 +2294,10 @@ function MealRecordCard({
         onClick={() => {
           if (hasMultipleMenus) {
             setIsOpen((prev) => !prev);
+          } else {
+            onEditClick();
           }
         }}
-        disabled={!hasMultipleMenus}
         aria-expanded={hasMultipleMenus ? isOpen : undefined}
       >
         <p className={`${styles.mealRecordSummaryName} ${styles.textNormal} typo-title4`}>
