@@ -3,7 +3,7 @@ import type { ApiFailResponse } from "@/shared/api/types/apiResponse.types";
 export const API_ERROR_MESSAGE = {
   DEFAULT: "요청 처리 중 오류가 발생했습니다",
   BAD_REQUEST: "입력값을 다시 확인해주세요",
-  AUTH_EXPIRED: "로그인이 만료되었어요 다시 로그인해주세요",
+  AUTH_EXPIRED: "로그인이 만료되었어요\n다시 로그인해주세요",
   FORBIDDEN: "요청 권한이 없어요",
   NOT_FOUND: "요청한 정보를 찾지 못했어요",
   CONFLICT: "이미 처리된 요청이에요",
@@ -20,9 +20,9 @@ export const API_ERROR_MESSAGE = {
   FOOD_NOT_DETECTED: "사진에서 음식을 찾을 수 없어요",
   FOOD_NOT_MATCHED: "사진 속 음식이 후보 메뉴와 매칭되지 않았어요",
   ADMIN_ID_OR_EMAIL_INVALID: "아이디 또는 이메일을 다시 확인해주세요",
-  KAKAO_AUTH_FAILED: "카카오 인증에 실패했어요 다시 로그인해주세요",
-  APPLE_AUTH_FAILED: "Apple 인증에 실패했어요 다시 로그인해주세요",
-  USER_AUTH_REQUIRED: "회원 인증이 필요해요 다시 로그인해주세요",
+  KAKAO_AUTH_FAILED: "카카오 인증에 실패했어요\n다시 로그인해주세요",
+  APPLE_AUTH_FAILED: "Apple 인증에 실패했어요\n다시 로그인해주세요",
+  USER_AUTH_REQUIRED: "회원 인증이 필요해요\n다시 로그인해주세요",
   SUB_CODE_NOT_FOUND: "존재하지 않는 구독 코드예요",
   USER_INFO_NOT_FOUND: "회원 정보를 찾지 못했어요",
   MEAL_NOT_FOUND: "식사를 찾지 못했어요",
@@ -30,9 +30,9 @@ export const API_ERROR_MESSAGE = {
   PROFILE_ALREADY_EXISTS: "이미 등록된 프로필이 있어요",
   SUB_CODE_ALREADY_EXISTS: "이미 등록한 구독 코드예요",
   SUB_CODE_LIMIT_EXCEEDED: "사용 한도가 초과된 구독 코드예요",
-  REQUEST_TIMEOUT: "요청 시간이 초과되었습니다 잠시 후 다시 시도해주세요",
-  NETWORK_ERROR: "서버에 연결할 수 없어요 네트워크 상태를 확인해주세요",
-  SERVICE_UNAVAILABLE: "서버가 일시적으로 불안정해요 잠시 후 다시 시도해주세요",
+  REQUEST_TIMEOUT: "요청 시간이 초과되었습니다\n잠시 후 다시 시도해주세요",
+  NETWORK_ERROR: "서버에 연결할 수 없어요\n네트워크 상태를 확인해주세요",
+  SERVICE_UNAVAILABLE: "서버가 일시적으로 불안정해요\n잠시 후 다시 시도해주세요",
 } as const;
 
 type ApiErrorUserMessageRule = {
