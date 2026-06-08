@@ -1,8 +1,10 @@
 import { useStack } from "@stackflow/react";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { useGetProfileQuery } from "@/features/profile/hooks/queries/useProfileQuery";
 import { PATH } from "@/router/path";
+import { track } from "@/shared/analytics/analytics";
+import { EVENT_NAME } from "@/shared/analytics/analytics.constants";
 import { isNativeApp, syncAppTab } from "@/shared/api/bridge/nativeBridge";
 import { Button } from "@/shared/commons/button/Button";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
@@ -51,6 +53,10 @@ export default function SettingsFeedbackPage() {
 
     navigate(PATH.HOME, { replace: true });
   }, [canGoBack, navigate]);
+
+  useEffect(() => {
+    track(EVENT_NAME.CLICK_FEEDBACK_BUTTON);
+  }, []);
 
   return (
     <div className={styles.page}>
