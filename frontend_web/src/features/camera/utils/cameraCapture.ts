@@ -126,11 +126,13 @@ export function getRecognitionErrorFeedback(
   }
 
   const copy = RECOGNITION_ERROR_COPY[domain];
-  const message = getErrorMessage(error, copy.fallbackMessage);
+  // TODO : 추후 에러코드 연결시에 멘트 넣도록 수정. 우선 상황에 맞는 에러 메세지를 보여주지 않고, 동일한 메세지 보여주도록 설정
+  // const message = getErrorMessage(error, copy.fallbackMessage);
 
   return {
     title: copy.title,
-    description: `${message}\n${copy.retryGuide} `,
+    // description: `${message}\n${copy.retryGuide} `,
+    description: `${copy.retryGuide}`,
   };
 }
 
