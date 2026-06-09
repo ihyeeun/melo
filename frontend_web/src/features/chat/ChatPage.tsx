@@ -86,7 +86,6 @@ import {
   formatTimeText,
   getTodayFormatDateKey,
   parseDate,
-  parseDateKey,
 } from "@/shared/utils/dateFormat";
 import { formatNumberWithMaxOneDecimal } from "@/shared/utils/numberFormat";
 
@@ -124,7 +123,6 @@ type MealRecordViewModel = {
   dayMeals: DayMealSummary;
   image?: string;
   time: MealTime;
-  createdAt?: string;
   updatedAt?: string;
   menus: ChatMealRecordMenu[];
   recordedMenus: RecordedMenuSummary[];
@@ -1538,7 +1536,7 @@ export default function ChatPage() {
                         menus={mealRecord.recordedMenus}
                         mealRecordTime={mealRecord.time}
                         dateKey={mealRecord.dateKey}
-                        timeText={formatTimeText(getMealRecordSavedAt(mealRecord))}
+                        timeText={formatTimeText(getMealRecordUpdatedAt(mealRecord))}
                         onCancelClick={() => handleMealRecordCancelRequest(mealRecord)}
                         onEditClick={() => handleMealRecordEditClick(mealRecord)}
                       />
@@ -2956,7 +2954,6 @@ function buildMealRecordViewModel(
     dayMeals,
     image: getDiaryMealImage(dayMeals, mealTime),
     time: mealTime,
-    createdAt: dayMeals.mealRecordTimestampsByTime?.[mealTime]?.createdAt,
     updatedAt: dayMeals.mealRecordTimestampsByTime?.[mealTime]?.updatedAt,
     menus: menus.map(toChatMealRecordMenu),
     recordedMenus: menus.map(toRecordedMenuSummary),
@@ -3035,13 +3032,12 @@ function getChatTimelineItemKey(chatId: number) {
 
 function toMealRecordTimelineItem(mealRecord: MealRecordViewModel): ChatTimelineItem {
   const date = getMealRecordTimelineDate(mealRecord);
-  const sortDate = getMealRecordSortDate(mealRecord);
 
   return {
     type: "mealRecord",
     key: getMealRecordTimelineItemKey(mealRecord.dateKey, mealRecord.time),
     date,
-    sortTime: parseDateValue(sortDate),
+    sortTime: parseDateValue(date),
     mealRecord,
   };
 }
@@ -3051,11 +3047,6 @@ function getMealRecordTimelineItemKey(dateKey: string, mealTime: MealTime) {
 }
 
 function compareChatTimelineItems(a: ChatTimelineItem, b: ChatTimelineItem) {
-  const dateOrderDifference = compareTimelineItemDates(a, b);
-  if (dateOrderDifference !== 0) {
-    return dateOrderDifference;
-  }
-
   if (a.sortTime !== null && b.sortTime !== null && a.sortTime !== b.sortTime) {
     return a.sortTime - b.sortTime;
   }
@@ -3069,23 +3060,6 @@ function compareChatTimelineItems(a: ChatTimelineItem, b: ChatTimelineItem) {
   }
 
   return a.key.localeCompare(b.key);
-}
-
-function compareTimelineItemDates(a: ChatTimelineItem, b: ChatTimelineItem) {
-  if (a.date && b.date) {
-    const aDateKey = formatDateKey(a.date);
-    const bDateKey = formatDateKey(b.date);
-
-    if (aDateKey !== bDateKey) {
-      return aDateKey < bDateKey ? -1 : 1;
-    }
-
-    return 0;
-  }
-
-  if (!a.date && b.date) return -1;
-  if (a.date && !b.date) return 1;
-  return 0;
 }
 
 function getTimelineItemTypeOrder(item: ChatTimelineItem) {
@@ -3107,78 +3081,14 @@ function shouldShowTimelineDateDivider(
   return formatDateKey(item.date) !== formatDateKey(previousItem.date);
 }
 
-function getMealRecordSavedAt(mealRecord: Pick<MealRecordViewModel, "createdAt" | "updatedAt">) {
+function getMealRecordUpdatedAt(mealRecord: Pick<MealRecordViewModel, "updatedAt">) {
   const updatedAt = mealRecord.updatedAt?.trim();
-  if (updatedAt) {
-    return updatedAt;
-  }
-
-  const createdAt = mealRecord.createdAt?.trim();
-  return createdAt || null;
+  return updatedAt || null;
 }
 
 function getMealRecordTimelineDate(mealRecord: MealRecordViewModel) {
-  return parseDateKey(mealRecord.dateKey);
-}
-
-function getMealRecordSortDate(mealRecord: MealRecordViewModel) {
-  const savedAt = getMealRecordSavedAt(mealRecord);
-  const savedAtDate = savedAt ? parseDate(savedAt) : null;
-
-  if (savedAtDate) {
-    return getMealRecordDateWithSavedTime(mealRecord.dateKey, savedAtDate);
-  }
-
-  return getMealRecordFallbackDate(mealRecord);
-}
-
-function getMealRecordDateWithSavedTime(dateKey: string, savedAtDate: Date) {
-  const date = parseDateKey(dateKey);
-  const savedAtDateKey = formatDateKey(savedAtDate);
-  const dayOffset = getDateKeyDayDifference(dateKey, savedAtDateKey);
-
-  date.setDate(date.getDate() + dayOffset);
-  date.setHours(
-    savedAtDate.getHours(),
-    savedAtDate.getMinutes(),
-    savedAtDate.getSeconds(),
-    savedAtDate.getMilliseconds(),
-  );
-  return date;
-}
-
-function getDateKeyDayDifference(fromDateKey: string, toDateKey: string) {
-  const fromDate = parseDateKey(fromDateKey);
-  const toDate = parseDateKey(toDateKey);
-  const millisecondsPerDay = 24 * 60 * 60 * 1000;
-
-  return Math.round((toDate.getTime() - fromDate.getTime()) / millisecondsPerDay);
-}
-
-function getMealRecordFallbackDate(mealRecord: Pick<MealRecordViewModel, "dateKey" | "time">) {
-  const date = parseDateKey(mealRecord.dateKey);
-
-  switch (mealRecord.time) {
-    case 0:
-      date.setHours(8, 0, 0, 0);
-      break;
-    case 1:
-      date.setHours(12, 0, 0, 0);
-      break;
-    case 2:
-      date.setHours(18, 0, 0, 0);
-      break;
-    case 3:
-      date.setHours(15, 0, 0, 0);
-      break;
-    case 4:
-      date.setHours(22, 0, 0, 0);
-      break;
-    default:
-      break;
-  }
-
-  return date;
+  const updatedAt = getMealRecordUpdatedAt(mealRecord);
+  return updatedAt ? parseDate(updatedAt) : null;
 }
 
 // 문자열 날짜를 timestamp 숫자로 변환
