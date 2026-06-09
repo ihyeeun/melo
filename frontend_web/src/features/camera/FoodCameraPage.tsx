@@ -31,7 +31,11 @@ import { type MealTime, MENU_INPUT_MODE } from "@/shared/api/types/api.dto";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
 import { CheckButtonModal } from "@/shared/commons/modals/CheckButtonModal";
 import { toast } from "@/shared/commons/toast/toast";
-import { navigateBack, useNavigate, useSearchParams } from "@/shared/navigation/stackflowNavigation";
+import {
+  navigateBack,
+  useNavigate,
+  useSearchParams,
+} from "@/shared/navigation/stackflowNavigation";
 
 export default function FoodCameraPage() {
   const navigate = useNavigate();
@@ -204,8 +208,10 @@ export default function FoodCameraPage() {
       <CheckButtonModal
         open={captureErrorFeedback !== null}
         onOpenChange={handleCaptureErrorModalOpenChange}
-        title={captureErrorFeedback?.title ?? ""}
-        description={captureErrorFeedback?.description}
+        // title={captureErrorFeedback?.title ?? ""}
+        // description={captureErrorFeedback?.description}
+        title={"음식을 인식하기 어려웠어요"}
+        description={"음식이 잘 보이도록 다시 촬영해주세요"}
       />
     </section>
   );
