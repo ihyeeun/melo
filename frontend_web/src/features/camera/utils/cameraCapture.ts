@@ -34,7 +34,7 @@ const RECOGNITION_ERROR_COPY: Record<RecognitionDomain, RecognitionErrorCopy> = 
   FOOD: {
     title: "음식을 인식하기 어려웠어요",
     fallbackMessage: "음식 메뉴 분석에 실패했어요",
-    retryGuide: "음식이 잘 보이도록 다시 촬영해주세요",
+    retryGuide: "음식이 잘 보이도록 다시 촬영해 주세요",
   },
   MENU_BOARD: {
     title: "메뉴판 인식에 실패했어요",

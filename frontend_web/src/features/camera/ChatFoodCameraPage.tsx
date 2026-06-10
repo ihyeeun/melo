@@ -135,7 +135,7 @@ export default function ChatFoodCameraPage() {
         // title={captureErrorFeedback?.title ?? ""}
         // description={captureErrorFeedback?.description}
         title={"음식을 인식하기 어려웠어요"}
-        description={"음식이 잘 보이도록 다시 촬영해주세요"}
+        description={"음식이 잘 보이도록 다시 촬영해 주세요"}
       />
     </section>
   );
