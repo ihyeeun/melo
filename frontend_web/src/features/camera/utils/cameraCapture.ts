@@ -37,7 +37,7 @@ const RECOGNITION_ERROR_COPY: Record<RecognitionDomain, RecognitionErrorCopy> = 
     retryGuide: "음식이 잘 보이도록 다시 촬영해 주세요",
   },
   MENU_BOARD: {
-    title: "메뉴판 인식에 실패했어요",
+    title: "메뉴판을 인식하기 어려웠어요",
     fallbackMessage: "메뉴판 분석에 실패했어요",
     retryGuide: "선명하게 다시 촬영해 주세요",
   },
