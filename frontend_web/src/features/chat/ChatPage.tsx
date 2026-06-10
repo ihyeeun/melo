@@ -2493,11 +2493,11 @@ function RecommendationSection({
           className={`${styles.moreRecommendCard} ${
             animate ? styles.assistantResultCardAnimated : ""
           }`}
-          aria-label="추천 목록 더보기"
+          aria-label="메뉴 목록 더보기"
           onClick={() => navigate(getRecommendResultPath(chatId))}
         >
           <p className={`${styles.textNormal} typo-body2`}>
-            다른 추천 메뉴도 있어요 (총 {recommendations.length}개)
+            다른 메뉴도 있어요 (총 {recommendations.length}개)
           </p>
           <p className={`${styles.ActionIcon} typo-label3`}>
             더보기
