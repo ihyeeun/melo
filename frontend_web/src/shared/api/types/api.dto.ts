@@ -287,7 +287,7 @@ export interface ChatRecommendItemResponseDto extends NullableMenuNutrientFields
   calories: number;
   data_source: number;
   score: number; //최종 점수
-  rank: number;
+  rank?: number;
   one_line_summary: string;
   recommendation_reason: string;
 }

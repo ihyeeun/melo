@@ -2381,7 +2381,6 @@ function RecommendationSection({
 
   if (!topRecommendation) return null;
 
-  const topBadgeText = topRecommendation.rank ? `${topRecommendation.rank}위` : "추천";
   const handleRecommendationDetailClick = (event?: MouseEvent<HTMLElement>) => {
     event?.stopPropagation();
     navigate(getRecommendDetailPath(chatId, topRecommendation.menu_id));
@@ -2432,7 +2431,9 @@ function RecommendationSection({
           onClick={handleRecommendationCardClick}
           onKeyDown={handleRecommendationCardKeyDown}
         >
-          <span className={`${styles.rankBadge} typo-label6`}>{topBadgeText}</span>
+          {topRecommendation.rank && (
+            <span className={`${styles.rankBadge} typo-label6`}>{topRecommendation.rank}위</span>
+          )}
 
           <div className={styles.recommendContents}>
             <p className={`${styles.recommendMenuName} typo-title2`}>
