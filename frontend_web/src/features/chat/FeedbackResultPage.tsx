@@ -58,6 +58,8 @@ const FOOD_MARKER_BUBBLE_CONTENT_GAP = 8;
 const FOOD_MARKER_SCORE_TEXT_WIDTH = 35;
 const FOOD_MARKER_BUBBLE_TEXT_LINE_HEIGHT = 20;
 const FOOD_MARKER_FALLBACK_LAYOUT_SIZE = 360;
+const FOOD_MARKER_POSITION_MIN = 0.1;
+const FOOD_MARKER_POSITION_MAX = 0.9;
 const FOOD_MARKER_DEFAULT_BELOW_THRESHOLD = 0.18;
 const FOOD_MARKER_CLUSTER_SOURCE_BELOW_THRESHOLD = 0.42;
 const FOOD_MARKER_CLUSTER_SOURCE_PIN_SIZE = 28;
@@ -727,7 +729,7 @@ function resolveErrorMessage(error: unknown) {
 
 function getMarkerPosition(value: number, options?: FoodMarkerHorizontalClassOptions) {
   const position = Number.isFinite(value) ? value : 0.5;
-  const clampedPosition = clamp(position, 0, 1);
+  const clampedPosition = clamp(position, FOOD_MARKER_POSITION_MIN, FOOD_MARKER_POSITION_MAX);
 
   if (!options || options.markerLayout.width <= 0 || options.bubbleWidth <= 0) {
     return clampedPosition;
