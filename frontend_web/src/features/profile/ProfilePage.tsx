@@ -53,6 +53,8 @@ const METRIC_CONFIG: Record<
 
 const NICKNAME_MAX_LENGTH = 15;
 const NICKNAME_ALLOWED_PATTERN = /[^0-9A-Za-zㄱ-ㅎㅏ-ㅣ가-힣]/g;
+const WEEKLY_RECORD_SKELETON_Y_TICK_WIDTHS = [24, 30, 26, 32, 22];
+const WEEKLY_RECORD_SKELETON_X_TICK_WIDTHS = [24, 26, 24, 26, 24, 26, 34];
 
 const sanitizeNickName = (value: string) =>
   value.replace(NICKNAME_ALLOWED_PATTERN, "").slice(0, NICKNAME_MAX_LENGTH);
@@ -417,17 +419,37 @@ function ProfilePageSkeleton() {
 
 function WeeklyRecordSkeleton() {
   return (
-    <div className={styles.weeklyChartSkeleton}>
-      {Array.from({ length: 7 }).map((_, index) => (
-        <div key={index} className={styles.weeklyChartSkeletonColumn}>
-          <Skeleton
-            width="100%"
-            height={`${52 + ((index * 23) % 86)}px`}
-            radius="8px 8px 2px 2px"
-          />
-          <Skeleton width="70%" height={12} radius={999} />
+    <section className={styles.weeklyChart}>
+      <Skeleton className={styles.weeklyYLabelSkeleton} width={42} height={12} radius={999} />
+      <div className={styles.weeklyChartSkeleton} aria-hidden="true">
+        <div className={styles.weeklyChartSkeletonPlot}>
+          <div className={styles.weeklyChartSkeletonYAxis}>
+            {WEEKLY_RECORD_SKELETON_Y_TICK_WIDTHS.map((index) => (
+              <Skeleton key={index} width={10} height={10} radius={999} />
+            ))}
+          </div>
+
+          <div className={styles.weeklyChartSkeletonCanvas}>
+            <div className={styles.weeklyChartSkeletonGrid}>
+              {Array.from({ length: 5 }).map((_, index) => (
+                <span key={index} className={styles.weeklyChartSkeletonGridLine} />
+              ))}
+            </div>
+          </div>
         </div>
-      ))}
-    </div>
+
+        <div className={styles.weeklyChartSkeletonXAxis}>
+          {WEEKLY_RECORD_SKELETON_X_TICK_WIDTHS.map((index) => (
+            <Skeleton
+              key={index}
+              className={styles.weeklyChartSkeletonXAxisTick}
+              width={20}
+              height={10}
+              radius={999}
+            />
+          ))}
+        </div>
+      </div>
+    </section>
   );
 }
