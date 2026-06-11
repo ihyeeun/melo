@@ -8,6 +8,7 @@ import { PATH } from "@/router/path";
 import { initAnalytics, track } from "@/shared/analytics/analytics";
 import { EVENT_NAME } from "@/shared/analytics/analytics.constants";
 import { initNativeBridgeListener } from "@/shared/api/bridge/nativeBridge";
+import { initQueryClientLifecycleSync } from "@/shared/api/queryClient";
 import { LoadingScreen } from "@/shared/commons/loading/Loading";
 import { syncFeatureGuardStateToApp } from "@/shared/guards/featureGuard";
 import { initContentInteractionGuard } from "@/shared/utils/contentInteractionGuard";
@@ -33,6 +34,7 @@ export default function App() {
     initAnalytics();
     track(EVENT_NAME.APP_OPEN);
     const cleanupNativeBridgeListener = initNativeBridgeListener();
+    const cleanupQueryClientLifecycleSync = initQueryClientLifecycleSync();
     const cleanupContentInteractionGuard = initContentInteractionGuard();
     const cleanupInputCharacterRestriction = initInputCharacterRestriction();
     syncFeatureGuardStateToApp();
@@ -40,6 +42,7 @@ export default function App() {
     return () => {
       cleanupInputCharacterRestriction();
       cleanupContentInteractionGuard();
+      cleanupQueryClientLifecycleSync();
       cleanupNativeBridgeListener();
     };
   }, []);

@@ -21,7 +21,6 @@ import {
   useState,
 } from "react";
 
-import AccountDeletePage from "@/features/account-delete/AccountDeletePage";
 import { PATH } from "@/router/path";
 import { track } from "@/shared/analytics/analytics";
 import { EVENT_NAME } from "@/shared/analytics/analytics.constants";
@@ -105,7 +104,6 @@ const NutrientRegisterPage = createLazyActivity(
   () => import("@/features/nutrient-entry/NutrientRegisterPage"),
 );
 const OnboardingPage = createLazyActivity(() => import("@/features/onboarding/OnboardingPage"));
-const RecommendPage = createLazyActivity(() => import("@/features/recommend/RecommendPage"));
 const BrandSearch = createLazyActivity(() => import("@/features/search/brand/BrandSearch"));
 const MealSearchPage = createLazyActivity(
   () => import("@/features/search/menu-record/MealSearchPage"),
@@ -153,7 +151,6 @@ const ACTIVITIES = {
   Home: HomePage,
   TodayMealScore: TodayMealScorePage,
   Onboarding: OnboardingPage,
-  Recommend: RecommendPage,
   Profile: ProfilePage,
   Settings: SettingsPage,
   SettingsFeedback: SettingsFeedbackPage,
@@ -176,7 +173,6 @@ const ACTIVITIES = {
   GoalEdit: GoalEditPage,
   GoalEditTargetCalories: GoalEditTargetCaloriesPage,
   GoalEditNutrient: GoalEditNutrientPage,
-  AccountDelete: createStaticActivity(AccountDeletePage),
   FeedbackResult: FeedbackResultPage,
   FeedbackDetail: ChatMenuDetailPage,
   ChatFoodCamera: ChatFoodCameraPage,
@@ -187,7 +183,6 @@ const ACTIVITY_ROUTES: Record<keyof typeof ACTIVITIES, RoutePath> = {
   Home: [PATH.HOME, PATH.ROOT],
   TodayMealScore: PATH.TODAY_MEAL_SCORE,
   Onboarding: PATH.ONBOARDING,
-  Recommend: PATH.RECOMMEND,
   Profile: PATH.PROFILE,
   Settings: PATH.SETTINGS,
   SettingsFeedback: PATH.SETTINGS_FEEDBACK,
@@ -210,7 +205,6 @@ const ACTIVITY_ROUTES: Record<keyof typeof ACTIVITIES, RoutePath> = {
   GoalEdit: PATH.GOAL_EDIT,
   GoalEditTargetCalories: PATH.GOAL_EDIT_TARGET_CALORIES,
   GoalEditNutrient: PATH.GOAL_EDIT_NUTRIENT,
-  AccountDelete: "/account-delete",
   FeedbackResult: PATH.FEEDBACK_RESULT,
   FeedbackDetail: PATH.FEEDBACK_DETAIL,
   ChatFoodCamera: PATH.CHAT_FOOD_CAMERA,
@@ -245,12 +239,6 @@ function createLazyActivity(loader: () => Promise<{ default: ComponentType }>) {
         <LazyPage />
       </Suspense>
     );
-  };
-}
-
-function createStaticActivity(Page: ComponentType) {
-  return function StaticActivity() {
-    return <Page />;
   };
 }
 
@@ -634,13 +622,7 @@ function StackActivityFrame({
 
   const startSwipeBackTransition = useCallback(
     (options: SwipeBackTransitionOptions) => {
-      if (
-        !canSwipeBack ||
-        isSwipePending ||
-        isSwipeCompleting ||
-        isDragging ||
-        isResetting
-      ) {
+      if (!canSwipeBack || isSwipePending || isSwipeCompleting || isDragging || isResetting) {
         return false;
       }
 

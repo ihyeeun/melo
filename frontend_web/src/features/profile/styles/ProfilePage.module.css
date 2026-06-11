@@ -174,22 +174,56 @@
 }
 
 .weeklyChartSkeleton {
-  align-items: end;
+  aspect-ratio: 1;
   display: grid;
-  gap: 10px;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
-  min-height: 170px;
-  padding: 8px 6px 0;
+  grid-template-rows: minmax(0, 1fr) 50px;
+  width: 100%;
 }
 
-.weeklyChartSkeletonColumn {
-  align-items: center;
+.weeklyChartSkeletonPlot {
+  display: grid;
+  grid-template-columns: 35px minmax(0, 1fr);
+  min-height: 0;
+}
+
+.weeklyChartSkeletonYAxis {
+  align-items: flex-end;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  height: 100%;
-  justify-content: flex-end;
-  min-width: 0;
+  justify-content: space-between;
+  padding: 2px 7px 4px 0;
+}
+
+.weeklyChartSkeletonCanvas {
+  min-height: 0;
+  overflow: visible;
+  position: relative;
+}
+
+.weeklyChartSkeletonGrid {
+  display: flex;
+  flex-direction: column;
+  inset: 0;
+  justify-content: space-between;
+  position: absolute;
+}
+
+.weeklyChartSkeletonGridLine {
+  border-top: 1px solid var(--border-neutral);
+  display: block;
+  width: 100%;
+}
+
+.weeklyChartSkeletonXAxis {
+  align-items: start;
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  margin-left: 35px;
+  padding-top: 12px;
+}
+
+.weeklyChartSkeletonXAxisTick {
+  justify-self: center;
 }
 
 .sheetContainer {
@@ -240,4 +274,8 @@
 .weeklyYLabel {
   color: var(--label-assistive);
   padding-left: 22px;
+}
+
+.weeklyYLabelSkeleton {
+  margin-left: 22px;
 }

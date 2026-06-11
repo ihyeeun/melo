@@ -81,7 +81,11 @@ export default function ProfilePage() {
   }, [profile?.nickname]);
 
   const nickname = profile?.nickname ?? "진득한 푸마";
-  const currentWeight = profile?.weight ?? 0;
+  const todayWeight =
+    typeof bodyLog?.weight === "number" && Number.isFinite(bodyLog.weight) && bodyLog.weight > 0
+      ? bodyLog.weight
+      : undefined;
+  const currentWeight = todayWeight ?? profile?.weight ?? 0;
   const targetWeight = profile?.target_weight ?? currentWeight;
   const targetCalories = profile?.target_calories ?? 2000;
   const remainingWeight = Math.abs(currentWeight - targetWeight);
@@ -413,17 +417,37 @@ function ProfilePageSkeleton() {
 
 function WeeklyRecordSkeleton() {
   return (
-    <div className={styles.weeklyChartSkeleton}>
-      {Array.from({ length: 7 }).map((_, index) => (
-        <div key={index} className={styles.weeklyChartSkeletonColumn}>
-          <Skeleton
-            width="100%"
-            height={`${52 + ((index * 23) % 86)}px`}
-            radius="8px 8px 2px 2px"
-          />
-          <Skeleton width="70%" height={12} radius={999} />
+    <section className={styles.weeklyChart}>
+      <Skeleton className={styles.weeklyYLabelSkeleton} width={42} height={12} radius={999} />
+      <div className={styles.weeklyChartSkeleton} aria-hidden="true">
+        <div className={styles.weeklyChartSkeletonPlot}>
+          <div className={styles.weeklyChartSkeletonYAxis}>
+            {Array.from({ length: 5 }).map((_, index) => (
+              <Skeleton key={index} width={10} height={10} radius={999} />
+            ))}
+          </div>
+
+          <div className={styles.weeklyChartSkeletonCanvas}>
+            <div className={styles.weeklyChartSkeletonGrid}>
+              {Array.from({ length: 5 }).map((_, index) => (
+                <span key={index} className={styles.weeklyChartSkeletonGridLine} />
+              ))}
+            </div>
+          </div>
         </div>
-      ))}
-    </div>
+
+        <div className={styles.weeklyChartSkeletonXAxis}>
+          {Array.from({ length: 7 }).map((_, index) => (
+            <Skeleton
+              key={index}
+              className={styles.weeklyChartSkeletonXAxisTick}
+              width={20}
+              height={10}
+              radius={999}
+            />
+          ))}
+        </div>
+      </div>
+    </section>
   );
 }

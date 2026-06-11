@@ -5,8 +5,6 @@ import {
   useWithdrawMutation,
 } from "@/features/settings/hooks/mutations/useAccountMutation";
 import { PATH } from "@/router/path";
-import { track } from "@/shared/analytics/analytics";
-import { EVENT_NAME } from "@/shared/analytics/analytics.constants";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import { LoadingOverlay } from "@/shared/commons/loading/Loading";
@@ -43,7 +41,6 @@ export default function SettingsPage() {
             type="button"
             className={styles.menuItem}
             onClick={() => {
-              track(EVENT_NAME.CLICK_FEEDBACK_BUTTON);
               navigate(PATH.SETTINGS_FEEDBACK);
             }}
           >

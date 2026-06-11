@@ -5,7 +5,6 @@ import { useRequestChatMealRecordFocus } from "@/features/chat/stores/mealRecord
 import styles from "@/features/chat/styles/RecommendResultPage.module.css";
 import {
   buildDiaryMealRecordRequest,
-  getChatDateKey,
   getCurrentMealTime,
   getDiaryMealImage,
   getDiaryMealRecordSelectionByMenuIds,
@@ -45,6 +44,7 @@ import {
   useNavigate,
   useSearchParams,
 } from "@/shared/navigation/stackflowNavigation";
+import { getTodayFormatDateKey } from "@/shared/utils/dateFormat";
 
 type RecommendFilter = "all" | "brand" | "food";
 type SelectedMealRecordMenu = SelectedDiaryMealRecordMenu;
@@ -130,8 +130,9 @@ function RecommendResultContent({
   const [selectedMenusOverride, setSelectedMenusOverride] = useState<
     SelectedMealRecordMenu[] | null
   >(null);
-  const chatDateKey = useMemo(() => getChatDateKey(chatItem), [chatItem]);
-  const { data: dayMeals, isPending: isDayMealsPending } = useDayMealsQuery(chatDateKey);
+  const recordDateKey = getTodayFormatDateKey();
+  const currentMealTime = getCurrentMealTime();
+  const { data: dayMeals, isPending: isDayMealsPending } = useDayMealsQuery(recordDateKey);
   const { mutateAsync: registerDiaryMealRecordMutate, isPending: isMealRegisterPending } =
     useTodayMealRecordRegisterMutation();
   const recommendationMenuIds = useMemo(
@@ -139,10 +140,10 @@ function RecommendResultContent({
     [recommendations],
   );
   const diaryMealRecordSelection = useMemo(
-    () => getDiaryMealRecordSelectionByMenuIds(dayMeals, recommendationMenuIds),
-    [dayMeals, recommendationMenuIds],
+    () => getDiaryMealRecordSelectionByMenuIds(dayMeals, recommendationMenuIds, currentMealTime),
+    [currentMealTime, dayMeals, recommendationMenuIds],
   );
-  const targetMealTime = diaryMealRecordSelection?.time ?? getCurrentMealTime();
+  const targetMealTime = currentMealTime;
   const mealType: MealType = getMealTypeFromChatMealTime(targetMealTime);
   const selectedMenus = useMemo(
     () => selectedMenusOverride ?? diaryMealRecordSelection?.menus ?? [],
@@ -259,7 +260,7 @@ function RecommendResultContent({
 
       await registerDiaryMealRecordMutate({
         ...buildDiaryMealRecordRequest({
-          dateKey: chatDateKey,
+          dateKey: recordDateKey,
           mealType,
           selectedMenus: nextMenus,
           image: getDiaryMealImage(dayMeals, targetMealTime),
@@ -273,7 +274,7 @@ function RecommendResultContent({
 
       toast.success("식사 기록이 등록되었어요.");
       requestChatMealRecordFocus({
-        dateKey: chatDateKey,
+        dateKey: recordDateKey,
         mealTime: targetMealTime,
       });
       navigateBack({ fallbackTo: PATH.CHAT });

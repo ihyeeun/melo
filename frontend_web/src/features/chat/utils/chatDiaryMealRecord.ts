@@ -46,21 +46,23 @@ export function getSelectedDiaryMenusByTime(dayMeals: DayMealSummary, mealTime: 
 export function getDiaryMealRecordSelectionByMenuIds(
   dayMeals: DayMealSummary | undefined,
   menuIds: number[],
+  mealTime?: MealTime,
 ): DiaryMealRecordSelection | null {
   if (!dayMeals || menuIds.length === 0) {
     return null;
   }
 
   const targetIdSet = new Set(menuIds);
+  const mealTimes = mealTime === undefined ? MEAL_TIME_LIST : [mealTime];
 
-  for (const mealTime of MEAL_TIME_LIST) {
-    const selectedMenus = (dayMeals.menusByTime?.[mealTime] ?? [])
+  for (const targetMealTime of mealTimes) {
+    const selectedMenus = (dayMeals.menusByTime?.[targetMealTime] ?? [])
       .filter((menu) => targetIdSet.has(menu.id))
       .map(toSelectedDiaryMealRecordMenu);
 
     if (selectedMenus.length > 0) {
       return {
-        time: mealTime,
+        time: targetMealTime,
         menus: selectedMenus,
       };
     }
@@ -73,17 +75,20 @@ export function getDiaryMealRecordSelectionByMenuIds(
 export function getDiaryMealMenuSelection(
   dayMeals: DayMealSummary | undefined,
   menuId: number,
+  mealTime?: MealTime,
 ): { time: MealTime; menu: SelectedDiaryMealRecordMenu } | null {
   if (!dayMeals) {
     return null;
   }
 
-  for (const mealTime of MEAL_TIME_LIST) {
-    const menu = dayMeals.menusByTime?.[mealTime]?.find((item) => item.id === menuId);
+  const mealTimes = mealTime === undefined ? MEAL_TIME_LIST : [mealTime];
+
+  for (const targetMealTime of mealTimes) {
+    const menu = dayMeals.menusByTime?.[targetMealTime]?.find((item) => item.id === menuId);
 
     if (menu) {
       return {
-        time: mealTime,
+        time: targetMealTime,
         menu: toSelectedDiaryMealRecordMenu(menu),
       };
     }

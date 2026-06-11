@@ -123,12 +123,7 @@ export default function NutrientCameraPage() {
     } finally {
       setIsUploading(false);
     }
-  }, [
-    isUploading,
-    returnFromCameraPage,
-    searchParams,
-    uploadImage,
-  ]);
+  }, [isUploading, returnFromCameraPage, searchParams, uploadImage]);
 
   useEffect(() => {
     if (autoTriggeredRef.current) return;
@@ -164,8 +159,10 @@ export default function NutrientCameraPage() {
       <CheckButtonModal
         open={captureErrorFeedback !== null}
         onOpenChange={handleCaptureErrorModalOpenChange}
-        title={captureErrorFeedback?.title ?? ""}
-        description={captureErrorFeedback?.description}
+        // title={captureErrorFeedback?.title ?? ""}
+        // description={captureErrorFeedback?.description}
+        title={"영양성분을 인식하기 어려웠어요"}
+        description={"선명하게 다시 촬영해 주세요"}
       />
     </section>
   );

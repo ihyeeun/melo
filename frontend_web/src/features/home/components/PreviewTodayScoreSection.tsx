@@ -1,5 +1,3 @@
-import { useEffect } from "react";
-
 import ActionCard from "@/features/home/components/cards/ActionCard";
 import { useDayMealsQuery } from "@/features/home/hooks/queries/useDayMealsQuery";
 import style from "@/features/home/styles/PreviewTodayScoreSection.module.css";
@@ -25,12 +23,20 @@ import {
 } from "@/shared/utils/nutrientScore";
 
 type PreviewTodayScoreSectionProps = {
-  onReadyChange?: (selectedDate: string, isReady: boolean) => void;
   selectedDate: string;
 };
 
+type PreviewTodayScoreCardProps = {
+  currentCalories: number;
+  isCalorieExceeded: boolean;
+  message: string;
+  onClick?: () => void;
+  progressPercent: number;
+  score: number | null;
+  targetCalories: number | null;
+};
+
 export default function PreviewTodayScoreSection({
-  onReadyChange,
   selectedDate,
 }: PreviewTodayScoreSectionProps) {
   const navigation = useNavigate();
@@ -72,11 +78,6 @@ export default function PreviewTodayScoreSection({
   const isCalorieExceeded =
     targetCalories !== null && (dayMealSummary?.totalCalories ?? 0) > targetCalories;
   const isTargetInfoPending = shouldFetchProfile && isProfilePending;
-  const isSectionReady = !isSummaryPending && hasTargetsLoaded && !isTargetInfoPending;
-
-  useEffect(() => {
-    onReadyChange?.(selectedDate, isSectionReady);
-  }, [isSectionReady, onReadyChange, selectedDate]);
 
   const handleTodayMealScoreClick = () => {
     if (!hasValidTargets(targets)) {
@@ -105,34 +106,64 @@ export default function PreviewTodayScoreSection({
   }
 
   return (
-    <ActionCard className={style.content} onClick={handleTodayMealScoreClick}>
+    <PreviewTodayScoreCard
+      score={score}
+      message={isTargetInfoPending ? "목표 정보를 불러오는 중입니다." : calorieSummary.message}
+      currentCalories={calorieSummary.roundedCurrentCalories}
+      targetCalories={calorieSummary.roundedTargetCalories}
+      progressPercent={
+        nutritionMetrics?.calorieProgressPercent ??
+        getCalorieProgressPercent(dayMealSummary?.totalCalories || 0, targetCalories ?? 0)
+      }
+      isCalorieExceeded={isCalorieExceeded}
+      onClick={handleTodayMealScoreClick}
+    />
+  );
+}
+
+export function PreviewTodayScorePreview() {
+  return (
+    <PreviewTodayScoreCard
+      score={84}
+      message="오늘 목표까지 1,240kcal 남았어요"
+      currentCalories={560}
+      targetCalories={1800}
+      progressPercent={31}
+      isCalorieExceeded={false}
+    />
+  );
+}
+
+function PreviewTodayScoreCard({
+  currentCalories,
+  isCalorieExceeded,
+  message,
+  onClick,
+  progressPercent,
+  score,
+  targetCalories,
+}: PreviewTodayScoreCardProps) {
+  return (
+    <ActionCard className={style.content} onClick={onClick}>
       <section className={style.scoreContainer}>
         <div className={style.scoreText}>
           <img src="/icons/face-2.svg" width={50} alt="" aria-hidden="true" />
           <span className={`typo-title1`}>{score ?? "--"}점</span>
         </div>
-        <p className={`typo-body3 ${style.textAssistive}`}>
-          {isTargetInfoPending ? "목표 정보를 불러오는 중입니다." : calorieSummary.message}
-        </p>
+        <p className={`typo-body3 ${style.textAssistive}`}>{message}</p>
       </section>
 
       <section className={style.caloriesContainer}>
         <p className={`${style.calorieText} textNoWrap typo-title2`}>
           <span className={`${style.score} typo-h2`}>
-            {calorieSummary.roundedCurrentCalories.toLocaleString("ko-KR")}
+            {currentCalories.toLocaleString("ko-KR")}
           </span>
           {"/ "}
-          {calorieSummary.roundedTargetCalories !== null
-            ? calorieSummary.roundedTargetCalories.toLocaleString("ko-KR")
-            : "--"}{" "}
-          kcal
+          {targetCalories !== null ? targetCalories.toLocaleString("ko-KR") : "--"} kcal
           <SystemIcon name="chevron-right-normal" size={24} className={style.icon} />
         </p>
         <ScoreProgress
-          value={
-            nutritionMetrics?.calorieProgressPercent ??
-            getCalorieProgressPercent(dayMealSummary?.totalCalories || 0, targetCalories ?? 0)
-          }
+          value={progressPercent}
           variant={isCalorieExceeded ? "danger-white" : "primary-white"}
         />
       </section>

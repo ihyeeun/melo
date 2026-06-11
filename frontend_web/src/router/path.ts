@@ -5,7 +5,6 @@ export const PATH = {
   KAKAO_WEB_CALLBACK: "/auth/kakao/callback",
   TODAY_MEAL_SCORE: "/home/date-meal-score",
   ONBOARDING: "/onboarding",
-  RECOMMEND: "/recommend",
   PROFILE: "/profile",
   SETTINGS: "/settings",
   SETTINGS_FEEDBACK: "/settings/feedback",

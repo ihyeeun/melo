@@ -13,6 +13,27 @@
   grid-template-columns: repeat(2, 1fr);
 }
 
+.menuCardFrame {
+  min-width: 0;
+  position: relative;
+}
+
+.onboardingTargetActive {
+  pointer-events: none;
+  z-index: 11;
+}
+
+.onboardingTargetActive::after {
+  border: 2px dashed var(--static-white);
+  border-radius: 8px;
+  box-sizing: border-box;
+  content: "";
+  inset: -1px;
+  pointer-events: none;
+  position: absolute;
+  z-index: 1;
+}
+
 .menuCardContainer {
   display: flex;
   flex-direction: column;

@@ -1,4 +1,4 @@
-import { useActivity, useEnterDoneEffect } from "@stackflow/react";
+import { useActivity } from "@stackflow/react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { useDayMealsQuery } from "@/features/home/hooks/queries/useDayMealsQuery";
@@ -141,14 +141,8 @@ export default function MealSearchPage() {
     navigate(getMealRecordPath(dateKey, mealType), { replace: true });
   }, [dateKey, hasDraft, isDayMealsError, isDayMealsPending, isTop, mealType, navigate]);
 
-  useEnterDoneEffect(() => {
-    const frameId = window.requestAnimationFrame(() => {
-      searchInputRef.current?.focus();
-    });
-
-    return () => {
-      window.cancelAnimationFrame(frameId);
-    };
+  useEffect(() => {
+    searchInputRef.current?.focus();
   }, []);
 
   const handleToggleMenuSelection = (menu: MenuSimpleResponseDto) => {

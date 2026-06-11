@@ -1,5 +1,5 @@
 import { useActivity } from "@stackflow/react";
-import { type QueryClient, useQueries, useQueryClient } from "@tanstack/react-query";
+import { useQueries, useQueryClient } from "@tanstack/react-query";
 import type { FormEvent, KeyboardEvent, MouseEvent, PointerEvent } from "react";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 
@@ -11,8 +11,8 @@ import {
 } from "@/features/chat/components/ChatMealRecordBottomSheet";
 import { useSendMessageMutation } from "@/features/chat/hooks/mutations/useSendMessageMutation";
 import {
-  appendMissingChatHistoryItemsToCache,
-  refetchAndMergeChatHistoryIntoCache,
+  ChatHistorySyncError,
+  refetchAndResolveChatHistoryItem,
 } from "@/features/chat/hooks/queries/chatHistoryCache";
 import { useGetChatHistoryQuery } from "@/features/chat/hooks/queries/useGetChatQuery";
 import {
@@ -30,6 +30,7 @@ import {
   type SelectedDiaryMealRecordMenu,
 } from "@/features/chat/utils/chatDiaryMealRecord";
 import { isChatHistoryItemResponse } from "@/features/chat/utils/chatHistoryItem";
+import { consumeChatHistoryPlaybackBaselineIds } from "@/features/chat/utils/chatHistoryPlayback";
 import {
   getMealTypeFromChatMealTime,
   getMealTypeFromCurrentTime,
@@ -78,7 +79,7 @@ import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import { ConfirmModal } from "@/shared/commons/modals/ConfirmModal";
 import { Skeleton, SkeletonStatus } from "@/shared/commons/skeleton/Skeleton";
 import { toast } from "@/shared/commons/toast/toast";
-import { navigateBack, useLocation, useNavigate } from "@/shared/navigation/stackflowNavigation";
+import { navigateBack, useNavigate } from "@/shared/navigation/stackflowNavigation";
 import {
   formatDateDividerText,
   formatDateKey,
@@ -86,7 +87,6 @@ import {
   formatTimeText,
   getTodayFormatDateKey,
   parseDate,
-  parseDateKey,
 } from "@/shared/utils/dateFormat";
 import { formatNumberWithMaxOneDecimal } from "@/shared/utils/numberFormat";
 
@@ -124,7 +124,6 @@ type MealRecordViewModel = {
   dayMeals: DayMealSummary;
   image?: string;
   time: MealTime;
-  createdAt?: string;
   updatedAt?: string;
   menus: ChatMealRecordMenu[];
   recordedMenus: RecordedMenuSummary[];
@@ -176,10 +175,6 @@ type AssistantPlaybackState = {
   chatItemId: number;
   visibleBubbleCount: number;
   resultVisibleCount: number;
-};
-
-type ChatLocationState = {
-  playbackChatItemId?: number;
 };
 
 type ClientOsName = AppDeviceInfoPayload["osName"] | "unknown";
@@ -405,7 +400,6 @@ function useSoftKeyboardVisible(isInputFocused: boolean, clientOsName: ClientOsN
 
 export default function ChatPage() {
   const navigate = useNavigate();
-  const location = useLocation<ChatLocationState>();
   const queryClient = useQueryClient();
   const { isTop } = useActivity();
   const todayDateKey = getTodayFormatDateKey();
@@ -417,6 +411,7 @@ export default function ChatPage() {
   const assistantPlaybackChatItemIdsRef = useRef(new Set<number>());
   const knownHistoryChatItemIdsRef = useRef<Set<number> | null>(null);
   const pendingMealRecordScrollKeyRef = useRef<string | null>(null);
+  const shouldFollowBottomRef = useRef(true);
   const skipNextAutoBottomScrollRef = useRef(false);
   const hiddenScrollTopSnapshotRef = useRef<number | null>(null);
   const previousIsTopRef = useRef(isTop);
@@ -424,12 +419,7 @@ export default function ChatPage() {
   const [inputValue, setInputValue] = useState("");
   const [isInputFocused, setIsInputFocused] = useState(false);
   const [pendingInput, setPendingInput] = useState<string | null>(null);
-  const [localResponseChatItem, setLocalResponseChatItem] =
-    useState<ChatHistoryItemResponseDto | null>(null);
   const [assistantPlayback, setAssistantPlayback] = useState<AssistantPlaybackState | null>(null);
-  const [playedAssistantPlaybackChatItemIds, setPlayedAssistantPlaybackChatItemIds] = useState(
-    () => new Set<number>(),
-  );
   const [isCameraActionMenuOpen, setIsCameraActionMenuOpen] = useState(false);
   const [isCameraHintDismissed, setIsCameraHintDismissed] = useState(
     getIsCameraHintDismissedInSession,
@@ -448,20 +438,18 @@ export default function ChatPage() {
   const [timelineScrollTarget, setTimelineScrollTarget] = useState<TimelineScrollTarget | null>(
     null,
   );
+  const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null);
   const clientOsName = useClientOsName();
   const isSoftKeyboardVisible = useSoftKeyboardVisible(isInputFocused, clientOsName);
 
   const { data, isPending: isHistoryPending } = useGetChatHistoryQuery();
-  const { mutateAsync: sendMessageMutation, isPending: isSendPending } = useSendMessageMutation({
-    appendToCache: false,
-  });
+  const { mutateAsync: sendMessageMutation, isPending: isSendPending } = useSendMessageMutation();
   const { mutateAsync: registerDiaryMealRecordMutate, isPending: isDiaryMealRegisterPending } =
     useTodayMealRecordRegisterMutation();
   const { mutateAsync: deleteDiaryMealRecordMutate, isPending: isDiaryMealDeletePending } =
     useTodayMealRecordDeleteWithRollbackMutation();
   const chatMealRecordFocusRequest = useChatMealRecordFocusRequest();
   const clearChatMealRecordFocusRequest = useClearChatMealRecordFocusRequest();
-  const navigationPlaybackChatItemId = location.state?.playbackChatItemId;
 
   const isMealRecordEditPending = isDiaryMealRegisterPending || isDiaryMealDeletePending;
 
@@ -469,16 +457,7 @@ export default function ChatPage() {
     const rawList = data?.chat_list ?? [];
     return rawList.filter(isChatHistoryItemResponse).sort(compareChatHistoryItems);
   }, [data]);
-  const displayChatList = useMemo(() => {
-    if (
-      localResponseChatItem === null ||
-      chatList.some((chatItem) => chatItem.id === localResponseChatItem.id)
-    ) {
-      return chatList;
-    }
-
-    return [...chatList, localResponseChatItem].sort(compareChatHistoryItems);
-  }, [chatList, localResponseChatItem]);
+  const displayChatList = chatList;
   const chatDateKeys = useMemo(() => {
     const dateKeySet = new Set<string>([todayDateKey]);
 
@@ -555,7 +534,20 @@ export default function ChatPage() {
     !isSoftKeyboardVisible && (isQuickActionVisible || isScrollToBottomButtonVisible);
   const currentMealTime = getCurrentMealTime();
 
-  const updateIsScrolledAwayFromBottom = useCallback(() => {
+  const scrollToBottom = useCallback((behavior: ScrollBehavior = "instant") => {
+    const main = mainRef.current;
+
+    if (!main) {
+      return;
+    }
+
+    main.scrollTo({
+      behavior,
+      top: main.scrollHeight,
+    });
+  }, []);
+
+  const updateIsScrolledAwayFromBottom = useCallback((options?: { updateStickiness?: boolean }) => {
     const main = mainRef.current;
 
     if (!main) {
@@ -566,10 +558,53 @@ export default function ChatPage() {
     const isAwayFromBottom = distanceToBottom > SCROLL_BOTTOM_THRESHOLD;
     setIsScrolledAwayFromBottom(isAwayFromBottom);
 
+    if (options?.updateStickiness) {
+      shouldFollowBottomRef.current = !isAwayFromBottom;
+    }
+
     if (isAwayFromBottom) {
       setIsCameraActionMenuOpen(false);
     }
   }, []);
+
+  const handleMainScroll = useCallback(() => {
+    updateIsScrolledAwayFromBottom({ updateStickiness: true });
+  }, [updateIsScrolledAwayFromBottom]);
+
+  const handleWindowResize = useCallback(() => {
+    updateIsScrolledAwayFromBottom();
+  }, [updateIsScrolledAwayFromBottom]);
+
+  const keepBottomIfFollowing = useCallback(
+    (behavior: ScrollBehavior = "instant") => {
+      if (
+        !isTop ||
+        pendingMealRecordScrollKeyRef.current !== null ||
+        timelineScrollTarget !== null ||
+        !shouldFollowBottomRef.current
+      ) {
+        updateIsScrolledAwayFromBottom();
+        return;
+      }
+
+      scrollToBottom(behavior);
+
+      if (behavior === "smooth") {
+        return;
+      }
+
+      if (typeof window === "undefined") {
+        updateIsScrolledAwayFromBottom();
+        return;
+      }
+
+      window.requestAnimationFrame(() => {
+        scrollToBottom("instant");
+        updateIsScrolledAwayFromBottom();
+      });
+    },
+    [isTop, scrollToBottom, timelineScrollTarget, updateIsScrolledAwayFromBottom],
+  );
 
   const setTimelineScrollElementRef = useCallback((key: string, element: HTMLElement | null) => {
     if (element) {
@@ -581,6 +616,7 @@ export default function ChatPage() {
   }, []);
 
   const commitTimelineScroll = useCallback((key: string, block: ScrollLogicalPosition) => {
+    shouldFollowBottomRef.current = false;
     timelineScrollRequestIdRef.current += 1;
     setTimelineScrollTarget({
       block,
@@ -684,21 +720,16 @@ export default function ChatPage() {
       return;
     }
 
-    if (isScrolledAwayFromBottom) {
+    if (!shouldFollowBottomRef.current) {
       updateIsScrolledAwayFromBottom();
       return;
     }
 
-    endAnchorRef.current?.scrollIntoView({
-      behavior: "instant",
-      block: "end",
-    });
-
-    updateIsScrolledAwayFromBottom();
+    keepBottomIfFollowing("instant");
   }, [
     assistantPlaybackSignature,
-    isScrolledAwayFromBottom,
     isTop,
+    keepBottomIfFollowing,
     timelineScrollTarget,
     timelineSignature,
     updateIsScrolledAwayFromBottom,
@@ -771,11 +802,8 @@ export default function ChatPage() {
       return;
     }
 
-    endAnchorRef.current?.scrollIntoView({
-      behavior: "smooth",
-      block: "end",
-    });
-  }, [isTop, pendingInput, timelineScrollTarget]);
+    keepBottomIfFollowing("instant");
+  }, [isTop, keepBottomIfFollowing, pendingInput, timelineScrollTarget]);
 
   useEffect(() => {
     updateIsScrolledAwayFromBottom();
@@ -786,14 +814,14 @@ export default function ChatPage() {
       return;
     }
 
-    main.addEventListener("scroll", updateIsScrolledAwayFromBottom, { passive: true });
-    window.addEventListener("resize", updateIsScrolledAwayFromBottom);
+    main.addEventListener("scroll", handleMainScroll, { passive: true });
+    window.addEventListener("resize", handleWindowResize);
 
     return () => {
-      main.removeEventListener("scroll", updateIsScrolledAwayFromBottom);
-      window.removeEventListener("resize", updateIsScrolledAwayFromBottom);
+      main.removeEventListener("scroll", handleMainScroll);
+      window.removeEventListener("resize", handleWindowResize);
     };
-  }, [updateIsScrolledAwayFromBottom]);
+  }, [handleMainScroll, handleWindowResize, updateIsScrolledAwayFromBottom]);
 
   useEffect(() => {
     return () => {
@@ -816,7 +844,9 @@ export default function ChatPage() {
       return;
     }
 
-    const frameId = window.requestAnimationFrame(updateIsScrolledAwayFromBottom);
+    const frameId = window.requestAnimationFrame(() => {
+      updateIsScrolledAwayFromBottom();
+    });
 
     return () => {
       window.cancelAnimationFrame(frameId);
@@ -831,10 +861,7 @@ export default function ChatPage() {
   ]);
 
   const playAssistantResponse = useCallback(
-    async (
-      responseChatItem: ChatHistoryItemResponseDto,
-      options: { clearLocalResponseOnComplete: boolean },
-    ) => {
+    async (responseChatItem: ChatHistoryItemResponseDto) => {
       const playbackRunId = assistantPlaybackRunIdRef.current + 1;
       const responsePayload = responseChatItem.response_payload;
       const bubbleRevealCount = getAssistantBubbleRevealCount(responsePayload);
@@ -862,11 +889,6 @@ export default function ChatPage() {
 
       assistantPlaybackRunIdRef.current = playbackRunId;
       assistantPlaybackChatItemIdsRef.current.add(responseChatItem.id);
-      setPlayedAssistantPlaybackChatItemIds((current) => {
-        const next = new Set(current);
-        next.add(responseChatItem.id);
-        return next;
-      });
 
       if (shouldPlayResponse) {
         setAssistantPlayback({
@@ -914,12 +936,6 @@ export default function ChatPage() {
         }
       }
 
-      if (options.clearLocalResponseOnComplete) {
-        setLocalResponseChatItem((current) =>
-          current?.id === responseChatItem.id ? null : current,
-        );
-      }
-
       setAssistantPlayback((current) =>
         current?.chatItemId === responseChatItem.id ? null : current,
       );
@@ -927,53 +943,17 @@ export default function ChatPage() {
     [],
   );
 
-  useEffect(() => {
-    if (
-      navigationPlaybackChatItemId === undefined ||
-      isHistoryPending ||
-      assistantPlayback !== null ||
-      pendingInput !== null ||
-      assistantPlaybackChatItemIdsRef.current.has(navigationPlaybackChatItemId)
-    ) {
-      return;
-    }
-
-    const chatItem = chatList.find((item) => item.id === navigationPlaybackChatItemId);
-
-    if (!chatItem) {
-      return;
-    }
-
-    if (knownHistoryChatItemIdsRef.current === null) {
-      knownHistoryChatItemIdsRef.current = new Set(chatList.map((item) => item.id));
-    } else {
-      knownHistoryChatItemIdsRef.current.add(chatItem.id);
-    }
-
-    const timeoutId = window.setTimeout(() => {
-      void playAssistantResponse(chatItem, {
-        clearLocalResponseOnComplete: false,
-      });
-    }, 0);
-
-    return () => {
-      window.clearTimeout(timeoutId);
-    };
-  }, [
-    assistantPlayback,
-    chatList,
-    isHistoryPending,
-    navigationPlaybackChatItemId,
-    pendingInput,
-    playAssistantResponse,
-  ]);
-
   useLayoutEffect(() => {
     if (isHistoryPending) {
       return;
     }
 
     const currentChatItemIds = new Set(chatList.map((chatItem) => chatItem.id));
+    const playbackBaselineChatIds = consumeChatHistoryPlaybackBaselineIds(queryClient);
+
+    if (playbackBaselineChatIds !== null) {
+      knownHistoryChatItemIdsRef.current = new Set(playbackBaselineChatIds);
+    }
 
     if (knownHistoryChatItemIdsRef.current === null) {
       knownHistoryChatItemIdsRef.current = currentChatItemIds;
@@ -1007,10 +987,16 @@ export default function ChatPage() {
 
     const nextChatItem = newChatItems[0];
     knownChatItemIds.add(nextChatItem.id);
-    void playAssistantResponse(nextChatItem, {
-      clearLocalResponseOnComplete: false,
-    });
-  }, [assistantPlayback, chatList, isHistoryPending, isTop, pendingInput, playAssistantResponse]);
+    void playAssistantResponse(nextChatItem);
+  }, [
+    assistantPlayback,
+    chatList,
+    isHistoryPending,
+    isTop,
+    pendingInput,
+    queryClient,
+    playAssistantResponse,
+  ]);
 
   const sendChatMessage = async (rawInput: string) => {
     const text = rawInput.trim();
@@ -1022,9 +1008,9 @@ export default function ChatPage() {
     }
 
     assistantPlaybackRunIdRef.current += 1;
+    shouldFollowBottomRef.current = true;
     setAssistantPlayback(null);
     setIsCameraActionMenuOpen(false);
-    setLocalResponseChatItem(null);
     setPendingInput(text);
     setInputValue("");
     track(EVENT_NAME.AI_COACH_CHAT, { input_length: text.length });
@@ -1033,20 +1019,15 @@ export default function ChatPage() {
       const response = await sendMessageMutation({ input: text });
       const responsePayload = getSendMessageResponsePayload(response);
       const directHistoryChatItem = isChatHistoryItemResponse(response) ? response : null;
-      const historyChatItem =
-        directHistoryChatItem ??
-        (await resolveHistoryChatItemFromResponse(queryClient, text, responsePayload, chatList));
-      const responseChatItem = historyChatItem ?? buildLocalChatHistoryItem(text, responsePayload);
-
-      setLocalResponseChatItem(responseChatItem);
-      setPendingInput(null);
-      const playbackPromise = playAssistantResponse(responseChatItem, {
-        clearLocalResponseOnComplete: historyChatItem !== null,
+      const responseChatItem = await refetchAndResolveChatHistoryItem(queryClient, {
+        match: (chatItem) =>
+          directHistoryChatItem
+            ? chatItem.id === directHistoryChatItem.id
+            : isMatchingHistoryChatItem(chatItem, text, responsePayload),
       });
 
-      if (directHistoryChatItem) {
-        appendMissingChatHistoryItemsToCache(queryClient, [directHistoryChatItem]);
-      }
+      setPendingInput(null);
+      const playbackPromise = playAssistantResponse(responseChatItem);
 
       track(
         EVENT_NAME.AI_COACH_RESPONSE_SUCCESS,
@@ -1059,9 +1040,12 @@ export default function ChatPage() {
       });
       assistantPlaybackRunIdRef.current += 1;
       setAssistantPlayback(null);
-      setLocalResponseChatItem(null);
       setPendingInput(null);
       toast.warning(resolveErrorMessage(error));
+      if (error instanceof ChatHistorySyncError) {
+        return;
+      }
+
       setInputValue(text);
     }
   };
@@ -1110,11 +1094,13 @@ export default function ChatPage() {
 
   const handleScrollToBottom = () => {
     handleCloseCameraActionMenu();
-    endAnchorRef.current?.scrollIntoView({
-      behavior: "smooth",
-      block: "end",
-    });
+    shouldFollowBottomRef.current = true;
+    keepBottomIfFollowing("smooth");
   };
+
+  const handleTimelineImageLoad = useCallback(() => {
+    keepBottomIfFollowing("instant");
+  }, [keepBottomIfFollowing]);
 
   const handleNavigateMenuBoardCamera = () => {
     handleCloseCameraActionMenu();
@@ -1564,7 +1550,7 @@ export default function ChatPage() {
                         menus={mealRecord.recordedMenus}
                         mealRecordTime={mealRecord.time}
                         dateKey={mealRecord.dateKey}
-                        timeText={formatTimeText(getMealRecordSavedAt(mealRecord))}
+                        timeText={formatTimeText(getMealRecordUpdatedAt(mealRecord))}
                         onCancelClick={() => handleMealRecordCancelRequest(mealRecord)}
                         onEditClick={() => handleMealRecordEditClick(mealRecord)}
                       />
@@ -1574,30 +1560,25 @@ export default function ChatPage() {
               }
 
               const { chatItem } = timelineItem;
-              const chatDateKey = getChatDateKey(chatItem);
-              const chatDayMeals = chatDateKey ? dayMealsByDate.get(chatDateKey) : undefined;
-              const fallbackMealRecord =
-                chatDateKey && chatDayMeals
-                  ? getMealRecordViewModelByTime(chatDayMeals, chatDateKey, currentMealTime)
-                  : null;
+              const recordDateKey = todayDateKey;
+              const recordDayMeals = dayMealsByDate.get(recordDateKey);
+              const fallbackMealRecord = recordDayMeals
+                ? getMealRecordViewModelByTime(recordDayMeals, recordDateKey, currentMealTime)
+                : null;
               const mealRecordMenus = getChatMealRecordMenus(chatItem);
               const chatMealRecord =
-                chatDateKey && mealRecordMenus.length > 0
+                mealRecordMenus.length > 0
                   ? getMealRecordViewModelByMenuIds(
-                      chatDayMeals,
-                      chatDateKey,
+                      recordDayMeals,
+                      recordDateKey,
                       mealRecordMenus.map((menu) => menu.menu_id),
+                      currentMealTime,
                     )
                   : null;
               const userImageUrl = getChatItemImageUrl(chatItem);
               const assistantTimeText = formatTimeText(chatItem.createdAt);
               const chatItemPlayback =
-                assistantPlayback?.chatItemId === chatItem.id
-                  ? assistantPlayback
-                  : navigationPlaybackChatItemId === chatItem.id &&
-                      !playedAssistantPlaybackChatItemIds.has(chatItem.id)
-                    ? getInitialAssistantPlaybackState(chatItem)
-                    : null;
+                assistantPlayback?.chatItemId === chatItem.id ? assistantPlayback : null;
               const introMessage = chatItem.response_payload.intro_message;
               const generalAnswer =
                 chatItem.response_payload.chat_category === "general"
@@ -1622,6 +1603,20 @@ export default function ChatPage() {
                   ? Number.POSITIVE_INFINITY
                   : chatItemPlayback.resultVisibleCount;
               const shouldShowResultSection = resultVisibleCount > 0;
+              const userImageAction =
+                userImageUrl === null
+                  ? null
+                  : chatItem.response_payload.chat_category === "feedback"
+                    ? {
+                        ariaLabel: "피드백 결과 보기",
+                        onClick: () => navigate(getFeedbackResultPath(chatItem.id)),
+                      }
+                    : chatItem.response_payload.chat_category === "recommendation"
+                      ? {
+                          ariaLabel: "업로드 이미지 크게 보기",
+                          onClick: () => setPreviewImageUrl(userImageUrl),
+                        }
+                      : null;
 
               return (
                 <section key={timelineItem.key} className={styles.conversationSection}>
@@ -1642,25 +1637,25 @@ export default function ChatPage() {
                         <p className={`${styles.userBubble} typo-body2`}>{chatItem.input_text}</p>
                       )}
                       {userImageUrl ? (
-                        chatItem.response_payload.chat_category === "feedback" ? (
+                        userImageAction ? (
                           <button
                             type="button"
                             className={styles.userImageButton}
-                            aria-label="피드백 결과 보기"
-                            onClick={() => navigate(getFeedbackResultPath(chatItem.id))}
+                            aria-label={userImageAction.ariaLabel}
+                            onClick={userImageAction.onClick}
                           >
-                            <img
+                            <UserImageBubble
                               src={userImageUrl}
                               alt=""
-                              aria-hidden="true"
-                              className={styles.userImageBubble}
+                              isDecorative
+                              onLoad={handleTimelineImageLoad}
                             />
                           </button>
                         ) : (
-                          <img
+                          <UserImageBubble
                             src={userImageUrl}
                             alt="사용자가 업로드한 이미지"
-                            className={styles.userImageBubble}
+                            onLoad={handleTimelineImageLoad}
                           />
                         )
                       ) : null}
@@ -1698,8 +1693,8 @@ export default function ChatPage() {
                           onMealRecordClick={() =>
                             handleMenuRecordClick(
                               chatItem,
-                              chatDateKey,
-                              chatDayMeals,
+                              recordDateKey,
+                              recordDayMeals,
                               fallbackMealRecord,
                             )
                           }
@@ -1721,8 +1716,8 @@ export default function ChatPage() {
                           onMealRecordClick={() =>
                             handleMenuRecordClick(
                               chatItem,
-                              chatDateKey,
-                              chatDayMeals,
+                              recordDateKey,
+                              recordDayMeals,
                               fallbackMealRecord,
                             )
                           }
@@ -1892,6 +1887,9 @@ export default function ChatPage() {
         closeOnConfirm={false}
         onConfirm={handleMealRecordCancelConfirm}
       />
+      {previewImageUrl ? (
+        <UserImagePreviewOverlay src={previewImageUrl} onClose={() => setPreviewImageUrl(null)} />
+      ) : null}
     </div>
   );
 }
@@ -1900,14 +1898,6 @@ function delayAssistantPlayback(delayMs: number) {
   return new Promise<void>((resolve) => {
     globalThis.setTimeout(resolve, delayMs);
   });
-}
-
-function getInitialAssistantPlaybackState(chatItem: ChatHistoryItemResponseDto) {
-  return {
-    chatItemId: chatItem.id,
-    visibleBubbleCount: 0,
-    resultVisibleCount: 0,
-  } satisfies AssistantPlaybackState;
 }
 
 function getAssistantBubbleRevealCount(responsePayload: ChatRecommendResponseDto) {
@@ -2015,6 +2005,101 @@ function ChatHistorySkeleton() {
         </div>
       </section>
     </SkeletonStatus>
+  );
+}
+
+function UserImageBubble({
+  alt,
+  isDecorative = false,
+  onLoad,
+  src,
+}: {
+  alt: string;
+  isDecorative?: boolean;
+  onLoad?: () => void;
+  src: string;
+}) {
+  const [isLoaded, setIsLoaded] = useState(false);
+  const handleLoadSettled = () => {
+    setIsLoaded(true);
+    onLoad?.();
+  };
+
+  return (
+    <span className={styles.userImageBubbleFrame}>
+      {!isLoaded ? (
+        <Skeleton
+          width="100%"
+          height="100%"
+          radius={12}
+          style={{ inset: 0, position: "absolute" }}
+        />
+      ) : null}
+      <img
+        src={src}
+        alt={isDecorative ? "" : alt}
+        aria-hidden={isDecorative ? "true" : undefined}
+        className={[
+          styles.userImageBubble,
+          isLoaded ? styles.userImageBubbleLoaded : styles.userImageBubbleLoading,
+        ].join(" ")}
+        onLoad={handleLoadSettled}
+        onError={handleLoadSettled}
+      />
+    </span>
+  );
+}
+
+function UserImagePreviewOverlay({ onClose, src }: { onClose: () => void; src: string }) {
+  const closeButtonRef = useRef<HTMLButtonElement | null>(null);
+
+  useEffect(() => {
+    closeButtonRef.current?.focus();
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const handleKeyDown = (event: globalThis.KeyboardEvent) => {
+      if (event.key === "Escape") {
+        onClose();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [onClose]);
+
+  const handleBackdropClick = (event: MouseEvent<HTMLDivElement>) => {
+    if (event.target === event.currentTarget) {
+      onClose();
+    }
+  };
+
+  return (
+    <div
+      className={styles.userImagePreviewOverlay}
+      role="dialog"
+      aria-modal="true"
+      aria-label="업로드 이미지 미리보기"
+      onClick={handleBackdropClick}
+    >
+      <button
+        ref={closeButtonRef}
+        type="button"
+        className={styles.userImagePreviewCloseButton}
+        aria-label="이미지 닫기"
+        onClick={onClose}
+      >
+        <SystemIcon name="close" size={24} />
+      </button>
+      <img src={src} alt="사용자가 업로드한 이미지" className={styles.userImagePreviewImage} />
+    </div>
   );
 }
 
@@ -2221,9 +2306,10 @@ function MealRecordCard({
         onClick={() => {
           if (hasMultipleMenus) {
             setIsOpen((prev) => !prev);
+          } else {
+            onEditClick();
           }
         }}
-        disabled={!hasMultipleMenus}
         aria-expanded={hasMultipleMenus ? isOpen : undefined}
       >
         <p className={`${styles.mealRecordSummaryName} ${styles.textNormal} typo-title4`}>
@@ -2309,7 +2395,6 @@ function RecommendationSection({
 
   if (!topRecommendation) return null;
 
-  const topBadgeText = topRecommendation.rank ? `${topRecommendation.rank}위` : "추천";
   const handleRecommendationDetailClick = (event?: MouseEvent<HTMLElement>) => {
     event?.stopPropagation();
     navigate(getRecommendDetailPath(chatId, topRecommendation.menu_id));
@@ -2360,7 +2445,9 @@ function RecommendationSection({
           onClick={handleRecommendationCardClick}
           onKeyDown={handleRecommendationCardKeyDown}
         >
-          <span className={`${styles.rankBadge} typo-label6`}>{topBadgeText}</span>
+          {topRecommendation.rank && (
+            <span className={`${styles.rankBadge} typo-label6`}>{topRecommendation.rank}위</span>
+          )}
 
           <div className={styles.recommendContents}>
             <p className={`${styles.recommendMenuName} typo-title2`}>
@@ -2421,11 +2508,11 @@ function RecommendationSection({
           className={`${styles.moreRecommendCard} ${
             animate ? styles.assistantResultCardAnimated : ""
           }`}
-          aria-label="추천 목록 더보기"
+          aria-label="메뉴 목록 더보기"
           onClick={() => navigate(getRecommendResultPath(chatId))}
         >
           <p className={`${styles.textNormal} typo-body2`}>
-            다른 추천 메뉴도 있어요 (총 {recommendations.length}개)
+            다른 메뉴도 있어요 (총 {recommendations.length}개)
           </p>
           <p className={`${styles.ActionIcon} typo-label3`}>
             더보기
@@ -2835,19 +2922,21 @@ function getMealRecordViewModelByMenuIds(
   dayMeals: DayMealSummary | undefined,
   dateKey: string,
   menuIds: number[],
+  mealTime?: MealTime,
 ) {
   if (!dayMeals || menuIds.length === 0) {
     return null;
   }
 
   const targetMenuIds = [...new Set(menuIds)];
+  const mealTimes = mealTime === undefined ? MEAL_TIME_LIST : [mealTime];
 
-  for (const mealTime of MEAL_TIME_LIST) {
-    const menus = dayMeals.menusByTime?.[mealTime] ?? [];
+  for (const targetMealTime of mealTimes) {
+    const menus = dayMeals.menusByTime?.[targetMealTime] ?? [];
     const recordedMenuIds = new Set(menus.map((menu) => menu.id));
 
     if (targetMenuIds.every((menuId) => recordedMenuIds.has(menuId))) {
-      return buildMealRecordViewModel(dateKey, dayMeals, mealTime);
+      return buildMealRecordViewModel(dateKey, dayMeals, targetMealTime);
     }
   }
 
@@ -2880,7 +2969,6 @@ function buildMealRecordViewModel(
     dayMeals,
     image: getDiaryMealImage(dayMeals, mealTime),
     time: mealTime,
-    createdAt: dayMeals.mealRecordTimestampsByTime?.[mealTime]?.createdAt,
     updatedAt: dayMeals.mealRecordTimestampsByTime?.[mealTime]?.updatedAt,
     menus: menus.map(toChatMealRecordMenu),
     recordedMenus: menus.map(toRecordedMenuSummary),
@@ -2959,13 +3047,12 @@ function getChatTimelineItemKey(chatId: number) {
 
 function toMealRecordTimelineItem(mealRecord: MealRecordViewModel): ChatTimelineItem {
   const date = getMealRecordTimelineDate(mealRecord);
-  const sortDate = getMealRecordSortDate(mealRecord);
 
   return {
     type: "mealRecord",
     key: getMealRecordTimelineItemKey(mealRecord.dateKey, mealRecord.time),
     date,
-    sortTime: parseDateValue(sortDate),
+    sortTime: parseDateValue(date),
     mealRecord,
   };
 }
@@ -2975,11 +3062,6 @@ function getMealRecordTimelineItemKey(dateKey: string, mealTime: MealTime) {
 }
 
 function compareChatTimelineItems(a: ChatTimelineItem, b: ChatTimelineItem) {
-  const dateOrderDifference = compareTimelineItemDates(a, b);
-  if (dateOrderDifference !== 0) {
-    return dateOrderDifference;
-  }
-
   if (a.sortTime !== null && b.sortTime !== null && a.sortTime !== b.sortTime) {
     return a.sortTime - b.sortTime;
   }
@@ -2993,23 +3075,6 @@ function compareChatTimelineItems(a: ChatTimelineItem, b: ChatTimelineItem) {
   }
 
   return a.key.localeCompare(b.key);
-}
-
-function compareTimelineItemDates(a: ChatTimelineItem, b: ChatTimelineItem) {
-  if (a.date && b.date) {
-    const aDateKey = formatDateKey(a.date);
-    const bDateKey = formatDateKey(b.date);
-
-    if (aDateKey !== bDateKey) {
-      return aDateKey < bDateKey ? -1 : 1;
-    }
-
-    return 0;
-  }
-
-  if (!a.date && b.date) return -1;
-  if (a.date && !b.date) return 1;
-  return 0;
 }
 
 function getTimelineItemTypeOrder(item: ChatTimelineItem) {
@@ -3031,78 +3096,14 @@ function shouldShowTimelineDateDivider(
   return formatDateKey(item.date) !== formatDateKey(previousItem.date);
 }
 
-function getMealRecordSavedAt(mealRecord: Pick<MealRecordViewModel, "createdAt" | "updatedAt">) {
+function getMealRecordUpdatedAt(mealRecord: Pick<MealRecordViewModel, "updatedAt">) {
   const updatedAt = mealRecord.updatedAt?.trim();
-  if (updatedAt) {
-    return updatedAt;
-  }
-
-  const createdAt = mealRecord.createdAt?.trim();
-  return createdAt || null;
+  return updatedAt || null;
 }
 
 function getMealRecordTimelineDate(mealRecord: MealRecordViewModel) {
-  return parseDateKey(mealRecord.dateKey);
-}
-
-function getMealRecordSortDate(mealRecord: MealRecordViewModel) {
-  const savedAt = getMealRecordSavedAt(mealRecord);
-  const savedAtDate = savedAt ? parseDate(savedAt) : null;
-
-  if (savedAtDate) {
-    return getMealRecordDateWithSavedTime(mealRecord.dateKey, savedAtDate);
-  }
-
-  return getMealRecordFallbackDate(mealRecord);
-}
-
-function getMealRecordDateWithSavedTime(dateKey: string, savedAtDate: Date) {
-  const date = parseDateKey(dateKey);
-  const savedAtDateKey = formatDateKey(savedAtDate);
-  const dayOffset = getDateKeyDayDifference(dateKey, savedAtDateKey);
-
-  date.setDate(date.getDate() + dayOffset);
-  date.setHours(
-    savedAtDate.getHours(),
-    savedAtDate.getMinutes(),
-    savedAtDate.getSeconds(),
-    savedAtDate.getMilliseconds(),
-  );
-  return date;
-}
-
-function getDateKeyDayDifference(fromDateKey: string, toDateKey: string) {
-  const fromDate = parseDateKey(fromDateKey);
-  const toDate = parseDateKey(toDateKey);
-  const millisecondsPerDay = 24 * 60 * 60 * 1000;
-
-  return Math.round((toDate.getTime() - fromDate.getTime()) / millisecondsPerDay);
-}
-
-function getMealRecordFallbackDate(mealRecord: Pick<MealRecordViewModel, "dateKey" | "time">) {
-  const date = parseDateKey(mealRecord.dateKey);
-
-  switch (mealRecord.time) {
-    case 0:
-      date.setHours(8, 0, 0, 0);
-      break;
-    case 1:
-      date.setHours(12, 0, 0, 0);
-      break;
-    case 2:
-      date.setHours(18, 0, 0, 0);
-      break;
-    case 3:
-      date.setHours(15, 0, 0, 0);
-      break;
-    case 4:
-      date.setHours(22, 0, 0, 0);
-      break;
-    default:
-      break;
-  }
-
-  return date;
+  const updatedAt = getMealRecordUpdatedAt(mealRecord);
+  return updatedAt ? parseDate(updatedAt) : null;
 }
 
 // 문자열 날짜를 timestamp 숫자로 변환
@@ -3134,54 +3135,21 @@ function resolveErrorMessage(
   return fallbackMessage;
 }
 
-async function resolveHistoryChatItemFromResponse(
-  queryClient: QueryClient,
-  inputText: string,
-  responsePayload: ChatRecommendResponseDto,
-  currentChatItems: ChatHistoryItemResponseDto[],
-) {
-  const appendedChatItems = await refetchAndMergeChatHistoryIntoCache(queryClient);
-  return (
-    findMatchingHistoryChatItem(appendedChatItems, inputText, responsePayload) ??
-    findMatchingHistoryChatItem(currentChatItems, inputText, responsePayload)
-  );
-}
-
 function getSendMessageResponsePayload(
   response: ChatHistoryItemResponseDto | ChatRecommendResponseDto,
 ) {
   return "response_payload" in response ? response.response_payload : response;
 }
 
-function buildLocalChatHistoryItem(
-  inputText: string,
-  responsePayload: ChatRecommendResponseDto,
-): ChatHistoryItemResponseDto {
-  return {
-    id: -Date.now(),
-    input_text: inputText,
-    createdAt: new Date().toISOString(),
-    response_payload: responsePayload,
-  };
-}
-
-function findMatchingHistoryChatItem(
-  chatItems: ChatHistoryItemResponseDto[],
+function isMatchingHistoryChatItem(
+  chatItem: ChatHistoryItemResponseDto,
   inputText: string,
   responsePayload: ChatRecommendResponseDto,
 ) {
-  if (chatItems.length === 0) {
-    return null;
-  }
-
-  const normalizedInputText = inputText.trim();
-  const matchingChatItems = chatItems.filter(
-    (chatItem) =>
-      chatItem.input_text.trim() === normalizedInputText &&
-      isSameChatResponsePayload(chatItem.response_payload, responsePayload),
+  return (
+    chatItem.input_text.trim() === inputText.trim() &&
+    isSameChatResponsePayload(chatItem.response_payload, responsePayload)
   );
-
-  return matchingChatItems.at(-1) ?? null;
 }
 
 function isSameChatResponsePayload(

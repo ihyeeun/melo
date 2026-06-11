@@ -65,18 +65,17 @@
   line-height: 1;
 }
 
-.app-toast-title {
+.app-toast-title,
+.app-toast-description {
   color: var(--label-white);
   margin: 0;
   overflow-wrap: anywhere;
   word-break: keep-all;
+  white-space: pre-line;
 }
 
 .app-toast-description {
-  color: rgb(255 255 255 / 82%);
   margin: 4px 0 0;
-  overflow-wrap: anywhere;
-  word-break: keep-all;
 }
 
 .app-toast-action {

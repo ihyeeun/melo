@@ -6,7 +6,7 @@ import {
   uploadMenuBoardImage,
   uploadNutritionLabelImage,
 } from "@/features/camera/api/uploadCapturedImage";
-import { refetchAndMergeChatHistoryIntoCache } from "@/features/chat/hooks/queries/chatHistoryCache";
+import { refetchAndResolveChatHistoryItem } from "@/features/chat/hooks/queries/chatHistoryCache";
 import type { UseMutationCallback } from "@/shared/api/types/callback.types";
 
 export function useFoodImageMutation(callbacks?: UseMutationCallback) {
@@ -46,10 +46,10 @@ export function useMenuBoardMutation(callbacks?: UseMutationCallback) {
   return useMutation({
     mutationFn: async (image: Parameters<typeof uploadMenuBoardImage>[0]) => {
       await uploadMenuBoardImage(image);
-      const appendedChatItems = await refetchAndMergeChatHistoryIntoCache(queryClient);
+      const chatItem = await refetchAndResolveChatHistoryItem(queryClient);
 
       return {
-        appendedChatItems,
+        chatItem,
       };
     },
     onSuccess: () => {
@@ -71,10 +71,10 @@ export function useChatFoodImageFeedbackMutation(callbacks?: UseMutationCallback
   return useMutation({
     mutationFn: async (image: Parameters<typeof uploadChatFoodImageFeedback>[0]) => {
       await uploadChatFoodImageFeedback(image);
-      const appendedChatItems = await refetchAndMergeChatHistoryIntoCache(queryClient);
+      const chatItem = await refetchAndResolveChatHistoryItem(queryClient);
 
       return {
-        appendedChatItems,
+        chatItem,
       };
     },
     onSuccess: () => {

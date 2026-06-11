@@ -218,23 +218,123 @@
   white-space: pre-wrap;
 }
 
+.userImageButton,
+.userImageBubbleFrame {
+  width: 240px;
+}
+
 .userImageButton {
   background: transparent;
   border: 0;
+  border-radius: 12px;
   cursor: pointer;
   display: block;
-  max-width: 100%;
   padding: 0;
 }
 
-.userImageBubble {
+.userImageBubbleFrame {
+  aspect-ratio: 1 / 1;
   background-color: var(--bg-white);
   border-radius: 12px;
   display: block;
-  max-height: 240px;
-  max-width: 100%;
+  overflow: hidden;
+  position: relative;
+}
+
+.userImageBubble {
+  display: block;
+  height: 100%;
+  inset: 0;
   object-fit: cover;
+  position: absolute;
+  transition: opacity 180ms ease;
   width: 100%;
+}
+
+.userImageBubbleLoading {
+  opacity: 0;
+}
+
+.userImageBubbleLoaded {
+  opacity: 1;
+}
+
+.userImagePreviewOverlay {
+  align-items: center;
+  animation: userImagePreviewOverlayEnter 180ms ease-out both;
+  background-color: var(--dimmer-dimmer);
+  display: flex;
+  inset: 0;
+  justify-content: center;
+  padding: calc(var(--safe-area-top) + 56px) 16px calc(var(--safe-area-bottom) + 32px);
+  position: fixed;
+  z-index: 1000;
+}
+
+.userImagePreviewCloseButton {
+  align-items: center;
+  animation: userImagePreviewControlEnter 180ms ease-out both;
+  border: 0;
+  color: var(--static-white);
+  display: inline-flex;
+  height: 40px;
+  justify-content: center;
+  position: absolute;
+  right: 16px;
+  top: calc(var(--safe-area-top) + 12px);
+  width: 40px;
+}
+
+.userImagePreviewImage {
+  animation: userImagePreviewImageEnter 180ms ease-out both;
+  border-radius: 8px;
+  display: block;
+  max-height: calc(100dvh - var(--safe-area-top) - var(--safe-area-bottom) - 88px);
+  max-width: 100%;
+  object-fit: contain;
+  width: auto;
+}
+
+@keyframes userImagePreviewOverlayEnter {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes userImagePreviewImageEnter {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes userImagePreviewControlEnter {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .userImagePreviewOverlay,
+  .userImagePreviewCloseButton,
+  .userImagePreviewImage {
+    animation-duration: 1ms;
+  }
 }
 
 .assistantMessageGroup {
@@ -696,7 +796,8 @@
   .plusIcon,
   .addActionPanel,
   .assistantBubbleAnimated,
-  .assistantResultCardAnimated {
+  .assistantResultCardAnimated,
+  .userImageBubble {
     animation: none;
     transition: none;
   }

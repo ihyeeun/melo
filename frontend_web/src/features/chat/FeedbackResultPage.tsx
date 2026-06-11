@@ -5,7 +5,6 @@ import { useRequestChatMealRecordFocus } from "@/features/chat/stores/mealRecord
 import styles from "@/features/chat/styles/RecommendResultPage.module.css";
 import {
   buildDiaryMealRecordRequest,
-  getChatDateKey,
   getCurrentMealTime,
   getDiaryMealImage,
   getDiaryMealRecordSelectionByMenuIds,
@@ -44,6 +43,7 @@ import {
   useNavigate,
   useSearchParams,
 } from "@/shared/navigation/stackflowNavigation";
+import { getTodayFormatDateKey } from "@/shared/utils/dateFormat";
 
 type SelectedMealRecordMenu = SelectedDiaryMealRecordMenu;
 
@@ -58,6 +58,8 @@ const FOOD_MARKER_BUBBLE_CONTENT_GAP = 8;
 const FOOD_MARKER_SCORE_TEXT_WIDTH = 35;
 const FOOD_MARKER_BUBBLE_TEXT_LINE_HEIGHT = 20;
 const FOOD_MARKER_FALLBACK_LAYOUT_SIZE = 360;
+const FOOD_MARKER_POSITION_MIN = 0.1;
+const FOOD_MARKER_POSITION_MAX = 0.9;
 const FOOD_MARKER_DEFAULT_BELOW_THRESHOLD = 0.18;
 const FOOD_MARKER_CLUSTER_SOURCE_BELOW_THRESHOLD = 0.42;
 const FOOD_MARKER_CLUSTER_SOURCE_PIN_SIZE = 28;
@@ -174,8 +176,9 @@ function FeedbackResultContent({
   const [selectedMenusOverride, setSelectedMenusOverride] = useState<
     SelectedMealRecordMenu[] | null
   >(null);
-  const chatDateKey = useMemo(() => getChatDateKey(chatItem), [chatItem]);
-  const { data: dayMeals, isPending: isDayMealsPending } = useDayMealsQuery(chatDateKey);
+  const recordDateKey = getTodayFormatDateKey();
+  const currentMealTime = getCurrentMealTime();
+  const { data: dayMeals, isPending: isDayMealsPending } = useDayMealsQuery(recordDateKey);
   const { mutateAsync: registerDiaryMealRecordMutate, isPending: isMealRegisterPending } =
     useTodayMealRecordRegisterMutation();
 
@@ -183,10 +186,10 @@ function FeedbackResultContent({
   const recognizedFoods = getRecognizedFoods(chatItem);
   const feedbackMenuIds = useMemo(() => menus.map((menu) => menu.menu_id), [menus]);
   const diaryMealRecordSelection = useMemo(
-    () => getDiaryMealRecordSelectionByMenuIds(dayMeals, feedbackMenuIds),
-    [dayMeals, feedbackMenuIds],
+    () => getDiaryMealRecordSelectionByMenuIds(dayMeals, feedbackMenuIds, currentMealTime),
+    [currentMealTime, dayMeals, feedbackMenuIds],
   );
-  const targetMealTime = diaryMealRecordSelection?.time ?? getCurrentMealTime();
+  const targetMealTime = currentMealTime;
   const mealType: MealType = getMealTypeFromChatMealTime(targetMealTime);
   const selectedMenus = useMemo(
     () => selectedMenusOverride ?? diaryMealRecordSelection?.menus ?? [],
@@ -292,7 +295,7 @@ function FeedbackResultContent({
 
       await registerDiaryMealRecordMutate({
         ...buildDiaryMealRecordRequest({
-          dateKey: chatDateKey,
+          dateKey: recordDateKey,
           mealType,
           selectedMenus: nextMenus,
           image: getDiaryMealImage(dayMeals, targetMealTime),
@@ -304,7 +307,7 @@ function FeedbackResultContent({
 
       toast.success("식사 기록이 등록되었어요.");
       requestChatMealRecordFocus({
-        dateKey: chatDateKey,
+        dateKey: recordDateKey,
         mealTime: targetMealTime,
       });
       navigateBack({ fallbackTo: PATH.CHAT });
@@ -726,7 +729,7 @@ function resolveErrorMessage(error: unknown) {
 
 function getMarkerPosition(value: number, options?: FoodMarkerHorizontalClassOptions) {
   const position = Number.isFinite(value) ? value : 0.5;
-  const clampedPosition = clamp(position, 0, 1);
+  const clampedPosition = clamp(position, FOOD_MARKER_POSITION_MIN, FOOD_MARKER_POSITION_MAX);
 
   if (!options || options.markerLayout.width <= 0 || options.bubbleWidth <= 0) {
     return clampedPosition;

@@ -34,10 +34,10 @@ const RECOGNITION_ERROR_COPY: Record<RecognitionDomain, RecognitionErrorCopy> = 
   FOOD: {
     title: "음식을 인식하기 어려웠어요",
     fallbackMessage: "음식 메뉴 분석에 실패했어요",
-    retryGuide: "음식이 잘 보이도록 다시 촬영해주세요",
+    retryGuide: "음식이 잘 보이도록 다시 촬영해 주세요",
   },
   MENU_BOARD: {
-    title: "메뉴판 인식에 실패했어요",
+    title: "메뉴판을 인식하기 어려웠어요",
     fallbackMessage: "메뉴판 분석에 실패했어요",
     retryGuide: "선명하게 다시 촬영해 주세요",
   },
@@ -93,10 +93,14 @@ export function getCameraCaptureErrorFeedback(error: unknown): CameraCaptureErro
 }
 
 const BRIDGE_TIMEOUT_CODE = "BRIDGE_TIMEOUT";
+const TIMEOUT_STATUS_CODES = new Set([408, 504]);
 
 function isBridgeTimeout(error: unknown) {
   const bridgeError = error as BridgeCameraError;
-  return bridgeError?.error === BRIDGE_TIMEOUT_CODE || bridgeError?.statusCode === 408;
+  return (
+    bridgeError?.error === BRIDGE_TIMEOUT_CODE ||
+    TIMEOUT_STATUS_CODES.has(bridgeError?.statusCode ?? 0)
+  );
 }
 
 function isServiceUnavailable(error: unknown) {
@@ -122,11 +126,13 @@ export function getRecognitionErrorFeedback(
   }
 
   const copy = RECOGNITION_ERROR_COPY[domain];
-  const message = getErrorMessage(error, copy.fallbackMessage);
+  // TODO : 추후 에러코드 연결시에 멘트 넣도록 수정. 우선 상황에 맞는 에러 메세지를 보여주지 않고, 동일한 메세지 보여주도록 설정
+  // const message = getErrorMessage(error, copy.fallbackMessage);
 
   return {
     title: copy.title,
-    description: `${message}\n${copy.retryGuide} `,
+    // description: `${message}\n${copy.retryGuide} `,
+    description: `${copy.retryGuide}`,
   };
 }
 

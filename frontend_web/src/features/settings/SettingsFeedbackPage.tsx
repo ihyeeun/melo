@@ -1,9 +1,15 @@
 import { useStack } from "@stackflow/react";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { useGetProfileQuery } from "@/features/profile/hooks/queries/useProfileQuery";
 import { PATH } from "@/router/path";
-import { isNativeApp, syncAppTab } from "@/shared/api/bridge/nativeBridge";
+import { track } from "@/shared/analytics/analytics";
+import { EVENT_NAME } from "@/shared/analytics/analytics.constants";
+import {
+  isNativeApp,
+  requestNativeAppDeviceInfo,
+  syncAppTab,
+} from "@/shared/api/bridge/nativeBridge";
 import { Button } from "@/shared/commons/button/Button";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
 import { LoadingIndicator } from "@/shared/commons/loading/Loading";
@@ -13,10 +19,13 @@ import styles from "./styles/SettingsDetail.module.css";
 
 const TALLY_FORM_BASE_URL = "https://tally.so/embed/EkMj9L";
 
-function getTallyFormUrl(userId: number) {
+function getTallyFormUrl(userId: number, appVersion: string | null) {
   const url = new URL(TALLY_FORM_BASE_URL);
 
   url.searchParams.set("id", String(userId));
+  if (appVersion) {
+    url.searchParams.set("version", appVersion);
+  }
 
   return url.toString();
 }
@@ -24,6 +33,9 @@ function getTallyFormUrl(userId: number) {
 export default function SettingsFeedbackPage() {
   const navigate = useNavigate();
   const stack = useStack();
+  const [appVersion, setAppVersion] = useState<string | null | undefined>(() =>
+    isNativeApp() ? undefined : null,
+  );
   const [loadedFormUrl, setLoadedFormUrl] = useState<string | null>(null);
   const {
     data: profile,
@@ -32,9 +44,10 @@ export default function SettingsFeedbackPage() {
     isRefetching: isProfileRefetching,
     refetch: refetchProfile,
   } = useGetProfileQuery();
+  const isAppVersionPending = appVersion === undefined;
   const tallyFormUrl = useMemo(
-    () => (profile ? getTallyFormUrl(profile.user_id) : null),
-    [profile],
+    () => (profile && !isAppVersionPending ? getTallyFormUrl(profile.user_id, appVersion) : null),
+    [appVersion, isAppVersionPending, profile],
   );
   const isFormLoading = tallyFormUrl !== null && loadedFormUrl !== tallyFormUrl;
   const canGoBack = stack.activities.filter((activity) => !activity.exitedBy).length > 1;
@@ -52,12 +65,40 @@ export default function SettingsFeedbackPage() {
     navigate(PATH.HOME, { replace: true });
   }, [canGoBack, navigate]);
 
+  useEffect(() => {
+    track(EVENT_NAME.CLICK_FEEDBACK_BUTTON);
+  }, []);
+
+  useEffect(() => {
+    if (!isNativeApp()) {
+      return;
+    }
+
+    let isActive = true;
+
+    void requestNativeAppDeviceInfo()
+      .then((deviceInfo) => {
+        if (!isActive) return;
+
+        setAppVersion(deviceInfo.appVersion ?? null);
+      })
+      .catch(() => {
+        if (!isActive) return;
+
+        setAppVersion(null);
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
+
   return (
     <div className={styles.page}>
       <PageHeader onBack={handleBack} />
 
       <main className={styles.formMain}>
-        {isProfilePending ? (
+        {isProfilePending || isAppVersionPending ? (
           <div className={styles.formState}>
             <LoadingIndicator label="문의 화면을 불러오는 중입니다." />
           </div>

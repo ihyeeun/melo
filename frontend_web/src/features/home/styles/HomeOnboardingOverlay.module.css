@@ -5,39 +5,36 @@
   z-index: 10;
 }
 
-.spotlight {
-  border: 2px dashed var(--dimmer-dimmer);
-  border-radius: 8px;
-  box-shadow: 0 0 0 200vmax var(--dimmer-dimmer);
-  position: fixed;
+.dimmer {
+  background-color: var(--dimmer-dimmer);
+  inset: 0;
+  position: absolute;
 }
 
 .closeButton {
-  align-items: center;
   color: var(--static-white);
-  display: inline-flex;
-  height: 44px;
-  justify-content: center;
   pointer-events: auto;
   position: fixed;
-  right: 16px;
-  top: max(12px, var(--safe-area-top));
-  width: 44px;
-  z-index: 10;
+  right: 20px;
+  top: calc(var(--safe-area-top) + 10px);
+  z-index: 12;
 }
 
 .bubble {
   background-color: var(--bg-white);
-  border-radius: 8px;
+  border-radius: 4px;
   box-shadow: var(--shadow-strong);
   display: inline-flex;
   flex-direction: column;
-  max-width: calc(100vw - 24px);
+  left: 0;
+  max-width: calc(100vw - 40px);
   overflow: visible;
   padding: 14px 16px;
   pointer-events: auto;
-  position: fixed;
-  width: auto;
+  position: absolute;
+  bottom: calc(100% + 12px);
+  width: min(227px, calc(100vw - 40px));
+  z-index: 12;
 }
 
 .bubble::after {
@@ -45,10 +42,21 @@
   border-left: 8px solid transparent;
   border-right: 8px solid transparent;
   content: "";
-  left: var(--tail-left, 40px);
+  left: var(--tail-left, 82px);
   position: absolute;
   top: 100%;
   transform: translateX(-50%);
+}
+
+.bubbleRightAligned {
+  left: auto;
+  right: 0;
+}
+
+.bubbleRightAligned::after {
+  left: auto;
+  right: 74px;
+  transform: none;
 }
 
 .title {

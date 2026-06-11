@@ -13,16 +13,16 @@ import { useGetProfileQuery } from "@/features/profile/hooks/queries/useProfileQ
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import { LoadingOverlay } from "@/shared/commons/loading/Loading";
 import { toast } from "@/shared/commons/toast/toast";
-import { isFutureDateKey } from "@/shared/utils/dateFormat";
+import { getTodayFormatDateKey } from "@/shared/utils/dateFormat";
 
 type TodayMetricType = "weight" | "steps";
 
 export default function TodayBodyLogSection({ date }: { date: string }) {
   const { data: bodyLog } = useGetBodyLog(date);
   const { data: profile } = useGetProfileQuery();
-  const isFutureDate = isFutureDateKey(date);
-  const displayWeight = bodyLog?.weight ?? (isFutureDate ? 0 : profile?.weight ?? 0);
-  const initialWeight = bodyLog?.weight ?? (isFutureDate ? undefined : profile?.weight ?? 0);
+  const isToday = date === getTodayFormatDateKey();
+  const displayWeight = bodyLog?.weight ?? (isToday ? profile?.weight ?? 0 : 0);
+  const initialWeight = bodyLog?.weight ?? (isToday ? profile?.weight : undefined);
 
   const { mutate: registerWeight, isPending: isWeightPending } = useRegisterWeightMutation({
     onSuccess: () => {
@@ -107,6 +107,15 @@ export default function TodayBodyLogSection({ date }: { date: string }) {
   );
 }
 
+export function TodayBodyLogPreviewSection() {
+  return (
+    <div className={style.todayContainer}>
+      <TodayMetricCard title="체중" value={62.4} unit="kg" />
+      <TodayMetricCard title="걸음 수" value={4821} unit="보" />
+    </div>
+  );
+}
+
 function TodayMetricCard({
   title,
   value,
@@ -116,7 +125,7 @@ function TodayMetricCard({
   title: string;
   value: number;
   unit: string;
-  onClick: () => void;
+  onClick?: () => void;
 }) {
   return (
     <ActionCard onClick={onClick}>

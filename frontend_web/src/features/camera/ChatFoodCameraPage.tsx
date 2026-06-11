@@ -1,3 +1,4 @@
+import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import styles from "@/features/camera/CameraPage.module.css";
@@ -12,17 +13,21 @@ import {
   getRecognitionErrorFeedback,
   isCameraCaptureCancelled,
 } from "@/features/camera/utils/cameraCapture";
+import {
+  getChatHistoryPlaybackBaselineIds,
+  setChatHistoryPlaybackBaselineIds,
+} from "@/features/chat/utils/chatHistoryPlayback";
 import { PATH } from "@/router/path";
 import { track } from "@/shared/analytics/analytics";
 import { EVENT_NAME } from "@/shared/analytics/analytics.constants";
-import { requestNativeCameraCapture, syncAppTab } from "@/shared/api/bridge/nativeBridge";
+import { requestNativeCameraCapture } from "@/shared/api/bridge/nativeBridge";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
 import { CheckButtonModal } from "@/shared/commons/modals/CheckButtonModal";
-import { navigateBack, useNavigate } from "@/shared/navigation/stackflowNavigation";
-
-type ChatFoodCameraToChatLocationState = {
-  playbackChatItemId?: number;
-};
+import {
+  isPreviousStackActivity,
+  navigateBack,
+  navigateBackAndPush,
+} from "@/shared/navigation/stackflowNavigation";
 
 export default function ChatFoodCameraPage() {
   const [isOpeningCamera, setIsOpeningCamera] = useState(true);
@@ -30,10 +35,22 @@ export default function ChatFoodCameraPage() {
   const [captureErrorFeedback, setCaptureErrorFeedback] =
     useState<CameraCaptureErrorFeedback | null>(null);
   const [previewSrc, setPreviewSrc] = useState<string | null>(null);
+  const queryClient = useQueryClient();
   const { mutateAsync: uploadFoodImage } = useChatFoodImageFeedbackMutation();
-  const navigate = useNavigate();
 
   const autoTriggeredRef = useRef(false);
+
+  const navigateToChatAfterSuccess = useCallback(() => {
+    if (isPreviousStackActivity("Chat")) {
+      navigateBack({ fallbackTo: PATH.CHAT });
+      return;
+    }
+
+    navigateBackAndPush({
+      fallbackTo: PATH.CHAT,
+      to: PATH.CHAT,
+    });
+  }, []);
 
   const handleCameraActions = useCallback(async () => {
     if (isProcessing) return;
@@ -71,17 +88,14 @@ export default function ChatFoodCameraPage() {
     try {
       setPreviewSrc(getCapturedImagePreviewSrc(image)); // 이미지 미리보기 설정
       setIsProcessing(true);
-      const uploadResult = await uploadFoodImage(image);
-      const playbackChatItemId = getLatestAppendedChatItemId(uploadResult.appendedChatItems);
+      const playbackBaselineChatIds = await getChatHistoryPlaybackBaselineIds(queryClient);
+      await uploadFoodImage(image);
+      if (playbackBaselineChatIds !== null) {
+        setChatHistoryPlaybackBaselineIds(queryClient, playbackBaselineChatIds);
+      }
       track(EVENT_NAME.FOOD_SCAN_SUCCESS, { source: "chat_food_camera" });
-      syncAppTab("chat");
 
-      navigate(PATH.CHAT, {
-        replace: true,
-        state: {
-          playbackChatItemId,
-        } satisfies ChatFoodCameraToChatLocationState,
-      });
+      navigateToChatAfterSuccess();
     } catch (error) {
       track(EVENT_NAME.FOOD_SCAN_FAIL, {
         reason: getAnalyticsErrorMessage(error, "음식 메뉴 분석에 실패했어요."),
@@ -92,7 +106,7 @@ export default function ChatFoodCameraPage() {
     } finally {
       setIsProcessing(false);
     }
-  }, [isProcessing, uploadFoodImage, navigate]);
+  }, [isProcessing, navigateToChatAfterSuccess, queryClient, uploadFoodImage]);
 
   useEffect(() => {
     if (autoTriggeredRef.current) return;
@@ -128,13 +142,11 @@ export default function ChatFoodCameraPage() {
       <CheckButtonModal
         open={captureErrorFeedback !== null}
         onOpenChange={handleCaptureErrorModalOpenChange}
-        title={captureErrorFeedback?.title ?? ""}
-        description={captureErrorFeedback?.description}
+        // title={captureErrorFeedback?.title ?? ""}
+        // description={captureErrorFeedback?.description}
+        title={"음식을 인식하기 어려웠어요"}
+        description={"음식이 잘 보이도록 다시 촬영해 주세요"}
       />
     </section>
   );
-}
-
-function getLatestAppendedChatItemId(appendedChatItems: { id: number }[]) {
-  return appendedChatItems[appendedChatItems.length - 1]?.id;
 }
