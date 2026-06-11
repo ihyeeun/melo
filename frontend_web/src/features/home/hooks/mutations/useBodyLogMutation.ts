@@ -19,13 +19,20 @@ export function useRegisterWeightMutation(callbacks?: UseMutationCallback) {
         return undefined;
       }
 
-      return updateWeight(weight);
+      try {
+        return await updateWeight(weight);
+      } catch {
+        return undefined;
+      }
     },
     onSuccess: (updatedProfile, { date, weight }) => {
-      queryClient.setQueryData<WeightStepsResponseDto>(homeQueryKeys.bodyStats(date), (previous) => ({
-        weight,
-        steps: previous?.steps ?? 0,
-      }));
+      queryClient.setQueryData<WeightStepsResponseDto>(
+        homeQueryKeys.bodyStats(date),
+        (previous) => ({
+          weight,
+          steps: previous?.steps ?? 0,
+        }),
+      );
 
       if (updatedProfile) {
         queryClient.setQueryData<ProfileResponseDto>(profileQueryKeys.profile, updatedProfile);
@@ -43,10 +50,13 @@ export function useRegisterStepsMutation(callbacks?: UseMutationCallback) {
   return useMutation({
     mutationFn: ({ date, steps }: { date: string; steps: number }) => registerStep({ date, steps }),
     onSuccess: (_data, { date, steps }) => {
-      queryClient.setQueryData<WeightStepsResponseDto>(homeQueryKeys.bodyStats(date), (previous) => ({
-        weight: previous?.weight ?? 0,
-        steps,
-      }));
+      queryClient.setQueryData<WeightStepsResponseDto>(
+        homeQueryKeys.bodyStats(date),
+        (previous) => ({
+          weight: previous?.weight ?? 0,
+          steps,
+        }),
+      );
       callbacks?.onSuccess?.();
     },
     onError: (error) => callbacks?.onError?.(error),
