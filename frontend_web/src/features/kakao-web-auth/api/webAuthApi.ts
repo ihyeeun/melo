@@ -1,4 +1,4 @@
-import { platformApiData, type RequestOptions } from "@/shared/api/appApi";
+import { platformApiData, type RequestOptions } from "@/shared/api/apiClient";
 
 let webAuthAccessToken: string | null = null;
 

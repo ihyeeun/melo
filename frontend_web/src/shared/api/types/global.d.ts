@@ -1,4 +1,4 @@
-import type { AppApiError } from "@/shared/api/appApi";
+import type { AppApiError } from "@/shared/api/apiClient";
 
 declare module "@tanstack/react-query" {
   interface Register {

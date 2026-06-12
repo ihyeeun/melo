@@ -1,5 +1,5 @@
 import { dayMealSummary } from "@/features/home/utils/dayMealSummary";
-import { appApiData } from "@/shared/api/appApi";
+import { appApiData } from "@/shared/api/apiClient";
 import type { DateRequestDto, MealRecordResponseDto } from "@/shared/api/types/api.dto";
 
 const END_POINT = {

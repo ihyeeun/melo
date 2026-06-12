@@ -28,7 +28,7 @@ import { useTodayMealRecordRegisterMutation } from "@/features/meal-record/hooks
 import { useGetProfileQuery } from "@/features/profile/hooks/queries/useProfileQuery";
 import { PATH } from "@/router/path";
 import { trackRecommendMenuSave } from "@/shared/analytics/recommendMenuEvents";
-import { AppApiError } from "@/shared/api/appApi";
+import { AppApiError } from "@/shared/api/apiClient";
 import {
   type ChatHistoryItemResponseDto,
   type ChatRecommendItemResponseDto,

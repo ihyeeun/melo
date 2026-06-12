@@ -1,5 +1,5 @@
 import { HOME_ONBOARDING_STORAGE_KEY } from "@/features/home/constants/homeOnboarding";
-import { appApiData } from "@/shared/api/appApi";
+import { appApiData } from "@/shared/api/apiClient";
 
 export async function logout() {
   try {

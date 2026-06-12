@@ -26,7 +26,7 @@ import {
 } from "@/features/meal-record/constants/menu.constants";
 import { useTodayMealRecordRegisterMutation } from "@/features/meal-record/hooks/mutations/useTodayMealRecordMutation";
 import { PATH } from "@/router/path";
-import { AppApiError } from "@/shared/api/appApi";
+import { AppApiError } from "@/shared/api/apiClient";
 import {
   type ChatFeedbackMenuResponseDto,
   type ChatFoodImageRecognizedMenuResponseDto,

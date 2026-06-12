@@ -1,4 +1,4 @@
-import { AppApiError, toAppApiError } from "@/shared/api/appApi";
+import { AppApiError, toAppApiError } from "@/shared/api/apiClient";
 import { requestNativeImageUpload } from "@/shared/api/bridge/nativeBridge";
 import type { ImageUploadRequestPayload } from "@/shared/api/bridge/nativeBridge.types";
 import {

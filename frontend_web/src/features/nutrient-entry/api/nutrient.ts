@@ -1,4 +1,4 @@
-import { appApiData } from "@/shared/api/appApi";
+import { appApiData } from "@/shared/api/apiClient";
 import type { MenuNutrientFieldKey, RegisterMenuRequestDto } from "@/shared/api/types/api.dto";
 
 export type RegisterManualMenuPayload = Omit<RegisterMenuRequestDto, MenuNutrientFieldKey> &

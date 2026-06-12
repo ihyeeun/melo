@@ -6,7 +6,7 @@ import {
   QueryClient,
 } from "@tanstack/react-query";
 
-import { AppApiError } from "@/shared/api/appApi";
+import { AppApiError } from "@/shared/api/apiClient";
 
 const NON_RETRYABLE_API_STATUS_CODES = new Set([401, 403, 408, 500, 502, 503, 504]);
 const NON_RETRYABLE_API_ERROR_CODES = new Set(["NETWORK_ERROR", "REQUEST_TIMEOUT"]);

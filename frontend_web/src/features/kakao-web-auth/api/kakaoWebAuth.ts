@@ -1,4 +1,4 @@
-import { API_BASE_URL, AppApiError, webApiData } from "@/shared/api/appApi";
+import { API_BASE_URL, AppApiError, webApiData } from "@/shared/api/apiClient";
 import { type ApiFailResponse } from "@/shared/api/types/apiResponse.types";
 
 import { getWebAuthAccessToken, setWebAuthAccessToken } from "./webAuthApi";

@@ -1,6 +1,6 @@
 import { getProfile } from "@/features/profile/api/profile";
 import { queryKeys as profileQueryKeys } from "@/features/profile/hooks/queries/queryKey";
-import { appApiData } from "@/shared/api/appApi";
+import { appApiData } from "@/shared/api/apiClient";
 import { queryClient } from "@/shared/api/queryClient";
 import type {
   DateRequestDto,

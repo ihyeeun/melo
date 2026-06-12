@@ -1,4 +1,4 @@
-import { appApiData } from "@/shared/api/appApi";
+import { appApiData } from "@/shared/api/apiClient";
 import type {
   ChatHistoryItemResponseDto,
   ChatHistoryResponseDto,
