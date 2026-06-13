@@ -3,7 +3,7 @@ import { devtools } from "zustand/middleware";
 
 import type { OnboardingData } from "@/features/onboarding/onboarding.types";
 import { type GoalEditDraft, toGoalEditDraft } from "@/features/profile/goalEdit.model";
-import type { ProfileResponseDto } from "@/shared/api/types/api.dto";
+import type { ProfileResponseDto } from "@/shared/api/types/api.response.dto";
 
 type GoalEditFlowState = {
   draft: GoalEditDraft | null;

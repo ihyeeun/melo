@@ -1,4 +1,4 @@
-import type { ChatHistoryItemResponseDto } from "@/shared/api/types/api.dto";
+import type { ChatHistoryItemResponseDto } from "@/shared/api/types/api.response.dto";
 
 export function isChatHistoryItemResponse(value: unknown): value is ChatHistoryItemResponseDto {
   if (typeof value !== "object" || value === null) {

@@ -30,10 +30,12 @@ import { PATH } from "@/router/path";
 import { trackRecommendMenuSave } from "@/shared/analytics/recommendMenuEvents";
 import { AppApiError } from "@/shared/api/apiClient";
 import {
-  type ChatHistoryItemResponseDto,
-  type ChatRecommendItemResponseDto,
   type MealType,
 } from "@/shared/api/types/api.dto";
+import type {
+  ChatHistoryItemResponseDto,
+  ChatRecommendItemResponseDto,
+} from "@/shared/api/types/api.response.dto";
 import { Button } from "@/shared/commons/button/Button";
 import { MealMenuCard } from "@/shared/commons/card/MealMenuCard";
 import { PageHeader } from "@/shared/commons/header/PageHeader";

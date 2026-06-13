@@ -2,11 +2,11 @@ import { getProfile } from "@/features/profile/api/profile";
 import { queryKeys as profileQueryKeys } from "@/features/profile/hooks/queries/queryKey";
 import { appApiData } from "@/shared/api/apiClient";
 import { queryClient } from "@/shared/api/queryClient";
+import type { DateRequestDto } from "@/shared/api/types/api.dto";
 import type {
-  DateRequestDto,
   ProfileResponseDto,
   WeightStepsResponseDto,
-} from "@/shared/api/types/api.dto";
+} from "@/shared/api/types/api.response.dto";
 import { isFutureDateKey } from "@/shared/utils/dateFormat";
 
 const END_POINT = {

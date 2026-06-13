@@ -4,7 +4,10 @@ import { registerStep, registerWeight } from "@/features/home/api/health";
 import { queryKeys as homeQueryKeys } from "@/features/home/hooks/queries/queryKey";
 import { updateWeight } from "@/features/profile/api/profile";
 import { queryKeys as profileQueryKeys } from "@/features/profile/hooks/queries/queryKey";
-import type { ProfileResponseDto, WeightStepsResponseDto } from "@/shared/api/types/api.dto";
+import type {
+  ProfileResponseDto,
+  WeightStepsResponseDto,
+} from "@/shared/api/types/api.response.dto";
 import type { UseMutationCallback } from "@/shared/api/types/callback.types";
 import { getTodayFormatDateKey } from "@/shared/utils/dateFormat";
 

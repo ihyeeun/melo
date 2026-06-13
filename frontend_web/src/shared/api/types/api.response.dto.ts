@@ -113,7 +113,7 @@ export interface NutritionLabelRecognitionResponseDto {
   alcohol?: number;
 }
 
-export interface FoodImageREcognitionResponseDto {
+export interface FoodImageRecognitionResponseDto {
   menu_ids: number[];
   menu_quantities: number[];
   image_url: string;

@@ -4,7 +4,7 @@ import {
   ONBOARDING_WEIGHT_RANGE,
 } from "@/features/onboarding/constants/inputRanges";
 import type { OnboardingData } from "@/features/onboarding/onboarding.types";
-import type { ProfileResponseDto } from "@/shared/api/types/api.dto";
+import type { ProfileResponseDto } from "@/shared/api/types/api.response.dto";
 import { isValidBirthYear } from "@/shared/commons/picker/yearOptions";
 
 export type GoalEditDraft = Pick<

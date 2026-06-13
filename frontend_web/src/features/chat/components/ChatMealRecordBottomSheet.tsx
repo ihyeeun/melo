@@ -3,12 +3,12 @@ import { type FocusEvent, type PointerEvent, useMemo } from "react";
 
 import styles from "@/features/chat/styles/ChatMealRecordBottomSheet.module.css";
 import {
-  type ChatRecommendItemResponseDto,
   MEAL_TYPE_OPTIONS,
   type MealServingInputMode,
   type MealType,
   MENU_UNIT,
 } from "@/shared/api/types/api.dto";
+import type { ChatRecommendItemResponseDto } from "@/shared/api/types/api.response.dto";
 import BottomSheet from "@/shared/commons/bottomSheet/BottomSheet";
 import { Button } from "@/shared/commons/button/Button";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";

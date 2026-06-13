@@ -1,4 +1,4 @@
-import type { ProfileResponseDto } from "@/shared/api/types/api.dto";
+import type { ProfileResponseDto } from "@/shared/api/types/api.response.dto";
 
 export const ANALYTICS_USER_PROPERTY_KEYS = [
   "is_test_user",

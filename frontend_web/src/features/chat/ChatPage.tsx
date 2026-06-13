@@ -63,15 +63,17 @@ import { AppApiError } from "@/shared/api/apiClient";
 import { isNativeApp, requestNativeAppDeviceInfo } from "@/shared/api/bridge/nativeBridge";
 import type { AppDeviceInfoPayload } from "@/shared/api/bridge/nativeBridge.types";
 import {
-  type ChatHistoryItemResponseDto,
-  type ChatRecommendItemResponseDto,
-  type ChatRecommendResponseDto,
-  type FeedbackDto,
   MEAL_TYPE_OPTIONS,
   type MealServingInputMode,
   type MealTime,
   type MealType,
 } from "@/shared/api/types/api.dto";
+import type {
+  ChatHistoryItemResponseDto,
+  ChatRecommendItemResponseDto,
+  ChatRecommendResponseDto,
+  FeedbackItemDto,
+} from "@/shared/api/types/api.response.dto";
 import { DataSourceBadge } from "@/shared/commons/badge/DataSourceBadge";
 import { Button } from "@/shared/commons/button/Button";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
@@ -2535,7 +2537,7 @@ function FeedbackSection({
 }: {
   animate?: boolean;
   chatId: number;
-  feedback: FeedbackDto;
+  feedback: FeedbackItemDto;
   hasImage: boolean;
   timeText: string;
   onMealRecordClick: () => void;
@@ -3116,7 +3118,7 @@ function getServingUnitLabel(unitQuantity: string) {
   return unitQuantity.trim() === "인분" ? unitQuantity : "기준량";
 }
 
-function formatMenuServing(menu: FeedbackDto["menus"][number]) {
+function formatMenuServing(menu: FeedbackItemDto["menus"][number]) {
   return `1${getServingUnitLabel(menu.unit_quantity)} (${formatNumberWithMaxOneDecimal(menu.weight)}${menu.unit === 0 ? "g" : "ml"})`;
 }
 

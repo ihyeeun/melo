@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { updateNickName } from "@/features/profile/api/profile";
 import { queryKeys } from "@/features/profile/hooks/queries/queryKey";
-import { type ProfileResponseDto } from "@/shared/api/types/api.dto";
+import { type ProfileResponseDto } from "@/shared/api/types/api.response.dto";
 import type { UseMutationCallback } from "@/shared/api/types/callback.types";
 
 export function useNickNameUpdateMutation(callbacks?: UseMutationCallback) {

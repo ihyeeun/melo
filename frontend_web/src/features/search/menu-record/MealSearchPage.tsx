@@ -29,7 +29,7 @@ import RegisterBottomSheet from "@/features/search/components/RegisterBottomShee
 import { useMealSearchInfiniteQuery } from "@/features/search/menu-record/hooks/queries/useMealSearchInfiniteQuery";
 import { PATH } from "@/router/path";
 import { getMealDetailPath, getMealRecordPath, getPathWithMeal } from "@/router/pathHelpers";
-import { type MenuSimpleResponseDto } from "@/shared/api/types/api.dto";
+import { type MenuSimpleResponseDto } from "@/shared/api/types/api.response.dto";
 import { Button } from "@/shared/commons/button/Button";
 import { FloatingCameraButton } from "@/shared/commons/button/FloatingCameraButton";
 import { MealMenuCard } from "@/shared/commons/card/MealMenuCard";

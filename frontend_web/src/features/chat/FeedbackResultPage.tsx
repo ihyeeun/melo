@@ -28,11 +28,13 @@ import { useTodayMealRecordRegisterMutation } from "@/features/meal-record/hooks
 import { PATH } from "@/router/path";
 import { AppApiError } from "@/shared/api/apiClient";
 import {
-  type ChatFeedbackMenuResponseDto,
-  type ChatFoodImageRecognizedMenuResponseDto,
-  type ChatHistoryItemResponseDto,
   type MealType,
 } from "@/shared/api/types/api.dto";
+import type {
+  ChatFeedbackMenuResponseDto,
+  ChatFoodImageRecognizedMenuResponseDto,
+  ChatHistoryItemResponseDto,
+} from "@/shared/api/types/api.response.dto";
 import { Button } from "@/shared/commons/button/Button";
 import { MealMenuCard } from "@/shared/commons/card/MealMenuCard";
 import { PageHeader } from "@/shared/commons/header/PageHeader";

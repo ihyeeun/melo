@@ -2,7 +2,7 @@ import type { QueryClient } from "@tanstack/react-query";
 
 import { getChatHistory } from "@/features/chat/api/chat.api";
 import { queryKeys } from "@/features/chat/hooks/queries/queryKey";
-import type { ChatHistoryResponseDto } from "@/shared/api/types/api.dto";
+import type { ChatHistoryResponseDto } from "@/shared/api/types/api.response.dto";
 
 const chatHistoryPlaybackBaselineQueryKey = ["chat-history-playback-baseline"] as const;
 

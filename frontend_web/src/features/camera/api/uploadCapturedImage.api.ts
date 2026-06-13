@@ -1,13 +1,12 @@
 import { AppApiError, toAppApiError } from "@/shared/api/apiClient";
 import { requestNativeImageUpload } from "@/shared/api/bridge/nativeBridge";
 import type { ImageUploadRequestPayload } from "@/shared/api/bridge/nativeBridge.types";
-import {
-  type CapturedImage,
-  type ChatFoodImageFeedbackResponseDto,
-  type ChatMenuBoardRecommendResponseDto,
-  type FoodImageRecognitionResponseDto,
-  type NutritionLabelRecognitionResponseDto,
-} from "@/shared/api/types/api.dto";
+import type {
+  ChatFeedbackResponseDto,
+  ChatRecommendationResponseDto,
+  FoodImageRecognitionResponseDto,
+  NutritionLabelRecognitionResponseDto,
+} from "@/shared/api/types/api.response.dto";
 import { type ApiResponse, isApiSuccess } from "@/shared/api/types/apiResponse.types";
 
 const END_POINT = {
@@ -16,6 +15,15 @@ const END_POINT = {
   NUTRIENT_RECOGNITION: "/home/recognizeNutritionLabel",
   MENU_BOARD_ANALYSIS: "/chat/menu-board",
   CHAT_FOOD_IMAGE_FEEDBACK: "/chat/food-image-feedback",
+};
+
+type CapturedImage = {
+  uri: string;
+  width: number;
+  height: number;
+  fileName: string | null;
+  fileSize: number | null;
+  mimeType: string | null;
 };
 
 async function requestNativeImageUploadData<T>(
@@ -64,7 +72,7 @@ export async function uploadNutritionLabelImage(capturedImage: CapturedImage) {
 }
 
 export async function uploadMenuBoardImage(capturedImage: CapturedImage) {
-  return requestNativeImageUploadData<ChatMenuBoardRecommendResponseDto>(
+  return requestNativeImageUploadData<ChatRecommendationResponseDto>(
     {
       endpoint: END_POINT.MENU_BOARD_ANALYSIS,
       fileUri: capturedImage.uri,
@@ -78,7 +86,7 @@ export async function uploadMenuBoardImage(capturedImage: CapturedImage) {
 }
 
 export async function uploadChatFoodImageFeedback(image: CapturedImage) {
-  return requestNativeImageUploadData<ChatFoodImageFeedbackResponseDto>(
+  return requestNativeImageUploadData<ChatFeedbackResponseDto>(
     {
       endpoint: END_POINT.CHAT_FOOD_IMAGE_FEEDBACK,
       fileUri: image.uri,

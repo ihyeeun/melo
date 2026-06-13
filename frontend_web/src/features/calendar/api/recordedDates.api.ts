@@ -1,12 +1,14 @@
 import { appApiData } from "@/shared/api/apiClient";
-import type {
-  MealRecordedDatesRequestDto,
-  MealRecordedDatesResponseDto,
-} from "@/shared/api/types/api.dto";
+import type { MealRecordedDatesResponseDto } from "@/shared/api/types/api.response.dto";
 
 const END_POINT = {
   MEAL_RECORDED_DATES: "/home/getMealRecordedDates",
 };
+
+interface MealRecordedDatesRequestDto {
+  startDate: string;
+  endDate: string;
+}
 
 export async function getMealRecordedDates(body: MealRecordedDatesRequestDto) {
   const response = await appApiData<MealRecordedDatesResponseDto>({

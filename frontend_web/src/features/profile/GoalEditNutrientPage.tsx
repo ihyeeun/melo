@@ -26,7 +26,10 @@ import styles from "@/features/profile/styles/GoalEditPage.module.css";
 import { PATH } from "@/router/path";
 import { track } from "@/shared/analytics/analytics";
 import { EVENT_NAME } from "@/shared/analytics/analytics.constants";
-import type { ProfileResponseDto, WeightStepsResponseDto } from "@/shared/api/types/api.dto";
+import type {
+  ProfileResponseDto,
+  WeightStepsResponseDto,
+} from "@/shared/api/types/api.response.dto";
 import { Button } from "@/shared/commons/button/Button";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
 import { CheckButtonModal } from "@/shared/commons/modals/CheckButtonModal";

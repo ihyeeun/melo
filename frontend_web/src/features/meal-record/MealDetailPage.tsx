@@ -40,6 +40,11 @@ type MealDetailLocationState = {
   replaceMenuId?: number;
 };
 
+function getMenuIsDeleted(menu: unknown) {
+  const isDeleted = (menu as { is_deleted?: unknown }).is_deleted;
+  return typeof isDeleted === "number" ? isDeleted : 0;
+}
+
 export default function MealDetailPage() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -229,6 +234,7 @@ export default function MealDetailPage() {
   }
 
   const isPersonalMenuData = meal.data_source === MENU_DATA_SOURCE.PERSONAL;
+  const mealIsDeleted = getMenuIsDeleted(meal);
 
   const getNutrientModifyPath = (targetMenuId: number) => {
     const modifyQueryParams = new URLSearchParams({
@@ -275,7 +281,7 @@ export default function MealDetailPage() {
         onBack={handleGoBack}
         rightSlot={
           isPersonalMenuData &&
-          meal.is_deleted === 0 && (
+          mealIsDeleted === 0 && (
             <Button variant="text" color="normal" onClick={handleDelete}>
               삭제
             </Button>
@@ -293,7 +299,7 @@ export default function MealDetailPage() {
             onToggleDetail={() => setIsDetailOpen((prev) => !prev)}
             onSelectionChange={setSelection}
             onEditAndAdd={handleEditAndAdd}
-            showEditSection={meal.data_source === MENU_DATA_SOURCE.PUBLIC || meal.is_deleted === 0}
+            showEditSection={meal.data_source === MENU_DATA_SOURCE.PUBLIC || mealIsDeleted === 0}
           />
         </div>
       </main>

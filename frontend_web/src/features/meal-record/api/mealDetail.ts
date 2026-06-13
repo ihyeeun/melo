@@ -1,5 +1,5 @@
 import { appApiData } from "@/shared/api/apiClient";
-import type { MenuResponseDto } from "@/shared/api/types/api.dto";
+import type { MenuResponseDto } from "@/shared/api/types/api.response.dto";
 
 const END_POINT = {
   MEAL_DETAIL: "/home/menuDetail",
