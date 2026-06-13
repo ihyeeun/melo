@@ -1,8 +1,8 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 
-import { registerWeight } from "@/features/home/api/health";
-import { queryKeys as homeQueryKeys } from "@/features/home/hooks/queries/queryKey";
+import { registerWeight } from "@/features/home/api/todayRecord.api";
+import { queryKeys as homeQueryKeys } from "@/features/home/hooks/queries/todayRecord.queryKey";
 import {
   updateActivity,
   updateBirthYear,

@@ -1,8 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import ActionCard from "@/features/home/components/cards/ActionCard";
-import { useGetBodyLog } from "@/features/home/hooks/queries/useBodyLogQuery";
-import { useDayMealsQuery } from "@/features/home/hooks/queries/useDayMealsQuery";
+import { useDayMealsQuery, useGetBodyLog } from "@/features/home/hooks/queries/useTodayRecordQuery";
 import WeeklyRecordChart from "@/features/profile/components/WeeklyRecordChart";
 import { useNickNameUpdateMutation } from "@/features/profile/hooks/mutations/useProfileMutation";
 import { useGetProfileQuery } from "@/features/profile/hooks/queries/useProfileQuery";

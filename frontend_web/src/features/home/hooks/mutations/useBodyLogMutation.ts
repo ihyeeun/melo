@@ -1,13 +1,9 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-import { registerStep, registerWeight } from "@/features/home/api/health";
-import { queryKeys as homeQueryKeys } from "@/features/home/hooks/queries/queryKey";
+import { registerStep, registerWeight } from "@/features/home/api/todayRecord.api";
+import { queryKeys as homeQueryKeys } from "@/features/home/hooks/queries/todayRecord.queryKey";
 import { updateWeight } from "@/features/profile/api/profile";
-import { queryKeys as profileQueryKeys } from "@/features/profile/hooks/queries/queryKey";
-import type {
-  ProfileResponseDto,
-  WeightStepsResponseDto,
-} from "@/shared/api/types/api.response.dto";
+import type { WeightStepsResponseDto } from "@/shared/api/types/api.response.dto";
 import type { UseMutationCallback } from "@/shared/api/types/callback.types";
 import { getTodayFormatDateKey } from "@/shared/utils/dateFormat";
 
@@ -28,19 +24,14 @@ export function useRegisterWeightMutation(callbacks?: UseMutationCallback) {
         return undefined;
       }
     },
-    onSuccess: (updatedProfile, { date, weight }) => {
+    onSuccess: (_, { date, weight }) => {
       queryClient.setQueryData<WeightStepsResponseDto>(
         homeQueryKeys.bodyStats(date),
         (previous) => ({
           weight,
-          steps: previous?.steps ?? 0,
+          steps: previous?.steps ?? null,
         }),
       );
-
-      if (updatedProfile) {
-        queryClient.setQueryData<ProfileResponseDto>(profileQueryKeys.profile, updatedProfile);
-      }
-
       callbacks?.onSuccess?.();
     },
     onError: (error) => callbacks?.onError?.(error),
@@ -52,11 +43,11 @@ export function useRegisterStepsMutation(callbacks?: UseMutationCallback) {
 
   return useMutation({
     mutationFn: ({ date, steps }: { date: string; steps: number }) => registerStep({ date, steps }),
-    onSuccess: (_data, { date, steps }) => {
+    onSuccess: (_, { date, steps }) => {
       queryClient.setQueryData<WeightStepsResponseDto>(
         homeQueryKeys.bodyStats(date),
         (previous) => ({
-          weight: previous?.weight ?? 0,
+          weight: previous?.weight ?? null,
           steps,
         }),
       );

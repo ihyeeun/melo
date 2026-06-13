@@ -7,7 +7,7 @@ import {
   useRegisterStepsMutation,
   useRegisterWeightMutation,
 } from "@/features/home/hooks/mutations/useBodyLogMutation";
-import { useGetBodyLog } from "@/features/home/hooks/queries/useBodyLogQuery";
+import { useGetBodyLog } from "@/features/home/hooks/queries/useTodayRecordQuery";
 import style from "@/features/home/styles/TodayBodyLogSection.module.css";
 import { useGetProfileQuery } from "@/features/profile/hooks/queries/useProfileQuery";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
@@ -21,7 +21,7 @@ export default function TodayBodyLogSection({ date }: { date: string }) {
   const { data: bodyLog } = useGetBodyLog(date);
   const { data: profile } = useGetProfileQuery();
   const isToday = date === getTodayFormatDateKey();
-  const displayWeight = bodyLog?.weight ?? (isToday ? profile?.weight ?? 0 : 0);
+  const displayWeight = bodyLog?.weight ?? (isToday ? (profile?.weight ?? 0) : 0);
   const initialWeight = bodyLog?.weight ?? (isToday ? profile?.weight : undefined);
 
   const { mutate: registerWeight, isPending: isWeightPending } = useRegisterWeightMutation({
@@ -69,12 +69,7 @@ export default function TodayBodyLogSection({ date }: { date: string }) {
   return (
     <>
       <div className={style.todayContainer}>
-        <TodayMetricCard
-          title="체중"
-          value={displayWeight}
-          unit="kg"
-          onClick={openWeightEditor}
-        />
+        <TodayMetricCard title="체중" value={displayWeight} unit="kg" onClick={openWeightEditor} />
         <TodayMetricCard
           title="걸음 수"
           value={bodyLog?.steps ?? 0}

@@ -138,8 +138,8 @@ export interface MealRecordedDatesResponseDto {
 }
 
 export interface WeightStepsResponseDto {
-  weight: number;
-  steps: number;
+  weight: number | null;
+  steps: number | null;
 }
 
 /* ======
