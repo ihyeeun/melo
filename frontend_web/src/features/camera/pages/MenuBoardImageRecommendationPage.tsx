@@ -1,9 +1,9 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import styles from "@/features/camera/CameraPage.module.css";
 import { CameraLoading } from "@/features/camera/components/CameraLoading";
-import { useMenuBoardMutation } from "@/features/camera/hooks/mutations/useImageRecognitionMutation";
+import { useRecommendMenusByMenuBoardImageMutation } from "@/features/camera/hooks/mutations/useImageRecognitionMutation";
+import styles from "@/features/camera/styles/CameraPage.module.css";
 import {
   type CameraCaptureErrorFeedback,
   DEFAULT_CAMERA_CAPTURE_QUALITY,
@@ -37,7 +37,7 @@ export default function MenuBoardCameraPage() {
     useState<CameraCaptureErrorFeedback | null>(null);
   const autoTriggeredRef = useRef(false);
   const queryClient = useQueryClient();
-  const { mutateAsync: uploadMenuBoardImage } = useMenuBoardMutation();
+  const { mutateAsync: uploadMenuBoardImage } = useRecommendMenusByMenuBoardImageMutation();
 
   const returnFromCameraPage = useCallback(() => {
     navigateBack({ fallbackTo: PATH.CHAT });

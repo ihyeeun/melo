@@ -1,9 +1,9 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import styles from "@/features/camera/CameraPage.module.css";
 import { CameraLoading } from "@/features/camera/components/CameraLoading";
-import { useChatFoodImageFeedbackMutation } from "@/features/camera/hooks/mutations/useImageRecognitionMutation";
+import { useCreateMealFeedbackByFoodImageMutation } from "@/features/camera/hooks/mutations/useImageRecognitionMutation";
+import styles from "@/features/camera/styles/CameraPage.module.css";
 import {
   type CameraCaptureErrorFeedback,
   DEFAULT_CAMERA_CAPTURE_QUALITY,
@@ -36,7 +36,7 @@ export default function ChatFoodCameraPage() {
     useState<CameraCaptureErrorFeedback | null>(null);
   const [previewSrc, setPreviewSrc] = useState<string | null>(null);
   const queryClient = useQueryClient();
-  const { mutateAsync: uploadFoodImage } = useChatFoodImageFeedbackMutation();
+  const { mutateAsync: uploadFoodImage } = useCreateMealFeedbackByFoodImageMutation();
 
   const autoTriggeredRef = useRef(false);
 

@@ -118,12 +118,14 @@ const SettingsSubCodePage = createLazyActivity(
 const TermsPage = createLazyActivity(() => import("@/features/terms/TermsPage"));
 const MenuBoardCameraPage = createGuardedLazyActivity(
   FEATURE_GUARD.MENU_BOARD_CAMERA,
-  () => import("@/features/camera/MenuBoardCameraPage"),
+  () => import("@/features/camera/pages/MenuBoardImageRecommendationPage"),
 );
-const NutrientCameraPage = createLazyActivity(() => import("@/features/camera/NutrientCameraPage"));
+const NutrientCameraPage = createLazyActivity(
+  () => import("@/features/camera/pages/NutritionLabelCreatePage"),
+);
 const FoodCameraPage = createGuardedLazyActivity(
   FEATURE_GUARD.FOOD_CAMERA,
-  () => import("@/features/camera/FoodCameraPage"),
+  () => import("@/features/camera/pages/FoodImageMealRecordCreatePage"),
 );
 const ProfilePage = createLazyActivity(() => import("@/features/profile/ProfilePage"));
 const GoalEditPage = createLazyActivity(() => import("@/features/profile/GoalEditPage"));
@@ -143,7 +145,7 @@ const ChatMenuDetailPage = createLazyActivity(() => import("@/features/chat/Chat
 const FeedbackResultPage = createLazyActivity(() => import("@/features/chat/FeedbackResultPage"));
 const ChatFoodCameraPage = createGuardedLazyActivity(
   FEATURE_GUARD.FOOD_CAMERA,
-  () => import("@/features/camera/ChatFoodCameraPage"),
+  () => import("@/features/camera/pages/FoodImageFeedbackPage"),
 );
 const AppInfoPage = createLazyActivity(() => import("@/features/kakao-web-auth/pages/AppInfoPage"));
 

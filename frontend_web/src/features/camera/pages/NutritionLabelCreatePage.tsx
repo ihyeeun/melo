@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import styles from "@/features/camera/CameraPage.module.css";
 import { CameraLoading } from "@/features/camera/components/CameraLoading";
-import { useNutritionLabelMutation } from "@/features/camera/hooks/mutations/useImageRecognitionMutation";
+import { useCreateMenuByNutritionLabelImageMutation } from "@/features/camera/hooks/mutations/useImageRecognitionMutation";
+import styles from "@/features/camera/styles/CameraPage.module.css";
 import {
   type CameraCaptureErrorFeedback,
   DEFAULT_CAMERA_CAPTURE_QUALITY,
@@ -30,7 +30,7 @@ export default function NutrientCameraPage() {
   const [capturedPreviewSrc, setCapturedPreviewSrc] = useState<string | null>(null);
   const [captureErrorFeedback, setCaptureErrorFeedback] =
     useState<CameraCaptureErrorFeedback | null>(null);
-  const { mutateAsync: uploadImage } = useNutritionLabelMutation();
+  const { mutateAsync: uploadImage } = useCreateMenuByNutritionLabelImageMutation();
   const [searchParams] = useSearchParams();
   const dateKey = getSafeDateKey(searchParams.get("date"));
   const mealType = getMealType(searchParams.get("mealType"));

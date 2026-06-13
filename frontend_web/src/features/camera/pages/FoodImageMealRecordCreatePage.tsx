@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import styles from "@/features/camera/CameraPage.module.css";
 import { CameraLoading } from "@/features/camera/components/CameraLoading";
-import { useFoodImageMutation } from "@/features/camera/hooks/mutations/useImageRecognitionMutation";
+import { useCreateMealRecordByFoodImageMutation } from "@/features/camera/hooks/mutations/useImageRecognitionMutation";
+import styles from "@/features/camera/styles/CameraPage.module.css";
 import {
   type CameraCaptureErrorFeedback,
   DEFAULT_CAMERA_CAPTURE_QUALITY,
@@ -47,7 +47,7 @@ export default function FoodCameraPage() {
     useState<CameraCaptureErrorFeedback | null>(null);
   const autoTriggeredRef = useRef(false);
 
-  const { mutateAsync: uploadImage } = useFoodImageMutation();
+  const { mutateAsync: uploadImage } = useCreateMealRecordByFoodImageMutation();
   const { mutateAsync: mealRegisterAsync } = useTodayMealRecordRegisterMutation();
 
   const dateKey = getSafeDateKey(searchParams.get("date"));
