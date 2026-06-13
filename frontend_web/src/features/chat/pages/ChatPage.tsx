@@ -42,8 +42,8 @@ import {
   getRecommendDetailPath,
   getRecommendResultPath,
 } from "@/features/chat/utils/recommendNavigation";
-import { getDayMeals } from "@/features/home/api/dayMeal";
-import { queryKeys as homeQueryKeys } from "@/features/home/hooks/queries/queryKey";
+import { getTodayMealRecordMenus } from "@/features/home/api/todayRecord.api";
+import { queryKeys as homeQueryKeys } from "@/features/home/hooks/queries/todayRecord.queryKey";
 import type { DayMealSummary, MenuWithQuantity } from "@/features/home/utils/dayMealSummary";
 import {
   MAX_MEAL_RECORD_MENUS,
@@ -107,7 +107,7 @@ const SOFT_KEYBOARD_VISIBLE_HEIGHT_THRESHOLD = 120;
 const MEAL_TIME_LIST: MealTime[] = [0, 1, 2, 3, 4];
 const ASSISTANT_BUBBLE_REVEAL_START_DELAY_MS = 180;
 const ASSISTANT_BUBBLE_GAP_MS = 1000;
-const ASSISTANT_RESULT_REVEAL_DELAY_MS = 520;
+const ASSISTANT_RESULT_REVEAL_DELAY_MS = 1000;
 const ASSISTANT_RESULT_CARD_GAP_MS = 460;
 
 type RecordedMenuSummary = {
@@ -177,6 +177,11 @@ type AssistantPlaybackState = {
   chatItemId: number;
   visibleBubbleCount: number;
   resultVisibleCount: number;
+};
+
+type AssistantBubbleGroup = {
+  key: string;
+  message: string;
 };
 
 type ClientOsName = AppDeviceInfoPayload["osName"] | "unknown";
@@ -476,7 +481,7 @@ export default function ChatPage() {
   const dayMealQueries = useQueries({
     queries: chatDateKeys.map((dateKey) => ({
       queryKey: homeQueryKeys.dayMeals.byDate(dateKey),
-      queryFn: () => getDayMeals({ date: dateKey }),
+      queryFn: () => getTodayMealRecordMenus(dateKey),
       staleTime: Infinity,
     })),
   });
@@ -1018,14 +1023,11 @@ export default function ChatPage() {
     track(EVENT_NAME.AI_COACH_CHAT, { input_length: text.length });
 
     try {
-      const response = await sendMessageMutation({ input: text });
-      const responsePayload = getSendMessageResponsePayload(response);
-      const directHistoryChatItem = isChatHistoryItemResponse(response) ? response : null;
+      const previousChatItemIds = new Set(chatList.map((chatItem) => chatItem.id));
+      const responsePayload = await sendMessageMutation({ input: text });
       const responseChatItem = await refetchAndResolveChatHistoryItem(queryClient, {
         match: (chatItem) =>
-          directHistoryChatItem
-            ? chatItem.id === directHistoryChatItem.id
-            : isMatchingHistoryChatItem(chatItem, text, responsePayload),
+          !previousChatItemIds.has(chatItem.id) && chatItem.input_text.trim() === text,
       });
 
       setPendingInput(null);
@@ -1524,6 +1526,7 @@ export default function ChatPage() {
         {hasTimelineContent ? (
           <div className={styles.chatTimeline}>
             {timelineItems.map((timelineItem, index) => {
+              // 현재 아이템과 이전 아이템의 날짜를 비교해 날짜 구분선 렌더링 결정
               const previousItem = timelineItems[index - 1];
               const shouldShowDateDivider = shouldShowTimelineDateDivider(
                 timelineItem,
@@ -1563,65 +1566,39 @@ export default function ChatPage() {
 
               const { chatItem } = timelineItem;
               const recordDateKey = todayDateKey;
-              const recordDayMeals = dayMealsByDate.get(recordDateKey);
-              const fallbackMealRecord = recordDayMeals
-                ? getMealRecordViewModelByTime(recordDayMeals, recordDateKey, currentMealTime)
+              const recordedDayMeals = dayMealsByDate.get(recordDateKey);
+              // 기존에 기록되어있는 식사 기록
+              const currentMealRecord = recordedDayMeals
+                ? getMealRecordViewModelByTime(recordedDayMeals, recordDateKey, currentMealTime)
                 : null;
-              const mealRecordMenus = getChatMealRecordMenus(chatItem);
-              const chatMealRecord =
-                mealRecordMenus.length > 0
-                  ? getMealRecordViewModelByMenuIds(
-                      recordDayMeals,
-                      recordDateKey,
-                      mealRecordMenus.map((menu) => menu.menu_id),
-                      currentMealTime,
-                    )
-                  : null;
-              const userImageUrl = getChatItemImageUrl(chatItem);
+              const userImageUrl = chatItem.image_url ?? chatItem.response_payload.image_url ?? "";
               const assistantTimeText = formatTimeText(chatItem.createdAt);
               const chatItemPlayback =
                 assistantPlayback?.chatItemId === chatItem.id ? assistantPlayback : null;
-              const introMessage = chatItem.response_payload.intro_message;
-              const recommendationMenus = getRecommendationMenus(chatItem.response_payload);
-              const feedback = getFeedbackPayload(chatItem.response_payload);
-              const feedbackMenus = getFeedbackMenus(chatItem.response_payload);
-              const generalAnswer =
-                chatItem.response_payload.chat_category === "general"
-                  ? (chatItem.response_payload.general_answer ?? "")
-                  : "";
-              const introBubbleCount = getAssistantMessageBubbleCount(introMessage);
               const visibleBubbleCount =
                 chatItemPlayback === null
                   ? Number.POSITIVE_INFINITY
                   : chatItemPlayback.visibleBubbleCount;
-              const visibleIntroBubbleCount = Math.min(visibleBubbleCount, introBubbleCount);
-              const visibleGeneralBubbleCount = Math.max(0, visibleBubbleCount - introBubbleCount);
-              const shouldAnimateAssistantResponse = chatItemPlayback !== null;
-              const shouldShowIntroMessage =
-                introMessage.trim().length > 0 && visibleIntroBubbleCount > 0;
-              const shouldShowGeneralAnswer =
-                chatItem.response_payload.chat_category === "general" &&
-                generalAnswer.trim().length > 0 &&
-                visibleGeneralBubbleCount > 0;
-              const resultVisibleCount =
+              const visibleResultCount =
                 chatItemPlayback === null
                   ? Number.POSITIVE_INFINITY
                   : chatItemPlayback.resultVisibleCount;
-              const shouldShowResultSection = resultVisibleCount > 0;
+              const assistantBubbleGroups = getAssistantVisibleBubbleGroups(
+                chatItem.response_payload,
+                visibleBubbleCount,
+              );
+              const isResponseAnimating = chatItemPlayback !== null;
               const userImageAction =
-                userImageUrl === null
-                  ? null
-                  : chatItem.response_payload.chat_category === "feedback"
-                    ? {
-                        ariaLabel: "피드백 결과 보기",
-                        onClick: () => navigate(getFeedbackResultPath(chatItem.id)),
-                      }
-                    : chatItem.response_payload.chat_category === "recommendation"
-                      ? {
-                          ariaLabel: "업로드 이미지 크게 보기",
-                          onClick: () => setPreviewImageUrl(userImageUrl),
-                        }
-                      : null;
+                chatItem.response_payload.chat_category === "feedback"
+                  ? {
+                      ariaLabel: "피드백 결과 보기",
+                      onClick: () => navigate(getFeedbackResultPath(chatItem.id)),
+                    }
+                  : {
+                      ariaLabel: "업로드 이미지 크게 보기",
+                      onClick: () => setPreviewImageUrl(userImageUrl),
+                    };
+              const isMealRecorded = hasChatMealRecordMenus(chatItem, currentMealRecord);
 
               return (
                 <section key={timelineItem.key} className={styles.conversationSection}>
@@ -1641,99 +1618,87 @@ export default function ChatPage() {
                       {!userImageUrl && (
                         <p className={`${styles.userBubble} typo-body2`}>{chatItem.input_text}</p>
                       )}
-                      {userImageUrl ? (
-                        userImageAction ? (
-                          <button
-                            type="button"
-                            className={styles.userImageButton}
-                            aria-label={userImageAction.ariaLabel}
-                            onClick={userImageAction.onClick}
-                          >
-                            <UserImageBubble
-                              src={userImageUrl}
-                              alt=""
-                              isDecorative
-                              onLoad={handleTimelineImageLoad}
-                            />
-                          </button>
-                        ) : (
+                      {userImageUrl && (
+                        <button
+                          type="button"
+                          className={styles.userImageButton}
+                          aria-label={userImageAction.ariaLabel}
+                          onClick={userImageAction.onClick}
+                        >
                           <UserImageBubble
                             src={userImageUrl}
-                            alt="사용자가 업로드한 이미지"
+                            alt=""
+                            isDecorative
                             onLoad={handleTimelineImageLoad}
                           />
-                        )
-                      ) : null}
+                        </button>
+                      )}
                     </div>
                   </div>
 
                   <div className={styles.assistantMessageRow}>
                     <div className={styles.assistantMessageContent}>
-                      {shouldShowIntroMessage ? (
+                      {assistantBubbleGroups.map((bubbleGroup) => (
                         <AssistantMessageBubbles
-                          animate={shouldAnimateAssistantResponse}
-                          message={introMessage}
+                          key={bubbleGroup.key}
+                          animate={isResponseAnimating}
+                          message={bubbleGroup.message}
                           timeText={assistantTimeText}
-                          visibleBubbleCount={visibleIntroBubbleCount}
+                          visibleBubbleCount={bubbleGroup.visibleBubbleCount}
                         />
-                      ) : null}
-
-                      {shouldShowGeneralAnswer ? (
-                        <AssistantMessageBubbles
-                          animate={shouldAnimateAssistantResponse}
-                          message={generalAnswer}
-                          timeText={assistantTimeText}
-                          visibleBubbleCount={visibleGeneralBubbleCount}
-                        />
-                      ) : null}
+                      ))}
 
                       {chatItem.response_payload.chat_category === "recommendation" &&
-                      recommendationMenus.length > 0 &&
-                      shouldShowResultSection ? (
-                        <RecommendationSection
-                          chatId={chatItem.id}
-                          animate={shouldAnimateAssistantResponse}
-                          recommendations={recommendationMenus}
-                          visibleCardCount={resultVisibleCount}
-                          onMealRecordClick={() =>
-                            handleMenuRecordClick(
-                              chatItem,
-                              recordDateKey,
-                              recordDayMeals,
-                              fallbackMealRecord,
-                            )
-                          }
-                          onMealRecordCancelClick={() =>
-                            handleChatMealRecordCancelRequest(chatItem, chatMealRecord)
-                          }
-                          isMealRecorded={chatMealRecord !== null}
-                        />
-                      ) : null}
+                        chatItem.response_payload.recommendations && (
+                          <RecommendationSection
+                            chatId={chatItem.id}
+                            animate={isResponseAnimating}
+                            recommendations={chatItem.response_payload.recommendations}
+                            visibleCardCount={visibleResultCount}
+                            onMealRecordClick={() =>
+                              handleMenuRecordClick(
+                                chatItem,
+                                recordDateKey,
+                                recordedDayMeals,
+                                currentMealRecord,
+                              )
+                            }
+                            onMealRecordCancelClick={() =>
+                              handleChatMealRecordCancelRequest(
+                                chatItem,
+                                isMealRecorded ? currentMealRecord : null,
+                              )
+                            }
+                            isMealRecorded={isMealRecorded}
+                          />
+                        )}
 
                       {chatItem.response_payload.chat_category === "feedback" &&
-                      feedback &&
-                      feedbackMenus.length > 0 &&
-                      shouldShowResultSection ? (
-                        <FeedbackSection
-                          chatId={chatItem.id}
-                          animate={shouldAnimateAssistantResponse}
-                          feedback={feedback}
-                          hasImage={userImageUrl !== null}
-                          timeText={assistantTimeText}
-                          onMealRecordClick={() =>
-                            handleMenuRecordClick(
-                              chatItem,
-                              recordDateKey,
-                              recordDayMeals,
-                              fallbackMealRecord,
-                            )
-                          }
-                          onMealRecordCancelClick={() =>
-                            handleChatMealRecordCancelRequest(chatItem, chatMealRecord)
-                          }
-                          isMealRecorded={chatMealRecord !== null}
-                        />
-                      ) : null}
+                        chatItem.response_payload.feedback &&
+                        visibleResultCount >= 1 && (
+                          <FeedbackSection
+                            chatId={chatItem.id}
+                            animate={isResponseAnimating}
+                            feedback={chatItem.response_payload.feedback}
+                            hasImage={Boolean(userImageUrl)}
+                            timeText={assistantTimeText}
+                            onMealRecordClick={() =>
+                              handleMenuRecordClick(
+                                chatItem,
+                                recordDateKey,
+                                recordedDayMeals,
+                                currentMealRecord,
+                              )
+                            }
+                            onMealRecordCancelClick={() =>
+                              handleChatMealRecordCancelRequest(
+                                chatItem,
+                                isMealRecorded ? currentMealRecord : null,
+                              )
+                            }
+                            isMealRecorded={isMealRecorded}
+                          />
+                        )}
                     </div>
                   </div>
                 </section>
@@ -1907,14 +1872,47 @@ function delayAssistantPlayback(delayMs: number) {
   });
 }
 
-function getAssistantBubbleRevealCount(responsePayload: ChatRecommendResponseDto) {
-  const introBubbleCount = getAssistantMessageBubbleCount(responsePayload.intro_message);
+function getAssistantBubbleGroups(
+  responsePayload: ChatRecommendResponseDto,
+): AssistantBubbleGroup[] {
+  const bubbleGroups: AssistantBubbleGroup[] = [
+    { key: "intro", message: responsePayload.intro_message },
+  ];
 
-  if (responsePayload.chat_category !== "general") {
-    return introBubbleCount;
+  if (responsePayload.chat_category === "general" && responsePayload.general_answer) {
+    bubbleGroups.push({ key: "general", message: responsePayload.general_answer });
   }
 
-  return introBubbleCount + getAssistantMessageBubbleCount(responsePayload.general_answer ?? "");
+  return bubbleGroups;
+}
+
+function getAssistantVisibleBubbleGroups(
+  responsePayload: ChatRecommendResponseDto,
+  visibleBubbleCount: number,
+) {
+  let consumedBubbleCount = 0;
+
+  return getAssistantBubbleGroups(responsePayload).map((bubbleGroup) => {
+    const bubbleCount = getAssistantMessageBubbleCount(bubbleGroup.message);
+    const groupVisibleBubbleCount = Math.max(
+      0,
+      Math.min(visibleBubbleCount - consumedBubbleCount, bubbleCount),
+    );
+
+    consumedBubbleCount += bubbleCount;
+
+    return {
+      ...bubbleGroup,
+      visibleBubbleCount: groupVisibleBubbleCount,
+    };
+  });
+}
+
+function getAssistantBubbleRevealCount(responsePayload: ChatRecommendResponseDto) {
+  return getAssistantBubbleGroups(responsePayload).reduce(
+    (bubbleCount, bubbleGroup) => bubbleCount + getAssistantMessageBubbleCount(bubbleGroup.message),
+    0,
+  );
 }
 
 function getAssistantMessageBubbleCount(message: string) {
@@ -1926,18 +1924,16 @@ function getAssistantMessageBubbleTexts(message: string) {
 }
 
 function getAssistantResultRevealCount(responsePayload: ChatRecommendResponseDto) {
-  if (responsePayload.chat_category === "recommendation") {
-    const recommendations = getRecommendationMenus(responsePayload);
-
-    if (recommendations.length === 0) {
+  if (responsePayload.chat_category === "recommendation" && responsePayload.recommendations) {
+    if (responsePayload.recommendations.length === 0) {
       return 0;
     }
 
-    return recommendations.length > 1 ? 2 : 1;
+    return responsePayload.recommendations.length > 1 ? 2 : 1;
   }
 
-  if (responsePayload.chat_category === "feedback") {
-    return getFeedbackMenus(responsePayload).length > 0 ? 1 : 0;
+  if (responsePayload.chat_category === "feedback" && responsePayload.feedback) {
+    return responsePayload.feedback.menus.length > 0 ? 1 : 0;
   }
 
   return 0;
@@ -1962,10 +1958,6 @@ function EmptySection() {
         <br />
         무엇이든 물어보세요
       </p>
-      {/* <p className={`${styles.emptyText} typo-body3`}>
-        <CircleAlert size={20} />
-        상황을 자세히 알려주면 추천이 더 정확해져요
-      </p> */}
     </div>
   );
 }
@@ -2804,30 +2796,22 @@ function getFeedbackGaugePoint(angle: number) {
 }
 
 function getChatMealRecordMenus(chatItem: ChatHistoryItemResponseDto): ChatMealRecordMenu[] {
-  if (chatItem.response_payload.chat_category === "recommendation") {
-    const topRecommendation = getRecommendationMenus(chatItem.response_payload)[0];
+  if (
+    chatItem.response_payload.chat_category === "recommendation" &&
+    chatItem.response_payload.recommendations
+  ) {
+    const topRecommendation = chatItem.response_payload.recommendations[0];
     return topRecommendation ? [topRecommendation] : [];
   }
 
-  if (chatItem.response_payload.chat_category === "feedback") {
-    return getFeedbackMenus(chatItem.response_payload);
+  if (
+    chatItem.response_payload.chat_category === "feedback" &&
+    chatItem.response_payload.feedback
+  ) {
+    return chatItem.response_payload.feedback.menus;
   }
 
   return [];
-}
-
-function getRecommendationMenus(responsePayload: ChatRecommendResponseDto) {
-  return responsePayload.chat_category === "recommendation"
-    ? (responsePayload.recommendations ?? [])
-    : [];
-}
-
-function getFeedbackPayload(responsePayload: ChatRecommendResponseDto) {
-  return responsePayload.chat_category === "feedback" ? responsePayload.feedback : undefined;
-}
-
-function getFeedbackMenus(responsePayload: ChatRecommendResponseDto): FeedbackItemDto["menus"] {
-  return getFeedbackPayload(responsePayload)?.menus ?? [];
 }
 
 function getUniqueMealRecordMenus(menus: ChatMealRecordMenu[]) {
@@ -2838,12 +2822,6 @@ function getUniqueMealRecordMenus(menus: ChatMealRecordMenu[]) {
   });
 
   return [...menuById.values()];
-}
-
-function getChatItemImageUrl(chatItem: ChatHistoryItemResponseDto) {
-  const imageUrl = chatItem.image_url ?? chatItem.response_payload.image_url ?? "";
-
-  return imageUrl.trim().length > 0 ? imageUrl : null;
 }
 
 function getChatDateKey(chatItem: ChatHistoryItemResponseDto) {
@@ -2941,29 +2919,23 @@ function getMealRecordViewModelByTime(
   return buildMealRecordViewModel(dateKey, dayMeals, mealTime);
 }
 
-function getMealRecordViewModelByMenuIds(
-  dayMeals: DayMealSummary | undefined,
-  dateKey: string,
-  menuIds: number[],
-  mealTime?: MealTime,
+function hasChatMealRecordMenus(
+  chatItem: ChatHistoryItemResponseDto,
+  mealRecord: MealRecordViewModel | null,
 ) {
-  if (!dayMeals || menuIds.length === 0) {
-    return null;
+  if (!mealRecord) {
+    return false;
   }
 
-  const targetMenuIds = [...new Set(menuIds)];
-  const mealTimes = mealTime === undefined ? MEAL_TIME_LIST : [mealTime];
+  const chatMenuIds = getChatMealRecordMenus(chatItem).map((menu) => menu.menu_id);
 
-  for (const targetMealTime of mealTimes) {
-    const menus = dayMeals.menusByTime?.[targetMealTime] ?? [];
-    const recordedMenuIds = new Set(menus.map((menu) => menu.id));
-
-    if (targetMenuIds.every((menuId) => recordedMenuIds.has(menuId))) {
-      return buildMealRecordViewModel(dateKey, dayMeals, targetMealTime);
-    }
+  if (chatMenuIds.length === 0) {
+    return false;
   }
 
-  return null;
+  const recordedMenuIds = new Set(mealRecord.previousMealRecord.menus.map((menu) => menu.id));
+
+  return chatMenuIds.every((menuId) => recordedMenuIds.has(menuId));
 }
 
 function getDateMealRecordViewModels(dayMeals: DayMealSummary, dateKey: string) {
@@ -3158,75 +3130,21 @@ function resolveErrorMessage(
   return fallbackMessage;
 }
 
-function getSendMessageResponsePayload(
-  response: ChatHistoryItemResponseDto | ChatRecommendResponseDto,
-) {
-  return "response_payload" in response ? response.response_payload : response;
-}
-
-function isMatchingHistoryChatItem(
-  chatItem: ChatHistoryItemResponseDto,
-  inputText: string,
-  responsePayload: ChatRecommendResponseDto,
-) {
-  return (
-    chatItem.input_text.trim() === inputText.trim() &&
-    isSameChatResponsePayload(chatItem.response_payload, responsePayload)
-  );
-}
-
-function isSameChatResponsePayload(
-  left: ChatRecommendResponseDto,
-  right: ChatRecommendResponseDto,
-) {
-  if (left.chat_category !== right.chat_category) {
-    return false;
-  }
-
-  if (left.chat_category === "recommendation" && right.chat_category === "recommendation") {
-    return areNumberArraysEqual(
-      getRecommendationMenus(left).map((menu) => menu.menu_id),
-      getRecommendationMenus(right).map((menu) => menu.menu_id),
-    );
-  }
-
-  if (left.chat_category === "feedback" && right.chat_category === "feedback") {
-    return areNumberArraysEqual(
-      getFeedbackMenus(left).map((menu) => menu.menu_id),
-      getFeedbackMenus(right).map((menu) => menu.menu_id),
-    );
-  }
-
-  if (left.chat_category === "general" && right.chat_category === "general") {
-    return (left.general_answer ?? "") === (right.general_answer ?? "");
-  }
-
-  return false;
-}
-
-function areNumberArraysEqual(left: number[], right: number[]) {
-  return left.length === right.length && left.every((value, index) => value === right[index]);
-}
-
 function getAiCoachResponseAnalyticsProperties(response: ChatRecommendResponseDto) {
-  if (response.chat_category === "recommendation") {
-    const recommendations = getRecommendationMenus(response);
-
+  if (response.chat_category === "recommendation" && response.recommendations) {
     return {
-      menu_ids: recommendations.map((menu) => menu.menu_id),
-      menu_names: recommendations.map((menu) => menu.menu_name),
-      has_menu: recommendations.length > 0,
+      menu_ids: response.recommendations.map((menu) => menu.menu_id),
+      menu_names: response.recommendations.map((menu) => menu.menu_name),
+      has_menu: response.recommendations.length > 0,
       chat_mode: "recommendation",
     };
   }
 
-  if (response.chat_category === "feedback") {
-    const feedbackMenus = getFeedbackMenus(response);
-
+  if (response.chat_category === "feedback" && response.feedback) {
     return {
-      menu_ids: feedbackMenus.map((menu) => menu.menu_id),
-      menu_names: feedbackMenus.map((menu) => menu.menu_name),
-      has_menu: feedbackMenus.length > 0,
+      menu_ids: response.feedback.menus.map((menu) => menu.menu_id),
+      menu_names: response.feedback.menus.map((menu) => menu.menu_name),
+      has_menu: response.feedback.menus.length > 0,
       chat_mode: "feedback",
     };
   }

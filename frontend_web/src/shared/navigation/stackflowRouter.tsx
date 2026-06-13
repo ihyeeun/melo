@@ -90,8 +90,10 @@ type SwipeBackTransitionOptions = {
 };
 type SwipeBackTransitionRequester = (options: SwipeBackTransitionOptions) => boolean;
 
-const HomePage = createLazyActivity(() => import("@/features/home/HomePage"));
-const TodayMealScorePage = createLazyActivity(() => import("@/features/home/TodayMealScorePage"));
+const HomePage = createLazyActivity(() => import("@/features/home/pages/HomePage"));
+const TodayMealScorePage = createLazyActivity(
+  () => import("@/features/home/pages/TodayMealScorePage"),
+);
 const MealDetailPage = createLazyActivity(() => import("@/features/meal-record/MealDetailPage"));
 const MealRecordPage = createLazyActivity(() => import("@/features/meal-record/MealRecordPage"));
 const NutrientAddPage = createLazyActivity(
@@ -137,12 +139,18 @@ const GoalEditNutrientPage = createLazyActivity(
 );
 const ChatPage = createGuardedLazyActivity(
   FEATURE_GUARD.CHAT,
-  () => import("@/features/chat/ChatPage"),
+  () => import("@/features/chat/pages/ChatPage"),
 );
 const DiaryPage = createLazyActivity(() => import("@/features/diary/DiaryPage"));
-const RecommendResultPage = createLazyActivity(() => import("@/features/chat/RecommendResultPage"));
-const ChatMenuDetailPage = createLazyActivity(() => import("@/features/chat/ChatMenuDetailPage"));
-const FeedbackResultPage = createLazyActivity(() => import("@/features/chat/FeedbackResultPage"));
+const RecommendResultPage = createLazyActivity(
+  () => import("@/features/chat/pages/RecommendResultPage"),
+);
+const ChatMenuDetailPage = createLazyActivity(
+  () => import("@/features/chat/pages/ChatMenuDetailPage"),
+);
+const FeedbackResultPage = createLazyActivity(
+  () => import("@/features/chat/pages/FeedbackResultPage"),
+);
 const ChatFoodCameraPage = createGuardedLazyActivity(
   FEATURE_GUARD.FOOD_CAMERA,
   () => import("@/features/camera/pages/FoodImageFeedbackPage"),

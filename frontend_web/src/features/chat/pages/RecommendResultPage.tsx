@@ -19,7 +19,7 @@ import {
   getRecommendResultPath,
   getSafeChatId,
 } from "@/features/chat/utils/recommendNavigation";
-import { useDayMealsQuery } from "@/features/home/hooks/queries/useDayMealsQuery";
+import { useDayMealsQuery } from "@/features/home/hooks/queries/useTodayRecordQuery";
 import {
   MAX_MEAL_RECORD_MENUS,
   MEAL_RECORD_MENU_LIMIT_MESSAGE,
@@ -29,9 +29,7 @@ import { useGetProfileQuery } from "@/features/profile/hooks/queries/useProfileQ
 import { PATH } from "@/router/path";
 import { trackRecommendMenuSave } from "@/shared/analytics/recommendMenuEvents";
 import { AppApiError } from "@/shared/api/apiClient";
-import {
-  type MealType,
-} from "@/shared/api/types/api.dto";
+import { type MealType } from "@/shared/api/types/api.dto";
 import type {
   ChatHistoryItemResponseDto,
   ChatRecommendItemResponseDto,
@@ -73,7 +71,6 @@ export default function RecommendResultPage() {
     chatItem?.response_payload?.chat_category === "recommendation"
       ? chatItem.response_payload
       : null;
-  const recommendations = recommendationPayload?.recommendations ?? [];
 
   useEffect(() => {
     if (chatId === null) {
@@ -85,10 +82,10 @@ export default function RecommendResultPage() {
       return;
     }
 
-    if (!recommendationPayload || recommendations.length === 0) {
+    if (!recommendationPayload || !recommendationPayload.recommendations) {
       navigate(PATH.CHAT, { replace: true });
     }
-  }, [chatId, isPending, navigate, recommendationPayload, recommendations.length]);
+  }, [chatId, isPending, navigate, recommendationPayload]);
 
   if (chatId === null) {
     return null;
@@ -105,7 +102,7 @@ export default function RecommendResultPage() {
     );
   }
 
-  if (!chatItem || !recommendationPayload || recommendations.length === 0) {
+  if (!chatItem || !recommendationPayload || !recommendationPayload.recommendations) {
     return null;
   }
 
@@ -113,7 +110,7 @@ export default function RecommendResultPage() {
     <RecommendResultContent
       key={chatItem.id}
       chatItem={chatItem}
-      recommendations={recommendations}
+      recommendations={recommendationPayload.recommendations}
       profileNickname={profile?.nickname ?? ""}
     />
   );

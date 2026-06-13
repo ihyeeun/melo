@@ -18,7 +18,7 @@ import {
   getSafeChatId,
   getSafeMenuId,
 } from "@/features/chat/utils/recommendNavigation";
-import { useDayMealsQuery } from "@/features/home/hooks/queries/useDayMealsQuery";
+import { useDayMealsQuery } from "@/features/home/hooks/queries/useTodayRecordQuery";
 import {
   MealMenuNutrientDetail,
   type MealMenuNutrientSelection,
