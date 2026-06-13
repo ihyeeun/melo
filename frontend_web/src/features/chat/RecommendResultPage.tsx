@@ -73,6 +73,7 @@ export default function RecommendResultPage() {
     chatItem?.response_payload?.chat_category === "recommendation"
       ? chatItem.response_payload
       : null;
+  const recommendations = recommendationPayload?.recommendations ?? [];
 
   useEffect(() => {
     if (chatId === null) {
@@ -84,10 +85,10 @@ export default function RecommendResultPage() {
       return;
     }
 
-    if (!recommendationPayload || recommendationPayload.recommendations.length === 0) {
+    if (!recommendationPayload || recommendations.length === 0) {
       navigate(PATH.CHAT, { replace: true });
     }
-  }, [chatId, isPending, navigate, recommendationPayload]);
+  }, [chatId, isPending, navigate, recommendationPayload, recommendations.length]);
 
   if (chatId === null) {
     return null;
@@ -104,7 +105,7 @@ export default function RecommendResultPage() {
     );
   }
 
-  if (!chatItem || !recommendationPayload || recommendationPayload.recommendations.length === 0) {
+  if (!chatItem || !recommendationPayload || recommendations.length === 0) {
     return null;
   }
 
@@ -112,7 +113,7 @@ export default function RecommendResultPage() {
     <RecommendResultContent
       key={chatItem.id}
       chatItem={chatItem}
-      recommendations={recommendationPayload.recommendations}
+      recommendations={recommendations}
       profileNickname={profile?.nickname ?? ""}
     />
   );

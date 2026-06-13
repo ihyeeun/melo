@@ -158,18 +158,18 @@ interface ChatResponseBaseDto {
 
 export interface ChatRecommendationResponseDto extends ChatResponseBaseDto {
   chat_category: "recommendation";
-  recommendations: ChatRecommendItemResponseDto[];
+  recommendations?: ChatRecommendItemResponseDto[];
 }
 
 export interface ChatFeedbackResponseDto extends ChatResponseBaseDto {
   chat_category: "feedback";
-  feedback: FeedbackItemDto;
+  feedback?: FeedbackItemDto;
   recognized_foods?: ChatFoodImageRecognizedMenuResponseDto[];
 }
 
 export interface ChatGeneralResponseDto extends ChatResponseBaseDto {
   chat_category: "general";
-  general_answer: string;
+  general_answer?: string;
 }
 
 export interface ChatRecommendItemResponseDto {

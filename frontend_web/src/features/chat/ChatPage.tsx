@@ -1582,9 +1582,12 @@ export default function ChatPage() {
               const chatItemPlayback =
                 assistantPlayback?.chatItemId === chatItem.id ? assistantPlayback : null;
               const introMessage = chatItem.response_payload.intro_message;
+              const recommendationMenus = getRecommendationMenus(chatItem.response_payload);
+              const feedback = getFeedbackPayload(chatItem.response_payload);
+              const feedbackMenus = getFeedbackMenus(chatItem.response_payload);
               const generalAnswer =
                 chatItem.response_payload.chat_category === "general"
-                  ? chatItem.response_payload.general_answer
+                  ? (chatItem.response_payload.general_answer ?? "")
                   : "";
               const introBubbleCount = getAssistantMessageBubbleCount(introMessage);
               const visibleBubbleCount =
@@ -1685,12 +1688,12 @@ export default function ChatPage() {
                       ) : null}
 
                       {chatItem.response_payload.chat_category === "recommendation" &&
-                      chatItem.response_payload.recommendations.length > 0 &&
+                      recommendationMenus.length > 0 &&
                       shouldShowResultSection ? (
                         <RecommendationSection
                           chatId={chatItem.id}
                           animate={shouldAnimateAssistantResponse}
-                          recommendations={chatItem.response_payload.recommendations}
+                          recommendations={recommendationMenus}
                           visibleCardCount={resultVisibleCount}
                           onMealRecordClick={() =>
                             handleMenuRecordClick(
@@ -1708,11 +1711,13 @@ export default function ChatPage() {
                       ) : null}
 
                       {chatItem.response_payload.chat_category === "feedback" &&
+                      feedback &&
+                      feedbackMenus.length > 0 &&
                       shouldShowResultSection ? (
                         <FeedbackSection
                           chatId={chatItem.id}
                           animate={shouldAnimateAssistantResponse}
-                          feedback={chatItem.response_payload.feedback}
+                          feedback={feedback}
                           hasImage={userImageUrl !== null}
                           timeText={assistantTimeText}
                           onMealRecordClick={() =>
@@ -1909,7 +1914,7 @@ function getAssistantBubbleRevealCount(responsePayload: ChatRecommendResponseDto
     return introBubbleCount;
   }
 
-  return introBubbleCount + getAssistantMessageBubbleCount(responsePayload.general_answer);
+  return introBubbleCount + getAssistantMessageBubbleCount(responsePayload.general_answer ?? "");
 }
 
 function getAssistantMessageBubbleCount(message: string) {
@@ -1922,15 +1927,17 @@ function getAssistantMessageBubbleTexts(message: string) {
 
 function getAssistantResultRevealCount(responsePayload: ChatRecommendResponseDto) {
   if (responsePayload.chat_category === "recommendation") {
-    if (responsePayload.recommendations.length === 0) {
+    const recommendations = getRecommendationMenus(responsePayload);
+
+    if (recommendations.length === 0) {
       return 0;
     }
 
-    return responsePayload.recommendations.length > 1 ? 2 : 1;
+    return recommendations.length > 1 ? 2 : 1;
   }
 
   if (responsePayload.chat_category === "feedback") {
-    return responsePayload.feedback.menus.length > 0 ? 1 : 0;
+    return getFeedbackMenus(responsePayload).length > 0 ? 1 : 0;
   }
 
   return 0;
@@ -2798,15 +2805,29 @@ function getFeedbackGaugePoint(angle: number) {
 
 function getChatMealRecordMenus(chatItem: ChatHistoryItemResponseDto): ChatMealRecordMenu[] {
   if (chatItem.response_payload.chat_category === "recommendation") {
-    const topRecommendation = chatItem.response_payload.recommendations[0];
+    const topRecommendation = getRecommendationMenus(chatItem.response_payload)[0];
     return topRecommendation ? [topRecommendation] : [];
   }
 
   if (chatItem.response_payload.chat_category === "feedback") {
-    return chatItem.response_payload.feedback.menus;
+    return getFeedbackMenus(chatItem.response_payload);
   }
 
   return [];
+}
+
+function getRecommendationMenus(responsePayload: ChatRecommendResponseDto) {
+  return responsePayload.chat_category === "recommendation"
+    ? (responsePayload.recommendations ?? [])
+    : [];
+}
+
+function getFeedbackPayload(responsePayload: ChatRecommendResponseDto) {
+  return responsePayload.chat_category === "feedback" ? responsePayload.feedback : undefined;
+}
+
+function getFeedbackMenus(responsePayload: ChatRecommendResponseDto): FeedbackItemDto["menus"] {
+  return getFeedbackPayload(responsePayload)?.menus ?? [];
 }
 
 function getUniqueMealRecordMenus(menus: ChatMealRecordMenu[]) {
@@ -3164,20 +3185,20 @@ function isSameChatResponsePayload(
 
   if (left.chat_category === "recommendation" && right.chat_category === "recommendation") {
     return areNumberArraysEqual(
-      left.recommendations.map((menu) => menu.menu_id),
-      right.recommendations.map((menu) => menu.menu_id),
+      getRecommendationMenus(left).map((menu) => menu.menu_id),
+      getRecommendationMenus(right).map((menu) => menu.menu_id),
     );
   }
 
   if (left.chat_category === "feedback" && right.chat_category === "feedback") {
     return areNumberArraysEqual(
-      left.feedback.menus.map((menu) => menu.menu_id),
-      right.feedback.menus.map((menu) => menu.menu_id),
+      getFeedbackMenus(left).map((menu) => menu.menu_id),
+      getFeedbackMenus(right).map((menu) => menu.menu_id),
     );
   }
 
   if (left.chat_category === "general" && right.chat_category === "general") {
-    return left.general_answer === right.general_answer;
+    return (left.general_answer ?? "") === (right.general_answer ?? "");
   }
 
   return false;
@@ -3189,19 +3210,23 @@ function areNumberArraysEqual(left: number[], right: number[]) {
 
 function getAiCoachResponseAnalyticsProperties(response: ChatRecommendResponseDto) {
   if (response.chat_category === "recommendation") {
+    const recommendations = getRecommendationMenus(response);
+
     return {
-      menu_ids: response.recommendations.map((menu) => menu.menu_id),
-      menu_names: response.recommendations.map((menu) => menu.menu_name),
-      has_menu: response.recommendations.length > 0,
+      menu_ids: recommendations.map((menu) => menu.menu_id),
+      menu_names: recommendations.map((menu) => menu.menu_name),
+      has_menu: recommendations.length > 0,
       chat_mode: "recommendation",
     };
   }
 
   if (response.chat_category === "feedback") {
+    const feedbackMenus = getFeedbackMenus(response);
+
     return {
-      menu_ids: response.feedback.menus.map((menu) => menu.menu_id),
-      menu_names: response.feedback.menus.map((menu) => menu.menu_name),
-      has_menu: response.feedback.menus.length > 0,
+      menu_ids: feedbackMenus.map((menu) => menu.menu_id),
+      menu_names: feedbackMenus.map((menu) => menu.menu_name),
+      has_menu: feedbackMenus.length > 0,
       chat_mode: "feedback",
     };
   }
