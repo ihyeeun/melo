@@ -63,7 +63,6 @@ const FOOD_MARKER_POSITION_MAX = 0.9;
 const FOOD_MARKER_DEFAULT_BELOW_THRESHOLD = 0.18;
 const FOOD_MARKER_CLUSTER_SOURCE_BELOW_THRESHOLD = 0.42;
 const FOOD_MARKER_CLUSTER_SOURCE_PIN_SIZE = 28;
-const FOOD_MARKER_CLUSTER_SOURCE_BUBBLE_INLINE_MARGIN = 8;
 
 type FoodMarkerItem = {
   id: string;
@@ -595,7 +594,7 @@ function FoodImageFeedbackPreview({
         ? foodMarkers.map((marker) => {
             const markerNumber = marker.index + 1;
             const isSourceMarkerOpen = visibleOpenSourceMarkerId === marker.id;
-            const sourceBubbleSize = getEstimatedFoodClusterSourceBubbleSize(marker, markerLayout);
+            const sourceBubbleSize = getEstimatedFoodMarkerBubbleSize(marker);
             const sourceMarkerClassName = [
               styles.foodClusterSourceMarker,
               isSourceMarkerOpen ? styles.foodClusterSourceMarkerOpen : "",
@@ -914,35 +913,6 @@ function getEstimatedFoodMarkerBubbleSize(marker: Pick<FoodMarkerItem, "label" |
   return {
     height,
     width,
-  };
-}
-
-function getEstimatedFoodClusterSourceBubbleSize(
-  marker: FoodMarkerItem,
-  markerLayout: FoodMarkerLayout,
-) {
-  const sourceBubbleWidth = Math.min(
-    FOOD_MARKER_BUBBLE_MAX_WIDTH,
-    Math.max(
-      FOOD_MARKER_BUBBLE_MIN_WIDTH,
-      markerLayout.width - FOOD_MARKER_CLUSTER_SOURCE_BUBBLE_INLINE_MARGIN,
-    ),
-  );
-  const scoreWidth = marker.scoreText ? FOOD_MARKER_SCORE_TEXT_WIDTH : 0;
-  const contentGap = marker.scoreText ? FOOD_MARKER_BUBBLE_CONTENT_GAP : 0;
-  const labelWidth = getEstimatedTextWidth(marker.label);
-  const labelContentWidth = Math.max(
-    1,
-    sourceBubbleWidth - scoreWidth - contentGap - FOOD_MARKER_BUBBLE_HORIZONTAL_PADDING,
-  );
-  const lineCount = Math.max(1, Math.ceil(labelWidth / labelContentWidth));
-
-  return {
-    height: Math.max(
-      FOOD_MARKER_BUBBLE_MIN_HEIGHT,
-      lineCount * FOOD_MARKER_BUBBLE_TEXT_LINE_HEIGHT + 20,
-    ),
-    width: sourceBubbleWidth,
   };
 }
 
