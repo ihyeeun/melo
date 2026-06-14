@@ -15,6 +15,7 @@ import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import NumberField from "@/shared/commons/input/NumberField";
 import { formatDateKeyToMonthDayWeekdayLabel } from "@/shared/utils/dateFormat";
 import { formatNumberWithMaxOneDecimal } from "@/shared/utils/numberFormat";
+import { getServingUnitLabel } from "@/shared/utils/servingUnit";
 
 type SelectedMenuItem = {
   id: number;
@@ -86,7 +87,7 @@ function toPositiveNumber(value: number | null | undefined) {
 function resolveServingContext(recommendation: ChatMealRecordMenu): ServingContext {
   const matched = recommendation.unit_quantity.match(UNIT_QUANTITY_PATTERN);
   const parsedCount = matched ? Number(matched[1]) : Number.NaN;
-  const unitLabel = matched?.[2]?.trim() || recommendation.unit_quantity || "인분";
+  const unitLabel = matched?.[2]?.trim() || recommendation.unit_quantity || "";
 
   return {
     baseWeight: toPositiveNumber(recommendation.weight) ?? 1,
@@ -347,7 +348,7 @@ export function ChatMealRecordBottomSheet({
           <section className={styles.menuSection}>
             {selectedItems.map((item) => {
               const displayValue = getDisplayValue(item.quantity, item.mode, item.servingContext);
-              const unitSelectLabel = item.servingContext.unitLabel === "인분" ? "인분" : "기준량";
+              const unitSelectLabel = getServingUnitLabel(item.servingContext.unitLabel);
               const selectLabel =
                 item.mode === "unit" ? unitSelectLabel : item.servingContext.weightUnit;
 

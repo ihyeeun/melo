@@ -22,6 +22,7 @@ import {
 import { Button } from "@/shared/commons/button/Button";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import NumberField from "@/shared/commons/input/NumberField";
+import { formatBaseServingUnit } from "@/shared/utils/servingUnit";
 
 import styles from "../styles/MealMenuNutrientDetail.module.css";
 
@@ -418,7 +419,7 @@ export function MealMenuNutrientDetail({
               value="unit"
               className={`${styles.TabsTab} ${inputMode === "unit" ? "typo-label1" : "typo-label2"}`}
             >
-              1{menu.unit_quantity === "인분" ? menu.unit_quantity : "기준량"} ({menu.weight}
+              {formatBaseServingUnit(menu.unit_quantity)} ({menu.weight}
               {menu.unit === MENU_UNIT.GRAM ? "g" : "ml"})
             </Tabs.Tab>
             <Tabs.Tab
