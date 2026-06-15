@@ -20,7 +20,7 @@
 
 .onboardingTargetActive {
   pointer-events: none;
-  z-index: 11;
+  z-index: 1;
 }
 
 .onboardingTargetActive::after {

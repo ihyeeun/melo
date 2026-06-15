@@ -33,7 +33,7 @@
   margin-top: auto;
   position: sticky;
   transition: opacity 180ms ease;
-  z-index: 10;
+  z-index: 1;
   width: fit-content;
   margin-left: auto;
 }
@@ -42,7 +42,7 @@
   background-color: var(--dimmer-dimmer);
   inset: 0;
   position: fixed;
-  z-index: 5;
+  z-index: 1;
 }
 
 .floatingCameraBackdrop:active {
@@ -275,7 +275,7 @@
   justify-content: center;
   padding: calc(var(--safe-area-top) + 56px) 16px calc(var(--safe-area-bottom) + 32px);
   position: fixed;
-  z-index: 1000;
+  z-index: 1;
 }
 
 .userImagePreviewCloseButton {

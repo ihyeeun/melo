@@ -196,7 +196,7 @@
 }
 
 .selectPositioner {
-  z-index: 10000;
+  z-index: 10;
   margin-top: 8px;
 }
 
