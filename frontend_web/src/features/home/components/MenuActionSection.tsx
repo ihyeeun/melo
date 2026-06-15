@@ -57,7 +57,7 @@ export default function MenuActionSection({
             renderBubble={renderOnboardingBubble}
           >
             <MenuCard
-              title={"메뉴 촬영"}
+              title={"메뉴 찍기"}
               description="메뉴판이나 음식을 찍어 피드백을 받아보세요"
               iconSrc="/icons/camera-icon.svg"
               onClick={disableInteractions ? undefined : handleOpenCameraActionSheet}
