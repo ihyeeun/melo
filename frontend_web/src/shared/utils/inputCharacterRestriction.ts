@@ -1,4 +1,5 @@
-const DISALLOWED_INPUT_CHARACTERS = /[^가-힣ㄱ-ㅎㅏ-ㅣa-zA-Z0-9 !@#$%^&*()_+\-=[\]{};:'",.<>/?\\|`~]/g;
+const DISALLOWED_INPUT_CHARACTERS =
+  /[^\p{Script=Hangul}a-zA-Z0-9 !@#$%^&*()_+\-=[\]{};:'",.<>/?\\|`~]/gu;
 
 const UNSUPPORTED_INPUT_TYPES = new Set([
   "button",
@@ -42,9 +43,15 @@ const updateInputCursor = (input: HTMLInputElement, rawValueBeforeCursor: string
   }
 };
 
+const isComposingInputEvent = (event: Event) => (event as InputEvent).isComposing === true;
+
 export const initInputCharacterRestriction = () => {
   const handleInput = (event: Event) => {
     if (!isSanitizableInput(event.target)) {
+      return;
+    }
+
+    if (isComposingInputEvent(event)) {
       return;
     }
 
