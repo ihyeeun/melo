@@ -84,10 +84,6 @@ export default function SteptargetCalories({ data, update }: StepComponentProps)
   const [drafttargetCalories, setDrafttargetCalories] = useState<number | undefined>(undefined);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const focusInput = () => {
-    inputRef.current?.focus();
-  };
-
   const {
     mutate,
     isPending,
@@ -126,6 +122,12 @@ export default function SteptargetCalories({ data, update }: StepComponentProps)
 
     mutate(requestPayload);
   }, [mutate, requestPayload]);
+
+  useEffect(() => {
+    if (!open) return;
+
+    inputRef.current?.focus();
+  }, [open]);
 
   useEffect(() => {
     if (responseData === undefined) {
@@ -225,7 +227,7 @@ export default function SteptargetCalories({ data, update }: StepComponentProps)
 
         <p className={`${styles.onboardingGoalKcalHelper} typo-body1`}>{goalWeekMessage}</p>
       </div>
-      <BottomSheet isOpen={open} onClose={() => setOpen(false)} onOpenEnd={focusInput}>
+      <BottomSheet isOpen={open} onClose={() => setOpen(false)}>
         <div className={`${styles.onboardingGoalKcalSheet}`}>
           <h3 className="typo-title2">목표 칼로리</h3>
           <EditorInput

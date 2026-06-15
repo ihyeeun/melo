@@ -1,69 +1,31 @@
-import { useState } from "react";
-
 import ActionCard from "@/features/home/components/cards/ActionCard";
-import StepsLogBottomSheet from "@/features/home/components/sheets/StepsLogBottomSheet";
-import WeightLogBottomSheet from "@/features/home/components/sheets/WeightLogBottomSheet";
-import {
-  useRegisterStepsMutation,
-  useRegisterWeightMutation,
-} from "@/features/home/hooks/mutations/useBodyLogMutation";
 import { useGetBodyLog } from "@/features/home/hooks/queries/useTodayRecordQuery";
 import style from "@/features/home/styles/TodayBodyLogSection.module.css";
 import { useGetProfileQuery } from "@/features/profile/hooks/queries/useProfileQuery";
+import { PATH } from "@/router/path";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
-import { LoadingOverlay } from "@/shared/commons/loading/Loading";
-import { toast } from "@/shared/commons/toast/toast";
+import { useNavigate } from "@/shared/navigation/stackflowNavigation";
 import { getTodayFormatDateKey } from "@/shared/utils/dateFormat";
 
-type TodayMetricType = "weight" | "steps";
-
 export default function TodayBodyLogSection({ date }: { date: string }) {
+  const navigate = useNavigate();
   const { data: bodyLog } = useGetBodyLog(date);
   const { data: profile } = useGetProfileQuery();
   const isToday = date === getTodayFormatDateKey();
   const displayWeight = bodyLog?.weight ?? (isToday ? (profile?.weight ?? 0) : 0);
-  const initialWeight = bodyLog?.weight ?? (isToday ? profile?.weight : undefined);
 
-  const { mutate: registerWeight, isPending: isWeightPending } = useRegisterWeightMutation({
-    onSuccess: () => {
-      toast.success("체중이 기록되었어요");
-      closeEditor();
-    },
-    onError: () => {
-      toast.error("체중 기록에 실패했어요");
-    },
-  });
-  const { mutate: registerSteps, isPending: isStepsPending } = useRegisterStepsMutation({
-    onSuccess: () => {
-      toast.success("걸음 수가 기록되었어요");
-      closeEditor();
-    },
-    onError: () => {
-      toast.error("걸음 수 기록에 실패했어요");
-    },
-  });
+  const getSheetPath = (pathname: string) => {
+    const searchParams = new URLSearchParams({ date });
 
-  const [editingMetric, setEditingMetric] = useState<TodayMetricType | null>(null);
-  const isSubmitPending = isWeightPending || isStepsPending;
-
-  const closeEditor = () => {
-    setEditingMetric(null);
+    return `${pathname}?${searchParams.toString()}`;
   };
 
   const openWeightEditor = () => {
-    setEditingMetric("weight");
+    navigate(getSheetPath(PATH.HOME_WEIGHT_LOG_SHEET));
   };
 
   const openStepsEditor = () => {
-    setEditingMetric("steps");
-  };
-
-  const submitWeight = (weight: number) => {
-    registerWeight({ date, weight });
-  };
-
-  const submitSteps = (steps: number) => {
-    registerSteps({ date, steps });
+    navigate(getSheetPath(PATH.HOME_STEPS_LOG_SHEET));
   };
 
   return (
@@ -77,27 +39,6 @@ export default function TodayBodyLogSection({ date }: { date: string }) {
           onClick={openStepsEditor}
         />
       </div>
-
-      {editingMetric === "weight" ? (
-        <WeightLogBottomSheet
-          initialWeight={initialWeight}
-          onClose={closeEditor}
-          onSubmit={submitWeight}
-        />
-      ) : null}
-      {editingMetric === "steps" ? (
-        <StepsLogBottomSheet
-          initialSteps={bodyLog?.steps ?? undefined}
-          onClose={closeEditor}
-          onSubmit={submitSteps}
-        />
-      ) : null}
-
-      {isSubmitPending ? (
-        <LoadingOverlay
-          label={isWeightPending ? "체중을 기록하는 중입니다." : "걸음 수를 기록하는 중입니다."}
-        />
-      ) : null}
     </>
   );
 }

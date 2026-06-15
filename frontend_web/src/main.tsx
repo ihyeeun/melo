@@ -1,3 +1,4 @@
+import "@seed-design/css/base.css";
 import "./shared/styles/tokens.css";
 import "./index.css";
 

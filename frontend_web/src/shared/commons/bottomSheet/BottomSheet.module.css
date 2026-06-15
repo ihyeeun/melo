@@ -1,0 +1,28 @@
+.header:global(.seed-bottom-sheet__header) {
+  align-items: center;
+  display: flex;
+  flex-direction: row;
+  gap: 0;
+  justify-content: center;
+  width: 100%;
+  padding-top: 20px;
+  padding-bottom: 12px;
+}
+
+.handle:global(.seed-bottom-sheet-handle__root) {
+  background-color: var(--static-black);
+  border-radius: 100px;
+  height: 4px;
+  position: relative;
+  top: auto;
+  left: auto;
+  transform: none;
+  width: 50px;
+}
+
+.body:global(.seed-bottom-sheet__body) {
+  --seed-box-padding-x: 0px;
+
+  padding-left: 0;
+  padding-right: 0;
+}

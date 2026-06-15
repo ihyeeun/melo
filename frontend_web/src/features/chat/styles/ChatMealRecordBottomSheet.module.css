@@ -2,7 +2,7 @@
   --chat-meal-record-focus-bottom-offset: calc(50px + 24px);
 }
 
-.bottomSheet :global(.react-modal-sheet-content-scroller) {
+.bottomSheet :global(.seed-bottom-sheet__body) {
   scroll-padding-bottom: calc(
     var(--chat-meal-record-focus-bottom-offset) +
       env(keyboard-inset-height, var(--keyboard-inset-height, 0px))

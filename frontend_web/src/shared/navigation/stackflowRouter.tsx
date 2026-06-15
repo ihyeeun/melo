@@ -21,6 +21,9 @@ import {
   useState,
 } from "react";
 
+import HomeStepsLogSheet from "@/features/home/components/sheets/StepsLogBottomSheetActivity";
+import HomeWeightLogSheet from "@/features/home/components/sheets/WeightLogBottomSheetActivity";
+import ProfileNicknameSheetPage from "@/features/profile/ProfileNicknameSheetPage";
 import { PATH } from "@/router/path";
 import { track } from "@/shared/analytics/analytics";
 import { EVENT_NAME } from "@/shared/analytics/analytics.constants";
@@ -32,6 +35,7 @@ import {
   useIsFeatureBlocked,
 } from "@/shared/guards/featureGuard";
 
+import { setStackflowNavigateBackHandler } from "./stackflowNavigationController";
 import styles from "./StackflowRuntime.module.css";
 
 type ActivityParams = Record<string, string | undefined>;
@@ -159,9 +163,12 @@ const AppInfoPage = createLazyActivity(() => import("@/features/kakao-web-auth/p
 
 const ACTIVITIES = {
   Home: HomePage,
+  HomeWeightLogSheet,
+  HomeStepsLogSheet,
   TodayMealScore: TodayMealScorePage,
   Onboarding: OnboardingPage,
   Profile: ProfilePage,
+  ProfileNicknameSheet: ProfileNicknameSheetPage,
   Settings: SettingsPage,
   SettingsFeedback: SettingsFeedbackPage,
   SettingsSubCode: SettingsSubCodePage,
@@ -191,9 +198,12 @@ const ACTIVITIES = {
 
 const ACTIVITY_ROUTES: Record<keyof typeof ACTIVITIES, RoutePath> = {
   Home: [PATH.HOME, PATH.ROOT],
+  HomeWeightLogSheet: PATH.HOME_WEIGHT_LOG_SHEET,
+  HomeStepsLogSheet: PATH.HOME_STEPS_LOG_SHEET,
   TodayMealScore: PATH.TODAY_MEAL_SCORE,
   Onboarding: PATH.ONBOARDING,
   Profile: PATH.PROFILE,
+  ProfileNicknameSheet: PATH.PROFILE_NICKNAME_SHEET,
   Settings: PATH.SETTINGS,
   SettingsFeedback: PATH.SETTINGS_FEEDBACK,
   SettingsSubCode: PATH.SETTINGS_SUB_CODE,
@@ -222,6 +232,11 @@ const ACTIVITY_ROUTES: Record<keyof typeof ACTIVITIES, RoutePath> = {
 };
 
 type ActivityName = keyof typeof ACTIVITY_ROUTES;
+const BOTTOM_SHEET_ACTIVITY_NAMES = new Set<ActivityName>([
+  "HomeWeightLogSheet",
+  "HomeStepsLogSheet",
+  "ProfileNicknameSheet",
+]);
 
 const STACK_TRANSITION_DURATION = 270;
 const EDGE_SWIPE_WIDTH = 44;
@@ -310,6 +325,10 @@ function getPrimaryRoutePath(activityName: ActivityName) {
 
 function isActivityName(value: string): value is ActivityName {
   return value in ACTIVITY_ROUTES;
+}
+
+function isBottomSheetActivityName(value: string) {
+  return isActivityName(value) && BOTTOM_SHEET_ACTIVITY_NAMES.has(value);
 }
 
 function resolveActivityForPath(
@@ -586,7 +605,9 @@ function StackActivityFrame({
   const [isSwipeCompleting, setIsSwipeCompleting] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
+  const isBottomSheetActivity = isBottomSheetActivityName(activity.name);
   const canSwipeBack =
+    !isBottomSheetActivity &&
     activity.isTop &&
     !activity.isRoot &&
     activity.transitionState === "enter-done" &&
@@ -842,7 +863,8 @@ function StackActivityFrame({
       ref={frameRef}
       className={styles.activityFrame}
       data-dragging={isDragging ? "true" : undefined}
-      data-enter-animation={shouldAnimateEnter ? "true" : undefined}
+      data-bottom-sheet={isBottomSheetActivity ? "true" : undefined}
+      data-enter-animation={shouldAnimateEnter && !isBottomSheetActivity ? "true" : undefined}
       data-resetting={isResetting ? "true" : undefined}
       data-root={activity.isRoot ? "true" : undefined}
       data-swipe-completing={isSwipeCompleting ? "true" : undefined}
@@ -1041,6 +1063,8 @@ export function navigateBack({
 
   return false;
 }
+
+setStackflowNavigateBackHandler(navigateBack);
 
 function replaceStackWithActivity({
   activityName,

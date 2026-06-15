@@ -136,7 +136,7 @@ function getScaledCalories(
 }
 
 function getScrollContainer(element: HTMLElement) {
-  const sheetScroller = element.closest(".react-modal-sheet-content-scroller");
+  const sheetScroller = element.closest(".seed-bottom-sheet__body, .seed-bottom-sheet__content");
 
   if (sheetScroller instanceof HTMLElement) {
     return sheetScroller;
