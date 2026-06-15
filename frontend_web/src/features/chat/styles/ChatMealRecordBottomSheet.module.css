@@ -1,14 +1,3 @@
-.bottomSheet {
-  --chat-meal-record-focus-bottom-offset: calc(50px + 24px);
-}
-
-.bottomSheet :global(.seed-bottom-sheet__body) {
-  scroll-padding-bottom: calc(
-    var(--chat-meal-record-focus-bottom-offset) +
-      env(keyboard-inset-height, var(--keyboard-inset-height, 0px))
-  );
-}
-
 .container {
   display: flex;
   flex-direction: column;
@@ -164,7 +153,6 @@
   background-color: transparent;
   border: 0;
   color: var(--label-normal);
-  scroll-margin-bottom: var(--chat-meal-record-focus-bottom-offset);
   text-align: center;
   width: 100%;
 }

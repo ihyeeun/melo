@@ -1,3 +1,9 @@
+.content:global(.seed-bottom-sheet__content) {
+  max-height: calc(100dvh - var(--safe-area-top, 0px) - 8px);
+  min-height: 0;
+  overflow: hidden;
+}
+
 .header:global(.seed-bottom-sheet__header) {
   align-items: center;
   display: flex;
@@ -23,6 +29,11 @@
 .body:global(.seed-bottom-sheet__body) {
   --seed-box-padding-x: 0px;
 
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   padding-left: 0;
   padding-right: 0;
+  -webkit-overflow-scrolling: touch;
 }
