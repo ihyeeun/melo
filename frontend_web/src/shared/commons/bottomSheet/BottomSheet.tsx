@@ -72,7 +72,7 @@ export default function BottomSheet({
         style={positionerStyle}
       >
         <SeedBottomSheet.Backdrop />
-        <SeedBottomSheet.Content className={styles.content} aria-describedby={undefined}>
+        <SeedBottomSheet.Content aria-describedby={undefined}>
           <SeedBottomSheet.Header
             className={styles.header}
             onPointerDownCapture={blurActiveElement}
