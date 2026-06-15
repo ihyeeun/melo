@@ -232,11 +232,15 @@ export default function CameraCaptureScreen() {
   const insets = useSafeAreaInsets();
   const isFocused = useIsFocused();
   const cameraRef = useRef<Camera>(null);
+  const isProcessingRef = useRef(false);
   const [isPreparing, setIsPreparing] = useState(true);
   const [cameraPermissionStatus, setCameraPermissionStatus] =
     useState<CameraPermissionStatus | null>(null);
   const [isDeviceDetectionFinished, setIsDeviceDetectionFinished] = useState(false);
-  const [isProcessing, setIsProcessing] = useState(false);
+  const [isCameraInitialized, setIsCameraInitialized] = useState(false);
+  const [isCapturing, setIsCapturing] = useState(false);
+  const [isPickingGallery, setIsPickingGallery] = useState(false);
+  const isProcessing = isCapturing || isPickingGallery;
   const capturePayload = useMemo(() => getPendingCameraCapturePayload(), []);
   const captureMode = useMemo<CameraCaptureMode>(
     () => capturePayload?.mode ?? DEFAULT_CAPTURE_MODE,
@@ -258,6 +262,10 @@ export default function CameraCaptureScreen() {
     [capturePayload?.quality],
   );
   const device = useCameraDevice("back");
+
+  useEffect(() => {
+    setIsCameraInitialized(false);
+  }, [device?.id]);
 
   const getCameraPermissionStatus = useCallback(async (shouldRequestPermission: boolean) => {
     const currentStatus = await Camera.getCameraPermissionStatus();
@@ -411,9 +419,17 @@ export default function CameraCaptureScreen() {
   }, [captureMode]);
 
   const handleCapturePress = useCallback(async () => {
-    if (!cameraRef.current || isProcessing) return;
+    if (
+      !cameraRef.current ||
+      isProcessing ||
+      isProcessingRef.current ||
+      !isCameraInitialized ||
+      !isFocused
+    )
+      return;
 
-    setIsProcessing(true);
+    isProcessingRef.current = true;
+    setIsCapturing(true);
 
     try {
       const photo = await cameraRef.current.takePhoto({
@@ -433,20 +449,31 @@ export default function CameraCaptureScreen() {
       });
 
       router.back();
-    } catch {
+    } catch (error) {
+      const nativeMessage =
+        error instanceof Error && error.message.trim().length > 0
+          ? error.message.trim()
+          : "unknown";
+      console.warn("[CameraCapture] takePhoto failed", error);
       rejectCameraCaptureSession(
-        new BridgeHandledError("촬영 결과를 가져오지 못했어요.", 500, "CAMERA_CAPTURE_FAILED"),
+        new BridgeHandledError(
+          `촬영 결과를 가져오지 못했어요. (${nativeMessage})`,
+          500,
+          "CAMERA_CAPTURE_FAILED",
+        ),
       );
       router.back();
     } finally {
-      setIsProcessing(false);
+      isProcessingRef.current = false;
+      setIsCapturing(false);
     }
-  }, [isProcessing]);
+  }, [isCameraInitialized, isFocused, isProcessing]);
 
   const handleGalleryPress = useCallback(async () => {
-    if (isProcessing) return;
+    if (isProcessing || isProcessingRef.current) return;
 
-    setIsProcessing(true);
+    isProcessingRef.current = true;
+    setIsPickingGallery(true);
 
     try {
       const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -526,7 +553,8 @@ export default function CameraCaptureScreen() {
       );
       router.back();
     } finally {
-      setIsProcessing(false);
+      isProcessingRef.current = false;
+      setIsPickingGallery(false);
     }
   }, [capturePayload?.quality, handleOpenSettingsPress, isProcessing]);
 
@@ -534,7 +562,8 @@ export default function CameraCaptureScreen() {
     cameraPermissionStatus === "granted" &&
     cameraOnboardingConfig !== null &&
     !isCameraOnboardingResolved;
-  const isCaptureDisabled = isProcessing || isCameraOnboardingVisible || isCameraOnboardingPending;
+  const isGalleryDisabled = isProcessing || isCameraOnboardingVisible || isCameraOnboardingPending;
+  const isCaptureDisabled = isGalleryDisabled || !isFocused || !isCameraInitialized;
   const shouldShowGuideOverlay =
     shouldShowOverlay && !isCameraOnboardingVisible && !isCameraOnboardingPending;
 
@@ -591,10 +620,13 @@ export default function CameraCaptureScreen() {
         ref={cameraRef}
         style={StyleSheet.absoluteFill}
         device={device}
-        isActive={isFocused && !isProcessing}
+        isActive={isFocused && !isPickingGallery}
         photo={true}
         audio={false}
         photoQualityBalance={photoQualityBalance}
+        onInitialized={() => {
+          setIsCameraInitialized(true);
+        }}
       />
 
       <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
@@ -640,9 +672,13 @@ export default function CameraCaptureScreen() {
       <View style={[styles.bottomBar, { paddingBottom: Math.max(insets.bottom, 14) }]}>
         {cameraModeConfig.showGalleryButton ? (
           <Pressable
-            style={[styles.sideSlot, styles.galleryButton, isProcessing && styles.disabledButton]}
+            style={[
+              styles.sideSlot,
+              styles.galleryButton,
+              isGalleryDisabled && styles.disabledButton,
+            ]}
             onPress={handleGalleryPress}
-            disabled={isCaptureDisabled}
+            disabled={isGalleryDisabled}
             accessibilityRole="button"
             accessibilityLabel="갤러리에서 사진 선택"
           >
@@ -652,7 +688,7 @@ export default function CameraCaptureScreen() {
           <View style={styles.sideSlot} />
         )}
         <Pressable
-          style={[styles.captureOuter, isProcessing && styles.disabledButton]}
+          style={[styles.captureOuter, isCaptureDisabled && styles.disabledButton]}
           onPress={handleCapturePress}
           disabled={isCaptureDisabled}
           accessibilityRole="button"
