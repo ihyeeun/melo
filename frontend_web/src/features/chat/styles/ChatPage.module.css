@@ -747,14 +747,21 @@
 }
 
 .textInput {
+  background-color: var(--bg-white);
   flex: 1 1 auto;
   min-width: 0;
   width: 100%;
   padding: 9px 20px;
   border-radius: 100px;
   border: 1px solid var(--border-neutral);
+  color: var(--label-normal);
   resize: none;
   overflow-y: auto;
+}
+
+.textInput::placeholder {
+  color: var(--label-assistive);
+  opacity: 1;
 }
 
 .textInputWrapper {
