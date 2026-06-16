@@ -1,8 +1,8 @@
 import { useStack } from "@stackflow/react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
+import AppOpenSettingsFeedbackPage from "@/features/app-open/AppOpenSettingsFeedbackPage";
 import { useGetProfileQuery } from "@/features/profile/hooks/queries/useProfileQuery";
-import { PATH } from "@/router/path";
 import { track } from "@/shared/analytics/analytics";
 import { EVENT_NAME } from "@/shared/analytics/analytics.constants";
 import {
@@ -31,11 +31,17 @@ function getTallyFormUrl(userId: number, appVersion: string | null) {
 }
 
 export default function SettingsFeedbackPage() {
+  if (!isNativeApp()) {
+    return <AppOpenSettingsFeedbackPage autoOpen={false} />;
+  }
+
+  return <NativeSettingsFeedbackPage />;
+}
+
+function NativeSettingsFeedbackPage() {
   const navigate = useNavigate();
   const stack = useStack();
-  const [appVersion, setAppVersion] = useState<string | null | undefined>(() =>
-    isNativeApp() ? undefined : null,
-  );
+  const [appVersion, setAppVersion] = useState<string | null | undefined>(undefined);
   const [loadedFormUrl, setLoadedFormUrl] = useState<string | null>(null);
   const {
     data: profile,
@@ -57,12 +63,7 @@ export default function SettingsFeedbackPage() {
       return;
     }
 
-    if (isNativeApp()) {
-      syncAppTab("home");
-      return;
-    }
-
-    navigate(PATH.HOME, { replace: true });
+    syncAppTab("home");
   }, [canGoBack, navigate]);
 
   useEffect(() => {
@@ -70,10 +71,6 @@ export default function SettingsFeedbackPage() {
   }, []);
 
   useEffect(() => {
-    if (!isNativeApp()) {
-      return;
-    }
-
     let isActive = true;
 
     void requestNativeAppDeviceInfo()

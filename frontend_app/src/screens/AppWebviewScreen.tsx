@@ -54,6 +54,9 @@ type AppWebViewScreenProps = {
 };
 
 type WebViewOpenWindowEvent = Parameters<NonNullable<WebViewProps["onOpenWindow"]>>[0];
+type WebViewShouldStartLoadEvent = Parameters<
+  NonNullable<WebViewProps["onShouldStartLoadWithRequest"]>
+>[0];
 type WebViewLoadProgressEvent = Parameters<NonNullable<WebViewProps["onLoadProgress"]>>[0];
 type WebViewLoadErrorEvent = Parameters<NonNullable<WebViewProps["onError"]>>[0];
 type WebViewHttpErrorEvent = Parameters<NonNullable<WebViewProps["onHttpError"]>>[0];
@@ -143,6 +146,10 @@ function resolveTabFromUrl(requestUrl: string, webAppOrigin: string | null): App
   if (!pathname) return null;
 
   return resolveTabFromPath(pathname);
+}
+
+function shouldOpenWithNativeLinking(protocol: string) {
+  return protocol === "melo:" || protocol === "intent:" || protocol === "market:";
 }
 
 function shouldHideTabBar(requestUrl: string, webAppOrigin: string | null) {
@@ -673,23 +680,55 @@ export default function AppWebViewScreen({
     setWebViewKey((key) => key + 1);
   }, [isTabWebView, normalizedTabPath]);
 
+  const openExternalUrl = useCallback(async (targetUrl: string) => {
+    try {
+      const parsed = new URL(targetUrl);
+      const href = parsed.toString();
+
+      if (parsed.protocol === "http:" || parsed.protocol === "https:") {
+        const canOpen = await Linking.canOpenURL(href);
+        if (!canOpen) return false;
+
+        await Linking.openURL(href);
+        return true;
+      }
+
+      if (shouldOpenWithNativeLinking(parsed.protocol)) {
+        await Linking.openURL(href);
+        return true;
+      }
+    } catch (error) {
+      console.warn("Failed to open external URL", targetUrl, error);
+    }
+
+    return false;
+  }, []);
+
+  const onShouldStartLoadWithRequest = useCallback(
+    (request: WebViewShouldStartLoadEvent) => {
+      const targetUrl = request.url?.trim();
+      if (!targetUrl) return true;
+
+      try {
+        const parsed = new URL(targetUrl);
+        if (parsed.protocol === "http:" || parsed.protocol === "https:") return true;
+        if (!shouldOpenWithNativeLinking(parsed.protocol)) return true;
+
+        void openExternalUrl(targetUrl);
+        return false;
+      } catch {
+        return true;
+      }
+    },
+    [openExternalUrl],
+  );
+
   const onOpenWindow = useCallback(async (event: WebViewOpenWindowEvent) => {
     const targetUrl = event.nativeEvent.targetUrl?.trim();
     if (!targetUrl) return;
 
-    try {
-      const parsed = new URL(targetUrl);
-      if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return;
-
-      const href = parsed.toString();
-      const canOpen = await Linking.canOpenURL(href);
-      if (!canOpen) return;
-
-      await Linking.openURL(href);
-    } catch (error) {
-      console.warn("Failed to open window targetUrl", targetUrl, error);
-    }
-  }, []);
+    await openExternalUrl(targetUrl);
+  }, [openExternalUrl]);
 
   return (
     <SafeAreaView style={styles.container} edges={["left", "right"]}>
@@ -704,6 +743,7 @@ export default function AppWebViewScreen({
         onError={onLoadError}
         onHttpError={onHttpError}
         onNavigationStateChange={onNavigationStateChange}
+        onShouldStartLoadWithRequest={onShouldStartLoadWithRequest}
         allowsBackForwardNavigationGestures={false}
         javaScriptEnabled
         domStorageEnabled

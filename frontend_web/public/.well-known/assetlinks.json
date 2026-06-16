@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.melo.frontend",
+      "sha256_cert_fingerprints": [
+        "FA:E1:2F:26:7A:1A:B1:6E:38:F1:AF:04:8E:52:B7:33:F1:42:1F:7A:85:B9:4F:6E:88:F0:34:BF:7D:B0:12:B8"
+      ]
+    }
+  }
+]

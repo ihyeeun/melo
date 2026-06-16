@@ -12,6 +12,7 @@ export const PATH = {
   SETTINGS: "/settings",
   SETTINGS_FEEDBACK: "/settings/feedback",
   SETTINGS_SUB_CODE: "/settings/sub-code",
+  APP_OPEN_SETTINGS_FEEDBACK: "/open/settings-feedback",
   TERMS: "/terms",
   MEAL_RECORD: "/meal-record",
   MEAL_RECORD_ADD_SEARCH: "/meal-record/add/search",

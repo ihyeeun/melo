@@ -110,6 +110,9 @@ const NutrientRegisterPage = createLazyActivity(
   () => import("@/features/nutrient-entry/NutrientRegisterPage"),
 );
 const OnboardingPage = createLazyActivity(() => import("@/features/onboarding/OnboardingPage"));
+const AppOpenSettingsFeedbackPage = createLazyActivity(
+  () => import("@/features/app-open/AppOpenSettingsFeedbackPage"),
+);
 const BrandSearch = createLazyActivity(() => import("@/features/search/brand/BrandSearch"));
 const MealSearchPage = createLazyActivity(
   () => import("@/features/search/menu-record/MealSearchPage"),
@@ -166,6 +169,7 @@ const ACTIVITIES = {
   HomeWeightLogSheet,
   HomeStepsLogSheet,
   TodayMealScore: TodayMealScorePage,
+  AppOpenSettingsFeedback: AppOpenSettingsFeedbackPage,
   Onboarding: OnboardingPage,
   Profile: ProfilePage,
   ProfileNicknameSheet: ProfileNicknameSheetPage,
@@ -201,6 +205,7 @@ const ACTIVITY_ROUTES: Record<keyof typeof ACTIVITIES, RoutePath> = {
   HomeWeightLogSheet: PATH.HOME_WEIGHT_LOG_SHEET,
   HomeStepsLogSheet: PATH.HOME_STEPS_LOG_SHEET,
   TodayMealScore: PATH.TODAY_MEAL_SCORE,
+  AppOpenSettingsFeedback: PATH.APP_OPEN_SETTINGS_FEEDBACK,
   Onboarding: PATH.ONBOARDING,
   Profile: PATH.PROFILE,
   ProfileNicknameSheet: PATH.PROFILE_NICKNAME_SHEET,
