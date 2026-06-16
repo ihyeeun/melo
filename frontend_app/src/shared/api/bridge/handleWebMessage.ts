@@ -23,7 +23,7 @@ import { requestFromWeb } from "./requestFromWeb";
 
 const ALLOWED_IMAGE_MIME_TYPES = new Set(["image/jpeg", "image/png", "image/heic", "image/heif"]);
 const ALLOWED_IMAGE_EXTENSIONS = new Set(["jpg", "jpeg", "png", "heic", "heif"]);
-const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024;
+const MAX_IMAGE_SIZE_BYTES = 8 * 1024 * 1024;
 const DEFAULT_UPLOAD_FIELD_NAME = "file";
 const SESSION_TERMINATION_ENDPOINTS = new Set(["/commonAuth/signout", "/commonAuth/delete"]);
 const LOCAL_SESSION_CLEAR_ON_FAILURE_ENDPOINTS = new Set(["/commonAuth/signout"]);
@@ -123,7 +123,7 @@ async function normalizeCapturedImageSource(source: CapturedImageSource) {
 
   if (fileSize > MAX_IMAGE_SIZE_BYTES) {
     throw new BridgeHandledError(
-      "이미지 용량은 5MB 이하만 첨부할 수 있어요.",
+      "이미지 용량은 8MB 이하만 첨부할 수 있어요.",
       400,
       "IMAGE_SIZE_EXCEEDED",
     );
@@ -208,7 +208,7 @@ async function normalizeUploadImageSource(payload: BridgeImageUploadRequestPaylo
 
   if (fileSize > MAX_IMAGE_SIZE_BYTES) {
     throw new BridgeHandledError(
-      "이미지 용량은 5MB 이하만 첨부할 수 있어요.",
+      "이미지 용량은 8MB 이하만 첨부할 수 있어요.",
       400,
       "IMAGE_SIZE_EXCEEDED",
     );
@@ -592,9 +592,7 @@ export async function handleWebMessage(
         payload: {
           message:
             serverData?.message ??
-            (error.response
-              ? "요청 처리 중 오류가 발생했습니다."
-              : "서버에 연결할 수 없습니다."),
+            (error.response ? "요청 처리 중 오류가 발생했습니다." : "서버에 연결할 수 없습니다."),
           statusCode: serverData?.statusCode ?? error.response?.status ?? 503,
           error: serverData?.error ?? (error.response ? "API_REQUEST_FAILED" : "NETWORK_ERROR"),
         },
