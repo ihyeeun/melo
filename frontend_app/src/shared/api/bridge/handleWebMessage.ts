@@ -30,7 +30,7 @@ const ALLOWED_IMAGE_MIME_TYPES = new Set([
   "image/webp",
 ]);
 const ALLOWED_IMAGE_EXTENSIONS = new Set(["jpg", "jpeg", "png", "heic", "heif", "webp"]);
-const MAX_IMAGE_SIZE_BYTES = 8 * 1024 * 1024;
+const MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024;
 const NORMALIZED_UPLOAD_IMAGE_MAX_DIMENSION = 2560;
 const NORMALIZED_UPLOAD_IMAGE_QUALITY = 0.9;
 const NORMALIZED_UPLOAD_PRIMARY_FORMAT = SaveFormat.WEBP;
@@ -141,7 +141,7 @@ async function normalizeCapturedImageSource(source: CapturedImageSource) {
 
   if (fileSize > MAX_IMAGE_SIZE_BYTES) {
     throw new BridgeHandledError(
-      "이미지 용량은 8MB 이하만 첨부할 수 있어요.",
+      "이미지 용량은 10MB 이하만 첨부할 수 있어요.",
       400,
       "IMAGE_SIZE_EXCEEDED",
     );
@@ -226,10 +226,14 @@ function getNormalizedUploadImageActions(source: ImageFileSource): ImageManipula
 }
 
 async function convertUploadImage(source: ImageFileSource, format: SaveFormat) {
-  const normalizedImage = await manipulateAsync(source.uri, getNormalizedUploadImageActions(source), {
-    compress: NORMALIZED_UPLOAD_IMAGE_QUALITY,
-    format,
-  });
+  const normalizedImage = await manipulateAsync(
+    source.uri,
+    getNormalizedUploadImageActions(source),
+    {
+      compress: NORMALIZED_UPLOAD_IMAGE_QUALITY,
+      format,
+    },
+  );
   const fileSize = await resolveImageFileSize({ uri: normalizedImage.uri });
 
   if (fileSize === null) {
@@ -242,7 +246,7 @@ async function convertUploadImage(source: ImageFileSource, format: SaveFormat) {
 
   if (fileSize > MAX_IMAGE_SIZE_BYTES) {
     throw new BridgeHandledError(
-      "이미지 용량은 8MB 이하만 첨부할 수 있어요.",
+      "이미지 용량은 10MB 이하만 첨부할 수 있어요.",
       400,
       "IMAGE_SIZE_EXCEEDED",
     );
@@ -315,7 +319,7 @@ async function normalizeUploadImageSource(payload: BridgeImageUploadRequestPaylo
 
   if (fileSize > MAX_IMAGE_SIZE_BYTES) {
     throw new BridgeHandledError(
-      "이미지 용량은 8MB 이하만 첨부할 수 있어요.",
+      "이미지 용량은 10MB 이하만 첨부할 수 있어요.",
       400,
       "IMAGE_SIZE_EXCEEDED",
     );
