@@ -1,14 +1,25 @@
 import type {
   MealMenuInputMode,
-  MealRecordResponseDto,
-  MealResponseDto,
   MealServingInputMode,
-  MenuSimpleResponseDto,
 } from "@/shared/api/types/api.dto";
 import { MENU_INPUT_MODE } from "@/shared/api/types/api.dto";
+import type {
+  MealRecordResponseDto,
+  MealResponseDto,
+  MenuSimpleResponseDto,
+} from "@/shared/api/types/api.response.dto";
 
 type MealTimeKey = 0 | 1 | 2 | 3 | 4;
 type OptionalNutrientValue = number | null | undefined;
+
+function isMealTimeKey(value: number): value is MealTimeKey {
+  return value === 0 || value === 1 || value === 2 || value === 3 || value === 4;
+}
+
+function getMenuIsDeleted(menu: MenuSimpleResponseDto) {
+  const value = (menu as { is_deleted?: unknown }).is_deleted;
+  return typeof value === "number" ? value : 0;
+}
 
 function toFiniteNutrientValue(value: OptionalNutrientValue) {
   return typeof value === "number" && Number.isFinite(value) ? value : null;
@@ -78,6 +89,7 @@ function getMealRecordSavedAtTime(meal: MealResponseDto) {
 }
 
 export type MenuWithQuantity = MenuSimpleResponseDto & {
+  is_deleted?: number;
   quantity: number;
   serving_input_mode: MealServingInputMode;
 };
@@ -298,15 +310,20 @@ export function dayMealSummary(meals: MealRecordResponseDto): DayMealSummary {
   };
 
   mealList.forEach((meal) => {
-    recordCountByTime[meal.time] += 1;
-    mealRecordTimestampsByTime[meal.time] = {
+    if (!isMealTimeKey(meal.time)) {
+      return;
+    }
+
+    const mealTime = meal.time;
+    recordCountByTime[mealTime] += 1;
+    mealRecordTimestampsByTime[mealTime] = {
       createdAt: meal.createdAt,
       updatedAt: meal.updatedAt,
     };
 
     if (typeof meal.image === "string" && meal.image.trim().length > 0) {
       // 같은 time에 여러 건이면 최신 이미지로 덮어씀
-      imagesByTime[meal.time] = meal.image;
+      imagesByTime[mealTime] = meal.image;
     }
 
     meal.menu_list.forEach((menu, menuIndex) => {
@@ -339,7 +356,7 @@ export function dayMealSummary(meals: MealRecordResponseDto): DayMealSummary {
       const menuItem: MenuWithQuantity = {
         id: menu.id,
         data_source: menu.data_source,
-        is_deleted: menu.is_deleted,
+        is_deleted: getMenuIsDeleted(menu),
         name: menu.name,
         brand: menu?.brand,
         category: menu.category,
@@ -358,16 +375,16 @@ export function dayMealSummary(meals: MealRecordResponseDto): DayMealSummary {
         serving_input_mode: servingInputMode,
       };
 
-      const existingMenuIndex = menusByTime[meal.time].findIndex((item) => item.id === menu.id);
+      const existingMenuIndex = menusByTime[mealTime].findIndex((item) => item.id === menu.id);
       if (existingMenuIndex !== -1) {
-        const [existingMenu] = menusByTime[meal.time].splice(existingMenuIndex, 1);
+        const [existingMenu] = menusByTime[mealTime].splice(existingMenuIndex, 1);
         if (existingMenu) {
-          applyMenuNutrients(meal.time, existingMenu, -1);
+          applyMenuNutrients(mealTime, existingMenu, -1);
         }
       }
 
-      menusByTime[meal.time].push(menuItem);
-      applyMenuNutrients(meal.time, menuItem, 1);
+      menusByTime[mealTime].push(menuItem);
+      applyMenuNutrients(mealTime, menuItem, 1);
     });
   });
 

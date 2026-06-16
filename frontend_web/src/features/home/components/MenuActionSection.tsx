@@ -57,7 +57,7 @@ export default function MenuActionSection({
             renderBubble={renderOnboardingBubble}
           >
             <MenuCard
-              title={"메뉴 촬영"}
+              title={"메뉴 찍기"}
               description="메뉴판이나 음식을 찍어 피드백을 받아보세요"
               iconSrc="/icons/camera-icon.svg"
               onClick={disableInteractions ? undefined : handleOpenCameraActionSheet}
@@ -104,7 +104,7 @@ export default function MenuActionSection({
                 onClick={handleNavigateMenuBoardCamera}
                 className={style.cameraActionSheetButton}
               >
-                <p className={`typo-label2`}>메뉴판 촬영</p>
+                <p className={`typo-label2`}>메뉴판 찍기</p>
               </button>
 
               <div className="divider" />
@@ -114,7 +114,7 @@ export default function MenuActionSection({
                 className={style.cameraActionSheetButton}
                 onClick={handleNavigateFoodCamera}
               >
-                <p className={`typo-label2`}>음식 촬영</p>
+                <p className={`typo-label2`}>음식 찍기</p>
               </button>
             </div>
           </div>

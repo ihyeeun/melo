@@ -1,13 +1,13 @@
 import { getMealTypeFromCurrentTime } from "@/features/chat/utils/chatMeal";
 import type { DayMealSummary, MenuWithQuantity } from "@/features/home/utils/dayMealSummary";
 import {
-  type ChatHistoryItemResponseDto,
   type MealServingInputMode,
   type MealTime,
   type MealType,
   MENU_INPUT_MODE,
   type RegisterMealRequestDto,
 } from "@/shared/api/types/api.dto";
+import type { ChatHistoryItemResponseDto } from "@/shared/api/types/api.response.dto";
 import { formatDateKey, getTodayFormatDateKey, parseDate } from "@/shared/utils/dateFormat";
 
 export type SelectedDiaryMealRecordMenu = {

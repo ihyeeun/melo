@@ -1,4 +1,4 @@
-import styles from "@/features/camera/CameraPage.module.css";
+import styles from "@/features/camera/styles/CameraPage.module.css";
 
 type CameraLoadingProps = {
   description: string;

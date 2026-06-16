@@ -2,7 +2,7 @@
   inset: 0;
   pointer-events: auto;
   position: fixed;
-  z-index: 10;
+  z-index: 1;
 }
 
 .dimmer {
@@ -17,7 +17,7 @@
   position: fixed;
   right: 20px;
   top: calc(var(--safe-area-top) + 10px);
-  z-index: 12;
+  z-index: 1;
 }
 
 .bubble {
@@ -34,7 +34,7 @@
   position: absolute;
   bottom: calc(100% + 12px);
   width: min(227px, calc(100vw - 40px));
-  z-index: 12;
+  z-index: 2;
 }
 
 .bubble::after {

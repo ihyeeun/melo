@@ -1,4 +1,4 @@
-import type { AppApiError } from "@/shared/api/appApi";
+import type { AppApiError } from "@/shared/api/apiClient";
 
 export interface UseMutationCallback<TError = AppApiError> {
   onSuccess?: () => void;

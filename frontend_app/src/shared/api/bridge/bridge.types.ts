@@ -73,6 +73,8 @@ export type BridgeImageUploadRequestPayload = {
   endpoint: string;
   fileUri: string;
   fileName?: string | null;
+  width?: number | null;
+  height?: number | null;
   mimeType?: string | null;
   fieldName?: string;
   method?: "POST" | "PUT";

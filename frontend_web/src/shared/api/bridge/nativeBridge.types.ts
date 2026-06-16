@@ -93,6 +93,8 @@ export type ImageUploadRequestPayload = {
   endpoint: string;
   fileUri: string;
   fileName?: string | null;
+  width?: number | null;
+  height?: number | null;
   mimeType?: string | null;
   fieldName?: string;
   method?: "POST" | "PUT";
@@ -126,6 +128,8 @@ export type CameraCaptureResponsePayload = {
   fileSize: number | null;
   mimeType: string | null;
   base64: string | null;
+  previewBase64: string | null;
+  previewMimeType: string | null;
 };
 
 export type AppToWebMessage<T = unknown> = {

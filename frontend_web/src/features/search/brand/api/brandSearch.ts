@@ -1,5 +1,5 @@
-import { appApiData } from "@/shared/api/appApi";
-import type { SearchBrandResponseDto } from "@/shared/api/types/api.dto";
+import { appApiData } from "@/shared/api/apiClient";
+import type { SearchBrandResponseDto } from "@/shared/api/types/api.response.dto";
 
 const END_POINT = {
   BRAND_SEARCH: "/home/searchBrand",

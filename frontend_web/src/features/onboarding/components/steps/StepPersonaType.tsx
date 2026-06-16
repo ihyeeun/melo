@@ -4,9 +4,9 @@ import styles from "@/features/onboarding/styles/OnboardingSteps.module.css";
 import OnboardingOptionCard from "./OnboardingOptionCard";
 
 const PERSONA_TYPE_OPTIONS = [
-  "칼로리·영양성분을 직접 검색해요",
-  "안전한 메뉴(샐러드 등)를 반복해요",
-  "그냥 덜 부담스러워 보이는 걸 감으로 골라요",
+  "음식의 칼로리·영양성분을 직접 검색해요",
+  "정해둔 음식(샐러드 등)만 반복해서 먹어요",
+  "덜 부담스러워 보이는 음식을 감으로 골라요",
 ] as const;
 
 export default function StepPersonaType({ data, update }: StepComponentProps) {

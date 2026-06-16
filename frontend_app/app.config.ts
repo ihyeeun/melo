@@ -1,5 +1,7 @@
 import type { ExpoConfig } from "expo/config";
 
+const APP_LINK_HOST = "melo-diet.vercel.app";
+
 const config: ExpoConfig = {
   name: "melo",
   slug: "melo",
@@ -8,7 +10,7 @@ const config: ExpoConfig = {
       projectId: "507c0e33-8576-4aba-84f4-00d6b74a7338",
     },
   },
-  version: "1.0.3",
+  version: "1.0.5",
   orientation: "portrait",
   icon: "./assets/logo/melo-logo.png",
   scheme: "melo",
@@ -36,6 +38,20 @@ const config: ExpoConfig = {
     package: "com.melo.frontend",
     permissions: ["CAMERA"],
     blockedPermissions: ["android.permission.RECORD_AUDIO"],
+    intentFilters: [
+      {
+        action: "VIEW",
+        autoVerify: true,
+        data: [
+          {
+            scheme: "https",
+            host: APP_LINK_HOST,
+            pathPrefix: "/settings/feedback",
+          },
+        ],
+        category: ["BROWSABLE", "DEFAULT"],
+      },
+    ],
   },
   web: {
     output: "static",

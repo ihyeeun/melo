@@ -21,6 +21,9 @@ import {
   useState,
 } from "react";
 
+import HomeStepsLogSheet from "@/features/home/components/sheets/StepsLogBottomSheetActivity";
+import HomeWeightLogSheet from "@/features/home/components/sheets/WeightLogBottomSheetActivity";
+import ProfileNicknameSheetPage from "@/features/profile/ProfileNicknameSheetPage";
 import { PATH } from "@/router/path";
 import { track } from "@/shared/analytics/analytics";
 import { EVENT_NAME } from "@/shared/analytics/analytics.constants";
@@ -32,6 +35,7 @@ import {
   useIsFeatureBlocked,
 } from "@/shared/guards/featureGuard";
 
+import { setStackflowNavigateBackHandler } from "./stackflowNavigationController";
 import styles from "./StackflowRuntime.module.css";
 
 type ActivityParams = Record<string, string | undefined>;
@@ -90,8 +94,10 @@ type SwipeBackTransitionOptions = {
 };
 type SwipeBackTransitionRequester = (options: SwipeBackTransitionOptions) => boolean;
 
-const HomePage = createLazyActivity(() => import("@/features/home/HomePage"));
-const TodayMealScorePage = createLazyActivity(() => import("@/features/home/TodayMealScorePage"));
+const HomePage = createLazyActivity(() => import("@/features/home/pages/HomePage"));
+const TodayMealScorePage = createLazyActivity(
+  () => import("@/features/home/pages/TodayMealScorePage"),
+);
 const MealDetailPage = createLazyActivity(() => import("@/features/meal-record/MealDetailPage"));
 const MealRecordPage = createLazyActivity(() => import("@/features/meal-record/MealRecordPage"));
 const NutrientAddPage = createLazyActivity(
@@ -104,6 +110,9 @@ const NutrientRegisterPage = createLazyActivity(
   () => import("@/features/nutrient-entry/NutrientRegisterPage"),
 );
 const OnboardingPage = createLazyActivity(() => import("@/features/onboarding/OnboardingPage"));
+const AppOpenSettingsFeedbackPage = createLazyActivity(
+  () => import("@/features/app-open/AppOpenSettingsFeedbackPage"),
+);
 const BrandSearch = createLazyActivity(() => import("@/features/search/brand/BrandSearch"));
 const MealSearchPage = createLazyActivity(
   () => import("@/features/search/menu-record/MealSearchPage"),
@@ -118,12 +127,14 @@ const SettingsSubCodePage = createLazyActivity(
 const TermsPage = createLazyActivity(() => import("@/features/terms/TermsPage"));
 const MenuBoardCameraPage = createGuardedLazyActivity(
   FEATURE_GUARD.MENU_BOARD_CAMERA,
-  () => import("@/features/camera/MenuBoardCameraPage"),
+  () => import("@/features/camera/pages/MenuBoardImageRecommendationPage"),
 );
-const NutrientCameraPage = createLazyActivity(() => import("@/features/camera/NutrientCameraPage"));
+const NutrientCameraPage = createLazyActivity(
+  () => import("@/features/camera/pages/NutritionLabelCreatePage"),
+);
 const FoodCameraPage = createGuardedLazyActivity(
   FEATURE_GUARD.FOOD_CAMERA,
-  () => import("@/features/camera/FoodCameraPage"),
+  () => import("@/features/camera/pages/FoodImageMealRecordCreatePage"),
 );
 const ProfilePage = createLazyActivity(() => import("@/features/profile/ProfilePage"));
 const GoalEditPage = createLazyActivity(() => import("@/features/profile/GoalEditPage"));
@@ -135,23 +146,33 @@ const GoalEditNutrientPage = createLazyActivity(
 );
 const ChatPage = createGuardedLazyActivity(
   FEATURE_GUARD.CHAT,
-  () => import("@/features/chat/ChatPage"),
+  () => import("@/features/chat/pages/ChatPage"),
 );
 const DiaryPage = createLazyActivity(() => import("@/features/diary/DiaryPage"));
-const RecommendResultPage = createLazyActivity(() => import("@/features/chat/RecommendResultPage"));
-const ChatMenuDetailPage = createLazyActivity(() => import("@/features/chat/ChatMenuDetailPage"));
-const FeedbackResultPage = createLazyActivity(() => import("@/features/chat/FeedbackResultPage"));
+const RecommendResultPage = createLazyActivity(
+  () => import("@/features/chat/pages/RecommendResultPage"),
+);
+const ChatMenuDetailPage = createLazyActivity(
+  () => import("@/features/chat/pages/ChatMenuDetailPage"),
+);
+const FeedbackResultPage = createLazyActivity(
+  () => import("@/features/chat/pages/FeedbackResultPage"),
+);
 const ChatFoodCameraPage = createGuardedLazyActivity(
   FEATURE_GUARD.FOOD_CAMERA,
-  () => import("@/features/camera/ChatFoodCameraPage"),
+  () => import("@/features/camera/pages/FoodImageFeedbackPage"),
 );
-const AppInfoPage = createLazyActivity(() => import("@/features/auth/AppInfoPage"));
+const AppInfoPage = createLazyActivity(() => import("@/features/kakao-web-auth/pages/AppInfoPage"));
 
 const ACTIVITIES = {
   Home: HomePage,
+  HomeWeightLogSheet,
+  HomeStepsLogSheet,
   TodayMealScore: TodayMealScorePage,
+  AppOpenSettingsFeedback: AppOpenSettingsFeedbackPage,
   Onboarding: OnboardingPage,
   Profile: ProfilePage,
+  ProfileNicknameSheet: ProfileNicknameSheetPage,
   Settings: SettingsPage,
   SettingsFeedback: SettingsFeedbackPage,
   SettingsSubCode: SettingsSubCodePage,
@@ -181,9 +202,13 @@ const ACTIVITIES = {
 
 const ACTIVITY_ROUTES: Record<keyof typeof ACTIVITIES, RoutePath> = {
   Home: [PATH.HOME, PATH.ROOT],
+  HomeWeightLogSheet: PATH.HOME_WEIGHT_LOG_SHEET,
+  HomeStepsLogSheet: PATH.HOME_STEPS_LOG_SHEET,
   TodayMealScore: PATH.TODAY_MEAL_SCORE,
+  AppOpenSettingsFeedback: PATH.APP_OPEN_SETTINGS_FEEDBACK,
   Onboarding: PATH.ONBOARDING,
   Profile: PATH.PROFILE,
+  ProfileNicknameSheet: PATH.PROFILE_NICKNAME_SHEET,
   Settings: PATH.SETTINGS,
   SettingsFeedback: PATH.SETTINGS_FEEDBACK,
   SettingsSubCode: PATH.SETTINGS_SUB_CODE,
@@ -212,6 +237,11 @@ const ACTIVITY_ROUTES: Record<keyof typeof ACTIVITIES, RoutePath> = {
 };
 
 type ActivityName = keyof typeof ACTIVITY_ROUTES;
+const BOTTOM_SHEET_ACTIVITY_NAMES = new Set<ActivityName>([
+  "HomeWeightLogSheet",
+  "HomeStepsLogSheet",
+  "ProfileNicknameSheet",
+]);
 
 const STACK_TRANSITION_DURATION = 270;
 const EDGE_SWIPE_WIDTH = 44;
@@ -300,6 +330,10 @@ function getPrimaryRoutePath(activityName: ActivityName) {
 
 function isActivityName(value: string): value is ActivityName {
   return value in ACTIVITY_ROUTES;
+}
+
+function isBottomSheetActivityName(value: string) {
+  return isActivityName(value) && BOTTOM_SHEET_ACTIVITY_NAMES.has(value);
 }
 
 function resolveActivityForPath(
@@ -576,7 +610,9 @@ function StackActivityFrame({
   const [isSwipeCompleting, setIsSwipeCompleting] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
+  const isBottomSheetActivity = isBottomSheetActivityName(activity.name);
   const canSwipeBack =
+    !isBottomSheetActivity &&
     activity.isTop &&
     !activity.isRoot &&
     activity.transitionState === "enter-done" &&
@@ -832,7 +868,8 @@ function StackActivityFrame({
       ref={frameRef}
       className={styles.activityFrame}
       data-dragging={isDragging ? "true" : undefined}
-      data-enter-animation={shouldAnimateEnter ? "true" : undefined}
+      data-bottom-sheet={isBottomSheetActivity ? "true" : undefined}
+      data-enter-animation={shouldAnimateEnter && !isBottomSheetActivity ? "true" : undefined}
       data-resetting={isResetting ? "true" : undefined}
       data-root={activity.isRoot ? "true" : undefined}
       data-swipe-completing={isSwipeCompleting ? "true" : undefined}
@@ -1031,6 +1068,8 @@ export function navigateBack({
 
   return false;
 }
+
+setStackflowNavigateBackHandler(navigateBack);
 
 function replaceStackWithActivity({
   activityName,

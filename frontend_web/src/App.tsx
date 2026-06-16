@@ -2,8 +2,8 @@ import "./App.css";
 
 import { lazy, Suspense, useEffect, useState } from "react";
 
-import KakaoWebCallbackPage from "@/features/auth/KakaoWebCallbackPage";
-import KakaoWebLoginPage from "@/features/auth/KakaoWebLoginPage";
+import KakaoWebCallbackPage from "@/features/kakao-web-auth/pages/KakaoWebCallbackPage";
+import KakaoWebLoginPage from "@/features/kakao-web-auth/pages/KakaoWebLoginPage";
 import { PATH } from "@/router/path";
 import { initAnalytics, track } from "@/shared/analytics/analytics";
 import { EVENT_NAME } from "@/shared/analytics/analytics.constants";

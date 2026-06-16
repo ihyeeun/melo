@@ -1,0 +1,138 @@
+.container {
+  align-items: center;
+  background: var(--bg-white);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  justify-content: center;
+  min-height: 100dvh;
+  padding: 24px;
+  text-align: center;
+  width: 100%;
+}
+
+.description {
+  color: var(--label-assistive);
+  max-width: 320px;
+}
+
+.actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 8px;
+  width: min(100%, 320px);
+}
+
+.actionButton {
+  flex: 1 1 0;
+}
+
+.loginCopy {
+  text-align: center;
+}
+
+.loginContainer {
+  align-items: stretch;
+  background: var(--bg-normal);
+  display: flex;
+  justify-content: center;
+  min-height: 100dvh;
+  overflow: hidden;
+  width: 100%;
+}
+
+.phoneFrame {
+  background: var(--bg-white);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding: calc(var(--safe-area-top) + 24px) 0 calc(var(--safe-area-bottom) + 28px);
+  width: min(100%, 480px);
+}
+
+.loginWrapper {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+  width: 100%;
+}
+
+.imageSection {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+  align-items: center;
+  flex: 1;
+}
+
+.loginImage {
+  display: block;
+  flex: 0 0 auto;
+  height: auto;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.loginActions {
+  align-items: center;
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  gap: 24px;
+  margin: 0 auto;
+  width: min(100%, 335px);
+}
+
+.completeCopy {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  text-align: center;
+}
+
+.kakaoButton {
+  align-items: center;
+  background: #fee500;
+  border-radius: 4px;
+  color: var(--label-normal);
+  display: flex;
+  gap: 8px;
+  height: 45px;
+  justify-content: center;
+  padding: 12px 10px;
+  width: 100%;
+}
+
+.loginFooter {
+  color: var(--label-assistive);
+  text-align: center;
+}
+
+.storeLinkButton {
+  color: var(--label-assistive);
+  text-align: center;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+@media (width <= 480px) {
+  .loginContainer {
+    background: var(--bg-white);
+  }
+
+  .phoneFrame {
+    box-shadow: none;
+  }
+}
+
+.link {
+  color: var(--label-assistive);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  word-break: break-all;
+}

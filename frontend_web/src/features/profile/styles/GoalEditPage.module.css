@@ -179,22 +179,6 @@
   min-height: 320px;
 }
 
-.goalEditBottomSheet :global(.react-modal-sheet-container) {
-  border-top-left-radius: 20px !important;
-  border-top-right-radius: 20px !important;
-}
-
-.goalEditBottomSheet :global(.react-modal-sheet-header) {
-  height: 32px;
-}
-
-.goalEditBottomSheet :global(.react-modal-sheet-drag-indicator) {
-  background: var(--gray-1100);
-  border-radius: 999px;
-  height: 3px;
-  width: 30px;
-}
-
 @media (max-height: 700px) {
   .sheetContent[data-editor-field="birthYear"] {
     min-height: 420px;

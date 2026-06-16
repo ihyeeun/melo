@@ -89,9 +89,6 @@ export default function GoalEditTargetCaloriesStep({ data, update }: Props) {
   const [open, setOpen] = useState(false);
   const [draftTargetCalories, setDraftTargetCalories] = useState<number | undefined>(undefined);
   const inputRef = useRef<HTMLInputElement>(null);
-  const focusInput = () => {
-    inputRef.current?.focus();
-  };
 
   const {
     mutate,
@@ -131,6 +128,12 @@ export default function GoalEditTargetCaloriesStep({ data, update }: Props) {
 
     mutate(requestPayload);
   }, [mutate, requestPayload]);
+
+  useEffect(() => {
+    if (!open) return;
+
+    inputRef.current?.focus();
+  }, [open]);
 
   useEffect(() => {
     if (responseData === undefined) {
@@ -226,7 +229,7 @@ export default function GoalEditTargetCaloriesStep({ data, update }: Props) {
 
         <p className={`${styles.goalKcalHelper} typo-body1`}>{goalWeekMessage}</p>
       </div>
-      <BottomSheet isOpen={open} onClose={() => setOpen(false)} onOpenEnd={focusInput}>
+      <BottomSheet isOpen={open} onClose={() => setOpen(false)}>
         <div className={styles.goalKcalSheet}>
           <h3 className="typo-title2">목표 칼로리</h3>
           <EditorInput

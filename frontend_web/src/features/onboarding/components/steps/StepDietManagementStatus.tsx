@@ -13,7 +13,7 @@ const DIET_MANAGEMENT_OPTIONS = [
     isNoManagement: false,
   },
   {
-    title: "따로 기록하진 않지만,\n메뉴 고를 때 의식적으로 신경 써요",
+    title: "메뉴 고를 때 의식적으로 신경 써요",
     isNoManagement: false,
   },
   {

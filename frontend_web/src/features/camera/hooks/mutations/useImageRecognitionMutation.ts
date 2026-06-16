@@ -5,11 +5,11 @@ import {
   uploadChatFoodImageFeedback,
   uploadMenuBoardImage,
   uploadNutritionLabelImage,
-} from "@/features/camera/api/uploadCapturedImage";
+} from "@/features/camera/api/uploadCapturedImage.api";
 import { refetchAndResolveChatHistoryItem } from "@/features/chat/hooks/queries/chatHistoryCache";
 import type { UseMutationCallback } from "@/shared/api/types/callback.types";
 
-export function useFoodImageMutation(callbacks?: UseMutationCallback) {
+export function useCreateMealRecordByFoodImageMutation(callbacks?: UseMutationCallback) {
   return useMutation({
     mutationFn: uploadCapturedImageToServer,
     onSuccess: () => {
@@ -25,7 +25,7 @@ export function useFoodImageMutation(callbacks?: UseMutationCallback) {
   });
 }
 
-export function useNutritionLabelMutation(callbacks?: UseMutationCallback) {
+export function useCreateMenuByNutritionLabelImageMutation(callbacks?: UseMutationCallback) {
   return useMutation({
     mutationFn: uploadNutritionLabelImage,
     onSuccess: () => {
@@ -41,7 +41,7 @@ export function useNutritionLabelMutation(callbacks?: UseMutationCallback) {
   });
 }
 
-export function useMenuBoardMutation(callbacks?: UseMutationCallback) {
+export function useRecommendMenusByMenuBoardImageMutation(callbacks?: UseMutationCallback) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (image: Parameters<typeof uploadMenuBoardImage>[0]) => {
@@ -65,7 +65,7 @@ export function useMenuBoardMutation(callbacks?: UseMutationCallback) {
   });
 }
 
-export function useChatFoodImageFeedbackMutation(callbacks?: UseMutationCallback) {
+export function useCreateMealFeedbackByFoodImageMutation(callbacks?: UseMutationCallback) {
   const queryClient = useQueryClient();
 
   return useMutation({

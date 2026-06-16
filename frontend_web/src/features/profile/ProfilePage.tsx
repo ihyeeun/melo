@@ -1,10 +1,8 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 
 import ActionCard from "@/features/home/components/cards/ActionCard";
-import { useGetBodyLog } from "@/features/home/hooks/queries/useBodyLogQuery";
-import { useDayMealsQuery } from "@/features/home/hooks/queries/useDayMealsQuery";
+import { useDayMealsQuery, useGetBodyLog } from "@/features/home/hooks/queries/useTodayRecordQuery";
 import WeeklyRecordChart from "@/features/profile/components/WeeklyRecordChart";
-import { useNickNameUpdateMutation } from "@/features/profile/hooks/mutations/useProfileMutation";
 import { useGetProfileQuery } from "@/features/profile/hooks/queries/useProfileQuery";
 import {
   useWeeklyRecordQuery,
@@ -12,13 +10,10 @@ import {
 } from "@/features/profile/hooks/queries/useWeeklyRecordQuery";
 import styles from "@/features/profile/styles/ProfilePage.module.css";
 import { PATH } from "@/router/path";
-import BottomSheet from "@/shared/commons/bottomSheet/BottomSheet";
 import { Button } from "@/shared/commons/button/Button";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
-import { LoadingOverlay } from "@/shared/commons/loading/Loading";
 import { Skeleton, SkeletonStatus } from "@/shared/commons/skeleton/Skeleton";
-import { toast } from "@/shared/commons/toast/toast";
 import { useNavigate } from "@/shared/navigation/stackflowNavigation";
 import { getTodayFormatDateKey } from "@/shared/utils/dateFormat";
 
@@ -51,12 +46,6 @@ const METRIC_CONFIG: Record<
   },
 };
 
-const NICKNAME_MAX_LENGTH = 15;
-const NICKNAME_ALLOWED_PATTERN = /[^0-9A-Za-zㄱ-ㅎㅏ-ㅣ가-힣]/g;
-
-const sanitizeNickName = (value: string) =>
-  value.replace(NICKNAME_ALLOWED_PATTERN, "").slice(0, NICKNAME_MAX_LENGTH);
-
 export default function ProfilePage() {
   const navigate = useNavigate();
   const today = getTodayFormatDateKey();
@@ -64,21 +53,7 @@ export default function ProfilePage() {
   const { data: dayMeal, isPending: isDayMealPending } = useDayMealsQuery(today);
   const { data: bodyLog, isPending: isBodyLogPending } = useGetBodyLog(today);
 
-  const [sheetOpen, setSheetOpen] = useState(false);
-  const [nickName, setNickName] = useState("");
-  const [nickNameErrorMessage, setNickNameErrorMessage] = useState("");
   const [selectedMetric, setSelectedMetric] = useState<WeeklyMetricType>("weight");
-  const { mutate: updateNickName, isPending: isNickNamePending } = useNickNameUpdateMutation();
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  const focusInput = () => {
-    inputRef.current?.focus();
-  };
-
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- Keep sheet input synced with async profile data.
-    setNickName(sanitizeNickName(profile?.nickname ?? ""));
-  }, [profile?.nickname]);
 
   const nickname = profile?.nickname ?? "진득한 푸마";
   const todayWeight =
@@ -105,7 +80,7 @@ export default function ProfilePage() {
       if (selectedMetric === "weight") {
         return {
           label: record.label,
-          value: record.weight,
+          value: record.weight ?? currentWeight,
           target: record.targetWeight,
         };
       }
@@ -123,34 +98,10 @@ export default function ProfilePage() {
         value: record.steps ?? 0,
       };
     });
-  }, [selectedMetric, weeklyRecordQuery.records]);
+  }, [currentWeight, selectedMetric, weeklyRecordQuery.records]);
 
   const handleSelectMetric = (metric: WeeklyMetricType) => {
     setSelectedMetric(metric);
-  };
-
-  const handleUpdateNickName = () => {
-    if (nickName?.trim() === "" || nickName === undefined) {
-      setNickNameErrorMessage("");
-      toast.warning("닉네임을 입력해주세요");
-      return;
-    }
-
-    setNickNameErrorMessage("");
-    updateNickName(nickName, {
-      onSuccess: () => {
-        setSheetOpen(false);
-        setNickNameErrorMessage("");
-        toast.success("닉네임이 수정되었어요");
-      },
-      onError: (error) => {
-        if (error.statusCode === 409) {
-          setNickNameErrorMessage("이미 사용 중인 닉네임이에요");
-        } else {
-          setNickNameErrorMessage("닉네임 수정에 실패했어요");
-        }
-      },
-    });
   };
 
   if (isProfilePending || isDayMealPending || isBodyLogPending) {
@@ -189,7 +140,7 @@ export default function ProfilePage() {
                   className={styles.inlineIconButton}
                   aria-label="닉네임 수정"
                   onClick={() => {
-                    setSheetOpen(true);
+                    navigate(PATH.PROFILE_NICKNAME_SHEET);
                   }}
                 >
                   <SystemIcon name="pencil-fill" size={24} />
@@ -306,63 +257,8 @@ export default function ProfilePage() {
               )}
             </section>
           </div>
-
-          <BottomSheet
-            isOpen={sheetOpen}
-            onOpenEnd={focusInput}
-            onClose={() => {
-              setSheetOpen(false);
-              setNickName(sanitizeNickName(profile?.nickname ?? ""));
-              setNickNameErrorMessage("");
-            }}
-          >
-            <div className={styles.sheetContainer}>
-              <section className={styles.sheetContent}>
-                <p className="typo-title2">닉네임 수정하기</p>
-                <div className={styles.fieldGroup}>
-                  <input
-                    placeholder="닉네임 입력"
-                    value={nickName}
-                    onChange={(e) => {
-                      setNickName(sanitizeNickName(e.target.value));
-                      setNickNameErrorMessage("");
-                    }}
-                    className={`${styles.input} typo-body3`}
-                    aria-invalid={nickNameErrorMessage ? true : undefined}
-                    aria-describedby={
-                      nickNameErrorMessage ? "profile-nickname-error-message" : undefined
-                    }
-                    ref={inputRef}
-                  />
-                  {nickNameErrorMessage ? (
-                    <p
-                      id="profile-nickname-error-message"
-                      className={`${styles.nickNameErrorMessage} typo-body3`}
-                      role="alert"
-                    >
-                      {nickNameErrorMessage}
-                    </p>
-                  ) : null}
-                </div>
-              </section>
-
-              <Button
-                variant="filled"
-                interaction={nickName.trim() === "" ? "disable" : "normal"}
-                size="large"
-                color="primary"
-                fullWidth
-                onClick={handleUpdateNickName}
-                disabled={nickName.trim() === "" || isNickNamePending}
-              >
-                수정하기
-              </Button>
-            </div>
-          </BottomSheet>
         </div>
       </main>
-
-      {isNickNamePending ? <LoadingOverlay label="닉네임을 수정하는 중입니다." /> : null}
     </div>
   );
 }

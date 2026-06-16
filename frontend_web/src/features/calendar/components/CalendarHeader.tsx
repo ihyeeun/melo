@@ -35,7 +35,7 @@ export default function CalendarHeader({
             onClick={onToggleViewMode}
             aria-label={viewMode === "week" ? "월 달력 펼치기" : "주 달력 접기"}
           >
-            <span className="calendar-title typo-title3">
+            <span className="textWhite typo-title3">
               {viewMode === "week" ? weekTitle : "월간"}
             </span>
             <SystemIcon
@@ -50,7 +50,7 @@ export default function CalendarHeader({
           <div className="calendar-header-right">
             <button
               type="button"
-              className="typo-label3 calendar-text-white"
+              className="typo-label3 textWhite"
               onClick={onToday}
               aria-label="오늘 날짜로 이동"
             >
@@ -65,7 +65,7 @@ export default function CalendarHeader({
           <button type="button" className="calendar-nav-button" onClick={onPrev} aria-label="이전">
             <SystemIcon name="chevron-left-normal" size={24} />
           </button>
-          <p className="typo-title3 calendar-text-white">{monthTitle}</p>
+          <p className="typo-title3 textWhite">{monthTitle}</p>
           <button type="button" className="calendar-nav-button" onClick={onNext} aria-label="다음">
             <SystemIcon name="chevron-right-normal" size={24} />
           </button>

@@ -236,7 +236,7 @@
 }
 
 .foodClusterSourceMarkerOpen {
-  z-index: 5;
+  z-index: 3;
 }
 
 .foodClusterSourceBubble {
@@ -245,11 +245,10 @@
   color: var(--label-normal);
   cursor: pointer;
   max-width: min(220px, calc(100vw - 48px));
-  min-width: 86px;
   padding: 0;
   position: absolute;
   text-align: left;
-  width: min(220px, calc(100vw - 48px));
+  width: max-content;
 }
 
 .foodClusterSourceBubble:disabled {

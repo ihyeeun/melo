@@ -280,7 +280,7 @@ export default function NutrientModifyPage() {
             <p className={`typo-title1 ${styles.textNormal}`}>
               {foodName || "메뉴 정보를 확인해주세요"}
             </p>
-            {brandName && <p className={`typo-label4 ${styles.brandText}`}>{brandName}</p>}
+            {brandName && <p className={`typo-label4 textAssistive`}>{brandName}</p>}
           </section>
 
           <section className={styles.nutrientSection}>

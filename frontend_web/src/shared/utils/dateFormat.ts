@@ -19,10 +19,6 @@ export function isValidDateKey(date: string) {
   return /^\d{4}-\d{2}-\d{2}$/.test(date);
 }
 
-export function isFutureDateKey(date: string) {
-  return isValidDateKey(date) && date > getTodayFormatDateKey();
-}
-
 export function parseDateKey(dateKey: string) {
   if (!isValidDateKey(dateKey)) {
     return new Date();

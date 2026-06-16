@@ -2,9 +2,11 @@ import { useQueries } from "@tanstack/react-query";
 import { subDays } from "date-fns";
 import { useMemo } from "react";
 
-import { getDayMeals } from "@/features/home/api/dayMeal";
-import { getBodyStats } from "@/features/home/api/health";
-import { queryKeys as homeQueryKeys } from "@/features/home/hooks/queries/queryKey";
+import {
+  getTodayMealRecordMenus,
+  getTodayRecordBodyStats,
+} from "@/features/home/api/todayRecord.api";
+import { queryKeys as homeQueryKeys } from "@/features/home/hooks/queries/todayRecord.queryKey";
 import { getUserGoalSnapshot } from "@/features/profile/api/profile";
 import { queryKeys as profileQueryKeys } from "@/features/profile/hooks/queries/queryKey";
 
@@ -76,7 +78,7 @@ export function useWeeklyRecordQuery({
   const dayMealQueries = useQueries({
     queries: dateKeys.map((dateKey) => ({
       queryKey: homeQueryKeys.dayMeals.byDate(dateKey),
-      queryFn: () => getDayMeals({ date: dateKey }),
+      queryFn: () => getTodayMealRecordMenus(dateKey),
       enabled: shouldFetchCalories,
       staleTime: Infinity,
     })),
@@ -85,7 +87,7 @@ export function useWeeklyRecordQuery({
   const bodyLogQueries = useQueries({
     queries: dateKeys.map((dateKey) => ({
       queryKey: homeQueryKeys.bodyStats(dateKey),
-      queryFn: () => getBodyStats({ date: dateKey }),
+      queryFn: () => getTodayRecordBodyStats(dateKey),
       enabled: shouldFetchWeight || shouldFetchSteps,
       staleTime: Infinity,
     })),

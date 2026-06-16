@@ -1,4 +1,4 @@
-import { appApiData } from "@/shared/api/appApi";
+import { appApiData } from "@/shared/api/apiClient";
 import type { DeleteMealRequestDto, RegisterMealRequestDto } from "@/shared/api/types/api.dto";
 
 const END_POINT = {

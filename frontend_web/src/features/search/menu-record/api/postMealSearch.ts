@@ -1,5 +1,6 @@
-import { appApiData } from "@/shared/api/appApi";
-import type { SearchMenuRequestDto, SearchResponseDto } from "@/shared/api/types/api.dto";
+import { appApiData } from "@/shared/api/apiClient";
+import type { SearchMenuRequestDto } from "@/shared/api/types/api.dto";
+import type { SearchResponseDto } from "@/shared/api/types/api.response.dto";
 
 const END_POINT = {
   SEARCH_MENUS: "/home/search",

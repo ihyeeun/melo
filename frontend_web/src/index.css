@@ -133,6 +133,15 @@ svg {
   user-select: none;
 }
 
+input,
+textarea {
+  -webkit-appearance: none;
+  appearance: none;
+  -webkit-tap-highlight-color: transparent;
+  background-color: var(--bg-white);
+  color: var(--label-normal);
+}
+
 input:focus,
 textarea:focus,
 select:focus {

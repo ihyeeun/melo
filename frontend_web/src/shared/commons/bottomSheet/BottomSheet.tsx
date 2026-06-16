@@ -1,17 +1,19 @@
-import "./BottomSheet.css";
-
-import { Sheet } from "react-modal-sheet";
+import { BottomSheet as SeedBottomSheet } from "@seed-design/react";
+import type { ReactNode } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { useTabBarVisibilitySync } from "@/shared/api/bridge/useTabBarVisibilitySync";
+import { useBottomSheetPositionerStyle } from "@/shared/commons/bottomSheet/useBottomSheetPositionerStyle";
+
+import styles from "./BottomSheet.module.css";
 
 type BottomSheetProps = {
   isOpen: boolean;
   onClose: () => void;
-  onOpenEnd?: () => void;
   title?: string;
   className?: string;
   disableContentDrag?: boolean;
-  children: React.ReactNode;
+  children: ReactNode;
 };
 
 function blurActiveElement() {
@@ -29,55 +31,60 @@ function blurActiveElement() {
 export default function BottomSheet({
   isOpen,
   onClose,
-  onOpenEnd,
   title,
   className,
   disableContentDrag = false,
   children,
 }: BottomSheetProps) {
-  useTabBarVisibilitySync(isOpen);
+  const positionerStyle = useBottomSheetPositionerStyle();
+  const isOpenRef = useRef(isOpen);
+  const [isTabBarHidden, setIsTabBarHidden] = useState(isOpen);
+
+  useEffect(() => {
+    isOpenRef.current = isOpen;
+
+    if (isOpen) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- Keep the tab bar hidden until the bottom sheet close animation finishes.
+      setIsTabBarHidden(true);
+    }
+  }, [isOpen]);
+
+  useTabBarVisibilitySync(isTabBarHidden);
 
   return (
-    <Sheet
-      isOpen={isOpen}
-      onClose={onClose}
-      onOpenEnd={onOpenEnd}
-      detent="content"
-      className={className}
+    <SeedBottomSheet.Root
+      open={isOpen}
+      autoFocus={false}
+      handleOnly={disableContentDrag}
+      onAnimationEnd={(open) => {
+        if (!open && !isOpenRef.current) {
+          setIsTabBarHidden(false);
+        }
+      }}
+      onOpenChange={(open) => {
+        if (!open) {
+          onClose();
+        }
+      }}
     >
-      <Sheet.Container
-        style={{
-          paddingBottom:
-            "max(0px, calc(var(--safe-area-bottom) - var(--keyboard-inset-height, 0px)))",
-          background: "#fff",
-          borderTopLeftRadius: 20,
-          borderTopRightRadius: 20,
-          boxShadow: "none",
-        }}
+      <SeedBottomSheet.Positioner
+        className={className}
+        style={positionerStyle}
       >
-        <Sheet.Header
-          className="melo-bottom-sheet-header"
-          onPointerDownCapture={blurActiveElement}
-        >
-          <div className="melo-bottom-sheet-handle" aria-hidden="true" />
-        </Sheet.Header>
-        <Sheet.Content disableDrag={disableContentDrag}>
-          <div>
-            {title ? <div>{title}</div> : null}
-
+        <SeedBottomSheet.Backdrop />
+        <SeedBottomSheet.Content aria-describedby={undefined}>
+          <SeedBottomSheet.Header
+            className={styles.header}
+            onPointerDownCapture={blurActiveElement}
+          >
+            <SeedBottomSheet.Handle className={styles.handle} />
+          </SeedBottomSheet.Header>
+          <SeedBottomSheet.Body className={styles.body}>
+            {title && <SeedBottomSheet.Title>{title}</SeedBottomSheet.Title>}
             {children}
-          </div>
-        </Sheet.Content>
-      </Sheet.Container>
-
-      <Sheet.Backdrop
-        onTap={onClose}
-        transition={{ duration: 0.25 }}
-        style={{
-          backgroundColor: "var(--dimmer-dimmer)",
-          transform: "none",
-        }}
-      />
-    </Sheet>
+          </SeedBottomSheet.Body>
+        </SeedBottomSheet.Content>
+      </SeedBottomSheet.Positioner>
+    </SeedBottomSheet.Root>
   );
 }

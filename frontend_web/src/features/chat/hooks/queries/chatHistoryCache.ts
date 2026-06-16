@@ -2,7 +2,7 @@ import type { QueryClient } from "@tanstack/react-query";
 
 import { getChatHistory } from "@/features/chat/api/chat.api";
 import { queryKeys } from "@/features/chat/hooks/queries/queryKey";
-import type { ChatHistoryItemResponseDto } from "@/shared/api/types/api.dto";
+import type { ChatHistoryItemResponseDto } from "@/shared/api/types/api.response.dto";
 
 type ResolveChatHistoryItemOptions = {
   match?: (chatItem: ChatHistoryItemResponseDto) => boolean;

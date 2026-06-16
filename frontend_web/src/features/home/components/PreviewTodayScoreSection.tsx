@@ -1,5 +1,5 @@
 import ActionCard from "@/features/home/components/cards/ActionCard";
-import { useDayMealsQuery } from "@/features/home/hooks/queries/useDayMealsQuery";
+import { useDayMealsQuery } from "@/features/home/hooks/queries/useTodayRecordQuery";
 import style from "@/features/home/styles/PreviewTodayScoreSection.module.css";
 import {
   getCalorieSummary,
@@ -13,10 +13,7 @@ import ScoreProgress from "@/shared/commons/progress/Progress";
 import { Skeleton, SkeletonStatus } from "@/shared/commons/skeleton/Skeleton";
 import { toast } from "@/shared/commons/toast/toast";
 import { useNavigate } from "@/shared/navigation/stackflowNavigation";
-import {
-  useTargetsLoadedState,
-  useTargetsState,
-} from "@/shared/stores/targetNutrient.store";
+import { useTargetsLoadedState, useTargetsState } from "@/shared/stores/targetNutrient.store";
 import {
   calculateDailyNutritionMetricsForDisplay,
   getCalorieProgressPercent,
@@ -36,9 +33,7 @@ type PreviewTodayScoreCardProps = {
   targetCalories: number | null;
 };
 
-export default function PreviewTodayScoreSection({
-  selectedDate,
-}: PreviewTodayScoreSectionProps) {
+export default function PreviewTodayScoreSection({ selectedDate }: PreviewTodayScoreSectionProps) {
   const navigation = useNavigate();
 
   const { data: dayMealSummary, isPending: isSummaryPending } = useDayMealsQuery(selectedDate);

@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-import { queryKeys } from "@/features/home/hooks/queries/queryKey";
+import { queryKeys } from "@/features/home/hooks/queries/todayRecord.queryKey";
 import { modifyNutrient, registerMenu } from "@/features/nutrient-entry/api/nutrient";
 import type { UseMutationCallback } from "@/shared/api/types/callback.types";
 

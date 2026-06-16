@@ -1,5 +1,13 @@
-import { appApiData } from "@/shared/api/appApi";
-import type { ProfileResponseDto, UserGoalSnapshotResponseDto } from "@/shared/api/types/api.dto";
+import { appApiData } from "@/shared/api/apiClient";
+import type { ProfileResponseDto } from "@/shared/api/types/api.response.dto";
+
+type UserGoalSnapshotResponseDto = Pick<
+  ProfileResponseDto,
+  "activity" | "goal" | "target_weight" | "target_calories" | "target_ratio"
+> & {
+  id: number;
+  createdAt: string;
+};
 
 const END_POINT = {
   GET_PROFILE: "/profile/getProfile",

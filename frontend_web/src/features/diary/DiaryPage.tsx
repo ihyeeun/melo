@@ -5,7 +5,7 @@ import Calendar from "@/features/calendar/components/Calendar";
 import styles from "@/features/diary/styles/DiaryPage.module.css";
 import ActionCard from "@/features/home/components/cards/ActionCard";
 import TodayBodyLogSection from "@/features/home/components/TodayBodyLogSection";
-import { useDayMealsQuery } from "@/features/home/hooks/queries/useDayMealsQuery";
+import { useDayMealsQuery } from "@/features/home/hooks/queries/useTodayRecordQuery";
 import type { MenuWithQuantity } from "@/features/home/utils/dayMealSummary";
 import { getCalorieSummary, hasValidTargets } from "@/features/home/utils/todayMealFeedback";
 import {

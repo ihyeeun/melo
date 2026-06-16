@@ -1,4 +1,4 @@
-import { appApiData } from "@/shared/api/appApi";
+import { appApiData } from "@/shared/api/apiClient";
 export async function registerInquiry({
   content,
   app_version,

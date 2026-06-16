@@ -42,10 +42,6 @@
   padding: 0;
 }
 
-.calendar-title {
-  color: var(--static-white);
-}
-
 .calendar-title-icon {
   color: var(--static-white);
   transition: transform 0.2s ease;
@@ -235,8 +231,4 @@
   display: flex;
   gap: 16px;
   justify-content: center;
-}
-
-.calendar-text-white {
-  color: var(--static-white);
 }

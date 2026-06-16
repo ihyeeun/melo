@@ -1,5 +1,6 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
+import { getWebAuthAccessToken } from "@/features/kakao-web-auth/api/webAuthApi";
 import OnboardingHeader from "@/features/onboarding/components/OnboardingHeader";
 import {
   isInRange,
@@ -9,8 +10,8 @@ import {
 import { useRegisterUserInfoMutation } from "@/features/onboarding/hooks/mutations/useRegisterUserInfoMutation";
 import styles from "@/features/onboarding/styles/OnboardingPage.module.css";
 import { PATH } from "@/router/path";
+import { AppApiError } from "@/shared/api/apiClient";
 import { API_ERROR_MESSAGE } from "@/shared/api/apiErrorMessage";
-import { AppApiError } from "@/shared/api/appApi";
 import { isNativeApp, syncAppTab } from "@/shared/api/bridge/nativeBridge";
 import { Button } from "@/shared/commons/button/Button";
 import { LoadingOverlay } from "@/shared/commons/loading/Loading";
@@ -106,6 +107,14 @@ export default function OnboardingPage() {
     () => getOnboardingSteps({ showSubscribedCodeStep }),
     [showSubscribedCodeStep],
   );
+
+  useEffect(() => {
+    if (!isWebOnboarding) return;
+    if (getWebAuthAccessToken()) return;
+
+    navigate(PATH.KAKAO_WEB_LOGIN, { replace: true });
+  }, [isWebOnboarding, navigate]);
+
   const navigateAfterOnboarding = useCallback(() => {
     if (isNativeApp()) {
       syncAppTab("home");

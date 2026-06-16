@@ -23,22 +23,26 @@ type CapturedImagePreviewSource = {
   uri: string;
   mimeType: string | null;
   base64: string | null;
+  previewBase64?: string | null;
+  previewMimeType?: string | null;
 };
+
+const WEBVIEW_PREVIEW_MIME_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 
 const RECOGNITION_ERROR_COPY: Record<RecognitionDomain, RecognitionErrorCopy> = {
   NUTRITION_LABEL: {
     title: "영양성분을 인식하기 어려웠어요",
-    fallbackMessage: "영양성분을 인식하기 어려웠어요",
+    fallbackMessage: "선명하게 다시 촬영해 주세요",
     retryGuide: "선명하게 다시 촬영해 주세요",
   },
   FOOD: {
     title: "음식을 인식하기 어려웠어요",
-    fallbackMessage: "음식 메뉴 분석에 실패했어요",
+    fallbackMessage: "음식이 잘 보이도록 다시 촬영해 주세요",
     retryGuide: "음식이 잘 보이도록 다시 촬영해 주세요",
   },
   MENU_BOARD: {
     title: "메뉴판을 인식하기 어려웠어요",
-    fallbackMessage: "메뉴판 분석에 실패했어요",
+    fallbackMessage: "선명하게 다시 촬영해 주세요",
     retryGuide: "선명하게 다시 촬영해 주세요",
   },
 };
@@ -107,6 +111,32 @@ function isServiceUnavailable(error: unknown) {
   return (error as BridgeCameraError)?.statusCode === 503;
 }
 
+const CLIENT_VISIBLE_RECOGNITION_ERROR_CODES = new Set([
+  "IMAGE_FORMAT_NOT_ALLOWED",
+  "IMAGE_SIZE_UNAVAILABLE",
+  "IMAGE_SIZE_EXCEEDED",
+  "IMAGE_FORMAT_UNKNOWN",
+  "IMAGE_COUNT_EXCEEDED",
+]);
+
+function shouldUseRecognitionFallbackMessage(error: unknown) {
+  const bridgeError = error as BridgeCameraError;
+
+  if (!bridgeError) return false;
+  if (
+    bridgeError.error &&
+    CLIENT_VISIBLE_RECOGNITION_ERROR_CODES.has(bridgeError.error)
+  ) {
+    return false;
+  }
+
+  return (
+    bridgeError.name === "AppApiError" ||
+    typeof bridgeError.statusCode === "number" ||
+    typeof bridgeError.error === "string"
+  );
+}
+
 export function getRecognitionErrorFeedback(
   domain: RecognitionDomain,
   error?: unknown,
@@ -126,21 +156,39 @@ export function getRecognitionErrorFeedback(
   }
 
   const copy = RECOGNITION_ERROR_COPY[domain];
-  // TODO : 추후 에러코드 연결시에 멘트 넣도록 수정. 우선 상황에 맞는 에러 메세지를 보여주지 않고, 동일한 메세지 보여주도록 설정
-  // const message = getErrorMessage(error, copy.fallbackMessage);
+  const message = shouldUseRecognitionFallbackMessage(error)
+    ? copy.fallbackMessage
+    : getErrorMessage(error, copy.fallbackMessage);
 
   return {
     title: copy.title,
     // description: `${message}\n${copy.retryGuide} `,
-    description: `${copy.retryGuide}`,
+    // description: `${copy.retryGuide}`,
+    description: `${message}`,
   };
 }
 
 export function getCapturedImagePreviewSrc(source: CapturedImagePreviewSource) {
-  if (source.base64 && source.base64.trim().length > 0) {
-    const mimeType = source.mimeType ?? "image/jpeg";
+  const previewBase64 = source.previewBase64?.trim();
+  const previewMimeType = source.previewMimeType?.toLowerCase().trim();
+
+  if (
+    previewBase64 &&
+    previewMimeType &&
+    WEBVIEW_PREVIEW_MIME_TYPES.has(previewMimeType)
+  ) {
+    return `data:${previewMimeType};base64,${previewBase64}`;
+  }
+
+  const mimeType = source.mimeType?.toLowerCase().trim() ?? "image/jpeg";
+
+  if (
+    source.base64 &&
+    source.base64.trim().length > 0 &&
+    WEBVIEW_PREVIEW_MIME_TYPES.has(mimeType)
+  ) {
     return `data:${mimeType};base64,${source.base64}`;
   }
 
-  return source.uri;
+  return null;
 }

@@ -1,20 +1,21 @@
 import { Select } from "@base-ui/react";
-import { type FocusEvent, type PointerEvent, useMemo } from "react";
+import { useMemo } from "react";
 
 import styles from "@/features/chat/styles/ChatMealRecordBottomSheet.module.css";
 import {
-  type ChatRecommendItemResponseDto,
   MEAL_TYPE_OPTIONS,
   type MealServingInputMode,
   type MealType,
   MENU_UNIT,
 } from "@/shared/api/types/api.dto";
+import type { ChatRecommendItemResponseDto } from "@/shared/api/types/api.response.dto";
 import BottomSheet from "@/shared/commons/bottomSheet/BottomSheet";
 import { Button } from "@/shared/commons/button/Button";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import NumberField from "@/shared/commons/input/NumberField";
 import { formatDateKeyToMonthDayWeekdayLabel } from "@/shared/utils/dateFormat";
 import { formatNumberWithMaxOneDecimal } from "@/shared/utils/numberFormat";
+import { getServingUnitLabel } from "@/shared/utils/servingUnit";
 
 type SelectedMenuItem = {
   id: number;
@@ -65,10 +66,6 @@ const QUANTITY_STEP = 0.5;
 const MIN_QUANTITY = 0.1;
 const CONSUMED_WEIGHT_PRECISION = 4;
 const UNIT_QUANTITY_PATTERN = /^\s*([\d.]+)\s*(.*)$/;
-const QUANTITY_FOCUS_SCROLL_BOTTOM_OFFSET = 80;
-const QUANTITY_FOCUS_SCROLL_DELAY = 200;
-const QUANTITY_FOCUS_SCROLL_BEHAVIOR: ScrollBehavior = "smooth";
-let quantityFocusScrollRequestId = 0;
 
 function roundDecimal(value: number, digits = 1) {
   const factor = 10 ** digits;
@@ -86,7 +83,7 @@ function toPositiveNumber(value: number | null | undefined) {
 function resolveServingContext(recommendation: ChatMealRecordMenu): ServingContext {
   const matched = recommendation.unit_quantity.match(UNIT_QUANTITY_PATTERN);
   const parsedCount = matched ? Number(matched[1]) : Number.NaN;
-  const unitLabel = matched?.[2]?.trim() || recommendation.unit_quantity || "인분";
+  const unitLabel = matched?.[2]?.trim() || recommendation.unit_quantity || "";
 
   return {
     baseWeight: toPositiveNumber(recommendation.weight) ?? 1,
@@ -132,114 +129,6 @@ function getScaledCalories(
   servingContext: ServingContext,
 ) {
   return baseCalories * (consumedWeight / servingContext.baseWeight);
-}
-
-function getScrollContainer(element: HTMLElement) {
-  const sheetScroller = element.closest(".react-modal-sheet-content-scroller");
-
-  if (sheetScroller instanceof HTMLElement) {
-    return sheetScroller;
-  }
-
-  let parent = element.parentElement;
-
-  while (parent) {
-    const { overflowY } = window.getComputedStyle(parent);
-
-    if (overflowY === "auto" || overflowY === "scroll" || overflowY === "overlay") {
-      return parent;
-    }
-
-    parent = parent.parentElement;
-  }
-
-  return document.scrollingElement instanceof HTMLElement ? document.scrollingElement : null;
-}
-
-function getQuantityInputScrollBounds(input: HTMLInputElement) {
-  const scrollContainer = getScrollContainer(input);
-
-  if (!scrollContainer) {
-    return null;
-  }
-
-  const viewportTop = window.visualViewport?.offsetTop ?? 0;
-  const viewportBottom =
-    (window.visualViewport?.offsetTop ?? 0) + (window.visualViewport?.height ?? window.innerHeight);
-  const containerRect = scrollContainer.getBoundingClientRect();
-  const visibleTop = Math.max(containerRect.top, viewportTop);
-  const visibleBottom =
-    Math.min(containerRect.bottom, viewportBottom) - QUANTITY_FOCUS_SCROLL_BOTTOM_OFFSET;
-
-  if (visibleBottom <= visibleTop) {
-    return null;
-  }
-
-  return {
-    scrollContainer,
-    visibleTop,
-    visibleBottom,
-  };
-}
-
-function scrollQuantityInputToCenter(input: HTMLInputElement) {
-  if (!input.isConnected || document.activeElement !== input) {
-    return;
-  }
-
-  const scrollBounds = getQuantityInputScrollBounds(input);
-
-  if (!scrollBounds) {
-    input.scrollIntoView({
-      behavior: QUANTITY_FOCUS_SCROLL_BEHAVIOR,
-      block: "center",
-      inline: "nearest",
-    });
-    return;
-  }
-
-  const inputRect = input.getBoundingClientRect();
-  const inputCenter = inputRect.top + inputRect.height / 2;
-  const desiredCenter =
-    scrollBounds.visibleTop + (scrollBounds.visibleBottom - scrollBounds.visibleTop) / 2;
-  const delta = inputCenter - desiredCenter;
-
-  if (Math.abs(delta) < 2) {
-    return;
-  }
-
-  scrollBounds.scrollContainer.scrollBy({
-    top: delta,
-    behavior: QUANTITY_FOCUS_SCROLL_BEHAVIOR,
-  });
-}
-
-function scheduleQuantityInputScroll(
-  input: HTMLInputElement,
-  requestId: number,
-  delay: number,
-  scroll: (input: HTMLInputElement) => void,
-) {
-  window.setTimeout(() => {
-    window.requestAnimationFrame(() => {
-      if (requestId !== quantityFocusScrollRequestId) {
-        return;
-      }
-
-      scroll(input);
-    });
-  }, delay);
-}
-
-function requestQuantityInputScroll(input: HTMLInputElement) {
-  const requestId = ++quantityFocusScrollRequestId;
-
-  scheduleQuantityInputScroll(
-    input,
-    requestId,
-    QUANTITY_FOCUS_SCROLL_DELAY,
-    scrollQuantityInputToCenter,
-  );
 }
 
 export function ChatMealRecordBottomSheet({
@@ -289,16 +178,8 @@ export function ChatMealRecordBottomSheet({
   const dateLabel = dateKey ? formatDateKeyToMonthDayWeekdayLabel(dateKey) : null;
   const actionLabel = selectedItems.length === 0 ? "수정하기" : submitLabel;
 
-  const handleQuantityInputFocus = (event: FocusEvent<HTMLInputElement>) => {
-    requestQuantityInputScroll(event.currentTarget);
-  };
-
-  const handleQuantityInputPointerDown = (event: PointerEvent<HTMLInputElement>) => {
-    requestQuantityInputScroll(event.currentTarget);
-  };
-
   return (
-    <BottomSheet isOpen={isOpen} onClose={onClose} className={styles.bottomSheet}>
+    <BottomSheet isOpen={isOpen} onClose={onClose}>
       <section className={styles.container}>
         <div className={styles.scrollArea}>
           <div>
@@ -347,7 +228,7 @@ export function ChatMealRecordBottomSheet({
           <section className={styles.menuSection}>
             {selectedItems.map((item) => {
               const displayValue = getDisplayValue(item.quantity, item.mode, item.servingContext);
-              const unitSelectLabel = item.servingContext.unitLabel === "인분" ? "인분" : "기준량";
+              const unitSelectLabel = getServingUnitLabel(item.servingContext.unitLabel);
               const selectLabel =
                 item.mode === "unit" ? unitSelectLabel : item.servingContext.weightUnit;
 
@@ -424,8 +305,6 @@ export function ChatMealRecordBottomSheet({
                         inputProps={{
                           inputMode: "decimal",
                           "aria-label": `${item.recommendation.menu_name} 수량 입력`,
-                          onFocus: handleQuantityInputFocus,
-                          onPointerDown: handleQuantityInputPointerDown,
                         }}
                       />
                     </div>

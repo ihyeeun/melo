@@ -13,14 +13,9 @@ import {
   subWeeks,
 } from "date-fns";
 
-import type { CalendarDay, ViewMode } from "../types/calendar.types";
+import { formatDateKey } from "@/shared/utils/dateFormat";
 
-export function formatDateKey(date: Date) {
-  const yyyy = date.getFullYear();
-  const mm = String(date.getMonth() + 1).padStart(2, "0");
-  const dd = String(date.getDate()).padStart(2, "0");
-  return `${yyyy}-${mm}-${dd}`;
-}
+import type { CalendarDay, ViewMode } from "../types/calendar.types";
 
 export function getRecordedDateSet(recordedDates: string[] = []) {
   return new Set(recordedDates);

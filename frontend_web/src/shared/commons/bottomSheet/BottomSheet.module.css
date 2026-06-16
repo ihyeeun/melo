@@ -1,0 +1,30 @@
+.header:global(.seed-bottom-sheet__header) {
+  align-items: center;
+  display: flex;
+  flex-direction: row;
+  gap: 0;
+  justify-content: center;
+  width: 100%;
+  padding-top: 20px;
+  padding-bottom: 12px;
+}
+
+.handle:global(.seed-bottom-sheet-handle__root) {
+  background-color: var(--static-black);
+  border-radius: 100px;
+  height: 4px;
+  position: relative;
+  top: auto;
+  left: auto;
+  transform: none;
+  width: 50px;
+}
+
+.body:global(.seed-bottom-sheet__body) {
+  max-height: calc(100dvh - var(--safe-area-top, 0px) - var(--safe-area-bottom, 0px) - 56px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-left: 0;
+  padding-right: 0;
+  -webkit-overflow-scrolling: touch;
+}

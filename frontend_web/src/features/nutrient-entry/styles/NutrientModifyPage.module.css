@@ -21,12 +21,8 @@
 
 .topSection {
   display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.brandText {
-  color: var(--label-alternative);
+  flex-direction: column;
+  gap: 4px;
 }
 
 .nutrientSection {

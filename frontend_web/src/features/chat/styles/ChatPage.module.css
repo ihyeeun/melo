@@ -33,7 +33,7 @@
   margin-top: auto;
   position: sticky;
   transition: opacity 180ms ease;
-  z-index: 10;
+  z-index: 1;
   width: fit-content;
   margin-left: auto;
 }
@@ -42,7 +42,7 @@
   background-color: var(--dimmer-dimmer);
   inset: 0;
   position: fixed;
-  z-index: 5;
+  z-index: 1;
 }
 
 .floatingCameraBackdrop:active {
@@ -218,6 +218,13 @@
   white-space: pre-wrap;
 }
 
+.userBubble,
+.assistantBubble {
+  -webkit-touch-callout: default;
+  -webkit-user-select: text;
+  user-select: text;
+}
+
 .userImageButton,
 .userImageBubbleFrame {
   width: 240px;
@@ -268,7 +275,7 @@
   justify-content: center;
   padding: calc(var(--safe-area-top) + 56px) 16px calc(var(--safe-area-bottom) + 32px);
   position: fixed;
-  z-index: 1000;
+  z-index: 1;
 }
 
 .userImagePreviewCloseButton {
@@ -476,6 +483,7 @@
 .recommendMetaRow {
   align-items: flex-end;
   display: flex;
+  gap: 4px;
 }
 
 .menuInfoRow {
@@ -485,6 +493,10 @@
 
 .recommendBrand {
   color: var(--label-assistive);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .recommendAmount {
@@ -569,7 +581,6 @@
   position: absolute;
   transform: translate(-50%, -50%);
   width: 46px;
-  z-index: 1;
 }
 
 .feedbackMenuSummary {
@@ -735,14 +746,21 @@
 }
 
 .textInput {
+  background-color: var(--bg-white);
   flex: 1 1 auto;
   min-width: 0;
   width: 100%;
   padding: 9px 20px;
   border-radius: 100px;
   border: 1px solid var(--border-neutral);
+  color: var(--label-normal);
   resize: none;
   overflow-y: auto;
+}
+
+.textInput::placeholder {
+  color: var(--label-assistive);
+  opacity: 1;
 }
 
 .textInputWrapper {

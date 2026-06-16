@@ -1,3 +1,5 @@
+import type { MenuSimpleResponseDto as ApiMenuSimpleResponseDto } from "@/shared/api/types/api.response.dto";
+
 export const MENU_DATA_SOURCE = {
   PUBLIC: 0,
   PERSONAL: 1,
@@ -190,10 +192,11 @@ type NullableMenuNutrientFields = {
 };
 
 export type MealMenuItem = Omit<
-  MenuSimpleResponseDto,
+  ApiMenuSimpleResponseDto,
   "brand" | "category" | "unit" | "weight" | keyof MenuSimpleSubNutrientFields
 > &
-  Partial<Pick<MenuSimpleResponseDto, "brand" | "category" | "unit">> & {
+  Partial<Pick<ApiMenuSimpleResponseDto, "brand" | "category" | "unit">> & {
+    is_deleted?: number;
     weight?: MenuBaseFields["weight"] | null;
   } & NullableMenuNutrientFields & {
     serving_input_mode?: MealServingInputMode;
@@ -213,15 +216,6 @@ export const MEAL_TYPE_SET: ReadonlySet<MealType> = new Set(
 );
 
 export type NutrientServingUnit = "g" | "ml";
-
-export type CapturedImage = {
-  uri: string;
-  width: number;
-  height: number;
-  fileName: string | null;
-  fileSize: number | null;
-  mimeType: string | null;
-};
 
 // Profile
 export type TargetRatio = [carb: number, protein: number, fat: number];

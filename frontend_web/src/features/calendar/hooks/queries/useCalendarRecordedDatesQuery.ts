@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 
-import { getMealRecordedDates } from "@/features/calendar/api/recordedDates";
-import { queryKeys } from "@/features/calendar/hooks/queries/queryKey";
+import { getMealRecordedDates } from "@/features/calendar/api/recordedDates.api";
+import { queryKeys } from "@/features/calendar/hooks/queries/calendar.queryKey";
 import { isValidDateKey } from "@/shared/utils/dateFormat";
 
 type UseCalendarRecordedDatesQueryParams = {

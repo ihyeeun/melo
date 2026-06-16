@@ -365,3 +365,22 @@ body {
   flex-shrink: 0;
   white-space: nowrap;
 }
+
+.textPrimary {
+  color: var(--label-primary);
+}
+.textNormal {
+  color: var(--label-normal);
+}
+.textAlternative {
+  color: var(--label-alternative);
+}
+.textAssistive {
+  color: var(--label-assistive);
+}
+.textDisable {
+  color: var(--label-disable);
+}
+.textWhite {
+  color: var(--label-white);
+}

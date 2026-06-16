@@ -6,10 +6,11 @@ import { useMemo } from "react";
 import CalendarHeader from "@/features/calendar/components/CalendarHeader";
 import MonthlyCalendar from "@/features/calendar/components/MonthlyCalendar";
 import WeeklyCalendar from "@/features/calendar/components/WeeklyCalendar";
+import { formatDateKey } from "@/shared/utils/dateFormat";
 
 import { useCalendarRecordedDatesQuery } from "../hooks/queries/useCalendarRecordedDatesQuery";
 import { useCalendar } from "../hooks/useCalendar";
-import { buildMonthCalendarDays, formatDateKey } from "../utils/calendar";
+import { buildMonthCalendarDays } from "../utils/calendar";
 
 type Props = {
   initialDate?: Date;

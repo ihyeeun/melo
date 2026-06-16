@@ -4,6 +4,7 @@ import { MENU_DATA_SOURCE, type MenuDataSource } from "@/shared/api/types/api.dt
 import { DataSourceBadge } from "@/shared/commons/badge/DataSourceBadge";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import { formatNumberWithMaxOneDecimal } from "@/shared/utils/numberFormat";
+import { getServingUnitLabel } from "@/shared/utils/servingUnit";
 
 import styles from "./MealMenuCard.module.css";
 
@@ -120,7 +121,11 @@ export function MealMenuCard({
   const displayedCalories =
     typeof calories === "number" && Number.isFinite(calories) ? calories : null;
   const weightUnitText = unit === 1 ? "ml" : "g";
-  const shouldShowUnitQuantity = unit_quantity?.trim() === "인분";
+  const servingUnitLabel = getServingUnitLabel(unit_quantity);
+  // const servingAmountLabel =
+  //   servingUnitLabel === "인분"
+  //     ? `${formatQuantity(safeDisplayUnitCount)}${servingUnitLabel}`
+  //     : `1${servingUnitLabel}`;
 
   return (
     <article
@@ -161,12 +166,10 @@ export function MealMenuCard({
                 {brand}
               </span>
             )}
-            {shouldShowUnitQuantity && (
-              <span className={`${styles.unitAmount} typo-label4`}>
-                {formatQuantity(safeDisplayUnitCount)}
-                {unit_quantity}
-              </span>
-            )}
+            <span className={`${styles.unitAmount} typo-label4`}>
+              {formatQuantity(safeDisplayUnitCount)}
+              {servingUnitLabel}
+            </span>
             <span
               className={`${styles.unitAmount} typo-label4`}
             >{`(${formatQuantity(resolvedConsumedWeight)}${weightUnitText})`}</span>

@@ -1,6 +1,5 @@
 import { HOME_ONBOARDING_STORAGE_KEY } from "@/features/home/constants/homeOnboarding";
-import { appApiData } from "@/shared/api/appApi";
-import { clearAuthTokens } from "@/shared/auth/authSession";
+import { appApiData } from "@/shared/api/apiClient";
 
 export async function logout() {
   try {
@@ -13,7 +12,6 @@ export async function logout() {
     console.warn("Remote signout failed. Clearing local session only.", error);
   }
 
-  clearAuthTokens();
   window.localStorage.removeItem(HOME_ONBOARDING_STORAGE_KEY);
 }
 

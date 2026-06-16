@@ -162,17 +162,17 @@ export default function GoalEditPage() {
     setSheetData({});
   };
 
-  const applyInstantSelection = (patch: Partial<OnboardingData>) => {
-    updateDraft(patch);
-    closeEditor();
-  };
-
-  const focusEditorInput = () => {
+  useEffect(() => {
     if (editingField !== "height" && editingField !== "weight" && editingField !== "goalWeight") {
       return;
     }
 
     editorInputRef.current?.focus();
+  }, [editingField]);
+
+  const applyInstantSelection = (patch: Partial<OnboardingData>) => {
+    updateDraft(patch);
+    closeEditor();
   };
 
   const applyEditor = () => {
@@ -517,8 +517,6 @@ export default function GoalEditPage() {
       <BottomSheet
         isOpen={editingField !== null}
         onClose={closeEditor}
-        onOpenEnd={focusEditorInput}
-        className={styles.goalEditBottomSheet}
         disableContentDrag
       >
         <div className={styles.sheetContent} data-editor-field={editingField ?? undefined}>

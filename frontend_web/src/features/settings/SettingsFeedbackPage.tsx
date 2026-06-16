@@ -1,8 +1,8 @@
 import { useStack } from "@stackflow/react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
+import AppOpenSettingsFeedbackPage from "@/features/app-open/AppOpenSettingsFeedbackPage";
 import { useGetProfileQuery } from "@/features/profile/hooks/queries/useProfileQuery";
-import { PATH } from "@/router/path";
 import { track } from "@/shared/analytics/analytics";
 import { EVENT_NAME } from "@/shared/analytics/analytics.constants";
 import {
@@ -10,6 +10,7 @@ import {
   requestNativeAppDeviceInfo,
   syncAppTab,
 } from "@/shared/api/bridge/nativeBridge";
+import type { AppDeviceInfoPayload } from "@/shared/api/bridge/nativeBridge.types";
 import { Button } from "@/shared/commons/button/Button";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
 import { LoadingIndicator } from "@/shared/commons/loading/Loading";
@@ -19,23 +20,49 @@ import styles from "./styles/SettingsDetail.module.css";
 
 const TALLY_FORM_BASE_URL = "https://tally.so/embed/EkMj9L";
 
-function getTallyFormUrl(userId: number, appVersion: string | null) {
+type DeviceInfoQueryParams = {
+  appVersion: string | null;
+  osName: AppDeviceInfoPayload["osName"] | null;
+  osVersion: string | null;
+};
+
+function formatOsQueryValue(deviceInfo: DeviceInfoQueryParams) {
+  if (!deviceInfo.osName) return null;
+
+  const osVersion = deviceInfo.osVersion?.trim();
+
+  return osVersion ? `${deviceInfo.osName} ${osVersion}` : deviceInfo.osName;
+}
+
+function getTallyFormUrl(userId: number, deviceInfo: DeviceInfoQueryParams) {
   const url = new URL(TALLY_FORM_BASE_URL);
+  const osQueryValue = formatOsQueryValue(deviceInfo);
 
   url.searchParams.set("id", String(userId));
-  if (appVersion) {
-    url.searchParams.set("version", appVersion);
+  if (deviceInfo.appVersion) {
+    url.searchParams.set("version", deviceInfo.appVersion);
+  }
+  if (osQueryValue) {
+    url.searchParams.set("os", osQueryValue);
   }
 
   return url.toString();
 }
 
 export default function SettingsFeedbackPage() {
+  if (!isNativeApp()) {
+    return <AppOpenSettingsFeedbackPage autoOpen={false} />;
+  }
+
+  return <NativeSettingsFeedbackPage />;
+}
+
+function NativeSettingsFeedbackPage() {
   const navigate = useNavigate();
   const stack = useStack();
-  const [appVersion, setAppVersion] = useState<string | null | undefined>(() =>
-    isNativeApp() ? undefined : null,
-  );
+  const [deviceInfoQueryParams, setDeviceInfoQueryParams] = useState<
+    DeviceInfoQueryParams | undefined
+  >(undefined);
   const [loadedFormUrl, setLoadedFormUrl] = useState<string | null>(null);
   const {
     data: profile,
@@ -44,10 +71,13 @@ export default function SettingsFeedbackPage() {
     isRefetching: isProfileRefetching,
     refetch: refetchProfile,
   } = useGetProfileQuery();
-  const isAppVersionPending = appVersion === undefined;
+  const isDeviceInfoPending = deviceInfoQueryParams === undefined;
   const tallyFormUrl = useMemo(
-    () => (profile && !isAppVersionPending ? getTallyFormUrl(profile.user_id, appVersion) : null),
-    [appVersion, isAppVersionPending, profile],
+    () =>
+      profile && !isDeviceInfoPending
+        ? getTallyFormUrl(profile.user_id, deviceInfoQueryParams)
+        : null,
+    [deviceInfoQueryParams, isDeviceInfoPending, profile],
   );
   const isFormLoading = tallyFormUrl !== null && loadedFormUrl !== tallyFormUrl;
   const canGoBack = stack.activities.filter((activity) => !activity.exitedBy).length > 1;
@@ -57,12 +87,7 @@ export default function SettingsFeedbackPage() {
       return;
     }
 
-    if (isNativeApp()) {
-      syncAppTab("home");
-      return;
-    }
-
-    navigate(PATH.HOME, { replace: true });
+    syncAppTab("home");
   }, [canGoBack, navigate]);
 
   useEffect(() => {
@@ -70,22 +95,26 @@ export default function SettingsFeedbackPage() {
   }, []);
 
   useEffect(() => {
-    if (!isNativeApp()) {
-      return;
-    }
-
     let isActive = true;
 
     void requestNativeAppDeviceInfo()
       .then((deviceInfo) => {
         if (!isActive) return;
 
-        setAppVersion(deviceInfo.appVersion ?? null);
+        setDeviceInfoQueryParams({
+          appVersion: deviceInfo.appVersion ?? null,
+          osName: deviceInfo.osName,
+          osVersion: deviceInfo.osVersion ?? null,
+        });
       })
       .catch(() => {
         if (!isActive) return;
 
-        setAppVersion(null);
+        setDeviceInfoQueryParams({
+          appVersion: null,
+          osName: null,
+          osVersion: null,
+        });
       });
 
     return () => {
@@ -98,7 +127,7 @@ export default function SettingsFeedbackPage() {
       <PageHeader onBack={handleBack} />
 
       <main className={styles.formMain}>
-        {isProfilePending || isAppVersionPending ? (
+        {isProfilePending || isDeviceInfoPending ? (
           <div className={styles.formState}>
             <LoadingIndicator label="문의 화면을 불러오는 중입니다." />
           </div>

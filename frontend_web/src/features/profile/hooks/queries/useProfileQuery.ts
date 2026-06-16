@@ -10,6 +10,10 @@ type UseGetProfileQueryOptions = {
   enabled?: boolean;
 };
 
+function toTargetRatioTuple(targetRatio: number[]): [carbs: number, protein: number, fat: number] {
+  return [targetRatio[0] ?? 0, targetRatio[1] ?? 0, targetRatio[2] ?? 0];
+}
+
 export function useGetProfileQuery(options?: UseGetProfileQueryOptions) {
   const setTargets = useSetTargets();
   const isEnabled = options?.enabled;
@@ -26,7 +30,7 @@ export function useGetProfileQuery(options?: UseGetProfileQueryOptions) {
     identifyAnalyticsUser(query.data);
     setTargets({
       target_calories: query.data.target_calories,
-      target_ratio: query.data.target_ratio,
+      target_ratio: toTargetRatioTuple(query.data.target_ratio),
     });
   }, [query.data, setTargets, shouldSyncProfileSideEffects]);
 
