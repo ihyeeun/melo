@@ -86,7 +86,7 @@ export interface MenuResponseDto {
   sat_fat: number;
   trans_fat: number;
   un_sat_fat: number;
-  soduim: number;
+  sodium: number;
   caffeine: number;
   potassium: number;
   cholesterol: number;
@@ -103,13 +103,13 @@ export interface NutritionLabelRecognitionResponseDto {
   dietary_fiber?: number;
   protein?: number;
   fat?: number;
-  sat_fal?: number;
+  sat_fat?: number;
   trans_fat?: number;
   un_sat_fat?: number;
   sodium?: number;
   caffeine?: number;
   potassium?: number;
-  caolesterol?: number;
+  cholesterol?: number;
   alcohol?: number;
 }
 
