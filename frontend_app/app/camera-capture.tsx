@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useIsFocused } from "@react-navigation/native";
 import { router } from "expo-router";
-import * as FileSystem from "expo-file-system/legacy";
+import { manipulateAsync, SaveFormat } from "expo-image-manipulator";
 import * as ImagePicker from "expo-image-picker";
 import * as SecureStore from "expo-secure-store";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -33,6 +33,16 @@ type CameraPermissionStatus = Awaited<ReturnType<typeof Camera.getCameraPermissi
 
 const DEFAULT_CAPTURE_MODE: CameraCaptureMode = "NUTRITION_LABEL";
 const CAMERA_ONBOARDING_DONE_VALUE = "done";
+const PREVIEW_THUMBNAIL_MAX_DIMENSION = 720;
+const PREVIEW_THUMBNAIL_QUALITY = 0.82;
+const PREVIEW_THUMBNAIL_PRIMARY_FORMAT = SaveFormat.WEBP;
+const PREVIEW_THUMBNAIL_FALLBACK_FORMAT = SaveFormat.JPEG;
+
+type ImageManipulationActions = NonNullable<Parameters<typeof manipulateAsync>[1]>;
+type PreviewThumbnail = {
+  base64: string;
+  mimeType: string;
+};
 
 const CAMERA_MODE_CONFIG: Record<
   CameraCaptureMode,
@@ -107,11 +117,66 @@ function resolveFileNameFromUri(uri: string) {
   return fileName;
 }
 
-async function readBase64FromUri(uri: string) {
+function getPreviewThumbnailMimeType(format: SaveFormat) {
+  return format === SaveFormat.WEBP ? "image/webp" : "image/jpeg";
+}
+
+function getPreviewThumbnailActions(width: number, height: number): ImageManipulationActions {
+  if (
+    !Number.isFinite(width) ||
+    !Number.isFinite(height) ||
+    width <= 0 ||
+    height <= 0 ||
+    Math.max(width, height) <= PREVIEW_THUMBNAIL_MAX_DIMENSION
+  ) {
+    return [];
+  }
+
+  return width >= height
+    ? [{ resize: { width: PREVIEW_THUMBNAIL_MAX_DIMENSION } }]
+    : [{ resize: { height: PREVIEW_THUMBNAIL_MAX_DIMENSION } }];
+}
+
+async function createPreviewThumbnailWithFormat(
+  uri: string,
+  width: number,
+  height: number,
+  format: SaveFormat,
+): Promise<PreviewThumbnail | null> {
+  const thumbnail = await manipulateAsync(uri, getPreviewThumbnailActions(width, height), {
+    base64: true,
+    compress: PREVIEW_THUMBNAIL_QUALITY,
+    format,
+  });
+
+  if (!thumbnail.base64) return null;
+
+  return {
+    base64: thumbnail.base64,
+    mimeType: getPreviewThumbnailMimeType(format),
+  };
+}
+
+async function createPreviewThumbnail(uri: string, width: number, height: number) {
   try {
-    return await FileSystem.readAsStringAsync(uri, {
-      encoding: FileSystem.EncodingType.Base64,
-    });
+    const thumbnail = await createPreviewThumbnailWithFormat(
+      uri,
+      width,
+      height,
+      PREVIEW_THUMBNAIL_PRIMARY_FORMAT,
+    );
+    if (thumbnail) return thumbnail;
+  } catch {
+    // Some older devices may fail WebP encoding. JPEG is the stable fallback.
+  }
+
+  try {
+    return await createPreviewThumbnailWithFormat(
+      uri,
+      width,
+      height,
+      PREVIEW_THUMBNAIL_FALLBACK_FORMAT,
+    );
   } catch {
     return null;
   }
@@ -436,7 +501,7 @@ export default function CameraCaptureScreen() {
         flash: "off",
       });
       const uri = resolvePhotoUri(photo.path);
-      const base64 = await readBase64FromUri(uri);
+      const previewThumbnail = await createPreviewThumbnail(uri, photo.width, photo.height);
 
       resolveCameraCaptureSession({
         uri,
@@ -445,7 +510,9 @@ export default function CameraCaptureScreen() {
         fileName: resolveFileNameFromUri(uri),
         fileSize: null,
         mimeType: "image/jpeg",
-        base64,
+        base64: null,
+        previewBase64: previewThumbnail?.base64 ?? null,
+        previewMimeType: previewThumbnail?.mimeType ?? null,
       });
 
       router.back();
@@ -531,7 +598,7 @@ export default function CameraCaptureScreen() {
         router.back();
         return;
       }
-      const base64 = asset.base64 ?? (await readBase64FromUri(asset.uri));
+      const previewThumbnail = await createPreviewThumbnail(asset.uri, asset.width, asset.height);
 
       resolveCameraCaptureSession({
         uri: asset.uri,
@@ -540,7 +607,9 @@ export default function CameraCaptureScreen() {
         fileName: asset.fileName,
         fileSize: asset.fileSize,
         mimeType: asset.mimeType,
-        base64,
+        base64: null,
+        previewBase64: previewThumbnail?.base64 ?? null,
+        previewMimeType: previewThumbnail?.mimeType ?? null,
       });
       router.back();
     } catch {

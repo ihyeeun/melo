@@ -3,8 +3,9 @@ import type { WebView, WebViewMessageEvent } from "react-native-webview";
 import { isAxiosError } from "axios";
 import Constants from "expo-constants";
 import { router } from "expo-router";
-import * as ImagePicker from "expo-image-picker";
 import * as FileSystem from "expo-file-system/legacy";
+import { manipulateAsync, SaveFormat } from "expo-image-manipulator";
+import * as ImagePicker from "expo-image-picker";
 import { Platform } from "react-native";
 import { clearTokens } from "@/features/auth/store/tokenStore";
 import { apiClient } from "@/src/shared/api/apiClient";
@@ -21,9 +22,19 @@ import type {
 import { sendToWeb } from "./sendToWeb";
 import { requestFromWeb } from "./requestFromWeb";
 
-const ALLOWED_IMAGE_MIME_TYPES = new Set(["image/jpeg", "image/png", "image/heic", "image/heif"]);
-const ALLOWED_IMAGE_EXTENSIONS = new Set(["jpg", "jpeg", "png", "heic", "heif"]);
+const ALLOWED_IMAGE_MIME_TYPES = new Set([
+  "image/jpeg",
+  "image/png",
+  "image/heic",
+  "image/heif",
+  "image/webp",
+]);
+const ALLOWED_IMAGE_EXTENSIONS = new Set(["jpg", "jpeg", "png", "heic", "heif", "webp"]);
 const MAX_IMAGE_SIZE_BYTES = 8 * 1024 * 1024;
+const NORMALIZED_UPLOAD_IMAGE_MAX_DIMENSION = 2560;
+const NORMALIZED_UPLOAD_IMAGE_QUALITY = 0.9;
+const NORMALIZED_UPLOAD_PRIMARY_FORMAT = SaveFormat.WEBP;
+const NORMALIZED_UPLOAD_FALLBACK_FORMAT = SaveFormat.JPEG;
 const DEFAULT_UPLOAD_FIELD_NAME = "file";
 const SESSION_TERMINATION_ENDPOINTS = new Set(["/commonAuth/signout", "/commonAuth/delete"]);
 const LOCAL_SESSION_CLEAR_ON_FAILURE_ENDPOINTS = new Set(["/commonAuth/signout"]);
@@ -33,12 +44,18 @@ type ImageFileSource = {
   fileName?: string | null;
   mimeType?: string | null;
   fileSize?: number | null;
+  width?: number | null;
+  height?: number | null;
 };
+
+type ImageManipulationActions = NonNullable<Parameters<typeof manipulateAsync>[1]>;
 
 type CapturedImageSource = ImageFileSource & {
   width: number;
   height: number;
   base64?: string | null;
+  previewBase64?: string | null;
+  previewMimeType?: string | null;
 };
 
 function resolveLowerCaseExtension(value: string | null | undefined) {
@@ -56,6 +73,7 @@ function resolveImageMimeTypeFromExtension(extension: string | null | undefined)
   if (extension === "jpg" || extension === "jpeg") return "image/jpeg";
   if (extension === "heic") return "image/heic";
   if (extension === "heif") return "image/heif";
+  if (extension === "webp") return "image/webp";
   return null;
 }
 
@@ -106,7 +124,7 @@ async function normalizeCapturedImageSource(source: CapturedImageSource) {
 
   if (!isAllowedMimeType && !isAllowedExtension) {
     throw new BridgeHandledError(
-      "JPG, PNG, HEIC, HEIF 형식의 이미지만 첨부할 수 있어요.",
+      "JPG, PNG, HEIC, HEIF, WEBP 형식의 이미지만 첨부할 수 있어요.",
       400,
       "IMAGE_FORMAT_NOT_ALLOWED",
     );
@@ -137,6 +155,8 @@ async function normalizeCapturedImageSource(source: CapturedImageSource) {
     fileSize,
     mimeType: mimeType ?? null,
     base64: source.base64 ?? null,
+    previewBase64: source.previewBase64 ?? null,
+    previewMimeType: source.previewMimeType ?? null,
   };
 }
 
@@ -149,6 +169,8 @@ function normalizeImagePickerAsset(asset: ImagePicker.ImagePickerAsset) {
     fileSize: asset.fileSize,
     mimeType: asset.mimeType,
     base64: asset.base64,
+    previewBase64: null,
+    previewMimeType: null,
   });
 }
 
@@ -162,17 +184,100 @@ function assertRelativeEndpoint(endpoint: string) {
   }
 }
 
-function resolveUploadFileName(source: ImageFileSource, mimeType: string) {
+function getNormalizedUploadMimeType(format: SaveFormat) {
+  if (format === SaveFormat.WEBP) return "image/webp";
+  if (format === SaveFormat.PNG) return "image/png";
+
+  return "image/jpeg";
+}
+
+function getNormalizedUploadExtension(format: SaveFormat) {
+  if (format === SaveFormat.WEBP) return "webp";
+  if (format === SaveFormat.PNG) return "png";
+
+  return "jpg";
+}
+
+function resolveNormalizedUploadFileName(source: ImageFileSource, format: SaveFormat) {
   const trimmedFileName = source.fileName?.trim();
-  if (trimmedFileName) return trimmedFileName;
+  const rawFileName = trimmedFileName || source.uri.split("?")[0].split("/").pop() || "upload";
+  const fileName = rawFileName.split("?")[0].split("/").pop() || "upload";
+  const baseName = fileName.replace(/\.[a-zA-Z0-9]+$/, "").trim();
 
-  const extensionFromUri = resolveLowerCaseExtension(source.uri);
-  if (extensionFromUri) return `upload.${extensionFromUri}`;
+  return `${baseName || "upload"}.${getNormalizedUploadExtension(format)}`;
+}
 
-  if (mimeType === "image/png") return "upload.png";
-  if (mimeType === "image/heic") return "upload.heic";
-  if (mimeType === "image/heif") return "upload.heif";
-  return "upload.jpg";
+function toPositiveFiniteNumber(value: number | null | undefined) {
+  if (typeof value !== "number" || !Number.isFinite(value) || value <= 0) return null;
+
+  return value;
+}
+
+function getNormalizedUploadImageActions(source: ImageFileSource): ImageManipulationActions {
+  const width = toPositiveFiniteNumber(source.width);
+  const height = toPositiveFiniteNumber(source.height);
+
+  if (width === null || height === null) return [];
+  if (Math.max(width, height) <= NORMALIZED_UPLOAD_IMAGE_MAX_DIMENSION) return [];
+
+  return width >= height
+    ? [{ resize: { width: NORMALIZED_UPLOAD_IMAGE_MAX_DIMENSION } }]
+    : [{ resize: { height: NORMALIZED_UPLOAD_IMAGE_MAX_DIMENSION } }];
+}
+
+async function convertUploadImage(source: ImageFileSource, format: SaveFormat) {
+  const normalizedImage = await manipulateAsync(source.uri, getNormalizedUploadImageActions(source), {
+    compress: NORMALIZED_UPLOAD_IMAGE_QUALITY,
+    format,
+  });
+  const fileSize = await resolveImageFileSize({ uri: normalizedImage.uri });
+
+  if (fileSize === null) {
+    throw new BridgeHandledError(
+      "이미지 용량을 확인하지 못했어요. 다시 시도해주세요.",
+      400,
+      "IMAGE_SIZE_UNAVAILABLE",
+    );
+  }
+
+  if (fileSize > MAX_IMAGE_SIZE_BYTES) {
+    throw new BridgeHandledError(
+      "이미지 용량은 8MB 이하만 첨부할 수 있어요.",
+      400,
+      "IMAGE_SIZE_EXCEEDED",
+    );
+  }
+
+  return {
+    uri: normalizedImage.uri,
+    fileName: resolveNormalizedUploadFileName(source, format),
+    mimeType: getNormalizedUploadMimeType(format),
+    fileSize,
+  };
+}
+
+async function normalizeUploadImage(source: ImageFileSource) {
+  try {
+    return await convertUploadImage(source, NORMALIZED_UPLOAD_PRIMARY_FORMAT);
+  } catch (error) {
+    if (isBridgeHandledError(error)) {
+      throw error;
+    }
+
+    try {
+      return await convertUploadImage(source, NORMALIZED_UPLOAD_FALLBACK_FORMAT);
+    } catch (fallbackError) {
+      if (isBridgeHandledError(fallbackError)) {
+        throw fallbackError;
+      }
+    }
+
+    throw new BridgeHandledError(
+      "이미지 파일을 처리하지 못했어요. 다시 시도해주세요.",
+      400,
+      "IMAGE_PROCESSING_FAILED",
+    );
+  }
 }
 
 async function normalizeUploadImageSource(payload: BridgeImageUploadRequestPayload) {
@@ -180,6 +285,8 @@ async function normalizeUploadImageSource(payload: BridgeImageUploadRequestPaylo
     uri: payload.fileUri,
     fileName: payload.fileName,
     mimeType: payload.mimeType,
+    width: payload.width,
+    height: payload.height,
   };
 
   const mimeType = resolveImageMimeType(source);
@@ -191,7 +298,7 @@ async function normalizeUploadImageSource(payload: BridgeImageUploadRequestPaylo
 
   if (!isAllowedMimeType && !isAllowedExtension) {
     throw new BridgeHandledError(
-      "JPG, PNG, HEIC, HEIF 형식의 이미지만 첨부할 수 있어요.",
+      "JPG, PNG, HEIC, HEIF, WEBP 형식의 이미지만 첨부할 수 있어요.",
       400,
       "IMAGE_FORMAT_NOT_ALLOWED",
     );
@@ -214,17 +321,7 @@ async function normalizeUploadImageSource(payload: BridgeImageUploadRequestPaylo
     );
   }
 
-  const normalizedMimeType = mimeType ?? resolveImageMimeTypeFromExtension(extension);
-  if (!normalizedMimeType) {
-    throw new BridgeHandledError("이미지 형식을 확인하지 못했어요.", 400, "IMAGE_FORMAT_UNKNOWN");
-  }
-
-  return {
-    uri: payload.fileUri,
-    fileName: resolveUploadFileName(source, normalizedMimeType),
-    mimeType: normalizedMimeType,
-    fileSize,
-  };
+  return await normalizeUploadImage(source);
 }
 
 function resolveUploadFieldName(payloadFieldName?: string) {
@@ -382,6 +479,10 @@ function isBridgePrimitiveRecord(
   return Object.values(value).every(isBridgePrimitiveValue);
 }
 
+function isOptionalBridgeDimension(value: unknown) {
+  return value === undefined || value === null || typeof value === "number";
+}
+
 function isWebToAppMessage(value: unknown): value is WebToAppMessage {
   if (!isRecord(value)) return false;
   if (typeof value.id !== "string") return false;
@@ -452,6 +553,12 @@ function isWebToAppMessage(value: unknown): value is WebToAppMessage {
       value.payload.mimeType === null ||
       typeof value.payload.mimeType === "string";
     if (!isValidMimeType) return false;
+
+    const isValidWidth = isOptionalBridgeDimension(value.payload.width);
+    if (!isValidWidth) return false;
+
+    const isValidHeight = isOptionalBridgeDimension(value.payload.height);
+    if (!isValidHeight) return false;
 
     const isValidFieldName =
       value.payload.fieldName === undefined || typeof value.payload.fieldName === "string";

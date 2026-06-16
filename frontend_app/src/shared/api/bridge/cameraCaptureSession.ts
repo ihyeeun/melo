@@ -10,6 +10,8 @@ export type CameraCaptureSessionResult = {
   mimeType?: string | null;
   fileSize?: number | null;
   base64?: string | null;
+  previewBase64?: string | null;
+  previewMimeType?: string | null;
 };
 
 type PendingCameraCaptureSession = {

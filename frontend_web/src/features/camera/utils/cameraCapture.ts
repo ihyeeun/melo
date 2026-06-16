@@ -23,7 +23,11 @@ type CapturedImagePreviewSource = {
   uri: string;
   mimeType: string | null;
   base64: string | null;
+  previewBase64?: string | null;
+  previewMimeType?: string | null;
 };
+
+const WEBVIEW_PREVIEW_MIME_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 
 const RECOGNITION_ERROR_COPY: Record<RecognitionDomain, RecognitionErrorCopy> = {
   NUTRITION_LABEL: {
@@ -165,10 +169,26 @@ export function getRecognitionErrorFeedback(
 }
 
 export function getCapturedImagePreviewSrc(source: CapturedImagePreviewSource) {
-  if (source.base64 && source.base64.trim().length > 0) {
-    const mimeType = source.mimeType ?? "image/jpeg";
+  const previewBase64 = source.previewBase64?.trim();
+  const previewMimeType = source.previewMimeType?.toLowerCase().trim();
+
+  if (
+    previewBase64 &&
+    previewMimeType &&
+    WEBVIEW_PREVIEW_MIME_TYPES.has(previewMimeType)
+  ) {
+    return `data:${previewMimeType};base64,${previewBase64}`;
+  }
+
+  const mimeType = source.mimeType?.toLowerCase().trim() ?? "image/jpeg";
+
+  if (
+    source.base64 &&
+    source.base64.trim().length > 0 &&
+    WEBVIEW_PREVIEW_MIME_TYPES.has(mimeType)
+  ) {
     return `data:${mimeType};base64,${source.base64}`;
   }
 
-  return source.uri;
+  return null;
 }
