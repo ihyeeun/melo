@@ -149,10 +149,8 @@ export default function MenuBoardCameraPage() {
       <CheckButtonModal
         open={captureErrorFeedback !== null}
         onOpenChange={handleCaptureErrorModalOpenChange}
-        // title={captureErrorFeedback?.title ?? ""}
-        // description={captureErrorFeedback?.description}
-        title={"메뉴판을 인식하기 어려웠어요"}
-        description={"선명하게 다시 촬영해 주세요"}
+        title={captureErrorFeedback?.title ?? ""}
+        description={captureErrorFeedback?.description}
       />
     </section>
   );
