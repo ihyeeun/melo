@@ -84,7 +84,7 @@
   gap: 8px;
 }
 
-.activeMetricCard {
+.activeCard.activeMetricCard {
   background-color: var(--interaction-primary);
   border-color: var(--border-primary);
 }
