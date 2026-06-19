@@ -10,6 +10,10 @@ import {
 } from "@/features/profile/hooks/queries/useWeeklyRecordQuery";
 import styles from "@/features/profile/styles/ProfilePage.module.css";
 import { PATH } from "@/router/path";
+import {
+  useNativeStepCountQuery,
+  useNativeStepCountRecordsQuery,
+} from "@/shared/api/bridge/useNativeStepCountQuery";
 import { Button } from "@/shared/commons/button/Button";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
@@ -64,7 +68,7 @@ export default function ProfilePage() {
   const targetWeight = profile?.target_weight ?? currentWeight;
   const targetCalories = profile?.target_calories ?? 2000;
   const remainingWeight = Math.abs(currentWeight - targetWeight);
-  const todaySteps =
+  const savedTodaySteps =
     typeof bodyLog?.steps === "number" && bodyLog.steps >= 0 ? bodyLog.steps : null;
   const metricConfig = METRIC_CONFIG[selectedMetric];
 
@@ -74,6 +78,22 @@ export default function ProfilePage() {
     targetWeight,
     targetCalories,
   });
+  const weeklyStartDate = weeklyRecordQuery.records[0]?.dateKey ?? today;
+  const weeklyEndDate = weeklyRecordQuery.records.at(-1)?.dateKey ?? today;
+  const { data: nativeTodayStepCount } = useNativeStepCountQuery(today);
+  const { data: nativeWeeklyStepCount } = useNativeStepCountRecordsQuery(
+    {
+      startDate: weeklyStartDate,
+      endDate: weeklyEndDate,
+    },
+    { enabled: selectedMetric === "steps" },
+  );
+  const todaySteps = nativeTodayStepCount?.steps ?? savedTodaySteps ?? 0;
+  const nativeWeeklyStepsByDate = useMemo(() => {
+    return new Map(
+      (nativeWeeklyStepCount?.records ?? []).map((record) => [record.date, record.steps]),
+    );
+  }, [nativeWeeklyStepCount?.records]);
 
   const weeklyChartData = useMemo(() => {
     return weeklyRecordQuery.records.map((record) => {
@@ -95,10 +115,10 @@ export default function ProfilePage() {
 
       return {
         label: record.label,
-        value: record.steps ?? 0,
+        value: record.steps ?? nativeWeeklyStepsByDate.get(record.dateKey) ?? 0,
       };
     });
-  }, [currentWeight, selectedMetric, weeklyRecordQuery.records]);
+  }, [currentWeight, nativeWeeklyStepsByDate, selectedMetric, weeklyRecordQuery.records]);
 
   const handleSelectMetric = (metric: WeeklyMetricType) => {
     setSelectedMetric(metric);
@@ -209,7 +229,7 @@ export default function ProfilePage() {
 
                 <div className={styles.activeCardValueRow}>
                   <span className={`${styles.activeCardValue} typo-body3`}>
-                    {todaySteps === null ? "0" : todaySteps.toLocaleString("ko-KR")}
+                    {todaySteps.toLocaleString("ko-KR")}
                   </span>
                   <span className={`${styles.activeCardUnit} typo-caption3`}>보</span>
                 </div>

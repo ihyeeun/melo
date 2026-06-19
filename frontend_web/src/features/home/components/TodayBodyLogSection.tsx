@@ -3,6 +3,7 @@ import { useGetBodyLog } from "@/features/home/hooks/queries/useTodayRecordQuery
 import style from "@/features/home/styles/TodayBodyLogSection.module.css";
 import { useGetProfileQuery } from "@/features/profile/hooks/queries/useProfileQuery";
 import { PATH } from "@/router/path";
+import { useNativeStepCountQuery } from "@/shared/api/bridge/useNativeStepCountQuery";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import { useNavigate } from "@/shared/navigation/stackflowNavigation";
 import { getTodayFormatDateKey } from "@/shared/utils/dateFormat";
@@ -12,7 +13,9 @@ export default function TodayBodyLogSection({ date }: { date: string }) {
   const { data: bodyLog } = useGetBodyLog(date);
   const { data: profile } = useGetProfileQuery();
   const isToday = date === getTodayFormatDateKey();
+  const { data: nativeStepCount } = useNativeStepCountQuery(date, { enabled: isToday });
   const displayWeight = bodyLog?.weight ?? (isToday ? (profile?.weight ?? 0) : 0);
+  const displaySteps = nativeStepCount?.steps ?? bodyLog?.steps ?? 0;
 
   const getSheetPath = (pathname: string) => {
     const searchParams = new URLSearchParams({ date });
@@ -34,7 +37,7 @@ export default function TodayBodyLogSection({ date }: { date: string }) {
         <TodayMetricCard title="체중" value={displayWeight} unit="kg" onClick={openWeightEditor} />
         <TodayMetricCard
           title="걸음 수"
-          value={bodyLog?.steps ?? 0}
+          value={displaySteps}
           unit="보"
           onClick={openStepsEditor}
         />
