@@ -123,7 +123,7 @@ export function SearchInputHeader({
         <div className={styles.fieldWrap}>
           <input
             ref={inputRef}
-            className={`${styles.input} typo-body3`}
+            className={`${styles.input} ${value ? styles.clearPadding : ""} typo-body2`}
             type="search"
             value={value}
             onChange={handleChange}
