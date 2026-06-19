@@ -9,8 +9,9 @@
 
 .navBar {
   align-items: center;
-  display: flex;
+  display: grid;
   gap: 8px;
+  grid-template-columns: 24px minmax(0, 1fr);
   padding: 7px 20px;
 }
 
