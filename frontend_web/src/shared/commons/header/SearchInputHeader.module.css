@@ -12,8 +12,7 @@
   display: grid;
   gap: 8px;
   grid-template-columns: 24px minmax(0, 1fr);
-  height: 56px;
-  padding: 0 20px;
+  padding: 7px 20px;
 }
 
 .backButton {
@@ -38,9 +37,12 @@
   border: 1px solid var(--border-neutral);
   border-radius: 8px;
   color: var(--label-normal);
-  height: 42px;
-  padding: 0 44px 0 14px;
   width: 100%;
+  padding: 10px 14px;
+}
+
+.clearPadding {
+  padding-right: 52px;
 }
 
 .input::placeholder {
@@ -53,17 +55,14 @@
   -webkit-appearance: none;
 }
 
-.input:focus {
-  outline: none;
-}
-
 .clearButton {
   align-items: center;
   color: var(--gray-400);
   display: inline-flex;
   justify-content: center;
   position: absolute;
-  right: 16px;
-  top: 50%;
-  transform: translateY(-50%);
+  bottom: 0;
+  right: 0;
+  top: 0;
+  width: 52px;
 }

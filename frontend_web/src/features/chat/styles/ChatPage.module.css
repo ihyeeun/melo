@@ -105,6 +105,10 @@
   width: 56px;
 }
 
+.scrollButton {
+  opacity: 85%;
+}
+
 .emptySection {
   display: flex;
   flex-direction: column;
