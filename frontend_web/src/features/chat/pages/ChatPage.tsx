@@ -89,6 +89,7 @@ import {
   formatTimeText,
   getTodayFormatDateKey,
   parseDate,
+  parseDateKey,
 } from "@/shared/utils/dateFormat";
 import { formatNumberWithMaxOneDecimal } from "@/shared/utils/numberFormat";
 import { formatBaseServingUnit } from "@/shared/utils/servingUnit";
@@ -110,6 +111,7 @@ const ASSISTANT_BUBBLE_REVEAL_START_DELAY_MS = 180;
 const ASSISTANT_BUBBLE_GAP_MS = 1000;
 const ASSISTANT_RESULT_REVEAL_DELAY_MS = 1000;
 const ASSISTANT_RESULT_CARD_GAP_MS = 460;
+const MEAL_RECORD_LOOKBACK_DAYS = 4;
 
 type RecordedMenuSummary = {
   menu_id: number;
@@ -467,7 +469,9 @@ export default function ChatPage() {
   }, [data]);
   const displayChatList = chatList;
   const chatDateKeys = useMemo(() => {
-    const dateKeySet = new Set<string>([todayDateKey]);
+    const dateKeySet = new Set<string>(
+      getRecentDateKeys(todayDateKey, MEAL_RECORD_LOOKBACK_DAYS),
+    );
 
     displayChatList.forEach((chatItem) => {
       const dateKey = getChatDateKey(chatItem);
@@ -1566,7 +1570,7 @@ export default function ChatPage() {
               }
 
               const { chatItem } = timelineItem;
-              const recordDateKey = todayDateKey;
+              const recordDateKey = getChatDateKey(chatItem) ?? todayDateKey;
               const recordedDayMeals = dayMealsByDate.get(recordDateKey);
               // 기존에 기록되어있는 식사 기록
               const currentMealRecord = recordedDayMeals
@@ -1870,6 +1874,16 @@ export default function ChatPage() {
 function delayAssistantPlayback(delayMs: number) {
   return new Promise<void>((resolve) => {
     globalThis.setTimeout(resolve, delayMs);
+  });
+}
+
+function getRecentDateKeys(baseDateKey: string, dayCount: number) {
+  const baseDate = parseDateKey(baseDateKey);
+
+  return Array.from({ length: dayCount }, (_, index) => {
+    const date = new Date(baseDate);
+    date.setDate(baseDate.getDate() - index);
+    return formatDateKey(date);
   });
 }
 
