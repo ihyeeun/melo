@@ -1,29 +1,128 @@
-// frontend_app/features/health/service/healthStep.android.ts
+import {
+  aggregateGroupByPeriod,
+  getGrantedPermissions,
+  getSdkStatus,
+  initialize,
+  requestPermission,
+  SdkAvailabilityStatus,
+} from "react-native-health-connect";
 
-import { BridgeHandledError } from "@/src/shared/api/bridge/bridgeError";
 import type {
   HealthStepCountRecord,
   HealthStepsRequestPayload,
 } from "@/features/health/types/healthSteps.types";
 
+const HEALTH_CONNECT_SOURCE = "health_connect" as const;
+const STEPS_READ_PERMISSION = {
+  accessType: "read",
+  recordType: "Steps",
+} as const;
+
+function hasStepsReadPermission(permissions: unknown[]) {
+  return permissions.some((permission) => {
+    const item = permission as {
+      accessType?: string;
+      recordType?: string;
+    };
+
+    return item.accessType === "read" && item.recordType === "Steps";
+  });
+}
+
+async function initializeAndroidHealthConnect() {
+  const sdkStatus = await getSdkStatus();
+
+  if (sdkStatus !== SdkAvailabilityStatus.SDK_AVAILABLE) {
+    return false;
+  }
+
+  return initialize();
+}
+
 export async function getAndroidHealthPermissionStatus() {
+  const isInitialized = await initializeAndroidHealthConnect();
+
+  if (!isInitialized) {
+    return {
+      permissionStatus: "unknown" as const,
+      source: HEALTH_CONNECT_SOURCE,
+    };
+  }
+
+  const permissions = await getGrantedPermissions();
+
   return {
-    permissionStatus: "unknown" as const,
-    source: "health_connect" as const,
+    permissionStatus: hasStepsReadPermission(permissions)
+      ? ("granted" as const)
+      : ("not_determined" as const),
+    source: HEALTH_CONNECT_SOURCE,
   };
 }
 
 export async function requestAndroidHealthReadPermission() {
+  const isInitialized = await initializeAndroidHealthConnect();
+
+  if (!isInitialized) {
+    return {
+      permissionStatus: "unknown" as const,
+      source: HEALTH_CONNECT_SOURCE,
+    };
+  }
+
+  const grantedPermissions = await requestPermission([STEPS_READ_PERMISSION]);
+
   return {
-    permissionStatus: "unknown" as const,
-    source: "health_connect" as const,
+    permissionStatus: hasStepsReadPermission(grantedPermissions)
+      ? ("granted" as const)
+      : ("denied" as const),
+    source: HEALTH_CONNECT_SOURCE,
   };
 }
 
-export async function readAndroidStepCountRecords(_payload: HealthStepsRequestPayload) {
-  throw new BridgeHandledError(
-    "Android 걸음 수 연동은 아직 준비되지 않았어요",
-    400,
-    "HEALTH_STEPS_ANDROID_NOT_IMPLEMENTED",
-  );
+function addDaysToDateKey(dateKey: string, days: number) {
+  const [year, month, day] = dateKey.split("-").map(Number);
+  const date = new Date(year, month - 1, day + days);
+
+  return [
+    date.getFullYear(),
+    String(date.getMonth() + 1).padStart(2, "0"),
+    String(date.getDate()).padStart(2, "0"),
+  ].join("-");
+}
+
+export async function readAndroidStepCountRecords(payload: HealthStepsRequestPayload) {
+  const permission = await getAndroidHealthPermissionStatus();
+
+  if (permission.permissionStatus !== "granted") {
+    return {
+      records: [] as HealthStepCountRecord[],
+      readAt: new Date().toISOString(),
+    };
+  }
+
+  const endDateExclusive = addDaysToDateKey(payload.endDate, 1);
+
+  const groups = await aggregateGroupByPeriod({
+    recordType: "Steps",
+    timeRangeFilter: {
+      operator: "between",
+      startTime: `${payload.startDate}T00:00:00`,
+      endTime: `${endDateExclusive}T00:00:00`,
+    },
+    timeRangeSlicer: {
+      period: "DAYS",
+      length: 1,
+    },
+  });
+
+  const records: HealthStepCountRecord[] = groups.map((group) => ({
+    date: group.startTime.slice(0, 10),
+    steps: Math.trunc(group.result.COUNT_TOTAL ?? 0),
+    source: HEALTH_CONNECT_SOURCE,
+  }));
+
+  return {
+    records,
+    readAt: new Date().toISOString(),
+  };
 }

@@ -36,7 +36,7 @@ const config: ExpoConfig = {
     edgeToEdgeEnabled: true,
     predictiveBackGestureEnabled: false,
     package: "com.melo.frontend",
-    permissions: ["CAMERA"],
+    permissions: ["CAMERA", "android.permission.health.READ_STEPS"],
     blockedPermissions: ["android.permission.RECORD_AUDIO"],
     intentFilters: [
       {
@@ -88,10 +88,18 @@ const config: ExpoConfig = {
       },
     ],
     [
+      "expo-build-properties",
+      {
+        android: {
+          minSdkVersion: 26,
+        },
+      },
+    ],
+    "./plugins/with-health-connect-android",
+    [
       "@kingstinct/react-native-healthkit",
       {
-        NSHealthShareUsageDescription:
-          "걸음 수를 자동으로 기록하기 위해 Apple 건강 데이터를 읽습니다",
+        NSHealthShareUsageDescription: "걸음 수를 체크할 수 있도록 접근을 허용합니다",
         NSHealthUpdateUsageDescription: "건강 데이터를 직접 수정하거나 추가하지 않습니다",
         background: false,
       },
