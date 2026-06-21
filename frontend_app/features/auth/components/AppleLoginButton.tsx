@@ -18,7 +18,7 @@ export function AppleLoginButton({ onPress }: AppleLoginButtonProps) {
       <View style={styles.content}>
         <AppleLogo width={20} height={20} />
         <Text allowFontScaling={false} style={styles.label}>
-          Apple 로그인
+          Apple{"\u00A0"}로그인
         </Text>
       </View>
     </Pressable>

@@ -19,7 +19,7 @@ export function KakaoLoginButton({ onPress }: KakaoLoginButtonProps) {
       <View style={styles.content}>
         <KakaoLogo width={20} height={20} />
         <Text allowFontScaling={false} style={styles.label}>
-          카카오 로그인
+          카카오{"\u00A0"}로그인
         </Text>
       </View>
     </Pressable>
@@ -47,5 +47,7 @@ const styles = StyleSheet.create({
   label: {
     ...typography["typo-label3"],
     color: "#0a0a0a",
+    includeFontPadding: false,
+    flexShrink: 0,
   },
 });
