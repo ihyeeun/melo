@@ -79,6 +79,11 @@ export async function requestAndroidHealthReadPermission() {
   };
 }
 
+function parseDateKey(dateKey: string) {
+  const [year, month, day] = dateKey.split("-").map(Number);
+  return new Date(year, month - 1, day);
+}
+
 function addDaysToDateKey(dateKey: string, days: number) {
   const [year, month, day] = dateKey.split("-").map(Number);
   const date = new Date(year, month - 1, day + days);
@@ -88,6 +93,10 @@ function addDaysToDateKey(dateKey: string, days: number) {
     String(date.getMonth() + 1).padStart(2, "0"),
     String(date.getDate()).padStart(2, "0"),
   ].join("-");
+}
+
+function toLocalStartOfDayIsoString(dateKey: string) {
+  return parseDateKey(dateKey).toISOString();
 }
 
 export async function readAndroidStepCountRecords(payload: HealthStepsRequestPayload) {
@@ -101,13 +110,15 @@ export async function readAndroidStepCountRecords(payload: HealthStepsRequestPay
   }
 
   const endDateExclusive = addDaysToDateKey(payload.endDate, 1);
+  const startTime = toLocalStartOfDayIsoString(payload.startDate);
+  const endTime = toLocalStartOfDayIsoString(endDateExclusive);
 
   const groups = await aggregateGroupByPeriod({
     recordType: "Steps",
     timeRangeFilter: {
       operator: "between",
-      startTime: `${payload.startDate}T00:00:00`,
-      endTime: `${endDateExclusive}T00:00:00`,
+      startTime,
+      endTime,
     },
     timeRangeSlicer: {
       period: "DAYS",

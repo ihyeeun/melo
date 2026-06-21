@@ -72,8 +72,7 @@ async function readNativeStepCountRecordsRange(
       })),
       source: permission.source,
     };
-  } catch (error) {
-    console.warn("[HealthBridge] native steps display fallback", error);
+  } catch {
     return emptyNativeStepCountRecordsResult;
   }
 }

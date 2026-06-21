@@ -720,10 +720,6 @@ export async function handleWebMessage(
     }
 
     if (message.type === "HEALTH_PERMISSION_STATUS_REQUEST") {
-      console.log("[HealthBridge] received permission status request", {
-        requestId,
-      });
-
       const result = await getHealthPermissionStatus();
 
       sendToWeb(webViewRef, {
@@ -735,10 +731,6 @@ export async function handleWebMessage(
     }
 
     if (message.type === "HEALTH_PERMISSION_REQUEST") {
-      console.log("[HealthBridge] received permission request", {
-        requestId,
-      });
-
       const result = await requestHealthReadPermission();
 
       sendToWeb(webViewRef, {
@@ -750,17 +742,7 @@ export async function handleWebMessage(
     }
 
     if (message.type === "HEALTH_STEPS_READ_REQUEST") {
-      console.log("[HealthBridge] received steps read request", {
-        requestId,
-        payload: message.payload,
-      });
-
       const result = await readStepCountRecords(message.payload);
-
-      console.log("[HealthBridge] steps read response", {
-        requestId,
-        result,
-      });
 
       sendToWeb(webViewRef, {
         id: requestId,

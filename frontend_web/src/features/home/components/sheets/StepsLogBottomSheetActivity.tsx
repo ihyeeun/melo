@@ -114,28 +114,19 @@ export default function StepsLogBottomSheetActivity() {
     setShouldShowHealthAccessNotice(false);
 
     try {
-      console.log("[HealthBridge] auto sync steps start", { date });
-
       const permission = await requestNativeHealthPermissionStatus();
-      console.log("[HealthBridge] permission response", permission);
 
       if (permission.permissionStatus !== "granted") {
-        const requestedPermission = await requestNativeHealthReadPermission();
-        console.log("[HealthBridge] requested permission response", requestedPermission);
+        await requestNativeHealthReadPermission();
       }
 
       const result = await readNativeStepCountRecords({
         startDate: date,
         endDate: date,
       });
-      console.log("[HealthBridge] read steps response", result);
 
       const record = result.records.find((item) => item.date === date);
       if (!record) {
-        console.log("[HealthBridge] no record for date", {
-          date,
-          records: result.records,
-        });
         setShouldShowHealthAccessNotice(true);
         return;
       }
@@ -146,8 +137,7 @@ export default function StepsLogBottomSheetActivity() {
       setShouldShowHealthAccessNotice(false);
       setDraftSteps(nextSteps);
       setStepsFieldRevision((revision) => revision + 1);
-    } catch (error) {
-      console.error("[HealthBridge] auto sync steps failed", error);
+    } catch {
       setShouldShowHealthAccessNotice(true);
       toast.error("걸음 수를 가져오지 못했어요");
     } finally {
@@ -169,8 +159,7 @@ export default function StepsLogBottomSheetActivity() {
       return;
     }
 
-    void openNativeInAppBrowser(HEALTH_ACCESS_GUIDE_URL).catch((error) => {
-      console.error("[HealthBridge] open guide failed", error);
+    void openNativeInAppBrowser(HEALTH_ACCESS_GUIDE_URL).catch(() => {
       window.open(HEALTH_ACCESS_GUIDE_URL, "_blank", "noopener,noreferrer");
     });
   }, [canImportNativeSteps]);
