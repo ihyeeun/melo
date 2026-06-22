@@ -3,6 +3,7 @@ import { requestNativeImageUpload } from "@/shared/api/bridge/nativeBridge";
 import type { ImageUploadRequestPayload } from "@/shared/api/bridge/nativeBridge.types";
 import type {
   ChatFeedbackResponseDto,
+  ChatNutritionLabelFeedbackResponseDto,
   ChatRecommendationResponseDto,
   FoodImageRecognitionResponseDto,
   NutritionLabelRecognitionResponseDto,
@@ -15,6 +16,7 @@ const END_POINT = {
   NUTRIENT_RECOGNITION: "/home/recognizeNutritionLabel",
   MENU_BOARD_ANALYSIS: "/chat/menu-board",
   CHAT_FOOD_IMAGE_FEEDBACK: "/chat/food-image-feedback",
+  CHAT_NUTRITION_LABEL_FEEDBACK: "/chat/nutrition-label-feedback",
 };
 
 type CapturedImage = {
@@ -104,5 +106,21 @@ export async function uploadChatFoodImageFeedback(image: CapturedImage) {
       method: "POST",
     },
     "음식 분석 실패",
+  );
+}
+
+export async function uploadChatNutritionLabelImageFeedback(image: CapturedImage) {
+  return requestNativeImageUploadData<ChatNutritionLabelFeedbackResponseDto>(
+    {
+      endpoint: END_POINT.CHAT_NUTRITION_LABEL_FEEDBACK,
+      fileUri: image.uri,
+      fileName: image.fileName,
+      width: image.width,
+      height: image.height,
+      mimeType: image.mimeType,
+      fieldName: "image",
+      method: "POST",
+    },
+    "영양성분표 분석 실패",
   );
 }

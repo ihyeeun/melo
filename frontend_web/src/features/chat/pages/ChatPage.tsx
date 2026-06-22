@@ -430,7 +430,6 @@ export default function ChatPage() {
   const [isInputFocused, setIsInputFocused] = useState(false);
   const [pendingInput, setPendingInput] = useState<string | null>(null);
   const [assistantPlayback, setAssistantPlayback] = useState<AssistantPlaybackState | null>(null);
-  const [isCameraActionMenuOpen, setIsCameraActionMenuOpen] = useState(false);
   const [isCameraHintDismissed, setIsCameraHintDismissed] = useState(
     getIsCameraHintDismissedInSession,
   );
@@ -574,9 +573,6 @@ export default function ChatPage() {
       shouldFollowBottomRef.current = !isAwayFromBottom;
     }
 
-    if (isAwayFromBottom) {
-      setIsCameraActionMenuOpen(false);
-    }
   }, []);
 
   const handleMainScroll = useCallback(() => {
@@ -1022,7 +1018,6 @@ export default function ChatPage() {
     assistantPlaybackRunIdRef.current += 1;
     shouldFollowBottomRef.current = true;
     setAssistantPlayback(null);
-    setIsCameraActionMenuOpen(false);
     setPendingInput(text);
     setInputValue("");
     track(EVENT_NAME.AI_COACH_CHAT, { input_length: text.length });
@@ -1073,36 +1068,15 @@ export default function ChatPage() {
     navigateBack({ fallbackTo: PATH.HOME });
   };
 
-  const handleToggleCameraActionMenu = () => {
-    if (!isQuickActionVisible) {
-      return;
-    }
-
-    setIsCameraActionMenuOpen((prev) => !prev);
-  };
-
-  const handleCloseCameraActionMenu = () => {
-    setIsCameraActionMenuOpen(false);
-  };
-
   const handleInputValueChange = (nextValue: string) => {
     setInputValue(nextValue);
-
-    if (nextValue.trim().length > 0) {
-      handleCloseCameraActionMenu();
-    }
   };
 
   const handleInputFocusChange = (isFocused: boolean) => {
     setIsInputFocused(isFocused);
-
-    if (isFocused) {
-      handleCloseCameraActionMenu();
-    }
   };
 
   const handleScrollToBottom = () => {
-    handleCloseCameraActionMenu();
     shouldFollowBottomRef.current = true;
     keepBottomIfFollowing("smooth");
   };
@@ -1111,14 +1085,8 @@ export default function ChatPage() {
     keepBottomIfFollowing("instant");
   }, [keepBottomIfFollowing]);
 
-  const handleNavigateMenuBoardCamera = () => {
-    handleCloseCameraActionMenu();
-    navigate(PATH.MENU_BOARD_CAMERA);
-  };
-
-  const handleNavigateFoodCamera = () => {
-    handleCloseCameraActionMenu();
-    navigate(PATH.CHAT_FOOD_CAMERA);
+  const handleNavigateChatCamera = () => {
+    navigate(PATH.CHAT_CAMERA);
   };
 
   const handleNavigateDirectMenuRecord = () => {
@@ -1511,15 +1479,6 @@ export default function ChatPage() {
     <div className={styles.page}>
       <PageHeader onBack={handleBack} />
 
-      {isCameraActionMenuOpen && isQuickActionVisible && !isScrollToBottomButtonVisible ? (
-        <button
-          type="button"
-          className={styles.floatingCameraBackdrop}
-          onClick={handleCloseCameraActionMenu}
-          aria-label="촬영 메뉴 닫기"
-        />
-      ) : null}
-
       <main ref={mainRef} className={styles.main}>
         {!hasTimelineContent && !isHistoryPending && !isTodayMealPending ? <EmptySection /> : null}
         {(isHistoryPending || isTodayMealPending) &&
@@ -1725,78 +1684,21 @@ export default function ChatPage() {
 
         {isFloatingButtonVisible && (
           <div className={styles.floatingCameraButtonWrapper}>
-            <div className={styles.floatingCameraActionContainer}>
-              {isCameraActionMenuOpen && !isScrollToBottomButtonVisible ? (
-                <div className={styles.floatingCameraActionList}>
-                  <button
-                    type="button"
-                    className={styles.floatingCameraActionItem}
-                    onClick={handleNavigateMenuBoardCamera}
-                  >
-                    <span className={`${styles.floatingCameraActionLabel} typo-label3`}>
-                      메뉴판 찍기
-                    </span>
-                    <span className={styles.floatingCameraActionIcon}>
-                      <img
-                        src="/icons/menu.svg"
-                        alt=""
-                        aria-hidden="true"
-                        className={styles.floatingCameraActionIconImage}
-                      />
-                    </span>
-                  </button>
-
-                  <button
-                    type="button"
-                    className={styles.floatingCameraActionItem}
-                    onClick={handleNavigateFoodCamera}
-                  >
-                    <span className={`${styles.floatingCameraActionLabel} typo-label3`}>
-                      음식 찍기
-                    </span>
-                    <span className={styles.floatingCameraActionIcon}>
-                      <img
-                        src="/icons/food.svg"
-                        alt=""
-                        aria-hidden="true"
-                        className={styles.floatingCameraActionIconImage}
-                      />
-                    </span>
-                  </button>
-                </div>
-              ) : null}
-
-              {!isScrollToBottomButtonVisible &&
-                !isCameraActionMenuOpen &&
-                !isCameraHintDismissed && (
-                  <div className={`${styles.fabBubble} typo-caption4`}>메뉴 찍기</div>
-                )}
-              <button
-                type="button"
-                className={`${styles.cameraButton} ${isScrollToBottomButtonVisible ? styles.scrollButton : ""}`}
-                onClick={
-                  isScrollToBottomButtonVisible
-                    ? handleScrollToBottom
-                    : handleToggleCameraActionMenu
-                }
-                aria-label={
-                  isScrollToBottomButtonVisible
-                    ? "맨 아래로 이동"
-                    : isCameraActionMenuOpen
-                      ? "촬영 메뉴 닫기"
-                      : "촬영 메뉴 열기"
-                }
-                aria-expanded={isScrollToBottomButtonVisible ? undefined : isCameraActionMenuOpen}
-              >
-                {isScrollToBottomButtonVisible ? (
-                  <SystemIcon name="chevron-down-normal" size={24} />
-                ) : isCameraActionMenuOpen ? (
-                  <SystemIcon name="close" size={24} />
-                ) : (
-                  <SystemIcon name="camera" size={24} />
-                )}
-              </button>
-            </div>
+            {!isScrollToBottomButtonVisible && !isCameraHintDismissed && (
+              <div className={`${styles.fabBubble} typo-caption4`}>메뉴 찍기</div>
+            )}
+            <button
+              type="button"
+              className={`${styles.cameraButton} ${isScrollToBottomButtonVisible ? styles.scrollButton : ""}`}
+              onClick={isScrollToBottomButtonVisible ? handleScrollToBottom : handleNavigateChatCamera}
+              aria-label={isScrollToBottomButtonVisible ? "맨 아래로 이동" : "촬영하기"}
+            >
+              {isScrollToBottomButtonVisible ? (
+                <SystemIcon name="chevron-down-normal" size={24} />
+              ) : (
+                <SystemIcon name="camera" size={24} />
+              )}
+            </button>
           </div>
         )}
         <div>

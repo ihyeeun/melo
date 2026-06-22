@@ -3,6 +3,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   uploadCapturedImageToServer,
   uploadChatFoodImageFeedback,
+  uploadChatNutritionLabelImageFeedback,
   uploadMenuBoardImage,
   uploadNutritionLabelImage,
 } from "@/features/camera/api/uploadCapturedImage.api";
@@ -71,6 +72,31 @@ export function useCreateMealFeedbackByFoodImageMutation(callbacks?: UseMutation
   return useMutation({
     mutationFn: async (image: Parameters<typeof uploadChatFoodImageFeedback>[0]) => {
       await uploadChatFoodImageFeedback(image);
+      const chatItem = await refetchAndResolveChatHistoryItem(queryClient);
+
+      return {
+        chatItem,
+      };
+    },
+    onSuccess: () => {
+      if (callbacks?.onSuccess) {
+        callbacks.onSuccess();
+      }
+    },
+    onError: (error) => {
+      if (callbacks?.onError) {
+        callbacks.onError(error);
+      }
+    },
+  });
+}
+
+export function useGetFeedbackByNutritionLabelImageMutation(callbacks?: UseMutationCallback) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (image: Parameters<typeof uploadChatFoodImageFeedback>[0]) => {
+      await uploadChatNutritionLabelImageFeedback(image);
       const chatItem = await refetchAndResolveChatHistoryItem(queryClient);
 
       return {

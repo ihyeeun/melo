@@ -25,10 +25,13 @@ import {
   rejectCameraCaptureSession,
   resolveCameraCaptureSession,
 } from "@/src/shared/api/bridge/cameraCaptureSession";
-import type { BridgeCameraCaptureRequestPayload } from "@/src/shared/api/bridge/bridge.types";
+import type {
+  BridgeCameraCaptureMode,
+  BridgeCameraCaptureRequestPayload,
+} from "@/src/shared/api/bridge/bridge.types";
 import { typography } from "@/src/shared/styles/tokens";
 
-type CameraCaptureMode = NonNullable<BridgeCameraCaptureRequestPayload["mode"]>;
+type CameraCaptureMode = BridgeCameraCaptureMode;
 type CameraPermissionStatus = Awaited<ReturnType<typeof Camera.getCameraPermissionStatus>>;
 
 const DEFAULT_CAPTURE_MODE: CameraCaptureMode = "NUTRITION_LABEL";
@@ -37,6 +40,12 @@ const PREVIEW_THUMBNAIL_MAX_DIMENSION = 720;
 const PREVIEW_THUMBNAIL_QUALITY = 0.82;
 const PREVIEW_THUMBNAIL_PRIMARY_FORMAT = SaveFormat.WEBP;
 const PREVIEW_THUMBNAIL_FALLBACK_FORMAT = SaveFormat.JPEG;
+const CAMERA_CAPTURE_MODES: CameraCaptureMode[] = [
+  "NUTRITION_LABEL",
+  "MENU_BOARD",
+  "FOOD",
+  "GENERAL",
+];
 
 type ImageManipulationActions = NonNullable<Parameters<typeof manipulateAsync>[1]>;
 type PreviewThumbnail = {
@@ -97,6 +106,60 @@ const CAMERA_ONBOARDING_CONFIG: Partial<Record<CameraCaptureMode, CameraOnboardi
     image: require("@/assets/images/Icon/camera-onboarding-food.png"),
   },
 };
+
+const CAMERA_MODE_SELECTOR_CONFIG: Partial<
+  Record<
+    CameraCaptureMode,
+    {
+      label: string;
+      iconName: keyof typeof Ionicons.glyphMap;
+    }
+  >
+> = {
+  FOOD: {
+    label: "음식",
+    iconName: "restaurant-outline",
+  },
+  MENU_BOARD: {
+    label: "메뉴판",
+    iconName: "reader-outline",
+  },
+  NUTRITION_LABEL: {
+    label: "영양성분",
+    iconName: "document-text-outline",
+  },
+  GENERAL: {
+    label: "일반",
+    iconName: "camera-outline",
+  },
+};
+
+function isCameraCaptureMode(value: unknown): value is CameraCaptureMode {
+  return typeof value === "string" && CAMERA_CAPTURE_MODES.includes(value as CameraCaptureMode);
+}
+
+function getInitialCameraMode(payload?: BridgeCameraCaptureRequestPayload) {
+  if (isCameraCaptureMode(payload?.mode)) return payload.mode;
+
+  const firstSelectableMode = payload?.selectableModes?.find(isCameraCaptureMode);
+  return firstSelectableMode ?? DEFAULT_CAPTURE_MODE;
+}
+
+function getSelectableCameraModes(payload?: BridgeCameraCaptureRequestPayload) {
+  const requestedMode = getInitialCameraMode(payload);
+  const payloadSelectableModes = payload?.selectableModes ?? [];
+  const modes = payloadSelectableModes.length > 0 ? payloadSelectableModes : [requestedMode];
+  const uniqueModes = modes.filter(
+    (mode, index): mode is CameraCaptureMode =>
+      isCameraCaptureMode(mode) && modes.indexOf(mode) === index,
+  );
+
+  if (!uniqueModes.includes(requestedMode)) {
+    uniqueModes.unshift(requestedMode);
+  }
+
+  return uniqueModes.length > 0 ? uniqueModes : [DEFAULT_CAPTURE_MODE];
+}
 
 function mapQualityPrioritization(quality?: number): "speed" | "balanced" | "quality" {
   if (quality === undefined) return "balanced";
@@ -307,10 +370,14 @@ export default function CameraCaptureScreen() {
   const [isPickingGallery, setIsPickingGallery] = useState(false);
   const isProcessing = isCapturing || isPickingGallery;
   const capturePayload = useMemo(() => getPendingCameraCapturePayload(), []);
-  const captureMode = useMemo<CameraCaptureMode>(
-    () => capturePayload?.mode ?? DEFAULT_CAPTURE_MODE,
-    [capturePayload?.mode],
+  const selectableCameraModes = useMemo(
+    () => getSelectableCameraModes(capturePayload),
+    [capturePayload],
   );
+  const [captureMode, setCaptureMode] = useState<CameraCaptureMode>(
+    () => selectableCameraModes[0] ?? DEFAULT_CAPTURE_MODE,
+  );
+  const shouldShowModeSelector = selectableCameraModes.length > 1;
   const cameraModeConfig = useMemo(() => CAMERA_MODE_CONFIG[captureMode], [captureMode]);
   const cameraOnboardingConfig = useMemo(
     () => CAMERA_ONBOARDING_CONFIG[captureMode] ?? null,
@@ -483,6 +550,12 @@ export default function CameraCaptureScreen() {
     void markCameraOnboardingDone(captureMode);
   }, [captureMode]);
 
+  const handleModePress = useCallback((nextMode: CameraCaptureMode) => {
+    if (isProcessingRef.current) return;
+
+    setCaptureMode(nextMode);
+  }, []);
+
   const handleCapturePress = useCallback(async () => {
     if (
       !cameraRef.current ||
@@ -513,6 +586,7 @@ export default function CameraCaptureScreen() {
         base64: null,
         previewBase64: previewThumbnail?.base64 ?? null,
         previewMimeType: previewThumbnail?.mimeType ?? null,
+        mode: captureMode,
       });
 
       router.back();
@@ -534,7 +608,7 @@ export default function CameraCaptureScreen() {
       isProcessingRef.current = false;
       setIsCapturing(false);
     }
-  }, [isCameraInitialized, isFocused, isProcessing]);
+  }, [captureMode, isCameraInitialized, isFocused, isProcessing]);
 
   const handleGalleryPress = useCallback(async () => {
     if (isProcessing || isProcessingRef.current) return;
@@ -610,6 +684,7 @@ export default function CameraCaptureScreen() {
         base64: null,
         previewBase64: previewThumbnail?.base64 ?? null,
         previewMimeType: previewThumbnail?.mimeType ?? null,
+        mode: captureMode,
       });
       router.back();
     } catch {
@@ -625,12 +700,14 @@ export default function CameraCaptureScreen() {
       isProcessingRef.current = false;
       setIsPickingGallery(false);
     }
-  }, [capturePayload?.quality, handleOpenSettingsPress, isProcessing]);
+  }, [captureMode, capturePayload?.quality, handleOpenSettingsPress, isProcessing]);
 
   const isCameraOnboardingPending =
     cameraPermissionStatus === "granted" &&
     cameraOnboardingConfig !== null &&
     !isCameraOnboardingResolved;
+  const isModeSelectorDisabled =
+    isProcessing || isCameraOnboardingVisible || isCameraOnboardingPending;
   const isGalleryDisabled = isProcessing || isCameraOnboardingVisible || isCameraOnboardingPending;
   const isCaptureDisabled = isGalleryDisabled || !isFocused || !isCameraInitialized;
   const shouldShowGuideOverlay =
@@ -739,33 +816,76 @@ export default function CameraCaptureScreen() {
       ) : null}
 
       <View style={[styles.bottomBar, { paddingBottom: Math.max(insets.bottom, 14) }]}>
-        {cameraModeConfig.showGalleryButton ? (
+        {shouldShowModeSelector ? (
+          <View style={styles.modeSelector}>
+            {selectableCameraModes.map((mode) => {
+              const selectorConfig = CAMERA_MODE_SELECTOR_CONFIG[mode];
+              if (!selectorConfig) return null;
+
+              const isSelected = mode === captureMode;
+              const contentColor = isSelected ? "#141414" : "#ffffff";
+
+              return (
+                <Pressable
+                  key={mode}
+                  style={[
+                    styles.modeButton,
+                    isSelected && styles.modeButtonSelected,
+                    isModeSelectorDisabled && styles.disabledButton,
+                  ]}
+                  onPress={() => {
+                    handleModePress(mode);
+                  }}
+                  disabled={isModeSelectorDisabled}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${selectorConfig.label} 모드`}
+                  accessibilityState={{
+                    selected: isSelected,
+                    disabled: isModeSelectorDisabled,
+                  }}
+                >
+                  <Ionicons name={selectorConfig.iconName} size={18} color={contentColor} />
+                  <Text
+                    allowFontScaling={false}
+                    style={[styles.modeButtonText, isSelected && styles.modeButtonTextSelected]}
+                  >
+                    {selectorConfig.label}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+        ) : null}
+
+        <View style={styles.captureControls}>
+          {cameraModeConfig.showGalleryButton ? (
+            <Pressable
+              style={[
+                styles.sideSlot,
+                styles.galleryButton,
+                isGalleryDisabled && styles.disabledButton,
+              ]}
+              onPress={handleGalleryPress}
+              disabled={isGalleryDisabled}
+              accessibilityRole="button"
+              accessibilityLabel="갤러리에서 사진 선택"
+            >
+              <Ionicons name="images-outline" size={24} color="#ffffff" />
+            </Pressable>
+          ) : (
+            <View style={styles.sideSlot} />
+          )}
           <Pressable
-            style={[
-              styles.sideSlot,
-              styles.galleryButton,
-              isGalleryDisabled && styles.disabledButton,
-            ]}
-            onPress={handleGalleryPress}
-            disabled={isGalleryDisabled}
+            style={[styles.captureOuter, isCaptureDisabled && styles.disabledButton]}
+            onPress={handleCapturePress}
+            disabled={isCaptureDisabled}
             accessibilityRole="button"
-            accessibilityLabel="갤러리에서 사진 선택"
+            accessibilityLabel="사진 촬영"
           >
-            <Ionicons name="images-outline" size={24} color="#ffffff" />
+            <View style={styles.captureInner} />
           </Pressable>
-        ) : (
           <View style={styles.sideSlot} />
-        )}
-        <Pressable
-          style={[styles.captureOuter, isCaptureDisabled && styles.disabledButton]}
-          onPress={handleCapturePress}
-          disabled={isCaptureDisabled}
-          accessibilityRole="button"
-          accessibilityLabel="사진 촬영"
-        >
-          <View style={styles.captureInner} />
-        </Pressable>
-        <View style={styles.sideSlot} />
+        </View>
       </View>
     </View>
   );
@@ -902,12 +1022,46 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
     backgroundColor: "rgba(0, 0, 0, 0.86)",
-    padding: 27,
+    gap: 18,
+    paddingHorizontal: 27,
+    paddingTop: 18,
     zIndex: 30,
+  },
+  modeSelector: {
+    alignSelf: "center",
+    backgroundColor: "rgba(255, 255, 255, 0.16)",
+    borderRadius: 14,
+    flexDirection: "row",
+    gap: 4,
+    padding: 4,
+  },
+  modeButton: {
+    alignItems: "center",
+    borderRadius: 10,
+    flexDirection: "row",
+    gap: 6,
+    minHeight: 42,
+    minWidth: 92,
+    justifyContent: "center",
+    paddingHorizontal: 10,
+  },
+  modeButtonSelected: {
+    backgroundColor: "#ffffff",
+  },
+  modeButtonText: {
+    ...typography["typo-label6"],
+    color: "#ffffff",
+  },
+  modeButtonTextSelected: {
+    color: "#141414",
+  },
+  captureControls: {
+    alignItems: "center",
+    alignSelf: "stretch",
+    flexDirection: "row",
+    justifyContent: "space-between",
   },
   sideSlot: {
     width: 44,

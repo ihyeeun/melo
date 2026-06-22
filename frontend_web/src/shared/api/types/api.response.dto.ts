@@ -172,6 +172,12 @@ export interface ChatGeneralResponseDto extends ChatResponseBaseDto {
   general_answer?: string;
 }
 
+export interface ChatNutritionLabelFeedbackResponseDto extends ChatResponseBaseDto {
+  chat_category: "feedback";
+  image_summary: string;
+  recognized_nutrition: NutritionLabelRecognitionResponseDto;
+}
+
 export interface ChatRecommendItemResponseDto {
   menu_id: number;
   menu_name: string; //메뉴명

@@ -41,6 +41,7 @@ export const PATH = {
   MENU_BOARD_CAMERA: "/meal-record/add/menu-board-camera",
   FOOD_CAMERA: "/meal-record/add/food-camera",
   NUTRIENT_CAMERA: "/nutrient-camera",
+  CHAT_CAMERA: "/chat-camera",
   CHAT_FOOD_CAMERA: "/chat-food-camera",
 
   // ETC

@@ -1,4 +1,4 @@
-import { type ReactNode, useCallback, useState } from "react";
+import { type ReactNode } from "react";
 
 import ActionCard from "@/features/home/components/cards/ActionCard";
 import TodayBodyLogSection from "@/features/home/components/TodayBodyLogSection";
@@ -6,7 +6,6 @@ import type { HomeOnboardingTarget } from "@/features/home/constants/homeOnboard
 import style from "@/features/home/styles/MenuActionSection.module.css";
 import { PATH } from "@/router/path";
 import { isNativeApp, syncAppTab } from "@/shared/api/bridge/nativeBridge";
-import BottomSheet from "@/shared/commons/bottomSheet/BottomSheet";
 import { useNavigate } from "@/shared/navigation/stackflowNavigation";
 
 export default function MenuActionSection({
@@ -27,24 +26,8 @@ export default function MenuActionSection({
   showMenuBoardCameraCard: boolean;
 }) {
   const navigate = useNavigate();
-  const [isCameraActionSheetOpen, setIsCameraActionSheetOpen] = useState(false);
-
-  const handleOpenCameraActionSheet = useCallback(() => {
-    setIsCameraActionSheetOpen(true);
-  }, []);
-
-  const handleCloseCameraActionSheet = useCallback(() => {
-    setIsCameraActionSheetOpen(false);
-  }, []);
-
-  const handleNavigateMenuBoardCamera = () => {
-    handleCloseCameraActionSheet();
-    navigate(PATH.MENU_BOARD_CAMERA);
-  };
-
-  const handleNavigateFoodCamera = () => {
-    handleCloseCameraActionSheet();
-    navigate(PATH.CHAT_FOOD_CAMERA);
+  const handleNavigateChatCamera = () => {
+    navigate(PATH.CHAT_CAMERA);
   };
 
   return (
@@ -60,7 +43,7 @@ export default function MenuActionSection({
               title={"메뉴 찍기"}
               description="메뉴판이나 음식을 찍어 피드백을 받아보세요"
               iconSrc="/icons/camera-icon.svg"
-              onClick={disableInteractions ? undefined : handleOpenCameraActionSheet}
+              onClick={disableInteractions ? undefined : handleNavigateChatCamera}
               type="camera"
             />
           </OnboardingTargetFrame>
@@ -93,33 +76,6 @@ export default function MenuActionSection({
       </div>
 
       {bodyLogSection ?? <TodayBodyLogSection date={selectedDate} />}
-
-      {disableInteractions ? null : (
-        <BottomSheet isOpen={isCameraActionSheetOpen} onClose={handleCloseCameraActionSheet}>
-          <div className={style.cameraActionSheetContainer}>
-            <h2 className={`${style.cameraActionSheetTitle} typo-title2`}>무엇을 촬영할까요?</h2>
-            <div>
-              <button
-                type="button"
-                onClick={handleNavigateMenuBoardCamera}
-                className={style.cameraActionSheetButton}
-              >
-                <p className={`typo-label2`}>메뉴판 찍기</p>
-              </button>
-
-              <div className="divider" />
-
-              <button
-                type="button"
-                className={style.cameraActionSheetButton}
-                onClick={handleNavigateFoodCamera}
-              >
-                <p className={`typo-label2`}>음식 찍기</p>
-              </button>
-            </div>
-          </div>
-        </BottomSheet>
-      )}
     </div>
   );
 }

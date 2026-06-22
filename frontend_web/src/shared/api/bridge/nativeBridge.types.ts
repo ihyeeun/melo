@@ -66,9 +66,12 @@ export type WebToAppTabBarVisibilitySyncMessage = {
   context?: BridgeMessageContext;
 };
 
+export type CameraCaptureMode = "NUTRITION_LABEL" | "MENU_BOARD" | "FOOD" | "GENERAL";
+
 export type CameraCaptureRequestPayload = {
   quality?: number;
-  mode?: "NUTRITION_LABEL" | "MENU_BOARD" | "FOOD" | "GENERAL";
+  mode?: CameraCaptureMode;
+  selectableModes?: CameraCaptureMode[];
 };
 
 export type WebToAppCameraCaptureMessage = {
@@ -130,6 +133,7 @@ export type CameraCaptureResponsePayload = {
   base64: string | null;
   previewBase64: string | null;
   previewMimeType: string | null;
+  mode?: CameraCaptureMode | null;
 };
 
 export type AppToWebMessage<T = unknown> = {

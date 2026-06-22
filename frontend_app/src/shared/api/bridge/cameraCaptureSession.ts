@@ -1,6 +1,9 @@
 import { router } from "expo-router";
 import { BridgeHandledError } from "./bridgeError";
-import type { BridgeCameraCaptureRequestPayload } from "./bridge.types";
+import type {
+  BridgeCameraCaptureMode,
+  BridgeCameraCaptureRequestPayload,
+} from "./bridge.types";
 
 export type CameraCaptureSessionResult = {
   uri: string;
@@ -12,6 +15,7 @@ export type CameraCaptureSessionResult = {
   base64?: string | null;
   previewBase64?: string | null;
   previewMimeType?: string | null;
+  mode?: BridgeCameraCaptureMode | null;
 };
 
 type PendingCameraCaptureSession = {

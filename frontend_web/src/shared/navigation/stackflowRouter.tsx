@@ -158,6 +158,10 @@ const ChatMenuDetailPage = createLazyActivity(
 const FeedbackResultPage = createLazyActivity(
   () => import("@/features/chat/pages/FeedbackResultPage"),
 );
+const ChatCameraPage = createGuardedLazyActivity(
+  FEATURE_GUARD.FOOD_CAMERA,
+  () => import("@/features/camera/pages/ChatCameraPage"),
+);
 const ChatFoodCameraPage = createGuardedLazyActivity(
   FEATURE_GUARD.FOOD_CAMERA,
   () => import("@/features/camera/pages/FoodImageFeedbackPage"),
@@ -196,6 +200,7 @@ const ACTIVITIES = {
   GoalEditNutrient: GoalEditNutrientPage,
   FeedbackResult: FeedbackResultPage,
   FeedbackDetail: ChatMenuDetailPage,
+  ChatCamera: ChatCameraPage,
   ChatFoodCamera: ChatFoodCameraPage,
   AppInfo: AppInfoPage,
 };
@@ -232,6 +237,7 @@ const ACTIVITY_ROUTES: Record<keyof typeof ACTIVITIES, RoutePath> = {
   GoalEditNutrient: PATH.GOAL_EDIT_NUTRIENT,
   FeedbackResult: PATH.FEEDBACK_RESULT,
   FeedbackDetail: PATH.FEEDBACK_DETAIL,
+  ChatCamera: PATH.CHAT_CAMERA,
   ChatFoodCamera: PATH.CHAT_FOOD_CAMERA,
   AppInfo: PATH.APP_INFO,
 };

@@ -38,61 +38,6 @@
   margin-left: auto;
 }
 
-.floatingCameraBackdrop {
-  background-color: var(--dimmer-dimmer);
-  inset: 0;
-  position: fixed;
-  z-index: 1;
-}
-
-.floatingCameraBackdrop:active {
-  transform: none;
-}
-
-.floatingCameraActionContainer {
-  align-items: flex-end;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  position: relative;
-}
-
-.floatingCameraActionList {
-  align-items: flex-end;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.floatingCameraActionItem {
-  align-items: center;
-  display: inline-flex;
-  gap: 16px;
-}
-
-.floatingCameraActionLabel {
-  border-radius: 12px;
-  color: var(--static-white);
-  padding: 8px 10px;
-  white-space: nowrap;
-}
-
-.floatingCameraActionIcon {
-  align-items: center;
-  background-color: var(--dimmer-dimmer);
-  border-radius: 100px;
-  box-shadow: var(--shadow-emphasize);
-  display: inline-flex;
-  height: 58px;
-  justify-content: center;
-  width: 58px;
-}
-
-.floatingCameraActionIconImage {
-  height: 26px;
-  width: 26px;
-}
-
 .cameraButton {
   align-items: center;
   background-color: var(--primary-normal);
