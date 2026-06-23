@@ -95,6 +95,14 @@ function addDaysToDateKey(dateKey: string, days: number) {
   ].join("-");
 }
 
+function formatLocalDateKey(date: Date) {
+  return [
+    date.getFullYear(),
+    String(date.getMonth() + 1).padStart(2, "0"),
+    String(date.getDate()).padStart(2, "0"),
+  ].join("-");
+}
+
 function toLocalStartOfDayIsoString(dateKey: string) {
   return parseDateKey(dateKey).toISOString();
 }
@@ -127,7 +135,7 @@ export async function readAndroidStepCountRecords(payload: HealthStepsRequestPay
   });
 
   const records: HealthStepCountRecord[] = groups.map((group) => ({
-    date: group.startTime.slice(0, 10),
+    date: formatLocalDateKey(new Date(group.startTime)),
     steps: Math.trunc(group.result.COUNT_TOTAL ?? 0),
     source: HEALTH_CONNECT_SOURCE,
   }));
