@@ -1,4 +1,5 @@
 import * as amplitude from "@amplitude/analytics-browser";
+import { sessionReplayPlugin } from "@amplitude/plugin-session-replay-browser";
 
 import type { AnalyticsEventName } from "@/shared/analytics/analytics.constants";
 import {
@@ -17,6 +18,11 @@ type AnalyticsUserIdentitySource = Parameters<typeof buildAnalyticsUserPropertie
 };
 
 const ANALYTICS_USER_ID_PREFIX = "melo_user_";
+
+const sessionReplayTracking = sessionReplayPlugin({
+  forceSessionTracking: true,
+  sampleRate: 1,
+});
 
 let initialized = false;
 let analyticsUnavailable = false;
@@ -77,6 +83,7 @@ export function initAnalytics() {
     return;
   }
 
+  amplitude.add(sessionReplayTracking);
   amplitude.init(apiKey, {
     autocapture: false,
   });
