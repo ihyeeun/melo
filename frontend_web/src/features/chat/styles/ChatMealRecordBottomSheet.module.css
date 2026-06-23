@@ -186,6 +186,7 @@
 .selectPositioner {
   z-index: 10;
   margin-top: 8px;
+  pointer-events: auto;
 }
 
 .selectPopup {
