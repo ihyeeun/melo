@@ -165,6 +165,15 @@
   margin: 0;
 }
 
+.syncedStepsValue {
+  align-items: center;
+  display: flex;
+  justify-content: flex-end;
+  padding: 14px 12px;
+  text-align: end;
+  width: 100%;
+}
+
 .stepsUnit {
   color: var(--label-normal);
   padding-bottom: 4px;
