@@ -1,9 +1,9 @@
-import { Ionicons } from "@expo/vector-icons";
 import { useIsFocused } from "@react-navigation/native";
 import { router } from "expo-router";
 import { manipulateAsync, SaveFormat } from "expo-image-manipulator";
 import * as ImagePicker from "expo-image-picker";
 import * as SecureStore from "expo-secure-store";
+import { StatusBar } from "expo-status-bar";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
@@ -40,6 +40,8 @@ const PREVIEW_THUMBNAIL_MAX_DIMENSION = 720;
 const PREVIEW_THUMBNAIL_QUALITY = 0.82;
 const PREVIEW_THUMBNAIL_PRIMARY_FORMAT = SaveFormat.WEBP;
 const PREVIEW_THUMBNAIL_FALLBACK_FORMAT = SaveFormat.JPEG;
+const CAMERA_TOP_BAR_CONTENT_HEIGHT = 58;
+const CAMERA_BOTTOM_BAR_CONTENT_HEIGHT = 76;
 const CAMERA_CAPTURE_MODES: CameraCaptureMode[] = [
   "NUTRITION_LABEL",
   "MENU_BOARD",
@@ -53,35 +55,13 @@ type PreviewThumbnail = {
   mimeType: string;
 };
 
-const CAMERA_MODE_CONFIG: Record<
-  CameraCaptureMode,
-  {
-    guideText: string | null;
-    showGalleryButton: boolean;
-    frameAspectRatio: number | null;
-  }
-> = {
-  NUTRITION_LABEL: {
-    guideText: "영양성분표가 선명하게 보이도록 촬영해주세요",
-    showGalleryButton: true,
-    frameAspectRatio: 0.68,
-  },
-  MENU_BOARD: {
-    guideText: "메뉴판을 화면에 맞춰주세요",
-    showGalleryButton: true,
-    frameAspectRatio: 0.68,
-  },
-  FOOD: {
-    guideText: "음식이 프레임 안에 잘 보이도록 촬영해주세요",
-    showGalleryButton: true,
-    frameAspectRatio: 0.68,
-  },
-  GENERAL: {
-    guideText: null,
-    showGalleryButton: true,
-    frameAspectRatio: null,
-  },
-};
+const SYSTEM_ICON_IMAGES = {
+  close: require("@/assets/images/system-icons/close.png"),
+  menuboard: require("@/assets/images/system-icons/menuboard.png"),
+  food: require("@/assets/images/system-icons/food.png"),
+  nutritionlabel: require("@/assets/images/system-icons/nutritionlabel.png"),
+  gallery: require("@/assets/images/system-icons/gallery.png"),
+} satisfies Record<string, ImageSourcePropType>;
 
 type CameraOnboardingConfig = {
   title: string;
@@ -107,30 +87,27 @@ const CAMERA_ONBOARDING_CONFIG: Partial<Record<CameraCaptureMode, CameraOnboardi
   },
 };
 
-const CAMERA_MODE_SELECTOR_CONFIG: Partial<
-  Record<
-    CameraCaptureMode,
-    {
-      label: string;
-      iconName: keyof typeof Ionicons.glyphMap;
-    }
-  >
+const CAMERA_MODE_SELECTOR_CONFIG: Record<
+  CameraCaptureMode,
+  {
+    label: string;
+    iconSource?: ImageSourcePropType;
+  }
 > = {
   FOOD: {
     label: "음식",
-    iconName: "restaurant-outline",
+    iconSource: SYSTEM_ICON_IMAGES.food,
   },
   MENU_BOARD: {
     label: "메뉴판",
-    iconName: "reader-outline",
+    iconSource: SYSTEM_ICON_IMAGES.menuboard,
   },
   NUTRITION_LABEL: {
-    label: "영양성분",
-    iconName: "document-text-outline",
+    label: "영양성분표",
+    iconSource: SYSTEM_ICON_IMAGES.nutritionlabel,
   },
   GENERAL: {
     label: "일반",
-    iconName: "camera-outline",
   },
 };
 
@@ -378,14 +355,9 @@ export default function CameraCaptureScreen() {
     () => selectableCameraModes[0] ?? DEFAULT_CAPTURE_MODE,
   );
   const shouldShowModeSelector = selectableCameraModes.length > 1;
-  const cameraModeConfig = useMemo(() => CAMERA_MODE_CONFIG[captureMode], [captureMode]);
   const cameraOnboardingConfig = useMemo(
     () => CAMERA_ONBOARDING_CONFIG[captureMode] ?? null,
     [captureMode],
-  );
-  const shouldShowOverlay = useMemo(
-    () => cameraModeConfig.guideText !== null || cameraModeConfig.frameAspectRatio !== null,
-    [cameraModeConfig.frameAspectRatio, cameraModeConfig.guideText],
   );
   const [isCameraOnboardingVisible, setIsCameraOnboardingVisible] = useState(false);
   const [isCameraOnboardingResolved, setIsCameraOnboardingResolved] = useState(false);
@@ -710,8 +682,11 @@ export default function CameraCaptureScreen() {
     isProcessing || isCameraOnboardingVisible || isCameraOnboardingPending;
   const isGalleryDisabled = isProcessing || isCameraOnboardingVisible || isCameraOnboardingPending;
   const isCaptureDisabled = isGalleryDisabled || !isFocused || !isCameraInitialized;
-  const shouldShowGuideOverlay =
-    shouldShowOverlay && !isCameraOnboardingVisible && !isCameraOnboardingPending;
+  const shouldShowGuideFrame =
+    captureMode !== "GENERAL" && !isCameraOnboardingVisible && !isCameraOnboardingPending;
+  const cameraTopBarHeight = insets.top + CAMERA_TOP_BAR_CONTENT_HEIGHT;
+  const bottomInset = Math.max(insets.bottom, 18);
+  const cameraBottomBarMinHeight = CAMERA_BOTTOM_BAR_CONTENT_HEIGHT + bottomInset;
 
   if (isPreparing) {
     return <LoadingView />;
@@ -719,21 +694,31 @@ export default function CameraCaptureScreen() {
 
   if (cameraPermissionStatus !== "granted") {
     return (
-      <View style={styles.permissionContainer}>
-        <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
-          <View style={styles.spacer} />
+      <View style={styles.permissionScreen}>
+        <StatusBar style="light" />
+        <View
+          style={[styles.permissionTopBar, { height: cameraTopBarHeight, paddingTop: insets.top }]}
+        >
           <Pressable
-            style={styles.closeButton}
+            style={styles.cameraCloseButton}
             onPress={closeWithCancellation}
             accessibilityRole="button"
             accessibilityLabel="카메라 닫기"
           >
-            <Ionicons name="close" size={24} color="#ffffff" />
+            <Image
+              source={SYSTEM_ICON_IMAGES.close}
+              style={styles.cameraCloseIcon}
+              resizeMode="contain"
+            />
           </Pressable>
         </View>
 
         <View style={styles.permissionCard}>
-          <Ionicons name="camera-outline" size={36} color="#ff8a00" />
+          <Image
+            source={SYSTEM_ICON_IMAGES.gallery}
+            style={styles.permissionIcon}
+            resizeMode="contain"
+          />
           <Text allowFontScaling={false} style={styles.permissionTitle}>
             카메라 권한이 꺼져 있어요.
           </Text>
@@ -762,6 +747,7 @@ export default function CameraCaptureScreen() {
 
   return (
     <View style={styles.container}>
+      <StatusBar style="light" />
       <Camera
         ref={cameraRef}
         style={StyleSheet.absoluteFill}
@@ -775,37 +761,123 @@ export default function CameraCaptureScreen() {
         }}
       />
 
-      <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
-        <View style={styles.spacer} />
-        <Pressable
-          style={styles.closeButton}
-          onPress={closeWithCancellation}
-          accessibilityRole="button"
-          accessibilityLabel="카메라 닫기"
-        >
-          <Ionicons name="close" size={24} color="#ffffff" />
-        </Pressable>
-      </View>
+      <View style={styles.cameraOverlay} pointerEvents="box-none">
+        <View style={[styles.cameraTopBar, { height: cameraTopBarHeight, paddingTop: insets.top }]}>
+          <Pressable
+            style={styles.cameraCloseButton}
+            onPress={closeWithCancellation}
+            accessibilityRole="button"
+            accessibilityLabel="카메라 닫기"
+          >
+            <Image
+              source={SYSTEM_ICON_IMAGES.close}
+              style={styles.cameraCloseIcon}
+              resizeMode="contain"
+            />
+          </Pressable>
+        </View>
 
-      {shouldShowGuideOverlay ? (
-        <View style={styles.overlay}>
-          {cameraModeConfig.guideText ? (
-            <View style={styles.guideCard}>
-              <Text allowFontScaling={false} style={styles.guideText}>
-                {cameraModeConfig.guideText}
-              </Text>
-            </View>
-          ) : null}
-          {cameraModeConfig.frameAspectRatio ? (
-            <View style={[styles.frameBox, { aspectRatio: cameraModeConfig.frameAspectRatio }]}>
-              <View style={[styles.frameCorner, styles.cornerTopLeft]} />
-              <View style={[styles.frameCorner, styles.cornerTopRight]} />
-              <View style={[styles.frameCorner, styles.cornerBottomLeft]} />
-              <View style={[styles.frameCorner, styles.cornerBottomRight]} />
+        <View style={styles.cameraGuideArea} pointerEvents="none">
+          {shouldShowGuideFrame ? (
+            <View style={styles.cameraGuideFrame}>
+              <View style={[styles.cameraGuideCorner, styles.guideCornerTopLeft]} />
+              <View style={[styles.cameraGuideCorner, styles.guideCornerTopRight]} />
+              <View style={[styles.cameraGuideCorner, styles.guideCornerBottomLeft]} />
+              <View style={[styles.cameraGuideCorner, styles.guideCornerBottomRight]} />
             </View>
           ) : null}
         </View>
-      ) : null}
+
+        {shouldShowModeSelector ? (
+          <View style={styles.cameraModeSection}>
+            <View style={styles.cameraModeList}>
+              {selectableCameraModes.map((mode) => {
+                const selectorConfig = CAMERA_MODE_SELECTOR_CONFIG[mode];
+
+                const isSelected = mode === captureMode;
+
+                return (
+                  <Pressable
+                    key={mode}
+                    style={[
+                      styles.cameraModeButton,
+                      isSelected && styles.cameraModeButtonSelected,
+                      isModeSelectorDisabled && styles.disabledControl,
+                    ]}
+                    onPress={() => {
+                      handleModePress(mode);
+                    }}
+                    disabled={isModeSelectorDisabled}
+                    accessibilityRole="button"
+                    accessibilityLabel={`${selectorConfig.label} 모드`}
+                    accessibilityState={{
+                      selected: isSelected,
+                      disabled: isModeSelectorDisabled,
+                    }}
+                  >
+                    {selectorConfig.iconSource ? (
+                      <Image
+                        source={selectorConfig.iconSource}
+                        style={styles.cameraModeIcon}
+                        resizeMode="contain"
+                      />
+                    ) : null}
+                    <Text
+                      allowFontScaling={false}
+                      style={[
+                        styles.cameraModeButtonText,
+                        isSelected && styles.cameraModeButtonTextSelected,
+                      ]}
+                    >
+                      {selectorConfig.label}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+          </View>
+        ) : null}
+
+        <View
+          style={[
+            styles.cameraBottomBar,
+            {
+              minHeight: cameraBottomBarMinHeight,
+              paddingBottom: bottomInset,
+            },
+          ]}
+        >
+          <View style={styles.cameraCaptureControls}>
+            <Pressable
+              style={[
+                styles.cameraControlSideSlot,
+                styles.galleryButton,
+                isGalleryDisabled && styles.disabledControl,
+              ]}
+              onPress={handleGalleryPress}
+              disabled={isGalleryDisabled}
+              accessibilityRole="button"
+              accessibilityLabel="갤러리에서 사진 선택"
+            >
+              <Image
+                source={SYSTEM_ICON_IMAGES.gallery}
+                style={styles.galleryIcon}
+                resizeMode="contain"
+              />
+            </Pressable>
+            <Pressable
+              style={[styles.cameraShutterButton, isCaptureDisabled && styles.disabledControl]}
+              onPress={handleCapturePress}
+              disabled={isCaptureDisabled}
+              accessibilityRole="button"
+              accessibilityLabel="사진 촬영"
+            >
+              <View style={styles.cameraShutterButtonInner} />
+            </Pressable>
+            <View style={styles.cameraControlSideSlot} />
+          </View>
+        </View>
+      </View>
 
       {isCameraOnboardingVisible && cameraOnboardingConfig ? (
         <CameraOnboardingOverlay
@@ -814,79 +886,6 @@ export default function CameraCaptureScreen() {
           onSkip={handleCameraOnboardingSkip}
         />
       ) : null}
-
-      <View style={[styles.bottomBar, { paddingBottom: Math.max(insets.bottom, 14) }]}>
-        {shouldShowModeSelector ? (
-          <View style={styles.modeSelector}>
-            {selectableCameraModes.map((mode) => {
-              const selectorConfig = CAMERA_MODE_SELECTOR_CONFIG[mode];
-              if (!selectorConfig) return null;
-
-              const isSelected = mode === captureMode;
-              const contentColor = isSelected ? "#141414" : "#ffffff";
-
-              return (
-                <Pressable
-                  key={mode}
-                  style={[
-                    styles.modeButton,
-                    isSelected && styles.modeButtonSelected,
-                    isModeSelectorDisabled && styles.disabledButton,
-                  ]}
-                  onPress={() => {
-                    handleModePress(mode);
-                  }}
-                  disabled={isModeSelectorDisabled}
-                  accessibilityRole="button"
-                  accessibilityLabel={`${selectorConfig.label} 모드`}
-                  accessibilityState={{
-                    selected: isSelected,
-                    disabled: isModeSelectorDisabled,
-                  }}
-                >
-                  <Ionicons name={selectorConfig.iconName} size={18} color={contentColor} />
-                  <Text
-                    allowFontScaling={false}
-                    style={[styles.modeButtonText, isSelected && styles.modeButtonTextSelected]}
-                  >
-                    {selectorConfig.label}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </View>
-        ) : null}
-
-        <View style={styles.captureControls}>
-          {cameraModeConfig.showGalleryButton ? (
-            <Pressable
-              style={[
-                styles.sideSlot,
-                styles.galleryButton,
-                isGalleryDisabled && styles.disabledButton,
-              ]}
-              onPress={handleGalleryPress}
-              disabled={isGalleryDisabled}
-              accessibilityRole="button"
-              accessibilityLabel="갤러리에서 사진 선택"
-            >
-              <Ionicons name="images-outline" size={24} color="#ffffff" />
-            </Pressable>
-          ) : (
-            <View style={styles.sideSlot} />
-          )}
-          <Pressable
-            style={[styles.captureOuter, isCaptureDisabled && styles.disabledButton]}
-            onPress={handleCapturePress}
-            disabled={isCaptureDisabled}
-            accessibilityRole="button"
-            accessibilityLabel="사진 촬영"
-          >
-            <View style={styles.captureInner} />
-          </Pressable>
-          <View style={styles.sideSlot} />
-        </View>
-      </View>
     </View>
   );
 }
@@ -894,12 +893,22 @@ export default function CameraCaptureScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: "#000000",
   },
-  permissionContainer: {
+  permissionScreen: {
     flex: 1,
     backgroundColor: "#111111",
     justifyContent: "center",
     paddingHorizontal: 20,
+  },
+  permissionTopBar: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    paddingHorizontal: 20,
+    backgroundColor: "#000000",
+    zIndex: 30,
   },
   permissionCard: {
     borderRadius: 16,
@@ -935,161 +944,167 @@ const styles = StyleSheet.create({
     ...typography["typo-label2"],
     color: "#ffffff",
   },
+  permissionIcon: {
+    width: 36,
+    height: 36,
+  },
   loadingContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+    backgroundColor: "#000000",
   },
-  header: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    justifyContent: "space-between",
-    backgroundColor: "black",
-    zIndex: 30,
+  cameraOverlay: {
+    flex: 1,
   },
-  spacer: {
-    width: 28,
-    height: 58,
+  cameraTopBar: {
+    paddingHorizontal: 20,
+    backgroundColor: "#000000",
   },
-  closeButton: {
-    alignItems: "center",
+  cameraCloseButton: {
+    width: CAMERA_TOP_BAR_CONTENT_HEIGHT,
+    height: CAMERA_TOP_BAR_CONTENT_HEIGHT,
+    alignItems: "flex-end",
     justifyContent: "center",
+    marginLeft: "auto",
   },
-  overlay: {
-    ...StyleSheet.absoluteFillObject,
+  cameraCloseIcon: {
+    width: 24,
+    height: 24,
+  },
+  cameraGuideArea: {
+    flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    pointerEvents: "none",
-    marginBottom: 30,
-    zIndex: 10,
+    paddingHorizontal: 24,
+    paddingVertical: 30,
   },
-  guideCard: {
-    marginBottom: 20,
-    backgroundColor: "#ffe9d5",
-    borderRadius: 6,
-    paddingVertical: 10,
-    paddingHorizontal: 14,
-  },
-  guideText: {
-    ...typography["typo-label4"],
-    color: "#000",
-  },
-  frameBox: {
-    width: "82%",
+  cameraGuideFrame: {
+    width: "100%",
+    height: "100%",
     position: "relative",
   },
-  frameCorner: {
+  cameraGuideCorner: {
     position: "absolute",
-    width: 58,
-    height: 58,
+    width: 52,
+    height: 65,
     borderColor: "#ffffff",
   },
-  cornerTopLeft: {
+  guideCornerTopLeft: {
     top: 0,
     left: 0,
-    borderTopWidth: 4,
-    borderLeftWidth: 4,
+    borderTopWidth: 3,
+    borderLeftWidth: 3,
     borderTopLeftRadius: 20,
   },
-  cornerTopRight: {
+  guideCornerTopRight: {
     top: 0,
     right: 0,
-    borderTopWidth: 4,
-    borderRightWidth: 4,
+    borderTopWidth: 3,
+    borderRightWidth: 3,
     borderTopRightRadius: 20,
   },
-  cornerBottomLeft: {
+  guideCornerBottomLeft: {
     bottom: 0,
     left: 0,
-    borderBottomWidth: 4,
-    borderLeftWidth: 4,
+    borderBottomWidth: 3,
+    borderLeftWidth: 3,
     borderBottomLeftRadius: 20,
   },
-  cornerBottomRight: {
+  guideCornerBottomRight: {
     bottom: 0,
     right: 0,
-    borderBottomWidth: 4,
-    borderRightWidth: 4,
+    borderBottomWidth: 3,
+    borderRightWidth: 3,
     borderBottomRightRadius: 20,
   },
-  bottomBar: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    bottom: 0,
+  cameraBottomBar: {
     alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.86)",
-    gap: 18,
+    backgroundColor: "#000000",
     paddingHorizontal: 27,
-    paddingTop: 18,
-    zIndex: 30,
+    paddingTop: 16,
   },
-  modeSelector: {
-    alignSelf: "center",
-    backgroundColor: "rgba(255, 255, 255, 0.16)",
-    borderRadius: 14,
-    flexDirection: "row",
-    gap: 4,
-    padding: 4,
-  },
-  modeButton: {
+  cameraModeSection: {
     alignItems: "center",
-    borderRadius: 10,
-    flexDirection: "row",
-    gap: 6,
-    minHeight: 42,
-    minWidth: 92,
-    justifyContent: "center",
-    paddingHorizontal: 10,
+    paddingHorizontal: 20,
+    paddingBottom: 16,
   },
-  modeButtonSelected: {
-    backgroundColor: "#ffffff",
-  },
-  modeButtonText: {
-    ...typography["typo-label6"],
-    color: "#ffffff",
-  },
-  modeButtonTextSelected: {
-    color: "#141414",
-  },
-  captureControls: {
-    alignItems: "center",
+  cameraModeList: {
     alignSelf: "stretch",
     flexDirection: "row",
-    justifyContent: "space-between",
+    gap: 8,
+    width: "100%",
   },
-  sideSlot: {
+  cameraModeButton: {
+    alignItems: "center",
+    backgroundColor: "#000000",
+    borderRadius: 8,
+    flex: 1,
+    gap: 6,
+    justifyContent: "center",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    opacity: 0.3,
+  },
+  cameraModeButtonSelected: {
+    backgroundColor: "#ffffff",
+    borderColor: "#bfbfbf",
+    borderWidth: 1,
+    opacity: 1,
+  },
+  cameraModeIcon: {
+    width: 26,
+    height: 26,
+  },
+  cameraModeButtonText: {
+    ...typography["typo-body3"],
+    color: "#ffffff",
+    textAlign: "center",
+  },
+  cameraModeButtonTextSelected: {
+    color: "#1f1f1f",
+  },
+  cameraCaptureControls: {
+    alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    width: "100%",
+  },
+  cameraControlSideSlot: {
     width: 44,
     height: 44,
+    alignItems: "center",
+    justifyContent: "center",
   },
   galleryButton: {
     borderRadius: 100,
-    backgroundColor: "rgba(255, 255, 255, 0.22)",
+    backgroundColor: "rgba(255, 255, 255, 0.18)",
     alignItems: "center",
     justifyContent: "center",
+    width: 44,
+    height: 44,
   },
-  captureOuter: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    borderWidth: 9,
+  galleryIcon: {
+    width: 24,
+    height: 24,
+  },
+  cameraShutterButton: {
+    width: 60,
+    height: 60,
+    borderRadius: 100,
+    borderWidth: 7,
     borderColor: "#ff8a00",
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "#ffffff",
   },
-  captureInner: {
-    width: 62,
-    height: 62,
-    borderRadius: 30,
+  cameraShutterButtonInner: {
+    width: 46,
+    height: 46,
+    borderRadius: 100,
     backgroundColor: "#ffffff",
   },
-  disabledButton: {
+  disabledControl: {
     opacity: 0.6,
   },
   cameraOnboardingOverlay: {
