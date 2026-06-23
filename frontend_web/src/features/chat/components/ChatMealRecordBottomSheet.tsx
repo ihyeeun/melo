@@ -27,8 +27,7 @@ type ServingWeightUnit = "g" | "ml";
 
 type ServingContext = {
   baseWeight: number;
-  baseUnitCount: number;
-  unitLabel: string;
+  unitLabel: string | null | undefined;
   weightUnit: ServingWeightUnit;
 };
 
@@ -65,7 +64,6 @@ type ChatMealRecordBottomSheetProps = {
 const QUANTITY_STEP = 0.5;
 const MIN_QUANTITY = 0.1;
 const CONSUMED_WEIGHT_PRECISION = 4;
-const UNIT_QUANTITY_PATTERN = /^\s*([\d.]+)\s*(.*)$/;
 
 function roundDecimal(value: number, digits = 1) {
   const factor = 10 ** digits;
@@ -81,14 +79,9 @@ function toPositiveNumber(value: number | null | undefined) {
 }
 
 function resolveServingContext(recommendation: ChatMealRecordMenu): ServingContext {
-  const matched = recommendation.unit_quantity.match(UNIT_QUANTITY_PATTERN);
-  const parsedCount = matched ? Number(matched[1]) : Number.NaN;
-  const unitLabel = matched?.[2]?.trim() || recommendation.unit_quantity || "";
-
   return {
     baseWeight: toPositiveNumber(recommendation.weight) ?? 1,
-    baseUnitCount: toPositiveNumber(parsedCount) ?? 1,
-    unitLabel,
+    unitLabel: recommendation.unit_quantity,
     weightUnit: recommendation.unit === MENU_UNIT.MILLILITER ? "ml" : "g",
   };
 }
@@ -99,10 +92,7 @@ function getDisplayValue(
   servingContext: ServingContext,
 ) {
   if (mode === "unit") {
-    return roundDecimal(
-      (consumedWeight / servingContext.baseWeight) * servingContext.baseUnitCount,
-      1,
-    );
+    return roundDecimal(consumedWeight / servingContext.baseWeight, 1);
   }
 
   return roundDecimal(consumedWeight, 1);
@@ -117,10 +107,7 @@ function toConsumedWeight(
     return roundDecimal(displayValue, CONSUMED_WEIGHT_PRECISION);
   }
 
-  return roundDecimal(
-    (displayValue / servingContext.baseUnitCount) * servingContext.baseWeight,
-    CONSUMED_WEIGHT_PRECISION,
-  );
+  return roundDecimal(displayValue * servingContext.baseWeight, CONSUMED_WEIGHT_PRECISION);
 }
 
 function getScaledCalories(
