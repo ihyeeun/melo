@@ -1600,7 +1600,9 @@ export default function ChatPage() {
                 currentMealRecord?.previousMealRecord.menus.some(
                   (menu) => menu.id === nutritionMenuId,
                 ) === true;
-              const shouldHideUserMessage = isNutritionRegisteredChat;
+              const shouldHideUserMessage = isNutritionLabelMenuRegisteredActionPayload(
+                chatItem.response_payload,
+              );
 
               return (
                 <section key={timelineItem.key} className={styles.conversationSection}>
@@ -1979,6 +1981,16 @@ function isNutritionLabelMenuNotFoundPayload(responsePayload: ChatRecommendRespo
   return (
     isNutritionLabelFeedbackPayload(responsePayload) &&
     getNutritionMenuId(responsePayload) === null
+  );
+}
+
+function isNutritionLabelMenuRegisteredActionPayload(
+  responsePayload: ChatRecommendResponseDto,
+): responsePayload is ChatNutritionLabelMenuRegisteredResponseDto {
+  return (
+    isNutritionLabelFeedbackPayload(responsePayload) &&
+    "action" in responsePayload &&
+    responsePayload.action === "nutrition_label_menu_registered"
   );
 }
 
