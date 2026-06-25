@@ -45,9 +45,9 @@
   box-shadow: var(--shadow-emphasize);
   color: var(--static-white);
   display: inline-flex;
-  height: 56px;
+  height: 64px;
   justify-content: center;
-  width: 56px;
+  width: 64px;
 }
 
 .scrollButton {
@@ -374,10 +374,18 @@
   gap: 10px;
   padding: 16px 20px;
   width: 100%;
+  cursor: pointer;
 }
 
-.recommendCard,
-.feedbackCard {
+.menuNotFoundCard {
+  background-color: var(--bg-white);
+  border: 1px solid var(--border-neutral);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+  width: 96%;
   cursor: pointer;
 }
 
