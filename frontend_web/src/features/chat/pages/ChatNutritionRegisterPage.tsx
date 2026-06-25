@@ -1,5 +1,6 @@
 import { useQueryClient } from "@tanstack/react-query";
 
+import { getAnalyticsErrorMessage } from "@/features/camera/utils/cameraCapture";
 import { useRegisterMenuByNutritionLabelImageMutation } from "@/features/chat/hooks/mutations/useSendMessageMutation";
 import { queryKeys as chatQueryKeys } from "@/features/chat/hooks/queries/queryKey";
 import {
@@ -13,6 +14,10 @@ import {
   type NutrientAddSubmitPayload,
 } from "@/features/nutrient-entry/NutrientAddPage";
 import { PATH } from "@/router/path";
+import {
+  trackNutritionLabelRegisterFail,
+  trackNutritionLabelRegisterSuccess,
+} from "@/shared/analytics/nutritionLabelEvents";
 import type { NutritionLabelMenuRegisterRequestDto } from "@/shared/api/types/api.request.dto";
 import { LoadingOverlay } from "@/shared/commons/loading/Loading";
 import { toast } from "@/shared/commons/toast/toast";
@@ -63,13 +68,18 @@ export default function ChatNutritionRegisterPage() {
     });
 
     if (!body) {
+      trackNutritionLabelRegisterFail("영양성분 정보를 불러오지 못했어요. 다시 시도해주세요.");
       toast.warning("영양성분 정보를 불러오지 못했어요. 다시 시도해주세요.");
       return;
     }
 
+    let hasRegisterSucceeded = false;
+
     try {
       const playbackBaselineChatIds = await getChatHistoryPlaybackBaselineIds(queryClient);
       await registerMenu({ body });
+      hasRegisterSucceeded = true;
+      trackNutritionLabelRegisterSuccess();
 
       await queryClient.refetchQueries({
         queryKey: chatQueryKeys.chatHistory,
@@ -82,7 +92,12 @@ export default function ChatNutritionRegisterPage() {
 
       toast.success("메뉴가 등록되었어요.");
       navigateBack({ fallbackTo: PATH.CHAT });
-    } catch {
+    } catch (error) {
+      if (!hasRegisterSucceeded) {
+        trackNutritionLabelRegisterFail(
+          getAnalyticsErrorMessage(error, "등록에 실패했어요. 잠시 후 다시 시도해주세요."),
+        );
+      }
       toast.warning("등록에 실패했어요. 잠시 후 다시 시도해주세요.");
     }
   };

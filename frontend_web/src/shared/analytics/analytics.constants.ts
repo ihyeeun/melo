@@ -15,6 +15,14 @@ export const EVENT_NAME = {
   FOOD_SCAN_FAIL: "food_scan_fail",
   FOOD_SCAN_CANCEL: "food_scan_cancel",
 
+  LABEL_SCAN_START: "label_scan_start",
+  LABEL_SCAN_SUCCESS: "label_scan_success",
+  LABEL_SCAN_FAIL: "label_scan_fail",
+  LABEL_SCAN_CANCEL: "label_scan_cancel",
+
+  LABEL_REGISTER_SUCCESS: "label_register_success",
+  LABEL_REGISTER_FAIL: "label_register_fail",
+
   AI_COACH_CHAT: "ai_coach_chat",
   AI_COACH_RESPONSE_SUCCESS: "ai_coach_response_success",
   AI_COACH_RESPONSE_FAIL: "ai_coach_response_fail",

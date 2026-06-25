@@ -26,6 +26,12 @@ import {
 import { PATH } from "@/router/path";
 import { track } from "@/shared/analytics/analytics";
 import { EVENT_NAME } from "@/shared/analytics/analytics.constants";
+import {
+  trackNutritionLabelScanCancel,
+  trackNutritionLabelScanFail,
+  trackNutritionLabelScanStart,
+  trackNutritionLabelScanSuccess,
+} from "@/shared/analytics/nutritionLabelEvents";
 import { requestNativeCameraCapture } from "@/shared/api/bridge/nativeBridge";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
 import { CheckButtonModal } from "@/shared/commons/modals/CheckButtonModal";
@@ -52,25 +58,47 @@ function resolveChatCameraMode(mode: string | null | undefined) {
   return "FOOD";
 }
 
-function trackScanStart(mode: keyof typeof CHAT_CAMERA_SOURCE) {
+type ChatCameraMode = keyof typeof CHAT_CAMERA_LOADING_DESCRIPTION;
+
+function trackScanStart(mode: ChatCameraMode) {
+  if (mode === "NUTRITION_LABEL") {
+    trackNutritionLabelScanStart({ source: CHAT_CAMERA_SOURCE[mode] });
+    return;
+  }
+
   track(mode === "FOOD" ? EVENT_NAME.FOOD_SCAN_START : EVENT_NAME.OCR_SCAN_START, {
     source: CHAT_CAMERA_SOURCE[mode],
   });
 }
 
-function trackScanSuccess(mode: keyof typeof CHAT_CAMERA_SOURCE) {
+function trackScanSuccess(mode: ChatCameraMode) {
+  if (mode === "NUTRITION_LABEL") {
+    trackNutritionLabelScanSuccess({ source: CHAT_CAMERA_SOURCE[mode] });
+    return;
+  }
+
   track(mode === "FOOD" ? EVENT_NAME.FOOD_SCAN_SUCCESS : EVENT_NAME.OCR_SCAN_SUCCESS, {
     source: CHAT_CAMERA_SOURCE[mode],
   });
 }
 
-function trackScanCancel(mode: keyof typeof CHAT_CAMERA_SOURCE) {
+function trackScanCancel(mode: ChatCameraMode) {
+  if (mode === "NUTRITION_LABEL") {
+    trackNutritionLabelScanCancel({ source: CHAT_CAMERA_SOURCE[mode] });
+    return;
+  }
+
   track(mode === "FOOD" ? EVENT_NAME.FOOD_SCAN_CANCEL : EVENT_NAME.OCR_SCAN_CANCEL, {
     source: CHAT_CAMERA_SOURCE[mode],
   });
 }
 
-function trackScanFail(mode: keyof typeof CHAT_CAMERA_SOURCE, reason: string) {
+function trackScanFail(mode: ChatCameraMode, reason: string) {
+  if (mode === "NUTRITION_LABEL") {
+    trackNutritionLabelScanFail(reason, { source: CHAT_CAMERA_SOURCE[mode] });
+    return;
+  }
+
   track(mode === "FOOD" ? EVENT_NAME.FOOD_SCAN_FAIL : EVENT_NAME.OCR_SCAN_FAIL, {
     reason,
     source: CHAT_CAMERA_SOURCE[mode],
