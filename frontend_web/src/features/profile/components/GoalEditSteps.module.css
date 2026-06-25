@@ -5,7 +5,6 @@
 }
 
 .title {
-  height: fit-content;
   padding: 16px 0;
 }
 
@@ -47,6 +46,7 @@
 .goalKcalValue {
   color: var(--label-normal);
   text-decoration: underline;
+  text-underline-offset: 6px;
 }
 
 .goalKcalHelper {

@@ -97,7 +97,7 @@ import {
 import { formatNumberWithMaxOneDecimal } from "@/shared/utils/numberFormat";
 import { formatBaseServingUnit } from "@/shared/utils/servingUnit";
 
-const QUICK_CHIP_LIST = ["포만감 있는 점심 메뉴 추천해줘", "칼로리 부담 적은 배달 음식 추천해줘"];
+// const QUICK_CHIP_LIST = ["포만감 있는 점심 메뉴 추천해줘", "칼로리 부담 적은 배달 음식 추천해줘"];
 const FEEDBACK_GAUGE_VIEWBOX_WIDTH = 220;
 const FEEDBACK_GAUGE_VIEWBOX_HEIGHT = 100;
 const FEEDBACK_GAUGE_CENTER_X = 110;
@@ -473,9 +473,7 @@ export default function ChatPage() {
   }, [data]);
   const displayChatList = chatList;
   const chatDateKeys = useMemo(() => {
-    const dateKeySet = new Set<string>(
-      getRecentDateKeys(todayDateKey, MEAL_RECORD_LOOKBACK_DAYS),
-    );
+    const dateKeySet = new Set<string>(getRecentDateKeys(todayDateKey, MEAL_RECORD_LOOKBACK_DAYS));
 
     displayChatList.forEach((chatItem) => {
       const dateKey = getChatDateKey(chatItem);
@@ -1726,7 +1724,7 @@ export default function ChatPage() {
             </button>
           </div>
         )}
-        <div>
+        {/* <div>
           {!isSoftKeyboardVisible && !isAwaitingChatResponse && (
             <section className={`${styles.chipSection}`}>
               {QUICK_CHIP_LIST.map((chip) => (
@@ -1742,7 +1740,7 @@ export default function ChatPage() {
               ))}
             </section>
           )}
-        </div>
+        </div> */}
         <div ref={endAnchorRef} />
       </main>
 

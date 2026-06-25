@@ -7,17 +7,16 @@ import {
   type AnalyticsUserProperties,
   buildAnalyticsUserProperties,
 } from "@/shared/analytics/analyticsUserProperties";
+import type { ProfileResponseDto } from "@/shared/api/types/api.response.dto";
 
 type AnalyticsProperties = Record<string, unknown>;
 type PendingEvent = {
   eventName: AnalyticsEventName;
   properties?: AnalyticsProperties;
 };
-type AnalyticsUserIdentitySource = Parameters<typeof buildAnalyticsUserProperties>[0] & {
-  user_id: number | string;
-};
 
 const ANALYTICS_USER_ID_PREFIX = "melo_user_";
+const ADMIN_ROLE = "ADMIN";
 
 const sessionReplayTracking = sessionReplayPlugin({
   forceSessionTracking: true,
@@ -26,7 +25,8 @@ const sessionReplayTracking = sessionReplayPlugin({
 
 let initialized = false;
 let analyticsUnavailable = false;
-let currentNickname: string | null = null;
+let analyticsInitRequested = false;
+let currentUserRole: ProfileResponseDto["role"] | undefined;
 let identifiedUserPropertiesKey: string | null = null;
 let currentUserId: string | null = null;
 let currentUserProperties: AnalyticsUserProperties = {};
@@ -42,17 +42,35 @@ function getUserPropertiesKey(properties: AnalyticsUserProperties) {
   );
 }
 
-function syncUserProperties(properties: AnalyticsUserProperties) {
-  currentUserProperties = properties;
-  currentNickname = properties.nickname ?? null;
+function getAnalyticsUserId(userId: number | string) {
+  const stringUserId = String(userId);
+  return stringUserId.startsWith(ANALYTICS_USER_ID_PREFIX)
+    ? stringUserId
+    : `${ANALYTICS_USER_ID_PREFIX}${stringUserId}`;
+}
 
-  const userPropertiesKey = getUserPropertiesKey(properties);
+function getAmplitudeApiKey(userRole: ProfileResponseDto["role"]) {
+  if (userRole === ADMIN_ROLE) {
+    return import.meta.env.VITE_DEV_AMPLITUDE_API_KEY;
+  }
 
-  if (!initialized || identifiedUserPropertiesKey === userPropertiesKey) return;
+  return import.meta.env.VITE_PROD_AMPLITUDE_API_KEY;
+}
+
+function disableAnalytics() {
+  analyticsUnavailable = true;
+  pendingEvents.length = 0;
+}
+
+function syncUserPropertiesWithAmplitude() {
+  if (!initialized) return;
+
+  const userPropertiesKey = getUserPropertiesKey(currentUserProperties);
+  if (identifiedUserPropertiesKey === userPropertiesKey) return;
 
   const identify = new amplitude.Identify();
   ANALYTICS_USER_PROPERTY_KEYS.forEach((propertyKey) => {
-    const value = properties[propertyKey];
+    const value = currentUserProperties[propertyKey];
 
     if (value === undefined || value === null) {
       identify.unset(propertyKey);
@@ -66,20 +84,31 @@ function syncUserProperties(properties: AnalyticsUserProperties) {
   identifiedUserPropertiesKey = userPropertiesKey;
 }
 
-function getAnalyticsUserId(userId: number | string) {
-  const stringUserId = String(userId);
-  return stringUserId.startsWith(ANALYTICS_USER_ID_PREFIX)
-    ? stringUserId
-    : `${ANALYTICS_USER_ID_PREFIX}${stringUserId}`;
+function syncUserProperties(properties: AnalyticsUserProperties) {
+  currentUserProperties = properties;
+  syncUserPropertiesWithAmplitude();
 }
 
-export function initAnalytics() {
-  if (initialized || analyticsUnavailable) return;
+function sendTrack(eventName: AnalyticsEventName, properties?: AnalyticsProperties) {
+  const nickname = currentUserProperties.nickname;
+  const eventProperties = nickname ? { ...(properties ?? {}), nickname } : properties;
 
-  const apiKey = import.meta.env.VITE_AMPLITUDE_API_KEY;
+  amplitude.track(eventName, eventProperties);
+}
+
+function flushPendingEvents() {
+  pendingEvents.splice(0).forEach(({ eventName, properties }) => {
+    sendTrack(eventName, properties);
+  });
+}
+
+function initializeAnalyticsIfReady() {
+  if (initialized || analyticsUnavailable || !analyticsInitRequested) return;
+  if (currentUserRole === undefined) return;
+
+  const apiKey = getAmplitudeApiKey(currentUserRole);
   if (!apiKey) {
-    analyticsUnavailable = true;
-    pendingEvents.length = 0;
+    disableAnalytics();
     return;
   }
 
@@ -95,23 +124,27 @@ export function initAnalytics() {
   }
 
   if (Object.keys(currentUserProperties).length > 0) {
-    syncUserProperties(currentUserProperties);
+    syncUserPropertiesWithAmplitude();
   }
 
-  pendingEvents.splice(0).forEach(({ eventName, properties }) => {
-    sendTrack(eventName, properties);
-  });
+  flushPendingEvents();
 }
 
-export function identifyAnalyticsUser(source: AnalyticsUserIdentitySource) {
-  const userId = getAnalyticsUserId(source.user_id);
-  currentUserId = userId;
+export function initAnalytics() {
+  analyticsInitRequested = true;
+  initializeAnalyticsIfReady();
+}
+
+export function identifyAnalyticsUser(source: ProfileResponseDto) {
+  currentUserRole = source.role;
+  currentUserId = getAnalyticsUserId(source.user_id);
 
   if (initialized) {
-    amplitude.setUserId(userId);
+    amplitude.setUserId(currentUserId);
   }
 
   syncUserProperties(buildAnalyticsUserProperties(source));
+  initializeAnalyticsIfReady();
 }
 
 export function identifyNickname(nickname?: string | null) {
@@ -131,7 +164,7 @@ export function clearAnalyticsUserProperties() {
 export function resetAnalyticsIdentity() {
   pendingEvents.length = 0;
   trackedOnceKeys.clear();
-  currentNickname = null;
+  currentUserRole = undefined;
   currentUserId = null;
   currentUserProperties = {};
   identifiedUserPropertiesKey = null;
@@ -141,19 +174,6 @@ export function resetAnalyticsIdentity() {
   amplitude.reset();
 }
 
-function sendTrack(eventName: AnalyticsEventName, properties?: AnalyticsProperties) {
-  const eventProperties = currentNickname
-    ? { ...(properties ?? {}), nickname: currentNickname }
-    : properties;
-
-  if (import.meta.env.DEV) {
-    console.log("[analytics]", eventName, eventProperties);
-  }
-
-  amplitude.track(eventName, eventProperties);
-}
-
-// amplitude에는 이벤트를 보낼 수 있는 함수
 export function track(eventName: AnalyticsEventName, properties?: AnalyticsProperties) {
   if (analyticsUnavailable) return;
 
