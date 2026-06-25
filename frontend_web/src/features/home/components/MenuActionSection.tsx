@@ -51,7 +51,6 @@ export default function MenuActionSection({
           >
             <MenuCard
               title={"메뉴 찍기"}
-              description="메뉴판이나 음식을 찍어 피드백을 받아보세요"
               iconSrc="/icons/camera-icon.svg"
               onClick={disableInteractions ? undefined : handleNavigateChatCamera}
               type="camera"
@@ -66,7 +65,6 @@ export default function MenuActionSection({
           >
             <MenuCard
               title={"AI 코치"}
-              description={"식단 고민,\n무엇이든 물어보세요"}
               iconSrc="/icons/chat-icon.svg"
               onClick={
                 disableInteractions
@@ -132,7 +130,7 @@ function MenuCard({
   type,
 }: {
   title: string;
-  description: string;
+  description?: string;
   iconSrc: string;
   onClick?: () => void;
   type?: string;
@@ -140,15 +138,14 @@ function MenuCard({
   return (
     <ActionCard onClick={onClick} className={type === "camera" ? style.bgPrimary : ""}>
       <div className={style.menuCardContainer}>
-        <p className={`typo-title4 ${type === "camera" ? style.textWhite : ""}`}>{title}</p>
         <p
           className={`${style.description} ${type === "camera" ? style.textWhite : ""} typo-body3`}
         >
           {description}
         </p>
-        <div className={style.iconContainer}>
-          <img src={iconSrc} alt={`${title} 아이콘`} className={style.iconSize} />
-        </div>
+
+        <img src={iconSrc} alt={`${title} 아이콘`} width={56} height={56} />
+        <p className={`typo-title4 ${type === "camera" ? style.textWhite : ""}`}>{title}</p>
       </div>
     </ActionCard>
   );
