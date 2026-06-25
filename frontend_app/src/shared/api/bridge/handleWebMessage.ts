@@ -15,6 +15,7 @@ import { BridgeHandledError, isBridgeHandledError } from "./bridgeError";
 import { beginCameraCaptureSession } from "./cameraCaptureSession";
 import type {
   BridgeAppDeviceInfoPayload,
+  BridgeCameraCaptureMode,
   BridgeCameraCaptureRequestPayload,
   BridgeGalleryPickRequestPayload,
   BridgeImageUploadRequestPayload,
@@ -45,6 +46,12 @@ const NORMALIZED_UPLOAD_FALLBACK_FORMAT = SaveFormat.JPEG;
 const DEFAULT_UPLOAD_FIELD_NAME = "file";
 const SESSION_TERMINATION_ENDPOINTS = new Set(["/commonAuth/signout", "/commonAuth/delete"]);
 const LOCAL_SESSION_CLEAR_ON_FAILURE_ENDPOINTS = new Set(["/commonAuth/signout"]);
+const CAMERA_CAPTURE_MODES = new Set<BridgeCameraCaptureMode>([
+  "NUTRITION_LABEL",
+  "MENU_BOARD",
+  "FOOD",
+  "GENERAL",
+]);
 
 type ImageFileSource = {
   uri: string;
@@ -63,6 +70,7 @@ type CapturedImageSource = ImageFileSource & {
   base64?: string | null;
   previewBase64?: string | null;
   previewMimeType?: string | null;
+  mode?: BridgeCameraCaptureMode | null;
 };
 
 function resolveLowerCaseExtension(value: string | null | undefined) {
@@ -82,6 +90,10 @@ function resolveImageMimeTypeFromExtension(extension: string | null | undefined)
   if (extension === "heif") return "image/heif";
   if (extension === "webp") return "image/webp";
   return null;
+}
+
+function isBridgeCameraCaptureMode(value: unknown): value is BridgeCameraCaptureMode {
+  return typeof value === "string" && CAMERA_CAPTURE_MODES.has(value as BridgeCameraCaptureMode);
 }
 
 function resolveImageMimeType(source: ImageFileSource) {
@@ -164,6 +176,7 @@ async function normalizeCapturedImageSource(source: CapturedImageSource) {
     base64: source.base64 ?? null,
     previewBase64: source.previewBase64 ?? null,
     previewMimeType: source.previewMimeType ?? null,
+    mode: source.mode ?? null,
   };
 }
 
@@ -557,13 +570,17 @@ function isWebToAppMessage(value: unknown): value is WebToAppMessage {
       value.payload.quality === undefined || typeof value.payload.quality === "number";
     if (!isValidQuality) return false;
 
-    return (
-      value.payload.mode === undefined ||
-      value.payload.mode === "NUTRITION_LABEL" ||
-      value.payload.mode === "MENU_BOARD" ||
-      value.payload.mode === "FOOD" ||
-      value.payload.mode === "GENERAL"
-    );
+    const isValidMode =
+      value.payload.mode === undefined || isBridgeCameraCaptureMode(value.payload.mode);
+    if (!isValidMode) return false;
+
+    const isValidSelectableModes =
+      value.payload.selectableModes === undefined ||
+      (Array.isArray(value.payload.selectableModes) &&
+        value.payload.selectableModes.every(isBridgeCameraCaptureMode));
+    if (!isValidSelectableModes) return false;
+
+    return true;
   }
 
   if (value.type === "GALLERY_PICK_REQUEST") {

@@ -37,24 +37,15 @@
 .menuCardContainer {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
   width: 100%;
+  justify-content: center;
+  align-items: center;
 }
 
 .description {
   color: var(--label-alternative);
   white-space: pre-line;
-}
-
-.iconContainer {
-  width: 100%;
-}
-
-.iconSize {
-  display: block;
-  height: 60px;
-  margin-left: auto;
-  width: 60px;
 }
 
 .recordContainer {
@@ -123,22 +114,4 @@
 
 .textWhite {
   color: var(--static-white);
-}
-
-.cameraActionSheetContainer {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  padding: 0 20px calc(var(--safe-area-bottom) + 20px);
-}
-
-.cameraActionSheetTitle {
-  color: var(--label-normal);
-}
-
-.cameraActionSheetButton {
-  color: var(--label-alternative);
-  padding: 12px;
-  text-align: start;
-  width: 100%;
 }

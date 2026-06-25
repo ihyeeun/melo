@@ -296,6 +296,7 @@ interface ChatResponseBaseDto {
 export type ChatRecommendResponseDto =
   | ChatRecommendationResponseDto
   | ChatFeedbackResponseDto
+  | ChatNutritionLabelFeedbackResponseDto
   | ChatGeneralResponseDto;
 
 export interface ChatRecommendationResponseDto extends ChatResponseBaseDto {
@@ -308,6 +309,15 @@ export interface ChatFeedbackResponseDto extends ChatResponseBaseDto {
   chat_category: "feedback";
   feedback: FeedbackDto;
   recognized_foods?: ChatFoodImageRecognizedMenuResponseDto[];
+  recommendations?: never;
+}
+
+export interface ChatNutritionLabelFeedbackResponseDto extends ChatResponseBaseDto {
+  chat_category: "feedback";
+  image_summary: string;
+  recognized_nutrition: NutritionLabelRecognitionResponseDto;
+  feedback?: never;
+  recognized_foods?: never;
   recommendations?: never;
 }
 

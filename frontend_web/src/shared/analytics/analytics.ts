@@ -23,11 +23,6 @@ const sessionReplayTracking = sessionReplayPlugin({
   sampleRate: 1,
 });
 
-const sessionReplayTracking = sessionReplayPlugin({
-  forceSessionTracking: true,
-  sampleRate: 1,
-});
-
 let initialized = false;
 let analyticsUnavailable = false;
 let analyticsInitRequested = false;

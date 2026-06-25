@@ -24,6 +24,8 @@ export const PATH = {
 
   // Chat
   CHAT: "/chat",
+  CHAT_NUTRITION_REGISTER: "/chat/nutrition-register",
+  CHAT_NUTRITION_DETAIL: "/chat/nutrition-detail",
   RECOMMEND_RESULT: "/recommend-result",
   RECOMMEND_DETAIL: "/recommend-detail",
   FEEDBACK_RESULT: "/feedback-result",
@@ -41,6 +43,7 @@ export const PATH = {
   MENU_BOARD_CAMERA: "/meal-record/add/menu-board-camera",
   FOOD_CAMERA: "/meal-record/add/food-camera",
   NUTRIENT_CAMERA: "/nutrient-camera",
+  CHAT_CAMERA: "/chat-camera",
   CHAT_FOOD_CAMERA: "/chat-food-camera",
 
   // ETC

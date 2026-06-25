@@ -48,9 +48,12 @@ export type BridgeAppDeviceInfoRequestMessage = {
   context?: BridgeMessageContext;
 };
 
+export type BridgeCameraCaptureMode = "NUTRITION_LABEL" | "MENU_BOARD" | "FOOD" | "GENERAL";
+
 export type BridgeCameraCaptureRequestPayload = {
   quality?: number;
-  mode?: "NUTRITION_LABEL" | "MENU_BOARD" | "FOOD" | "GENERAL";
+  mode?: BridgeCameraCaptureMode;
+  selectableModes?: BridgeCameraCaptureMode[];
 };
 
 export type BridgeCameraCaptureRequestMessage = {

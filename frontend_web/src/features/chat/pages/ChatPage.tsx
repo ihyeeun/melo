@@ -3,6 +3,8 @@ import { useQueries, useQueryClient } from "@tanstack/react-query";
 import type { FormEvent, KeyboardEvent, MouseEvent, PointerEvent } from "react";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 
+import { ChatCameraUpdateRequiredModal } from "@/features/camera/components/ChatCameraUpdateRequiredModal";
+import { navigateToChatCameraIfSupported } from "@/features/camera/utils/chatCameraSupport";
 import { AssistantMessageText } from "@/features/chat/components/AssistantMessageText";
 import { AssistantPendingMessage } from "@/features/chat/components/AssistantPendingMessage";
 import {
@@ -70,6 +72,9 @@ import {
 } from "@/shared/api/types/api.dto";
 import type {
   ChatHistoryItemResponseDto,
+  ChatNutritionLabelFeedbackResponseDto,
+  ChatNutritionLabelMenuRegisteredResponseDto,
+  ChatNutritionLabelRegisteredMenuDto,
   ChatRecommendItemResponseDto,
   ChatRecommendResponseDto,
   FeedbackItemDto,
@@ -111,7 +116,7 @@ const ASSISTANT_BUBBLE_REVEAL_START_DELAY_MS = 180;
 const ASSISTANT_BUBBLE_GAP_MS = 1000;
 const ASSISTANT_RESULT_REVEAL_DELAY_MS = 1000;
 const ASSISTANT_RESULT_CARD_GAP_MS = 460;
-const MEAL_RECORD_LOOKBACK_DAYS = 4;
+const MEAL_RECORD_LOOKBACK_DAYS = 7;
 
 type RecordedMenuSummary = {
   menu_id: number;
@@ -151,6 +156,12 @@ type ChatTimelineItem =
       mealRecord: MealRecordViewModel;
     };
 
+type ChatNutritionLabelFeedbackItem = ChatHistoryItemResponseDto & {
+  response_payload:
+    | ChatNutritionLabelFeedbackResponseDto
+    | ChatNutritionLabelMenuRegisteredResponseDto;
+};
+
 type EditingMealRecordContext = {
   dateKey: string;
   dayMeals: DayMealSummary;
@@ -163,6 +174,7 @@ type MealRecordCancelTarget =
   | {
       type: "chatMenus";
       chatItem: ChatHistoryItemResponseDto;
+      mealRecordMenus?: ChatMealRecordMenu[];
       mealRecord: MealRecordViewModel;
     }
   | {
@@ -430,7 +442,8 @@ export default function ChatPage() {
   const [isInputFocused, setIsInputFocused] = useState(false);
   const [pendingInput, setPendingInput] = useState<string | null>(null);
   const [assistantPlayback, setAssistantPlayback] = useState<AssistantPlaybackState | null>(null);
-  const [isCameraActionMenuOpen, setIsCameraActionMenuOpen] = useState(false);
+  const [chatCameraUpdateUrl, setChatCameraUpdateUrl] = useState<string | null>(null);
+  const [isChatCameraUpdateModalOpen, setIsChatCameraUpdateModalOpen] = useState(false);
   const [isCameraHintDismissed, setIsCameraHintDismissed] = useState(
     getIsCameraHintDismissedInSession,
   );
@@ -468,21 +481,12 @@ export default function ChatPage() {
     return rawList.filter(isChatHistoryItemResponse).sort(compareChatHistoryItems);
   }, [data]);
   const displayChatList = chatList;
-  const chatDateKeys = useMemo(() => {
-    const dateKeySet = new Set<string>(getRecentDateKeys(todayDateKey, MEAL_RECORD_LOOKBACK_DAYS));
-
-    displayChatList.forEach((chatItem) => {
-      const dateKey = getChatDateKey(chatItem);
-
-      if (dateKey !== null) {
-        dateKeySet.add(dateKey);
-      }
-    });
-
-    return [...dateKeySet];
-  }, [displayChatList, todayDateKey]);
+  const mealRecordDateKeys = useMemo(
+    () => getRecentDateKeys(todayDateKey, MEAL_RECORD_LOOKBACK_DAYS),
+    [todayDateKey],
+  );
   const dayMealQueries = useQueries({
-    queries: chatDateKeys.map((dateKey) => ({
+    queries: mealRecordDateKeys.map((dateKey) => ({
       queryKey: homeQueryKeys.dayMeals.byDate(dateKey),
       queryFn: () => getTodayMealRecordMenus(dateKey),
       staleTime: Infinity,
@@ -491,7 +495,7 @@ export default function ChatPage() {
   const dayMealsByDate = useMemo(() => {
     const dayMeals = new Map<string, DayMealSummary>();
 
-    chatDateKeys.forEach((dateKey, index) => {
+    mealRecordDateKeys.forEach((dateKey, index) => {
       const queryData = dayMealQueries[index]?.data;
 
       if (queryData) {
@@ -500,9 +504,9 @@ export default function ChatPage() {
     });
 
     return dayMeals;
-  }, [chatDateKeys, dayMealQueries]);
+  }, [mealRecordDateKeys, dayMealQueries]);
   const timelineMealRecords = useMemo(() => {
-    return chatDateKeys.flatMap((dateKey) => {
+    return mealRecordDateKeys.flatMap((dateKey) => {
       const dayMeals = dayMealsByDate.get(dateKey);
 
       if (!dayMeals) {
@@ -511,7 +515,7 @@ export default function ChatPage() {
 
       return getDateMealRecordViewModels(dayMeals, dateKey);
     });
-  }, [chatDateKeys, dayMealsByDate]);
+  }, [mealRecordDateKeys, dayMealsByDate]);
   const timelineItems = useMemo(
     () => buildChatTimelineItems(displayChatList, timelineMealRecords),
     [displayChatList, timelineMealRecords],
@@ -520,7 +524,7 @@ export default function ChatPage() {
     () => timelineItems.map((item) => `${item.key}:${item.sortTime ?? "unknown"}`).join("|"),
     [timelineItems],
   );
-  const todayMealQueryIndex = chatDateKeys.indexOf(todayDateKey);
+  const todayMealQueryIndex = mealRecordDateKeys.indexOf(todayDateKey);
   const isTodayMealPending =
     todayMealQueryIndex >= 0 ? (dayMealQueries[todayMealQueryIndex]?.isPending ?? false) : false;
   const editingMealRecordMenus = editingMealRecordContext?.menus ?? [];
@@ -570,10 +574,6 @@ export default function ChatPage() {
 
     if (options?.updateStickiness) {
       shouldFollowBottomRef.current = !isAwayFromBottom;
-    }
-
-    if (isAwayFromBottom) {
-      setIsCameraActionMenuOpen(false);
     }
   }, []);
 
@@ -877,6 +877,7 @@ export default function ChatPage() {
       const bubbleRevealCount = getAssistantBubbleRevealCount(responsePayload);
       const resultRevealCount = getAssistantResultRevealCount(responsePayload);
       const shouldPlayResponse = bubbleRevealCount > 0 || resultRevealCount > 0;
+      const shouldRevealResultBeforeBubbles = isNutritionLabelMenuNotFoundPayload(responsePayload);
       const isCurrentPlayback = () => assistantPlaybackRunIdRef.current === playbackRunId;
       const updateVisibleBubbleCount = (visibleBubbleCount: number) => {
         setAssistantPlayback((current) => {
@@ -908,9 +909,22 @@ export default function ChatPage() {
         });
       }
 
-      if (bubbleRevealCount > 0) {
+      if (shouldRevealResultBeforeBubbles && resultRevealCount > 0) {
         await delayAssistantPlayback(ASSISTANT_BUBBLE_REVEAL_START_DELAY_MS);
         if (!isCurrentPlayback()) return;
+
+        updateResultVisibleCount(1);
+
+        if (bubbleRevealCount > 0) {
+          await delayAssistantPlayback(ASSISTANT_RESULT_CARD_GAP_MS);
+        }
+      }
+
+      if (bubbleRevealCount > 0) {
+        if (!shouldRevealResultBeforeBubbles) {
+          await delayAssistantPlayback(ASSISTANT_BUBBLE_REVEAL_START_DELAY_MS);
+          if (!isCurrentPlayback()) return;
+        }
 
         for (
           let visibleBubbleCount = 1;
@@ -927,7 +941,7 @@ export default function ChatPage() {
         }
       }
 
-      if (resultRevealCount > 0) {
+      if (!shouldRevealResultBeforeBubbles && resultRevealCount > 0) {
         await delayAssistantPlayback(ASSISTANT_RESULT_REVEAL_DELAY_MS);
         if (!isCurrentPlayback()) return;
 
@@ -1020,7 +1034,6 @@ export default function ChatPage() {
     assistantPlaybackRunIdRef.current += 1;
     shouldFollowBottomRef.current = true;
     setAssistantPlayback(null);
-    setIsCameraActionMenuOpen(false);
     setPendingInput(text);
     setInputValue("");
     track(EVENT_NAME.AI_COACH_CHAT, { input_length: text.length });
@@ -1071,36 +1084,15 @@ export default function ChatPage() {
     navigateBack({ fallbackTo: PATH.HOME });
   };
 
-  const handleToggleCameraActionMenu = () => {
-    if (!isQuickActionVisible) {
-      return;
-    }
-
-    setIsCameraActionMenuOpen((prev) => !prev);
-  };
-
-  const handleCloseCameraActionMenu = () => {
-    setIsCameraActionMenuOpen(false);
-  };
-
   const handleInputValueChange = (nextValue: string) => {
     setInputValue(nextValue);
-
-    if (nextValue.trim().length > 0) {
-      handleCloseCameraActionMenu();
-    }
   };
 
   const handleInputFocusChange = (isFocused: boolean) => {
     setIsInputFocused(isFocused);
-
-    if (isFocused) {
-      handleCloseCameraActionMenu();
-    }
   };
 
   const handleScrollToBottom = () => {
-    handleCloseCameraActionMenu();
     shouldFollowBottomRef.current = true;
     keepBottomIfFollowing("smooth");
   };
@@ -1109,14 +1101,13 @@ export default function ChatPage() {
     keepBottomIfFollowing("instant");
   }, [keepBottomIfFollowing]);
 
-  const handleNavigateMenuBoardCamera = () => {
-    handleCloseCameraActionMenu();
-    navigate(PATH.MENU_BOARD_CAMERA);
-  };
+  const handleNavigateChatCamera = async () => {
+    const result = await navigateToChatCameraIfSupported(navigate);
 
-  const handleNavigateFoodCamera = () => {
-    handleCloseCameraActionMenu();
-    navigate(PATH.CHAT_FOOD_CAMERA);
+    if (!result.isSupported) {
+      setChatCameraUpdateUrl(result.updateUrl);
+      setIsChatCameraUpdateModalOpen(true);
+    }
   };
 
   const handleNavigateDirectMenuRecord = () => {
@@ -1131,8 +1122,9 @@ export default function ChatPage() {
     dateKey: string | null,
     dayMeals: DayMealSummary | undefined,
     mealRecord?: MealRecordViewModel | null,
+    overrideMealRecordMenus?: ChatMealRecordMenu[],
   ) => {
-    const mealRecordMenus = getChatMealRecordMenus(meal);
+    const mealRecordMenus = overrideMealRecordMenus ?? getChatMealRecordMenus(meal);
 
     if (mealRecordMenus.length === 0) {
       return;
@@ -1212,8 +1204,9 @@ export default function ChatPage() {
   const handleChatMealRecordRemoveClick = async (
     meal: ChatHistoryItemResponseDto,
     mealRecord: MealRecordViewModel | null,
+    overrideMealRecordMenus?: ChatMealRecordMenu[],
   ) => {
-    const mealRecordMenus = getChatMealRecordMenus(meal);
+    const mealRecordMenus = overrideMealRecordMenus ?? getChatMealRecordMenus(meal);
 
     if (!mealRecord || mealRecordMenus.length === 0) {
       return;
@@ -1312,6 +1305,7 @@ export default function ChatPage() {
   const handleChatMealRecordCancelRequest = (
     chatItem: ChatHistoryItemResponseDto,
     mealRecord: MealRecordViewModel | null,
+    overrideMealRecordMenus?: ChatMealRecordMenu[],
   ) => {
     if (!mealRecord) {
       return;
@@ -1320,6 +1314,7 @@ export default function ChatPage() {
     setMealRecordCancelTarget({
       type: "chatMenus",
       chatItem,
+      mealRecordMenus: overrideMealRecordMenus,
       mealRecord,
     });
   };
@@ -1340,6 +1335,7 @@ export default function ChatPage() {
       await handleChatMealRecordRemoveClick(
         mealRecordCancelTarget.chatItem,
         mealRecordCancelTarget.mealRecord,
+        mealRecordCancelTarget.mealRecordMenus,
       );
       return;
     }
@@ -1509,15 +1505,6 @@ export default function ChatPage() {
     <div className={styles.page}>
       <PageHeader onBack={handleBack} />
 
-      {isCameraActionMenuOpen && isQuickActionVisible && !isScrollToBottomButtonVisible ? (
-        <button
-          type="button"
-          className={styles.floatingCameraBackdrop}
-          onClick={handleCloseCameraActionMenu}
-          aria-label="촬영 메뉴 닫기"
-        />
-      ) : null}
-
       <main ref={mainRef} className={styles.main}>
         {!hasTimelineContent && !isHistoryPending && !isTodayMealPending ? <EmptySection /> : null}
         {(isHistoryPending || isTodayMealPending) &&
@@ -1586,13 +1573,15 @@ export default function ChatPage() {
                 chatItemPlayback === null
                   ? Number.POSITIVE_INFINITY
                   : chatItemPlayback.resultVisibleCount;
+              const nutritionLabelFeedback = getNutritionLabelFeedback(chatItem);
               const assistantBubbleGroups = getAssistantVisibleBubbleGroups(
                 chatItem.response_payload,
                 visibleBubbleCount,
               );
               const isResponseAnimating = chatItemPlayback !== null;
               const userImageAction =
-                chatItem.response_payload.chat_category === "feedback"
+                chatItem.response_payload.chat_category === "feedback" &&
+                chatItem.response_payload.feedback
                   ? {
                       ariaLabel: "피드백 결과 보기",
                       onClick: () => navigate(getFeedbackResultPath(chatItem.id)),
@@ -1602,6 +1591,18 @@ export default function ChatPage() {
                       onClick: () => setPreviewImageUrl(userImageUrl),
                     };
               const isMealRecorded = hasChatMealRecordMenus(chatItem, currentMealRecord);
+              const nutritionResponsePayload = nutritionLabelFeedback?.response_payload;
+              const nutritionMenuId = getNutritionMenuId(nutritionResponsePayload);
+              const nutritionCardMenu = getNutritionCardMenu(nutritionResponsePayload);
+              const isNutritionRegisteredChat = nutritionMenuId !== null;
+              const isNutritionMealRecorded =
+                typeof nutritionMenuId === "number" &&
+                currentMealRecord?.previousMealRecord.menus.some(
+                  (menu) => menu.id === nutritionMenuId,
+                ) === true;
+              const shouldHideUserMessage = isNutritionLabelMenuRegisteredActionPayload(
+                chatItem.response_payload,
+              );
 
               return (
                 <section key={timelineItem.key} className={styles.conversationSection}>
@@ -1613,34 +1614,45 @@ export default function ChatPage() {
                     </div>
                   ) : null}
 
-                  <div className={styles.userMessageGroup}>
-                    <p className={`${styles.timeText} typo-caption4`}>
-                      {formatTimeText(chatItem.createdAt)}
-                    </p>
-                    <div className={styles.userMessageContent}>
-                      {!userImageUrl && (
-                        <p className={`${styles.userBubble} typo-body2`}>{chatItem.input_text}</p>
-                      )}
-                      {userImageUrl && (
-                        <button
-                          type="button"
-                          className={styles.userImageButton}
-                          aria-label={userImageAction.ariaLabel}
-                          onClick={userImageAction.onClick}
-                        >
-                          <UserImageBubble
-                            src={userImageUrl}
-                            alt=""
-                            isDecorative
-                            onLoad={handleTimelineImageLoad}
-                          />
-                        </button>
-                      )}
+                  {!shouldHideUserMessage ? (
+                    <div className={styles.userMessageGroup}>
+                      <p className={`${styles.timeText} typo-caption4`}>
+                        {formatTimeText(chatItem.createdAt)}
+                      </p>
+                      <div className={styles.userMessageContent}>
+                        {!userImageUrl && (
+                          <p className={`${styles.userBubble} typo-body2`}>{chatItem.input_text}</p>
+                        )}
+                        {userImageUrl && (
+                          <button
+                            type="button"
+                            className={styles.userImageButton}
+                            aria-label={userImageAction.ariaLabel}
+                            onClick={userImageAction.onClick}
+                          >
+                            <UserImageBubble
+                              src={userImageUrl}
+                              alt=""
+                              isDecorative
+                              onLoad={handleTimelineImageLoad}
+                            />
+                          </button>
+                        )}
+                      </div>
                     </div>
-                  </div>
+                  ) : null}
 
                   <div className={styles.assistantMessageRow}>
                     <div className={styles.assistantMessageContent}>
+                      {nutritionLabelFeedback &&
+                      !isNutritionRegisteredChat &&
+                      visibleResultCount >= 1 ? (
+                        <MemuNotFoundCard
+                          animate={isResponseAnimating}
+                          chatItem={nutritionLabelFeedback}
+                        />
+                      ) : null}
+
                       {assistantBubbleGroups.map((bubbleGroup) => (
                         <AssistantMessageBubbles
                           key={bubbleGroup.key}
@@ -1702,6 +1714,34 @@ export default function ChatPage() {
                             isMealRecorded={isMealRecorded}
                           />
                         )}
+
+                      {nutritionLabelFeedback &&
+                      isNutritionRegisteredChat &&
+                      visibleResultCount >= 1 ? (
+                        <NutritionSection
+                          animate={isResponseAnimating}
+                          chatItem={nutritionLabelFeedback}
+                          isMealRecorded={isNutritionMealRecorded}
+                          meal={nutritionCardMenu}
+                          menuId={nutritionMenuId}
+                          onMealRecordClick={(meal) =>
+                            handleMenuRecordClick(
+                              chatItem,
+                              recordDateKey,
+                              recordedDayMeals,
+                              currentMealRecord,
+                              [meal],
+                            )
+                          }
+                          onMealRecordCancelClick={(meal) =>
+                            handleChatMealRecordCancelRequest(
+                              chatItem,
+                              isNutritionMealRecorded ? currentMealRecord : null,
+                              [meal],
+                            )
+                          }
+                        />
+                      ) : null}
                     </div>
                   </div>
                 </section>
@@ -1723,78 +1763,23 @@ export default function ChatPage() {
 
         {isFloatingButtonVisible && (
           <div className={styles.floatingCameraButtonWrapper}>
-            <div className={styles.floatingCameraActionContainer}>
-              {isCameraActionMenuOpen && !isScrollToBottomButtonVisible ? (
-                <div className={styles.floatingCameraActionList}>
-                  <button
-                    type="button"
-                    className={styles.floatingCameraActionItem}
-                    onClick={handleNavigateMenuBoardCamera}
-                  >
-                    <span className={`${styles.floatingCameraActionLabel} typo-label3`}>
-                      메뉴판 찍기
-                    </span>
-                    <span className={styles.floatingCameraActionIcon}>
-                      <img
-                        src="/icons/menu.svg"
-                        alt=""
-                        aria-hidden="true"
-                        className={styles.floatingCameraActionIconImage}
-                      />
-                    </span>
-                  </button>
-
-                  <button
-                    type="button"
-                    className={styles.floatingCameraActionItem}
-                    onClick={handleNavigateFoodCamera}
-                  >
-                    <span className={`${styles.floatingCameraActionLabel} typo-label3`}>
-                      음식 찍기
-                    </span>
-                    <span className={styles.floatingCameraActionIcon}>
-                      <img
-                        src="/icons/food.svg"
-                        alt=""
-                        aria-hidden="true"
-                        className={styles.floatingCameraActionIconImage}
-                      />
-                    </span>
-                  </button>
-                </div>
-              ) : null}
-
-              {!isScrollToBottomButtonVisible &&
-                !isCameraActionMenuOpen &&
-                !isCameraHintDismissed && (
-                  <div className={`${styles.fabBubble} typo-caption4`}>메뉴 찍기</div>
-                )}
-              <button
-                type="button"
-                className={`${styles.cameraButton} ${isScrollToBottomButtonVisible ? styles.scrollButton : ""}`}
-                onClick={
-                  isScrollToBottomButtonVisible
-                    ? handleScrollToBottom
-                    : handleToggleCameraActionMenu
-                }
-                aria-label={
-                  isScrollToBottomButtonVisible
-                    ? "맨 아래로 이동"
-                    : isCameraActionMenuOpen
-                      ? "촬영 메뉴 닫기"
-                      : "촬영 메뉴 열기"
-                }
-                aria-expanded={isScrollToBottomButtonVisible ? undefined : isCameraActionMenuOpen}
-              >
-                {isScrollToBottomButtonVisible ? (
-                  <SystemIcon name="chevron-down-normal" size={24} />
-                ) : isCameraActionMenuOpen ? (
-                  <SystemIcon name="close" size={24} />
-                ) : (
-                  <SystemIcon name="camera" size={24} />
-                )}
-              </button>
-            </div>
+            {!isScrollToBottomButtonVisible && !isCameraHintDismissed && (
+              <div className={`${styles.fabBubble} typo-caption4`}>메뉴 찍기</div>
+            )}
+            <button
+              type="button"
+              className={`${styles.cameraButton} ${isScrollToBottomButtonVisible ? styles.scrollButton : ""}`}
+              onClick={
+                isScrollToBottomButtonVisible ? handleScrollToBottom : handleNavigateChatCamera
+              }
+              aria-label={isScrollToBottomButtonVisible ? "맨 아래로 이동" : "촬영하기"}
+            >
+              {isScrollToBottomButtonVisible ? (
+                <SystemIcon name="chevron-down-normal" size={24} />
+              ) : (
+                <SystemIcon name="camera" size={32} />
+              )}
+            </button>
           </div>
         )}
         {/* <div>
@@ -1862,6 +1847,13 @@ export default function ChatPage() {
         closeOnConfirm={false}
         onConfirm={handleMealRecordCancelConfirm}
       />
+      <ChatCameraUpdateRequiredModal
+        open={isChatCameraUpdateModalOpen}
+        updateUrl={chatCameraUpdateUrl}
+        onOpenChange={(open) => {
+          setIsChatCameraUpdateModalOpen(open);
+        }}
+      />
       {previewImageUrl ? (
         <UserImagePreviewOverlay src={previewImageUrl} onClose={() => setPreviewImageUrl(null)} />
       ) : null}
@@ -1888,15 +1880,135 @@ function getRecentDateKeys(baseDateKey: string, dayCount: number) {
 function getAssistantBubbleGroups(
   responsePayload: ChatRecommendResponseDto,
 ): AssistantBubbleGroup[] {
-  const bubbleGroups: AssistantBubbleGroup[] = [
-    { key: "intro", message: responsePayload.intro_message },
-  ];
+  const bubbleGroups: AssistantBubbleGroup[] = [];
 
-  if (responsePayload.chat_category === "general" && responsePayload.general_answer) {
+  if (isNonEmptyMessage(responsePayload.intro_message)) {
+    bubbleGroups.push({ key: "intro", message: responsePayload.intro_message });
+  }
+
+  if (
+    responsePayload.chat_category === "general" &&
+    isNonEmptyMessage(responsePayload.general_answer)
+  ) {
     bubbleGroups.push({ key: "general", message: responsePayload.general_answer });
   }
 
   return bubbleGroups;
+}
+
+function isNonEmptyMessage(message: unknown): message is string {
+  return typeof message === "string" && message.trim().length > 0;
+}
+
+function getNutritionLabelFeedback(
+  chatItem: ChatHistoryItemResponseDto,
+): ChatNutritionLabelFeedbackItem | null {
+  if (isNutritionLabelFeedbackPayload(chatItem.response_payload)) {
+    return chatItem as ChatNutritionLabelFeedbackItem;
+  }
+
+  return null;
+}
+
+function isNutritionLabelFeedbackPayload(
+  responsePayload: ChatRecommendResponseDto,
+): responsePayload is
+  | ChatNutritionLabelFeedbackResponseDto
+  | ChatNutritionLabelMenuRegisteredResponseDto {
+  return (
+    responsePayload.chat_category === "feedback" &&
+    "recognized_nutrition" in responsePayload &&
+    Boolean(responsePayload.recognized_nutrition)
+  );
+}
+
+function getNutritionRegisteredMenu(
+  responsePayload: ChatRecommendResponseDto | undefined,
+): ChatNutritionLabelRegisteredMenuDto | null {
+  if (!responsePayload || !isNutritionLabelFeedbackPayload(responsePayload)) {
+    return null;
+  }
+
+  return responsePayload.registered_menu ?? null;
+}
+
+function getNutritionMenuId(responsePayload: ChatRecommendResponseDto | undefined) {
+  const registeredMenuId = getNutritionRegisteredMenu(responsePayload)?.menu_id;
+
+  if (typeof registeredMenuId === "number") {
+    return registeredMenuId;
+  }
+
+  if (!responsePayload || !isNutritionLabelFeedbackPayload(responsePayload)) {
+    return null;
+  }
+
+  return typeof responsePayload.menu_id === "number" ? responsePayload.menu_id : null;
+}
+
+function getNutritionCardMenu(
+  responsePayload: ChatRecommendResponseDto | undefined,
+): ChatMealRecordMenu | null {
+  if (!responsePayload || !isNutritionLabelFeedbackPayload(responsePayload)) {
+    return null;
+  }
+
+  const registeredMenu = getNutritionRegisteredMenu(responsePayload);
+
+  if (registeredMenu) {
+    return toChatMealRecordMenuFromRegisteredMenu(registeredMenu);
+  }
+
+  const menuId = getNutritionMenuId(responsePayload);
+
+  if (
+    menuId === null ||
+    !("menu_name" in responsePayload) ||
+    typeof responsePayload.menu_name !== "string"
+  ) {
+    return null;
+  }
+
+  return toChatMealRecordMenuFromNutrition({
+    brand: "brand" in responsePayload ? responsePayload.brand : undefined,
+    menuId,
+    menuName: responsePayload.menu_name,
+    nutrition: responsePayload.recognized_nutrition,
+  });
+}
+
+function isNutritionLabelMenuNotFoundPayload(responsePayload: ChatRecommendResponseDto) {
+  return (
+    isNutritionLabelFeedbackPayload(responsePayload) &&
+    getNutritionMenuId(responsePayload) === null
+  );
+}
+
+function isNutritionLabelMenuRegisteredActionPayload(
+  responsePayload: ChatRecommendResponseDto,
+): responsePayload is ChatNutritionLabelMenuRegisteredResponseDto {
+  return (
+    isNutritionLabelFeedbackPayload(responsePayload) &&
+    "action" in responsePayload &&
+    responsePayload.action === "nutrition_label_menu_registered"
+  );
+}
+
+function getChatNutritionRegisterPath(chatId: number) {
+  const params = new URLSearchParams({
+    chatId: String(chatId),
+  });
+
+  return `${PATH.CHAT_NUTRITION_REGISTER}?${params.toString()}`;
+}
+
+function getChatNutritionDetailPath(chatId: number, menuId: number) {
+  const params = new URLSearchParams({
+    chatId: String(chatId),
+    menuId: String(menuId),
+  });
+
+  return `${PATH.CHAT_NUTRITION_DETAIL}?${params.toString()}`;
 }
 
 function getAssistantVisibleBubbleGroups(
@@ -1937,6 +2049,10 @@ function getAssistantMessageBubbleTexts(message: string) {
 }
 
 function getAssistantResultRevealCount(responsePayload: ChatRecommendResponseDto) {
+  if (isNutritionLabelFeedbackPayload(responsePayload)) {
+    return 1;
+  }
+
   if (responsePayload.chat_category === "recommendation" && responsePayload.recommendations) {
     if (responsePayload.recommendations.length === 0) {
       return 0;
@@ -1957,7 +2073,9 @@ function getMealRecordCancelDescription(target: MealRecordCancelTarget | null) {
     return "이 식사 기록을 취소할까요?";
   }
 
-  return getChatMealRecordMenus(target.chatItem).length > 1
+  const mealRecordMenus = target.mealRecordMenus ?? getChatMealRecordMenus(target.chatItem);
+
+  return mealRecordMenus.length > 1
     ? "이 메뉴들을 식사 기록에서 제거할까요?"
     : "이 메뉴를 식사 기록에서 제거할까요?";
 }
@@ -2709,6 +2827,167 @@ function FeedbackSection({
   );
 }
 
+function MemuNotFoundCard({
+  animate = false,
+  chatItem,
+}: {
+  animate?: boolean;
+  chatItem: ChatNutritionLabelFeedbackItem;
+}) {
+  const navigate = useNavigate();
+
+  const handleNutritionRegisterClick = () => {
+    navigate(getChatNutritionRegisterPath(chatItem.id), {
+      state: {
+        ...chatItem.response_payload.recognized_nutrition,
+        name: "",
+        brand: "",
+        entrySource: "chatNutritionLabel" as const,
+        chatId: chatItem.id,
+      },
+    });
+  };
+
+  return (
+    <section
+      className={`${styles.menuNotFoundCard} ${animate ? styles.assistantResultCardAnimated : ""}`}
+    >
+      <img src="/icons/loading-3.svg" width={35} />
+      <p className="typo-body2">
+        영양성분을 인식했어요!
+        <br />
+        어떤 브랜드의 메뉴인지 확인해주세요.
+      </p>
+      <Button size="small" onClick={handleNutritionRegisterClick} fullWidth>
+        메뉴 입력하기
+      </Button>
+    </section>
+  );
+}
+
+function NutritionSection({
+  animate = false,
+  chatItem,
+  isMealRecorded,
+  meal,
+  menuId,
+  onMealRecordCancelClick,
+  onMealRecordClick,
+}: {
+  animate?: boolean;
+  chatItem: ChatNutritionLabelFeedbackItem;
+  isMealRecorded: boolean;
+  meal: ChatMealRecordMenu | null;
+  menuId: number;
+  onMealRecordCancelClick: (meal: ChatMealRecordMenu) => void;
+  onMealRecordClick: (meal: ChatMealRecordMenu) => void;
+}) {
+  const navigate = useNavigate();
+
+  const handleNutritionDetailClick = () => {
+    navigate(getChatNutritionDetailPath(chatItem.id, menuId));
+  };
+
+  const handleNutritionCardKeyDown = (event: KeyboardEvent<HTMLElement>) => {
+    if (event.target !== event.currentTarget) {
+      return;
+    }
+
+    if (event.key !== "Enter" && event.key !== " ") {
+      return;
+    }
+
+    event.preventDefault();
+    handleNutritionDetailClick();
+  };
+
+  return (
+    <section className={styles.feedbackSection}>
+      <article
+        className={`${styles.feedbackCard} ${isMealRecorded ? styles.cardSelected : ""} ${
+          animate ? styles.assistantResultCardAnimated : ""
+        }`}
+        role="button"
+        tabIndex={0}
+        aria-label="등록한 메뉴 상세 보기"
+        onClick={handleNutritionDetailClick}
+        onKeyDown={handleNutritionCardKeyDown}
+      >
+        {meal ? (
+          <NutritionCardContent
+            meal={meal}
+            isMealRecorded={isMealRecorded}
+            onMealRecordCancelClick={onMealRecordCancelClick}
+            onMealRecordClick={onMealRecordClick}
+          />
+        ) : (
+          <NutritionCardError />
+        )}
+      </article>
+    </section>
+  );
+}
+
+function NutritionCardError() {
+  return (
+    <p className={`${styles.nutritionErrorText} typo-body2`}>메뉴 정보를 불러오지 못했어요.</p>
+  );
+}
+
+function NutritionCardContent({
+  meal,
+  isMealRecorded,
+  onMealRecordCancelClick,
+  onMealRecordClick,
+}: {
+  meal: ChatMealRecordMenu;
+  isMealRecorded: boolean;
+  onMealRecordCancelClick: (meal: ChatMealRecordMenu) => void;
+  onMealRecordClick: (meal: ChatMealRecordMenu) => void;
+}) {
+  const handleMealRecordClick = (event: MouseEvent<HTMLElement>) => {
+    event.stopPropagation();
+
+    if (isMealRecorded) {
+      onMealRecordCancelClick(meal);
+      return;
+    }
+
+    onMealRecordClick(meal);
+  };
+
+  return (
+    <div className={styles.recommendContents}>
+      <p className={`${styles.recommendMenuName} typo-title2`}>{meal.menu_name}</p>
+      <div className={styles.recommendMetaRow}>
+        <p className={`${styles.menuInfoRow} typo-label4`}>
+          {meal.brand && <span className={styles.recommendBrand}>{meal.brand}</span>}
+          <span className={`${styles.recommendAmount} textNoWrap`}>{formatMenuServing(meal)}</span>
+        </p>
+        <span className={`${styles.recommendCalories} textNoWrap typo-title3`}>
+          {formatNumberWithMaxOneDecimal(meal.calories)}kcal
+        </span>
+      </div>
+
+      <div className={styles.recommendAction}>
+        <Button
+          size="small"
+          fullWidth
+          aria-pressed={isMealRecorded}
+          onClick={handleMealRecordClick}
+        >
+          {isMealRecorded ? "기록 완료" : "오늘의 식사에 추가"}
+          {isMealRecorded ? (
+            <SystemIcon name="check" size={16} className={styles.recommendActionIcon} />
+          ) : (
+            <SystemIcon name="plus" size={16} className={styles.recommendActionIcon} />
+          )}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 function isNestedInteractiveTarget(target: EventTarget | null, boundary: HTMLElement) {
   if (!(target instanceof Element)) {
     return false;
@@ -2999,6 +3278,43 @@ function toChatMealRecordMenu(menu: MenuWithQuantity): ChatMealRecordMenu {
   };
 }
 
+function toChatMealRecordMenuFromRegisteredMenu(
+  registeredMenu: ChatNutritionLabelRegisteredMenuDto,
+): ChatMealRecordMenu {
+  return toChatMealRecordMenuFromNutrition({
+    brand: registeredMenu.brand,
+    menuId: registeredMenu.menu_id,
+    menuName: registeredMenu.menu_name,
+    nutrition: registeredMenu.registered_nutrition,
+  });
+}
+
+function toChatMealRecordMenuFromNutrition({
+  brand,
+  menuId,
+  menuName,
+  nutrition,
+}: {
+  brand?: string | null;
+  menuId: number;
+  menuName: string;
+  nutrition: ChatNutritionLabelRegisteredMenuDto["registered_nutrition"];
+}): ChatMealRecordMenu {
+  return {
+    menu_id: menuId,
+    menu_name: menuName,
+    brand: brand ?? undefined,
+    unit: toFiniteNumber(nutrition.unit),
+    weight: toFiniteNumber(nutrition.weight),
+    unit_quantity: "기준량",
+    calories: toFiniteNumber(nutrition.calories),
+  };
+}
+
+function toFiniteNumber(value: unknown, fallback = 0) {
+  return typeof value === "number" && Number.isFinite(value) ? value : fallback;
+}
+
 function toRecordedMenuSummary(menu: MenuWithQuantity): RecordedMenuSummary {
   return {
     menu_id: menu.id,
@@ -3120,7 +3436,13 @@ function parseDateValue(value: Date | string | null | undefined) {
   return date ? date.getTime() : null;
 }
 
-function formatMenuServing(menu: FeedbackItemDto["menus"][number]) {
+type MenuServingInfo = {
+  unit: number;
+  unit_quantity?: string | null;
+  weight: number;
+};
+
+function formatMenuServing(menu: MenuServingInfo) {
   return `${formatBaseServingUnit(menu.unit_quantity)} (${formatNumberWithMaxOneDecimal(menu.weight)}${menu.unit === 0 ? "g" : "ml"})`;
 }
 
