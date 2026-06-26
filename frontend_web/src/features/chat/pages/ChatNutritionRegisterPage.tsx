@@ -10,9 +10,10 @@ import {
 import { getMealTypeFromCurrentTime } from "@/features/chat/utils/chatMeal";
 import { getSafeChatId } from "@/features/chat/utils/recommendNavigation";
 import {
-  NutrientAddFormPage,
-  type NutrientAddSubmitPayload,
-} from "@/features/nutrient-entry/NutrientAddPage";
+  NutrientRegisterFormPage,
+  type NutrientRegisterFormState,
+  type NutrientRegisterSubmitPayload,
+} from "@/features/nutrient-entry/components/NutrientRegisterFormPage";
 import { PATH } from "@/router/path";
 import {
   trackNutritionLabelRegisterFail,
@@ -30,7 +31,7 @@ import { getTodayFormatDateKey } from "@/shared/utils/dateFormat";
 
 type ChatNutritionRegisterState = Partial<NutritionLabelMenuRegisterRequestDto> & {
   chatId?: number;
-};
+} & NutrientRegisterFormState;
 
 const MAX_INPUT_LENGTH = 300;
 
@@ -57,15 +58,12 @@ export default function ChatNutritionRegisterPage() {
   const { mutateAsync: registerMenu, isPending: isSubmitting } =
     useRegisterMenuByNutritionLabelImageMutation();
 
-  const handleSubmit = async ({ brand, name }: NutrientAddSubmitPayload) => {
+  const handleSubmit = async (form: NutrientRegisterSubmitPayload) => {
     if (isSubmitting) {
       return;
     }
 
-    const body = buildNutritionLabelRegisterBody(locationState, {
-      brand: brand.trim().slice(0, MAX_INPUT_LENGTH),
-      name: name.trim().slice(0, MAX_INPUT_LENGTH),
-    });
+    const body = buildNutritionLabelRegisterBody(form);
 
     if (!body) {
       trackNutritionLabelRegisterFail("영양성분 정보를 불러오지 못했어요. 다시 시도해주세요.");
@@ -104,7 +102,7 @@ export default function ChatNutritionRegisterPage() {
 
   return (
     <>
-      <NutrientAddFormPage
+      <NutrientRegisterFormPage
         appendMealQueryToBrandSearchReturn={false}
         backFallbackPath={PATH.CHAT}
         brandSearchReturnPath={getChatNutritionRegisterPath(chatId)}
@@ -115,8 +113,7 @@ export default function ChatNutritionRegisterPage() {
         }}
         isSubmitPending={isSubmitting}
         mealType={mealType}
-        nextLabel="확인"
-        onNext={handleSubmit}
+        onSubmit={handleSubmit}
       />
 
       {isSubmitting ? <LoadingOverlay label="메뉴를 등록하는 중입니다." /> : null}
@@ -125,8 +122,7 @@ export default function ChatNutritionRegisterPage() {
 }
 
 function buildNutritionLabelRegisterBody(
-  nutrition: ChatNutritionRegisterState,
-  identity: Pick<NutritionLabelMenuRegisterRequestDto, "brand" | "name">,
+  nutrition: NutrientRegisterSubmitPayload,
 ): NutritionLabelMenuRegisterRequestDto | null {
   if (
     !Number.isFinite(nutrition.unit) ||
@@ -137,8 +133,8 @@ function buildNutritionLabelRegisterBody(
   }
 
   return {
-    name: identity.name,
-    brand: identity.brand,
+    name: nutrition.name.trim().slice(0, MAX_INPUT_LENGTH),
+    brand: nutrition.brand.trim().slice(0, MAX_INPUT_LENGTH),
     unit: nutrition.unit as number,
     weight: nutrition.weight as number,
     calories: nutrition.calories as number,

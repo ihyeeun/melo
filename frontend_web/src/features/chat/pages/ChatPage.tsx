@@ -97,7 +97,7 @@ import {
   parseDateKey,
 } from "@/shared/utils/dateFormat";
 import { formatNumberWithMaxOneDecimal } from "@/shared/utils/numberFormat";
-import { formatBaseServingUnit } from "@/shared/utils/servingUnit";
+import { formatBaseServingUnit, SERVING_UNIT_PERSON } from "@/shared/utils/servingUnit";
 
 // const QUICK_CHIP_LIST = ["포만감 있는 점심 메뉴 추천해줘", "칼로리 부담 적은 배달 음식 추천해줘"];
 const FEEDBACK_GAUGE_VIEWBOX_WIDTH = 220;
@@ -481,6 +481,10 @@ export default function ChatPage() {
     return rawList.filter(isChatHistoryItemResponse).sort(compareChatHistoryItems);
   }, [data]);
   const displayChatList = chatList;
+  const hasTodayDisplayChat = useMemo(
+    () => displayChatList.some((chatItem) => getChatDateKey(chatItem) === todayDateKey),
+    [displayChatList, todayDateKey],
+  );
   const mealRecordDateKeys = useMemo(
     () => getRecentDateKeys(todayDateKey, MEAL_RECORD_LOOKBACK_DAYS),
     [todayDateKey],
@@ -546,6 +550,11 @@ export default function ChatPage() {
   const isScrollToBottomButtonVisible = hasTimelineContent && isScrolledAwayFromBottom;
   const isFloatingButtonVisible =
     !isSoftKeyboardVisible && (isQuickActionVisible || isScrollToBottomButtonVisible);
+  const shouldShowCameraHint =
+    !isHistoryPending &&
+    !hasTodayDisplayChat &&
+    !isScrollToBottomButtonVisible &&
+    !isCameraHintDismissed;
   const currentMealTime = getCurrentMealTime();
 
   const scrollToBottom = useCallback((behavior: ScrollBehavior = "instant") => {
@@ -1763,7 +1772,7 @@ export default function ChatPage() {
 
         {isFloatingButtonVisible && (
           <div className={styles.floatingCameraButtonWrapper}>
-            {!isScrollToBottomButtonVisible && !isCameraHintDismissed && (
+            {shouldShowCameraHint && (
               <div className={`${styles.fabBubble} typo-caption4`}>메뉴 찍기</div>
             )}
             <button
@@ -3305,7 +3314,7 @@ function toChatMealRecordMenuFromNutrition({
     brand: brand ?? undefined,
     unit: toFiniteNumber(nutrition.unit),
     weight: toFiniteNumber(nutrition.weight),
-    unit_quantity: "기준량",
+    unit_quantity: SERVING_UNIT_PERSON,
     calories: toFiniteNumber(nutrition.calories),
   };
 }

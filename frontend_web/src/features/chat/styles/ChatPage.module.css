@@ -47,11 +47,17 @@
   display: inline-flex;
   height: 64px;
   justify-content: center;
+  transition:
+    height 80ms ease,
+    opacity 80ms ease,
+    width 80ms ease;
   width: 64px;
 }
 
 .scrollButton {
   opacity: 85%;
+  width: 40px;
+  height: 40px;
 }
 
 .emptySection {
@@ -362,6 +368,11 @@
   flex-direction: column;
   gap: 8px;
   width: 100%;
+}
+
+.recommendCard:active,
+.feedbackCard:active {
+  transform: scale(0.98);
 }
 
 .recommendCard,

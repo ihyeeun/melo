@@ -47,11 +47,20 @@ type NutrientRegisterFormPageProps = {
   brandSearchReturnPath?: string;
   dateKey: string;
   initialState: NutrientRegisterFormState;
+  isSubmitPending?: boolean;
   keyword?: string;
   mealType: MealType;
-  onRegisteredMenu: (savedMenuId: number) => void;
+  onRegisteredMenu?: (savedMenuId: number) => void;
+  onSubmit?: (payload: NutrientRegisterSubmitPayload) => void | Promise<void>;
+  submitLabel?: string;
   title?: string;
 };
+
+export type NutrientRegisterSubmitPayload = Pick<
+  RegisterMenuRequestDto,
+  "name" | "brand" | "unit" | "weight" | "calories"
+> &
+  Partial<MenuNutrientFields>;
 
 export function NutrientRegisterFormPage({
   appendMealQueryToBrandSearchReturn = true,
@@ -59,9 +68,12 @@ export function NutrientRegisterFormPage({
   brandSearchReturnPath = PATH.NUTRIENT_ADD_REGISTER,
   dateKey,
   initialState,
+  isSubmitPending = false,
   keyword = "",
   mealType,
   onRegisteredMenu,
+  onSubmit,
+  submitLabel = "등록하기",
   title = "영양성분 등록",
 }: NutrientRegisterFormPageProps) {
   const navigation = useNavigate();
@@ -80,6 +92,7 @@ export function NutrientRegisterFormPage({
 
   const brandName = (selectedBrandName ?? formState.brand ?? "").trim();
   const nutrientForm = buildNutrientFormFields(formState);
+  const isSubmitInProgress = isSubmitting || isSubmitPending;
 
   useEffect(() => {
     return () => {
@@ -120,7 +133,7 @@ export function NutrientRegisterFormPage({
   };
 
   const isSubmitDisabled =
-    isSubmitting ||
+    isSubmitInProgress ||
     (formState.name ?? "").trim().length === 0 ||
     formState.weight === undefined ||
     formState.calories === undefined;
@@ -146,19 +159,29 @@ export function NutrientRegisterFormPage({
     const calories = formState.calories ?? 0;
     const unit: MenuUnit = formState.unit === 1 ? 1 : 0;
 
-    const payload: RegisterManualMenuPayload = {
+    const submitPayload: NutrientRegisterSubmitPayload = {
       name,
       brand,
       unit,
       weight,
       calories,
+      ...buildNutrientFormFields(formState),
+    };
+
+    if (onSubmit) {
+      void onSubmit(submitPayload);
+      return;
+    }
+
+    const payload: RegisterManualMenuPayload = {
+      ...submitPayload,
       ...buildNullableNutrientFields(formState),
     };
 
     registerManualMenu(payload, {
       onSuccess: (savedMenuId) => {
         toast.success("메뉴가 등록되었어요");
-        onRegisteredMenu(savedMenuId);
+        onRegisteredMenu?.(savedMenuId);
       },
       onError: () => {
         toast.warning("등록에 실패했어요");
@@ -264,7 +287,7 @@ export function NutrientRegisterFormPage({
           interaction={isSubmitDisabled ? "disable" : "normal"}
           disabled={isSubmitDisabled}
         >
-          등록하기
+          {submitLabel}
         </Button>
       </footer>
 
