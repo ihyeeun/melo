@@ -134,7 +134,7 @@ const NutrientCameraPage = createLazyActivity(
 );
 const FoodCameraPage = createGuardedLazyActivity(
   FEATURE_GUARD.FOOD_CAMERA,
-  () => import("@/features/camera/pages/FoodImageMealRecordCreatePage"),
+  () => import("@/features/camera/pages/MealRecordCreatePage"),
 );
 const ProfilePage = createLazyActivity(() => import("@/features/profile/ProfilePage"));
 const GoalEditPage = createLazyActivity(() => import("@/features/profile/GoalEditPage"));

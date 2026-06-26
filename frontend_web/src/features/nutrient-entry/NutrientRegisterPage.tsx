@@ -33,6 +33,9 @@ export default function NutrientRegisterPage() {
       onRegisteredMenu={(savedMenuId) => {
         navigation(getMealDetailPath(dateKey, mealType, savedMenuId, searchKeyword), {
           replace: true,
+          state: {
+            afterAddBackCount: 2,
+          },
         });
       }}
     />
