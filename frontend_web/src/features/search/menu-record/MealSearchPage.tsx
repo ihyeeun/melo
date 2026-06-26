@@ -429,11 +429,19 @@ export default function MealSearchPage() {
             </>
           ) : (
             <div className={styles.placeholder}>
-              <p className={`typo-body2 ${styles.placeholderText}`}>
-                메뉴를 검색하거나
-                <br />
-                음식 사진을 찍어 기록해보세요
-              </p>
+              {showFoodCameraButton ? (
+                <p className={`typo-body2 ${styles.placeholderText}`}>
+                  메뉴를 검색하거나
+                  <br />
+                  음식 사진을 찍어 기록해보세요
+                </p>
+              ) : (
+                <p className={`typo-body2 ${styles.placeholderText}`}>
+                  메뉴를 검색하거나
+                  <br />
+                  영양 성분을 직접 등록 해보세요
+                </p>
+              )}
 
               <Button
                 variant="text"
