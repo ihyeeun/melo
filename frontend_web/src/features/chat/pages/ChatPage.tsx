@@ -1979,8 +1979,7 @@ function getNutritionCardMenu(
 
 function isNutritionLabelMenuNotFoundPayload(responsePayload: ChatRecommendResponseDto) {
   return (
-    isNutritionLabelFeedbackPayload(responsePayload) &&
-    getNutritionMenuId(responsePayload) === null
+    isNutritionLabelFeedbackPayload(responsePayload) && getNutritionMenuId(responsePayload) === null
   );
 }
 
@@ -2856,10 +2855,10 @@ function MemuNotFoundCard({
       <p className="typo-body2">
         영양성분을 인식했어요!
         <br />
-        어떤 브랜드의 메뉴인지 확인해주세요.
+        어떤 브랜드의 메뉴인가요?
       </p>
       <Button size="small" onClick={handleNutritionRegisterClick} fullWidth>
-        메뉴 입력하기
+        메뉴명 입력하기
       </Button>
     </section>
   );
