@@ -2984,7 +2984,7 @@ function NutritionCardContent({
           aria-pressed={isMealRecorded}
           onClick={handleMealRecordClick}
         >
-          {isMealRecorded ? "기록 완료" : "오늘의 식사에 추가"}
+          식사 기록
           {isMealRecorded ? (
             <SystemIcon name="check" size={16} className={styles.recommendActionIcon} />
           ) : (
