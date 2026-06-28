@@ -142,6 +142,10 @@ export interface WeightStepsResponseDto {
   steps: number | null;
 }
 
+export interface MenuListResponseDto {
+  menu_list: MenuSimpleResponseDto[];
+}
+
 /* ======
  * 채팅
  * ====== */
