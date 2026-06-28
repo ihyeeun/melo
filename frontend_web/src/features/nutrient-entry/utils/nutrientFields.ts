@@ -41,35 +41,3 @@ export function buildNutrientResetPatch() {
     MENU_NUTRIENT_FIELD_KEYS.map((key) => [key, undefined]),
   ) as Partial<Record<MenuNutrientFieldKey, undefined>>;
 }
-
-const NUTRIENT_CHILD_RULES: ReadonlyArray<{
-  parent: MenuNutrientFieldKey;
-  children: ReadonlyArray<MenuNutrientFieldKey>;
-}> = [
-  { parent: "carbs", children: ["sugars", "sugar_alchol", "dietary_fiber"] },
-  { parent: "fat", children: ["sat_fat", "trans_fat", "un_sat_fat"] },
-];
-const NUTRIENT_OVERFLOW_EPSILON = 1e-9;
-
-function toFiniteNumberOrZero(value: unknown) {
-  if (typeof value !== "number" || !Number.isFinite(value)) {
-    return 0;
-  }
-
-  return value;
-}
-
-export function hasChildNutrientOverflow(
-  source: Partial<Record<MenuNutrientFieldKey, unknown>>,
-) {
-  return NUTRIENT_CHILD_RULES.some(({ parent, children }) => {
-    const parentValue = toFiniteNumberOrUndefined(source[parent]);
-    if (parentValue === undefined) {
-      return false;
-    }
-
-    const childSum = children.reduce((sum, key) => sum + toFiniteNumberOrZero(source[key]), 0);
-
-    return childSum > parentValue + NUTRIENT_OVERFLOW_EPSILON;
-  });
-}

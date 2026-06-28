@@ -7,7 +7,6 @@ import styles from "@/features/nutrient-entry/styles/NutrientRegisterPage.module
 import {
   buildNullableNutrientFields,
   buildNutrientFormFields,
-  hasChildNutrientOverflow,
 } from "@/features/nutrient-entry/utils/nutrientFields";
 import {
   createBrandSearchSelectionKey,
@@ -145,11 +144,6 @@ export function NutrientRegisterFormPage({
 
     if (formState.weight === 0) {
       toast.warning("중량을 다시 확인해주세요");
-      return;
-    }
-
-    if (hasChildNutrientOverflow(formState)) {
-      toast.warning("하위 항목 합이 상위 항목을 초과했어요");
       return;
     }
 
