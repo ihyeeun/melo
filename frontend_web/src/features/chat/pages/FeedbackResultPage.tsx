@@ -337,11 +337,11 @@ function FeedbackResultContent({
           ) : null}
 
           <ul className={styles.resultList}>
-            {menus.map((menu, index) => {
+            {menus.map((menu) => {
               const isSelected = selectedMenuIds.has(menu.menu_id);
 
               return (
-                <li key={`${menu.menu_id}-${menu.input_menu_name}-${index}`}>
+                <li key={menu.menu_id}>
                   <MealMenuCard
                     name={menu.menu_name}
                     calories={menu.calories}
@@ -717,8 +717,8 @@ function FoodImageFeedbackPreview({
           {isUnpositionedMenuListVisible ? (
             <div className={styles.unpositionedMenuScrollArea}>
               <ul id="unpositioned-menu-list" className={styles.unpositionedMenuList}>
-                {unpositionedMenus.map((menu, index) => (
-                  <li key={`unpositioned-${menu.menu_id}-${menu.input_menu_name}-${index}`}>
+                {unpositionedMenus.map((menu) => (
+                  <li key={menu.menu_id}>
                     <button
                       type="button"
                       className={styles.unpositionedMenuItem}
