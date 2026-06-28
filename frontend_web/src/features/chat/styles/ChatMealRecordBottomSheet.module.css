@@ -1,12 +1,22 @@
 .container {
   display: flex;
   flex-direction: column;
+  max-height: inherit;
+  min-height: 0;
+}
+
+.sheetBody:global(.seed-bottom-sheet__body) {
+  overflow: hidden;
 }
 
 .scrollArea {
   display: flex;
+  flex: 1 1 auto;
   flex-direction: column;
   gap: 32px;
+  max-height: inherit;
+  min-height: 0;
+  overflow-y: auto;
   padding: 20px;
 }
 
@@ -239,9 +249,7 @@
 
 .actionBar {
   flex-shrink: 0;
-  margin-top: auto;
-  bottom: 0;
-  position: sticky;
+  padding: 0 20px 20px;
 }
 
 .additionalAction {
