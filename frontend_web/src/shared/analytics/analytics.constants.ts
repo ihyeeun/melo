@@ -23,8 +23,8 @@ export const EVENT_NAME = {
   AI_COACH_RESPONSE_SUCCESS: "ai_coach_response_success",
   AI_COACH_RESPONSE_FAIL: "ai_coach_response_fail",
 
-  RECOMMEND_MENU_SAVE: "recommend_menu_save",
-  RECOMMEND_MENU_CANCEL: "recommend_menu_cancel",
+  RECOMMEND_MENU_SAVE: "chat_menu_save",
+  RECOMMEND_MENU_CANCEL: "chat_menu_cancel",
 
   USER_PROFILE_UPDATED: "user_profile_updated",
 
