@@ -63,9 +63,6 @@ export default function FoodCameraPage() {
   const handleCameraActions = useCallback(async () => {
     if (isUploading) return;
     setCaptureErrorFeedback(null);
-    track(EVENT_NAME.FOOD_SCAN_START, {
-      source: "meal_record_camera",
-    });
 
     let capturedImage: Awaited<ReturnType<typeof requestNativeCameraCapture>>;
     try {
@@ -95,6 +92,9 @@ export default function FoodCameraPage() {
     try {
       setCapturedPreviewSrc(getCapturedImagePreviewSrc(capturedImage));
       setIsUploading(true);
+      track(EVENT_NAME.FOOD_SCAN_START, {
+        source: "meal_record_camera",
+      });
       const imageData = await uploadImage(capturedImage);
 
       if (!imageData?.menu_ids?.length) {

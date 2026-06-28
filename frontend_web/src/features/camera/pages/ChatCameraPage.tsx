@@ -41,8 +41,8 @@ import {
 } from "@/shared/navigation/stackflowNavigation";
 
 const CHAT_CAMERA_SOURCE = {
-  FOOD: "chat_camera_food",
-  NUTRITION_LABEL: "chat_camera_nutrition_label",
+  FOOD: "chat_food_camera",
+  NUTRITION_LABEL: "chat_nutrition_camera",
   MENU_BOARD: "chat_camera_menu_board",
 } as const;
 

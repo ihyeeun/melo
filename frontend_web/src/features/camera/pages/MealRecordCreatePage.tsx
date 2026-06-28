@@ -30,6 +30,11 @@ import { PATH } from "@/router/path";
 import { getMealRecordPath } from "@/router/pathHelpers";
 import { track } from "@/shared/analytics/analytics";
 import { EVENT_NAME } from "@/shared/analytics/analytics.constants";
+import {
+  trackNutritionLabelScanFail,
+  trackNutritionLabelScanStart,
+  trackNutritionLabelScanSuccess,
+} from "@/shared/analytics/nutritionLabelEvents";
 import { requestNativeCameraCapture } from "@/shared/api/bridge/nativeBridge";
 import { type MealTime, MENU_INPUT_MODE } from "@/shared/api/types/api.dto";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
@@ -47,6 +52,8 @@ const MEAL_RECORD_CAMERA_LOADING_DESCRIPTION = {
   FOOD: "음식을 분석하고 있어요",
   NUTRITION_LABEL: "영양 성분을 확인하고 있어요",
 } as const;
+
+const MEAL_RECORD_NUTRITION_LABEL_SCAN_SOURCE = "diary_nutrition_camera";
 
 type MealRecordCameraMode = keyof typeof MEAL_RECORD_CAMERA_LOADING_DESCRIPTION;
 type CapturedImage = Awaited<ReturnType<typeof requestNativeCameraCapture>>;
@@ -191,33 +198,44 @@ export default function MealRecordCreatePage() {
 
   const handleNutritionLabelImage = useCallback(
     async (capturedImage: CapturedImage) => {
+      trackNutritionLabelScanStart({ source: MEAL_RECORD_NUTRITION_LABEL_SCAN_SOURCE });
+
+      let imageData: Awaited<ReturnType<typeof uploadNutritionLabelImage>>;
       try {
-        const imageData = await uploadNutritionLabelImage(capturedImage);
-        const rawDateKey = searchParams.get("date");
-        const rawMealType = searchParams.get("mealType");
-        const keyword = searchParams.get("keyword");
-        const registerPath = createNutritionLabelRegisterPath();
-        const popCount = isPreviousStackActivity("NutrientAdd") ? 2 : 1;
-
-        navigateBackAndPush({
-          count: popCount,
-          animate: false,
-          to: registerPath,
-          pushOptions: {
-            state: {
-              ...imageData,
-              dateKey: rawDateKey ?? undefined,
-              mealType: rawMealType ?? undefined,
-              keyword: keyword ?? undefined,
-            },
-          },
-        });
-
-        toast.success("영양성분표 분석이 완료되었어요.");
+        imageData = await uploadNutritionLabelImage(capturedImage);
       } catch (error) {
+        trackNutritionLabelScanFail(
+          getAnalyticsErrorMessage(error, "영양성분표 분석에 실패했어요."),
+          { source: MEAL_RECORD_NUTRITION_LABEL_SCAN_SOURCE },
+        );
         setCapturedPreviewSrc(null);
         setCaptureErrorFeedback(getRecognitionErrorFeedback("NUTRITION_LABEL", error));
+        return;
       }
+
+      trackNutritionLabelScanSuccess({ source: MEAL_RECORD_NUTRITION_LABEL_SCAN_SOURCE });
+
+      const rawDateKey = searchParams.get("date");
+      const rawMealType = searchParams.get("mealType");
+      const keyword = searchParams.get("keyword");
+      const registerPath = createNutritionLabelRegisterPath();
+      const popCount = isPreviousStackActivity("NutrientAdd") ? 2 : 1;
+
+      navigateBackAndPush({
+        count: popCount,
+        animate: false,
+        to: registerPath,
+        pushOptions: {
+          state: {
+            ...imageData,
+            dateKey: rawDateKey ?? undefined,
+            mealType: rawMealType ?? undefined,
+            keyword: keyword ?? undefined,
+          },
+        },
+      });
+
+      toast.success("영양성분표 분석이 완료되었어요.");
     },
     [createNutritionLabelRegisterPath, searchParams, uploadNutritionLabelImage],
   );
