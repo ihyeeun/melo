@@ -395,13 +395,23 @@ function FoodImageFeedbackPreview({
   isDetailDisabled: boolean;
   onMarkerClick: (menuId: number) => void;
 }) {
-  const imageFeedbackSectionRef = useRef<HTMLElement | null>(null);
+  const imageFeedbackSectionRef = useRef<HTMLDivElement | null>(null);
   const [imageFeedbackSize, setImageFeedbackSize] = useState<FoodMarkerLayout>({
     height: 0,
     width: 0,
   });
   const [openSourceMarkerId, setOpenSourceMarkerId] = useState<string | null>(null);
+  const [isUnpositionedMenuListOpen, setIsUnpositionedMenuListOpen] = useState(false);
   const menuById = useMemo(() => new Map(menus.map((menu) => [menu.menu_id, menu])), [menus]);
+  const recognizedMenuIds = useMemo(
+    () => new Set(recognizedFoods.map((food) => food.menu_id)),
+    [recognizedFoods],
+  );
+  const unpositionedMenus = useMemo(
+    () => menus.filter((menu) => !recognizedMenuIds.has(menu.menu_id)),
+    [menus, recognizedMenuIds],
+  );
+
   const markerLayout = useMemo(() => getFoodMarkerLayout(imageFeedbackSize), [imageFeedbackSize]);
   const foodMarkers = useMemo(
     () =>
@@ -441,6 +451,11 @@ function FoodImageFeedbackPreview({
     foodMarkers.some((marker) => marker.id === openSourceMarkerId)
       ? openSourceMarkerId
       : null;
+  const isUnpositionedMenuListVisible = isUnpositionedMenuListOpen && unpositionedMenus.length > 0;
+  const imageFeedbackSectionClassName =
+    unpositionedMenus.length > 0
+      ? `${styles.imageFeedbackSection} ${styles.imageFeedbackSectionWithUnpositionedMenu}`
+      : styles.imageFeedbackSection;
 
   useEffect(() => {
     const sectionElement = imageFeedbackSectionRef.current;
@@ -523,150 +538,227 @@ function FoodImageFeedbackPreview({
     };
   }, [openSourceMarkerId]);
 
+  useEffect(() => {
+    if (!isUnpositionedMenuListVisible) {
+      return;
+    }
+
+    const handlePointerDown = (event: PointerEvent) => {
+      const target = event.target;
+
+      if (!(target instanceof Node)) {
+        return;
+      }
+
+      const targetElement = target instanceof Element ? target : target.parentElement;
+
+      if (targetElement?.closest("[data-unpositioned-menu-list]")) {
+        return;
+      }
+
+      setIsUnpositionedMenuListOpen(false);
+    };
+
+    document.addEventListener("pointerdown", handlePointerDown);
+
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+    };
+  }, [isUnpositionedMenuListVisible]);
+
   return (
-    <section
-      ref={imageFeedbackSectionRef}
-      className={styles.imageFeedbackSection}
-      aria-label="음식 사진 분석 결과"
-    >
-      <img src={imageUrl} alt="" aria-hidden="true" className={styles.foodImage} />
-      {recognizedFoods.length > 0 ? (
-        <div className={styles.foodImageDimmer} aria-hidden="true" />
-      ) : null}
+    <section className={imageFeedbackSectionClassName} aria-label="음식 사진 분석 결과">
+      <div ref={imageFeedbackSectionRef} className={styles.foodImageLayer}>
+        <img src={imageUrl} alt="" aria-hidden="true" className={styles.foodImage} />
+        {recognizedFoods.length > 0 ? (
+          <div className={styles.foodImageDimmer} aria-hidden="true" />
+        ) : null}
 
-      {!shouldUseNumberedMarkers
-        ? foodMarkerClusters.map((cluster) => {
-            const markerX = cluster.x;
-            const markerY = cluster.y;
-            const marker = cluster.markers[0];
-            const markerBubbleSize = marker ? getEstimatedFoodMarkerBubbleSize(marker) : null;
-            const markerClassName = [
-              styles.foodMarker,
-              markerBubbleSize
-                ? getHorizontalMarkerClass(markerX, {
-                    bubbleWidth: markerBubbleSize.width,
-                    markerLayout,
-                  })
-                : getHorizontalMarkerClass(markerX),
-              markerBubbleSize
-                ? getVerticalMarkerClass(markerY, {
-                    bubbleHeight: markerBubbleSize.height,
-                    markerLayout,
-                  })
-                : getVerticalMarkerClass(markerY),
-            ].join(" ");
+        {!shouldUseNumberedMarkers
+          ? foodMarkerClusters.map((cluster) => {
+              const markerX = cluster.x;
+              const markerY = cluster.y;
+              const marker = cluster.markers[0];
+              const markerBubbleSize = marker ? getEstimatedFoodMarkerBubbleSize(marker) : null;
+              const markerClassName = [
+                styles.foodMarker,
+                markerBubbleSize
+                  ? getHorizontalMarkerClass(markerX, {
+                      bubbleWidth: markerBubbleSize.width,
+                      markerLayout,
+                    })
+                  : getHorizontalMarkerClass(markerX),
+                markerBubbleSize
+                  ? getVerticalMarkerClass(markerY, {
+                      bubbleHeight: markerBubbleSize.height,
+                      markerLayout,
+                    })
+                  : getVerticalMarkerClass(markerY),
+              ].join(" ");
 
-            if (!marker) {
-              return null;
-            }
+              if (!marker) {
+                return null;
+              }
 
-            return (
-              <button
-                key={cluster.id}
-                type="button"
-                className={markerClassName}
-                style={{
-                  left: `${markerX * 100}%`,
-                  top: `${markerY * 100}%`,
-                }}
-                onClick={() => onMarkerClick(marker.food.menu_id)}
-                disabled={isDetailDisabled}
-                aria-label={`${marker.label}${
-                  marker.scoreText ? ` ${marker.scoreText}` : ""
-                } 상세 보기`}
-              >
-                <span className={styles.foodMarkerBubble}>
-                  <span className={`${styles.foodMarkerName} typo-body3`}>{marker.label}</span>
-                  {marker.scoreText ? (
-                    <span
-                      className={`typo-body2 ${styles.foodMarkerScore} ${getScoreClass(marker.score ?? 0)}`}
-                    >
-                      {marker.scoreText}
-                    </span>
-                  ) : null}
-                </span>
-              </button>
-            );
-          })
-        : null}
-
-      {shouldUseNumberedMarkers
-        ? foodMarkers.map((marker) => {
-            const markerNumber = marker.index + 1;
-            const isSourceMarkerOpen = visibleOpenSourceMarkerId === marker.id;
-            const sourceBubbleSize = getEstimatedFoodMarkerBubbleSize(marker);
-            const sourceMarkerClassName = [
-              styles.foodClusterSourceMarker,
-              isSourceMarkerOpen ? styles.foodClusterSourceMarkerOpen : "",
-              getHorizontalMarkerClass(marker.markerX, {
-                bubbleWidth: sourceBubbleSize.width,
-                markerLayout,
-              }),
-              getVerticalMarkerClass(marker.markerY, {
-                anchorEdgeOffset: FOOD_MARKER_CLUSTER_SOURCE_PIN_SIZE / 2,
-                belowThreshold: FOOD_MARKER_CLUSTER_SOURCE_BELOW_THRESHOLD,
-                bubbleHeight: sourceBubbleSize.height,
-                markerLayout,
-              }),
-            ].join(" ");
-
-            return (
-              <div
-                key={`source-pin-${marker.id}`}
-                className={sourceMarkerClassName}
-                data-food-source-marker-id={marker.id}
-                style={{
-                  left: `${marker.markerX * 100}%`,
-                  top: `${marker.markerY * 100}%`,
-                }}
-              >
+              return (
                 <button
+                  key={cluster.id}
                   type="button"
-                  className={styles.foodClusterSourcePin}
-                  onClick={() => {
-                    setOpenSourceMarkerId((currentId) =>
-                      currentId === marker.id ? null : marker.id,
-                    );
+                  className={markerClassName}
+                  style={{
+                    left: `${markerX * 100}%`,
+                    top: `${markerY * 100}%`,
                   }}
+                  onClick={() => onMarkerClick(marker.food.menu_id)}
                   disabled={isDetailDisabled}
-                  aria-expanded={isSourceMarkerOpen}
-                  aria-controls={`food-source-marker-${marker.id}`}
-                  aria-label={`${markerNumber}번 ${marker.label}${
+                  aria-label={`${marker.label}${
                     marker.scoreText ? ` ${marker.scoreText}` : ""
-                  } 말풍선 ${isSourceMarkerOpen ? "닫기" : "열기"}`}
+                  } 상세 보기`}
                 >
-                  <span className={`${styles.foodClusterSourcePinLabel} typo-body3`}>
-                    {markerNumber}
+                  <span className={styles.foodMarkerBubble}>
+                    <span className={`${styles.foodMarkerName} typo-body3`}>{marker.label}</span>
+                    {marker.scoreText ? (
+                      <span
+                        className={`typo-body2 ${styles.foodMarkerScore} ${getScoreClass(marker.score ?? 0)}`}
+                      >
+                        {marker.scoreText}
+                      </span>
+                    ) : null}
                   </span>
                 </button>
+              );
+            })
+          : null}
 
-                {isSourceMarkerOpen ? (
+        {shouldUseNumberedMarkers
+          ? foodMarkers.map((marker) => {
+              const markerNumber = marker.index + 1;
+              const isSourceMarkerOpen = visibleOpenSourceMarkerId === marker.id;
+              const sourceBubbleSize = getEstimatedFoodMarkerBubbleSize(marker);
+              const sourceMarkerClassName = [
+                styles.foodClusterSourceMarker,
+                isSourceMarkerOpen ? styles.foodClusterSourceMarkerOpen : "",
+                getHorizontalMarkerClass(marker.markerX, {
+                  bubbleWidth: sourceBubbleSize.width,
+                  markerLayout,
+                }),
+                getVerticalMarkerClass(marker.markerY, {
+                  anchorEdgeOffset: FOOD_MARKER_CLUSTER_SOURCE_PIN_SIZE / 2,
+                  belowThreshold: FOOD_MARKER_CLUSTER_SOURCE_BELOW_THRESHOLD,
+                  bubbleHeight: sourceBubbleSize.height,
+                  markerLayout,
+                }),
+              ].join(" ");
+
+              return (
+                <div
+                  key={`source-pin-${marker.id}`}
+                  className={sourceMarkerClassName}
+                  data-food-source-marker-id={marker.id}
+                  style={{
+                    left: `${marker.markerX * 100}%`,
+                    top: `${marker.markerY * 100}%`,
+                  }}
+                >
                   <button
                     type="button"
-                    id={`food-source-marker-${marker.id}`}
-                    className={styles.foodClusterSourceBubble}
-                    onClick={() => onMarkerClick(marker.food.menu_id)}
+                    className={styles.foodClusterSourcePin}
+                    onClick={() => {
+                      setIsUnpositionedMenuListOpen(false);
+                      setOpenSourceMarkerId((currentId) =>
+                        currentId === marker.id ? null : marker.id,
+                      );
+                    }}
                     disabled={isDetailDisabled}
-                    aria-label={`${marker.label}${
+                    aria-expanded={isSourceMarkerOpen}
+                    aria-controls={`food-source-marker-${marker.id}`}
+                    aria-label={`${markerNumber}번 ${marker.label}${
                       marker.scoreText ? ` ${marker.scoreText}` : ""
-                    } 상세 보기`}
+                    } 말풍선 ${isSourceMarkerOpen ? "닫기" : "열기"}`}
                   >
-                    <span className={styles.foodMarkerBubble}>
-                      <span className={`${styles.foodMarkerName} typo-body3`}>{marker.label}</span>
-                      {marker.scoreText ? (
-                        <span
-                          className={`typo-body2 ${styles.foodMarkerScore} ${getScoreClass(marker.score ?? 0)}`}
-                        >
-                          {marker.scoreText}
-                        </span>
-                      ) : null}
+                    <span className={`${styles.foodClusterSourcePinLabel} typo-body3`}>
+                      {markerNumber}
                     </span>
                   </button>
-                ) : null}
-              </div>
-            );
-          })
-        : null}
+
+                  {isSourceMarkerOpen ? (
+                    <button
+                      type="button"
+                      id={`food-source-marker-${marker.id}`}
+                      className={styles.foodClusterSourceBubble}
+                      onClick={() => onMarkerClick(marker.food.menu_id)}
+                      disabled={isDetailDisabled}
+                      aria-label={`${marker.label}${
+                        marker.scoreText ? ` ${marker.scoreText}` : ""
+                      } 상세 보기`}
+                    >
+                      <span className={styles.foodMarkerBubble}>
+                        <span className={`${styles.foodMarkerName} typo-body3`}>
+                          {marker.label}
+                        </span>
+                        {marker.scoreText ? (
+                          <span
+                            className={`typo-body2 ${styles.foodMarkerScore} ${getScoreClass(marker.score ?? 0)}`}
+                          >
+                            {marker.scoreText}
+                          </span>
+                        ) : null}
+                      </span>
+                    </button>
+                  ) : null}
+                </div>
+              );
+            })
+          : null}
+      </div>
+
+      {unpositionedMenus.length > 0 ? (
+        <div className={styles.unpositionedMenuOverlay} data-unpositioned-menu-list>
+          {isUnpositionedMenuListVisible ? (
+            <div className={styles.unpositionedMenuScrollArea}>
+              <ul id="unpositioned-menu-list" className={styles.unpositionedMenuList}>
+                {unpositionedMenus.map((menu, index) => (
+                  <li key={`unpositioned-${menu.menu_id}-${menu.input_menu_name}-${index}`}>
+                    <button
+                      type="button"
+                      className={styles.unpositionedMenuItem}
+                      onClick={() => {
+                        setIsUnpositionedMenuListOpen(false);
+                        onMarkerClick(menu.menu_id);
+                      }}
+                      disabled={isDetailDisabled}
+                      aria-label={`${menu.menu_name} ${Math.round(menu.score)}점 상세 보기`}
+                    >
+                      <span className={`${styles.unpositionedMenuName} typo-body3`}>
+                        {menu.menu_name}
+                      </span>
+                      <span
+                        className={`typo-body2 ${styles.unpositionedMenuScore} ${getScoreClass(menu.score)}`}
+                      >
+                        {Math.round(menu.score)}점
+                      </span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+
+          <button
+            type="button"
+            className={`${styles.unpositionedMenuToggle} typo-body3`}
+            onClick={() => {
+              setOpenSourceMarkerId(null);
+              setIsUnpositionedMenuListOpen((isOpen) => !isOpen);
+            }}
+            disabled={isDetailDisabled}
+            aria-expanded={isUnpositionedMenuListVisible}
+            aria-controls="unpositioned-menu-list"
+          >
+            +{unpositionedMenus.length}개 메뉴 더보기
+          </button>
+        </div>
+      ) : null}
     </section>
   );
 }
