@@ -714,8 +714,11 @@
 }
 
 .textInput {
+  --chat-input-line-height: calc(var(--fs-16) * var(--line-height-145));
+
   background-color: var(--bg-white);
   flex: 1 1 auto;
+  max-height: calc(var(--chat-input-line-height) * 5);
   min-width: 0;
   width: 100%;
   padding: 9px 20px;

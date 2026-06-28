@@ -2300,6 +2300,20 @@ function ChatInput({
   const lastPointerSubmitAtRef = useRef(0);
   const isSendDisabled = isInputEmpty || isSendPending;
 
+  const resizeTextInput = useCallback(() => {
+    const textInput = textInputRef.current;
+    if (!textInput) {
+      return;
+    }
+
+    textInput.style.height = "auto";
+    textInput.style.height = `${textInput.scrollHeight}px`;
+  }, []);
+
+  useLayoutEffect(() => {
+    resizeTextInput();
+  }, [resizeTextInput, value]);
+
   const handleInputChange = (nextValue: string) => {
     if (isAddActionOpen && nextValue.trim().length > 0) {
       setIsAddActionOpen(false);
