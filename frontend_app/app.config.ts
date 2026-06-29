@@ -99,8 +99,10 @@ const config: ExpoConfig = {
     [
       "@kingstinct/react-native-healthkit",
       {
-        NSHealthShareUsageDescription: "걸음 수를 체크할 수 있도록 접근을 허용합니다",
-        NSHealthUpdateUsageDescription: "건강 데이터를 직접 수정하거나 추가하지 않습니다",
+        NSHealthShareUsageDescription:
+          "Apple 건강의 걸음 수 데이터를 불러와 오늘의 활동 기록에 표시하고 앱 기록에 반영합니다",
+        NSHealthUpdateUsageDescription:
+          "이 앱은 Apple 건강에 데이터를 추가하거나 수정하지 않습니다",
         background: false,
       },
     ],
