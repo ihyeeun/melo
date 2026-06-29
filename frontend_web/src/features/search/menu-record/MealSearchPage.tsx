@@ -124,7 +124,9 @@ export default function MealSearchPage() {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
+    isError: isSearchError,
     isPending: isSearchPending,
+    refetch: refetchSearchResults,
   } = useMealSearchInfiniteQuery(searchKeyword, {
     enabled: hasDraft,
     limit: MENU_SEARCH_PAGE_LIMIT,
@@ -388,6 +390,25 @@ export default function MealSearchPage() {
     </button>
   );
 
+  const renderSearchErrorState = () => (
+    <section className={styles.emptyResult}>
+      <p className="typo-body2">메뉴를 검색하지 못했어요</p>
+      <div className={styles.buttonContainer}>
+        <Button
+          variant="text"
+          interaction="normal"
+          size="small"
+          color="normal"
+          onClick={() => {
+            void refetchSearchResults();
+          }}
+        >
+          다시 시도
+        </Button>
+      </div>
+    </section>
+  );
+
   const renderPersonalMenuEmptyState = (message: string) => (
     <section className={styles.loadingContainer}>
       <p className="typo-body2">{message}</p>
@@ -510,12 +531,8 @@ export default function MealSearchPage() {
       );
     }
 
-    if (!firstSearchResult) {
-      return (
-        <div className={styles.loadingContainer}>
-          <LoadingIndicator />
-        </div>
-      );
+    if (isSearchError || !firstSearchResult) {
+      return <div className={styles.emptyResultContainer}>{renderSearchErrorState()}</div>;
     }
 
     if (firstSearchResult.has_result) {
