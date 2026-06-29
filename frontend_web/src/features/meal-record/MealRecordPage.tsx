@@ -28,6 +28,10 @@ import {
 import { PATH } from "@/router/path";
 import { getMealDetailPath, getMealRecordPath, getMealSearchPath } from "@/router/pathHelpers";
 import {
+  type MenuSaveAnalyticsItem,
+  trackDiaryMenuSave,
+} from "@/shared/analytics/recommendMenuEvents";
+import {
   MEAL_TYPE_OPTIONS,
   type MealServingInputMode,
   type MealTime,
@@ -44,7 +48,6 @@ import { ConfirmModal } from "@/shared/commons/modals/ConfirmModal";
 import { Skeleton, SkeletonStatus } from "@/shared/commons/skeleton/Skeleton";
 import { toast } from "@/shared/commons/toast/toast";
 import {
-  navigateBack,
   resetStackflow,
   useLocation,
   useNavigate,
@@ -394,6 +397,28 @@ export default function MealRecordPage() {
       }));
   };
 
+  const getSavedMenusFromRequest = (request: RegisterMealRequestDto): MenuSaveAnalyticsItem[] => {
+    if (!currentMenus) {
+      return [];
+    }
+
+    const requestMenuIds = request.menu_ids ?? [];
+    if (requestMenuIds.length === 0) {
+      return [];
+    }
+
+    const type = String(request.time) as MealType;
+    const draftByType = allDrafts[formatMenuDraftKey(dateKey, type)];
+    const currentMenuNameById = new Map(
+      currentMenus.menusByTime[request.time].map((menu) => [menu.id, menu.name]),
+    );
+
+    return requestMenuIds.map((menuId) => ({
+      menu_id: menuId,
+      menu_name: currentMenuNameById.get(menuId) ?? draftByType?.previewsById[menuId]?.name,
+    }));
+  };
+
   const handleComplete = async () => {
     if (!currentMenus || isSavePending) {
       return;
@@ -403,7 +428,7 @@ export default function MealRecordPage() {
       if (changedRequests.length === 0) {
         clearAllDrafts();
         toast.success("식사 기록이 저장되었어요");
-        navigateBack({ fallbackTo: PATH.DIARY });
+        resetStackflow(PATH.DIARY, { animate: false });
         return;
       }
 
@@ -435,19 +460,26 @@ export default function MealRecordPage() {
           if (deleteResult === DELETE_MEAL_RECORD_RESULT.FAILED_UNRECOVERED) {
             clearAllDrafts();
             toast.warning("서버가 불안정해요. 잠시 후 다시 시도해주세요.");
-            navigateBack({ fallbackTo: PATH.DIARY });
+            resetStackflow(PATH.DIARY, { animate: false });
             return;
           }
 
           continue;
         }
 
-        await registerMealAsync({
-          ...request,
-          analytics: {
-            recommendMenuCancel: canceledMenus,
+        await registerMealAsync(
+          {
+            ...request,
+            analytics: {
+              recommendMenuCancel: canceledMenus,
+            },
           },
-        });
+          {
+            onSuccess: () => {
+              trackDiaryMenuSave(getSavedMenusFromRequest(request));
+            },
+          },
+        );
       }
 
       clearAllDrafts();
@@ -477,12 +509,16 @@ export default function MealRecordPage() {
   useStackflowBackHandler(handleBackGuard);
 
   const handleBack = () => {
-    navigateBack({ fallbackTo: PATH.DIARY });
+    if (handleBackGuard()) {
+      return;
+    }
+
+    resetStackflow(PATH.DIARY, { animate: false });
   };
 
   const handleExit = () => {
     clearAllDrafts();
-    navigateBack({ fallbackTo: PATH.DIARY, skipBackHandler: true });
+    resetStackflow(PATH.DIARY, { animate: false });
   };
 
   const handleMealSearchNavigate = () => {

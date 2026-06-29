@@ -10,7 +10,7 @@ const config: ExpoConfig = {
       projectId: "507c0e33-8576-4aba-84f4-00d6b74a7338",
     },
   },
-  version: "1.0.5",
+  version: "1.1.1",
   orientation: "portrait",
   icon: "./assets/logo/melo-logo.png",
   scheme: "melo",
@@ -36,7 +36,7 @@ const config: ExpoConfig = {
     edgeToEdgeEnabled: true,
     predictiveBackGestureEnabled: false,
     package: "com.melo.frontend",
-    permissions: ["CAMERA"],
+    permissions: ["CAMERA", "android.permission.health.READ_STEPS"],
     blockedPermissions: ["android.permission.RECORD_AUDIO"],
     intentFilters: [
       {
@@ -85,6 +85,25 @@ const config: ExpoConfig = {
         backgroundColor: "#FF8E00",
         resizeMode: "contain",
         imageWidth: 190,
+      },
+    ],
+    [
+      "expo-build-properties",
+      {
+        android: {
+          minSdkVersion: 26,
+        },
+      },
+    ],
+    "./plugins/with-health-connect-android",
+    [
+      "@kingstinct/react-native-healthkit",
+      {
+        NSHealthShareUsageDescription:
+          "Apple 건강의 걸음 수 데이터를 불러와 오늘의 활동 기록에 표시하고 앱 기록에 반영합니다",
+        NSHealthUpdateUsageDescription:
+          "이 앱은 Apple 건강에 데이터를 추가하거나 수정하지 않습니다",
+        background: false,
       },
     ],
   ],

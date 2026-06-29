@@ -12,9 +12,14 @@ type BottomSheetProps = {
   onClose: () => void;
   title?: string;
   className?: string;
+  bodyClassName?: string;
   disableContentDrag?: boolean;
   children: ReactNode;
 };
+
+function cx(...classNames: Array<string | undefined>) {
+  return classNames.filter(Boolean).join(" ");
+}
 
 function blurActiveElement() {
   if (typeof document === "undefined") {
@@ -33,6 +38,7 @@ export default function BottomSheet({
   onClose,
   title,
   className,
+  bodyClassName,
   disableContentDrag = false,
   children,
 }: BottomSheetProps) {
@@ -79,7 +85,7 @@ export default function BottomSheet({
           >
             <SeedBottomSheet.Handle className={styles.handle} />
           </SeedBottomSheet.Header>
-          <SeedBottomSheet.Body className={styles.body}>
+          <SeedBottomSheet.Body className={cx(styles.body, bodyClassName)}>
             {title && <SeedBottomSheet.Title>{title}</SeedBottomSheet.Title>}
             {children}
           </SeedBottomSheet.Body>

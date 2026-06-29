@@ -114,6 +114,7 @@
 .onboardingGoalKcalValue {
   color: var(--label-normal);
   text-decoration: underline;
+  text-underline-offset: 6px;
 }
 
 .onboardingGoalKcalHelper {

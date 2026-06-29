@@ -6,6 +6,7 @@ import { router } from "expo-router";
 import * as FileSystem from "expo-file-system/legacy";
 import { manipulateAsync, SaveFormat } from "expo-image-manipulator";
 import * as ImagePicker from "expo-image-picker";
+import * as WebBrowser from "expo-web-browser";
 import { Platform } from "react-native";
 import { clearTokens } from "@/features/auth/store/tokenStore";
 import { apiClient } from "@/src/shared/api/apiClient";
@@ -14,13 +15,20 @@ import { BridgeHandledError, isBridgeHandledError } from "./bridgeError";
 import { beginCameraCaptureSession } from "./cameraCaptureSession";
 import type {
   BridgeAppDeviceInfoPayload,
+  BridgeCameraCaptureMode,
   BridgeCameraCaptureRequestPayload,
   BridgeGalleryPickRequestPayload,
   BridgeImageUploadRequestPayload,
+  BridgeInAppBrowserOpenRequestPayload,
   WebToAppMessage,
 } from "./bridge.types";
 import { sendToWeb } from "./sendToWeb";
 import { requestFromWeb } from "./requestFromWeb";
+import {
+  getHealthPermissionStatus,
+  readStepCountRecords,
+  requestHealthReadPermission,
+} from "@/features/health/service/healthStep.service";
 
 const ALLOWED_IMAGE_MIME_TYPES = new Set([
   "image/jpeg",
@@ -38,6 +46,12 @@ const NORMALIZED_UPLOAD_FALLBACK_FORMAT = SaveFormat.JPEG;
 const DEFAULT_UPLOAD_FIELD_NAME = "file";
 const SESSION_TERMINATION_ENDPOINTS = new Set(["/commonAuth/signout", "/commonAuth/delete"]);
 const LOCAL_SESSION_CLEAR_ON_FAILURE_ENDPOINTS = new Set(["/commonAuth/signout"]);
+const CAMERA_CAPTURE_MODES = new Set<BridgeCameraCaptureMode>([
+  "NUTRITION_LABEL",
+  "MENU_BOARD",
+  "FOOD",
+  "GENERAL",
+]);
 
 type ImageFileSource = {
   uri: string;
@@ -56,6 +70,7 @@ type CapturedImageSource = ImageFileSource & {
   base64?: string | null;
   previewBase64?: string | null;
   previewMimeType?: string | null;
+  mode?: BridgeCameraCaptureMode | null;
 };
 
 function resolveLowerCaseExtension(value: string | null | undefined) {
@@ -75,6 +90,10 @@ function resolveImageMimeTypeFromExtension(extension: string | null | undefined)
   if (extension === "heif") return "image/heif";
   if (extension === "webp") return "image/webp";
   return null;
+}
+
+function isBridgeCameraCaptureMode(value: unknown): value is BridgeCameraCaptureMode {
+  return typeof value === "string" && CAMERA_CAPTURE_MODES.has(value as BridgeCameraCaptureMode);
 }
 
 function resolveImageMimeType(source: ImageFileSource) {
@@ -157,6 +176,7 @@ async function normalizeCapturedImageSource(source: CapturedImageSource) {
     base64: source.base64 ?? null,
     previewBase64: source.previewBase64 ?? null,
     previewMimeType: source.previewMimeType ?? null,
+    mode: source.mode ?? null,
   };
 }
 
@@ -487,6 +507,31 @@ function isOptionalBridgeDimension(value: unknown) {
   return value === undefined || value === null || typeof value === "number";
 }
 
+function resolveValidHttpUrl(url: string) {
+  try {
+    const parsedUrl = new URL(url.trim());
+    if (parsedUrl.protocol === "http:" || parsedUrl.protocol === "https:") {
+      return parsedUrl.toString();
+    }
+  } catch {
+    // handled below
+  }
+
+  throw new BridgeHandledError("유효하지 않은 URL입니다.", 400, "INVALID_URL");
+}
+
+function openInAppBrowser(payload: BridgeInAppBrowserOpenRequestPayload) {
+  const url = resolveValidHttpUrl(payload.url);
+
+  void WebBrowser.openBrowserAsync(url).catch((error) => {
+    console.warn("[Bridge] failed to open in-app browser", error);
+  });
+
+  return {
+    opened: true,
+  };
+}
+
 function isWebToAppMessage(value: unknown): value is WebToAppMessage {
   if (!isRecord(value)) return false;
   if (typeof value.id !== "string") return false;
@@ -525,13 +570,17 @@ function isWebToAppMessage(value: unknown): value is WebToAppMessage {
       value.payload.quality === undefined || typeof value.payload.quality === "number";
     if (!isValidQuality) return false;
 
-    return (
-      value.payload.mode === undefined ||
-      value.payload.mode === "NUTRITION_LABEL" ||
-      value.payload.mode === "MENU_BOARD" ||
-      value.payload.mode === "FOOD" ||
-      value.payload.mode === "GENERAL"
-    );
+    const isValidMode =
+      value.payload.mode === undefined || isBridgeCameraCaptureMode(value.payload.mode);
+    if (!isValidMode) return false;
+
+    const isValidSelectableModes =
+      value.payload.selectableModes === undefined ||
+      (Array.isArray(value.payload.selectableModes) &&
+        value.payload.selectableModes.every(isBridgeCameraCaptureMode));
+    if (!isValidSelectableModes) return false;
+
+    return true;
   }
 
   if (value.type === "GALLERY_PICK_REQUEST") {
@@ -583,6 +632,25 @@ function isWebToAppMessage(value: unknown): value is WebToAppMessage {
     if (!isValidParams) return false;
 
     return true;
+  }
+
+  if (value.type === "IN_APP_BROWSER_OPEN_REQUEST") {
+    if (!isRecord(value.payload)) return false;
+
+    return typeof value.payload.url === "string";
+  }
+
+  if (
+    value.type === "HEALTH_PERMISSION_STATUS_REQUEST" ||
+    value.type === "HEALTH_PERMISSION_REQUEST"
+  ) {
+    return true;
+  }
+
+  if (value.type === "HEALTH_STEPS_READ_REQUEST") {
+    if (!isRecord(value.payload)) return false;
+
+    return typeof value.payload.startDate === "string" && typeof value.payload.endDate === "string";
   }
 
   return false;
@@ -648,6 +716,50 @@ export async function handleWebMessage(
 
     if (message.type === "IMAGE_UPLOAD_REQUEST") {
       const result = await uploadImageToServer(message.payload);
+
+      sendToWeb(webViewRef, {
+        id: requestId,
+        type: "API_RESPONSE",
+        payload: result,
+      });
+      return;
+    }
+
+    if (message.type === "IN_APP_BROWSER_OPEN_REQUEST") {
+      const result = openInAppBrowser(message.payload);
+
+      sendToWeb(webViewRef, {
+        id: requestId,
+        type: "API_RESPONSE",
+        payload: result,
+      });
+      return;
+    }
+
+    if (message.type === "HEALTH_PERMISSION_STATUS_REQUEST") {
+      const result = await getHealthPermissionStatus();
+
+      sendToWeb(webViewRef, {
+        id: requestId,
+        type: "API_RESPONSE",
+        payload: result,
+      });
+      return;
+    }
+
+    if (message.type === "HEALTH_PERMISSION_REQUEST") {
+      const result = await requestHealthReadPermission();
+
+      sendToWeb(webViewRef, {
+        id: requestId,
+        type: "API_RESPONSE",
+        payload: result,
+      });
+      return;
+    }
+
+    if (message.type === "HEALTH_STEPS_READ_REQUEST") {
+      const result = await readStepCountRecords(message.payload);
 
       sendToWeb(webViewRef, {
         id: requestId,

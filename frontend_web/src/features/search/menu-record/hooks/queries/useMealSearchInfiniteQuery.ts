@@ -1,6 +1,6 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
 
-import { postMealSearch } from "@/features/search/menu-record/api/postMealSearch";
+import { postMealSearch } from "@/features/search/menu-record/api/mealSearch.api";
 
 type UseMealSearchInfiniteQueryOptions = {
   enabled?: boolean;

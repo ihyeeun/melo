@@ -41,6 +41,9 @@
 }
 
 .sheetActions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
   padding-top: 40px;
 }
 
@@ -121,6 +124,17 @@
   gap: 12px;
 }
 
+.stepsFieldRow {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+}
+
+.stepsNumberFieldRoot {
+  flex: 1;
+  min-width: 0;
+}
+
 .stepsInputWrapper {
   flex: 1;
 }
@@ -151,7 +165,25 @@
   margin: 0;
 }
 
+.syncedStepsValue {
+  align-items: center;
+  display: flex;
+  justify-content: flex-end;
+  padding: 14px 12px;
+  text-align: end;
+  width: 100%;
+}
+
 .stepsUnit {
   color: var(--label-normal);
   padding-bottom: 4px;
+}
+
+.healthAccessNoticeButton {
+  margin-left: auto;
+}
+
+.titleContainer {
+  display: flex;
+  align-items: center;
 }

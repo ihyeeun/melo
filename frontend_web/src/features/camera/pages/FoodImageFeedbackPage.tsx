@@ -55,7 +55,6 @@ export default function ChatFoodCameraPage() {
   const handleCameraActions = useCallback(async () => {
     if (isProcessing) return;
     setCaptureErrorFeedback(null);
-    track(EVENT_NAME.FOOD_SCAN_START, { source: "chat_food_camera" });
 
     let image: Awaited<ReturnType<typeof requestNativeCameraCapture>>;
     // 앱에서 이미지를 받아오는 로직
@@ -69,9 +68,7 @@ export default function ChatFoodCameraPage() {
     } catch (error) {
       setIsOpeningCamera(false);
       if (isCameraCaptureCancelled(error)) {
-        track(EVENT_NAME.FOOD_SCAN_CANCEL, {
-          source: "chat_food_camera",
-        });
+        track(EVENT_NAME.CAMERA_CANCEL);
         navigateBack({ fallbackTo: PATH.CHAT });
         return;
       }
@@ -88,6 +85,7 @@ export default function ChatFoodCameraPage() {
     try {
       setPreviewSrc(getCapturedImagePreviewSrc(image)); // 이미지 미리보기 설정
       setIsProcessing(true);
+      track(EVENT_NAME.FOOD_SCAN_START, { source: "chat_food_camera" });
       const playbackBaselineChatIds = await getChatHistoryPlaybackBaselineIds(queryClient);
       await uploadFoodImage(image);
       if (playbackBaselineChatIds !== null) {

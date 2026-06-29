@@ -26,13 +26,34 @@ import {
 
 import styles from "./styles/NutrientAddPage.module.css";
 
-type NutrientAddLocationState = Partial<RegisterMenuRequestDto> & {
+type NutrientAddLocationState = Omit<Partial<RegisterMenuRequestDto>, "unit"> & {
   dateKey?: string;
   mealType?: MealType;
   brandName?: string;
+  chatId?: number;
   returnPath?: string;
   keyword?: string;
   brandSearchReturnKey?: string;
+  unit?: number;
+};
+
+export type NutrientAddSubmitPayload = {
+  brand: string;
+  name: string;
+};
+
+type NutrientAddFormPageProps = {
+  appendMealQueryToBrandSearchReturn?: boolean;
+  backFallbackPath: string;
+  brandSearchReturnPath?: string;
+  dateKey: string;
+  initialState: NutrientAddLocationState;
+  isSubmitPending?: boolean;
+  keyword?: string;
+  mealType: MealType;
+  nextLabel?: string;
+  onNext: (payload: NutrientAddSubmitPayload) => void;
+  title?: string;
 };
 
 export default function NutrientAddPage() {
@@ -46,16 +67,61 @@ export default function NutrientAddPage() {
   const searchKeyword = getSafeKeyword(
     searchParams.get("keyword") ?? locationState.keyword ?? null,
   );
-  const [foodName, setFoodName] = useState(locationState.name ?? "");
+
+  const handleNext = ({ brand, name }: NutrientAddSubmitPayload) => {
+    const params = new URLSearchParams({
+      date: dateKey,
+      mealType,
+      name,
+    });
+
+    if (brand.trim()) {
+      params.set("brand", brand.trim());
+    }
+    if (searchKeyword.length > 0) {
+      params.set("keyword", searchKeyword);
+    }
+
+    navigation(PATH.NUTRIENT_CAMERA + "?" + params.toString());
+  };
+
+  return (
+    <NutrientAddFormPage
+      backFallbackPath={getMealSearchPath(dateKey, mealType, searchKeyword)}
+      brandSearchReturnPath={PATH.NUTRIENT_ADD}
+      dateKey={dateKey}
+      initialState={locationState}
+      keyword={searchKeyword}
+      mealType={mealType}
+      onNext={handleNext}
+    />
+  );
+}
+
+export function NutrientAddFormPage({
+  appendMealQueryToBrandSearchReturn = true,
+  backFallbackPath,
+  brandSearchReturnPath = PATH.NUTRIENT_ADD,
+  dateKey,
+  initialState,
+  isSubmitPending = false,
+  keyword = "",
+  mealType,
+  nextLabel = "다음",
+  onNext,
+  title = "영양성분 등록",
+}: NutrientAddFormPageProps) {
+  const navigation = useNavigate();
+  const [foodName, setFoodName] = useState(initialState.name ?? "");
   const [brandSearchReturnKey] = useState(
-    locationState.brandSearchReturnKey ?? createBrandSearchSelectionKey(),
+    initialState.brandSearchReturnKey ?? createBrandSearchSelectionKey(),
   );
   const selectedBrandName = useBrandSearchSelectedBrand(brandSearchReturnKey);
   const clearBrandSearchSelection = useClearBrandSearchSelection();
   const brandName = (
     selectedBrandName ??
-    locationState.brand ??
-    locationState.brandName ??
+    initialState.brand ??
+    initialState.brandName ??
     ""
   ).trim();
 
@@ -70,50 +136,44 @@ export default function NutrientAddPage() {
   };
 
   const handleOpenBrandSearch = () => {
+    const returnPath = appendMealQueryToBrandSearchReturn
+      ? getPathWithMeal(brandSearchReturnPath, dateKey, mealType, keyword)
+      : brandSearchReturnPath;
+
     navigation(PATH.BRAND_SEARCH, {
       state: {
-        ...locationState,
+        ...initialState,
         name: foodName,
         brand: brandName,
         dateKey,
         mealType,
-        keyword: searchKeyword,
+        keyword,
         brandSearchReturnKey,
-        returnPath: getPathWithMeal(PATH.NUTRIENT_ADD, dateKey, mealType, searchKeyword),
+        returnPath,
       },
     });
   };
 
-  const isNextDisabled = !foodName.trim();
+  const isNextDisabled = isSubmitPending || !foodName.trim();
 
   const handleNext = () => {
     if (isNextDisabled) {
       return;
     }
 
-    const params = new URLSearchParams({
-      date: dateKey,
-      mealType,
+    onNext({
+      brand: brandName.trim(),
       name: foodName.trim().slice(0, 300),
     });
-
-    if (brandName.trim()) {
-      params.set("brand", brandName.trim());
-    }
-    if (searchKeyword.length > 0) {
-      params.set("keyword", searchKeyword);
-    }
-
-    navigation(PATH.NUTRIENT_CAMERA + "?" + params.toString());
   };
 
   const handleBack = () => {
-    navigateBack({ fallbackTo: getMealSearchPath(dateKey, mealType, searchKeyword) });
+    navigateBack({ fallbackTo: backFallbackPath });
   };
 
   return (
     <section className={styles.page}>
-      <PageHeader title="영양성분 등록" onBack={handleBack} />
+      <PageHeader title={title} onBack={handleBack} />
 
       <main className={styles.main}>
         <div className={styles.content}>
@@ -165,7 +225,7 @@ export default function NutrientAddPage() {
           interaction={isNextDisabled ? "disable" : "normal"}
           disabled={isNextDisabled}
         >
-          다음
+          {nextLabel}
         </Button>
       </footer>
     </section>

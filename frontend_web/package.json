@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@amplitude/analytics-browser": "^2.42.3",
+    "@amplitude/plugin-session-replay-browser": "^1.32.2",
     "@base-ui/react": "^1.2.0",
     "@seed-design/css": "^1.2.15",
     "@seed-design/react": "^1.2.13",

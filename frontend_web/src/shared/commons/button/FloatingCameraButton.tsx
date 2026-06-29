@@ -60,7 +60,7 @@ export function FloatingCameraButton({
         bottom: `calc(var(--safe-area-bottom) + ${bottomOffset}px)`,
       }}
     >
-      <SystemIcon name="camera" size={24} />
+      <SystemIcon name="camera" size={32} />
     </button>
   );
 }

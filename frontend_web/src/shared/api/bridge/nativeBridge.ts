@@ -6,7 +6,11 @@ import type {
   CameraCaptureRequestPayload,
   CameraCaptureResponsePayload,
   GalleryPickRequestPayload,
+  HealthPermissionResponsePayload,
+  HealthStepCountResponsePayload,
+  HealthStepsReadRequestPayload,
   ImageUploadRequestPayload,
+  InAppBrowserOpenResponsePayload,
   WebToAppMessage,
 } from "./nativeBridge.types";
 
@@ -265,5 +269,40 @@ export function requestNativeImageUpload<T = unknown>(payload: ImageUploadReques
       payload,
     }),
     { timeoutMs: 15 * 60 * 1000 },
+  );
+}
+
+export function openNativeInAppBrowser(url: string) {
+  return sendRequestToApp<InAppBrowserOpenResponsePayload>((id) => ({
+    id,
+    type: "IN_APP_BROWSER_OPEN_REQUEST",
+    payload: {
+      url,
+    },
+  }));
+}
+
+export function requestNativeHealthPermissionStatus() {
+  return sendRequestToApp<HealthPermissionResponsePayload>((id) => ({
+    id,
+    type: "HEALTH_PERMISSION_STATUS_REQUEST",
+  }));
+}
+
+export function requestNativeHealthReadPermission() {
+  return sendRequestToApp<HealthPermissionResponsePayload>((id) => ({
+    id,
+    type: "HEALTH_PERMISSION_REQUEST",
+  }));
+}
+
+export function readNativeStepCountRecords(payload: HealthStepsReadRequestPayload) {
+  return sendRequestToApp<HealthStepCountResponsePayload>(
+    (id) => ({
+      id,
+      type: "HEALTH_STEPS_READ_REQUEST",
+      payload,
+    }),
+    { timeoutMs: 15000 },
   );
 }

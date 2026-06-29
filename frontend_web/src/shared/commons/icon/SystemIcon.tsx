@@ -33,6 +33,7 @@ const SYSTEM_ICON_SRC = {
   search: "/icons/system-icons/search.svg",
   setting: "/icons/system-icons/setting.svg",
   trash: "/icons/system-icons/trash.svg",
+  backup: "/icons/system-icons/backup.svg",
 } as const;
 
 export type SystemIconName = keyof typeof SYSTEM_ICON_SRC;

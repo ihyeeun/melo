@@ -134,7 +134,7 @@ const NutrientCameraPage = createLazyActivity(
 );
 const FoodCameraPage = createGuardedLazyActivity(
   FEATURE_GUARD.FOOD_CAMERA,
-  () => import("@/features/camera/pages/FoodImageMealRecordCreatePage"),
+  () => import("@/features/camera/pages/MealRecordCreatePage"),
 );
 const ProfilePage = createLazyActivity(() => import("@/features/profile/ProfilePage"));
 const GoalEditPage = createLazyActivity(() => import("@/features/profile/GoalEditPage"));
@@ -148,6 +148,14 @@ const ChatPage = createGuardedLazyActivity(
   FEATURE_GUARD.CHAT,
   () => import("@/features/chat/pages/ChatPage"),
 );
+const ChatNutritionRegisterPage = createGuardedLazyActivity(
+  FEATURE_GUARD.CHAT,
+  () => import("@/features/chat/pages/ChatNutritionRegisterPage"),
+);
+const ChatNutritionDetailActivity = createGuardedLazyActivity(
+  FEATURE_GUARD.CHAT,
+  () => import("@/features/chat/pages/ChatMenuDetailPage"),
+);
 const DiaryPage = createLazyActivity(() => import("@/features/diary/DiaryPage"));
 const RecommendResultPage = createLazyActivity(
   () => import("@/features/chat/pages/RecommendResultPage"),
@@ -157,6 +165,10 @@ const ChatMenuDetailPage = createLazyActivity(
 );
 const FeedbackResultPage = createLazyActivity(
   () => import("@/features/chat/pages/FeedbackResultPage"),
+);
+const ChatCameraPage = createGuardedLazyActivity(
+  FEATURE_GUARD.FOOD_CAMERA,
+  () => import("@/features/camera/pages/ChatCameraPage"),
 );
 const ChatFoodCameraPage = createGuardedLazyActivity(
   FEATURE_GUARD.FOOD_CAMERA,
@@ -188,6 +200,8 @@ const ACTIVITIES = {
   NutrientAddModify: NutrientModifyPage,
   BrandSearch,
   Chat: ChatPage,
+  ChatNutritionRegister: ChatNutritionRegisterPage,
+  ChatNutritionDetail: ChatNutritionDetailActivity,
   RecommendResult: RecommendResultPage,
   RecommendDetail: ChatMenuDetailPage,
   Diary: DiaryPage,
@@ -196,6 +210,7 @@ const ACTIVITIES = {
   GoalEditNutrient: GoalEditNutrientPage,
   FeedbackResult: FeedbackResultPage,
   FeedbackDetail: ChatMenuDetailPage,
+  ChatCamera: ChatCameraPage,
   ChatFoodCamera: ChatFoodCameraPage,
   AppInfo: AppInfoPage,
 };
@@ -224,6 +239,8 @@ const ACTIVITY_ROUTES: Record<keyof typeof ACTIVITIES, RoutePath> = {
   NutrientAddModify: PATH.NUTRIENT_ADD_MODIFY,
   BrandSearch: PATH.BRAND_SEARCH,
   Chat: PATH.CHAT,
+  ChatNutritionRegister: PATH.CHAT_NUTRITION_REGISTER,
+  ChatNutritionDetail: PATH.CHAT_NUTRITION_DETAIL,
   RecommendResult: PATH.RECOMMEND_RESULT,
   RecommendDetail: PATH.RECOMMEND_DETAIL,
   Diary: PATH.DIARY,
@@ -232,6 +249,7 @@ const ACTIVITY_ROUTES: Record<keyof typeof ACTIVITIES, RoutePath> = {
   GoalEditNutrient: PATH.GOAL_EDIT_NUTRIENT,
   FeedbackResult: PATH.FEEDBACK_RESULT,
   FeedbackDetail: PATH.FEEDBACK_DETAIL,
+  ChatCamera: PATH.CHAT_CAMERA,
   ChatFoodCamera: PATH.CHAT_FOOD_CAMERA,
   AppInfo: PATH.APP_INFO,
 };

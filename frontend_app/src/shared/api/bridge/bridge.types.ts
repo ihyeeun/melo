@@ -1,3 +1,5 @@
+import type { HealthStepsRequestPayload } from "@/features/health/types/healthSteps.types";
+
 export type BridgeHttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 export type BridgeTabName = "home" | "chat" | "diary" | "profile";
 export type BridgeMessageContext = {
@@ -46,9 +48,12 @@ export type BridgeAppDeviceInfoRequestMessage = {
   context?: BridgeMessageContext;
 };
 
+export type BridgeCameraCaptureMode = "NUTRITION_LABEL" | "MENU_BOARD" | "FOOD" | "GENERAL";
+
 export type BridgeCameraCaptureRequestPayload = {
   quality?: number;
-  mode?: "NUTRITION_LABEL" | "MENU_BOARD" | "FOOD" | "GENERAL";
+  mode?: BridgeCameraCaptureMode;
+  selectableModes?: BridgeCameraCaptureMode[];
 };
 
 export type BridgeCameraCaptureRequestMessage = {
@@ -89,6 +94,36 @@ export type BridgeImageUploadRequestMessage = {
   context?: BridgeMessageContext;
 };
 
+export type BridgeInAppBrowserOpenRequestPayload = {
+  url: string;
+};
+
+export type BridgeInAppBrowserOpenRequestMessage = {
+  id: string;
+  type: "IN_APP_BROWSER_OPEN_REQUEST";
+  payload: BridgeInAppBrowserOpenRequestPayload;
+  context?: BridgeMessageContext;
+};
+
+export type BridgeHealthPermissionStatusRequestMessage = {
+  id: string;
+  type: "HEALTH_PERMISSION_STATUS_REQUEST";
+  context?: BridgeMessageContext;
+};
+
+export type BridgeHealthPermissionRequestMessage = {
+  id: string;
+  type: "HEALTH_PERMISSION_REQUEST";
+  context?: BridgeMessageContext;
+};
+
+export type BridgeHealthStepsReadRequestMessage = {
+  id: string;
+  type: "HEALTH_STEPS_READ_REQUEST";
+  payload: HealthStepsRequestPayload;
+  context?: BridgeMessageContext;
+};
+
 export type WebToAppMessage =
   | BridgeApiRequestMessage
   | BridgeTabSyncMessage
@@ -96,7 +131,11 @@ export type WebToAppMessage =
   | BridgeAppDeviceInfoRequestMessage
   | BridgeCameraCaptureRequestMessage
   | BridgeGalleryPickRequestMessage
-  | BridgeImageUploadRequestMessage;
+  | BridgeImageUploadRequestMessage
+  | BridgeInAppBrowserOpenRequestMessage
+  | BridgeHealthPermissionStatusRequestMessage
+  | BridgeHealthPermissionRequestMessage
+  | BridgeHealthStepsReadRequestMessage;
 
 export type BridgeErrorPayload = {
   message: string;

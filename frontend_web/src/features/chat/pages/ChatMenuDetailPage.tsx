@@ -31,6 +31,7 @@ import {
 import { useTodayMealRecordRegisterMutation } from "@/features/meal-record/hooks/mutations/useTodayMealRecordMutation";
 import { useMealDetailQuery } from "@/features/meal-record/hooks/queries/useMealDetailQuery";
 import { PATH } from "@/router/path";
+import { trackChatMenuSave } from "@/shared/analytics/recommendMenuEvents";
 import { AppApiError } from "@/shared/api/apiClient";
 import { Button } from "@/shared/commons/button/Button";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
@@ -105,6 +106,7 @@ export default function ChatMenuDetailPage() {
   const footerLabel = resolvedInitialSelection ? "수정하기" : "담기";
   const isDirectSubmitPending =
     !hasSelectionCallback && (isChatHistoryPending || isDayMealsPending || !chatItem || !dayMeals);
+  const { data: meal, isPending, isError } = useMealDetailQuery(menuId);
 
   const handleConfirmSelection = async () => {
     if (!selection || menuId === null) {
@@ -153,6 +155,11 @@ export default function ChatMenuDetailPage() {
           selectedMenus: nextMenus,
           image: getDiaryMealImage(dayMeals, targetMealTime),
         }),
+        {
+          onSuccess: () => {
+            trackChatMenuSave([{ menu_id: menuId, menu_name: meal?.name ?? "" }]);
+          },
+        },
       );
 
       toast.success(diaryMenuSelection ? "식사 기록이 수정되었어요." : "식사 기록이 등록되었어요.");
@@ -165,8 +172,6 @@ export default function ChatMenuDetailPage() {
       toast.warning(resolveErrorMessage(error));
     }
   };
-
-  const { data: meal, isPending, isError } = useMealDetailQuery(menuId);
 
   useEffect(() => {
     if (menuId !== null) return;

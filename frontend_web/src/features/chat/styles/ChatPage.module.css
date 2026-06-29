@@ -38,61 +38,6 @@
   margin-left: auto;
 }
 
-.floatingCameraBackdrop {
-  background-color: var(--dimmer-dimmer);
-  inset: 0;
-  position: fixed;
-  z-index: 1;
-}
-
-.floatingCameraBackdrop:active {
-  transform: none;
-}
-
-.floatingCameraActionContainer {
-  align-items: flex-end;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  position: relative;
-}
-
-.floatingCameraActionList {
-  align-items: flex-end;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.floatingCameraActionItem {
-  align-items: center;
-  display: inline-flex;
-  gap: 16px;
-}
-
-.floatingCameraActionLabel {
-  border-radius: 12px;
-  color: var(--static-white);
-  padding: 8px 10px;
-  white-space: nowrap;
-}
-
-.floatingCameraActionIcon {
-  align-items: center;
-  background-color: var(--dimmer-dimmer);
-  border-radius: 100px;
-  box-shadow: var(--shadow-emphasize);
-  display: inline-flex;
-  height: 58px;
-  justify-content: center;
-  width: 58px;
-}
-
-.floatingCameraActionIconImage {
-  height: 26px;
-  width: 26px;
-}
-
 .cameraButton {
   align-items: center;
   background-color: var(--primary-normal);
@@ -100,13 +45,19 @@
   box-shadow: var(--shadow-emphasize);
   color: var(--static-white);
   display: inline-flex;
-  height: 56px;
+  height: 64px;
   justify-content: center;
-  width: 56px;
+  transition:
+    height 80ms ease,
+    opacity 80ms ease,
+    width 80ms ease;
+  width: 64px;
 }
 
 .scrollButton {
   opacity: 85%;
+  width: 40px;
+  height: 40px;
 }
 
 .emptySection {
@@ -419,6 +370,11 @@
   width: 100%;
 }
 
+.recommendCard:active,
+.feedbackCard:active {
+  transform: scale(0.98);
+}
+
 .recommendCard,
 .feedbackCard {
   background-color: var(--bg-white);
@@ -429,10 +385,18 @@
   gap: 10px;
   padding: 16px 20px;
   width: 100%;
+  cursor: pointer;
 }
 
-.recommendCard,
-.feedbackCard {
+.menuNotFoundCard {
+  background-color: var(--bg-white);
+  border: 1px solid var(--border-neutral);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+  width: 96%;
   cursor: pointer;
 }
 
@@ -676,6 +640,7 @@
   display: flex;
   flex-direction: column;
   background-color: var(--bg-white);
+  border-top: 1px solid var(--border-neutral);
 }
 
 .chipSection {
@@ -703,21 +668,20 @@
 
 .textInputContainer {
   display: grid;
-  grid-template-columns: 36px minmax(0, 1fr);
-  padding: 8px 20px 20px 20px;
+  grid-template-columns: 32px minmax(0, 1fr);
+  padding: 4px 20px;
   gap: 8px;
   align-items: center;
 }
 
 .plusIconContainer {
-  background-color: var(--interaction-alternative);
-  width: 36px;
-  height: 36px;
-  border-radius: 100px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--static-white);
+}
+
+.textInputContainer[data-multiline="true"] {
+  align-items: end;
 }
 
 .plusIconContainerActive {
@@ -727,6 +691,7 @@
 
 .plusIcon {
   transition: transform 180ms ease;
+  border-radius: 100px;
 }
 
 .plusIconOpen {
@@ -735,8 +700,6 @@
 
 .sendIconContainer {
   background-color: var(--primary-strong);
-  width: 40px;
-  height: 40px;
   border-radius: 100px;
   display: flex;
   align-items: center;
@@ -750,16 +713,23 @@
 }
 
 .textInput {
+  --chat-input-line-height: calc(var(--fs-16) * var(--line-height-145));
+
   background-color: var(--bg-white);
   flex: 1 1 auto;
+  max-height: calc(var(--chat-input-line-height) * 5);
   min-width: 0;
   width: 100%;
-  padding: 9px 20px;
+  padding: 10px 16px;
   border-radius: 100px;
   border: 1px solid var(--border-neutral);
   color: var(--label-normal);
   resize: none;
   overflow-y: auto;
+}
+
+.textInput[data-multiline="true"] {
+  border-radius: 20px;
 }
 
 .textInput::placeholder {
@@ -773,6 +743,10 @@
   gap: 8px;
   min-width: 0;
   width: 100%;
+}
+
+.textInputWrapper[data-multiline="true"] {
+  align-items: flex-end;
 }
 
 .addActionPanel {

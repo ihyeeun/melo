@@ -11,15 +11,41 @@
 .main {
   display: flex;
   flex: 1;
-  overflow-y: auto;
-  padding: 20px;
+  flex-direction: column;
+  min-height: 0;
+  width: 100%;
 }
 
-.content {
+.searchMain {
+  overflow-y: auto;
+}
+
+.pullToRefreshIndicator {
+  color: var(--label-alternative);
+}
+
+.pullToRefreshIndicatorInner {
+  align-items: center;
+  display: flex;
+  justify-content: center;
+}
+
+.pullToRefreshContent {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  min-height: 100%;
   width: 100%;
+}
+
+.searchContent {
+  flex: 1;
+  padding: 0 20px;
+  width: 100%;
+}
+
+.searchContent,
+.personalMenuRefreshRoot {
+  padding-bottom: 75px;
 }
 
 .topContainer {
@@ -27,36 +53,6 @@
   flex-direction: column;
   gap: 10px;
   width: 100%;
-}
-
-.brandList {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.brandItem {
-  align-items: center;
-  background-color: var(--bg-white);
-  border: 1px solid var(--border-neutral);
-  border-radius: 8px;
-  display: inline-flex;
-  justify-content: space-between;
-  min-height: 44px;
-  padding: 16px 20px;
-  text-align: left;
-  width: 100%;
-}
-
-.brandName {
-  color: var(--label-normal);
-}
-
-.brandItemChevron {
-  color: var(--static-black);
 }
 
 .searchFieldWrap {
@@ -132,6 +128,106 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
+  padding: 20px 0;
+}
+
+.personalMenuTabsRoot {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  width: 100%;
+}
+
+.personalMenuTabsList {
+  background-color: var(--bg-white);
+  border-bottom: 1px solid var(--border-neutral);
+  display: grid;
+  flex: 0 0 auto;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  position: relative;
+  width: 100%;
+  z-index: 1;
+}
+
+.personalMenuTabsTab {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  color: var(--label-assistive);
+  cursor: pointer;
+  display: inline-flex;
+  justify-content: center;
+  outline: none;
+  padding: 16px 0px;
+  text-align: center;
+  transition: color 0.16s ease;
+}
+
+.personalMenuTabsTab[data-active] {
+  color: var(--label-normal);
+}
+
+.personalMenuTabsIndicator {
+  background-color: var(--primary-normal);
+  bottom: -1px;
+  height: 2px;
+  left: 0;
+  pointer-events: none;
+  position: absolute;
+  transform: translateX(var(--active-tab-left, 0));
+  transition:
+    transform 0.22s cubic-bezier(0.2, 0, 0, 1),
+    width 0.22s cubic-bezier(0.2, 0, 0, 1);
+  width: var(--active-tab-width, 50%);
+}
+
+.personalMenuTabsPanel {
+  min-height: 100%;
+  width: 100%;
+}
+
+.personalMenuRefreshRoot {
+  --ptr-size: 72px;
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+}
+
+.personalMenuPanelContent {
+  animation: personal-menu-panel-enter 0.16s ease-out both;
+  display: flex;
+  flex-direction: column;
+  padding: 0 20px;
+  width: 100%;
+}
+
+.directRegisterPrompt {
+  align-items: center;
+  background-color: var(--bg-white);
+  border: 1px solid var(--border-neutral);
+  border-radius: 8px;
+  color: var(--label-normal);
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+  padding: 16px 20px;
+  width: 100%;
+  margin-top: 12px;
+}
+
+.directRegisterPromptAction {
+  color: var(--label-assistive);
+  margin-left: auto;
+}
+
+.loadingContainer {
+  align-items: center;
+  color: var(--label-normal);
+  display: flex;
+  justify-content: center;
+  min-height: 100px;
+  text-align: center;
 }
 
 .loadMoreState {
@@ -146,6 +242,7 @@
   display: flex;
   flex-direction: column;
   gap: 20px;
+  margin-top: 20px;
 }
 
 .emptyResult {
@@ -164,17 +261,6 @@
 
 .emptyResultText {
   color: var(--label-normal);
-}
-
-.placeholder {
-  padding-bottom: 76px;
-  text-align: center;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
 }
 
 .placeholderText {
@@ -211,4 +297,27 @@
 .bottomText {
   color: var(--label-normal);
   padding-right: 10px;
+}
+
+@keyframes personal-menu-panel-enter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .personalMenuTabsTab,
+  .personalMenuTabsIndicator {
+    transition: none;
+  }
+
+  .personalMenuPanelContent {
+    animation: none;
+  }
 }

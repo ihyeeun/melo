@@ -1,0 +1,14 @@
+.root {
+  min-height: 0;
+}
+
+.hideScrollBar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.hideScrollBar::-webkit-scrollbar {
+  display: none;
+  height: 0;
+  width: 0;
+}

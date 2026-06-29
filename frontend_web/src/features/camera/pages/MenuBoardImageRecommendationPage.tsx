@@ -58,7 +58,6 @@ export default function MenuBoardCameraPage() {
   const handleCameraActions = useCallback(async () => {
     if (isProcessing) return;
     setCaptureErrorFeedback(null);
-    track(EVENT_NAME.OCR_SCAN_START, { source: "menu_board_camera" });
 
     let capturedImage: Awaited<ReturnType<typeof requestNativeCameraCapture>>;
     try {
@@ -71,9 +70,7 @@ export default function MenuBoardCameraPage() {
     } catch (error) {
       setIsOpeningCamera(false);
       if (isCameraCaptureCancelled(error)) {
-        track(EVENT_NAME.OCR_SCAN_CANCEL, {
-          source: "menu_board_camera",
-        });
+        track(EVENT_NAME.CAMERA_CANCEL);
         returnFromCameraPage();
         return;
       }
@@ -89,6 +86,7 @@ export default function MenuBoardCameraPage() {
     try {
       setCapturedPreviewSrc(getCapturedImagePreviewSrc(capturedImage));
       setIsProcessing(true);
+      track(EVENT_NAME.OCR_SCAN_START, { source: "menu_board_camera" });
       const playbackBaselineChatIds = await getChatHistoryPlaybackBaselineIds(queryClient);
       await uploadMenuBoardImage(capturedImage);
       if (playbackBaselineChatIds !== null) {

@@ -1,12 +1,21 @@
 import { useActivity } from "@stackflow/react";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { useRegisterStepsMutation } from "@/features/home/hooks/mutations/useBodyLogMutation";
 import { useGetBodyLog } from "@/features/home/hooks/queries/useTodayRecordQuery";
 import style from "@/features/home/styles/TodayBodyLogSection.module.css";
 import { PATH } from "@/router/path";
+import {
+  isNativeApp,
+  openNativeInAppBrowser,
+  readNativeStepCountRecords,
+  requestNativeHealthPermissionStatus,
+  requestNativeHealthReadPermission,
+} from "@/shared/api/bridge/nativeBridge";
+import type { HealthPermissionResponsePayload } from "@/shared/api/bridge/nativeBridge.types";
 import BottomSheet from "@/shared/commons/bottomSheet/BottomSheet";
 import { Button } from "@/shared/commons/button/Button";
+import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import NumberField from "@/shared/commons/input/NumberField";
 import { LoadingOverlay } from "@/shared/commons/loading/Loading";
 import { toast } from "@/shared/commons/toast/toast";
@@ -14,6 +23,7 @@ import { navigateBack } from "@/shared/navigation/stackflowNavigationController"
 import { getTodayFormatDateKey } from "@/shared/utils/dateFormat";
 
 const MAX_STEPS = 999999;
+const HEALTH_ACCESS_GUIDE_URL = "https://third-princess-d57.notion.site/health-connect";
 
 function toInteger(value: number) {
   return Math.trunc(value);
@@ -28,14 +38,29 @@ function isStepsInputAllowed(inputValue: string) {
   return Number(normalized) <= MAX_STEPS;
 }
 
+function canAttemptNativeStepRead(permission: HealthPermissionResponsePayload) {
+  if (permission.source === "health_connect") return permission.permissionStatus === "granted";
+  if (permission.source === "apple_health") return true;
+
+  return permission.permissionStatus === "granted";
+}
+
 export default function StepsLogBottomSheetActivity() {
   const activity = useActivity();
   const date = activity.params.date ?? getTodayFormatDateKey();
   const { data: bodyLog } = useGetBodyLog(date);
   const [draftSteps, setDraftSteps] = useState<number | undefined>(bodyLog?.steps ?? undefined);
+  const [nativeSyncedSteps, setNativeSyncedSteps] = useState<number | null>(null);
+  const [isNativeStepsConnected, setIsNativeStepsConnected] = useState(false);
+  const [shouldShowHealthAccessNotice, setShouldShowHealthAccessNotice] = useState(false);
+  const [stepsFieldRevision, setStepsFieldRevision] = useState(0);
+  const isDraftTouchedRef = useRef(false);
+  const isNativeStepSyncingRef = useRef(false);
+  const previousDateRef = useRef(date);
   const stepsInputRef = useRef<HTMLInputElement>(null);
   const isOpen =
     activity.transitionState === "enter-active" || activity.transitionState === "enter-done";
+  const canImportNativeSteps = isNativeApp();
 
   const closeSheet = () => {
     if (!activity.isActive) return;
@@ -44,87 +69,211 @@ export default function StepsLogBottomSheetActivity() {
 
   useEffect(() => {
     if (!isOpen) return;
+    if (canImportNativeSteps) return;
 
     stepsInputRef.current?.focus();
-  }, [isOpen]);
+  }, [canImportNativeSteps, isOpen]);
 
-  const { mutate: registerSteps, isPending: isStepsPending } = useRegisterStepsMutation({
-    onSuccess: () => {
-      toast.success("걸음 수가 기록되었어요");
-      closeSheet();
+  const { mutate: registerManualSteps, isPending: isManualStepsPending } = useRegisterStepsMutation(
+    {
+      onSuccess: () => {
+        toast.success("걸음 수가 기록되었어요");
+        closeSheet();
+      },
+      onError: () => {
+        toast.error("걸음 수 기록에 실패했어요");
+      },
     },
-    onError: () => {
-      toast.error("걸음 수 기록에 실패했어요");
-    },
-  });
+  );
+  const { mutate: registerNativeStepsSilently } = useRegisterStepsMutation();
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- Keep sheet input synced with async body log data.
+    if (previousDateRef.current !== date) {
+      previousDateRef.current = date;
+      isDraftTouchedRef.current = false;
+      setNativeSyncedSteps(null);
+      setIsNativeStepsConnected(false);
+      setShouldShowHealthAccessNotice(false);
+      setStepsFieldRevision((revision) => revision + 1);
+    }
+
+    if (isDraftTouchedRef.current) return;
+
     setDraftSteps(bodyLog?.steps ?? undefined);
-  }, [bodyLog?.steps]);
+  }, [bodyLog?.steps, date]);
 
   const handleSubmit = () => {
-    if (draftSteps === undefined) {
+    const submittedSteps = draftSteps;
+
+    if (submittedSteps === undefined) {
       toast.warning("걸음 수를 입력해주세요");
       return;
     }
 
-    const nextSteps = toInteger(draftSteps);
+    const nextSteps = toInteger(submittedSteps);
     if (nextSteps < 0 || nextSteps > MAX_STEPS) {
       toast.warning("걸음 수는 0 ~ 999,999 사이로 입력해주세요");
       return;
     }
 
-    registerSteps({ date, steps: nextSteps });
+    registerManualSteps({ date, steps: nextSteps });
   };
+
+  const syncNativeSteps = useCallback(async () => {
+    if (!canImportNativeSteps) {
+      return;
+    }
+    if (isNativeStepSyncingRef.current) return;
+
+    isNativeStepSyncingRef.current = true;
+    setNativeSyncedSteps(null);
+    setIsNativeStepsConnected(false);
+    setShouldShowHealthAccessNotice(false);
+
+    try {
+      let permission = await requestNativeHealthPermissionStatus();
+
+      if (permission.permissionStatus !== "granted") {
+        permission = await requestNativeHealthReadPermission();
+      }
+
+      if (!canAttemptNativeStepRead(permission)) {
+        setShouldShowHealthAccessNotice(false);
+        return;
+      }
+
+      const result = await readNativeStepCountRecords({
+        startDate: date,
+        endDate: date,
+      });
+
+      const record = result.records.find((item) => item.date === date);
+      const nextSteps =
+        record === undefined
+          ? null
+          : Math.min(MAX_STEPS, Math.max(0, toInteger(record.steps)));
+
+      isDraftTouchedRef.current = true;
+      setNativeSyncedSteps(nextSteps);
+      setIsNativeStepsConnected(true);
+      setShouldShowHealthAccessNotice(false);
+
+      if (nextSteps !== null) {
+        setDraftSteps(nextSteps);
+        setStepsFieldRevision((revision) => revision + 1);
+        registerNativeStepsSilently({ date, steps: nextSteps });
+      }
+    } catch {
+      setNativeSyncedSteps(null);
+      setIsNativeStepsConnected(false);
+      setShouldShowHealthAccessNotice(false);
+    } finally {
+      isNativeStepSyncingRef.current = false;
+    }
+  }, [canImportNativeSteps, date, registerNativeStepsSilently]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    if (!canImportNativeSteps) return;
+
+    void syncNativeSteps();
+  }, [canImportNativeSteps, isOpen, syncNativeSteps]);
+
+  const handleOpenHealthAccessGuide = useCallback(() => {
+    if (!canImportNativeSteps) {
+      window.open(HEALTH_ACCESS_GUIDE_URL, "_blank", "noopener,noreferrer");
+      return;
+    }
+
+    void openNativeInAppBrowser(HEALTH_ACCESS_GUIDE_URL).catch(() => {
+      window.open(HEALTH_ACCESS_GUIDE_URL, "_blank", "noopener,noreferrer");
+    });
+  }, [canImportNativeSteps]);
+
+  const loadingLabel = isManualStepsPending ? "걸음 수를 기록하는 중입니다." : null;
 
   return (
     <>
       <BottomSheet isOpen={isOpen} onClose={closeSheet}>
         <div className={style.sheetContainer}>
-          <h3 className={`${style.sheetTitle} typo-title2`}>오늘의 걸음 수</h3>
-          <NumberField
-            value={draftSteps}
-            onChange={(nextValue) => {
-              if (nextValue === undefined) {
-                setDraftSteps(undefined);
-                return;
-              }
+          <div className={style.titleContainer}>
+            <p className={`${style.sheetTitle} typo-title2`}>오늘의 걸음 수</p>
+            {shouldShowHealthAccessNotice ? (
+              <button
+                type="button"
+                className={style.healthAccessNoticeButton}
+                aria-label="건강 접근 안내 보기"
+                onClick={handleOpenHealthAccessGuide}
+              >
+                <SystemIcon name="backup" mode="image" />
+              </button>
+            ) : null}
+          </div>
+          <div className={style.stepsFieldRow}>
+            {isNativeStepsConnected ? (
+              <p
+                className={`${style.syncedStepsValue} typo-body1`}
+                aria-label={
+                  nativeSyncedSteps === null
+                    ? "연동된 오늘의 걸음 수 데이터 없음"
+                    : `연동된 오늘의 걸음 수 ${nativeSyncedSteps.toLocaleString()}보`
+                }
+              >
+                {nativeSyncedSteps === null
+                  ? "걸음 수 데이터가 없어요"
+                  : `${nativeSyncedSteps.toLocaleString()} 보`}
+              </p>
+            ) : (
+              <NumberField
+                key={stepsFieldRevision}
+                value={draftSteps}
+                onChange={(nextValue) => {
+                  isDraftTouchedRef.current = true;
 
-              const nextSteps = toInteger(nextValue);
-              setDraftSteps(Math.min(MAX_STEPS, Math.max(0, nextSteps)));
-            }}
-            min={0}
-            max={MAX_STEPS}
-            step={1}
-            allowOutOfRange={false}
-            normalizeValue={toInteger}
-            isInputTextAllowed={isStepsInputAllowed}
-            inputRef={stepsInputRef}
-            showControls={false}
-            unstyled
-            classNames={{
-              group: style.stepsNumberFieldGroup,
-              inputWrapper: style.stepsInputWrapper,
-              input: `typo-body3 ${style.stepsNumberInput}`,
-            }}
-            format={{ maximumFractionDigits: 0, useGrouping: true }}
-            inputProps={{
-              inputMode: "numeric",
-              placeholder: "걸음 수 입력",
-              "aria-label": "오늘의 걸음 수 입력",
-            }}
-            suffix={<span className={`typo-caption1 ${style.stepsUnit}`}>보</span>}
-          />
+                  if (nextValue === undefined) {
+                    setDraftSteps(undefined);
+                    return;
+                  }
+
+                  const nextSteps = toInteger(nextValue);
+                  setDraftSteps(Math.min(MAX_STEPS, Math.max(0, nextSteps)));
+                }}
+                min={0}
+                max={MAX_STEPS}
+                step={1}
+                allowOutOfRange={false}
+                normalizeValue={toInteger}
+                isInputTextAllowed={isStepsInputAllowed}
+                inputRef={stepsInputRef}
+                showControls={false}
+                unstyled
+                classNames={{
+                  root: style.stepsNumberFieldRoot,
+                  group: style.stepsNumberFieldGroup,
+                  inputWrapper: style.stepsInputWrapper,
+                  input: `typo-body3 ${style.stepsNumberInput}`,
+                }}
+                format={{ maximumFractionDigits: 0, useGrouping: true }}
+                inputProps={{
+                  inputMode: "numeric",
+                  placeholder: "걸음 수 입력",
+                  "aria-label": "오늘의 걸음 수 입력",
+                }}
+                suffix={<span className={`typo-caption1 ${style.stepsUnit}`}>보</span>}
+              />
+            )}
+          </div>
           <div className={style.sheetActions}>
-            <Button onClick={handleSubmit} fullWidth size="large" disabled={isStepsPending}>
-              기록하기
-            </Button>
+            {!isNativeStepsConnected && (
+              <Button onClick={handleSubmit} fullWidth size="large" disabled={isManualStepsPending}>
+                기록하기
+              </Button>
+            )}
           </div>
         </div>
       </BottomSheet>
 
-      {isStepsPending ? <LoadingOverlay label="걸음 수를 기록하는 중입니다." /> : null}
+      {loadingLabel ? <LoadingOverlay label={loadingLabel} /> : null}
     </>
   );
 }

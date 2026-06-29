@@ -18,7 +18,6 @@ import {
   buildNullableNutrientFields,
   buildNutrientFormFields,
   buildNutrientResetPatch,
-  hasChildNutrientOverflow,
   toFiniteNumberOrUndefined,
   toNullableFiniteNumber,
 } from "@/features/nutrient-entry/utils/nutrientFields";
@@ -201,11 +200,6 @@ export default function NutrientModifyPage() {
 
     if (formState.weight === 0 || formState.weight === undefined) {
       toast.warning("중량을 다시 확인해주세요");
-      return;
-    }
-
-    if (hasChildNutrientOverflow(formState)) {
-      toast.warning("하위 항목 합이 상위 항목을 초과했어요");
       return;
     }
 

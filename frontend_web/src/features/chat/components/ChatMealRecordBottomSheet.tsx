@@ -13,6 +13,7 @@ import BottomSheet from "@/shared/commons/bottomSheet/BottomSheet";
 import { Button } from "@/shared/commons/button/Button";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import NumberField from "@/shared/commons/input/NumberField";
+import { ScrollFogArea } from "@/shared/commons/scrollFog";
 import { formatDateKeyToMonthDayWeekdayLabel } from "@/shared/utils/dateFormat";
 import { formatNumberWithMaxOneDecimal } from "@/shared/utils/numberFormat";
 import { getServingUnitLabel } from "@/shared/utils/servingUnit";
@@ -166,9 +167,9 @@ export function ChatMealRecordBottomSheet({
   const actionLabel = selectedItems.length === 0 ? "수정하기" : submitLabel;
 
   return (
-    <BottomSheet isOpen={isOpen} onClose={onClose}>
+    <BottomSheet isOpen={isOpen} onClose={onClose} bodyClassName={styles.sheetBody}>
       <section className={styles.container}>
-        <div className={styles.scrollArea}>
+        <ScrollFogArea className={styles.scrollArea}>
           <div>
             {dateLabel ? <p className={`${styles.dateText} typo-title3`}>{dateLabel}</p> : null}
 
@@ -355,20 +356,20 @@ export function ChatMealRecordBottomSheet({
               </Button>
             </section>
           ) : null}
+        </ScrollFogArea>
 
-          <div className={styles.actionBar}>
-            <Button
-              variant="filled"
-              interaction={isSubmitPending ? "disable" : "normal"}
-              size="large"
-              color="primary"
-              fullWidth
-              disabled={isSubmitPending}
-              onClick={onSubmit}
-            >
-              {isSubmitPending ? "저장 중..." : actionLabel}
-            </Button>
-          </div>
+        <div className={styles.actionBar}>
+          <Button
+            variant="filled"
+            interaction={isSubmitPending ? "disable" : "normal"}
+            size="large"
+            color="primary"
+            fullWidth
+            disabled={isSubmitPending}
+            onClick={onSubmit}
+          >
+            {isSubmitPending ? "저장 중..." : actionLabel}
+          </Button>
         </div>
       </section>
     </BottomSheet>

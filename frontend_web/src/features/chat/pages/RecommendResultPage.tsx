@@ -27,7 +27,7 @@ import {
 import { useTodayMealRecordRegisterMutation } from "@/features/meal-record/hooks/mutations/useTodayMealRecordMutation";
 import { useGetProfileQuery } from "@/features/profile/hooks/queries/useProfileQuery";
 import { PATH } from "@/router/path";
-import { trackRecommendMenuSave } from "@/shared/analytics/recommendMenuEvents";
+import { trackChatMenuSave } from "@/shared/analytics/recommendMenuEvents";
 import { AppApiError } from "@/shared/api/apiClient";
 import { type MealType } from "@/shared/api/types/api.dto";
 import type {
@@ -258,19 +258,24 @@ function RecommendResultContent({
         (menu) => previousSelectedMenuIds.has(menu.menu_id) && !selectedMenuIds.has(menu.menu_id),
       );
 
-      await registerDiaryMealRecordMutate({
-        ...buildDiaryMealRecordRequest({
-          dateKey: recordDateKey,
-          mealType,
-          selectedMenus: nextMenus,
-          image: getDiaryMealImage(dayMeals, targetMealTime),
-        }),
-        analytics: {
-          recommendMenuCancel: canceledMenus,
+      await registerDiaryMealRecordMutate(
+        {
+          ...buildDiaryMealRecordRequest({
+            dateKey: recordDateKey,
+            mealType,
+            selectedMenus: nextMenus,
+            image: getDiaryMealImage(dayMeals, targetMealTime),
+          }),
+          analytics: {
+            recommendMenuCancel: canceledMenus,
+          },
         },
-      });
-
-      trackRecommendMenuSave(recommendations.filter((menu) => selectedMenuIds.has(menu.menu_id)));
+        {
+          onSuccess: () => {
+            trackChatMenuSave(recommendations.filter((menu) => selectedMenuIds.has(menu.menu_id)));
+          },
+        },
+      );
 
       toast.success("식사 기록이 등록되었어요.");
       requestChatMealRecordFocus({

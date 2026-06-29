@@ -26,6 +26,7 @@ import { getMealType, getSafeDateKey } from "@/features/meal-record/utils/mealRe
 import { getMealRecordPath } from "@/router/pathHelpers";
 import { track } from "@/shared/analytics/analytics";
 import { EVENT_NAME } from "@/shared/analytics/analytics.constants";
+import { trackDiaryMenuSave } from "@/shared/analytics/recommendMenuEvents";
 import { requestNativeCameraCapture } from "@/shared/api/bridge/nativeBridge";
 import { type MealTime, MENU_INPUT_MODE } from "@/shared/api/types/api.dto";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
@@ -63,9 +64,6 @@ export default function FoodCameraPage() {
   const handleCameraActions = useCallback(async () => {
     if (isUploading) return;
     setCaptureErrorFeedback(null);
-    track(EVENT_NAME.FOOD_SCAN_START, {
-      source: "meal_record_camera",
-    });
 
     let capturedImage: Awaited<ReturnType<typeof requestNativeCameraCapture>>;
     try {
@@ -78,9 +76,7 @@ export default function FoodCameraPage() {
     } catch (error) {
       setIsOpeningCamera(false);
       if (isCameraCaptureCancelled(error)) {
-        track(EVENT_NAME.FOOD_SCAN_CANCEL, {
-          source: "meal_record_camera",
-        });
+        track(EVENT_NAME.CAMERA_CANCEL);
         returnFromCameraPage();
         return;
       }
@@ -97,6 +93,9 @@ export default function FoodCameraPage() {
     try {
       setCapturedPreviewSrc(getCapturedImagePreviewSrc(capturedImage));
       setIsUploading(true);
+      track(EVENT_NAME.FOOD_SCAN_START, {
+        source: "meal_record_camera",
+      });
       const imageData = await uploadImage(capturedImage);
 
       if (!imageData?.menu_ids?.length) {
@@ -137,16 +136,23 @@ export default function FoodCameraPage() {
 
       const latestMenus = useMenuDraftStore.getState().drafts[draftKey]?.existingMenus ?? [];
 
-      await mealRegisterAsync({
-        date: dateKey,
-        time: Number(mealType) as MealTime,
-        menu_ids: latestMenus.map((m) => m.id),
-        menu_quantities: latestMenus.map((m) => m.quantity),
-        menu_input_modes: latestMenus.map((menu) =>
-          menu.mode === "unit" ? MENU_INPUT_MODE.UNIT : MENU_INPUT_MODE.WEIGHT,
-        ),
-        image: imageData.image_url,
-      });
+      await mealRegisterAsync(
+        {
+          date: dateKey,
+          time: Number(mealType) as MealTime,
+          menu_ids: latestMenus.map((m) => m.id),
+          menu_quantities: latestMenus.map((m) => m.quantity),
+          menu_input_modes: latestMenus.map((menu) =>
+            menu.mode === "unit" ? MENU_INPUT_MODE.UNIT : MENU_INPUT_MODE.WEIGHT,
+          ),
+          image: imageData.image_url,
+        },
+        {
+          onSuccess: () => {
+            trackDiaryMenuSave(imageData.menu_ids.map((menuId) => ({ menu_id: menuId })));
+          },
+        },
+      );
 
       toast.success("촬영한 사진의 메뉴가 기록되었어요.");
       navigate(getMealRecordPath(dateKey, mealType), { replace: true });

@@ -3,6 +3,7 @@ import { useGetBodyLog } from "@/features/home/hooks/queries/useTodayRecordQuery
 import style from "@/features/home/styles/TodayBodyLogSection.module.css";
 import { useGetProfileQuery } from "@/features/profile/hooks/queries/useProfileQuery";
 import { PATH } from "@/router/path";
+import { useNativeStepCountQuery } from "@/shared/api/bridge/useNativeStepCountQuery";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import { useNavigate } from "@/shared/navigation/stackflowNavigation";
 import { getTodayFormatDateKey } from "@/shared/utils/dateFormat";
@@ -12,7 +13,9 @@ export default function TodayBodyLogSection({ date }: { date: string }) {
   const { data: bodyLog } = useGetBodyLog(date);
   const { data: profile } = useGetProfileQuery();
   const isToday = date === getTodayFormatDateKey();
+  const { data: nativeStepCount } = useNativeStepCountQuery(date, { enabled: isToday });
   const displayWeight = bodyLog?.weight ?? (isToday ? (profile?.weight ?? 0) : 0);
+  const displaySteps = nativeStepCount?.steps ?? bodyLog?.steps ?? 0;
 
   const getSheetPath = (pathname: string) => {
     const searchParams = new URLSearchParams({ date });
@@ -32,12 +35,7 @@ export default function TodayBodyLogSection({ date }: { date: string }) {
     <>
       <div className={style.todayContainer}>
         <TodayMetricCard title="체중" value={displayWeight} unit="kg" onClick={openWeightEditor} />
-        <TodayMetricCard
-          title="걸음 수"
-          value={bodyLog?.steps ?? 0}
-          unit="보"
-          onClick={openStepsEditor}
-        />
+        <TodayMetricCard title="걸음 수" value={displaySteps} unit="보" onClick={openStepsEditor} />
       </div>
     </>
   );
@@ -71,7 +69,9 @@ function TodayMetricCard({
           <SystemIcon name="circle-plus-fill" mode="image" size={24} />
         </div>
         <div className={style.valueText}>
-          <span className={`typo-h2 ${style.highlightValue}`}>{value.toLocaleString()}</span>
+          <span className={`typo-h2 amp-mask ${style.highlightValue}`}>
+            {value.toLocaleString()}
+          </span>
           <span className="typo-caption3">{unit}</span>
         </div>
       </div>

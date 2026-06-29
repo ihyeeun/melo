@@ -66,9 +66,12 @@ export type WebToAppTabBarVisibilitySyncMessage = {
   context?: BridgeMessageContext;
 };
 
+export type CameraCaptureMode = "NUTRITION_LABEL" | "MENU_BOARD" | "FOOD" | "GENERAL";
+
 export type CameraCaptureRequestPayload = {
   quality?: number;
-  mode?: "NUTRITION_LABEL" | "MENU_BOARD" | "FOOD" | "GENERAL";
+  mode?: CameraCaptureMode;
+  selectableModes?: CameraCaptureMode[];
 };
 
 export type WebToAppCameraCaptureMessage = {
@@ -109,6 +112,21 @@ export type WebToAppImageUploadMessage = {
   context?: BridgeMessageContext;
 };
 
+export type InAppBrowserOpenRequestPayload = {
+  url: string;
+};
+
+export type InAppBrowserOpenResponsePayload = {
+  opened: boolean;
+};
+
+export type WebToAppInAppBrowserOpenMessage = {
+  id: string;
+  type: "IN_APP_BROWSER_OPEN_REQUEST";
+  payload: InAppBrowserOpenRequestPayload;
+  context?: BridgeMessageContext;
+};
+
 export type WebToAppMessage =
   | WebToAppApiRequestMessage
   | WebToAppTabSyncMessage
@@ -118,7 +136,11 @@ export type WebToAppMessage =
   | WebToAppTabBarVisibilitySyncMessage
   | WebToAppCameraCaptureMessage
   | WebToAppGalleryPickMessage
-  | WebToAppImageUploadMessage;
+  | WebToAppImageUploadMessage
+  | WebToAppInAppBrowserOpenMessage
+  | WebToAppHealthPermissionStatusRequestMessage
+  | WebToAppHealthPermissionRequestMessage
+  | WebToAppHealthStepsReadMessage;
 
 export type CameraCaptureResponsePayload = {
   uri: string;
@@ -130,6 +152,7 @@ export type CameraCaptureResponsePayload = {
   base64: string | null;
   previewBase64: string | null;
   previewMimeType: string | null;
+  mode?: CameraCaptureMode | null;
 };
 
 export type AppToWebMessage<T = unknown> = {
@@ -148,4 +171,53 @@ export type BridgePingResponse = {
   ok: boolean;
   receivedAt: string;
   sentAt: number;
+};
+
+export type HealthPermissionStatus =
+  | "granted"
+  | "denied"
+  | "not_determined"
+  | "restricted"
+  | "unknown";
+
+export type HealthConnectionSource = "apple_health" | "health_connect" | null;
+
+export type HealthPermissionResponsePayload = {
+  permissionStatus: HealthPermissionStatus;
+  source: HealthConnectionSource;
+};
+
+export type HealthStepsReadRequestPayload = {
+  startDate: string;
+  endDate: string;
+};
+
+export type HealthStepCountRecord = {
+  date: string;
+  steps: number;
+  source: Exclude<HealthConnectionSource, null>;
+};
+
+export type HealthStepCountResponsePayload = {
+  records: HealthStepCountRecord[];
+  readAt?: string;
+};
+
+export type WebToAppHealthPermissionStatusRequestMessage = {
+  id: string;
+  type: "HEALTH_PERMISSION_STATUS_REQUEST";
+  context?: BridgeMessageContext;
+};
+
+export type WebToAppHealthPermissionRequestMessage = {
+  id: string;
+  type: "HEALTH_PERMISSION_REQUEST";
+  context?: BridgeMessageContext;
+};
+
+export type WebToAppHealthStepsReadMessage = {
+  id: string;
+  type: "HEALTH_STEPS_READ_REQUEST";
+  payload: HealthStepsReadRequestPayload;
+  context?: BridgeMessageContext;
 };

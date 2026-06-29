@@ -1,12 +1,22 @@
 .container {
   display: flex;
   flex-direction: column;
+  max-height: inherit;
+  min-height: 0;
+}
+
+.sheetBody:global(.seed-bottom-sheet__body) {
+  overflow: hidden;
 }
 
 .scrollArea {
   display: flex;
+  flex: 1 1 auto;
   flex-direction: column;
   gap: 32px;
+  max-height: inherit;
+  min-height: 0;
+  overflow-y: auto;
   padding: 20px;
 }
 
@@ -195,8 +205,20 @@
   border-radius: 10px;
   box-shadow: var(--shadow-emphasize);
   overflow: hidden;
-  width: 166px;
+  width: var(--anchor-width);
   padding: 8px;
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  transform-origin: var(--transform-origin);
+  transition:
+    opacity 140ms ease-out,
+    transform 140ms ease-out;
+}
+
+.selectPopup[data-starting-style],
+.selectPopup[data-ending-style] {
+  opacity: 0;
+  transform: translateY(-4px) scale(0.98);
 }
 
 .selectList {
@@ -207,7 +229,6 @@
 .selectItem {
   color: var(--label-normal);
   padding: 10px 6px;
-  text-align: end;
 }
 
 .selectItem[data-highlighted] {
@@ -228,9 +249,7 @@
 
 .actionBar {
   flex-shrink: 0;
-  margin-top: auto;
-  bottom: 0;
-  position: sticky;
+  padding: 0 20px 20px;
 }
 
 .additionalAction {
@@ -244,4 +263,10 @@
   display: flex;
   gap: 4px;
   align-items: baseline;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .selectPopup {
+    transition: none;
+  }
 }
