@@ -11,6 +11,7 @@ import type {
   HealthStepCountRecord,
   HealthStepsRequestPayload,
 } from "@/features/health/types/healthSteps.types";
+import { BridgeHandledError } from "@/src/shared/api/bridge/bridgeError";
 
 const HEALTH_CONNECT_SOURCE = "health_connect" as const;
 const STEPS_READ_PERMISSION = {
@@ -111,10 +112,11 @@ export async function readAndroidStepCountRecords(payload: HealthStepsRequestPay
   const permission = await getAndroidHealthPermissionStatus();
 
   if (permission.permissionStatus !== "granted") {
-    return {
-      records: [] as HealthStepCountRecord[],
-      readAt: new Date().toISOString(),
-    };
+    throw new BridgeHandledError(
+      "걸음 수 읽기 권한이 필요해요.",
+      403,
+      "HEALTH_PERMISSION_DENIED",
+    );
   }
 
   const endDateExclusive = addDaysToDateKey(payload.endDate, 1);

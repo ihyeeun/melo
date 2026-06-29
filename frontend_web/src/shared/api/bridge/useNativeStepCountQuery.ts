@@ -33,47 +33,69 @@ type NativeStepCountRecordsResult = {
   source: HealthConnectionSource;
 };
 
-const emptyNativeStepCountRecordsResult: NativeStepCountRecordsResult = {
-  permissionStatus: null,
-  records: [],
-  source: null,
-};
-
 function normalizeStepCount(steps: number) {
   return Math.min(MAX_STEPS, Math.max(0, Math.trunc(steps)));
+}
+
+function canAttemptNativeStepRead(
+  permissionStatus: HealthPermissionStatus | null,
+  source: HealthConnectionSource,
+) {
+  if (source === "health_connect") return permissionStatus === "granted";
+  if (source === "apple_health") return true;
+
+  return permissionStatus === "granted";
 }
 
 async function readNativeStepCountRecordsRange(
   startDate: string,
   endDate: string,
 ): Promise<NativeStepCountRecordsResult> {
+  let permissionStatus: HealthPermissionStatus | null = null;
+  let source: HealthConnectionSource = null;
+
   try {
     const permission = await requestNativeHealthPermissionStatus();
+    permissionStatus = permission.permissionStatus;
+    source = permission.source;
+  } catch {
+    return {
+      permissionStatus,
+      records: [],
+      source,
+    };
+  }
 
-    if (permission.permissionStatus !== "granted") {
-      return {
-        permissionStatus: permission.permissionStatus,
-        records: [],
-        source: permission.source,
-      };
-    }
+  if (!canAttemptNativeStepRead(permissionStatus, source)) {
+    return {
+      permissionStatus,
+      records: [],
+      source,
+    };
+  }
 
+  try {
     const result = await readNativeStepCountRecords({
       startDate,
       endDate,
     });
+    const records = result.records.map((record) => ({
+      ...record,
+      steps: normalizeStepCount(record.steps),
+    }));
 
     return {
-      permissionStatus: permission.permissionStatus,
+      permissionStatus,
       readAt: result.readAt,
-      records: result.records.map((record) => ({
-        ...record,
-        steps: normalizeStepCount(record.steps),
-      })),
-      source: permission.source,
+      records,
+      source: records[0]?.source ?? source,
     };
   } catch {
-    return emptyNativeStepCountRecordsResult;
+    return {
+      permissionStatus,
+      records: [],
+      source,
+    };
   }
 }
 

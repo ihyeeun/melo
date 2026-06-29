@@ -111,17 +111,31 @@ function addHealthConnectDelegateToMainActivity(contents) {
   let nextContents = contents;
 
   if (!nextContents.includes(HEALTH_CONNECT_IMPORT)) {
+    const contentsBeforeImport = nextContents;
     nextContents = nextContents.replace(
       "import expo.modules.ReactActivityDelegateWrapper",
       `${HEALTH_CONNECT_IMPORT}\n\nimport expo.modules.ReactActivityDelegateWrapper`,
     );
+
+    if (nextContents === contentsBeforeImport) {
+      throw new Error(
+        "Failed to add Health Connect import to MainActivity: missing import expo.modules.ReactActivityDelegateWrapper anchor.",
+      );
+    }
   }
 
   if (!nextContents.includes(HEALTH_CONNECT_DELEGATE_CALL.trim())) {
+    const contentsBeforeDelegateCall = nextContents;
     nextContents = nextContents.replace(
       /(\s+super\.onCreate\((?:null|savedInstanceState)\)\n)/,
       `$1${HEALTH_CONNECT_DELEGATE_CALL}\n`,
     );
+
+    if (nextContents === contentsBeforeDelegateCall) {
+      throw new Error(
+        "Failed to add Health Connect permission delegate to MainActivity: missing super.onCreate(...) call.",
+      );
+    }
   }
 
   return nextContents;

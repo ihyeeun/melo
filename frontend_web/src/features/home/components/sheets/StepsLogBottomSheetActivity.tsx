@@ -12,7 +12,7 @@ import {
   requestNativeHealthPermissionStatus,
   requestNativeHealthReadPermission,
 } from "@/shared/api/bridge/nativeBridge";
-import type { HealthPermissionStatus } from "@/shared/api/bridge/nativeBridge.types";
+import type { HealthPermissionResponsePayload } from "@/shared/api/bridge/nativeBridge.types";
 import BottomSheet from "@/shared/commons/bottomSheet/BottomSheet";
 import { Button } from "@/shared/commons/button/Button";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
@@ -24,12 +24,6 @@ import { getTodayFormatDateKey } from "@/shared/utils/dateFormat";
 
 const MAX_STEPS = 999999;
 const HEALTH_ACCESS_GUIDE_URL = "https://third-princess-d57.notion.site/health-connect";
-const NATIVE_STEPS_CONNECTED_PERMISSION_STATUSES = new Set<HealthPermissionStatus>([
-  "granted",
-  "denied",
-  "not_determined",
-  "restricted",
-]);
 
 function toInteger(value: number) {
   return Math.trunc(value);
@@ -44,8 +38,11 @@ function isStepsInputAllowed(inputValue: string) {
   return Number(normalized) <= MAX_STEPS;
 }
 
-function isNativeStepsConnectedPermissionStatus(permissionStatus: HealthPermissionStatus) {
-  return NATIVE_STEPS_CONNECTED_PERMISSION_STATUSES.has(permissionStatus);
+function canAttemptNativeStepRead(permission: HealthPermissionResponsePayload) {
+  if (permission.source === "health_connect") return permission.permissionStatus === "granted";
+  if (permission.source === "apple_health") return true;
+
+  return permission.permissionStatus === "granted";
 }
 
 export default function StepsLogBottomSheetActivity() {
@@ -77,15 +74,17 @@ export default function StepsLogBottomSheetActivity() {
     stepsInputRef.current?.focus();
   }, [canImportNativeSteps, isOpen]);
 
-  const { mutate: registerManualSteps, isPending: isManualStepsPending } = useRegisterStepsMutation({
-    onSuccess: () => {
-      toast.success("걸음 수가 기록되었어요");
-      closeSheet();
+  const { mutate: registerManualSteps, isPending: isManualStepsPending } = useRegisterStepsMutation(
+    {
+      onSuccess: () => {
+        toast.success("걸음 수가 기록되었어요");
+        closeSheet();
+      },
+      onError: () => {
+        toast.error("걸음 수 기록에 실패했어요");
+      },
     },
-    onError: () => {
-      toast.error("걸음 수 기록에 실패했어요");
-    },
-  });
+  );
   const { mutate: registerNativeStepsSilently } = useRegisterStepsMutation();
 
   useEffect(() => {
@@ -104,7 +103,7 @@ export default function StepsLogBottomSheetActivity() {
   }, [bodyLog?.steps, date]);
 
   const handleSubmit = () => {
-    const submittedSteps = isNativeStepsConnected ? (nativeSyncedSteps ?? 0) : draftSteps;
+    const submittedSteps = draftSteps;
 
     if (submittedSteps === undefined) {
       toast.warning("걸음 수를 입력해주세요");
@@ -132,18 +131,13 @@ export default function StepsLogBottomSheetActivity() {
     setShouldShowHealthAccessNotice(false);
 
     try {
-      const permission = await requestNativeHealthPermissionStatus();
-      let permissionStatus = permission.permissionStatus;
+      let permission = await requestNativeHealthPermissionStatus();
 
-      if (permissionStatus !== "granted") {
-        const requestedPermission = await requestNativeHealthReadPermission();
-        permissionStatus = requestedPermission.permissionStatus;
+      if (permission.permissionStatus !== "granted") {
+        permission = await requestNativeHealthReadPermission();
       }
 
-      const isConnected = isNativeStepsConnectedPermissionStatus(permissionStatus);
-      setIsNativeStepsConnected(isConnected);
-
-      if (permissionStatus !== "granted") {
+      if (!canAttemptNativeStepRead(permission)) {
         setShouldShowHealthAccessNotice(false);
         return;
       }
@@ -154,21 +148,21 @@ export default function StepsLogBottomSheetActivity() {
       });
 
       const record = result.records.find((item) => item.date === date);
-      if (!record) {
-        setNativeSyncedSteps(null);
-        setIsNativeStepsConnected(false);
-        setShouldShowHealthAccessNotice(false);
-        return;
-      }
-
-      const nextSteps = Math.min(MAX_STEPS, Math.max(0, toInteger(record.steps)));
+      const nextSteps =
+        record === undefined
+          ? null
+          : Math.min(MAX_STEPS, Math.max(0, toInteger(record.steps)));
 
       isDraftTouchedRef.current = true;
       setNativeSyncedSteps(nextSteps);
+      setIsNativeStepsConnected(true);
       setShouldShowHealthAccessNotice(false);
-      setDraftSteps(nextSteps);
-      setStepsFieldRevision((revision) => revision + 1);
-      registerNativeStepsSilently({ date, steps: nextSteps });
+
+      if (nextSteps !== null) {
+        setDraftSteps(nextSteps);
+        setStepsFieldRevision((revision) => revision + 1);
+        registerNativeStepsSilently({ date, steps: nextSteps });
+      }
     } catch {
       setNativeSyncedSteps(null);
       setIsNativeStepsConnected(false);
@@ -197,7 +191,6 @@ export default function StepsLogBottomSheetActivity() {
   }, [canImportNativeSteps]);
 
   const loadingLabel = isManualStepsPending ? "걸음 수를 기록하는 중입니다." : null;
-  const connectedStepsDisplayValue = nativeSyncedSteps ?? 0;
 
   return (
     <>
@@ -220,9 +213,15 @@ export default function StepsLogBottomSheetActivity() {
             {isNativeStepsConnected ? (
               <p
                 className={`${style.syncedStepsValue} typo-body1`}
-                aria-label={`연동된 오늘의 걸음 수 ${connectedStepsDisplayValue.toLocaleString()}보`}
+                aria-label={
+                  nativeSyncedSteps === null
+                    ? "연동된 오늘의 걸음 수 데이터 없음"
+                    : `연동된 오늘의 걸음 수 ${nativeSyncedSteps.toLocaleString()}보`
+                }
               >
-                {connectedStepsDisplayValue.toLocaleString()} 보
+                {nativeSyncedSteps === null
+                  ? "걸음 수 데이터가 없어요"
+                  : `${nativeSyncedSteps.toLocaleString()} 보`}
               </p>
             ) : (
               <NumberField
@@ -266,12 +265,7 @@ export default function StepsLogBottomSheetActivity() {
           </div>
           <div className={style.sheetActions}>
             {!isNativeStepsConnected && (
-              <Button
-                onClick={handleSubmit}
-                fullWidth
-                size="large"
-                disabled={isManualStepsPending}
-              >
+              <Button onClick={handleSubmit} fullWidth size="large" disabled={isManualStepsPending}>
                 기록하기
               </Button>
             )}

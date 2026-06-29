@@ -3,6 +3,7 @@ import {
   HealthStepCountRecord,
   HealthStepsRequestPayload,
 } from "@/features/health/types/healthSteps.types";
+import { BridgeHandledError } from "@/src/shared/api/bridge/bridgeError";
 import {
   AuthorizationRequestStatus,
   getRequestStatusForAuthorization,
@@ -15,7 +16,7 @@ const STEP_COUNT_TYPE = "HKQuantityTypeIdentifierStepCount" as const;
 const APPLE_HEALTH_SOURCE = "apple_health" as const;
 
 function mapIosPermissionStatus(status: AuthorizationRequestStatus): HealthPermissionStatus {
-  if (status === AuthorizationRequestStatus.unnecessary) return "granted";
+  if (status === AuthorizationRequestStatus.unnecessary) return "unknown";
   if (status === AuthorizationRequestStatus.shouldRequest) return "not_determined";
   if (status === AuthorizationRequestStatus.unknown) return "unknown";
   return "unknown";
@@ -25,7 +26,6 @@ export async function getIosHealthPermissionStatus() {
   const isAvailable = isHealthDataAvailable();
 
   if (!isAvailable) {
-    console.log("[HealthKit] health data unavailable");
     return {
       permissionStatus: "unknown",
       source: APPLE_HEALTH_SOURCE,
@@ -37,12 +37,6 @@ export async function getIosHealthPermissionStatus() {
   });
   const permissionStatus = mapIosPermissionStatus(requestStatus);
 
-  console.log("[HealthKit] permission status", {
-    requestStatus,
-    permissionStatus,
-    source: APPLE_HEALTH_SOURCE,
-  });
-
   return {
     permissionStatus,
     source: APPLE_HEALTH_SOURCE,
@@ -50,13 +44,8 @@ export async function getIosHealthPermissionStatus() {
 }
 
 export async function requestIosHealthReadPermission() {
-  const didRequestAuthorization = await requestAuthorization({
+  await requestAuthorization({
     toRead: [STEP_COUNT_TYPE],
-  });
-
-  console.log("[HealthKit] request authorization", {
-    didRequestAuthorization,
-    type: STEP_COUNT_TYPE,
   });
 
   return getIosHealthPermissionStatus();
@@ -92,14 +81,12 @@ function formatDateKey(date: Date) {
 
 export async function readIosStepCountRecords(payload: HealthStepsRequestPayload) {
   if (!isHealthDataAvailable()) {
-    console.log("[HealthKit] read steps skipped: health data unavailable", payload);
-    return {
-      records: [] as HealthStepCountRecord[],
-      readAt: new Date().toISOString(),
-    };
+    throw new BridgeHandledError(
+      "이 기기에서는 건강 데이터를 사용할 수 없어요.",
+      400,
+      "HEALTH_DATA_UNAVAILABLE",
+    );
   }
-
-  console.log("[HealthKit] read steps start", payload);
 
   const records = await Promise.all(
     getDateKeysInRange(payload).map(async (dateKey): Promise<HealthStepCountRecord | null> => {
@@ -116,14 +103,6 @@ export async function readIosStepCountRecords(payload: HealthStepsRequestPayload
       });
       const quantity = statistics.sumQuantity?.quantity;
 
-      console.log("[HealthKit] query steps result", {
-        dateKey,
-        startDate,
-        endDate,
-        quantity,
-        statistics,
-      });
-
       if (typeof quantity !== "number" || !Number.isFinite(quantity)) return null;
 
       return {
@@ -133,14 +112,12 @@ export async function readIosStepCountRecords(payload: HealthStepsRequestPayload
       };
     }),
   );
-  const filteredRecords = records.filter((record): record is HealthStepCountRecord => record !== null);
-
-  console.log("[HealthKit] read steps records", {
-    payload,
-    records: filteredRecords,
-  });
+  const filteredRecords = records.filter(
+    (record): record is HealthStepCountRecord => record !== null,
+  );
 
   return {
     records: filteredRecords,
+    readAt: new Date().toISOString(),
   };
 }
