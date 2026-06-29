@@ -640,6 +640,7 @@
   display: flex;
   flex-direction: column;
   background-color: var(--bg-white);
+  border-top: 1px solid var(--border-neutral);
 }
 
 .chipSection {
@@ -667,21 +668,20 @@
 
 .textInputContainer {
   display: grid;
-  grid-template-columns: 36px minmax(0, 1fr);
-  padding: 8px 20px 20px 20px;
+  grid-template-columns: 32px minmax(0, 1fr);
+  padding: 4px 20px;
   gap: 8px;
   align-items: center;
 }
 
 .plusIconContainer {
-  background-color: var(--interaction-alternative);
-  width: 36px;
-  height: 36px;
-  border-radius: 100px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--static-white);
+}
+
+.textInputContainer[data-multiline="true"] {
+  align-items: end;
 }
 
 .plusIconContainerActive {
@@ -691,6 +691,7 @@
 
 .plusIcon {
   transition: transform 180ms ease;
+  border-radius: 100px;
 }
 
 .plusIconOpen {
@@ -699,8 +700,6 @@
 
 .sendIconContainer {
   background-color: var(--primary-strong);
-  width: 40px;
-  height: 40px;
   border-radius: 100px;
   display: flex;
   align-items: center;
@@ -721,12 +720,16 @@
   max-height: calc(var(--chat-input-line-height) * 5);
   min-width: 0;
   width: 100%;
-  padding: 9px 20px;
+  padding: 10px 16px;
   border-radius: 100px;
   border: 1px solid var(--border-neutral);
   color: var(--label-normal);
   resize: none;
   overflow-y: auto;
+}
+
+.textInput[data-multiline="true"] {
+  border-radius: 20px;
 }
 
 .textInput::placeholder {
@@ -740,6 +743,10 @@
   gap: 8px;
   min-width: 0;
   width: 100%;
+}
+
+.textInputWrapper[data-multiline="true"] {
+  align-items: flex-end;
 }
 
 .addActionPanel {

@@ -2301,6 +2301,8 @@ function ChatInput({
   onSubmit: (event?: FormEvent<HTMLFormElement>) => void | Promise<void>;
 }) {
   const [isAddActionOpen, setIsAddActionOpen] = useState(false);
+  const textInputContainerRef = useRef<HTMLFormElement>(null);
+  const textInputWrapperRef = useRef<HTMLDivElement>(null);
   const textInputRef = useRef<HTMLTextAreaElement>(null);
   const lastPointerSubmitAtRef = useRef(0);
   const isSendDisabled = isInputEmpty || isSendPending;
@@ -2312,7 +2314,32 @@ function ChatInput({
     }
 
     textInput.style.height = "auto";
-    textInput.style.height = `${textInput.scrollHeight}px`;
+    const scrollHeight = textInput.scrollHeight;
+    textInput.style.height = `${scrollHeight}px`;
+
+    const computedStyle = window.getComputedStyle(textInput);
+    const lineHeight = Number.parseFloat(computedStyle.lineHeight);
+    const paddingTop = Number.parseFloat(computedStyle.paddingTop);
+    const paddingBottom = Number.parseFloat(computedStyle.paddingBottom);
+    const contentHeight =
+      scrollHeight -
+      (Number.isFinite(paddingTop) ? paddingTop : 0) -
+      (Number.isFinite(paddingBottom) ? paddingBottom : 0);
+    const nextIsMultiline =
+      Number.isFinite(lineHeight) && lineHeight > 0 && contentHeight > lineHeight * 1.5;
+
+    [textInputContainerRef.current, textInputWrapperRef.current, textInput].forEach((element) => {
+      if (!element) {
+        return;
+      }
+
+      if (nextIsMultiline) {
+        element.dataset.multiline = "true";
+        return;
+      }
+
+      delete element.dataset.multiline;
+    });
   }, []);
 
   useLayoutEffect(() => {
@@ -2359,7 +2386,7 @@ function ChatInput({
 
   return (
     <div className={styles.chatInputContainer}>
-      <form className={styles.textInputContainer} onSubmit={onSubmit}>
+      <form ref={textInputContainerRef} className={styles.textInputContainer} onSubmit={onSubmit}>
         <button
           type="button"
           className={`${styles.plusIconContainer} ${isAddActionOpen ? styles.plusIconContainerActive : ""}`}
@@ -2367,13 +2394,14 @@ function ChatInput({
           aria-label={isAddActionOpen ? "추가 기능 닫기" : "추가 기능 열기"}
         >
           <SystemIcon
-            name="plus"
-            size={24}
+            name="circle-plus"
+            size={32}
+            mode="image"
             className={`${styles.plusIcon} ${isAddActionOpen ? styles.plusIconOpen : ""}`}
           />
         </button>
 
-        <div className={styles.textInputWrapper}>
+        <div ref={textInputWrapperRef} className={styles.textInputWrapper}>
           <textarea
             ref={textInputRef}
             rows={1}
@@ -2395,7 +2423,7 @@ function ChatInput({
               onClick={handleSendClick}
               aria-label="메시지 전송"
             >
-              <SystemIcon name="chevron-up-normal" size={24} />
+              <SystemIcon name="chevron-up-normal" size={32} />
             </button>
           )}
         </div>
