@@ -23,7 +23,6 @@ import { useTodayMealRecordRegisterMutation } from "@/features/meal-record/hooks
 import {
   formatMenuDraftKey,
   useMenuDraftStore,
-  useMenuDraftUpsert,
 } from "@/features/meal-record/stores/menuDraft.store";
 import { getMealType, getSafeDateKey } from "@/features/meal-record/utils/mealRecord.queryParams";
 import { PATH } from "@/router/path";
@@ -85,8 +84,6 @@ export default function MealRecordCreatePage() {
   const mealType = getMealType(searchParams.get("mealType"));
   const draftKey = formatMenuDraftKey(dateKey, mealType);
 
-  const upsertMenu = useMenuDraftUpsert();
-
   const returnFromCameraPage = useCallback(() => {
     navigateBack({ fallbackTo: getMealRecordPath(dateKey, mealType) });
   }, [dateKey, mealType]);
@@ -132,18 +129,53 @@ export default function MealRecordCreatePage() {
           setCaptureErrorFeedback(getRecognitionErrorFeedback("FOOD"));
           return;
         }
+        const recognizedMenus = imageData.menu_ids.map((id, idx) => {
+          const quantity = imageData.menu_quantities[idx];
+
+          if (typeof quantity !== "number" || !Number.isFinite(quantity) || quantity <= 0) {
+            return null;
+          }
+
+          return { id, quantity };
+        });
+
+        if (recognizedMenus.some((menu) => menu === null)) {
+          track(EVENT_NAME.FOOD_SCAN_FAIL, {
+            reason: "음식 메뉴 분석에 실패했어요.",
+            source: "meal_record_camera",
+          });
+          setCapturedPreviewSrc(null);
+          setCaptureErrorFeedback(getRecognitionErrorFeedback("FOOD"));
+          return;
+        }
+
         hasRecognitionSucceeded = true;
         track(EVENT_NAME.FOOD_SCAN_SUCCESS, {
           source: "meal_record_camera",
         });
 
         const currentMenus = useMenuDraftStore.getState().drafts[draftKey]?.existingMenus ?? [];
-        const nextMenuIds = new Set(currentMenus.map((menu) => menu.id));
-        imageData.menu_ids.forEach((id) => {
-          nextMenuIds.add(id);
-        });
+        const nextMenus = recognizedMenus.reduce<typeof currentMenus>(
+          (menus, recognizedMenu) => {
+            if (!recognizedMenu) {
+              return menus;
+            }
 
-        if (nextMenuIds.size > MAX_MEAL_RECORD_MENUS) {
+            const { id, quantity } = recognizedMenu;
+            const existingIndex = menus.findIndex((menu) => menu.id === id);
+
+            if (existingIndex < 0) {
+              return [...menus, { id, quantity }];
+            }
+
+            return menus.map((menu, index) =>
+              index === existingIndex ? { ...menu, quantity } : menu,
+            );
+          },
+          [...currentMenus],
+        );
+
+        if (nextMenus.length > MAX_MEAL_RECORD_MENUS) {
           toast.warning(MEAL_RECORD_MENU_LIMIT_MESSAGE);
           setCapturedPreviewSrc(null);
           setIsUploading(false);
@@ -151,23 +183,13 @@ export default function MealRecordCreatePage() {
           return;
         }
 
-        imageData.menu_ids.forEach((id, idx) => {
-          upsertMenu({
-            key: draftKey,
-            id,
-            quantity: imageData.menu_quantities[idx] ?? 1,
-          });
-        });
-
-        const latestMenus = useMenuDraftStore.getState().drafts[draftKey]?.existingMenus ?? [];
-
         await mealRegisterAsync(
           {
             date: dateKey,
             time: Number(mealType) as MealTime,
-            menu_ids: latestMenus.map((m) => m.id),
-            menu_quantities: latestMenus.map((m) => m.quantity),
-            menu_input_modes: latestMenus.map((menu) =>
+            menu_ids: nextMenus.map((m) => m.id),
+            menu_quantities: nextMenus.map((m) => m.quantity),
+            menu_input_modes: nextMenus.map((menu) =>
               menu.mode === "unit" ? MENU_INPUT_MODE.UNIT : MENU_INPUT_MODE.WEIGHT,
             ),
             image: imageData.image_url,
@@ -199,7 +221,6 @@ export default function MealRecordCreatePage() {
       mealType,
       navigate,
       returnFromCameraPage,
-      upsertMenu,
       uploadFoodImage,
     ],
   );
