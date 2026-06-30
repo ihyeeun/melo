@@ -20,7 +20,6 @@ const END_POINT = {
   UPDATE_TARGET_WEIGHT: "/profile/updateTargetWeight",
   UPDATE_TARGET_CALORIES: "/profile/updateTargetCalories",
   UPDATE_TARGET_RATIO: "/profile/updateTargetRatio",
-  REGISTER_SUB_CODE: "/profile/registerSubCode",
   UPDATE_NICKNAME: "/profile/updateNickname",
   GET_USER_GOAL_SNAPSHOT: "/profile/getUserGoalSnapshot",
 };
@@ -78,10 +77,6 @@ export function updateTargetCalories(targetCalories: number) {
 
 export function updateTargetRatio(targetRatio: [number, number, number]) {
   return updateProfileField(END_POINT.UPDATE_TARGET_RATIO, { target_ratio: targetRatio });
-}
-
-export function registerSubCode(subCode: string) {
-  return updateProfileField(END_POINT.REGISTER_SUB_CODE, { subCode });
 }
 
 export function updateNickName(nickname: string) {

@@ -1,0 +1,29 @@
+.content {
+  color: var(--label-normal);
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding-bottom: 20px;
+}
+
+.title {
+  height: fit-content;
+  padding: 16px 0;
+}
+
+.titleHeading {
+  color: var(--label-normal);
+}
+
+.field {
+  padding: 0;
+}
+
+.input {
+  border: 1px solid var(--border-neutral);
+  background-color: var(--bg-white);
+  border-radius: 8px;
+  padding: 16px 20px;
+  text-align: right;
+  width: 100%;
+}
