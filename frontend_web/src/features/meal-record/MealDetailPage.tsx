@@ -1,4 +1,3 @@
-import { useStack } from "@stackflow/react";
 import { useEffect, useMemo, useState } from "react";
 
 import {
@@ -39,7 +38,8 @@ import { MAX_MEAL_RECORD_MENUS, MEAL_RECORD_MENU_LIMIT_MESSAGE } from "./constan
 import { getMealType, getSafeDateKey, getSafeKeyword } from "./utils/mealRecord.queryParams";
 
 type MealDetailLocationState = {
-  afterAddBackCount?: number;
+  afterAddReturnPath?: string;
+  backReturnPath?: string;
   replaceMenuId?: number;
 };
 
@@ -48,23 +48,9 @@ function getMenuIsDeleted(menu: unknown) {
   return typeof isDeleted === "number" ? isDeleted : 0;
 }
 
-function getActiveStackActivities(stack: ReturnType<typeof useStack>) {
-  return stack.activities
-    .filter((activity) => !activity.exitedBy)
-    .sort((prev, next) => prev.enteredBy.eventDate - next.enteredBy.eventDate);
-}
-
-function canNavigateBackWithoutLandingRoot(stack: ReturnType<typeof useStack>, count: number) {
-  const activeActivities = getActiveStackActivities(stack);
-  const targetIndex = activeActivities.length - 1 - count;
-
-  return targetIndex > 0;
-}
-
 export default function MealDetailPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const stack = useStack();
   const [searchParams] = useSearchParams();
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [selection, setSelection] = useState<MealMenuNutrientSelection | null>(null);
@@ -104,6 +90,11 @@ export default function MealDetailPage() {
   };
 
   const handleGoBack = () => {
+    if (locationState?.backReturnPath) {
+      resetStackflow(locationState.backReturnPath, { animate: false });
+      return;
+    }
+
     navigateBack({ fallbackTo: getBackFallbackPath() });
   };
 
@@ -225,19 +216,14 @@ export default function MealDetailPage() {
       ],
     });
 
-    const afterAddBackCount = locationState?.afterAddBackCount ?? 1;
     const backFallbackPath = getBackFallbackPath();
 
-    if (
-      afterAddBackCount > 1 &&
-      !canNavigateBackWithoutLandingRoot(stack, afterAddBackCount)
-    ) {
-      resetStackflow(backFallbackPath, { animate: false });
+    if (locationState?.afterAddReturnPath) {
+      resetStackflow(locationState.afterAddReturnPath, { animate: false });
       return;
     }
 
     navigateBack({
-      count: afterAddBackCount,
       fallbackTo: backFallbackPath,
     });
   };
