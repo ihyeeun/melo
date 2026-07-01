@@ -23,8 +23,9 @@ async function getMenuNamesById(menuIds: number[]) {
 export async function trackDiaryMenuSaveByMenuIds(menuIds: number[]) {
   if (menuIds.length === 0) return;
 
-  const menuNamesById = await getMenuNamesById(menuIds);
-  const menus: MenuSaveAnalyticsItem[] = menuIds.map((menuId) => ({
+  const uniqueMenuIds = [...new Set(menuIds)];
+  const menuNamesById = await getMenuNamesById(uniqueMenuIds);
+  const menus: MenuSaveAnalyticsItem[] = uniqueMenuIds.map((menuId) => ({
     menu_id: menuId,
     menu_name: menuNamesById.get(menuId),
   }));
