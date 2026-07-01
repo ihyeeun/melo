@@ -315,6 +315,53 @@
   white-space: nowrap;
 }
 
+.foodClusterPinListPopover {
+  background-color: var(--bg-white);
+  border: 1px solid var(--border-neutral);
+  border-radius: 8px;
+  box-shadow: var(--shadow-strong);
+  max-height: 180px;
+  overflow: hidden;
+  position: absolute;
+  width: min(180px, calc(100vw - 48px));
+  z-index: 4;
+}
+
+.foodClusterPinList {
+  padding: 2px;
+  width: 100%;
+}
+
+.unpositionedMenuItem.foodClusterPinListItem {
+  align-items: center;
+  display: grid;
+  gap: 6px;
+  grid-template-columns: auto minmax(0, 1fr);
+  min-height: 36px;
+  padding: 5px 8px;
+}
+
+.foodClusterPinListNumber {
+  align-items: center;
+  background-color: var(--primary-normal);
+  border-radius: 100px;
+  color: var(--static-white);
+  display: inline-flex;
+  font-weight: 700;
+  height: 20px;
+  justify-content: center;
+  padding: 0;
+  width: 20px;
+}
+
+.foodClusterPinListName {
+  color: var(--label-normal);
+  justify-self: start;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: keep-all;
+}
+
 .unpositionedMenuOverlay {
   align-items: flex-end;
   bottom: 6px;

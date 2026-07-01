@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 
 import { useGetChatHistoryQuery } from "@/features/chat/hooks/queries/useGetChatQuery";
 import { useRequestChatMealRecordFocus } from "@/features/chat/stores/mealRecordFocus.store";
@@ -67,6 +67,11 @@ const FOOD_MARKER_POSITION_MAX = 0.9;
 const FOOD_MARKER_DEFAULT_BELOW_THRESHOLD = 0.18;
 const FOOD_MARKER_CLUSTER_SOURCE_BELOW_THRESHOLD = 0.42;
 const FOOD_MARKER_CLUSTER_SOURCE_PIN_SIZE = 28;
+const FOOD_MARKER_PIN_LIST_WIDTH = 180;
+const FOOD_MARKER_PIN_LIST_ITEM_HEIGHT = 36;
+const FOOD_MARKER_PIN_LIST_VERTICAL_PADDING = 4;
+const FOOD_MARKER_PIN_LIST_MAX_HEIGHT = 180;
+const FOOD_MARKER_PIN_LIST_EDGE_GAP = 8;
 
 type FoodMarkerItem = {
   id: string;
@@ -83,6 +88,13 @@ type FoodMarkerCluster = {
   id: string;
   markers: FoodMarkerItem[];
   rect: FoodMarkerRect;
+  x: number;
+  y: number;
+};
+
+type FoodMarkerPinCluster = {
+  id: string;
+  markers: FoodMarkerItem[];
   x: number;
   y: number;
 };
@@ -404,13 +416,12 @@ function FoodImageFeedbackPreview({
     width: 0,
   });
   const [openSourceMarkerId, setOpenSourceMarkerId] = useState<string | null>(null);
+  const [openPinClusterId, setOpenPinClusterId] = useState<string | null>(null);
   const [isUnpositionedMenuListOpen, setIsUnpositionedMenuListOpen] = useState(false);
   const menuById = useMemo(() => new Map(menus.map((menu) => [menu.menu_id, menu])), [menus]);
   const positionedFoods = useMemo(
     () =>
-      recognizedFoods.filter(
-        (food) => menuById.has(food.menu_id) && hasValidFoodPosition(food),
-      ),
+      recognizedFoods.filter((food) => menuById.has(food.menu_id) && hasValidFoodPosition(food)),
     [menuById, recognizedFoods],
   );
   const positionedMenuIds = useMemo(
@@ -455,11 +466,25 @@ function FoodImageFeedbackPreview({
     [foodMarkers, imageFeedbackSize],
   );
   const shouldUseNumberedMarkers = foodMarkerClusters.some((cluster) => cluster.markers.length > 1);
+  const numberedMarkerClusters = useMemo(
+    () => (shouldUseNumberedMarkers ? clusterFoodMarkerPins(foodMarkers, imageFeedbackSize) : []),
+    [foodMarkers, imageFeedbackSize, shouldUseNumberedMarkers],
+  );
   const visibleOpenSourceMarkerId =
     openSourceMarkerId &&
     shouldUseNumberedMarkers &&
-    foodMarkers.some((marker) => marker.id === openSourceMarkerId)
+    numberedMarkerClusters.some(
+      (cluster) => cluster.markers.length === 1 && cluster.markers[0]?.id === openSourceMarkerId,
+    )
       ? openSourceMarkerId
+      : null;
+  const visibleOpenPinClusterId =
+    openPinClusterId &&
+    shouldUseNumberedMarkers &&
+    numberedMarkerClusters.some(
+      (cluster) => cluster.id === openPinClusterId && cluster.markers.length > 1,
+    )
+      ? openPinClusterId
       : null;
   const isUnpositionedMenuListVisible = isUnpositionedMenuListOpen && unpositionedMenus.length > 0;
   const imageFeedbackSectionClassName =
@@ -518,7 +543,7 @@ function FoodImageFeedbackPreview({
   }, []);
 
   useEffect(() => {
-    if (!openSourceMarkerId) {
+    if (!visibleOpenSourceMarkerId) {
       return;
     }
 
@@ -534,7 +559,7 @@ function FoodImageFeedbackPreview({
         "[data-food-source-marker-id]",
       );
 
-      if (sourceMarkerElement?.dataset.foodSourceMarkerId === openSourceMarkerId) {
+      if (sourceMarkerElement?.dataset.foodSourceMarkerId === visibleOpenSourceMarkerId) {
         return;
       }
 
@@ -546,7 +571,36 @@ function FoodImageFeedbackPreview({
     return () => {
       document.removeEventListener("pointerdown", handlePointerDown);
     };
-  }, [openSourceMarkerId]);
+  }, [visibleOpenSourceMarkerId]);
+
+  useEffect(() => {
+    if (!visibleOpenPinClusterId) {
+      return;
+    }
+
+    const handlePointerDown = (event: PointerEvent) => {
+      const target = event.target;
+
+      if (!(target instanceof Node)) {
+        return;
+      }
+
+      const targetElement = target instanceof Element ? target : target.parentElement;
+      const pinClusterElement = targetElement?.closest<HTMLElement>("[data-food-pin-cluster-id]");
+
+      if (pinClusterElement?.dataset.foodPinClusterId === visibleOpenPinClusterId) {
+        return;
+      }
+
+      setOpenPinClusterId(null);
+    };
+
+    document.addEventListener("pointerdown", handlePointerDown);
+
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+    };
+  }, [visibleOpenPinClusterId]);
 
   useEffect(() => {
     if (!isUnpositionedMenuListVisible) {
@@ -641,7 +695,108 @@ function FoodImageFeedbackPreview({
           : null}
 
         {shouldUseNumberedMarkers
-          ? foodMarkers.map((marker) => {
+          ? numberedMarkerClusters.map((cluster) => {
+              if (cluster.markers.length > 1) {
+                const markerNumbersText = cluster.markers
+                  .map((clusterMarker) => `${clusterMarker.index + 1}번`)
+                  .join(", ");
+                const isPinClusterOpen = visibleOpenPinClusterId === cluster.id;
+                const pinListSize = getEstimatedFoodMarkerPinListSize(cluster.markers.length);
+                const pinListPlacement = getFoodMarkerPinListPlacement({
+                  listSize: pinListSize,
+                  markerLayout,
+                  x: cluster.x,
+                  y: cluster.y,
+                });
+                const pinClusterClassName = [
+                  styles.foodClusterSourceMarker,
+                  isPinClusterOpen ? styles.foodClusterSourceMarkerOpen : "",
+                ].join(" ");
+
+                return (
+                  <Fragment key={`pin-cluster-${cluster.id}`}>
+                    <div
+                      className={pinClusterClassName}
+                      data-food-pin-cluster-id={cluster.id}
+                      style={{
+                        left: `${cluster.x * 100}%`,
+                        top: `${cluster.y * 100}%`,
+                      }}
+                    >
+                      <button
+                        type="button"
+                        className={styles.foodClusterSourcePin}
+                        onClick={() => {
+                          setOpenSourceMarkerId(null);
+                          setIsUnpositionedMenuListOpen(false);
+                          setOpenPinClusterId((currentId) =>
+                            currentId === cluster.id ? null : cluster.id,
+                          );
+                        }}
+                        disabled={isDetailDisabled}
+                        aria-expanded={isPinClusterOpen}
+                        aria-controls={`food-pin-cluster-${cluster.id}`}
+                        aria-label={`${markerNumbersText} 메뉴 목록 ${
+                          isPinClusterOpen ? "닫기" : "열기"
+                        }`}
+                      >
+                        <span className={`${styles.foodClusterSourcePinLabel} typo-body3`}>
+                          +{cluster.markers.length}
+                        </span>
+                      </button>
+                    </div>
+
+                    {isPinClusterOpen ? (
+                      <div
+                        id={`food-pin-cluster-${cluster.id}`}
+                        className={styles.foodClusterPinListPopover}
+                        data-food-pin-cluster-id={cluster.id}
+                        style={{
+                          left: pinListPlacement.left,
+                          maxHeight: pinListPlacement.maxHeight,
+                          top: pinListPlacement.top,
+                          width: pinListPlacement.width,
+                        }}
+                      >
+                        <ul
+                          className={`${styles.unpositionedMenuList} ${styles.foodClusterPinList}`}
+                        >
+                          {cluster.markers.map((marker) => (
+                            <li key={marker.id}>
+                              <button
+                                type="button"
+                                className={`${styles.unpositionedMenuItem} ${styles.foodClusterPinListItem}`}
+                                onClick={() => {
+                                  setOpenPinClusterId(null);
+                                  onMarkerClick(marker.food.menu_id);
+                                }}
+                                disabled={isDetailDisabled}
+                                aria-label={`${marker.index + 1}번 ${marker.label}${
+                                  marker.scoreText ? ` ${marker.scoreText}` : ""
+                                } 상세 보기`}
+                              >
+                                <span className={`${styles.foodClusterPinListNumber} typo-body3`}>
+                                  {marker.index + 1}
+                                </span>
+                                <span className={`${styles.foodClusterPinListName} typo-body3`}>
+                                  {marker.label}
+                                </span>
+                              </button>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ) : null}
+                  </Fragment>
+                );
+              }
+
+              const marker = cluster.markers[0];
+
+              if (!marker) {
+                return null;
+              }
+
               const markerNumber = marker.index + 1;
               const isSourceMarkerOpen = visibleOpenSourceMarkerId === marker.id;
               const sourceBubbleSize = getEstimatedFoodMarkerBubbleSize(marker);
@@ -674,6 +829,7 @@ function FoodImageFeedbackPreview({
                     type="button"
                     className={styles.foodClusterSourcePin}
                     onClick={() => {
+                      setOpenPinClusterId(null);
                       setIsUnpositionedMenuListOpen(false);
                       setOpenSourceMarkerId((currentId) =>
                         currentId === marker.id ? null : marker.id,
@@ -759,6 +915,7 @@ function FoodImageFeedbackPreview({
             className={`${styles.unpositionedMenuToggle} typo-body3`}
             onClick={() => {
               setOpenSourceMarkerId(null);
+              setOpenPinClusterId(null);
               setIsUnpositionedMenuListOpen((isOpen) => !isOpen);
             }}
             disabled={isDetailDisabled}
@@ -961,12 +1118,99 @@ function updateFoodMarkerCluster(cluster: FoodMarkerCluster, markerLayout: FoodM
   cluster.id = getFoodMarkerClusterId(cluster.markers);
 }
 
+function clusterFoodMarkerPins(
+  markers: FoodMarkerItem[],
+  imageFeedbackSize: FoodMarkerLayout,
+): FoodMarkerPinCluster[] {
+  const markerLayout = getFoodMarkerLayout(imageFeedbackSize);
+  const sortedMarkers = [...markers].sort(
+    (firstMarker, secondMarker) =>
+      firstMarker.markerY - secondMarker.markerY ||
+      firstMarker.markerX - secondMarker.markerX ||
+      firstMarker.index - secondMarker.index,
+  );
+  const clusters: FoodMarkerPinCluster[] = [];
+
+  sortedMarkers.forEach((marker) => {
+    const overlappingClusterIndexes = clusters.reduce<number[]>((indexes, cluster, index) => {
+      const hasTouchingPin = cluster.markers.some((clusterMarker) =>
+        isFoodMarkerPinTouching(marker, clusterMarker, markerLayout),
+      );
+
+      if (hasTouchingPin) {
+        return [...indexes, index];
+      }
+
+      return indexes;
+    }, []);
+
+    if (overlappingClusterIndexes.length === 0) {
+      clusters.push({
+        id: marker.id,
+        markers: [marker],
+        x: marker.markerX,
+        y: marker.markerY,
+      });
+      return;
+    }
+
+    const targetCluster = clusters[overlappingClusterIndexes[0]];
+
+    if (!targetCluster) {
+      return;
+    }
+
+    targetCluster.markers.push(marker);
+
+    overlappingClusterIndexes
+      .slice(1)
+      .sort((firstIndex, secondIndex) => secondIndex - firstIndex)
+      .forEach((clusterIndex) => {
+        const clusterToMerge = clusters[clusterIndex];
+
+        if (!clusterToMerge) {
+          return;
+        }
+
+        targetCluster.markers.push(...clusterToMerge.markers);
+        clusters.splice(clusterIndex, 1);
+      });
+
+    updateFoodMarkerPinCluster(targetCluster);
+  });
+
+  return clusters;
+}
+
+function updateFoodMarkerPinCluster(cluster: FoodMarkerPinCluster) {
+  cluster.markers.sort((firstMarker, secondMarker) => firstMarker.index - secondMarker.index);
+  cluster.x =
+    cluster.markers.reduce((sum, marker) => sum + marker.markerX, 0) / cluster.markers.length;
+  cluster.y =
+    cluster.markers.reduce((sum, marker) => sum + marker.markerY, 0) / cluster.markers.length;
+  cluster.id = getFoodMarkerClusterId(cluster.markers);
+}
+
 function getFoodMarkerLayout(imageFeedbackSize: FoodMarkerLayout): FoodMarkerLayout {
   return {
     height:
       imageFeedbackSize.height > 0 ? imageFeedbackSize.height : FOOD_MARKER_FALLBACK_LAYOUT_SIZE,
     width: imageFeedbackSize.width > 0 ? imageFeedbackSize.width : FOOD_MARKER_FALLBACK_LAYOUT_SIZE,
   };
+}
+
+function isFoodMarkerPinTouching(
+  firstMarker: FoodMarkerItem,
+  secondMarker: FoodMarkerItem,
+  markerLayout: FoodMarkerLayout,
+) {
+  const firstX = firstMarker.markerX * markerLayout.width;
+  const firstY = firstMarker.markerY * markerLayout.height;
+  const secondX = secondMarker.markerX * markerLayout.width;
+  const secondY = secondMarker.markerY * markerLayout.height;
+  const distance = Math.hypot(firstX - secondX, firstY - secondY);
+
+  return distance <= FOOD_MARKER_CLUSTER_SOURCE_PIN_SIZE;
 }
 
 function getFoodMarkerBubbleRect(
@@ -1004,6 +1248,72 @@ function getFoodMarkerBubbleRect(
     left,
     right: left + bubbleSize.width,
     top,
+  };
+}
+
+function getEstimatedFoodMarkerPinListSize(markerCount: number) {
+  return {
+    height: Math.min(
+      FOOD_MARKER_PIN_LIST_MAX_HEIGHT,
+      markerCount * FOOD_MARKER_PIN_LIST_ITEM_HEIGHT + FOOD_MARKER_PIN_LIST_VERTICAL_PADDING,
+    ),
+    width: FOOD_MARKER_PIN_LIST_WIDTH,
+  };
+}
+
+function getFoodMarkerPinListPlacement({
+  listSize,
+  markerLayout,
+  x,
+  y,
+}: {
+  listSize: FoodMarkerLayout;
+  markerLayout: FoodMarkerLayout;
+  x: number;
+  y: number;
+}) {
+  const availableWidth = Math.max(
+    FOOD_MARKER_CLUSTER_SOURCE_PIN_SIZE,
+    markerLayout.width - FOOD_MARKER_PIN_LIST_EDGE_GAP * 2,
+  );
+  const availableHeight = Math.max(
+    FOOD_MARKER_PIN_LIST_ITEM_HEIGHT,
+    markerLayout.height - FOOD_MARKER_PIN_LIST_EDGE_GAP * 2,
+  );
+  const width = Math.min(listSize.width, availableWidth);
+  const maxHeight = Math.min(listSize.height, availableHeight);
+  const anchorX = x * markerLayout.width;
+  const anchorY = y * markerLayout.height;
+  const pinEdgeOffset = FOOD_MARKER_CLUSTER_SOURCE_PIN_SIZE / 2;
+  const preferredLeft = anchorX - width / 2;
+  const maxLeft = markerLayout.width - width - FOOD_MARKER_PIN_LIST_EDGE_GAP;
+  const left = clamp(
+    preferredLeft,
+    FOOD_MARKER_PIN_LIST_EDGE_GAP,
+    Math.max(FOOD_MARKER_PIN_LIST_EDGE_GAP, maxLeft),
+  );
+  const spaceAbove =
+    anchorY - pinEdgeOffset - FOOD_MARKER_BUBBLE_ANCHOR_GAP - FOOD_MARKER_PIN_LIST_EDGE_GAP;
+  const spaceBelow =
+    markerLayout.height -
+    FOOD_MARKER_PIN_LIST_EDGE_GAP -
+    (anchorY + pinEdgeOffset + FOOD_MARKER_BUBBLE_ANCHOR_GAP);
+  const shouldPlaceBelow = spaceBelow >= maxHeight || spaceBelow >= spaceAbove;
+  const preferredTop = shouldPlaceBelow
+    ? anchorY + pinEdgeOffset + FOOD_MARKER_BUBBLE_ANCHOR_GAP
+    : anchorY - pinEdgeOffset - FOOD_MARKER_BUBBLE_ANCHOR_GAP - maxHeight;
+  const maxTop = markerLayout.height - maxHeight - FOOD_MARKER_PIN_LIST_EDGE_GAP;
+  const top = clamp(
+    preferredTop,
+    FOOD_MARKER_PIN_LIST_EDGE_GAP,
+    Math.max(FOOD_MARKER_PIN_LIST_EDGE_GAP, maxTop),
+  );
+
+  return {
+    left,
+    maxHeight,
+    top,
+    width,
   };
 }
 
