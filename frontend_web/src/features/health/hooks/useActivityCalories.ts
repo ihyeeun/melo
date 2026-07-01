@@ -3,47 +3,38 @@ import { useMemo } from "react";
 import { calculateActivityCalories } from "@/features/health/utils/activityCalories";
 import { useGetBodyLog } from "@/features/home/hooks/queries/useTodayRecordQuery";
 import { useGetProfileQuery } from "@/features/profile/hooks/queries/useProfileQuery";
-import { isValidDateKey } from "@/shared/utils/dateFormat";
+import { useSelectedDateKey } from "@/shared/stores/selectedDate.store";
+import { getAge } from "@/shared/utils/health.utils";
 
 export type ActivityCaloriesSummary = {
   calories: number;
-  steps: number;
+  stepCount: number;
 };
 
 function getPositiveFiniteNumber(value: number | null | undefined) {
   return typeof value === "number" && Number.isFinite(value) && value > 0 ? value : null;
 }
 
-function getServerSteps(value: number | null | undefined) {
-  if (typeof value !== "number" || !Number.isFinite(value) || value <= 0) {
-    return 0;
-  }
+export function useActivityCalories(date?: string) {
+  const selectedDateKey = useSelectedDateKey();
+  const dateKey = date ?? selectedDateKey;
 
-  return Math.trunc(value);
-}
-
-function getAgeFromBirthYear(birthYear: number) {
-  return new Date().getFullYear() - birthYear - 1;
-}
-
-export function useActivityCalories(date: string) {
-  const canResolveActivityCalories = isValidDateKey(date);
-  const bodyLogQuery = useGetBodyLog(date);
-  const profileQuery = useGetProfileQuery({ enabled: canResolveActivityCalories });
+  const bodyLogQuery = useGetBodyLog(dateKey);
+  const profileQuery = useGetProfileQuery();
 
   const bodyLog = bodyLogQuery.data;
   const profile = profileQuery.data;
-  const serverSteps = getServerSteps(bodyLog?.steps);
+  const stepCount = bodyLog?.steps ?? 0;
 
   const summary = useMemo<ActivityCaloriesSummary | null>(() => {
-    if (!profile || serverSteps <= 0) {
+    if (!profile || stepCount <= 0) {
       return null;
     }
 
     const weightKg =
       getPositiveFiniteNumber(bodyLog?.weight) ?? getPositiveFiniteNumber(profile.weight);
     const heightCm = getPositiveFiniteNumber(profile.height);
-    const age = getAgeFromBirthYear(profile.birthYear);
+    const age = getAge(profile.birthYear);
 
     if (weightKg === null || heightCm === null || !Number.isFinite(age) || age < 0) {
       return null;
@@ -52,7 +43,7 @@ export function useActivityCalories(date: string) {
     const calories = calculateActivityCalories({
       weightKg,
       heightCm,
-      stepCount: serverSteps,
+      stepCount,
       age,
     });
 
@@ -62,9 +53,9 @@ export function useActivityCalories(date: string) {
 
     return {
       calories,
-      steps: serverSteps,
+      stepCount,
     };
-  }, [bodyLog?.weight, profile, serverSteps]);
+  }, [bodyLog?.weight, profile, stepCount]);
 
   return {
     bodyLog,
