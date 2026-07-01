@@ -8,34 +8,8 @@
 
 .main {
   flex: 1;
-  padding: 0 20px;
-}
-
-.titleSection {
-  padding: 10px 0 14px;
-}
-
-.title {
-  color: var(--label-normal);
-  word-break: keep-all;
-}
-
-.inputSection {
-  display: flex;
-}
-
-.input {
-  background: var(--bg-white);
-  border: 1px solid var(--border-neutral);
-  border-radius: 8px;
-  color: var(--label-normal);
-  padding: 12px 20px;
-  text-align: right;
-  width: 100%;
-}
-
-.input::placeholder {
-  color: var(--label-assistive);
+  overflow-y: auto;
+  padding: 0 25px;
 }
 
 .footer {

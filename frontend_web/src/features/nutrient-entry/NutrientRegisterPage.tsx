@@ -8,7 +8,7 @@ import {
   type NutrientRegisterFormState,
 } from "@/features/nutrient-entry/components/NutrientRegisterFormPage";
 import { PATH } from "@/router/path";
-import { getMealDetailPath, getMealSearchPath } from "@/router/pathHelpers";
+import { getMealDetailPath, getMealRecordPath, getMealSearchPath } from "@/router/pathHelpers";
 import { useLocation, useNavigate, useSearchParams } from "@/shared/navigation/stackflowNavigation";
 
 export default function NutrientRegisterPage() {
@@ -21,10 +21,15 @@ export default function NutrientRegisterPage() {
   const searchKeyword = getSafeKeyword(
     searchParams.get("keyword") ?? locationState.keyword ?? null,
   );
+  const backFallbackPath = getMealSearchPath(dateKey, mealType, searchKeyword);
+  const backReturnPath = locationState.backReturnPath;
+  const afterAddReturnPath =
+    locationState.afterAddReturnPath ?? getMealRecordPath(dateKey, mealType);
 
   return (
     <NutrientRegisterFormPage
-      backFallbackPath={getMealSearchPath(dateKey, mealType, searchKeyword)}
+      backFallbackPath={backFallbackPath}
+      backReturnPath={backReturnPath}
       brandSearchReturnPath={PATH.NUTRIENT_ADD_REGISTER}
       dateKey={dateKey}
       initialState={locationState}
@@ -34,7 +39,8 @@ export default function NutrientRegisterPage() {
         navigation(getMealDetailPath(dateKey, mealType, savedMenuId, searchKeyword), {
           replace: true,
           state: {
-            afterAddBackCount: 2,
+            ...(backReturnPath ? { backReturnPath } : {}),
+            afterAddReturnPath,
           },
         });
       }}

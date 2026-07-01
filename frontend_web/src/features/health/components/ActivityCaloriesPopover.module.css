@@ -1,0 +1,80 @@
+.trigger {
+  align-items: center;
+  display: inline-flex;
+  height: 100%;
+}
+
+.popup[data-variant="white"],
+.arrow[data-variant="white"] {
+  background-color: var(--bg-white);
+  color: var(--label-normal);
+}
+
+.popup[data-variant="primary"],
+.arrow[data-variant="primary"] {
+  background-color: var(--bg-primary-1);
+  color: var(--label-white);
+}
+
+.positioner {
+  z-index: 1;
+}
+
+.arrow {
+  border-radius: 2px;
+  height: 12px;
+  width: 12px;
+  rotate: 45deg;
+  z-index: 0;
+  top: -4px;
+}
+
+.popup {
+  display: flex;
+  box-shadow: var(--shadow-strong);
+  border-radius: 4px;
+  background-color: var(--bg-white);
+  padding: 10px 16px;
+  gap: 8px;
+  justify-content: center;
+  align-items: center;
+
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  transform-origin: top center;
+  transition:
+    opacity 140ms ease,
+    transform 180ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.popup[data-starting-style],
+.popup[data-ending-style] {
+  opacity: 0;
+  transform: translateY(-4px) scale(0.4);
+}
+
+.step {
+  text-align: center;
+}
+
+.badge {
+  display: flex;
+  padding: 2px 8px 2px 6px;
+  border-radius: 100px;
+  gap: 2px;
+  margin-top: 4px;
+  align-items: center;
+  justify-content: center;
+}
+
+.badge[data-variant="white"] {
+  background-color: var(--bg-primary-2);
+}
+
+.badge[data-variant="primary"] {
+  background-color: var(--bg-white);
+}
+
+.infoIcon {
+  color: var(--label-assistive);
+}

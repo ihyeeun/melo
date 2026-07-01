@@ -67,12 +67,22 @@ export default function KakaoWebCallbackPage() {
 
     async function signInWithKakaoCode() {
       try {
-        await exchangeKakaoWebCodeForToken(code);
+        const res = await exchangeKakaoWebCodeForToken(code);
         const hasUserInfo = await postHasUserInfo();
 
         if (cancelled) return;
 
-        replacePath(hasUserInfo === true ? PATH.APP_INFO : PATH.ONBOARDING);
+        if (!hasUserInfo) {
+          replacePath(PATH.ONBOARDING);
+          return;
+        }
+
+        if (res.user.is_subscribed === false) {
+          replacePath(PATH.SETTINGS_SUB_CODE);
+          return;
+        }
+
+        replacePath(PATH.APP_INFO);
       } catch (error) {
         if (cancelled) return;
         setErrorMessage(getLoginErrorMessage(error));

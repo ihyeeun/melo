@@ -1,4 +1,5 @@
 import type { OnboardingData } from "@/features/onboarding/onboarding.types";
+import { getAge } from "@/shared/utils/health.utils";
 
 type WeightDirection = "loss" | "gain" | "maintain";
 
@@ -52,7 +53,7 @@ export function calculateTDEE(
   gender: number,
   activity: number,
 ): number {
-  const age = new Date().getFullYear() - birthYear - 1; // 만 나이 기준
+  const age = getAge(birthYear);
   let bmr = 10 * weight + 6.25 * height - 5 * age + 5;
 
   if (gender === 1) {

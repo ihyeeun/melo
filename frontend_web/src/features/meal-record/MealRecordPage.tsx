@@ -383,20 +383,6 @@ export default function MealRecordPage() {
     removeImage({ key: draftKey });
   };
 
-  const getCanceledMenusFromRequest = (request: RegisterMealRequestDto) => {
-    if (!currentMenus) {
-      return [];
-    }
-
-    const nextMenuIdSet = new Set(request.menu_ids ?? []);
-    return currentMenus.menusByTime[request.time]
-      .filter((menu) => !nextMenuIdSet.has(menu.id))
-      .map((menu) => ({
-        menu_id: menu.id,
-        menu_name: menu.name,
-      }));
-  };
-
   const getSavedMenusFromRequest = (request: RegisterMealRequestDto): MenuSaveAnalyticsItem[] => {
     if (!currentMenus) {
       return [];
@@ -440,16 +426,11 @@ export default function MealRecordPage() {
       }
 
       for (const request of changedRequests) {
-        const canceledMenus = getCanceledMenusFromRequest(request);
-
         if ((request.menu_ids?.length ?? 0) === 0) {
           const deleteResult = await deleteWithRollbackAsync({
             dateKey,
             request,
             currentMenusByTime: currentMenus.menusByTime,
-            analytics: {
-              recommendMenuCancel: canceledMenus,
-            },
           });
 
           if (deleteResult === DELETE_MEAL_RECORD_RESULT.FAILED_RECOVERED) {
@@ -468,12 +449,7 @@ export default function MealRecordPage() {
         }
 
         await registerMealAsync(
-          {
-            ...request,
-            analytics: {
-              recommendMenuCancel: canceledMenus,
-            },
-          },
+          request,
           {
             onSuccess: () => {
               trackDiaryMenuSave(getSavedMenusFromRequest(request));

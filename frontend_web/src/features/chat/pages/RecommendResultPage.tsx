@@ -27,7 +27,10 @@ import {
 import { useTodayMealRecordRegisterMutation } from "@/features/meal-record/hooks/mutations/useTodayMealRecordMutation";
 import { useGetProfileQuery } from "@/features/profile/hooks/queries/useProfileQuery";
 import { PATH } from "@/router/path";
-import { trackChatMenuSave } from "@/shared/analytics/recommendMenuEvents";
+import {
+  trackChatMenuSave,
+  trackRecommendMenuCancel,
+} from "@/shared/analytics/recommendMenuEvents";
 import { AppApiError } from "@/shared/api/apiClient";
 import { type MealType } from "@/shared/api/types/api.dto";
 import type {
@@ -259,24 +262,16 @@ function RecommendResultContent({
       );
 
       await registerDiaryMealRecordMutate(
-        {
-          ...buildDiaryMealRecordRequest({
-            dateKey: recordDateKey,
-            mealType,
-            selectedMenus: nextMenus,
-            image: getDiaryMealImage(dayMeals, targetMealTime),
-          }),
-          analytics: {
-            recommendMenuCancel: canceledMenus,
-          },
-        },
-        {
-          onSuccess: () => {
-            trackChatMenuSave(recommendations.filter((menu) => selectedMenuIds.has(menu.menu_id)));
-          },
-        },
+        buildDiaryMealRecordRequest({
+          dateKey: recordDateKey,
+          mealType,
+          selectedMenus: nextMenus,
+          image: getDiaryMealImage(dayMeals, targetMealTime),
+        }),
       );
 
+      trackChatMenuSave(recommendations.filter((menu) => selectedMenuIds.has(menu.menu_id)));
+      trackRecommendMenuCancel(canceledMenus);
       toast.success("식사 기록이 등록되었어요.");
       requestChatMealRecordFocus({
         dateKey: recordDateKey,

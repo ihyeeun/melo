@@ -58,15 +58,19 @@ export function redirectToKakaoWebLogin() {
 
 type KakaoWebTokenResponse = {
   accessToken: string;
+  user: {
+    is_subscribed: boolean;
+  };
 };
 
 export async function exchangeKakaoWebCodeForToken(code: string) {
-  const tokens = await kakaoWebAuthData<KakaoWebTokenResponse>({
+  const response = await kakaoWebAuthData<KakaoWebTokenResponse>({
     endpoint: END_POINT.KAKAO_WEB_CALLBACK,
     params: { code },
   });
 
-  setWebAuthAccessToken(tokens.accessToken);
+  setWebAuthAccessToken(response.accessToken);
+  return response;
 }
 
 export async function postHasUserInfo() {

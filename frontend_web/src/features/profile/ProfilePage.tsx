@@ -1,5 +1,9 @@
 import { useMemo, useState } from "react";
 
+import {
+  useNativeStepCountQuery,
+  useNativeStepCountRecordsQuery,
+} from "@/features/health/hooks/useNativeStepCountQuery";
 import ActionCard from "@/features/home/components/cards/ActionCard";
 import { useDayMealsQuery, useGetBodyLog } from "@/features/home/hooks/queries/useTodayRecordQuery";
 import WeeklyRecordChart from "@/features/profile/components/WeeklyRecordChart";
@@ -10,10 +14,6 @@ import {
 } from "@/features/profile/hooks/queries/useWeeklyRecordQuery";
 import styles from "@/features/profile/styles/ProfilePage.module.css";
 import { PATH } from "@/router/path";
-import {
-  useNativeStepCountQuery,
-  useNativeStepCountRecordsQuery,
-} from "@/shared/api/bridge/useNativeStepCountQuery";
 import { Button } from "@/shared/commons/button/Button";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";

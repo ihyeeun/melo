@@ -184,16 +184,18 @@ export default function BrandSearch() {
           )}
 
           {hasKeyword && hasResults && (
-            <Button
-              variant="text"
-              interaction={isDirectRegisterDisabled ? "disable" : "normal"}
-              size="small"
-              color="normal"
-              onClick={() => handleBrandRegister()}
-              disabled={isDirectRegisterDisabled}
-            >
-              브랜드 직접 입력
-            </Button>
+            <section className={styles.brandAddSection}>
+              <Button
+                variant="text"
+                interaction={isDirectRegisterDisabled ? "disable" : "normal"}
+                size="small"
+                color="normal"
+                onClick={() => handleBrandRegister()}
+                disabled={isDirectRegisterDisabled}
+              >
+                브랜드 직접 입력
+              </Button>
+            </section>
           )}
         </section>
       </main>

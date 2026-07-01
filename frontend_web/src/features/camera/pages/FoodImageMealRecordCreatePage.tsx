@@ -12,6 +12,7 @@ import {
   getRecognitionErrorFeedback,
   isCameraCaptureCancelled,
 } from "@/features/camera/utils/cameraCapture";
+import { trackDiaryMenuSaveByMenuIds } from "@/features/camera/utils/diaryMenuSaveAnalytics";
 import {
   MAX_MEAL_RECORD_MENUS,
   MEAL_RECORD_MENU_LIMIT_MESSAGE,
@@ -26,7 +27,6 @@ import { getMealType, getSafeDateKey } from "@/features/meal-record/utils/mealRe
 import { getMealRecordPath } from "@/router/pathHelpers";
 import { track } from "@/shared/analytics/analytics";
 import { EVENT_NAME } from "@/shared/analytics/analytics.constants";
-import { trackDiaryMenuSave } from "@/shared/analytics/recommendMenuEvents";
 import { requestNativeCameraCapture } from "@/shared/api/bridge/nativeBridge";
 import { type MealTime, MENU_INPUT_MODE } from "@/shared/api/types/api.dto";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
@@ -149,7 +149,7 @@ export default function FoodCameraPage() {
         },
         {
           onSuccess: () => {
-            trackDiaryMenuSave(imageData.menu_ids.map((menuId) => ({ menu_id: menuId })));
+            void trackDiaryMenuSaveByMenuIds(imageData.menu_ids);
           },
         },
       );

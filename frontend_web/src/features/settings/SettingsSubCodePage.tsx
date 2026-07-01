@@ -1,8 +1,12 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 
-import { registerSubCode } from "@/features/profile/api/profile";
 import { queryKeys } from "@/features/profile/hooks/queries/queryKey";
+import { registerSubCode } from "@/features/settings/api/subCode";
+import { SubCodeInputSection } from "@/features/sub-code/components/SubCodeInputSection";
+import { PATH } from "@/router/path";
+import { AppApiError } from "@/shared/api/apiClient";
+import { API_ERROR_MESSAGE } from "@/shared/api/apiErrorMessage";
 import { Button } from "@/shared/commons/button/Button";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
 import { toast } from "@/shared/commons/toast/toast";
@@ -11,6 +15,15 @@ import { useNavigate } from "@/shared/navigation/stackflowNavigation";
 import styles from "./styles/SettingsSubCodePage.module.css";
 
 const MAX_SUB_CODE_LENGTH = 40;
+const REGISTER_SUB_CODE_ERROR_MESSAGE = "구독 코드 등록에 실패했어요";
+
+function resolveRegisterSubCodeErrorMessage(error: unknown) {
+  if (error instanceof AppApiError) {
+    return error.message;
+  }
+
+  return REGISTER_SUB_CODE_ERROR_MESSAGE;
+}
 
 export default function SettingsSubCodePage() {
   const navigate = useNavigate();
@@ -23,7 +36,7 @@ export default function SettingsSubCodePage() {
 
   const handleSubmit = async () => {
     if (!canSubmit) {
-      toast.warning("구독 코드를 입력해주세요");
+      toast.warning(API_ERROR_MESSAGE.SUB_CODE_REQUIRED);
       return;
     }
 
@@ -32,10 +45,10 @@ export default function SettingsSubCodePage() {
       const updatedProfile = await registerSubCode(trimmedSubCode);
       queryClient.setQueryData(queryKeys.profile, updatedProfile);
       toast.success("구독 코드가 등록되었어요");
-      navigate(-1);
+      navigate(PATH.APP_INFO, { replace: true });
     } catch (error) {
       console.error(error);
-      toast.warning("구독 코드 등록에 실패했어요");
+      toast.warning(resolveRegisterSubCodeErrorMessage(error));
     } finally {
       setIsSubmitting(false);
     }
@@ -43,25 +56,15 @@ export default function SettingsSubCodePage() {
 
   return (
     <div className={styles.page}>
-      <PageHeader onBack={() => navigate(-1)} />
+      <PageHeader onBack={() => navigate(PATH.KAKAO_WEB_LOGIN, { replace: true })} />
 
       <main className={styles.main}>
-        <div className={styles.content}>
-          <section className={styles.titleSection}>
-            <h1 className={`${styles.title} typo-title1`}>구독 코드를 입력해주세요</h1>
-          </section>
-
-          <section className={styles.inputSection}>
-            <input
-              type="text"
-              value={subCode}
-              onChange={(event) => setSubCode(event.target.value.slice(0, MAX_SUB_CODE_LENGTH))}
-              className={`${styles.input} typo-h1`}
-              placeholder="구독 코드"
-              aria-label="구독 코드"
-            />
-          </section>
-        </div>
+        <SubCodeInputSection
+          value={subCode}
+          onChange={setSubCode}
+          headingLevel="h1"
+          maxLength={MAX_SUB_CODE_LENGTH}
+        />
       </main>
 
       <footer className={styles.footer}>

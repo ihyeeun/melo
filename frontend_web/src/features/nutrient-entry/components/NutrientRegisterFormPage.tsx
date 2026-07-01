@@ -26,11 +26,13 @@ import { PageHeader } from "@/shared/commons/header/PageHeader";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import { LoadingOverlay } from "@/shared/commons/loading/Loading";
 import { toast } from "@/shared/commons/toast/toast";
-import { navigateBack, useNavigate } from "@/shared/navigation/stackflowNavigation";
+import { navigateBack, resetStackflow, useNavigate } from "@/shared/navigation/stackflowNavigation";
 
 export type NutrientRegisterEntrySource = "camera" | "manual" | "chatNutritionLabel";
 
 export type NutrientRegisterFormState = Partial<RegisterMenuRequestDto> & {
+  afterAddReturnPath?: string;
+  backReturnPath?: string;
   brandName?: string;
   chatId?: number;
   dateKey?: string;
@@ -43,6 +45,7 @@ export type NutrientRegisterFormState = Partial<RegisterMenuRequestDto> & {
 type NutrientRegisterFormPageProps = {
   appendMealQueryToBrandSearchReturn?: boolean;
   backFallbackPath: string;
+  backReturnPath?: string;
   brandSearchReturnPath?: string;
   dateKey: string;
   initialState: NutrientRegisterFormState;
@@ -64,6 +67,7 @@ export type NutrientRegisterSubmitPayload = Pick<
 export function NutrientRegisterFormPage({
   appendMealQueryToBrandSearchReturn = true,
   backFallbackPath,
+  backReturnPath,
   brandSearchReturnPath = PATH.NUTRIENT_ADD_REGISTER,
   dateKey,
   initialState,
@@ -123,6 +127,7 @@ export function NutrientRegisterFormPage({
         dateKey,
         mealType,
         keyword,
+        backReturnPath,
         brandSearchReturnKey,
         returnPath: appendMealQueryToBrandSearchReturn
           ? getPathWithMeal(brandSearchReturnPath, dateKey, mealType, keyword)
@@ -184,6 +189,11 @@ export function NutrientRegisterFormPage({
   };
 
   const handleBack = () => {
+    if (backReturnPath) {
+      resetStackflow(backReturnPath, { animate: false });
+      return;
+    }
+
     navigateBack({ fallbackTo: backFallbackPath });
   };
 

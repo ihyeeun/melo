@@ -3,11 +3,18 @@ import { useMemo, useState } from "react";
 
 import Calendar from "@/features/calendar/components/Calendar";
 import styles from "@/features/diary/styles/DiaryPage.module.css";
+import ActivityCaloriesPopover from "@/features/health/components/ActivityCaloriesPopover";
+import { useActivityCalories } from "@/features/health/hooks/useActivityCalories";
 import ActionCard from "@/features/home/components/cards/ActionCard";
 import TodayBodyLogSection from "@/features/home/components/TodayBodyLogSection";
 import { useDayMealsQuery } from "@/features/home/hooks/queries/useTodayRecordQuery";
 import type { MenuWithQuantity } from "@/features/home/utils/dayMealSummary";
-import { getCalorieSummary, hasValidTargets } from "@/features/home/utils/todayMealFeedback";
+import {
+  getActivityAdjustedTargetCalories,
+  getActivityCalorieProgressDash,
+  getCalorieSummary,
+  hasValidTargets,
+} from "@/features/home/utils/todayMealFeedback";
 import {
   useTodayMealRecordDeleteMutation,
   useTodayMealRecordRegisterMutation,
@@ -25,10 +32,7 @@ import { useSelectedDateKey, useSetSelectedDate } from "@/shared/stores/selected
 import { useTargetsState } from "@/shared/stores/targetNutrient.store";
 import { formatDateKey, parseDateKey } from "@/shared/utils/dateFormat";
 import { formatNumberWithMaxOneDecimal } from "@/shared/utils/numberFormat";
-import {
-  calculateDailyNutritionMetricsForDisplay,
-  getCalorieProgressPercent,
-} from "@/shared/utils/nutrientScore";
+import { calculateDailyNutritionMetricsForDisplay } from "@/shared/utils/nutrientScore";
 
 type DiaryMeal = {
   type: MealType;
@@ -59,6 +63,7 @@ export default function DiaryPage() {
   const targets = useTargetsState();
 
   const { data: dayMeals, isPending } = useDayMealsQuery(selectedDateKey);
+  const { summary: activitySummary } = useActivityCalories(selectedDateKey);
 
   const nutritionMetrics = useMemo(() => {
     if (isPending || !dayMeals || !targets) {
@@ -82,13 +87,18 @@ export default function DiaryPage() {
   }, [dayMeals, isPending, targets]);
 
   const targetCalories = targets?.target_calories ?? 2100;
+  const adjustedTargetCalories = getActivityAdjustedTargetCalories(
+    targetCalories,
+    activitySummary?.calories,
+  );
   const totalCalories = isPending ? 0 : (dayMeals?.totalCalories ?? 0);
-  const calorieSummary = getCalorieSummary(totalCalories, targetCalories);
+  const calorieSummary = getCalorieSummary(totalCalories, adjustedTargetCalories);
   const roundedTargetCalories = calorieSummary.roundedTargetCalories ?? Math.round(targetCalories);
-  const calorieProgress =
-    nutritionMetrics?.calorieProgressPercent ??
-    getCalorieProgressPercent(totalCalories, targetCalories);
-  const isCalorieExceeded = totalCalories > targetCalories;
+  const progressDash = getActivityCalorieProgressDash({
+    targetCalories,
+    adjustedTargetCalories,
+  });
+  const isCalorieExceeded = totalCalories > roundedTargetCalories;
   const mealScore = nutritionMetrics?.score.totalScore ?? 0;
 
   const calorieMessage = calorieSummary.message;
@@ -116,7 +126,6 @@ export default function DiaryPage() {
         score: mealScore,
         targets: targets,
         currents: dayMeals,
-        calorieMessage: calorieSummary.message,
       },
     });
   };
@@ -141,6 +150,7 @@ export default function DiaryPage() {
                     <span className="textNoWrap typo-title2">
                       / {roundedTargetCalories.toLocaleString("ko-KR")} kcal
                     </span>
+                    <ActivityCaloriesPopover variant="primary" />
                   </p>
                   <span className={styles.scoreDivider} aria-hidden="true" />
                   <span className={`${styles.score} typo-title2`}>{mealScore}점</span>
@@ -149,7 +159,9 @@ export default function DiaryPage() {
                 </div>
                 <div className={styles.scoreContainer}>
                   <ScoreProgress
-                    value={calorieProgress}
+                    value={calorieSummary.roundedCurrentCalories}
+                    max={roundedTargetCalories}
+                    dash={progressDash}
                     variant={isCalorieExceeded ? "danger-white" : "primary-gray"}
                   />
                   <p className={`${styles.calorieMessage} typo-body3`}>{calorieMessage}</p>

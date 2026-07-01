@@ -1,21 +1,13 @@
 import { useActivity } from "@stackflow/react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { useRegisterStepsMutation } from "@/features/home/hooks/mutations/useBodyLogMutation";
 import { useGetBodyLog } from "@/features/home/hooks/queries/useTodayRecordQuery";
 import style from "@/features/home/styles/TodayBodyLogSection.module.css";
 import { PATH } from "@/router/path";
-import {
-  isNativeApp,
-  openNativeInAppBrowser,
-  readNativeStepCountRecords,
-  requestNativeHealthPermissionStatus,
-  requestNativeHealthReadPermission,
-} from "@/shared/api/bridge/nativeBridge";
-import type { HealthPermissionResponsePayload } from "@/shared/api/bridge/nativeBridge.types";
+import { isNativeApp } from "@/shared/api/bridge/nativeBridge";
 import BottomSheet from "@/shared/commons/bottomSheet/BottomSheet";
 import { Button } from "@/shared/commons/button/Button";
-import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import NumberField from "@/shared/commons/input/NumberField";
 import { LoadingOverlay } from "@/shared/commons/loading/Loading";
 import { toast } from "@/shared/commons/toast/toast";
@@ -23,7 +15,6 @@ import { navigateBack } from "@/shared/navigation/stackflowNavigationController"
 import { getTodayFormatDateKey } from "@/shared/utils/dateFormat";
 
 const MAX_STEPS = 999999;
-const HEALTH_ACCESS_GUIDE_URL = "https://third-princess-d57.notion.site/health-connect";
 
 function toInteger(value: number) {
   return Math.trunc(value);
@@ -38,29 +29,26 @@ function isStepsInputAllowed(inputValue: string) {
   return Number(normalized) <= MAX_STEPS;
 }
 
-function canAttemptNativeStepRead(permission: HealthPermissionResponsePayload) {
-  if (permission.source === "health_connect") return permission.permissionStatus === "granted";
-  if (permission.source === "apple_health") return true;
-
-  return permission.permissionStatus === "granted";
-}
+type StepsDraftState = {
+  date: string;
+  steps?: number;
+};
 
 export default function StepsLogBottomSheetActivity() {
   const activity = useActivity();
   const date = activity.params.date ?? getTodayFormatDateKey();
   const { data: bodyLog } = useGetBodyLog(date);
-  const [draftSteps, setDraftSteps] = useState<number | undefined>(bodyLog?.steps ?? undefined);
-  const [nativeSyncedSteps, setNativeSyncedSteps] = useState<number | null>(null);
-  const [isNativeStepsConnected, setIsNativeStepsConnected] = useState(false);
-  const [shouldShowHealthAccessNotice, setShouldShowHealthAccessNotice] = useState(false);
-  const [stepsFieldRevision, setStepsFieldRevision] = useState(0);
-  const isDraftTouchedRef = useRef(false);
-  const isNativeStepSyncingRef = useRef(false);
-  const previousDateRef = useRef(date);
+  const [draftState, setDraftState] = useState<StepsDraftState | null>(null);
+  const draftSteps = draftState?.date === date ? draftState.steps : (bodyLog?.steps ?? undefined);
   const stepsInputRef = useRef<HTMLInputElement>(null);
   const isOpen =
     activity.transitionState === "enter-active" || activity.transitionState === "enter-done";
   const canImportNativeSteps = isNativeApp();
+  const nativeStepConnectionStatus = canImportNativeSteps
+    ? activity.params.nativeStepConnectionStatus
+    : "disconnected";
+  const canInputSteps = nativeStepConnectionStatus === "disconnected";
+  const nativeSyncedSteps = canInputSteps ? null : (bodyLog?.steps ?? null);
 
   const closeSheet = () => {
     if (!activity.isActive) return;
@@ -85,22 +73,6 @@ export default function StepsLogBottomSheetActivity() {
       },
     },
   );
-  const { mutate: registerNativeStepsSilently } = useRegisterStepsMutation();
-
-  useEffect(() => {
-    if (previousDateRef.current !== date) {
-      previousDateRef.current = date;
-      isDraftTouchedRef.current = false;
-      setNativeSyncedSteps(null);
-      setIsNativeStepsConnected(false);
-      setShouldShowHealthAccessNotice(false);
-      setStepsFieldRevision((revision) => revision + 1);
-    }
-
-    if (isDraftTouchedRef.current) return;
-
-    setDraftSteps(bodyLog?.steps ?? undefined);
-  }, [bodyLog?.steps, date]);
 
   const handleSubmit = () => {
     const submittedSteps = draftSteps;
@@ -119,77 +91,6 @@ export default function StepsLogBottomSheetActivity() {
     registerManualSteps({ date, steps: nextSteps });
   };
 
-  const syncNativeSteps = useCallback(async () => {
-    if (!canImportNativeSteps) {
-      return;
-    }
-    if (isNativeStepSyncingRef.current) return;
-
-    isNativeStepSyncingRef.current = true;
-    setNativeSyncedSteps(null);
-    setIsNativeStepsConnected(false);
-    setShouldShowHealthAccessNotice(false);
-
-    try {
-      let permission = await requestNativeHealthPermissionStatus();
-
-      if (permission.permissionStatus !== "granted") {
-        permission = await requestNativeHealthReadPermission();
-      }
-
-      if (!canAttemptNativeStepRead(permission)) {
-        setShouldShowHealthAccessNotice(false);
-        return;
-      }
-
-      const result = await readNativeStepCountRecords({
-        startDate: date,
-        endDate: date,
-      });
-
-      const record = result.records.find((item) => item.date === date);
-      const nextSteps =
-        record === undefined
-          ? null
-          : Math.min(MAX_STEPS, Math.max(0, toInteger(record.steps)));
-
-      isDraftTouchedRef.current = true;
-      setNativeSyncedSteps(nextSteps);
-      setIsNativeStepsConnected(true);
-      setShouldShowHealthAccessNotice(false);
-
-      if (nextSteps !== null) {
-        setDraftSteps(nextSteps);
-        setStepsFieldRevision((revision) => revision + 1);
-        registerNativeStepsSilently({ date, steps: nextSteps });
-      }
-    } catch {
-      setNativeSyncedSteps(null);
-      setIsNativeStepsConnected(false);
-      setShouldShowHealthAccessNotice(false);
-    } finally {
-      isNativeStepSyncingRef.current = false;
-    }
-  }, [canImportNativeSteps, date, registerNativeStepsSilently]);
-
-  useEffect(() => {
-    if (!isOpen) return;
-    if (!canImportNativeSteps) return;
-
-    void syncNativeSteps();
-  }, [canImportNativeSteps, isOpen, syncNativeSteps]);
-
-  const handleOpenHealthAccessGuide = useCallback(() => {
-    if (!canImportNativeSteps) {
-      window.open(HEALTH_ACCESS_GUIDE_URL, "_blank", "noopener,noreferrer");
-      return;
-    }
-
-    void openNativeInAppBrowser(HEALTH_ACCESS_GUIDE_URL).catch(() => {
-      window.open(HEALTH_ACCESS_GUIDE_URL, "_blank", "noopener,noreferrer");
-    });
-  }, [canImportNativeSteps]);
-
   const loadingLabel = isManualStepsPending ? "걸음 수를 기록하는 중입니다." : null;
 
   return (
@@ -198,45 +99,20 @@ export default function StepsLogBottomSheetActivity() {
         <div className={style.sheetContainer}>
           <div className={style.titleContainer}>
             <p className={`${style.sheetTitle} typo-title2`}>오늘의 걸음 수</p>
-            {shouldShowHealthAccessNotice ? (
-              <button
-                type="button"
-                className={style.healthAccessNoticeButton}
-                aria-label="건강 접근 안내 보기"
-                onClick={handleOpenHealthAccessGuide}
-              >
-                <SystemIcon name="backup" mode="image" />
-              </button>
-            ) : null}
           </div>
           <div className={style.stepsFieldRow}>
-            {isNativeStepsConnected ? (
-              <p
-                className={`${style.syncedStepsValue} typo-body1`}
-                aria-label={
-                  nativeSyncedSteps === null
-                    ? "연동된 오늘의 걸음 수 데이터 없음"
-                    : `연동된 오늘의 걸음 수 ${nativeSyncedSteps.toLocaleString()}보`
-                }
-              >
-                {nativeSyncedSteps === null
-                  ? "걸음 수 데이터가 없어요"
-                  : `${nativeSyncedSteps.toLocaleString()} 보`}
-              </p>
-            ) : (
+            {canInputSteps ? (
               <NumberField
-                key={stepsFieldRevision}
+                key={date}
                 value={draftSteps}
                 onChange={(nextValue) => {
-                  isDraftTouchedRef.current = true;
-
                   if (nextValue === undefined) {
-                    setDraftSteps(undefined);
+                    setDraftState({ date, steps: undefined });
                     return;
                   }
 
                   const nextSteps = toInteger(nextValue);
-                  setDraftSteps(Math.min(MAX_STEPS, Math.max(0, nextSteps)));
+                  setDraftState({ date, steps: Math.min(MAX_STEPS, Math.max(0, nextSteps)) });
                 }}
                 min={0}
                 max={MAX_STEPS}
@@ -261,10 +137,23 @@ export default function StepsLogBottomSheetActivity() {
                 }}
                 suffix={<span className={`typo-caption1 ${style.stepsUnit}`}>보</span>}
               />
+            ) : (
+              <p
+                className={`${style.syncedStepsValue} typo-body1`}
+                aria-label={
+                  nativeSyncedSteps === null
+                    ? "연동된 오늘의 걸음 수 데이터 없음"
+                    : `연동된 오늘의 걸음 수 ${nativeSyncedSteps.toLocaleString()}보`
+                }
+              >
+                {nativeSyncedSteps === null
+                  ? "걸음 수 데이터가 없어요"
+                  : `${nativeSyncedSteps.toLocaleString()} 보`}
+              </p>
             )}
           </div>
           <div className={style.sheetActions}>
-            {!isNativeStepsConnected && (
+            {canInputSteps && (
               <Button onClick={handleSubmit} fullWidth size="large" disabled={isManualStepsPending}>
                 기록하기
               </Button>

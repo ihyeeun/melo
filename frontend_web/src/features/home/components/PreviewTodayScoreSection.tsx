@@ -1,7 +1,11 @@
+import ActivityCaloriesPopover from "@/features/health/components/ActivityCaloriesPopover";
+import { useActivityCalories } from "@/features/health/hooks/useActivityCalories";
 import ActionCard from "@/features/home/components/cards/ActionCard";
 import { useDayMealsQuery } from "@/features/home/hooks/queries/useTodayRecordQuery";
 import style from "@/features/home/styles/PreviewTodayScoreSection.module.css";
 import {
+  getActivityAdjustedTargetCalories,
+  getActivityCalorieProgressDash,
   getCalorieSummary,
   hasValidTargets,
   resolveTargetCalories,
@@ -14,10 +18,7 @@ import { Skeleton, SkeletonStatus } from "@/shared/commons/skeleton/Skeleton";
 import { toast } from "@/shared/commons/toast/toast";
 import { useNavigate } from "@/shared/navigation/stackflowNavigation";
 import { useTargetsLoadedState, useTargetsState } from "@/shared/stores/targetNutrient.store";
-import {
-  calculateDailyNutritionMetricsForDisplay,
-  getCalorieProgressPercent,
-} from "@/shared/utils/nutrientScore";
+import { calculateDailyNutritionMetricsForDisplay } from "@/shared/utils/nutrientScore";
 
 type PreviewTodayScoreSectionProps = {
   selectedDate: string;
@@ -25,10 +26,13 @@ type PreviewTodayScoreSectionProps = {
 
 type PreviewTodayScoreCardProps = {
   currentCalories: number;
+  date?: string;
   isCalorieExceeded: boolean;
   message: string;
   onClick?: () => void;
-  progressPercent: number;
+  progressDash?: { label?: string; value: number } | null;
+  progressMax: number | null;
+  progressValue: number;
   score: number | null;
   targetCalories: number | null;
 };
@@ -37,10 +41,15 @@ export default function PreviewTodayScoreSection({ selectedDate }: PreviewTodayS
   const navigation = useNavigate();
 
   const { data: dayMealSummary, isPending: isSummaryPending } = useDayMealsQuery(selectedDate);
+  const { summary: activitySummary } = useActivityCalories(selectedDate);
 
   const targets = useTargetsState();
   const hasTargetsLoaded = useTargetsLoadedState();
   const targetCalories = resolveTargetCalories(targets);
+  const adjustedTargetCalories = getActivityAdjustedTargetCalories(
+    targetCalories,
+    activitySummary?.calories,
+  );
   const hasTargetCalories = targetCalories !== null;
   const shouldFetchProfile = hasTargetsLoaded && !hasTargetCalories;
   const { isPending: isProfilePending } = useGetProfileQuery({
@@ -69,10 +78,18 @@ export default function PreviewTodayScoreSection({ selectedDate }: PreviewTodayS
     ? calculateDailyNutritionMetricsForDisplay(nutritionInput)
     : null;
   const score = nutritionInput ? (nutritionMetrics?.score.totalScore ?? 0) : null;
-  const calorieSummary = getCalorieSummary(dayMealSummary?.totalCalories ?? 0, targetCalories);
+  const calorieSummary = getCalorieSummary(
+    dayMealSummary?.totalCalories ?? 0,
+    adjustedTargetCalories,
+  );
   const isCalorieExceeded =
-    targetCalories !== null && (dayMealSummary?.totalCalories ?? 0) > targetCalories;
+    adjustedTargetCalories !== null &&
+    (dayMealSummary?.totalCalories ?? 0) > adjustedTargetCalories;
   const isTargetInfoPending = shouldFetchProfile && isProfilePending;
+  const progressDash = getActivityCalorieProgressDash({
+    targetCalories,
+    adjustedTargetCalories,
+  });
 
   const handleTodayMealScoreClick = () => {
     if (!hasValidTargets(targets)) {
@@ -91,7 +108,6 @@ export default function PreviewTodayScoreSection({ selectedDate }: PreviewTodayS
         score: scoreForNavigation,
         targets: targets,
         currents: dayMealSummary,
-        calorieMessage: calorieSummary.message,
       },
     });
   };
@@ -106,12 +122,12 @@ export default function PreviewTodayScoreSection({ selectedDate }: PreviewTodayS
       message={isTargetInfoPending ? "목표 정보를 불러오는 중입니다." : calorieSummary.message}
       currentCalories={calorieSummary.roundedCurrentCalories}
       targetCalories={calorieSummary.roundedTargetCalories}
-      progressPercent={
-        nutritionMetrics?.calorieProgressPercent ??
-        getCalorieProgressPercent(dayMealSummary?.totalCalories || 0, targetCalories ?? 0)
-      }
+      progressValue={calorieSummary.roundedCurrentCalories}
+      progressMax={calorieSummary.roundedTargetCalories}
+      progressDash={progressDash}
       isCalorieExceeded={isCalorieExceeded}
       onClick={handleTodayMealScoreClick}
+      date={selectedDate}
     />
   );
 }
@@ -123,7 +139,8 @@ export function PreviewTodayScorePreview() {
       message="오늘 목표까지 1,240kcal 남았어요"
       currentCalories={560}
       targetCalories={1800}
-      progressPercent={31}
+      progressValue={560}
+      progressMax={1800}
       isCalorieExceeded={false}
     />
   );
@@ -131,10 +148,13 @@ export function PreviewTodayScorePreview() {
 
 function PreviewTodayScoreCard({
   currentCalories,
+  date,
   isCalorieExceeded,
   message,
   onClick,
-  progressPercent,
+  progressDash = null,
+  progressMax,
+  progressValue,
   score,
   targetCalories,
 }: PreviewTodayScoreCardProps) {
@@ -155,10 +175,13 @@ function PreviewTodayScoreCard({
           </span>
           {"/ "}
           {targetCalories !== null ? targetCalories.toLocaleString("ko-KR") : "--"} kcal
+          {date ? <ActivityCaloriesPopover /> : null}
           <SystemIcon name="chevron-right-normal" size={24} className={style.icon} />
         </p>
         <ScoreProgress
-          value={progressPercent}
+          value={progressMax === null ? 0 : progressValue}
+          max={progressMax ?? 100}
+          dash={progressDash}
           variant={isCalorieExceeded ? "danger-white" : "primary-white"}
         />
       </section>

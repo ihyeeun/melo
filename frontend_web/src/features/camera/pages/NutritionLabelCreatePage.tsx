@@ -13,18 +13,19 @@ import {
 } from "@/features/camera/utils/cameraCapture";
 import { getMealType, getSafeDateKey } from "@/features/meal-record/utils/mealRecord.queryParams";
 import { PATH } from "@/router/path";
-import { getPathWithMeal } from "@/router/pathHelpers";
+import { getMealRecordPath, getMealSearchPath, getPathWithMeal } from "@/router/pathHelpers";
 import { requestNativeCameraCapture } from "@/shared/api/bridge/nativeBridge";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
 import { CheckButtonModal } from "@/shared/commons/modals/CheckButtonModal";
 import { toast } from "@/shared/commons/toast/toast";
 import {
   navigateBack,
-  navigateBackAndPush,
+  useNavigate,
   useSearchParams,
 } from "@/shared/navigation/stackflowNavigation";
 
 export default function NutrientCameraPage() {
+  const navigation = useNavigate();
   const [isOpeningCamera, setIsOpeningCamera] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
   const [capturedPreviewSrc, setCapturedPreviewSrc] = useState<string | null>(null);
@@ -81,38 +82,23 @@ export default function NutrientCameraPage() {
       setCapturedPreviewSrc(getCapturedImagePreviewSrc(capturedImage));
       setIsUploading(true);
       const imageData = await uploadImage(capturedImage);
-      const dateKey = searchParams.get("date");
-      const mealType = searchParams.get("mealType");
-      const keyword = searchParams.get("keyword");
-      const registerParams = new URLSearchParams();
+      const keyword = searchParams.get("keyword")?.trim() || undefined;
+      const registerPath = getPathWithMeal(PATH.NUTRIENT_ADD_REGISTER, dateKey, mealType, keyword);
+      const searchReturnPath = getMealSearchPath(dateKey, mealType, keyword);
 
-      if (dateKey) {
-        registerParams.set("date", dateKey);
-      }
-      if (mealType) {
-        registerParams.set("mealType", mealType);
-      }
-      if (keyword && keyword.trim().length > 0) {
-        registerParams.set("keyword", keyword.trim());
-      }
-      const registerPath = registerParams.toString().length
-        ? `${PATH.NUTRIENT_ADD_REGISTER}?${registerParams.toString()}`
-        : PATH.NUTRIENT_ADD_REGISTER;
-
-      navigateBackAndPush({
-        count: 2,
+      navigation(registerPath, {
+        replace: true,
         animate: false,
-        to: registerPath,
-        pushOptions: {
-          state: {
-            ...imageData, // unit, weight, calories, carbs...
-            name: searchParams.get("name") ?? "",
-            brand: searchParams.get("brand") ?? "",
-            entrySource: "camera" as const,
-            dateKey: dateKey ?? undefined,
-            mealType: mealType ?? undefined,
-            keyword: keyword ?? undefined,
-          },
+        state: {
+          ...imageData, // unit, weight, calories, carbs...
+          name: searchParams.get("name") ?? "",
+          brand: searchParams.get("brand") ?? "",
+          entrySource: "camera" as const,
+          dateKey,
+          mealType,
+          keyword: keyword ?? undefined,
+          backReturnPath: searchReturnPath,
+          afterAddReturnPath: getMealRecordPath(dateKey, mealType),
         },
       });
 
@@ -123,7 +109,7 @@ export default function NutrientCameraPage() {
     } finally {
       setIsUploading(false);
     }
-  }, [isUploading, returnFromCameraPage, searchParams, uploadImage]);
+  }, [isUploading, navigation, returnFromCameraPage, searchParams, uploadImage, dateKey, mealType]);
 
   useEffect(() => {
     if (autoTriggeredRef.current) return;

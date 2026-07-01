@@ -60,7 +60,10 @@ import { PATH } from "@/router/path";
 import { getMealRecordPath, getMealSearchPath } from "@/router/pathHelpers";
 import { track } from "@/shared/analytics/analytics";
 import { EVENT_NAME } from "@/shared/analytics/analytics.constants";
-import { trackChatMenuSave } from "@/shared/analytics/recommendMenuEvents";
+import {
+  trackChatMenuSave,
+  trackRecommendMenuCancel,
+} from "@/shared/analytics/recommendMenuEvents";
 import { AppApiError } from "@/shared/api/apiClient";
 import { isNativeApp, requestNativeAppDeviceInfo } from "@/shared/api/bridge/nativeBridge";
 import type { AppDeviceInfoPayload } from "@/shared/api/bridge/nativeBridge.types";
@@ -1255,9 +1258,6 @@ export default function ChatPage() {
             image: mealRecord.image,
           }),
           currentMenusByTime: mealRecord.dayMeals.menusByTime,
-          analytics: {
-            recommendMenuCancel: mealRecordMenus,
-          },
         });
 
         if (deleteResult !== DELETE_MEAL_RECORD_RESULT.DELETED) {
@@ -1265,6 +1265,7 @@ export default function ChatPage() {
           return;
         }
 
+        trackRecommendMenuCancel(mealRecordMenus);
         toast.success("식사 기록에서 메뉴를 제거했어요.");
       } catch {
         toast.warning("식사 기록 저장에 실패했어요. 잠시 후 다시 시도해주세요.");
@@ -1282,11 +1283,9 @@ export default function ChatPage() {
           selectedMenus: remainingMenus,
           image: mealRecord.image,
         }),
-        analytics: {
-          recommendMenuCancel: mealRecordMenus,
-        },
       });
 
+      trackRecommendMenuCancel(mealRecordMenus);
       toast.success("식사 기록에서 메뉴를 제거했어요.");
       commitMealRecordScroll(scrollTargetKey);
     } catch {
@@ -1308,9 +1307,6 @@ export default function ChatPage() {
           image: mealRecord.image,
         }),
         currentMenusByTime: mealRecord.dayMeals.menusByTime,
-        analytics: {
-          recommendMenuCancel: mealRecord.menus,
-        },
       });
 
       if (deleteResult !== DELETE_MEAL_RECORD_RESULT.DELETED) {
@@ -1318,6 +1314,7 @@ export default function ChatPage() {
         return;
       }
 
+      trackRecommendMenuCancel(mealRecord.menus);
       toast.success("식사 기록을 취소했어요.");
     } catch {
       toast.warning("식사 기록 저장에 실패했어요. 잠시 후 다시 시도해주세요.");
@@ -1421,11 +1418,6 @@ export default function ChatPage() {
             selectedMenus: editingSelectedMenus,
             candidateIds: editingSelectedMenus.map((menu) => menu.id),
           });
-    const removedMenus = getRemovedMealRecordMenus(
-      previousMealRecord.menus,
-      nextMenus,
-      editingMealRecordContext.menus,
-    );
 
     if (nextMenus.length === 0) {
       try {
@@ -1438,9 +1430,6 @@ export default function ChatPage() {
             image: editingMealRecordContext.image,
           }),
           currentMenusByTime: editingMealRecordContext.dayMeals.menusByTime,
-          analytics: {
-            recommendMenuCancel: removedMenus,
-          },
         });
 
         if (deleteResult !== DELETE_MEAL_RECORD_RESULT.DELETED) {
@@ -1493,9 +1482,6 @@ export default function ChatPage() {
               ? editingMealRecordContext.image
               : getDiaryMealImage(editingMealRecordContext.dayMeals, nextTime),
         }),
-        analytics: {
-          recommendMenuCancel: removedMenus,
-        },
       });
 
       toast.success("식사 기록이 수정되었어요.");
@@ -3243,19 +3229,6 @@ function getRemainingMealRecordMenus(
 ): SelectedDiaryMealRecordMenu[] {
   const removeMenuIdSet = new Set(removeMenuIds);
   return mealRecord.menus.filter((menu) => !removeMenuIdSet.has(menu.id));
-}
-
-function getRemovedMealRecordMenus(
-  previousMenus: SelectedDiaryMealRecordMenu[],
-  nextMenus: SelectedDiaryMealRecordMenu[],
-  menuDetails: ChatMealRecordMenu[],
-) {
-  const nextMenuIdSet = new Set(nextMenus.map((menu) => menu.id));
-  const removedMenuIdSet = new Set(
-    previousMenus.filter((menu) => !nextMenuIdSet.has(menu.id)).map((menu) => menu.id),
-  );
-
-  return menuDetails.filter((menu) => removedMenuIdSet.has(menu.menu_id));
 }
 
 function getMealRecordViewModelByTime(
