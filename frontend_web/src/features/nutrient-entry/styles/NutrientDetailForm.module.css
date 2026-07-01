@@ -97,7 +97,6 @@
   color: var(--label-normal);
   cursor: pointer;
   padding: 10px 6px;
-  text-align: right;
 }
 
 .selectItem[data-highlighted] {
