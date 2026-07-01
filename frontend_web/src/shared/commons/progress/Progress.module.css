@@ -1,6 +1,7 @@
 .Progress {
   --progress-track-color: var(--bg-white);
   --progress-indicator-color: var(--primary-normal);
+  --progress-dash-color: var(--label-alternative);
 
   display: grid;
   gap: 0.25rem;
@@ -43,9 +44,18 @@
 .Track {
   background-color: var(--progress-track-color);
   border-radius: 100px;
-  grid-column: 1 / 3;
   height: 12px;
   overflow: hidden;
+}
+
+.TrackWrap {
+  grid-column: 1 / 3;
+  position: relative;
+  width: 100%;
+}
+
+.TrackWrap[data-has-dash="true"] {
+  min-height: 32px;
 }
 
 .Indicator {
@@ -53,4 +63,26 @@
   border-radius: 100px;
   display: block;
   transition: width 500ms;
+}
+
+.Dash {
+  display: inline-flex;
+  flex-direction: column;
+  pointer-events: none;
+  position: absolute;
+  top: 0;
+  z-index: 1;
+  gap: 4px;
+}
+
+.DashLine {
+  border-left: 1px dashed var(--progress-dash-color);
+  height: 12px;
+  width: 0;
+}
+
+.DashLabel {
+  color: var(--progress-dash-color);
+  transform: translateX(-50%);
+  white-space: nowrap;
 }

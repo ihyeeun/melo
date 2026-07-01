@@ -1,13 +1,16 @@
 import { useEffect } from "react";
 
+import ActivityCaloriesPopover from "@/features/health/components/ActivityCaloriesPopover";
+import { useActivityCalories } from "@/features/health/hooks/useActivityCalories";
 import styles from "@/features/home/styles/TodayMealScorePage.module.css";
 import type { DayMealSummary } from "@/features/home/utils/dayMealSummary";
 import {
+  getActivityAdjustedTargetCalories,
+  getActivityCalorieProgressDash,
   getCalorieSummary,
   getNutrientStatus,
   getNutrientStatusLabel,
   hasValidTargets,
-  type MealFeedback,
   type NutrientStatus,
   resolveTargetCalories,
 } from "@/features/home/utils/todayMealFeedback";
@@ -15,7 +18,9 @@ import { NutrientWarningPopover } from "@/features/meal-record/components/Nutrie
 import { PATH } from "@/router/path";
 import { Button } from "@/shared/commons/button/Button";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
+import ScoreProgress from "@/shared/commons/progress/Progress";
 import { navigateBack, useLocation, useNavigate } from "@/shared/navigation/stackflowNavigation";
+import { useSelectedDateKey } from "@/shared/stores/selectedDate.store";
 import type { TargetsNutrients } from "@/shared/stores/targetNutrient.store";
 import { calculateMacroPercentToGram, type MacroKey } from "@/shared/utils/nutrientScore";
 
@@ -48,8 +53,10 @@ const badgeStatusClassName: Record<NutrientStatus, string> = {
 export default function TodayMealScorePage() {
   const navigate = useNavigate();
   const { state } = useLocation();
+  const selectedDateKey = useSelectedDateKey();
 
   const pageState = state as TodayMealScorePageState | null;
+  const { summary: activitySummary } = useActivityCalories(selectedDateKey);
   const isValidState = Boolean(
     pageState &&
     pageState.currents &&
@@ -76,8 +83,19 @@ export default function TodayMealScorePage() {
     return null;
   }
 
-  const calorieSummary = getCalorieSummary(pageState.currents.totalCalories, targetCalories);
+  const adjustedTargetCalories = getActivityAdjustedTargetCalories(
+    targetCalories,
+    activitySummary?.calories,
+  );
+  const calorieSummary = getCalorieSummary(
+    pageState.currents.totalCalories,
+    adjustedTargetCalories,
+  );
   const roundedTargetCalories = calorieSummary.roundedTargetCalories ?? Math.round(targetCalories);
+  const calorieProgressDash = getActivityCalorieProgressDash({
+    targetCalories,
+    adjustedTargetCalories,
+  });
   const nutrientBaseItems: Array<Omit<NutrientItem, "status" | "progressPercent">> = [
     {
       key: "carbs",
@@ -129,10 +147,6 @@ export default function TodayMealScorePage() {
   });
 
   const score = Math.round(pageState.score);
-  const calorieProgress = getNutrientProgressPercent(
-    calorieSummary.roundedCurrentCalories,
-    roundedTargetCalories,
-  );
   const isCalorieExceeded = calorieSummary.roundedCurrentCalories > roundedTargetCalories;
 
   return (
@@ -165,11 +179,14 @@ export default function TodayMealScorePage() {
                   <p className="textNoWrap typo-title3">
                     / {roundedTargetCalories.toLocaleString("ko-KR")} kcal
                   </p>
+                  <ActivityCaloriesPopover />
                 </div>
                 <div className={styles.calorieProgressContainer}>
-                  <NutrientProgress
-                    value={calorieProgress}
-                    status={isCalorieExceeded ? "excess" : undefined}
+                  <ScoreProgress
+                    value={calorieSummary.roundedCurrentCalories}
+                    max={roundedTargetCalories}
+                    dash={calorieProgressDash}
+                    variant={isCalorieExceeded ? "danger-white" : "primary-gray"}
                   />
                   <p className={`${styles.textAlternative} typo-body3`}>{calorieSummary.message}</p>
                 </div>
@@ -228,8 +245,6 @@ type TodayMealScorePageState = {
   score: number;
   targets: TargetsNutrients;
   currents: DayMealSummary;
-  calorieMessage?: string;
-  mealFeedback?: MealFeedback;
 };
 
 function getNutrientProgressPercent(current: number, target: number) {

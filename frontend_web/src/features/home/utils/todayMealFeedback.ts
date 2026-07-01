@@ -17,6 +17,11 @@ export type CalorieSummary = {
   message: string;
 };
 
+export type CalorieProgressDash = {
+  label: string;
+  value: number;
+};
+
 export type NutrientStatus = "insufficient" | "adequate" | "excess";
 
 export function resolveTargetCalories(targets: TargetsNutrients | null) {
@@ -29,6 +34,42 @@ export function resolveTargetCalories(targets: TargetsNutrients | null) {
 
 export function hasValidTargets(targets: TargetsNutrients | null): targets is TargetsNutrients {
   return resolveTargetCalories(targets) !== null;
+}
+
+export function getActivityAdjustedTargetCalories(
+  targetCalories: number | null,
+  activityCalories: number | null | undefined,
+) {
+  if (targetCalories === null || !Number.isFinite(targetCalories) || targetCalories <= 0) {
+    return null;
+  }
+
+  const safeActivityCalories =
+    typeof activityCalories === "number" && Number.isFinite(activityCalories) && activityCalories > 0
+      ? activityCalories
+      : 0;
+
+  return Math.round(targetCalories + safeActivityCalories);
+}
+
+export function getActivityCalorieProgressDash({
+  adjustedTargetCalories,
+  targetCalories,
+}: {
+  adjustedTargetCalories: number | null;
+  targetCalories: number | null;
+}): CalorieProgressDash | null {
+  if (
+    targetCalories === null ||
+    adjustedTargetCalories === null ||
+    !Number.isFinite(targetCalories) ||
+    !Number.isFinite(adjustedTargetCalories) ||
+    adjustedTargetCalories <= targetCalories
+  ) {
+    return null;
+  }
+
+  return { label: "활동 전", value: Math.round(targetCalories) };
 }
 
 export function getCalorieSummary(totalCalories: number, targetCalories: number | null): CalorieSummary {
