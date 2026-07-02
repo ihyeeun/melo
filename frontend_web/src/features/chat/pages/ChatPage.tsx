@@ -2872,12 +2872,12 @@ function FeedbackSection({
         </div>
       </article>
 
-      <button className={styles.actionCard} onClick={onDirectMealRecordClick}>
-        <p className="typo-body2 textNormal">
+      <button className={styles.actionCard} onClick={onDirectMealRecordClick} type="button">
+        <span className="typo-body2 textNormal">
           인식한 메뉴가 다르다면
           <br />
           직접 추가할 수 있어요
-        </p>
+        </span>
         <SystemIcon name="chevron-right-normal" size={20} />
       </button>
     </div>
