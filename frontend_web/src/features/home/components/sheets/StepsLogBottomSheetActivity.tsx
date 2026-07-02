@@ -49,8 +49,7 @@ export default function StepsLogBottomSheetActivity() {
   const nativeStepConnectionStatus = canImportNativeSteps
     ? activity.params.nativeStepConnectionStatus
     : "disconnected";
-  const isNativeStepsConnected =
-    canImportNativeSteps && nativeStepConnectionStatus === "connected";
+  const isNativeStepsConnected = canImportNativeSteps && nativeStepConnectionStatus === "connected";
   const canInputSteps = !isNativeStepsConnected;
   const nativeSyncedSteps = isNativeStepsConnected ? (bodyLog?.steps ?? null) : null;
 
@@ -147,15 +146,17 @@ export default function StepsLogBottomSheetActivity() {
                   suffix={<span className={`typo-caption1 ${style.stepsUnit}`}>보</span>}
                 />
 
-                <Button
-                  variant="text"
-                  color="normal"
-                  className={style.healthAccessNoticeButton}
-                  onClick={handleOpenHealthAccessGuide}
-                >
-                  걸음 수 연동하기
-                  <SystemIcon name="chevron-right-normal" size={16} />
-                </Button>
+                {nativeStepConnectionStatus === "disconnected" && (
+                  <Button
+                    variant="text"
+                    color="normal"
+                    className={style.healthAccessNoticeButton}
+                    onClick={handleOpenHealthAccessGuide}
+                  >
+                    걸음 수 연동하기
+                    <SystemIcon name="chevron-right-normal" size={16} />
+                  </Button>
+                )}
               </div>
             ) : (
               <p
