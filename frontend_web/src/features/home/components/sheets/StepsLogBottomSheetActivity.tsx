@@ -49,8 +49,10 @@ export default function StepsLogBottomSheetActivity() {
   const nativeStepConnectionStatus = canImportNativeSteps
     ? activity.params.nativeStepConnectionStatus
     : "disconnected";
-  const canInputSteps = nativeStepConnectionStatus === "disconnected";
-  const nativeSyncedSteps = canInputSteps ? null : (bodyLog?.steps ?? null);
+  const isNativeStepsConnected =
+    canImportNativeSteps && nativeStepConnectionStatus === "connected";
+  const canInputSteps = !isNativeStepsConnected;
+  const nativeSyncedSteps = isNativeStepsConnected ? (bodyLog?.steps ?? null) : null;
 
   const closeSheet = () => {
     if (!activity.isActive) return;
