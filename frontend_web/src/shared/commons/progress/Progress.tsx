@@ -39,7 +39,7 @@ export default function ScoreProgress({
     dash && dashPosition !== null && dashPosition >= 0 && dashPosition <= 100
       ? {
           ...dash,
-          position: dashPosition,
+          position: Math.min(Math.max(dashPosition, 2), 100 - 2),
         }
       : null;
 
