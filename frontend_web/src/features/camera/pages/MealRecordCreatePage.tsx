@@ -41,9 +41,7 @@ import { PageHeader } from "@/shared/commons/header/PageHeader";
 import { CheckButtonModal } from "@/shared/commons/modals/CheckButtonModal";
 import { toast } from "@/shared/commons/toast/toast";
 import {
-  isPreviousStackActivity,
   navigateBack,
-  navigateBackAndPush,
   useNavigate,
   useSearchParams,
 } from "@/shared/navigation/stackflowNavigation";
@@ -248,25 +246,21 @@ export default function MealRecordCreatePage() {
       const rawMealType = searchParams.get("mealType");
       const keyword = searchParams.get("keyword");
       const registerPath = createNutritionLabelRegisterPath();
-      const popCount = isPreviousStackActivity("NutrientAdd") ? 2 : 1;
 
-      navigateBackAndPush({
-        count: popCount,
+      navigate(registerPath, {
+        replace: true,
         animate: false,
-        to: registerPath,
-        pushOptions: {
-          state: {
-            ...imageData,
-            dateKey: rawDateKey ?? undefined,
-            mealType: rawMealType ?? undefined,
-            keyword: keyword ?? undefined,
-          },
+        state: {
+          ...imageData,
+          dateKey: rawDateKey ?? undefined,
+          mealType: rawMealType ?? undefined,
+          keyword: keyword ?? undefined,
         },
       });
 
       toast.success("영양성분표 분석이 완료되었어요.");
     },
-    [createNutritionLabelRegisterPath, searchParams, uploadNutritionLabelImage],
+    [createNutritionLabelRegisterPath, navigate, searchParams, uploadNutritionLabelImage],
   );
 
   const handleCameraActions = useCallback(async () => {

@@ -25,8 +25,8 @@ import { PageHeader } from "@/shared/commons/header/PageHeader";
 import { CheckButtonModal } from "@/shared/commons/modals/CheckButtonModal";
 import {
   isPreviousStackActivity,
+  navigate,
   navigateBack,
-  navigateBackAndPush,
 } from "@/shared/navigation/stackflowNavigation";
 
 export default function MenuBoardCameraPage() {
@@ -49,10 +49,7 @@ export default function MenuBoardCameraPage() {
       return;
     }
 
-    navigateBackAndPush({
-      fallbackTo: PATH.CHAT,
-      to: PATH.CHAT,
-    });
+    navigate(PATH.CHAT, { replace: true });
   }, []);
 
   const handleCameraActions = useCallback(async () => {
