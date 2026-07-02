@@ -533,7 +533,26 @@ export default function ChatPage() {
   );
   const isMealRecordTimelinePending = dayMealQueries.some((query) => query.isPending);
   const isTimelineDataPending = isHistoryPending || isMealRecordTimelinePending;
-  const editingMealRecordMenus = editingMealRecordContext?.menus ?? [];
+  const editingMealRecordMenus = useMemo(() => {
+    if (editingMealRecordContext === null) {
+      return [];
+    }
+
+    const menuById = new Map<number, ChatMealRecordMenu>();
+    const appendMenus = (menus: ChatMealRecordMenu[]) => {
+      menus.forEach((menu) => {
+        menuById.set(menu.menu_id, menu);
+      });
+    };
+    const editingMealTime = Number(editingMealType) as MealTime;
+
+    appendMenus(editingMealRecordContext.menus);
+    appendMenus(
+      editingMealRecordContext.dayMeals.menusByTime[editingMealTime].map(toChatMealRecordMenu),
+    );
+
+    return [...menuById.values()];
+  }, [editingMealRecordContext, editingMealType]);
 
   const assistantPlaybackSignature = assistantPlayback
     ? [
@@ -1378,16 +1397,67 @@ export default function ChatPage() {
     setEditingSelectedMenus((prev) => prev.filter((menu) => menu.id !== menuId));
   };
 
+  const getEditingMovedMenus = (selectedMenus: SelectedDiaryMealRecordMenu[]) => {
+    if (editingMealRecordContext === null) {
+      return selectedMenus;
+    }
+
+    const previousMenuIds = new Set(
+      editingMealRecordContext.previousMealRecord.menus.map((menu) => menu.id),
+    );
+
+    return selectedMenus.filter((menu) => previousMenuIds.has(menu.id));
+  };
+
+  const handleEditingMealTypeChange = (nextMealType: MealType) => {
+    if (editingMealRecordContext === null) {
+      setEditingMealType(nextMealType);
+      return;
+    }
+
+    if (nextMealType === editingMealType) {
+      return;
+    }
+
+    const previousMealRecord = editingMealRecordContext.previousMealRecord;
+    const nextTime = Number(nextMealType) as MealTime;
+    const movedMenus = getEditingMovedMenus(editingSelectedMenus);
+    const nextMenus =
+      previousMealRecord.time === nextTime
+        ? movedMenus
+        : getNextDiaryMenusByCandidateIds({
+            dayMeals: editingMealRecordContext.dayMeals,
+            time: nextTime,
+            selectedMenus: movedMenus,
+            candidateIds: movedMenus.map((menu) => menu.id),
+          });
+
+    setEditingMealType(nextMealType);
+    setEditingSelectedMenus(nextMenus);
+  };
+
   const handleEditingAddMore = () => {
     if (editingMealRecordContext === null) {
       return;
     }
+
+    const previousMealRecord = editingMealRecordContext.previousMealRecord;
+    const previousMealType = getMealTypeFromChatMealTime(previousMealRecord.time);
+    const nextTime = Number(editingMealType) as MealTime;
+    const nextMenus = editingSelectedMenus;
+
+    if (nextMenus.length > MAX_MEAL_RECORD_MENUS) {
+      toast.warning(MEAL_RECORD_MENU_LIMIT_MESSAGE);
+      return;
+    }
+
     handleMealRecordEditClose();
     navigate(getMealRecordPath(editingMealRecordContext.dateKey, editingMealType), {
       state: buildChatMealRecordTransferState({
         dateKey: editingMealRecordContext.dateKey,
         mealType: editingMealType,
-        selectedMenus: editingSelectedMenus,
+        selectedMenus: nextMenus,
+        clearMealTypes: previousMealRecord.time !== nextTime ? [previousMealType] : undefined,
         menus: editingMealRecordMenus,
       }),
     });
@@ -1409,41 +1479,7 @@ export default function ChatPage() {
     const previousMealRecord = editingMealRecordContext.previousMealRecord;
     const previousMealType = getMealTypeFromChatMealTime(previousMealRecord.time);
     const nextTime = Number(editingMealType) as MealTime;
-    const nextMenus =
-      previousMealRecord.time === nextTime
-        ? editingSelectedMenus
-        : getNextDiaryMenusByCandidateIds({
-            dayMeals: editingMealRecordContext.dayMeals,
-            time: nextTime,
-            selectedMenus: editingSelectedMenus,
-            candidateIds: editingSelectedMenus.map((menu) => menu.id),
-          });
-
-    if (nextMenus.length === 0) {
-      try {
-        const deleteResult = await deleteDiaryMealRecordMutate({
-          dateKey: editingMealRecordContext.dateKey,
-          request: buildDiaryMealRecordRequest({
-            dateKey: editingMealRecordContext.dateKey,
-            mealType: previousMealType,
-            selectedMenus: [],
-            image: editingMealRecordContext.image,
-          }),
-          currentMenusByTime: editingMealRecordContext.dayMeals.menusByTime,
-        });
-
-        if (deleteResult !== DELETE_MEAL_RECORD_RESULT.DELETED) {
-          toast.warning("식사 기록 저장에 실패했어요. 잠시 후 다시 시도해주세요.");
-          return;
-        }
-
-        toast.success("식사 기록을 취소했어요.");
-        handleMealRecordEditClose();
-      } catch {
-        toast.warning("식사 기록 저장에 실패했어요. 잠시 후 다시 시도해주세요.");
-      }
-      return;
-    }
+    const nextMenus = editingSelectedMenus;
 
     if (nextMenus.length > MAX_MEAL_RECORD_MENUS) {
       toast.warning(MEAL_RECORD_MENU_LIMIT_MESSAGE);
@@ -1451,6 +1487,20 @@ export default function ChatPage() {
     }
 
     const scrollTargetKey = prepareMealRecordScroll(editingMealRecordContext.dateKey, nextTime);
+    const restorePreviousMealRecord = async () => {
+      if (previousMealRecord.time === nextTime) {
+        return;
+      }
+
+      await registerDiaryMealRecordMutate(
+        buildDiaryMealRecordRequest({
+          dateKey: editingMealRecordContext.dateKey,
+          mealType: previousMealType,
+          selectedMenus: previousMealRecord.menus,
+          image: editingMealRecordContext.image,
+        }),
+      );
+    };
 
     try {
       if (previousMealRecord.time !== nextTime) {
@@ -1470,6 +1520,34 @@ export default function ChatPage() {
           toast.warning("식사 기록 저장에 실패했어요. 잠시 후 다시 시도해주세요.");
           return;
         }
+      }
+
+      if (nextMenus.length === 0) {
+        const deleteResult = await deleteDiaryMealRecordMutate({
+          dateKey: editingMealRecordContext.dateKey,
+          request: buildDiaryMealRecordRequest({
+            dateKey: editingMealRecordContext.dateKey,
+            mealType: editingMealType,
+            selectedMenus: [],
+            image:
+              previousMealRecord.time === nextTime
+                ? editingMealRecordContext.image
+                : getDiaryMealImage(editingMealRecordContext.dayMeals, nextTime),
+          }),
+          currentMenusByTime: editingMealRecordContext.dayMeals.menusByTime,
+        });
+
+        if (deleteResult !== DELETE_MEAL_RECORD_RESULT.DELETED) {
+          cancelMealRecordScroll(scrollTargetKey);
+          await restorePreviousMealRecord();
+          toast.warning("식사 기록 저장에 실패했어요. 잠시 후 다시 시도해주세요.");
+          return;
+        }
+
+        toast.success("식사 기록을 취소했어요.");
+        handleMealRecordEditClose();
+        cancelMealRecordScroll(scrollTargetKey);
+        return;
       }
 
       await registerDiaryMealRecordMutate({
@@ -1492,14 +1570,7 @@ export default function ChatPage() {
 
       if (previousMealRecord.time !== nextTime) {
         try {
-          await registerDiaryMealRecordMutate(
-            buildDiaryMealRecordRequest({
-              dateKey: editingMealRecordContext.dateKey,
-              mealType: previousMealType,
-              selectedMenus: previousMealRecord.menus,
-              image: editingMealRecordContext.image,
-            }),
-          );
+          await restorePreviousMealRecord();
         } catch {
           // The user-facing recovery path is to retry after the cache refetch.
         }
@@ -1829,7 +1900,7 @@ export default function ChatPage() {
         dateKey={editingMealRecordContext?.dateKey}
         submitLabel="수정하기"
         isSubmitPending={isMealRecordEditPending}
-        onMealTypeChange={setEditingMealType}
+        onMealTypeChange={handleEditingMealTypeChange}
         onQuantityChange={handleEditingQuantityChange}
         onModeChange={handleEditingModeChange}
         onRemoveMenu={handleEditingRemoveMenu}

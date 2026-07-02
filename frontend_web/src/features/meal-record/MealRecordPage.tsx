@@ -202,6 +202,28 @@ export default function MealRecordPage() {
       return;
     }
 
+    transferState.clearMealTypes?.forEach((clearMealType) => {
+      if (clearMealType === mealType) {
+        return;
+      }
+
+      const clearKey = formatMenuDraftKey(dateKey, clearMealType);
+      const clearSeedMenus = currentMenus.menusByTime[clearMealType].map(toMenuDraftSeed);
+      const clearServerSignature = buildMenuDraftSignature({
+        menus: clearSeedMenus,
+        image: currentMenus.imagesByTime[clearMealType],
+      });
+
+      clearDraft(clearKey);
+      initDraft({
+        key: clearKey,
+        existingMenuCount: clearSeedMenus.length,
+        seedMenus: [],
+        image: currentMenus.imagesByTime[clearMealType],
+        serverSignature: clearServerSignature,
+      });
+    });
+
     clearDraft(draftKey);
     initDraft({
       key: draftKey,

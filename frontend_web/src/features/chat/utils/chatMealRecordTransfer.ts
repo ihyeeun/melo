@@ -28,14 +28,17 @@ export function buildChatMealRecordTransferState({
   dateKey,
   mealType,
   selectedMenus,
+  clearMealTypes,
   menus,
 }: {
   dateKey: string;
   mealType: MealType;
   selectedMenus: SelectedChatMealRecordMenu[];
+  clearMealTypes?: MealType[];
   menus: ChatMealRecordMenu[];
 }): MealRecordTransferState {
   const menuById = new Map(menus.map((menu) => [menu.menu_id, menu]));
+  const clearMealTypeSet = new Set(clearMealTypes?.filter((type) => type !== mealType) ?? []);
 
   return {
     source: CHAT_TO_MEAL_RECORD_SOURCE,
@@ -46,6 +49,7 @@ export function buildChatMealRecordTransferState({
       quantity: menu.quantity,
       mode: menu.mode ?? "unit",
     })),
+    clearMealTypes: [...clearMealTypeSet],
     previews: selectedMenus.reduce<MealRecordTransferPreview[]>((previews, menu) => {
       const matchedMenu = menuById.get(menu.id);
 

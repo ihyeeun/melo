@@ -28,6 +28,7 @@ export type MealRecordTransferState = {
   dateKey: string;
   mealType: MealType;
   menus: MealRecordTransferMenu[];
+  clearMealTypes?: MealType[];
   previews?: MealRecordTransferPreview[];
 };
 
@@ -49,6 +50,22 @@ function normalizeMode(mode: unknown): MealServingInputMode | undefined {
   }
 
   return undefined;
+}
+
+function normalizeMealTypes(value: unknown): MealType[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  const mealTypeSet = new Set<MealType>();
+
+  value.forEach((mealType) => {
+    if (typeof mealType === "string" && MEAL_TYPE_SET.has(mealType as MealType)) {
+      mealTypeSet.add(mealType as MealType);
+    }
+  });
+
+  return [...mealTypeSet.values()];
 }
 
 function normalizeMenus(value: unknown): MealRecordTransferMenu[] {
@@ -160,6 +177,7 @@ export function parseMealRecordTransferState(value: unknown): MealRecordTransfer
     dateKey: candidate.dateKey,
     mealType: candidate.mealType,
     menus: normalizeMenus(candidate.menus),
+    clearMealTypes: normalizeMealTypes(candidate.clearMealTypes),
     previews: normalizePreviews(candidate.previews),
   };
 }
