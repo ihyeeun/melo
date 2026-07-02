@@ -179,7 +179,7 @@ export default function TodayMealScorePage() {
                   <p className="textNoWrap typo-title3">
                     / {roundedTargetCalories.toLocaleString("ko-KR")} kcal
                   </p>
-                  <ActivityCaloriesPopover />
+                  <ActivityCaloriesPopover variant="primary" />
                 </div>
                 <div className={styles.calorieProgressContainer}>
                   <ScoreProgress

@@ -986,3 +986,14 @@
 .datelabel {
   margin-bottom: 2px;
 }
+
+.actionCard {
+  background-color: var(--bg-white);
+  border: 1px solid var(--border-neutral);
+  border-radius: 8px;
+  display: flex;
+  padding: 16px;
+  width: fit-content;
+  gap: 16px;
+  align-items: flex-end;
+}
