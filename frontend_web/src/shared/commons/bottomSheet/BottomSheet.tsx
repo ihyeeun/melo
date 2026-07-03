@@ -90,6 +90,7 @@ export default function BottomSheet({
             className={styles.backdrop}
             aria-label="바텀시트 닫기"
             onClick={onClose}
+            tabIndex={-1}
           />
         )}
         <SeedBottomSheet.Content aria-describedby={undefined}>
