@@ -1,3 +1,16 @@
+.backdrop {
+  background: var(--seed-color-bg-overlay);
+  border: 0;
+  inset: 0;
+  padding: 0;
+  position: fixed;
+  z-index: calc(var(--sheet-z-index) + var(--layer-index, 0));
+}
+
+.backdrop:active {
+  transform: none;
+}
+
 .header:global(.seed-bottom-sheet__header) {
   align-items: center;
   display: flex;

@@ -1,7 +1,18 @@
 import { Select } from "@base-ui/react";
-import { useMemo } from "react";
+import type { CSSProperties } from "react";
+import { useEffect, useMemo, useRef } from "react";
 
 import styles from "@/features/chat/styles/ChatMealRecordBottomSheet.module.css";
+import type { ChatMenuDetailNavigationState } from "@/features/chat/utils/recommendNavigation";
+import {
+  formatMenuDraftKey,
+  useMenuDraftClear,
+  useMenuDraftInit,
+  useMenuDraftMenus,
+  useMenuDraftRemove,
+  useMenuDraftUpsert,
+} from "@/features/meal-record/stores/menuDraft.store";
+import { PATH } from "@/router/path";
 import {
   MEAL_TYPE_OPTIONS,
   type MealServingInputMode,
@@ -14,6 +25,7 @@ import { Button } from "@/shared/commons/button/Button";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import NumberField from "@/shared/commons/input/NumberField";
 import { ScrollFogArea } from "@/shared/commons/scrollFog";
+import { useNavigate } from "@/shared/navigation/stackflowNavigation";
 import { formatDateKeyToMonthDayWeekdayLabel } from "@/shared/utils/dateFormat";
 import { formatNumberWithMaxOneDecimal } from "@/shared/utils/numberFormat";
 import { getServingUnitLabel } from "@/shared/utils/servingUnit";
@@ -21,7 +33,7 @@ import { getServingUnitLabel } from "@/shared/utils/servingUnit";
 type SelectedMenuItem = {
   id: number;
   quantity: number;
-  mode?: MealServingInputMode;
+  mode: MealServingInputMode;
 };
 
 type ServingWeightUnit = "g" | "ml";
@@ -47,19 +59,20 @@ const MEAL_TYPE_ICON_MAP = {
 
 type ChatMealRecordBottomSheetProps = {
   isOpen: boolean;
+  isActive?: boolean;
   recommendations: ChatMealRecordMenu[];
-  selectedMenus: SelectedMenuItem[];
+  initialSelectedMenus: SelectedMenuItem[];
   mealType: MealType;
   dateKey?: string;
+  detailFallbackTo?: string;
+  positionerStyle?: CSSProperties;
+  modal?: boolean;
   isSubmitPending?: boolean;
   submitLabel?: string;
-  onMealTypeChange: (mealType: MealType) => void;
-  onQuantityChange: (menuId: number, nextQuantity: number) => void;
-  onModeChange: (menuId: number, nextMode: MealServingInputMode) => void;
-  onRemoveMenu: (menuId: number) => void;
-  onAddMore?: () => void;
+  onMealTypeChange: (mealType: MealType, selectedMenus: SelectedMenuItem[]) => SelectedMenuItem[];
+  onAddMore?: (selectedMenus: SelectedMenuItem[]) => void;
   onClose: () => void;
-  onSubmit: () => void;
+  onSubmit: (selectedMenus: SelectedMenuItem[]) => void | Promise<boolean | void>;
 };
 
 const QUANTITY_STEP = 0.5;
@@ -119,26 +132,59 @@ function getScaledCalories(
   return baseCalories * (consumedWeight / servingContext.baseWeight);
 }
 
+function normalizeSelectedMenus(
+  menus: Array<{ id: number; quantity: number; mode?: MealServingInputMode }>,
+): SelectedMenuItem[] {
+  return menus.map((menu) => ({
+    id: menu.id,
+    quantity: menu.quantity,
+    mode: menu.mode === "weight" ? "weight" : "unit",
+  }));
+}
+
 export function ChatMealRecordBottomSheet({
   isOpen,
+  isActive = true,
   recommendations,
-  selectedMenus,
+  initialSelectedMenus,
   mealType,
   dateKey,
+  detailFallbackTo = PATH.CHAT,
+  positionerStyle,
+  modal = true,
   isSubmitPending = false,
   submitLabel = "담기",
   onMealTypeChange,
-  onQuantityChange,
-  onModeChange,
-  onRemoveMenu,
   onAddMore,
   onClose,
   onSubmit,
 }: ChatMealRecordBottomSheetProps) {
+  const navigate = useNavigate();
+  const hasInitializedDraftRef = useRef(false);
+  const draftKey = formatMenuDraftKey(dateKey ?? "", mealType);
+  const draftMenus = useMenuDraftMenus(dateKey ?? "", mealType);
+  const selectedMenus = useMemo(() => normalizeSelectedMenus(draftMenus), [draftMenus]);
+  const initDraft = useMenuDraftInit();
+  const upsertMenu = useMenuDraftUpsert();
+  const removeMenu = useMenuDraftRemove();
+  const clearDraft = useMenuDraftClear();
   const recommendationById = useMemo(
     () => new Map(recommendations.map((item) => [item.menu_id, item])),
     [recommendations],
   );
+
+  useEffect(() => {
+    if (!isOpen || !dateKey || hasInitializedDraftRef.current) {
+      return;
+    }
+
+    hasInitializedDraftRef.current = true;
+    initDraft({
+      key: draftKey,
+      existingMenuCount: initialSelectedMenus.length,
+      seedMenus: initialSelectedMenus,
+    });
+  }, [dateKey, draftKey, initDraft, initialSelectedMenus, isOpen]);
 
   const selectedItems = useMemo(() => {
     return selectedMenus
@@ -166,8 +212,91 @@ export function ChatMealRecordBottomSheet({
   const dateLabel = dateKey ? formatDateKeyToMonthDayWeekdayLabel(dateKey) : null;
   const actionLabel = selectedItems.length === 0 ? "수정하기" : submitLabel;
 
+  const clearMealRecordDrafts = () => {
+    if (!dateKey) {
+      return;
+    }
+
+    MEAL_TYPE_OPTIONS.forEach((option) => {
+      clearDraft(formatMenuDraftKey(dateKey, option.key));
+    });
+  };
+
+  const handleClose = () => {
+    if (!isActive) {
+      return;
+    }
+
+    clearMealRecordDrafts();
+    onClose();
+  };
+
+  const handleNavigateMenuDetail = (menuId: number) => {
+    const selectedMenu = selectedMenus.find((menu) => menu.id === menuId);
+    const searchParams = new URLSearchParams({
+      menuId: String(menuId),
+    });
+
+    if (dateKey) {
+      searchParams.set("source", "chatMealRecordBottomSheet");
+      searchParams.set("date", dateKey);
+      searchParams.set("mealType", mealType);
+    }
+
+    const navigationState: ChatMenuDetailNavigationState = {
+      fallbackTo: detailFallbackTo,
+      initialSelection: selectedMenu
+        ? {
+            menuId,
+            quantity: selectedMenu.quantity,
+            mode: selectedMenu.mode ?? "unit",
+          }
+        : null,
+    };
+
+    navigate(`${PATH.CHAT_NUTRITION_DETAIL}?${searchParams.toString()}`, {
+      state: navigationState,
+    });
+  };
+
+  const handleMealTypeChange = (nextMealType: MealType) => {
+    if (!dateKey) {
+      onMealTypeChange(nextMealType, selectedMenus);
+      return;
+    }
+
+    const nextMenus = onMealTypeChange(nextMealType, selectedMenus);
+    const nextDraftKey = formatMenuDraftKey(dateKey, nextMealType);
+
+    clearDraft(nextDraftKey);
+    initDraft({
+      key: nextDraftKey,
+      existingMenuCount: nextMenus.length,
+      seedMenus: nextMenus,
+    });
+  };
+
+  const handleSubmit = async () => {
+    const submitResult = await onSubmit(selectedMenus);
+
+    if (submitResult !== false) {
+      clearMealRecordDrafts();
+    }
+  };
+
+  const handleAddMore = () => {
+    clearMealRecordDrafts();
+    onAddMore?.(selectedMenus);
+  };
+
   return (
-    <BottomSheet isOpen={isOpen} onClose={onClose} bodyClassName={styles.sheetBody}>
+    <BottomSheet
+      isOpen={isOpen}
+      onClose={handleClose}
+      bodyClassName={styles.sheetBody}
+      positionerStyle={positionerStyle}
+      modal={modal}
+    >
       <div className={styles.container}>
         <ScrollFogArea className={styles.scrollArea}>
           {dateLabel ? <p className={`typo-title2 textNormal`}>{dateLabel}</p> : null}
@@ -184,7 +313,7 @@ export function ChatMealRecordBottomSheet({
                     key={option.key}
                     type="button"
                     className={`${styles.mealTypeButton} ${isActive ? styles.mealTypeButtonActive : ""}`}
-                    onClick={() => onMealTypeChange(option.key)}
+                    onClick={() => handleMealTypeChange(option.key)}
                     aria-pressed={isActive}
                     aria-label={option.label}
                   >
@@ -224,14 +353,23 @@ export function ChatMealRecordBottomSheet({
                   item.mode === "unit" ? unitSelectLabel : item.servingContext.weightUnit;
 
                 return (
-                  <article key={item.id} className={styles.menuCard}>
+                  <button
+                    key={item.id}
+                    type="button"
+                    className={styles.menuCard}
+                    onClick={() => handleNavigateMenuDetail(item.id)}
+                    aria-label={`${item.recommendation.menu_name} 영양성분 상세 보기`}
+                  >
                     <div className={styles.menuItemTop}>
                       <div className={styles.menuName}>
                         <p className="typo-title4">{item.recommendation.menu_name}</p>
                         <button
                           type="button"
                           className={styles.menuRemoveButton}
-                          onClick={() => onRemoveMenu(item.id)}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            removeMenu({ key: draftKey, id: item.id });
+                          }}
                           aria-label={`${item.recommendation.menu_name} 삭제`}
                         >
                           <SystemIcon name="trash" size={20} />
@@ -243,7 +381,10 @@ export function ChatMealRecordBottomSheet({
                       </p>
                     </div>
 
-                    <div className={styles.quantityControlRow}>
+                    <div
+                      className={styles.quantityControlRow}
+                      onClick={(event) => event.stopPropagation()}
+                    >
                       <div className={styles.quantityStepper}>
                         <NumberField
                           value={displayValue}
@@ -253,7 +394,7 @@ export function ChatMealRecordBottomSheet({
                             }
 
                             if (nextValue < MIN_QUANTITY) {
-                              onRemoveMenu(item.id);
+                              removeMenu({ key: draftKey, id: item.id });
                               return;
                             }
 
@@ -262,7 +403,11 @@ export function ChatMealRecordBottomSheet({
                               item.mode,
                               item.servingContext,
                             );
-                            onQuantityChange(item.id, nextConsumedWeight);
+                            upsertMenu({
+                              key: draftKey,
+                              id: item.id,
+                              quantity: nextConsumedWeight,
+                            });
                           }}
                           min={0}
                           step={QUANTITY_STEP}
@@ -296,7 +441,12 @@ export function ChatMealRecordBottomSheet({
                         value={item.mode}
                         onValueChange={(nextValue) => {
                           const safeMode = nextValue === "weight" ? "weight" : "unit";
-                          onModeChange(item.id, safeMode);
+                          upsertMenu({
+                            key: draftKey,
+                            id: item.id,
+                            quantity: item.quantity,
+                            mode: safeMode,
+                          });
                         }}
                       >
                         <Select.Trigger className={`${styles.unitSelectTrigger} typo-h2`}>
@@ -311,8 +461,12 @@ export function ChatMealRecordBottomSheet({
                             className={styles.selectPositioner}
                             side="bottom"
                             align="end"
+                            onClick={(event) => event.stopPropagation()}
                           >
-                            <Select.Popup className={styles.selectPopup}>
+                            <Select.Popup
+                              className={styles.selectPopup}
+                              onClick={(event) => event.stopPropagation()}
+                            >
                               <Select.List className={styles.selectList}>
                                 <Select.Item
                                   value="unit"
@@ -334,7 +488,7 @@ export function ChatMealRecordBottomSheet({
                         </Select.Portal>
                       </Select.Root>
                     </div>
-                  </article>
+                  </button>
                 );
               })}
 
@@ -345,7 +499,7 @@ export function ChatMealRecordBottomSheet({
                   interaction="normal"
                   size="small"
                   color="normal"
-                  onClick={onAddMore}
+                  onClick={handleAddMore}
                 >
                   추가하러 가기
                 </Button>
@@ -362,7 +516,7 @@ export function ChatMealRecordBottomSheet({
             color="primary"
             fullWidth
             disabled={isSubmitPending}
-            onClick={onSubmit}
+            onClick={handleSubmit}
           >
             {isSubmitPending ? "저장 중..." : actionLabel}
           </Button>

@@ -30,6 +30,14 @@ import {
 } from "@/features/meal-record/constants/menu.constants";
 import { useTodayMealRecordRegisterMutation } from "@/features/meal-record/hooks/mutations/useTodayMealRecordMutation";
 import { useMealDetailQuery } from "@/features/meal-record/hooks/queries/useMealDetailQuery";
+import {
+  formatMenuDraftKey,
+  useMenuDraftUpsert,
+} from "@/features/meal-record/stores/menuDraft.store";
+import {
+  getMealType,
+  getSafeDateKey,
+} from "@/features/meal-record/utils/mealRecord.queryParams";
 import { PATH } from "@/router/path";
 import { trackChatMenuSave } from "@/shared/analytics/recommendMenuEvents";
 import { AppApiError } from "@/shared/api/apiClient";
@@ -45,16 +53,29 @@ import {
 } from "@/shared/navigation/stackflowNavigation";
 import { getTodayFormatDateKey } from "@/shared/utils/dateFormat";
 
+const CHAT_MEAL_RECORD_BOTTOM_SHEET_SOURCE = "chatMealRecordBottomSheet";
+
 export default function ChatMenuDetailPage() {
   const navigate = useNavigate();
+  const location = useLocation<ChatMenuDetailNavigationState>();
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [selection, setSelection] = useState<MealMenuNutrientSelection | null>(null);
-  const location = useLocation<ChatMenuDetailNavigationState>();
   const [searchParams] = useSearchParams();
   const chatId = getSafeChatId(searchParams.get("chatId"));
   const menuId = getSafeMenuId(searchParams.get("menuId"));
+  const draftSource = searchParams.get("source");
+  const draftDateParam = searchParams.get("date");
+  const draftMealTypeParam = searchParams.get("mealType");
+  const draftDateKey = getSafeDateKey(draftDateParam);
+  const draftMealType = getMealType(draftMealTypeParam);
+  const hasDraftSelectionTarget =
+    draftSource === CHAT_MEAL_RECORD_BOTTOM_SHEET_SOURCE &&
+    draftDateParam === draftDateKey &&
+    draftMealTypeParam === draftMealType;
   const onConfirmSelection = location.state?.onConfirmSelection;
   const hasSelectionCallback = typeof onConfirmSelection === "function";
+  const shouldUseSelectionOnly = hasSelectionCallback || hasDraftSelectionTarget;
+  const upsertDraftMenu = useMenuDraftUpsert();
   const fallbackTo =
     location.state?.fallbackTo ??
     (chatId === null || !hasSelectionCallback
@@ -72,15 +93,15 @@ export default function ChatMenuDetailPage() {
   }, [chatHistory?.chat_list, chatId]);
 
   useEffect(() => {
-    if (hasSelectionCallback || isChatHistoryPending || chatItem) return;
+    if (shouldUseSelectionOnly || isChatHistoryPending || chatItem) return;
 
     toast.warning("채팅 정보를 불러오지 못했어요.");
     navigate(PATH.CHAT, { replace: true });
-  }, [chatItem, hasSelectionCallback, isChatHistoryPending, navigate]);
+  }, [chatItem, isChatHistoryPending, navigate, shouldUseSelectionOnly]);
 
   const recordDateKey = useMemo(
-    () => (!hasSelectionCallback && chatItem ? getTodayFormatDateKey() : ""),
-    [chatItem, hasSelectionCallback],
+    () => (!shouldUseSelectionOnly && chatItem ? getTodayFormatDateKey() : ""),
+    [chatItem, shouldUseSelectionOnly],
   );
   const currentMealTime = getCurrentMealTime();
   const { data: dayMeals, isPending: isDayMealsPending } = useDayMealsQuery(recordDateKey);
@@ -88,12 +109,12 @@ export default function ChatMenuDetailPage() {
     useTodayMealRecordRegisterMutation();
   const requestChatMealRecordFocus = useRequestChatMealRecordFocus();
   const diaryMenuSelection = useMemo(() => {
-    if (hasSelectionCallback || menuId === null) {
+    if (shouldUseSelectionOnly || menuId === null) {
       return null;
     }
 
     return getDiaryMealMenuSelection(dayMeals, menuId, currentMealTime);
-  }, [currentMealTime, dayMeals, hasSelectionCallback, menuId]);
+  }, [currentMealTime, dayMeals, menuId, shouldUseSelectionOnly]);
   const resolvedInitialSelection =
     initialSelection ??
     (diaryMenuSelection && menuId !== null
@@ -105,7 +126,8 @@ export default function ChatMenuDetailPage() {
       : null);
   const footerLabel = resolvedInitialSelection ? "수정하기" : "담기";
   const isDirectSubmitPending =
-    !hasSelectionCallback && (isChatHistoryPending || isDayMealsPending || !chatItem || !dayMeals);
+    !shouldUseSelectionOnly &&
+    (isChatHistoryPending || isDayMealsPending || !chatItem || !dayMeals);
   const { data: meal, isPending, isError } = useMealDetailQuery(menuId);
 
   const handleConfirmSelection = async () => {
@@ -116,6 +138,17 @@ export default function ChatMenuDetailPage() {
     if (hasSelectionCallback) {
       onConfirmSelection({
         menuId,
+        quantity: selection.quantity,
+        mode: selection.mode,
+      });
+      navigateBack({ fallbackTo });
+      return;
+    }
+
+    if (hasDraftSelectionTarget) {
+      upsertDraftMenu({
+        key: formatMenuDraftKey(draftDateKey, draftMealType),
+        id: menuId,
         quantity: selection.quantity,
         mode: selection.mode,
       });

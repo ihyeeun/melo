@@ -1,5 +1,5 @@
 import { BottomSheet as SeedBottomSheet } from "@seed-design/react";
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
 
 import { useTabBarVisibilitySync } from "@/shared/api/bridge/useTabBarVisibilitySync";
@@ -13,6 +13,8 @@ type BottomSheetProps = {
   title?: string;
   className?: string;
   bodyClassName?: string;
+  positionerStyle?: CSSProperties;
+  modal?: boolean;
   disableContentDrag?: boolean;
   children: ReactNode;
 };
@@ -39,10 +41,12 @@ export default function BottomSheet({
   title,
   className,
   bodyClassName,
+  positionerStyle,
+  modal = true,
   disableContentDrag = false,
   children,
 }: BottomSheetProps) {
-  const positionerStyle = useBottomSheetPositionerStyle();
+  const basePositionerStyle = useBottomSheetPositionerStyle();
   const isOpenRef = useRef(isOpen);
   const [isTabBarHidden, setIsTabBarHidden] = useState(isOpen);
 
@@ -62,6 +66,7 @@ export default function BottomSheet({
       open={isOpen}
       autoFocus={false}
       handleOnly={disableContentDrag}
+      modal={modal}
       onAnimationEnd={(open) => {
         if (!open && !isOpenRef.current) {
           setIsTabBarHidden(false);
@@ -75,9 +80,18 @@ export default function BottomSheet({
     >
       <SeedBottomSheet.Positioner
         className={className}
-        style={positionerStyle}
+        style={{ ...basePositionerStyle, ...positionerStyle }}
       >
-        <SeedBottomSheet.Backdrop />
+        {modal ? (
+          <SeedBottomSheet.Backdrop />
+        ) : (
+          <button
+            type="button"
+            className={styles.backdrop}
+            aria-label="바텀시트 닫기"
+            onClick={onClose}
+          />
+        )}
         <SeedBottomSheet.Content aria-describedby={undefined}>
           <SeedBottomSheet.Header
             className={styles.header}
