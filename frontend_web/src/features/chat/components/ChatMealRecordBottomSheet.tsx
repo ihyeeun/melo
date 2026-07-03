@@ -186,6 +186,18 @@ export function ChatMealRecordBottomSheet({
     });
   }, [dateKey, draftKey, initDraft, initialSelectedMenus, isOpen]);
 
+  useEffect(() => {
+    return () => {
+      if (!dateKey) {
+        return;
+      }
+
+      MEAL_TYPE_OPTIONS.forEach((option) => {
+        clearDraft(formatMenuDraftKey(dateKey, option.key));
+      });
+    };
+  }, [clearDraft, dateKey]);
+
   const selectedItems = useMemo(() => {
     return selectedMenus
       .map((menu) => {
