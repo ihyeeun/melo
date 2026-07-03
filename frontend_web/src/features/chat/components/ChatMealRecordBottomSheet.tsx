@@ -168,197 +168,193 @@ export function ChatMealRecordBottomSheet({
 
   return (
     <BottomSheet isOpen={isOpen} onClose={onClose} bodyClassName={styles.sheetBody}>
-      <section className={styles.container}>
+      <div className={styles.container}>
         <ScrollFogArea className={styles.scrollArea}>
-          <div>
-            {dateLabel ? <p className={`${styles.dateText} typo-title3`}>{dateLabel}</p> : null}
-
-            <article className={styles.calorieCard}>
-              <span className="typo-title2">총 칼로리</span>
-              <div className={`${styles.calorieValueWrapper} textNoWrap`}>
-                <span className={`${styles.calorieValue} typo-h2`}>
-                  {formatNumberWithMaxOneDecimal(totalCalories)}
-                </span>
-                <span className="typo-caption1">kcal</span>
-              </div>
-            </article>
-          </div>
+          {dateLabel ? <p className={`typo-title2 textNormal`}>{dateLabel}</p> : null}
 
           <section>
-            <p className={`${styles.sectionTitle} typo-title4`}>섭취시간대</p>
+            <p className={`${styles.marginBottom8px} typo-title4 textNormal`}>섭취시간대</p>
             <div className={styles.mealTypeList}>
               {MEAL_TYPE_OPTIONS.map((option) => {
                 const isActive = option.key === mealType;
                 const iconSrc = MEAL_TYPE_ICON_MAP[option.key];
 
                 return (
-                  <div className={styles.mealTypeButtonWrapper} key={option.key}>
-                    <button
-                      type="button"
-                      className={`${styles.mealTypeButton} ${isActive ? styles.mealTypeButtonActive : ""}`}
-                      onClick={() => onMealTypeChange(option.key)}
-                      aria-pressed={isActive}
-                      aria-label={option.label}
-                    >
-                      <img src={iconSrc} width={32} height={32} aria-hidden="true" />
-                    </button>
+                  <button
+                    key={option.key}
+                    type="button"
+                    className={`${styles.mealTypeButton} ${isActive ? styles.mealTypeButtonActive : ""}`}
+                    onClick={() => onMealTypeChange(option.key)}
+                    aria-pressed={isActive}
+                    aria-label={option.label}
+                  >
+                    <img src={iconSrc} width={32} height={32} aria-hidden="true" />
                     <span
                       className={`${isActive ? styles.primaryText : styles.secondaryText} typo-label4`}
                     >
                       {option.label}
                     </span>
-                  </div>
+                  </button>
                 );
               })}
             </div>
           </section>
 
           <section className={styles.menuSection}>
-            {selectedItems.map((item) => {
-              const displayValue = getDisplayValue(item.quantity, item.mode, item.servingContext);
-              const unitSelectLabel = getServingUnitLabel(item.servingContext.unitLabel);
-              const selectLabel =
-                item.mode === "unit" ? unitSelectLabel : item.servingContext.weightUnit;
+            <article className={styles.calorieTitle}>
+              <span className="typo-title4 textNormal">총 칼로리</span>
+              <div className={`${styles.calorieValueWrapper} textNoWrap`}>
+                <span className={`textNormal typo-title1`}>
+                  {formatNumberWithMaxOneDecimal(totalCalories)}
+                </span>
+                <span className="typo-caption1">kcal</span>
+              </div>
+            </article>
 
-              return (
-                <article key={item.id} className={styles.menuItem}>
-                  <div className={styles.menuNameRow}>
-                    <div className={styles.menuTitleGroup}>
-                      <p className={`${styles.menuName} typo-title4`}>
-                        {item.recommendation.menu_name}
-                        {item.recommendation.brand && (
-                          <>
-                            {" "}
-                            <span
-                              className={`${styles.tertiaryText} ${styles.menuBrand} typo-label4`}
-                            >
-                              {item.recommendation.brand}
-                            </span>
-                          </>
-                        )}
+            <div className={styles.menuList}>
+              {selectedItems.map((item) => {
+                const displayValue = getDisplayValue(item.quantity, item.mode, item.servingContext);
+                const itemCalories = getScaledCalories(
+                  item.recommendation.calories,
+                  item.quantity,
+                  item.servingContext,
+                );
+                const unitSelectLabel = getServingUnitLabel(item.servingContext.unitLabel);
+                const selectLabel =
+                  item.mode === "unit" ? unitSelectLabel : item.servingContext.weightUnit;
+
+                return (
+                  <article key={item.id} className={styles.menuCard}>
+                    <div className={styles.menuItemTop}>
+                      <div className={styles.menuName}>
+                        <p className="typo-title4">{item.recommendation.menu_name}</p>
+                        <button
+                          type="button"
+                          className={styles.menuRemoveButton}
+                          onClick={() => onRemoveMenu(item.id)}
+                          aria-label={`${item.recommendation.menu_name} 삭제`}
+                        >
+                          <SystemIcon name="trash" size={20} />
+                        </button>
+                      </div>
+                      <p className={`typo-label4 textAssistive`}>
+                        {item.recommendation.brand && <span>{item.recommendation.brand} ㅣ </span>}
+                        {formatNumberWithMaxOneDecimal(itemCalories)}kcal
                       </p>
                     </div>
-                    <button
-                      type="button"
-                      className={styles.menuRemoveButton}
-                      onClick={() => onRemoveMenu(item.id)}
-                      aria-label={`${item.recommendation.menu_name} 삭제`}
-                    >
-                      <SystemIcon name="trash" size={20} />
-                    </button>
-                  </div>
 
-                  <div className={styles.quantityControlRow}>
-                    <div className={styles.quantityStepper}>
-                      <NumberField
-                        value={displayValue}
-                        onChange={(nextValue) => {
-                          if (nextValue === undefined) {
-                            return;
-                          }
+                    <div className={styles.quantityControlRow}>
+                      <div className={styles.quantityStepper}>
+                        <NumberField
+                          value={displayValue}
+                          onChange={(nextValue) => {
+                            if (nextValue === undefined) {
+                              return;
+                            }
 
-                          if (nextValue < MIN_QUANTITY) {
-                            onRemoveMenu(item.id);
-                            return;
-                          }
+                            if (nextValue < MIN_QUANTITY) {
+                              onRemoveMenu(item.id);
+                              return;
+                            }
 
-                          const nextConsumedWeight = toConsumedWeight(
-                            nextValue,
-                            item.mode,
-                            item.servingContext,
-                          );
-                          onQuantityChange(item.id, nextConsumedWeight);
+                            const nextConsumedWeight = toConsumedWeight(
+                              nextValue,
+                              item.mode,
+                              item.servingContext,
+                            );
+                            onQuantityChange(item.id, nextConsumedWeight);
+                          }}
+                          min={0}
+                          step={QUANTITY_STEP}
+                          snapOnStep
+                          decrementAriaLabel={`${item.recommendation.menu_name} 수량 감소`}
+                          incrementAriaLabel={`${item.recommendation.menu_name} 수량 증가`}
+                          decrementIcon={<SystemIcon name="minus" mode="image" size={24} />}
+                          incrementIcon={<SystemIcon name="plus" mode="image" size={24} />}
+                          normalizeValue={(value) => roundDecimal(value, 1)}
+                          unstyled
+                          classNames={{
+                            group: styles.quantityNumberFieldGroup,
+                            decrement: styles.quantityNumberFieldButton,
+                            increment: styles.quantityNumberFieldButton,
+                            inputWrapper: styles.quantityNumberFieldInputWrapper,
+                            input: `typo-body1 ${styles.quantityNumberFieldInput}`,
+                          }}
+                          format={{
+                            minimumFractionDigits: 0,
+                            maximumFractionDigits: 1,
+                            useGrouping: false,
+                          }}
+                          inputProps={{
+                            inputMode: "decimal",
+                            "aria-label": `${item.recommendation.menu_name} 수량 입력`,
+                          }}
+                        />
+                      </div>
+
+                      <Select.Root
+                        value={item.mode}
+                        onValueChange={(nextValue) => {
+                          const safeMode = nextValue === "weight" ? "weight" : "unit";
+                          onModeChange(item.id, safeMode);
                         }}
-                        min={0}
-                        step={QUANTITY_STEP}
-                        snapOnStep
-                        decrementAriaLabel={`${item.recommendation.menu_name} 수량 감소`}
-                        incrementAriaLabel={`${item.recommendation.menu_name} 수량 증가`}
-                        decrementIcon={<SystemIcon name="minus" mode="image" size={24} />}
-                        incrementIcon={<SystemIcon name="plus" mode="image" size={24} />}
-                        normalizeValue={(value) => roundDecimal(value, 1)}
-                        unstyled
-                        classNames={{
-                          group: styles.quantityNumberFieldGroup,
-                          decrement: styles.quantityNumberFieldButton,
-                          increment: styles.quantityNumberFieldButton,
-                          inputWrapper: styles.quantityNumberFieldInputWrapper,
-                          input: `typo-body1 ${styles.quantityNumberFieldInput}`,
-                        }}
-                        format={{
-                          minimumFractionDigits: 0,
-                          maximumFractionDigits: 1,
-                          useGrouping: false,
-                        }}
-                        inputProps={{
-                          inputMode: "decimal",
-                          "aria-label": `${item.recommendation.menu_name} 수량 입력`,
-                        }}
-                      />
+                      >
+                        <Select.Trigger className={`${styles.unitSelectTrigger} typo-h2`}>
+                          <Select.Value className="typo-body2">{selectLabel}</Select.Value>
+                          <Select.Icon className={styles.selectIcon} aria-hidden>
+                            <SystemIcon name="chevron-down-thin" size={24} />
+                          </Select.Icon>
+                        </Select.Trigger>
+
+                        <Select.Portal>
+                          <Select.Positioner
+                            className={styles.selectPositioner}
+                            side="bottom"
+                            align="end"
+                          >
+                            <Select.Popup className={styles.selectPopup}>
+                              <Select.List className={styles.selectList}>
+                                <Select.Item
+                                  value="unit"
+                                  className={`${styles.selectItem} typo-body2`}
+                                >
+                                  <Select.ItemText>{unitSelectLabel}</Select.ItemText>
+                                </Select.Item>
+                                <Select.Item
+                                  value="weight"
+                                  className={`${styles.selectItem} typo-body2`}
+                                >
+                                  <Select.ItemText>
+                                    {item.servingContext.weightUnit}
+                                  </Select.ItemText>
+                                </Select.Item>
+                              </Select.List>
+                            </Select.Popup>
+                          </Select.Positioner>
+                        </Select.Portal>
+                      </Select.Root>
                     </div>
+                  </article>
+                );
+              })}
 
-                    <Select.Root
-                      value={item.mode}
-                      onValueChange={(nextValue) => {
-                        const safeMode = nextValue === "weight" ? "weight" : "unit";
-                        onModeChange(item.id, safeMode);
-                      }}
-                    >
-                      <Select.Trigger className={`${styles.unitSelectTrigger} typo-h2`}>
-                        <Select.Value className="typo-body2">{selectLabel}</Select.Value>
-                        <Select.Icon className={styles.selectIcon} aria-hidden>
-                          <SystemIcon name="chevron-down-normal" size={24} />
-                        </Select.Icon>
-                      </Select.Trigger>
-
-                      <Select.Portal>
-                        <Select.Positioner
-                          className={styles.selectPositioner}
-                          side="bottom"
-                          align="end"
-                        >
-                          <Select.Popup className={styles.selectPopup}>
-                            <Select.List className={styles.selectList}>
-                              <Select.Item
-                                value="unit"
-                                className={`${styles.selectItem} typo-body2`}
-                              >
-                                <Select.ItemText>{unitSelectLabel}</Select.ItemText>
-                              </Select.Item>
-                              <Select.Item
-                                value="weight"
-                                className={`${styles.selectItem} typo-body2`}
-                              >
-                                <Select.ItemText>{item.servingContext.weightUnit}</Select.ItemText>
-                              </Select.Item>
-                            </Select.List>
-                          </Select.Popup>
-                        </Select.Positioner>
-                      </Select.Portal>
-                    </Select.Root>
-                  </div>
-                </article>
-              );
-            })}
+              <section className={styles.additionalAction}>
+                <p className={`${styles.secondaryText} typo-body3`}>다른 메뉴도 드셨나요?</p>
+                <Button
+                  variant="text"
+                  interaction="normal"
+                  size="small"
+                  color="normal"
+                  onClick={onAddMore}
+                >
+                  추가하러 가기
+                </Button>
+              </section>
+            </div>
           </section>
-
-          {onAddMore ? (
-            <section className={styles.additionalAction}>
-              <p className={`${styles.secondaryText} typo-body3`}>다른 메뉴도 드셨나요?</p>
-              <Button
-                variant="text"
-                interaction="normal"
-                size="small"
-                color="normal"
-                onClick={onAddMore}
-              >
-                추가하러 가기
-              </Button>
-            </section>
-          ) : null}
         </ScrollFogArea>
 
-        <div className={styles.actionBar}>
+        <section className={styles.actionBar}>
           <Button
             variant="filled"
             interaction={isSubmitPending ? "disable" : "normal"}
@@ -370,8 +366,8 @@ export function ChatMealRecordBottomSheet({
           >
             {isSubmitPending ? "저장 중..." : actionLabel}
           </Button>
-        </div>
-      </section>
+        </section>
+      </div>
     </BottomSheet>
   );
 }
