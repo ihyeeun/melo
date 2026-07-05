@@ -65,10 +65,7 @@ import {
 import { AppApiError } from "@/shared/api/apiClient";
 import { isNativeApp, requestNativeAppDeviceInfo } from "@/shared/api/bridge/nativeBridge";
 import type { AppDeviceInfoPayload } from "@/shared/api/bridge/nativeBridge.types";
-import {
-  MEAL_TYPE_OPTIONS,
-  type MealTime,
-} from "@/shared/api/types/api.dto";
+import { MEAL_TYPE_OPTIONS, type MealTime } from "@/shared/api/types/api.dto";
 import type {
   ChatHistoryItemResponseDto,
   ChatNutritionLabelFeedbackResponseDto,
@@ -2686,14 +2683,16 @@ function FeedbackSection({
         </div>
       </article>
 
-      <button className={styles.actionCard} onClick={onDirectMealRecordClick} type="button">
-        <span className="typo-body2 textNormal">
-          인식한 메뉴가 다르다면
-          <br />
-          직접 추가할 수 있어요
-        </span>
-        <SystemIcon name="chevron-right-normal" size={20} />
-      </button>
+      {hasImage && (
+        <button className={styles.actionCard} onClick={onDirectMealRecordClick} type="button">
+          <span className="typo-body2 textNormal">
+            인식한 메뉴가 다르다면
+            <br />
+            직접 추가할 수 있어요
+          </span>
+          <SystemIcon name="chevron-right-normal" size={20} />
+        </button>
+      )}
     </div>
   );
 }
