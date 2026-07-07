@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { MonthlyDatePickerCalendar } from "@/features/calendar/components/MonthlyDatePickerCalendar";
 import ActionCard from "@/features/home/components/cards/ActionCard";
@@ -17,13 +17,28 @@ export function MenstrualCycleSection() {
   const [isTabBarHidden, setIsTabBarHidden] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [menstrualStartDate, setMenstrualStartDate] = useState<Date | null>(null);
+  const modalOpenTimerRef = useRef<number | null>(null);
 
   useTabBarVisibilitySync(isTabBarHidden);
+
+  useEffect(() => {
+    return () => {
+      if (modalOpenTimerRef.current !== null) {
+        window.clearTimeout(modalOpenTimerRef.current);
+      }
+    };
+  }, []);
 
   const handleClick = () => {
     trackMenstrualCareDashboardTeaserClick();
     setIsTabBarHidden(true);
-    window.setTimeout(() => {
+
+    if (modalOpenTimerRef.current !== null) {
+      window.clearTimeout(modalOpenTimerRef.current);
+    }
+
+    modalOpenTimerRef.current = window.setTimeout(() => {
+      modalOpenTimerRef.current = null;
       setIsModalOpen(true);
     }, 100);
   };
