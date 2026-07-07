@@ -62,7 +62,7 @@ export function MenstrualCycleSection() {
   return (
     <>
       <ActionCard className={styles.actionCard} onClick={handleClick}>
-        <span className="typo-title4">내 생리 주기에 맞춘 '다정한 케어 대시보드' 보기</span>
+        <span className="typo-title4">내 생리 주기에 맞춘 '케어 대시보드' 보기</span>
         <SystemIcon name="chevron-right-thin" size={24} className={styles.icon} />
       </ActionCard>
 
@@ -79,11 +79,7 @@ export function MenstrualCycleSection() {
                 멜로가 주기에 따른 맞춤 가이드를 준비하고 있어요.
               </p>
               <br />
-              <p>
-                가장 먼저 체험하고 싶다면,
-                <br />
-                최근 생리 시작일을 입력해 주세요.
-              </p>
+              <p>가장 먼저 체험하고 싶다면, 최근 생리 시작일을 입력해 주세요.</p>
             </div>
 
             <MonthlyDatePickerCalendar
