@@ -69,17 +69,22 @@ export function MenstrualCycleSection() {
       <ConfirmModal
         open={isModalOpen}
         onOpenChange={handleModalOpenChange}
-        title="몸무게가 갑자기 늘어 속상하셨나요? 🥺"
+        title="몸무게가 갑자기 늘어 속상하셨나요?"
         description={
           <div className={styles.modalDescription}>
             <div className={styles.textContainer}>
               <p>
-                여성은 생리 주기에 따라 체중과 식욕이 변할 수 있어요.
+                여성은 생리 주기에 따라
                 <br />
-                멜로가 주기에 따른 맞춤 가이드를 준비하고 있어요.
+                체중과 식욕이 변할 수 있어요.
+                <br />
               </p>
               <br />
-              <p>가장 먼저 체험하고 싶다면, 최근 생리 시작일을 입력해 주세요.</p>
+              <p>
+                최근 생리 시작일을 선택하면,
+                <br />
+                맞춤 가이드를 가장 먼저 받아볼 수 있어요.
+              </p>
             </div>
 
             <MonthlyDatePickerCalendar
