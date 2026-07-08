@@ -62,29 +62,18 @@ export function MenstrualCycleSection() {
   return (
     <>
       <ActionCard className={styles.actionCard} onClick={handleClick}>
-        <span className="typo-title4">내 생리 주기에 맞춘 [ 케어 대시보드 ] 보기</span>
+        <span className="typo-title4">[ 생리 주기 맞춤 케어 ] 우선 체험 신청</span>
         <SystemIcon name="chevron-right-thin" size={24} className={styles.icon} />
       </ActionCard>
 
       <ConfirmModal
         open={isModalOpen}
         onOpenChange={handleModalOpenChange}
-        title="몸무게가 갑자기 늘어 속상하셨나요?"
+        title="우선 체험 신청"
         description={
           <div className={styles.modalDescription}>
             <div className={styles.textContainer}>
-              <p>
-                여성은 생리 주기에 따라
-                <br />
-                체중과 식욕이 변할 수 있어요.
-                <br />
-              </p>
-              <br />
-              <p>
-                최근 생리 시작일을 선택하면,
-                <br />
-                맞춤 가이드를 가장 먼저 받아볼 수 있어요.
-              </p>
+              <p>최근 생리 시작일을 선택해 주세요!</p>
             </div>
 
             <MonthlyDatePickerCalendar
