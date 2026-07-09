@@ -93,7 +93,7 @@ export default function BottomSheet({
             tabIndex={-1}
           />
         )}
-        <SeedBottomSheet.Content aria-describedby={undefined}>
+        <SeedBottomSheet.Content className={styles.sheetContent} aria-describedby={undefined}>
           <SeedBottomSheet.Header
             className={styles.header}
             onPointerDownCapture={blurActiveElement}
