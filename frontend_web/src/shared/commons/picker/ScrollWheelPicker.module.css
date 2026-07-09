@@ -87,7 +87,7 @@
 }
 
 .highlight {
-  height: var(--scroll-wheel-picker-item-height);
+  height: var(--scroll-wheel-picker-highlight-height);
   left: 0;
   pointer-events: none;
   position: absolute;

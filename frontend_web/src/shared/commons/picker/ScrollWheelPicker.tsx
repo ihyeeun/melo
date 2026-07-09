@@ -25,13 +25,15 @@ type ScrollWheelPickerProps = {
   className?: string;
   classNames?: ScrollWheelPickerClassNames;
   columnTemplate?: string;
-  height?: number;
+  height?: number | string;
+  highlightHeight?: number;
   itemHeight?: number;
   scrollEndDelay?: number;
 };
 
 type ScrollWheelPickerStyle = CSSProperties & {
   "--scroll-wheel-picker-height": string;
+  "--scroll-wheel-picker-highlight-height": string;
   "--scroll-wheel-picker-item-height": string;
   "--scroll-wheel-picker-column-template"?: string;
 };
@@ -167,10 +169,12 @@ export function ScrollWheelPicker({
   columnTemplate,
   height = 290,
   itemHeight = 67,
+  highlightHeight = itemHeight,
   scrollEndDelay = 90,
 }: ScrollWheelPickerProps) {
   const style: ScrollWheelPickerStyle = {
-    "--scroll-wheel-picker-height": `${height}px`,
+    "--scroll-wheel-picker-height": typeof height === "number" ? `${height}px` : height,
+    "--scroll-wheel-picker-highlight-height": `${highlightHeight}px`,
     "--scroll-wheel-picker-item-height": `${itemHeight}px`,
     "--scroll-wheel-picker-column-template": columnTemplate,
   };

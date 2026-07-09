@@ -172,11 +172,37 @@
 }
 
 .birthYearPicker {
-  --wheel-highlight-height: 72px;
-
   flex: 1;
   height: 320px;
   min-height: 320px;
+}
+
+.birthYearPickerItem {
+  color: var(--label-assistive);
+}
+
+.birthYearPickerItem[data-distance="1"] {
+  color: var(--gray-600);
+}
+
+.birthYearPickerItem[data-distance="2"] {
+  color: var(--gray-600);
+}
+
+.birthYearPickerItem[data-distance="3"] {
+  color: var(--gray-500);
+}
+
+.birthYearPickerItemSelected {
+  color: var(--label-normal);
+}
+
+.birthYearPickerHighlight {
+  background: var(--interaction-primary);
+  border: 1px solid var(--border-primary);
+  border-radius: 8px;
+  left: 12.5px;
+  right: 12.5px;
 }
 
 @media (max-height: 700px) {
