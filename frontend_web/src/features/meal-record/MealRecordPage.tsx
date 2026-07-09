@@ -39,12 +39,14 @@ import {
   MENU_INPUT_MODE,
   type RegisterMealRequestDto,
 } from "@/shared/api/types/api.dto";
+import BottomSheet from "@/shared/commons/bottomSheet/BottomSheet";
 import { Button } from "@/shared/commons/button/Button";
 import { MealMenuCard } from "@/shared/commons/card/MealMenuCard";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import { LoadingOverlay } from "@/shared/commons/loading/Loading";
 import { ConfirmModal } from "@/shared/commons/modals/ConfirmModal";
+import { ScrollWheelPicker } from "@/shared/commons/picker/ScrollWheelPicker";
 import { Skeleton, SkeletonStatus } from "@/shared/commons/skeleton/Skeleton";
 import { toast } from "@/shared/commons/toast/toast";
 import {
@@ -117,15 +119,47 @@ type DisplayMenuItem = {
   data_source?: number;
 };
 
+type MealRecordPeriod = "오전" | "오후";
+
+type MealRecordTimeValue = {
+  period: MealRecordPeriod;
+  hour: string;
+  minute: string;
+};
+
+const MEAL_RECORD_TIME_DEFAULTS: Record<MealType, MealRecordTimeValue> = {
+  "0": { period: "오전", hour: "8", minute: "00" },
+  "1": { period: "오후", hour: "12", minute: "00" },
+  "2": { period: "오후", hour: "6", minute: "00" },
+  "3": { period: "오후", hour: "3", minute: "00" },
+  "4": { period: "오후", hour: "10", minute: "00" },
+};
+
+const MEAL_RECORD_PERIOD_OPTIONS: MealRecordPeriod[] = ["오전", "오후"];
+const MEAL_RECORD_HOUR_OPTIONS = Array.from({ length: 12 }, (_, index) => String(index + 1));
+const MEAL_RECORD_MINUTE_OPTIONS = Array.from({ length: 60 }, (_, index) =>
+  String(index).padStart(2, "0"),
+);
+
+function formatMealRecordTime(value: MealRecordTimeValue) {
+  return `${value.period} ${value.hour.padStart(2, "0")}:${value.minute}`;
+}
+
 export default function MealRecordPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
-  const [isExitConfirmOpen, setIsExitConfirmOpen] = useState(false);
-  const hasAppliedTransferRef = useRef(false);
-
   const dateKey = getSafeDateKey(searchParams.get("date"));
   const mealType = getMealType(searchParams.get("mealType"));
+  const [isExitConfirmOpen, setIsExitConfirmOpen] = useState(false);
+  const [isTimeSheetOpen, setIsTimeSheetOpen] = useState(false);
+  const [mealRecordTimes, setMealRecordTimes] =
+    useState<Record<MealType, MealRecordTimeValue>>(MEAL_RECORD_TIME_DEFAULTS);
+  const [draftMealRecordTime, setDraftMealRecordTime] = useState<MealRecordTimeValue>(
+    MEAL_RECORD_TIME_DEFAULTS[mealType],
+  );
+  const hasAppliedTransferRef = useRef(false);
+
   const draftKey = formatMenuDraftKey(dateKey, mealType);
   const transferState = useMemo(
     () => parseMealRecordTransferState(location.state),
@@ -369,6 +403,8 @@ export default function MealRecordPage() {
     }, 0);
   }, [displayMenuItems]);
   const showDidNotEatState = didNotEat && displayMenuItems.length === 0;
+  const selectedMealRecordTime = mealRecordTimes[mealType] ?? MEAL_RECORD_TIME_DEFAULTS[mealType];
+  const formattedMealRecordTime = formatMealRecordTime(selectedMealRecordTime);
 
   const clearAllDrafts = useCallback(() => {
     MEAL_TYPE_OPTIONS.forEach((option) => {
@@ -381,6 +417,29 @@ export default function MealRecordPage() {
     nextParams.set("date", dateKey);
     nextParams.set("mealType", String(nextMealType));
     setSearchParams(nextParams, { animate: false });
+  };
+
+  const handleOpenTimeSheet = () => {
+    setDraftMealRecordTime(selectedMealRecordTime);
+    setIsTimeSheetOpen(true);
+  };
+
+  const handleConfirmTime = () => {
+    setMealRecordTimes((previous) => ({
+      ...previous,
+      [mealType]: draftMealRecordTime,
+    }));
+    setIsTimeSheetOpen(false);
+  };
+
+  const handleResetTime = () => {
+    const defaultTime = MEAL_RECORD_TIME_DEFAULTS[mealType];
+    setDraftMealRecordTime(defaultTime);
+    setMealRecordTimes((previous) => ({
+      ...previous,
+      [mealType]: defaultTime,
+    }));
+    setIsTimeSheetOpen(false);
   };
 
   const handleRemoveMenu = (menuId: number) => {
@@ -470,14 +529,11 @@ export default function MealRecordPage() {
           continue;
         }
 
-        await registerMealAsync(
-          request,
-          {
-            onSuccess: () => {
-              trackDiaryMenuSave(getSavedMenusFromRequest(request));
-            },
+        await registerMealAsync(request, {
+          onSuccess: () => {
+            trackDiaryMenuSave(getSavedMenusFromRequest(request));
           },
-        );
+        });
       }
 
       clearAllDrafts();
@@ -502,7 +558,7 @@ export default function MealRecordPage() {
 
     clearAllDrafts();
     return false;
-  }, [clearAllDrafts, hasUnsavedChanges]);
+  }, [clearAllDrafts, hasUnsavedChanges, setIsExitConfirmOpen]);
 
   useStackflowBackHandler(handleBackGuard);
 
@@ -600,6 +656,16 @@ export default function MealRecordPage() {
 
           {displayMenuItems.length > 0 ? (
             <div className={styles.menuList}>
+              <Button
+                variant="text"
+                color="normal"
+                className={styles.marginLeftAuto}
+                onClick={handleOpenTimeSheet}
+              >
+                <span>{formattedMealRecordTime}</span>
+                <SystemIcon name="chevron-right-thin" size={20} />
+              </Button>
+
               {displayMenuItems.map((menu, index) => (
                 <MealMenuCard
                   key={`${mealType}-${menu.id}-${index}`}
@@ -674,6 +740,63 @@ export default function MealRecordPage() {
         onCancel={handleExit}
         onConfirm={() => {}}
       />
+
+      <BottomSheet
+        isOpen={isTimeSheetOpen}
+        onClose={() => setIsTimeSheetOpen(false)}
+        bodyClassName={styles.timeSheetBody}
+        disableContentDrag
+      >
+        <div className={styles.timeSheetContent}>
+          <div className={styles.timeSheetHeader}>
+            <h2 className="typo-title2 textNormal">식사 시간</h2>
+            <Button onClick={handleResetTime} variant="text" color="normal">
+              삭제
+            </Button>
+          </div>
+
+          <ScrollWheelPicker
+            height={290}
+            itemHeight={67}
+            classNames={{
+              item: `typo-title1 ${styles.timePickerItem}`,
+              itemSelected: styles.timePickerItemSelected,
+              highlight: styles.timePickerHighlight,
+            }}
+            columns={[
+              {
+                key: "period",
+                value: draftMealRecordTime.period,
+                options: MEAL_RECORD_PERIOD_OPTIONS,
+                renderOption: (option) => `${option} :`,
+                ariaLabel: "오전 오후 선택",
+              },
+              {
+                key: "hour",
+                value: draftMealRecordTime.hour,
+                options: MEAL_RECORD_HOUR_OPTIONS,
+                ariaLabel: "시간 선택",
+              },
+              {
+                key: "minute",
+                value: draftMealRecordTime.minute,
+                options: MEAL_RECORD_MINUTE_OPTIONS,
+                ariaLabel: "분 선택",
+              },
+            ]}
+            onChange={(key, value) => {
+              setDraftMealRecordTime((previous) => ({
+                ...previous,
+                [key]: key === "period" ? (value as MealRecordPeriod) : value,
+              }));
+            }}
+          />
+
+          <Button size="large" fullWidth onClick={handleConfirmTime}>
+            확인
+          </Button>
+        </div>
+      </BottomSheet>
 
       {isSavePending ? <LoadingOverlay label="식사 기록을 저장하는 중입니다." /> : null}
     </section>

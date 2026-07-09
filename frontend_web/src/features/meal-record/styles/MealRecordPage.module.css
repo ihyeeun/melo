@@ -172,3 +172,39 @@
   width: 32px;
   height: 32px;
 }
+
+.marginLeftAuto {
+  margin-left: auto;
+}
+
+.timeSheetBody:global(.seed-bottom-sheet__body) {
+  overflow: hidden;
+}
+
+.timeSheetContent {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 0 20px;
+}
+
+.timeSheetHeader {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  gap: 4px;
+}
+
+.timePickerItem {
+  color: var(--label-assistive);
+}
+
+.timePickerItemSelected {
+  color: var(--label-normal);
+}
+
+.timePickerHighlight {
+  background: var(--interaction-primary);
+  border: 1px solid var(--border-primary);
+  border-radius: 8px;
+}
