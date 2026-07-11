@@ -12,12 +12,6 @@ import {
   useSetChatMealRecordEditSheetMealType,
 } from "@/features/chat/stores/chatMealRecordEditSheet.store";
 import { useRequestChatMealRecordFocus } from "@/features/chat/stores/mealRecordFocus.store";
-import {
-  buildDiaryMealRecordRequest,
-  getDiaryMealImage,
-  getNextDiaryMenusByCandidateIds,
-  type SelectedDiaryMealRecordMenu,
-} from "@/features/chat/utils/chatDiaryMealRecord";
 import { getMealTypeFromChatMealTime } from "@/features/chat/utils/chatMeal";
 import { getChatMealRecordBottomSheetPath } from "@/features/chat/utils/chatMealRecordBottomSheetPath";
 import { buildChatMealRecordTransferState } from "@/features/chat/utils/chatMealRecordTransfer";
@@ -31,11 +25,23 @@ import {
   useTodayMealRecordDeleteWithRollbackMutation,
   useTodayMealRecordRegisterMutation,
 } from "@/features/meal-record/hooks/mutations/useTodayMealRecordMutation";
+import {
+  type MenuDraftType,
+  mergeMenuDraftMenus,
+  useMenuDraftPrepareRegisterRequest,
+} from "@/features/meal-record/stores/menuDraft.store";
+import { toMenuDraftSeed } from "@/features/meal-record/utils/menuDraftSync";
 import { PATH } from "@/router/path";
 import { getMealRecordPath } from "@/router/pathHelpers";
-import type { MealTime, MealType } from "@/shared/api/types/api.dto";
+import type { MealServingInputMode, MealTime, MealType } from "@/shared/api/types/api.dto";
 import { toast } from "@/shared/commons/toast/toast";
 import { navigateBack, useNavigate } from "@/shared/navigation/stackflowNavigation";
+
+type ChatSelectedMealRecordMenu = {
+  id: number;
+  quantity: number;
+  mode: MealServingInputMode;
+};
 
 export default function ChatMealRecordBottomSheetPage() {
   const activity = useActivity();
@@ -49,6 +55,7 @@ export default function ChatMealRecordBottomSheetPage() {
     useTodayMealRecordRegisterMutation();
   const { mutateAsync: deleteDiaryMealRecordMutate, isPending: isDiaryMealDeletePending } =
     useTodayMealRecordDeleteWithRollbackMutation();
+  const prepareRegisterRequest = useMenuDraftPrepareRegisterRequest();
   const isMealRecordEditPending = isDiaryMealRegisterPending || isDiaryMealDeletePending;
   const isOpen =
     activity.transitionState === "enter-active" || activity.transitionState === "enter-done";
@@ -98,7 +105,7 @@ export default function ChatMealRecordBottomSheetPage() {
     navigateBack({ fallbackTo: PATH.CHAT });
   };
 
-  const getEditingMovedMenus = (selectedMenus: SelectedDiaryMealRecordMenu[]) => {
+  const getEditingMovedMenus = (selectedMenus: ChatSelectedMealRecordMenu[]) => {
     const previousMenuIds = new Set(context.previousMealRecord.menus.map((menu) => menu.id));
 
     return selectedMenus.filter((menu) => previousMenuIds.has(menu.id));
@@ -106,7 +113,7 @@ export default function ChatMealRecordBottomSheetPage() {
 
   const handleMealTypeChange = (
     nextMealType: MealType,
-    selectedMenus: SelectedDiaryMealRecordMenu[],
+    selectedMenus: ChatSelectedMealRecordMenu[],
   ) => {
     if (nextMealType === mealType) {
       return selectedMenus;
@@ -115,21 +122,20 @@ export default function ChatMealRecordBottomSheetPage() {
     const previousMealRecord = context.previousMealRecord;
     const nextTime = Number(nextMealType) as MealTime;
     const movedMenus = getEditingMovedMenus(selectedMenus);
+    const nextServerMenus = context.dayMeals.menusByTime[nextTime].map(toMenuDraftSeed);
     const nextMenus =
       previousMealRecord.time === nextTime
         ? movedMenus
-        : getNextDiaryMenusByCandidateIds({
-            dayMeals: context.dayMeals,
-            time: nextTime,
-            selectedMenus: movedMenus,
-            candidateIds: movedMenus.map((menu) => menu.id),
+        : mergeMenuDraftMenus({
+            baseMenus: nextServerMenus,
+            overrideMenus: movedMenus,
           });
 
     setMealType(nextMealType);
-    return nextMenus;
+    return normalizeSelectedMenus(nextMenus);
   };
 
-  const handleAddMore = (selectedMenus: SelectedDiaryMealRecordMenu[]) => {
+  const handleAddMore = (selectedMenus: ChatSelectedMealRecordMenu[]) => {
     const previousMealRecord = context.previousMealRecord;
     const previousMealType = getMealTypeFromChatMealTime(previousMealRecord.time);
     const nextTime = Number(mealType) as MealTime;
@@ -151,7 +157,7 @@ export default function ChatMealRecordBottomSheetPage() {
     });
   };
 
-  const handleSubmit = async (selectedMenus: SelectedDiaryMealRecordMenu[]) => {
+  const handleSubmit = async (selectedMenus: ChatSelectedMealRecordMenu[]) => {
     if (isMealRecordEditPending) {
       return false;
     }
@@ -159,7 +165,7 @@ export default function ChatMealRecordBottomSheetPage() {
     return submitMealRecordEdit(selectedMenus);
   };
 
-  const submitMealRecordEdit = async (selectedMenus: SelectedDiaryMealRecordMenu[]) => {
+  const submitMealRecordEdit = async (selectedMenus: ChatSelectedMealRecordMenu[]) => {
     const previousMealRecord = context.previousMealRecord;
     const previousMealType = getMealTypeFromChatMealTime(previousMealRecord.time);
     const nextTime = Number(mealType) as MealTime;
@@ -176,11 +182,12 @@ export default function ChatMealRecordBottomSheetPage() {
       }
 
       await registerDiaryMealRecordMutate(
-        buildDiaryMealRecordRequest({
+        prepareRegisterRequest({
           dateKey: context.dateKey,
           mealType: previousMealType,
-          selectedMenus: previousMealRecord.menus,
+          menus: previousMealRecord.menus,
           image: context.image,
+          mealTime: context.dayMeals.mealRecordMealTimesByTime[previousMealRecord.time],
         }),
       );
     };
@@ -189,11 +196,12 @@ export default function ChatMealRecordBottomSheetPage() {
       if (previousMealRecord.time !== nextTime) {
         const deleteResult = await deleteDiaryMealRecordMutate({
           dateKey: context.dateKey,
-          request: buildDiaryMealRecordRequest({
+          request: prepareRegisterRequest({
             dateKey: context.dateKey,
             mealType: previousMealType,
-            selectedMenus: [],
+            menus: [],
             image: context.image,
+            mealTime: context.dayMeals.mealRecordMealTimesByTime[previousMealRecord.time],
           }),
           currentMenusByTime: context.dayMeals.menusByTime,
         });
@@ -207,14 +215,15 @@ export default function ChatMealRecordBottomSheetPage() {
       if (nextMenus.length === 0) {
         const deleteResult = await deleteDiaryMealRecordMutate({
           dateKey: context.dateKey,
-          request: buildDiaryMealRecordRequest({
+          request: prepareRegisterRequest({
             dateKey: context.dateKey,
             mealType,
-            selectedMenus: [],
+            menus: [],
             image:
               previousMealRecord.time === nextTime
                 ? context.image
-                : getDiaryMealImage(context.dayMeals, nextTime),
+                : getMealRecordImage(context.dayMeals, nextTime),
+            mealTime: context.dayMeals.mealRecordMealTimesByTime[nextTime],
           }),
           currentMenusByTime: context.dayMeals.menusByTime,
         });
@@ -230,17 +239,18 @@ export default function ChatMealRecordBottomSheetPage() {
         return true;
       }
 
-      await registerDiaryMealRecordMutate({
-        ...buildDiaryMealRecordRequest({
+      await registerDiaryMealRecordMutate(
+        prepareRegisterRequest({
           dateKey: context.dateKey,
           mealType,
-          selectedMenus: nextMenus,
+          menus: nextMenus,
           image:
             previousMealRecord.time === nextTime
               ? context.image
-              : getDiaryMealImage(context.dayMeals, nextTime),
+              : getMealRecordImage(context.dayMeals, nextTime),
+          mealTime: context.dayMeals.mealRecordMealTimesByTime[nextTime],
         }),
-      });
+      );
 
       toast.success("식사 기록이 수정되었어요.");
       requestChatMealRecordFocus({
@@ -269,7 +279,7 @@ export default function ChatMealRecordBottomSheetPage() {
       isOpen={isOpen}
       isActive={activity.isActive}
       recommendations={editingMealRecordMenus}
-      initialSelectedMenus={context.previousMealRecord.menus}
+      initialSelectedMenus={normalizeSelectedMenus(context.previousMealRecord.menus)}
       mealType={mealType}
       dateKey={context.dateKey}
       submitLabel="수정하기"
@@ -306,4 +316,17 @@ function getBaseCalories(menu: MenuWithQuantity) {
   }
 
   return menu.calories;
+}
+
+function getMealRecordImage(dayMeals: { imagesByTime?: Record<MealTime, string> }, mealTime: MealTime) {
+  const image = dayMeals.imagesByTime?.[mealTime];
+  return typeof image === "string" && image.trim().length > 0 ? image : undefined;
+}
+
+function normalizeSelectedMenus(menus: MenuDraftType[]): ChatSelectedMealRecordMenu[] {
+  return menus.map((menu) => ({
+    id: menu.id,
+    quantity: menu.quantity,
+    mode: menu.mode ?? "unit",
+  }));
 }

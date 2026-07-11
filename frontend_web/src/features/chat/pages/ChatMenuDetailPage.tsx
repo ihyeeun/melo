@@ -3,14 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useGetChatHistoryQuery } from "@/features/chat/hooks/queries/useGetChatQuery";
 import { useRequestChatMealRecordFocus } from "@/features/chat/stores/mealRecordFocus.store";
 import styles from "@/features/chat/styles/ChatMenuDetailPage.module.css";
-import {
-  buildDiaryMealRecordRequest,
-  getCurrentMealTime,
-  getDiaryMealImage,
-  getDiaryMealMenuSelection,
-  getNextDiaryMenusByCandidateIds,
-} from "@/features/chat/utils/chatDiaryMealRecord";
-import { getMealTypeFromChatMealTime } from "@/features/chat/utils/chatMeal";
+import { getCurrentMealTime, getMealTypeFromChatMealTime } from "@/features/chat/utils/chatMeal";
 import {
   type ChatMenuDetailNavigationState,
   getFeedbackResultPath,
@@ -32,7 +25,11 @@ import { useTodayMealRecordRegisterMutation } from "@/features/meal-record/hooks
 import { useMealDetailQuery } from "@/features/meal-record/hooks/queries/useMealDetailQuery";
 import {
   formatMenuDraftKey,
+  useMenuDraftBuildRegisterRequest,
+  useMenuDraftClear,
+  useMenuDraftMenus,
   useMenuDraftUpsert,
+  useSyncMenuDraftWithDayMeals,
 } from "@/features/meal-record/stores/menuDraft.store";
 import {
   getMealType,
@@ -75,7 +72,11 @@ export default function ChatMenuDetailPage() {
   const onConfirmSelection = location.state?.onConfirmSelection;
   const hasSelectionCallback = typeof onConfirmSelection === "function";
   const shouldUseSelectionOnly = hasSelectionCallback || hasDraftSelectionTarget;
+  const directMealType = getMealTypeFromChatMealTime(getCurrentMealTime());
   const upsertDraftMenu = useMenuDraftUpsert();
+  const clearDraft = useMenuDraftClear();
+  const buildRegisterRequest = useMenuDraftBuildRegisterRequest();
+  const directDraftMenus = useMenuDraftMenus(getTodayFormatDateKey(), directMealType);
   const fallbackTo =
     location.state?.fallbackTo ??
     (chatId === null || !hasSelectionCallback
@@ -108,20 +109,27 @@ export default function ChatMenuDetailPage() {
   const { mutateAsync: registerDiaryMealRecordMutate, isPending: isMealRegisterPending } =
     useTodayMealRecordRegisterMutation();
   const requestChatMealRecordFocus = useRequestChatMealRecordFocus();
-  const diaryMenuSelection = useMemo(() => {
+  useSyncMenuDraftWithDayMeals({
+    dateKey: recordDateKey,
+    mealType: directMealType,
+    dayMeals,
+    enabled: !shouldUseSelectionOnly,
+  });
+
+  const draftMenuSelection = useMemo(() => {
     if (shouldUseSelectionOnly || menuId === null) {
       return null;
     }
 
-    return getDiaryMealMenuSelection(dayMeals, menuId, currentMealTime);
-  }, [currentMealTime, dayMeals, menuId, shouldUseSelectionOnly]);
+    return directDraftMenus.find((menu) => menu.id === menuId) ?? null;
+  }, [directDraftMenus, menuId, shouldUseSelectionOnly]);
   const resolvedInitialSelection =
     initialSelection ??
-    (diaryMenuSelection && menuId !== null
+    (draftMenuSelection && menuId !== null
       ? {
           menuId,
-          quantity: diaryMenuSelection.menu.quantity,
-          mode: diaryMenuSelection.menu.mode,
+          quantity: draftMenuSelection.quantity,
+          mode: draftMenuSelection.mode,
         }
       : null);
   const footerLabel = resolvedInitialSelection ? "수정하기" : "담기";
@@ -163,30 +171,28 @@ export default function ChatMenuDetailPage() {
 
     try {
       const targetMealTime = currentMealTime;
-      const nextMenus = getNextDiaryMenusByCandidateIds({
-        dayMeals,
-        time: targetMealTime,
-        selectedMenus: [
-          {
-            id: menuId,
-            quantity: selection.quantity,
-            mode: selection.mode,
-          },
-        ],
-        candidateIds: [menuId],
-      });
+      const targetMealType = getMealTypeFromChatMealTime(targetMealTime);
+      const targetDraftKey = formatMenuDraftKey(recordDateKey, targetMealType);
+      const isAlreadySelected = directDraftMenus.some((menu) => menu.id === menuId);
 
-      if (nextMenus.length > MAX_MEAL_RECORD_MENUS) {
+      if (!isAlreadySelected && directDraftMenus.length + 1 > MAX_MEAL_RECORD_MENUS) {
         toast.warning(MEAL_RECORD_MENU_LIMIT_MESSAGE);
         return;
       }
 
+      upsertDraftMenu({
+        key: targetDraftKey,
+        id: menuId,
+        quantity: selection.quantity,
+        mode: selection.mode,
+      });
+
       await registerDiaryMealRecordMutate(
-        buildDiaryMealRecordRequest({
+        buildRegisterRequest({
           dateKey: recordDateKey,
-          mealType: getMealTypeFromChatMealTime(targetMealTime),
-          selectedMenus: nextMenus,
-          image: getDiaryMealImage(dayMeals, targetMealTime),
+          mealType: targetMealType,
+          fallbackImage: dayMeals.imagesByTime[targetMealTime],
+          fallbackMealTime: dayMeals.mealRecordMealTimesByTime[targetMealTime],
         }),
         {
           onSuccess: () => {
@@ -195,7 +201,8 @@ export default function ChatMenuDetailPage() {
         },
       );
 
-      toast.success(diaryMenuSelection ? "식사 기록이 수정되었어요." : "식사 기록이 등록되었어요.");
+      clearDraft(targetDraftKey);
+      toast.success(draftMenuSelection ? "식사 기록이 수정되었어요." : "식사 기록이 등록되었어요.");
       requestChatMealRecordFocus({
         dateKey: recordDateKey,
         mealTime: targetMealTime,

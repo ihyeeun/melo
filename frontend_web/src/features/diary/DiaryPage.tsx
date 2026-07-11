@@ -293,17 +293,18 @@ function MealRecordCard({
       return;
     }
 
-    const body = {
-      date: formatDateKey(selectedDate),
+    const dateKey = formatDateKey(selectedDate);
+    const deleteRequest = {
+      date: dateKey,
       time: Number(mealType) as MealTime,
     };
 
     if (didNotEat) {
-      deleteDidNotEatMutate(body);
+      deleteDidNotEatMutate(deleteRequest);
       return;
     }
 
-    registerDidNotEatMutate(body);
+    registerDidNotEatMutate(deleteRequest);
   };
 
   const handleNavigateButtonClick = (event: MouseEvent<HTMLButtonElement>) => {

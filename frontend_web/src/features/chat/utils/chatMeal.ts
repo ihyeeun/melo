@@ -1,4 +1,9 @@
-import { DEFAULT_MEAL_TYPE, MEAL_TYPE_SET, type MealType } from "@/shared/api/types/api.dto";
+import {
+  DEFAULT_MEAL_TYPE,
+  MEAL_TYPE_SET,
+  type MealTime,
+  type MealType,
+} from "@/shared/api/types/api.dto";
 
 export function getMealTypeFromChatMealTime(value: number): MealType {
   const asMealType = String(value);
@@ -29,6 +34,10 @@ export function getMealTypeFromCurrentTime(date: Date): MealType {
   }
 
   return "4";
+}
+
+export function getCurrentMealTime() {
+  return Number(getMealTypeFromCurrentTime(new Date())) as MealTime;
 }
 
 export function formatQuantityText(quantity: number) {

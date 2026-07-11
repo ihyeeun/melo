@@ -9,7 +9,6 @@ import { useMealDeleteMutation } from "@/features/meal-record/hooks/mutations/us
 import { useMealDetailQuery } from "@/features/meal-record/hooks/queries/useMealDetailQuery";
 import {
   formatMenuDraftKey,
-  useMenuDraftInit,
   useMenuDraftMenus,
   useMenuDraftRemove,
   useMenuDraftUpsert,
@@ -68,7 +67,6 @@ export default function MealDetailPage() {
       ? parsedMenuId
       : null;
 
-  const initDraft = useMenuDraftInit();
   const upsertMenu = useMenuDraftUpsert();
   const upsertPreviews = useMenuDraftUpsertPreviews();
   const removeMenu = useMenuDraftRemove();
@@ -104,13 +102,6 @@ export default function MealDetailPage() {
       handleGoBack();
     },
   });
-
-  useEffect(() => {
-    initDraft({
-      key: draftKey,
-      existingMenuCount: 0,
-    });
-  }, [draftKey, initDraft]);
 
   useEffect(() => {
     if (menuId !== null) {

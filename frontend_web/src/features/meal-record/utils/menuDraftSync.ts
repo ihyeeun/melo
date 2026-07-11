@@ -22,9 +22,11 @@ export function toMenuDraftSeed(menu: MenuWithQuantity): MenuDraftSeed {
 export function buildMenuDraftSignature({
   menus,
   image,
+  mealTime,
 }: {
   menus: MenuDraftSeed[];
   image?: string | null;
+  mealTime?: string | null;
 }) {
   const menuSignature = menus
     .map((menu) => [menu.id, menu.quantity, normalizeServingInputMode(menu.mode)] as const)
@@ -32,5 +34,5 @@ export function buildMenuDraftSignature({
     .map(([id, quantity, mode]) => `${id}:${quantity}:${mode}`)
     .join("|");
 
-  return `${menuSignature}|image:${image ?? ""}`;
+  return `${menuSignature}|image:${image ?? ""}|mealTime:${mealTime ?? ""}`;
 }

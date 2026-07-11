@@ -7,9 +7,9 @@ import type { ChatMenuDetailNavigationState } from "@/features/chat/utils/recomm
 import {
   formatMenuDraftKey,
   useMenuDraftClear,
-  useMenuDraftInit,
   useMenuDraftMenus,
   useMenuDraftRemove,
+  useMenuDraftReplace,
   useMenuDraftUpsert,
 } from "@/features/meal-record/stores/menuDraft.store";
 import { PATH } from "@/router/path";
@@ -165,7 +165,7 @@ export function ChatMealRecordBottomSheet({
   const draftKey = formatMenuDraftKey(dateKey ?? "", mealType);
   const draftMenus = useMenuDraftMenus(dateKey ?? "", mealType);
   const selectedMenus = useMemo(() => normalizeSelectedMenus(draftMenus), [draftMenus]);
-  const initDraft = useMenuDraftInit();
+  const replaceDraft = useMenuDraftReplace();
   const upsertMenu = useMenuDraftUpsert();
   const removeMenu = useMenuDraftRemove();
   const clearDraft = useMenuDraftClear();
@@ -180,24 +180,12 @@ export function ChatMealRecordBottomSheet({
     }
 
     hasInitializedDraftRef.current = true;
-    initDraft({
+    replaceDraft({
       key: draftKey,
       existingMenuCount: initialSelectedMenus.length,
-      seedMenus: initialSelectedMenus,
+      menus: initialSelectedMenus,
     });
-  }, [dateKey, draftKey, initDraft, initialSelectedMenus, isOpen]);
-
-  useEffect(() => {
-    return () => {
-      if (!dateKey) {
-        return;
-      }
-
-      MEAL_TYPE_OPTIONS.forEach((option) => {
-        clearDraft(formatMenuDraftKey(dateKey, option.key));
-      });
-    };
-  }, [clearDraft, dateKey]);
+  }, [dateKey, draftKey, initialSelectedMenus, isOpen, replaceDraft]);
 
   const selectedItems = useMemo(() => {
     return selectedMenus
@@ -281,11 +269,10 @@ export function ChatMealRecordBottomSheet({
     const nextMenus = onMealTypeChange(nextMealType, selectedMenus);
     const nextDraftKey = formatMenuDraftKey(dateKey, nextMealType);
 
-    clearDraft(nextDraftKey);
-    initDraft({
+    replaceDraft({
       key: nextDraftKey,
       existingMenuCount: nextMenus.length,
-      seedMenus: nextMenus,
+      menus: nextMenus,
     });
   };
 
@@ -298,7 +285,6 @@ export function ChatMealRecordBottomSheet({
   };
 
   const handleAddMore = () => {
-    clearMealRecordDrafts();
     onAddMore?.(selectedMenus);
   };
 

@@ -95,6 +95,7 @@ export type MenuWithQuantity = MenuSimpleResponseDto & {
 };
 
 export type MealRecordTimestamp = Pick<MealResponseDto, "createdAt" | "updatedAt">;
+export type MealRecordMealTime = string;
 
 export type DayMealSummary = {
   totalCalories: number;
@@ -161,6 +162,13 @@ export type DayMealSummary = {
     3: MealRecordTimestamp | null;
     4: MealRecordTimestamp | null;
   };
+  mealRecordMealTimesByTime: {
+    0: MealRecordMealTime | null;
+    1: MealRecordMealTime | null;
+    2: MealRecordMealTime | null;
+    3: MealRecordMealTime | null;
+    4: MealRecordMealTime | null;
+  };
   didNotEatByTime: {
     0: boolean;
     1: boolean;
@@ -206,6 +214,13 @@ export function dayMealSummary(meals: MealRecordResponseDto): DayMealSummary {
     4: "",
   };
   const mealRecordTimestampsByTime: Record<MealTimeKey, MealRecordTimestamp | null> = {
+    0: null,
+    1: null,
+    2: null,
+    3: null,
+    4: null,
+  };
+  const mealRecordMealTimesByTime: Record<MealTimeKey, MealRecordMealTime | null> = {
     0: null,
     1: null,
     2: null,
@@ -321,6 +336,10 @@ export function dayMealSummary(meals: MealRecordResponseDto): DayMealSummary {
       updatedAt: meal.updatedAt,
     };
 
+    if (typeof meal.meal_time === "string" && meal.meal_time.trim().length > 0) {
+      mealRecordMealTimesByTime[mealTime] = meal.meal_time;
+    }
+
     if (typeof meal.image === "string" && meal.image.trim().length > 0) {
       // 같은 time에 여러 건이면 최신 이미지로 덮어씀
       imagesByTime[mealTime] = meal.image;
@@ -397,6 +416,7 @@ export function dayMealSummary(meals: MealRecordResponseDto): DayMealSummary {
     menusByTime,
     imagesByTime,
     mealRecordTimestampsByTime,
+    mealRecordMealTimesByTime,
     didNotEatByTime: {
       0: recordCountByTime[0] > 0 && menusByTime[0].length === 0,
       1: recordCountByTime[1] > 0 && menusByTime[1].length === 0,

@@ -23,6 +23,7 @@ import {
 import { useTodayMealRecordRegisterMutation } from "@/features/meal-record/hooks/mutations/useTodayMealRecordMutation";
 import {
   formatMenuDraftKey,
+  useMenuDraftPrepareRegisterRequest,
   useMenuDraftStore,
 } from "@/features/meal-record/stores/menuDraft.store";
 import { getMealType, getSafeDateKey } from "@/features/meal-record/utils/mealRecord.queryParams";
@@ -36,7 +37,6 @@ import {
   trackNutritionLabelScanSuccess,
 } from "@/shared/analytics/nutritionLabelEvents";
 import { requestNativeCameraCapture } from "@/shared/api/bridge/nativeBridge";
-import { type MealTime, MENU_INPUT_MODE } from "@/shared/api/types/api.dto";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
 import { CheckButtonModal } from "@/shared/commons/modals/CheckButtonModal";
 import { toast } from "@/shared/commons/toast/toast";
@@ -81,6 +81,7 @@ export default function MealRecordCreatePage() {
   const dateKey = getSafeDateKey(searchParams.get("date"));
   const mealType = getMealType(searchParams.get("mealType"));
   const draftKey = formatMenuDraftKey(dateKey, mealType);
+  const prepareRegisterRequest = useMenuDraftPrepareRegisterRequest();
 
   const returnFromCameraPage = useCallback(() => {
     navigateBack({ fallbackTo: getMealRecordPath(dateKey, mealType) });
@@ -182,16 +183,12 @@ export default function MealRecordCreatePage() {
         }
 
         await mealRegisterAsync(
-          {
-            date: dateKey,
-            time: Number(mealType) as MealTime,
-            menu_ids: nextMenus.map((m) => m.id),
-            menu_quantities: nextMenus.map((m) => m.quantity),
-            menu_input_modes: nextMenus.map((menu) =>
-              menu.mode === "unit" ? MENU_INPUT_MODE.UNIT : MENU_INPUT_MODE.WEIGHT,
-            ),
+          prepareRegisterRequest({
+            dateKey,
+            mealType,
+            menus: nextMenus,
             image: imageData.image_url,
-          },
+          }),
           {
             onSuccess: () => {
               void trackDiaryMenuSaveByMenuIds(imageData.menu_ids);
@@ -218,6 +215,7 @@ export default function MealRecordCreatePage() {
       mealRegisterAsync,
       mealType,
       navigate,
+      prepareRegisterRequest,
       returnFromCameraPage,
       uploadFoodImage,
     ],

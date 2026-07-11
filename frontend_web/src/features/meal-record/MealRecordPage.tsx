@@ -12,14 +12,26 @@ import {
 } from "@/features/meal-record/hooks/mutations/useTodayMealRecordMutation";
 import {
   formatMenuDraftKey,
+  useMenuDraftBuildRegisterRequest,
   useMenuDraftClear,
-  useMenuDraftInit,
   useMenuDraftMenus,
   useMenuDraftRemove,
   useMenuDraftRemoveImage,
+  useMenuDraftReplace,
+  useMenuDraftSetMealTime,
   useMenuDraftStore,
   useMenuDraftUpsertPreviews,
+  useSyncMenuDraftWithDayMeals,
 } from "@/features/meal-record/stores/menuDraft.store";
+import {
+  formatMealRecordTime,
+  getCurrentMealRecordTime,
+  type MealRecordPeriod,
+  type MealRecordTimeValue,
+  normalizeMealRecordTime,
+  toMealRecordTime,
+  toMealRecordTimeValue,
+} from "@/features/meal-record/utils/mealRecordTime";
 import {
   buildMenuDraftSignature,
   normalizeServingInputMode,
@@ -36,9 +48,8 @@ import {
   type MealServingInputMode,
   type MealTime,
   type MealType,
-  MENU_INPUT_MODE,
-  type RegisterMealRequestDto,
 } from "@/shared/api/types/api.dto";
+import type { RegisterMealRequestDto } from "@/shared/api/types/api.request.dto";
 import BottomSheet from "@/shared/commons/bottomSheet/BottomSheet";
 import { Button } from "@/shared/commons/button/Button";
 import { MealMenuCard } from "@/shared/commons/card/MealMenuCard";
@@ -84,10 +95,6 @@ function scaleCaloriesByWeight(
   return safeCalories * (safeNextWeight / safeCurrentWeight);
 }
 
-function toMenuInputMode(mode: MealServingInputMode | undefined) {
-  return mode === "unit" ? MENU_INPUT_MODE.UNIT : MENU_INPUT_MODE.WEIGHT;
-}
-
 function normalizeMealImage(image: string | null | undefined) {
   if (typeof image !== "string") {
     return undefined;
@@ -119,31 +126,11 @@ type DisplayMenuItem = {
   data_source?: number;
 };
 
-type MealRecordPeriod = "오전" | "오후";
-
-type MealRecordTimeValue = {
-  period: MealRecordPeriod;
-  hour: string;
-  minute: string;
-};
-
-const MEAL_RECORD_TIME_DEFAULTS: Record<MealType, MealRecordTimeValue> = {
-  "0": { period: "오전", hour: "8", minute: "00" },
-  "1": { period: "오후", hour: "12", minute: "00" },
-  "2": { period: "오후", hour: "6", minute: "00" },
-  "3": { period: "오후", hour: "3", minute: "00" },
-  "4": { period: "오후", hour: "10", minute: "00" },
-};
-
 const MEAL_RECORD_PERIOD_OPTIONS: MealRecordPeriod[] = ["오전", "오후"];
 const MEAL_RECORD_HOUR_OPTIONS = Array.from({ length: 12 }, (_, index) => String(index + 1));
 const MEAL_RECORD_MINUTE_OPTIONS = Array.from({ length: 60 }, (_, index) =>
   String(index).padStart(2, "0"),
 );
-
-function formatMealRecordTime(value: MealRecordTimeValue) {
-  return `${value.period} ${value.hour.padStart(2, "0")}:${value.minute}`;
-}
 
 export default function MealRecordPage() {
   const navigate = useNavigate();
@@ -153,10 +140,9 @@ export default function MealRecordPage() {
   const mealType = getMealType(searchParams.get("mealType"));
   const [isExitConfirmOpen, setIsExitConfirmOpen] = useState(false);
   const [isTimeSheetOpen, setIsTimeSheetOpen] = useState(false);
-  const [mealRecordTimes, setMealRecordTimes] =
-    useState<Record<MealType, MealRecordTimeValue>>(MEAL_RECORD_TIME_DEFAULTS);
+  const initialMealRecordTime = useMemo(() => getCurrentMealRecordTime(), []);
   const [draftMealRecordTime, setDraftMealRecordTime] = useState<MealRecordTimeValue>(
-    MEAL_RECORD_TIME_DEFAULTS[mealType],
+    () => toMealRecordTimeValue(initialMealRecordTime),
   );
   const hasAppliedTransferRef = useRef(false);
 
@@ -172,10 +158,12 @@ export default function MealRecordPage() {
     useTodayMealRecordRegisterMutation();
   const { mutateAsync: deleteWithRollbackAsync, isPending: isDeletePending } =
     useTodayMealRecordDeleteWithRollbackMutation();
-  const initDraft = useMenuDraftInit();
+  const replaceDraft = useMenuDraftReplace();
   const upsertPreviews = useMenuDraftUpsertPreviews();
   const removeMenu = useMenuDraftRemove();
   const removeImage = useMenuDraftRemoveImage();
+  const setMealTime = useMenuDraftSetMealTime();
+  const buildRegisterRequest = useMenuDraftBuildRegisterRequest();
   const clearDraft = useMenuDraftClear();
   const draftMenus = useMenuDraftMenus(dateKey, mealType);
   const allDrafts = useMenuDraftStore((store) => store.drafts);
@@ -200,23 +188,22 @@ export default function MealRecordPage() {
       buildMenuDraftSignature({
         menus: currentSeedMenus,
         image: currentMenus?.imagesByTime[mealType],
+        mealTime: currentMenus?.mealRecordMealTimesByTime[mealType],
       }),
     [currentMenus, currentSeedMenus, mealType],
   );
-
-  useEffect(() => {
-    if (!currentMenus) {
-      return;
-    }
-
-    initDraft({
-      key: draftKey,
-      existingMenuCount: currentSeedMenus.length,
-      seedMenus: currentSeedMenus,
-      image: currentMenus.imagesByTime[mealType],
-      serverSignature: currentServerSignature,
-    });
-  }, [currentMenus, currentSeedMenus, currentServerSignature, draftKey, initDraft, mealType]);
+  useSyncMenuDraftWithDayMeals({
+    dateKey,
+    mealType,
+    dayMeals: currentMenus,
+  });
+  const getBaselineMealRecordTime = useCallback(
+    (type: MealType) => {
+      const mealTime = Number(type) as MealTime;
+      return normalizeMealRecordTime(currentMenus?.mealRecordMealTimesByTime[mealTime]);
+    },
+    [currentMenus],
+  );
 
   useEffect(() => {
     if (hasAppliedTransferRef.current || !currentMenus || !transferState) {
@@ -246,24 +233,27 @@ export default function MealRecordPage() {
       const clearServerSignature = buildMenuDraftSignature({
         menus: clearSeedMenus,
         image: currentMenus.imagesByTime[clearMealType],
+        mealTime: currentMenus.mealRecordMealTimesByTime[clearMealType],
       });
 
       clearDraft(clearKey);
-      initDraft({
+      replaceDraft({
         key: clearKey,
         existingMenuCount: clearSeedMenus.length,
-        seedMenus: [],
+        menus: [],
         image: currentMenus.imagesByTime[clearMealType],
+        mealTime: currentMenus.mealRecordMealTimesByTime[clearMealType],
         serverSignature: clearServerSignature,
       });
     });
 
     clearDraft(draftKey);
-    initDraft({
+    replaceDraft({
       key: draftKey,
       existingMenuCount: currentSeedMenus.length,
-      seedMenus: transferState.menus,
+      menus: transferState.menus,
       image: currentMenus.imagesByTime[mealType],
+      mealTime: currentMenus.mealRecordMealTimesByTime[mealType],
       serverSignature: currentServerSignature,
     });
 
@@ -281,9 +271,9 @@ export default function MealRecordPage() {
     dateKey,
     clearDraft,
     draftKey,
-    initDraft,
     mealType,
     navigate,
+    replaceDraft,
     transferState,
     upsertPreviews,
   ]);
@@ -373,27 +363,26 @@ export default function MealRecordPage() {
           ? undefined
           : normalizeMealImage(draftByType.image ?? currentImage);
       const hasImageChanged = draftByType.image !== undefined && nextImage !== currentImage;
+      const baselineMealRecordTime = getBaselineMealRecordTime(type);
+      const nextMealRecordTime =
+        normalizeMealRecordTime(draftByType.mealTime) ?? baselineMealRecordTime;
+      const hasMealRecordTimeChanged = nextMealRecordTime !== baselineMealRecordTime;
 
-      if (!hasMenuChanged && !hasImageChanged) {
+      if (!hasMenuChanged && !hasImageChanged && !hasMealRecordTimeChanged) {
         return requests;
       }
 
-      const request: RegisterMealRequestDto = {
-        date: dateKey,
-        time: Number(type) as MealTime,
-        menu_ids: draftMenusByType.map((menu) => menu.id),
-        menu_quantities: draftMenusByType.map((menu) => menu.quantity),
-        menu_input_modes: draftMenusByType.map((menu) => toMenuInputMode(menu.mode)),
-      };
-
-      if (nextImage) {
-        request.image = nextImage;
-      }
-
-      requests.push(request);
+      requests.push(
+        buildRegisterRequest({
+          dateKey,
+          mealType: type,
+          fallbackImage: currentImage,
+          fallbackMealTime: baselineMealRecordTime,
+        }),
+      );
       return requests;
     }, []);
-  }, [allDrafts, currentMenus, dateKey]);
+  }, [allDrafts, buildRegisterRequest, currentMenus, dateKey, getBaselineMealRecordTime]);
 
   const hasUnsavedChanges = changedRequests.length > 0;
 
@@ -403,7 +392,10 @@ export default function MealRecordPage() {
     }, 0);
   }, [displayMenuItems]);
   const showDidNotEatState = didNotEat && displayMenuItems.length === 0;
-  const selectedMealRecordTime = mealRecordTimes[mealType] ?? MEAL_RECORD_TIME_DEFAULTS[mealType];
+  const selectedMealRecordTime =
+    normalizeMealRecordTime(currentDraft?.mealTime) ??
+    getBaselineMealRecordTime(mealType) ??
+    initialMealRecordTime;
   const formattedMealRecordTime = formatMealRecordTime(selectedMealRecordTime);
 
   const clearAllDrafts = useCallback(() => {
@@ -420,25 +412,19 @@ export default function MealRecordPage() {
   };
 
   const handleOpenTimeSheet = () => {
-    setDraftMealRecordTime(selectedMealRecordTime);
+    setDraftMealRecordTime(toMealRecordTimeValue(selectedMealRecordTime));
     setIsTimeSheetOpen(true);
   };
 
   const handleConfirmTime = () => {
-    setMealRecordTimes((previous) => ({
-      ...previous,
-      [mealType]: draftMealRecordTime,
-    }));
+    setMealTime({ key: draftKey, mealTime: toMealRecordTime(draftMealRecordTime) });
     setIsTimeSheetOpen(false);
   };
 
   const handleResetTime = () => {
-    const defaultTime = MEAL_RECORD_TIME_DEFAULTS[mealType];
-    setDraftMealRecordTime(defaultTime);
-    setMealRecordTimes((previous) => ({
-      ...previous,
-      [mealType]: defaultTime,
-    }));
+    const defaultTime = getCurrentMealRecordTime();
+    setDraftMealRecordTime(toMealRecordTimeValue(defaultTime));
+    setMealTime({ key: draftKey, mealTime: defaultTime });
     setIsTimeSheetOpen(false);
   };
 
@@ -447,20 +433,6 @@ export default function MealRecordPage() {
   };
 
   const handleRemoveImage = () => {
-    if (!currentMenus) {
-      return;
-    }
-
-    if (!hasCurrentDraft) {
-      initDraft({
-        key: draftKey,
-        existingMenuCount: currentSeedMenus.length,
-        seedMenus: currentSeedMenus,
-        image: currentMenus.imagesByTime[mealType],
-        serverSignature: currentServerSignature,
-      });
-    }
-
     removeImage({ key: draftKey });
   };
 
@@ -576,22 +548,6 @@ export default function MealRecordPage() {
   };
 
   const handleMealSearchNavigate = () => {
-    const seedMenus = hasCurrentDraft
-      ? draftMenus
-      : currentMenuItems.map((menu) => ({
-          id: menu.id,
-          quantity: menu.quantity,
-          mode: menu.serving_input_mode,
-        }));
-
-    initDraft({
-      key: draftKey,
-      existingMenuCount: seedMenus.length,
-      seedMenus,
-      image: mealImage,
-      serverSignature: currentServerSignature,
-    });
-
     navigate(getMealSearchPath(dateKey, mealType));
   };
 

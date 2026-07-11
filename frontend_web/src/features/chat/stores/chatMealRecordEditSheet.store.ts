@@ -1,13 +1,13 @@
 import { create } from "zustand";
 
 import type { ChatMealRecordMenu } from "@/features/chat/components/ChatMealRecordBottomSheet";
-import type { SelectedDiaryMealRecordMenu } from "@/features/chat/utils/chatDiaryMealRecord";
 import type { DayMealSummary } from "@/features/home/utils/dayMealSummary";
+import type { MenuDraftType } from "@/features/meal-record/stores/menuDraft.store";
 import { DEFAULT_MEAL_TYPE, type MealTime, type MealType } from "@/shared/api/types/api.dto";
 
 export type ChatMealRecordSnapshot = {
   time: MealTime;
-  menus: SelectedDiaryMealRecordMenu[];
+  menus: MenuDraftType[];
 };
 
 export type ChatMealRecordEditSheetContext = {

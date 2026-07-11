@@ -10,8 +10,8 @@ import {
   type MealServingInputMode,
   type MealTime,
   MENU_INPUT_MODE,
-  type RegisterMealRequestDto,
 } from "@/shared/api/types/api.dto";
+import type { RegisterMealRequestDto } from "@/shared/api/types/api.request.dto";
 import type { UseMutationCallback } from "@/shared/api/types/callback.types";
 
 export function useTodayMealRecordRegisterMutation(callbacks?: UseMutationCallback) {
@@ -104,6 +104,10 @@ export function useTodayMealRecordDeleteWithRollbackMutation() {
 
       if (typeof request.image === "string" && request.image.trim().length > 0) {
         snapshot.image = request.image;
+      }
+
+      if (typeof request.meal_time === "string" && request.meal_time.trim().length > 0) {
+        snapshot.meal_time = request.meal_time;
       }
 
       try {
