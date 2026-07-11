@@ -23,6 +23,7 @@ import type { ChatRecommendItemResponseDto } from "@/shared/api/types/api.respon
 import BottomSheet from "@/shared/commons/bottomSheet/BottomSheet";
 import { Button } from "@/shared/commons/button/Button";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
+import { KeyboardDown } from "@/shared/commons/input/KeyboardDown";
 import NumberField from "@/shared/commons/input/NumberField";
 import { ScrollFogArea } from "@/shared/commons/scrollFog";
 import { useNavigate } from "@/shared/navigation/stackflowNavigation";
@@ -532,6 +533,8 @@ export function ChatMealRecordBottomSheet({
           >
             {isSubmitPending ? "저장 중..." : actionLabel}
           </Button>
+
+          <KeyboardDown />
         </section>
       </div>
     </BottomSheet>

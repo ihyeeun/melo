@@ -1,0 +1,25 @@
+.button {
+  align-items: center;
+  color: var(--label-normal);
+  display: inline-flex;
+  justify-content: center;
+  margin-left: 0;
+  opacity: 0;
+  overflow: hidden;
+  pointer-events: none;
+  visibility: hidden;
+  width: 0;
+}
+
+.button:disabled {
+  color: var(--label-assistive);
+  cursor: not-allowed;
+}
+
+:global(body:has(:is(input, textarea, [contenteditable="true"]):focus)) .button {
+  margin-left: 8px;
+  opacity: 1;
+  pointer-events: auto;
+  visibility: visible;
+  width: 36px;
+}

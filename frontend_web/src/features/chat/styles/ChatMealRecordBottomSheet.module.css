@@ -241,6 +241,7 @@
 }
 
 .actionBar {
+  display: flex;
   flex-shrink: 0;
   padding: 0 20px;
 }
