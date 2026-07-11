@@ -245,11 +245,12 @@ function RecommendResultContent({
         return;
       }
 
-      const previousSelectedMenuIds = new Set(
-        dayMeals.menusByTime[targetMealTime]
-          .filter((menu) => recommendationMenuIdSet.has(menu.id))
-          .map((menu) => menu.id),
-      );
+      const previousSelectedMenuIds = new Set<number>();
+      for (const menu of dayMeals.menusByTime[targetMealTime]) {
+        if (recommendationMenuIdSet.has(menu.id)) {
+          previousSelectedMenuIds.add(menu.id);
+        }
+      }
       const canceledMenus = recommendations.filter(
         (menu) => previousSelectedMenuIds.has(menu.menu_id) && !selectedMenuIds.has(menu.menu_id),
       );
