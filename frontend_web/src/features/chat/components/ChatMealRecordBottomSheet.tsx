@@ -352,12 +352,11 @@ export function ChatMealRecordBottomSheet({
                   item.mode === "unit" ? unitSelectLabel : item.servingContext.weightUnit;
 
                 return (
-                  <div
-                    key={item.id}
-                    className={styles.menuCard}
-                    onClick={() => handleNavigateMenuDetail(item.id)}
-                  >
-                    <div className={styles.menuItemTop}>
+                  <div key={item.id} className={styles.menuCard}>
+                    <div
+                      className={styles.menuItemTop}
+                      onClick={() => handleNavigateMenuDetail(item.id)}
+                    >
                       <div className={styles.menuName}>
                         <p className="typo-title4">{item.recommendation.menu_name}</p>
                         <button
@@ -378,10 +377,7 @@ export function ChatMealRecordBottomSheet({
                       </p>
                     </div>
 
-                    <div
-                      className={styles.quantityControlRow}
-                      onClick={(event) => event.stopPropagation()}
-                    >
+                    <div className={styles.quantityControlRow}>
                       <div className={styles.quantityStepper}>
                         <NumberField
                           value={displayValue}
@@ -458,12 +454,8 @@ export function ChatMealRecordBottomSheet({
                             className={styles.selectPositioner}
                             side="bottom"
                             align="end"
-                            onClick={(event) => event.stopPropagation()}
                           >
-                            <Select.Popup
-                              className={styles.selectPopup}
-                              onClick={(event) => event.stopPropagation()}
-                            >
+                            <Select.Popup className={styles.selectPopup}>
                               <Select.List className={styles.selectList}>
                                 <Select.Item
                                   value="unit"
