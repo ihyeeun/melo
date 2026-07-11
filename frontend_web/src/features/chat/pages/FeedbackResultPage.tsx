@@ -292,11 +292,12 @@ function FeedbackResultContent({
         return;
       }
 
-      const previousSelectedMenuIds = new Set(
-        dayMeals.menusByTime[targetMealTime]
-          .filter((menu) => feedbackMenuIdSet.has(menu.id))
-          .map((menu) => menu.id),
-      );
+      const previousSelectedMenuIds = new Set<number>();
+      for (const menu of dayMeals.menusByTime[targetMealTime]) {
+        if (feedbackMenuIdSet.has(menu.id)) {
+          previousSelectedMenuIds.add(menu.id);
+        }
+      }
       const canceledMenus = menus.filter(
         (menu) => previousSelectedMenuIds.has(menu.menu_id) && !selectedMenuIds.has(menu.menu_id),
       );
