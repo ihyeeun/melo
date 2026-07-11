@@ -67,6 +67,7 @@ export default function BottomSheet({
       autoFocus={false}
       handleOnly={disableContentDrag}
       modal={modal}
+      repositionInputs={false}
       onAnimationEnd={(open) => {
         if (!open && !isOpenRef.current) {
           setIsTabBarHidden(false);
