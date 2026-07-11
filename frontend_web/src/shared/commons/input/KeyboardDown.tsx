@@ -21,18 +21,18 @@ function dismissKeyboard() {
   }
 }
 
+const handlePointerDown: PointerEventHandler<HTMLButtonElement> = (event) => {
+  // Prevent focus from moving to the button before the current input blurs.
+  event.preventDefault();
+  dismissKeyboard();
+};
+
 export function KeyboardDown({
   "aria-label": ariaLabel = "키보드 닫기",
   className,
   onClick,
   ...props
 }: KeyboardDownProps) {
-  const handlePointerDown: PointerEventHandler<HTMLButtonElement> = (event) => {
-    // Prevent focus from moving to the button before the current input blurs.
-    event.preventDefault();
-    dismissKeyboard();
-  };
-
   return (
     <button
       {...props}
