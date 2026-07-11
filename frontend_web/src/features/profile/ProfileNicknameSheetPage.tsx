@@ -37,12 +37,6 @@ export default function ProfileNicknameSheetPage() {
     navigateBack({ fallbackTo: PATH.PROFILE });
   };
 
-  useEffect(() => {
-    if (!isOpen) return;
-
-    inputRef.current?.focus();
-  }, [isOpen]);
-
   const handleUpdateNickName = () => {
     if (nickName.trim() === "") {
       setNickNameErrorMessage("");
