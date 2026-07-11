@@ -87,11 +87,6 @@
   width: 100%;
 }
 
-.menuCard:focus-visible {
-  outline: 2px solid var(--border-primary);
-  outline-offset: 2px;
-}
-
 .menuItemTop {
   display: flex;
   flex-direction: column;

@@ -352,12 +352,10 @@ export function ChatMealRecordBottomSheet({
                   item.mode === "unit" ? unitSelectLabel : item.servingContext.weightUnit;
 
                 return (
-                  <button
+                  <div
                     key={item.id}
-                    type="button"
                     className={styles.menuCard}
                     onClick={() => handleNavigateMenuDetail(item.id)}
-                    aria-label={`${item.recommendation.menu_name} 영양성분 상세 보기`}
                   >
                     <div className={styles.menuItemTop}>
                       <div className={styles.menuName}>
@@ -487,7 +485,7 @@ export function ChatMealRecordBottomSheet({
                         </Select.Portal>
                       </Select.Root>
                     </div>
-                  </button>
+                  </div>
                 );
               })}
 
