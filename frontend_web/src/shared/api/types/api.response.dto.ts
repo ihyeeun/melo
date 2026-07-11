@@ -125,6 +125,7 @@ export interface MealRecordResponseDto {
 
 export interface MealResponseDto {
   time: number;
+  meal_time?: string;
   image: string;
   createdAt: string;
   updatedAt: string;

@@ -20,6 +20,7 @@ import {
 import { useTodayMealRecordRegisterMutation } from "@/features/meal-record/hooks/mutations/useTodayMealRecordMutation";
 import {
   formatMenuDraftKey,
+  useMenuDraftPrepareRegisterRequest,
   useMenuDraftStore,
   useMenuDraftUpsert,
 } from "@/features/meal-record/stores/menuDraft.store";
@@ -28,7 +29,6 @@ import { getMealRecordPath } from "@/router/pathHelpers";
 import { track } from "@/shared/analytics/analytics";
 import { EVENT_NAME } from "@/shared/analytics/analytics.constants";
 import { requestNativeCameraCapture } from "@/shared/api/bridge/nativeBridge";
-import { type MealTime, MENU_INPUT_MODE } from "@/shared/api/types/api.dto";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
 import { CheckButtonModal } from "@/shared/commons/modals/CheckButtonModal";
 import { toast } from "@/shared/commons/toast/toast";
@@ -56,6 +56,7 @@ export default function FoodCameraPage() {
   const draftKey = formatMenuDraftKey(dateKey, mealType);
 
   const upsertMenu = useMenuDraftUpsert();
+  const prepareRegisterRequest = useMenuDraftPrepareRegisterRequest();
 
   const returnFromCameraPage = useCallback(() => {
     navigateBack({ fallbackTo: getMealRecordPath(dateKey, mealType) });
@@ -137,16 +138,12 @@ export default function FoodCameraPage() {
       const latestMenus = useMenuDraftStore.getState().drafts[draftKey]?.existingMenus ?? [];
 
       await mealRegisterAsync(
-        {
-          date: dateKey,
-          time: Number(mealType) as MealTime,
-          menu_ids: latestMenus.map((m) => m.id),
-          menu_quantities: latestMenus.map((m) => m.quantity),
-          menu_input_modes: latestMenus.map((menu) =>
-            menu.mode === "unit" ? MENU_INPUT_MODE.UNIT : MENU_INPUT_MODE.WEIGHT,
-          ),
+        prepareRegisterRequest({
+          dateKey,
+          mealType,
+          menus: latestMenus,
           image: imageData.image_url,
-        },
+        }),
         {
           onSuccess: () => {
             void trackDiaryMenuSaveByMenuIds(imageData.menu_ids);
@@ -175,6 +172,7 @@ export default function FoodCameraPage() {
     mealRegisterAsync,
     mealType,
     navigate,
+    prepareRegisterRequest,
     returnFromCameraPage,
     upsertMenu,
     uploadImage,

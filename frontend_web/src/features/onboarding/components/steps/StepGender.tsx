@@ -4,7 +4,7 @@ import { type StepComponentProps } from "@/features/onboarding/onboarding.types"
 import styles from "@/features/onboarding/styles/OnboardingSteps.module.css";
 import BottomSheet from "@/shared/commons/bottomSheet/BottomSheet";
 import { Button } from "@/shared/commons/button/Button";
-import WheelPicker from "@/shared/commons/picker/WheelPicker";
+import { ScrollWheelPicker } from "@/shared/commons/picker/ScrollWheelPicker";
 import {
   getBirthYearRange,
   isValidBirthYear,
@@ -85,13 +85,25 @@ export default function StepGender({ data, update }: StepComponentProps) {
         <div className={styles.onboardingBirthYearSheet}>
           <h3 className="typo-title2">출생 연도</h3>
           <div className={styles.onboardingBirthYearPicker}>
-            <WheelPicker
-              value={String(draftBirthYear)}
-              options={birthYearOptions}
-              suffix="년"
+            <ScrollWheelPicker
               height={400}
+              highlightHeight={72}
               itemHeight={80}
-              onChange={(value) => setDraftBirthYear(Number(value))}
+              classNames={{
+                item: `typo-h1 ${styles.onboardingBirthYearPickerItem}`,
+                itemSelected: `typo-h1 ${styles.onboardingBirthYearPickerItemSelected}`,
+                highlight: styles.onboardingBirthYearPickerHighlight,
+              }}
+              columns={[
+                {
+                  key: "birthYear",
+                  value: String(draftBirthYear),
+                  options: birthYearOptions,
+                  renderOption: (value) => `${value} 년`,
+                  ariaLabel: "출생 연도 선택",
+                },
+              ]}
+              onChange={(_, value) => setDraftBirthYear(Number(value))}
             />
           </div>
           <Button fullWidth size="large" onClick={confirmBirthYear}>

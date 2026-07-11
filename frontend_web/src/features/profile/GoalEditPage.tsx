@@ -19,7 +19,7 @@ import { Button } from "@/shared/commons/button/Button";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import { EditorInput } from "@/shared/commons/input/EditorInput";
-import WheelPicker from "@/shared/commons/picker/WheelPicker";
+import { ScrollWheelPicker } from "@/shared/commons/picker/ScrollWheelPicker";
 import {
   getBirthYearRange,
   isValidBirthYear,
@@ -333,13 +333,25 @@ export default function GoalEditPage() {
         <section className={styles.editorSection}>
           <h2 className={styles.editorTitle}>출생연도</h2>
           <div className={styles.birthYearPicker}>
-            <WheelPicker
-              value={String(selectedBirthYear)}
-              options={birthYearOptions}
-              suffix="년"
-              height={490}
+            <ScrollWheelPicker
+              height="100%"
+              highlightHeight={72}
               itemHeight={80}
-              onChange={(value) => updateSheetData({ birthYear: Number(value) })}
+              classNames={{
+                item: `typo-h1 ${styles.birthYearPickerItem}`,
+                itemSelected: `typo-h1 ${styles.birthYearPickerItemSelected}`,
+                highlight: styles.birthYearPickerHighlight,
+              }}
+              columns={[
+                {
+                  key: "birthYear",
+                  value: String(selectedBirthYear),
+                  options: birthYearOptions,
+                  renderOption: (value) => `${value} 년`,
+                  ariaLabel: "출생연도 선택",
+                },
+              ]}
+              onChange={(_, value) => updateSheetData({ birthYear: Number(value) })}
             />
           </div>
         </section>
@@ -514,11 +526,7 @@ export default function GoalEditPage() {
         </Button>
       </footer>
 
-      <BottomSheet
-        isOpen={editingField !== null}
-        onClose={closeEditor}
-        disableContentDrag
-      >
+      <BottomSheet isOpen={editingField !== null} onClose={closeEditor} disableContentDrag>
         <div className={styles.sheetContent} data-editor-field={editingField ?? undefined}>
           <div className={styles.sheetBody}>{renderEditorBody()}</div>
           {!isInstantSelectEditor && (

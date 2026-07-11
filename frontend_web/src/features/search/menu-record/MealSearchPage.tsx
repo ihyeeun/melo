@@ -10,23 +10,19 @@ import {
 } from "@/features/meal-record/constants/menu.constants";
 import {
   formatMenuDraftKey,
-  useMenuDraftInit,
   useMenuDraftMenus,
   useMenuDraftRemove,
   useMenuDraftSelectedCount,
   useMenuDraftStore,
   useMenuDraftUpsert,
   useMenuDraftUpsertPreviews,
+  useSyncMenuDraftWithDayMeals,
 } from "@/features/meal-record/stores/menuDraft.store";
 import {
   getMealType,
   getSafeDateKey,
   getSafeKeyword,
 } from "@/features/meal-record/utils/mealRecord.queryParams";
-import {
-  buildMenuDraftSignature,
-  toMenuDraftSeed,
-} from "@/features/meal-record/utils/menuDraftSync";
 import RegisterBottomSheet from "@/features/search/components/RegisterBottomSheet";
 import { useMealSearchInfiniteQuery } from "@/features/search/menu-record/hooks/queries/useMealSearchInfiniteQuery";
 import {
@@ -88,7 +84,6 @@ export default function MealSearchPage() {
     isPending: isDayMealsPending,
     isError: isDayMealsError,
   } = useDayMealsQuery(dateKey);
-  const initDraft = useMenuDraftInit();
   const upsertMenu = useMenuDraftUpsert();
   const upsertPreviews = useMenuDraftUpsertPreviews();
   const removeMenu = useMenuDraftRemove();
@@ -145,25 +140,12 @@ export default function MealSearchPage() {
     setSearchKeyword("");
   };
 
-  useEffect(() => {
-    if (!isTop || !dayMeals) {
-      return;
-    }
-
-    const seedMenus = dayMeals.menusByTime[mealType].map(toMenuDraftSeed);
-    const image = dayMeals.imagesByTime[mealType];
-
-    initDraft({
-      key: draftKey,
-      existingMenuCount: seedMenus.length,
-      seedMenus,
-      image,
-      serverSignature: buildMenuDraftSignature({
-        menus: seedMenus,
-        image,
-      }),
-    });
-  }, [dayMeals, draftKey, initDraft, isTop, mealType]);
+  useSyncMenuDraftWithDayMeals({
+    dateKey,
+    mealType,
+    dayMeals,
+    enabled: isTop,
+  });
 
   useEffect(() => {
     if (!isTop || hasDraft || isDayMealsPending || !isDayMealsError) {

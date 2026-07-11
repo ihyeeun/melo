@@ -30,6 +30,9 @@ export const EVENT_NAME = {
   USER_PROFILE_UPDATED: "user_profile_updated",
 
   CLICK_FEEDBACK_BUTTON: "click_feedback_button",
+
+  MENSTRUAL_CARE_CLICK: "menstrual_care_click",
+  MENSTRUAL_CARE_START_DATE_SUBMIT: "menstrual_care_start_date_submit",
 } as const;
 
 export type AnalyticsEventName = (typeof EVENT_NAME)[keyof typeof EVENT_NAME];

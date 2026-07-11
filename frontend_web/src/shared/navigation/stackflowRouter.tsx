@@ -152,6 +152,10 @@ const ChatNutritionRegisterPage = createGuardedLazyActivity(
   FEATURE_GUARD.CHAT,
   () => import("@/features/chat/pages/ChatNutritionRegisterPage"),
 );
+const ChatMealRecordBottomSheetActivity = createGuardedLazyActivity(
+  FEATURE_GUARD.CHAT,
+  () => import("@/features/chat/pages/ChatMealRecordBottomSheetPage"),
+);
 const ChatNutritionDetailActivity = createGuardedLazyActivity(
   FEATURE_GUARD.CHAT,
   () => import("@/features/chat/pages/ChatMenuDetailPage"),
@@ -200,6 +204,7 @@ const ACTIVITIES = {
   NutrientAddModify: NutrientModifyPage,
   BrandSearch,
   Chat: ChatPage,
+  ChatMealRecordSheet: ChatMealRecordBottomSheetActivity,
   ChatNutritionRegister: ChatNutritionRegisterPage,
   ChatNutritionDetail: ChatNutritionDetailActivity,
   RecommendResult: RecommendResultPage,
@@ -239,6 +244,7 @@ const ACTIVITY_ROUTES: Record<keyof typeof ACTIVITIES, RoutePath> = {
   NutrientAddModify: PATH.NUTRIENT_ADD_MODIFY,
   BrandSearch: PATH.BRAND_SEARCH,
   Chat: PATH.CHAT,
+  ChatMealRecordSheet: PATH.CHAT_MEAL_RECORD_SHEET,
   ChatNutritionRegister: PATH.CHAT_NUTRITION_REGISTER,
   ChatNutritionDetail: PATH.CHAT_NUTRITION_DETAIL,
   RecommendResult: PATH.RECOMMEND_RESULT,
@@ -259,6 +265,7 @@ const BOTTOM_SHEET_ACTIVITY_NAMES = new Set<ActivityName>([
   "HomeWeightLogSheet",
   "HomeStepsLogSheet",
   "ProfileNicknameSheet",
+  "ChatMealRecordSheet",
 ]);
 
 const STACK_TRANSITION_DURATION = 270;

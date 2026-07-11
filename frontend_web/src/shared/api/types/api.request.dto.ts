@@ -22,3 +22,19 @@ interface NutritionLabel {
   cholesterol?: number;
   alcohol?: number;
 }
+
+export interface RegisterMealRequestDto {
+  date: string; //날짜 YYYY-MM-DD
+  time: 0 | 1 | 2 | 3 | 4; //기록 시간대 0~4
+  meal_time?: string; //실제 식사 시간 HH:MM
+  image?: string;
+  menu_ids?: number[];
+  menu_quantities?: number[];
+  menu_input_modes?: Array<0 | 1>; //0: 단위, 1: 중량
+}
+
+export interface DeleteMealRequestDto {
+  date: string; //날짜 YYYY-MM-DD
+  time: 0 | 1 | 2 | 3 | 4; //기록 시간대 0~4
+  menu_id?: number;
+}

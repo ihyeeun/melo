@@ -1,5 +1,8 @@
 import { appApiData } from "@/shared/api/apiClient";
-import type { DeleteMealRequestDto, RegisterMealRequestDto } from "@/shared/api/types/api.dto";
+import type {
+  DeleteMealRequestDto,
+  RegisterMealRequestDto,
+} from "@/shared/api/types/api.request.dto";
 
 const END_POINT = {
   MEAL_REGISTER: "/home/registerMeal",

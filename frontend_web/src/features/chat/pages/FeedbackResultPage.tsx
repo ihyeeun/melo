@@ -3,15 +3,7 @@ import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { useGetChatHistoryQuery } from "@/features/chat/hooks/queries/useGetChatQuery";
 import { useRequestChatMealRecordFocus } from "@/features/chat/stores/mealRecordFocus.store";
 import styles from "@/features/chat/styles/RecommendResultPage.module.css";
-import {
-  buildDiaryMealRecordRequest,
-  getCurrentMealTime,
-  getDiaryMealImage,
-  getDiaryMealRecordSelectionByMenuIds,
-  getNextDiaryMenusByCandidateIds,
-  type SelectedDiaryMealRecordMenu,
-} from "@/features/chat/utils/chatDiaryMealRecord";
-import { getMealTypeFromChatMealTime } from "@/features/chat/utils/chatMeal";
+import { getCurrentMealTime, getMealTypeFromChatMealTime } from "@/features/chat/utils/chatMeal";
 import {
   type ChatMenuDetailNavigationState,
   type ChatMenuDetailSelectionPayload,
@@ -25,6 +17,15 @@ import {
   MEAL_RECORD_MENU_LIMIT_MESSAGE,
 } from "@/features/meal-record/constants/menu.constants";
 import { useTodayMealRecordRegisterMutation } from "@/features/meal-record/hooks/mutations/useTodayMealRecordMutation";
+import {
+  formatMenuDraftKey,
+  useMenuDraftBuildRegisterRequest,
+  useMenuDraftClear,
+  useMenuDraftMenus,
+  useMenuDraftRemove,
+  useMenuDraftUpsert,
+  useSyncMenuDraftWithDayMeals,
+} from "@/features/meal-record/stores/menuDraft.store";
 import { PATH } from "@/router/path";
 import {
   trackChatMenuSave,
@@ -48,8 +49,6 @@ import {
   useSearchParams,
 } from "@/shared/navigation/stackflowNavigation";
 import { getTodayFormatDateKey } from "@/shared/utils/dateFormat";
-
-type SelectedMealRecordMenu = SelectedDiaryMealRecordMenu;
 
 const FOOD_MARKER_CLUSTER_GAP = 8;
 const FOOD_MARKER_BUBBLE_MAX_WIDTH = 220;
@@ -188,52 +187,52 @@ function FeedbackResultContent({
   menus: ChatFeedbackMenuResponseDto[];
 }) {
   const navigate = useNavigate();
-  const [selectedMenusOverride, setSelectedMenusOverride] = useState<
-    SelectedMealRecordMenu[] | null
-  >(null);
   const recordDateKey = getTodayFormatDateKey();
   const currentMealTime = getCurrentMealTime();
   const { data: dayMeals, isPending: isDayMealsPending } = useDayMealsQuery(recordDateKey);
   const { mutateAsync: registerDiaryMealRecordMutate, isPending: isMealRegisterPending } =
     useTodayMealRecordRegisterMutation();
+  const upsertMenu = useMenuDraftUpsert();
+  const removeMenu = useMenuDraftRemove();
+  const clearDraft = useMenuDraftClear();
+  const buildRegisterRequest = useMenuDraftBuildRegisterRequest();
 
   const imageUrl = getChatItemImageUrl(chatItem);
   const recognizedFoods = getRecognizedFoods(chatItem);
   const feedbackMenuIds = useMemo(() => menus.map((menu) => menu.menu_id), [menus]);
-  const diaryMealRecordSelection = useMemo(
-    () => getDiaryMealRecordSelectionByMenuIds(dayMeals, feedbackMenuIds, currentMealTime),
-    [currentMealTime, dayMeals, feedbackMenuIds],
+  const feedbackMenuIdSet = useMemo(
+    () => new Set(feedbackMenuIds),
+    [feedbackMenuIds],
   );
   const targetMealTime = currentMealTime;
   const mealType: MealType = getMealTypeFromChatMealTime(targetMealTime);
-  const selectedMenus = useMemo(
-    () => selectedMenusOverride ?? diaryMealRecordSelection?.menus ?? [],
-    [diaryMealRecordSelection, selectedMenusOverride],
-  );
+  const draftKey = formatMenuDraftKey(recordDateKey, mealType);
+  const selectedMenus = useMenuDraftMenus(recordDateKey, mealType);
   const requestChatMealRecordFocus = useRequestChatMealRecordFocus();
   const selectedMenuIds = useMemo(() => {
     return new Set(selectedMenus.map((menu) => menu.id));
   }, [selectedMenus]);
+  const selectedFeedbackCount = useMemo(
+    () => menus.filter((menu) => selectedMenuIds.has(menu.menu_id)).length,
+    [menus, selectedMenuIds],
+  );
+
+  useSyncMenuDraftWithDayMeals({
+    dateKey: recordDateKey,
+    mealType,
+    dayMeals,
+  });
 
   const handleConfirmDetailSelection = (selection: ChatMenuDetailSelectionPayload) => {
     if (isDayMealsPending) {
       return;
     }
 
-    setSelectedMenusOverride((prev) => {
-      const currentMenus = prev ?? selectedMenus;
-      const nextMenu: SelectedMealRecordMenu = {
-        id: selection.menuId,
-        quantity: selection.quantity,
-        mode: selection.mode,
-      };
-      const existingIndex = currentMenus.findIndex((menu) => menu.id === selection.menuId);
-
-      if (existingIndex === -1) {
-        return [...currentMenus, nextMenu];
-      }
-
-      return currentMenus.map((menu) => (menu.id === selection.menuId ? nextMenu : menu));
+    upsertMenu({
+      key: draftKey,
+      id: selection.menuId,
+      quantity: selection.quantity,
+      mode: selection.mode,
     });
   };
 
@@ -249,7 +248,7 @@ function FeedbackResultContent({
         ? {
             menuId,
             quantity: initialSelection.quantity,
-            mode: initialSelection.mode,
+            mode: initialSelection.mode ?? "unit",
           }
         : null,
       onConfirmSelection: handleConfirmDetailSelection,
@@ -263,22 +262,21 @@ function FeedbackResultContent({
       return;
     }
 
-    setSelectedMenusOverride((prev) => {
-      const currentMenus = prev ?? selectedMenus;
-      const isAlreadySelected = currentMenus.some((item) => item.id === menu.menu_id);
+    if (selectedMenuIds.has(menu.menu_id)) {
+      removeMenu({ key: draftKey, id: menu.menu_id });
+      return;
+    }
 
-      if (isAlreadySelected) {
-        return currentMenus.filter((item) => item.id !== menu.menu_id);
-      }
+    if (selectedMenus.length + 1 > MAX_MEAL_RECORD_MENUS) {
+      toast.warning(MEAL_RECORD_MENU_LIMIT_MESSAGE);
+      return;
+    }
 
-      return [
-        ...currentMenus,
-        {
-          id: menu.menu_id,
-          quantity: menu.weight,
-          mode: "unit",
-        },
-      ];
+    upsertMenu({
+      key: draftKey,
+      id: menu.menu_id,
+      quantity: menu.weight,
+      mode: "unit",
     });
   };
 
@@ -289,34 +287,31 @@ function FeedbackResultContent({
     }
 
     try {
-      const nextMenus = getNextDiaryMenusByCandidateIds({
-        dayMeals,
-        time: targetMealTime,
-        selectedMenus,
-        candidateIds: feedbackMenuIds,
-      });
-
-      if (nextMenus.length > MAX_MEAL_RECORD_MENUS) {
+      if (selectedMenus.length > MAX_MEAL_RECORD_MENUS) {
         toast.warning(MEAL_RECORD_MENU_LIMIT_MESSAGE);
         return;
       }
 
-      const previousSelectedMenuIds = new Set(
-        diaryMealRecordSelection?.menus.map((menu) => menu.id) ?? [],
-      );
+      const previousSelectedMenuIds = new Set<number>();
+      for (const menu of dayMeals.menusByTime[targetMealTime]) {
+        if (feedbackMenuIdSet.has(menu.id)) {
+          previousSelectedMenuIds.add(menu.id);
+        }
+      }
       const canceledMenus = menus.filter(
         (menu) => previousSelectedMenuIds.has(menu.menu_id) && !selectedMenuIds.has(menu.menu_id),
       );
 
       await registerDiaryMealRecordMutate(
-        buildDiaryMealRecordRequest({
+        buildRegisterRequest({
           dateKey: recordDateKey,
           mealType,
-          selectedMenus: nextMenus,
-          image: getDiaryMealImage(dayMeals, targetMealTime),
+          fallbackImage: dayMeals.imagesByTime[targetMealTime],
+          fallbackMealTime: dayMeals.mealRecordMealTimesByTime[targetMealTime],
         }),
       );
 
+      clearDraft(draftKey);
       trackChatMenuSave(menus.filter((menu) => selectedMenuIds.has(menu.menu_id)));
       trackRecommendMenuCancel(canceledMenus);
       toast.success("식사 기록이 등록되었어요.");
@@ -387,10 +382,10 @@ function FeedbackResultContent({
           variant="filled"
           size="large"
           color="primary"
-          disabled={selectedMenus.length === 0 || isMealRegisterPending || isDayMealsPending}
+          disabled={selectedFeedbackCount === 0 || isMealRegisterPending || isDayMealsPending}
           onClick={handleSubmitMealRecord}
         >
-          {selectedMenus.length}개 기록하기
+          {selectedFeedbackCount}개 기록하기
         </Button>
       </footer>
     </section>
