@@ -272,6 +272,18 @@ export interface ChatHistoryItemResponseDto {
   };
 }
 
+export interface ChatMealRecordParseResponseDto {
+  chat_id: number;
+  menu_ids: number[];
+  menu_quantities: number[];
+  time: 0 | 1 | 2 | 3 | 4;
+  date: string;
+}
+
+export interface ChatUserMenuSearchResponseDto {
+  name: string[];
+}
+
 /* ======
  * 프로필
  * ====== */

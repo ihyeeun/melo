@@ -2,7 +2,9 @@ import { appApiData } from "@/shared/api/apiClient";
 import type { NutritionLabelMenuRegisterRequestDto } from "@/shared/api/types/api.request.dto";
 import type {
   ChatHistoryResponseDto,
+  ChatMealRecordParseResponseDto,
   ChatRecommendResponseDto,
+  ChatUserMenuSearchResponseDto,
 } from "@/shared/api/types/api.response.dto";
 
 export async function getChatHistory() {
@@ -33,6 +35,26 @@ export async function registerMenuByNutritionLabelImageFeedback({
     endpoint: "/chat/nutrition-label-feedback/register-menu",
     method: "POST",
     body,
+  });
+
+  return response;
+}
+
+export async function parseMenusFromText({ text }: { text: string }) {
+  const response = await appApiData<ChatMealRecordParseResponseDto>({
+    endpoint: "/chat/meal-record/parse",
+    method: "POST",
+    body: { text },
+  });
+
+  return response;
+}
+
+export async function searchMenu({ text }: { text: string }) {
+  const response = await appApiData<ChatUserMenuSearchResponseDto>({
+    endpoint: "/chat/menu/search",
+    method: "POST",
+    body: { text },
   });
 
   return response;

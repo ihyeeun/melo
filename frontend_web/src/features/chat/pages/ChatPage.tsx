@@ -1,6 +1,6 @@
 import { useActivity } from "@stackflow/react";
 import { useQueries, useQueryClient } from "@tanstack/react-query";
-import type { FormEvent, KeyboardEvent, MouseEvent, PointerEvent } from "react";
+import type { FormEvent, KeyboardEvent, MouseEvent, PointerEvent, TouchEvent } from "react";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 
 import { ChatCameraUpdateRequiredModal } from "@/features/camera/components/ChatCameraUpdateRequiredModal";
@@ -8,7 +8,11 @@ import { navigateToChatCameraIfSupported } from "@/features/camera/utils/chatCam
 import { AssistantMessageText } from "@/features/chat/components/AssistantMessageText";
 import { AssistantPendingMessage } from "@/features/chat/components/AssistantPendingMessage";
 import type { ChatMealRecordMenu } from "@/features/chat/components/ChatMealRecordBottomSheet";
-import { useSendMessageMutation } from "@/features/chat/hooks/mutations/useSendMessageMutation";
+import {
+  useParseMenusFromTextMutation,
+  useSearchMenuMutation,
+  useSendMessageMutation,
+} from "@/features/chat/hooks/mutations/useSendMessageMutation";
 import {
   ChatHistorySyncError,
   refetchAndResolveChatHistoryItem,
@@ -93,7 +97,7 @@ import {
 import { formatNumberWithMaxOneDecimal } from "@/shared/utils/numberFormat";
 import { formatBaseServingUnit, SERVING_UNIT_PERSON } from "@/shared/utils/servingUnit";
 
-// const QUICK_CHIP_LIST = ["포만감 있는 점심 메뉴 추천해줘", "칼로리 부담 적은 배달 음식 추천해줘"];
+const QUICK_CHIP_LIST = [{ id: "meal-record", label: "식사 기록 모드" }];
 const FEEDBACK_GAUGE_VIEWBOX_WIDTH = 220;
 const FEEDBACK_GAUGE_VIEWBOX_HEIGHT = 100;
 const FEEDBACK_GAUGE_CENTER_X = 110;
@@ -428,6 +432,7 @@ export default function ChatPage() {
   const [inputValue, setInputValue] = useState("");
   const [isInputFocused, setIsInputFocused] = useState(false);
   const [pendingInput, setPendingInput] = useState<string | null>(null);
+  const [pendingMealRecordInput, setPendingMealRecordInput] = useState<string | null>(null);
   const [assistantPlayback, setAssistantPlayback] = useState<AssistantPlaybackState | null>(null);
   const [chatCameraUpdateUrl, setChatCameraUpdateUrl] = useState<string | null>(null);
   const [isChatCameraUpdateModalOpen, setIsChatCameraUpdateModalOpen] = useState(false);
@@ -441,11 +446,15 @@ export default function ChatPage() {
     null,
   );
   const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null);
+  const [selectedChipId, setSelectedChipId] = useState<string | null>(null);
+  const isMealRecordTextMode = selectedChipId === "meal-record";
   const clientOsName = useClientOsName();
   const isSoftKeyboardVisible = useSoftKeyboardVisible(isInputFocused, clientOsName);
 
   const { data, isPending: isHistoryPending } = useGetChatHistoryQuery();
   const { mutateAsync: sendMessageMutation, isPending: isSendPending } = useSendMessageMutation();
+  const { mutateAsync: parseMenusFromTextMutation, isPending: isMealRecordParsePending } =
+    useParseMenusFromTextMutation();
   const { mutateAsync: registerDiaryMealRecordMutate, isPending: isDiaryMealRegisterPending } =
     useTodayMealRecordRegisterMutation();
   const { mutateAsync: deleteDiaryMealRecordMutate, isPending: isDiaryMealDeletePending } =
@@ -542,8 +551,9 @@ export default function ChatPage() {
       ].join(":")
     : "idle";
   const isAssistantPlaybackActive = assistantPlayback !== null;
-  const isChatSendDisabled = isSendPending || isAssistantPlaybackActive;
-  const isAwaitingChatResponse = pendingInput !== null || isAssistantPlaybackActive;
+  const isChatSendDisabled = isSendPending || isAssistantPlaybackActive || isMealRecordParsePending;
+  const isAwaitingChatResponse =
+    pendingInput !== null || pendingMealRecordInput !== null || isAssistantPlaybackActive;
   const hasTimelineContent = timelineItems.length > 0 || isAwaitingChatResponse;
   const isTypingPending = isAwaitingChatResponse && isSendPending;
   const isInputEmpty = inputValue.trim().length === 0;
@@ -824,7 +834,7 @@ export default function ChatPage() {
 
   useEffect(() => {
     if (
-      pendingInput === null ||
+      (pendingInput === null && pendingMealRecordInput === null) ||
       !isTop ||
       pendingMealRecordScrollKeyRef.current !== null ||
       timelineScrollTarget !== null
@@ -833,7 +843,7 @@ export default function ChatPage() {
     }
 
     keepBottomIfFollowing("instant");
-  }, [isTop, keepBottomIfFollowing, pendingInput, timelineScrollTarget]);
+  }, [isTop, keepBottomIfFollowing, pendingInput, pendingMealRecordInput, timelineScrollTarget]);
 
   useEffect(() => {
     updateIsScrolledAwayFromBottom();
@@ -886,6 +896,7 @@ export default function ChatPage() {
     hasTimelineContent,
     isSoftKeyboardVisible,
     isQuickActionVisible,
+    pendingMealRecordInput,
     pendingInput,
     updateIsScrolledAwayFromBottom,
   ]);
@@ -1090,8 +1101,42 @@ export default function ChatPage() {
     }
   };
 
+  const sendMealRecordText = async (rawInput: string) => {
+    const text = rawInput.trim();
+    if (!text || isChatSendDisabled) return;
+
+    if (!isCameraHintDismissed) {
+      setIsCameraHintDismissed(true);
+      saveCameraHintDismissedInSession();
+    }
+
+    shouldFollowBottomRef.current = true;
+    setPendingMealRecordInput(text);
+    setInputValue("");
+
+    try {
+      await parseMenusFromTextMutation({ text });
+      setPendingMealRecordInput(null);
+    } catch (error) {
+      setPendingMealRecordInput(null);
+      toast.warning(
+        resolveErrorMessage(
+          error,
+          "식사 기록 텍스트를 분석하지 못했어요. 잠시 후 다시 시도해주세요.",
+        ),
+      );
+      setInputValue(text);
+    }
+  };
+
   const handleSubmit = async (event?: FormEvent<HTMLFormElement>) => {
     event?.preventDefault();
+
+    if (isMealRecordTextMode) {
+      await sendMealRecordText(inputValue);
+      return;
+    }
+
     await sendChatMessage(inputValue);
   };
 
@@ -1183,14 +1228,11 @@ export default function ChatPage() {
     });
 
     try {
-      await registerDiaryMealRecordMutate(
-        request,
-        {
-          onSuccess: () => {
-            trackChatMenuSave(nextMealRecord.addedMenus);
-          },
+      await registerDiaryMealRecordMutate(request, {
+        onSuccess: () => {
+          trackChatMenuSave(nextMealRecord.addedMenus);
         },
-      );
+      });
 
       let successMessage = "식사 기록이 수정되었어요.";
 
@@ -1608,6 +1650,17 @@ export default function ChatPage() {
               );
             })}
 
+            {pendingMealRecordInput !== null ? (
+              <section className={styles.conversationSection} aria-live="polite">
+                <div className={styles.userMessageGroup}>
+                  <p className={`${styles.timeText} typo-caption4`}>{formatTimeText(new Date())}</p>
+                  <p className={`${styles.userBubble} typo-body2`}>{pendingMealRecordInput}</p>
+                </div>
+
+                {isMealRecordParsePending ? <AssistantPendingMessage /> : null}
+              </section>
+            ) : null}
+
             {pendingInput !== null ? (
               <section className={styles.conversationSection} aria-live="polite">
                 <div className={styles.userMessageGroup}>
@@ -1621,44 +1674,52 @@ export default function ChatPage() {
           </div>
         ) : null}
 
-        {isFloatingButtonVisible && (
-          <div className={styles.floatingCameraButtonWrapper}>
-            {shouldShowCameraHint && (
-              <div className={`${styles.fabBubble} typo-caption4`}>메뉴 찍기</div>
-            )}
-            <button
-              type="button"
-              className={`${styles.cameraButton} ${isScrollToBottomButtonVisible ? styles.scrollButton : ""}`}
-              onClick={
-                isScrollToBottomButtonVisible ? handleScrollToBottom : handleNavigateChatCamera
-              }
-              aria-label={isScrollToBottomButtonVisible ? "맨 아래로 이동" : "촬영하기"}
-            >
-              {isScrollToBottomButtonVisible ? (
-                <SystemIcon name="chevron-down-normal" size={24} />
-              ) : (
-                <SystemIcon name="camera" size={32} />
-              )}
-            </button>
-          </div>
-        )}
-        {/* <div>
-          {!isSoftKeyboardVisible && !isAwaitingChatResponse && (
+        <div className={styles.scrollBottomContainer}>
+          {!isScrollToBottomButtonVisible && (
             <section className={`${styles.chipSection}`}>
-              {QUICK_CHIP_LIST.map((chip) => (
-                <button
-                  key={chip}
-                  type="button"
-                  className={styles.chipContainer}
-                  onClick={() => sendChatMessage(chip)}
-                  disabled={isChatSendDisabled}
-                >
-                  <p className="typo-body2">{chip}</p>
-                </button>
-              ))}
+              {QUICK_CHIP_LIST.map((chip) => {
+                const isSelected = selectedChipId === chip.id;
+
+                return (
+                  <button
+                    key={chip.id}
+                    type="button"
+                    className={`${styles.chipContainer} ${isSelected ? styles.selectedChip : ""}`}
+                    onClick={() => {
+                      setSelectedChipId((prev) => (prev === chip.id ? null : chip.id));
+                    }}
+                    aria-pressed={isSelected}
+                  >
+                    <p className="typo-body2">{chip.label}</p>
+                    {isSelected && <SystemIcon name="close" size={18} />}
+                  </button>
+                );
+              })}
             </section>
           )}
-        </div> */}
+
+          {isFloatingButtonVisible && (
+            <div className={styles.floatingCameraButtonWrapper}>
+              {shouldShowCameraHint && (
+                <div className={`${styles.fabBubble} typo-caption4`}>메뉴 찍기</div>
+              )}
+              <button
+                type="button"
+                className={`${styles.cameraButton} ${isScrollToBottomButtonVisible ? styles.scrollButton : ""}`}
+                onClick={
+                  isScrollToBottomButtonVisible ? handleScrollToBottom : handleNavigateChatCamera
+                }
+                aria-label={isScrollToBottomButtonVisible ? "맨 아래로 이동" : "촬영하기"}
+              >
+                {isScrollToBottomButtonVisible ? (
+                  <SystemIcon name="chevron-down-normal" size={24} />
+                ) : (
+                  <SystemIcon name="camera" size={32} />
+                )}
+              </button>
+            </div>
+          )}
+        </div>
         <div ref={endAnchorRef} />
       </main>
 
@@ -1673,6 +1734,7 @@ export default function ChatPage() {
           onInputFocusChange={handleInputFocusChange}
           onDirectMenuRecordClick={handleNavigateDirectMenuRecord}
           onSubmit={handleSubmit}
+          isMealRecordTextMode={isMealRecordTextMode}
         />
       </footer>
 
@@ -2121,6 +2183,7 @@ function ChatInput({
   onInputFocusChange,
   onDirectMenuRecordClick,
   onSubmit,
+  isMealRecordTextMode,
 }: {
   value: string;
   isInputEmpty: boolean;
@@ -2129,6 +2192,7 @@ function ChatInput({
   onInputFocusChange: (isFocused: boolean) => void;
   onDirectMenuRecordClick: () => void;
   onSubmit: (event?: FormEvent<HTMLFormElement>) => void | Promise<void>;
+  isMealRecordTextMode: boolean;
 }) {
   const [isAddActionOpen, setIsAddActionOpen] = useState(false);
   const textInputContainerRef = useRef<HTMLFormElement>(null);
@@ -2136,6 +2200,11 @@ function ChatInput({
   const textInputRef = useRef<HTMLTextAreaElement>(null);
   const lastPointerSubmitAtRef = useRef(0);
   const isSendDisabled = isInputEmpty || isSendPending;
+  const [searchMenus, setSearchMenus] = useState<string[]>([]);
+  const [menuSearchKeyword, setMenuSearchKeyword] = useState("");
+  const searchKeyword = getTypingMenuKeyword(value);
+
+  const { mutateAsync: searchMenu } = useSearchMenuMutation();
 
   const resizeTextInput = useCallback(() => {
     const textInput = textInputRef.current;
@@ -2181,7 +2250,22 @@ function ChatInput({
       setIsAddActionOpen(false);
     }
 
+    const nextSearchKeyword = getTypingMenuKeyword(nextValue);
+
     onChange(nextValue);
+    setMenuSearchKeyword(nextSearchKeyword);
+
+    if (!isMealRecordTextMode || nextSearchKeyword.length === 0) {
+      setSearchMenus([]);
+    }
+  };
+
+  const handleInputFocus = () => {
+    onInputFocusChange(true);
+  };
+
+  const handleInputBlur = () => {
+    onInputFocusChange(false);
   };
 
   const submitMessage = () => {
@@ -2214,12 +2298,104 @@ function ChatInput({
     submitMessage();
   };
 
+  const focusTextInput = (cursorPosition: number) => {
+    const textInput = textInputRef.current;
+    if (!textInput) {
+      return;
+    }
+
+    textInput.focus({ preventScroll: true });
+
+    window.requestAnimationFrame(() => {
+      const nextTextInput = textInputRef.current;
+      if (!nextTextInput) {
+        return;
+      }
+
+      nextTextInput.focus({ preventScroll: true });
+      nextTextInput.setSelectionRange(cursorPosition, cursorPosition);
+    });
+  };
+
+  const selectSearchMenu = (menu: string) => {
+    const userInput = replaceLastKeyword(value, searchKeyword, menu);
+    const keywordIndex = searchKeyword.length > 0 ? value.lastIndexOf(searchKeyword) : -1;
+    const cursorPosition = keywordIndex === -1 ? userInput.length : keywordIndex + menu.length;
+
+    onChange(userInput);
+    setMenuSearchKeyword("");
+    setSearchMenus([]);
+    focusTextInput(cursorPosition);
+  };
+
+  const handleSearchMenuTouchStart = (event: TouchEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+  };
+
+  const handleSearchMenuTouchEnd = (event: TouchEvent<HTMLButtonElement>, menu: string) => {
+    event.preventDefault();
+    selectSearchMenu(menu);
+  };
+
+  const handleSearchMenuMouseDown = (event: MouseEvent<HTMLButtonElement>, menu: string) => {
+    event.preventDefault();
+    selectSearchMenu(menu);
+  };
+
+  const handleSearchMenuClick = (event: MouseEvent<HTMLButtonElement>, menu: string) => {
+    if (event.detail !== 0) {
+      return;
+    }
+
+    selectSearchMenu(menu);
+  };
+
+  useEffect(() => {
+    if (!isMealRecordTextMode || menuSearchKeyword.length === 0) {
+      return;
+    }
+
+    let isActive = true;
+    const timeoutId = window.setTimeout(() => {
+      void searchMenu({ text: menuSearchKeyword }).then((response) => {
+        if (!isActive) {
+          return;
+        }
+
+        setSearchMenus(response.name);
+      });
+    }, 200);
+
+    return () => {
+      isActive = false;
+      window.clearTimeout(timeoutId);
+    };
+  }, [menuSearchKeyword, isMealRecordTextMode, searchMenu]);
+
   return (
     <div className={styles.chatInputContainer}>
+      {isMealRecordTextMode && searchMenus.length > 0 && (
+        <ul className={styles.searchMenuList}>
+          {searchMenus.map((menuName) => (
+            <li key={menuName} className={styles.searchMenuItem}>
+              <button
+                type="button"
+                className={`${styles.searchMenuButton} typo-body2`}
+                onTouchStart={handleSearchMenuTouchStart}
+                onTouchEnd={(event) => handleSearchMenuTouchEnd(event, menuName)}
+                onMouseDown={(event) => handleSearchMenuMouseDown(event, menuName)}
+                onClick={(event) => handleSearchMenuClick(event, menuName)}
+              >
+                {menuName}
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
       <form ref={textInputContainerRef} className={styles.textInputContainer} onSubmit={onSubmit}>
         <button
           type="button"
-          className={`${styles.plusIconContainer} ${isAddActionOpen ? styles.plusIconContainerActive : ""}`}
+          className={`${styles.plusIconContainer}`}
           onClick={() => setIsAddActionOpen((prev) => !prev)}
           aria-label={isAddActionOpen ? "추가 기능 닫기" : "추가 기능 열기"}
         >
@@ -2238,9 +2414,11 @@ function ChatInput({
             value={value}
             className={`${styles.textInput} typo-body2`}
             // placeholder="맥도날드에 왔는데 뭐 먹을까?"
-            onChange={(event) => handleInputChange(event.target.value.slice(0, 500))}
-            onFocus={() => onInputFocusChange(true)}
-            onBlur={() => onInputFocusChange(false)}
+            onChange={async (event) => {
+              handleInputChange(event.target.value.slice(0, 500));
+            }}
+            onFocus={handleInputFocus}
+            onBlur={handleInputBlur}
             maxLength={500}
             disabled={isSendPending}
           />
@@ -3387,4 +3565,28 @@ function getAiCoachResponseAnalyticsProperties(response: ChatRecommendResponseDt
     has_menu: false,
     chat_mode: "general",
   };
+}
+
+function getTypingMenuKeyword(text: string) {
+  const parts = text
+    .trimEnd()
+    .split(/[\s,，.、/]+|랑|하고|그리고|또|와|과/g)
+    .map((part) => part.trim())
+    .filter(Boolean);
+
+  return parts.at(-1) ?? "";
+}
+
+function replaceLastKeyword(text: string, keyword: string, selectedMenuName: string) {
+  if (keyword.length === 0) {
+    return text;
+  }
+
+  const index = text.lastIndexOf(keyword);
+
+  if (index === -1) {
+    return text;
+  }
+
+  return `${text.slice(0, index)}${selectedMenuName}${text.slice(index + keyword.length)}`;
 }

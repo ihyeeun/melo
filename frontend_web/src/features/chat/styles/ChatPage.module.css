@@ -25,16 +25,23 @@
   padding-bottom: 0;
 }
 
+.scrollBottomContainer {
+  align-items: flex-end;
+  bottom: 15px;
+  display: flex;
+  gap: 10px;
+  position: sticky;
+}
+
 .floatingCameraButtonWrapper {
-  bottom: 20px;
+  align-items: flex-end;
   display: flex;
   flex-shrink: 0;
+  height: 64px;
   justify-content: flex-end;
-  margin-top: auto;
-  position: sticky;
+  position: relative;
   transition: opacity 180ms ease;
-  z-index: 1;
-  width: fit-content;
+  width: 64px;
   margin-left: auto;
 }
 
@@ -641,13 +648,13 @@
   flex-direction: column;
   background-color: var(--bg-white);
   border-top: 1px solid var(--border-neutral);
+  position: relative;
 }
 
 .chipSection {
-  background-color: var(--bg-normal);
+  flex: 1;
   display: flex;
-  align-items: center;
-  padding: 10px 0;
+  align-items: flex-end;
   gap: 10px;
   overflow-x: auto;
   overflow-y: hidden;
@@ -662,8 +669,16 @@
   border: 1px solid var(--border-neutral);
   width: fit-content;
   padding: 8px 16px;
-  border-radius: 8px;
+  border-radius: 100px;
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.selectedChip {
+  background-color: var(--interaction-primary);
+  border-color: var(--border-primary);
 }
 
 .textInputContainer {
@@ -682,11 +697,6 @@
 
 .textInputContainer[data-multiline="true"] {
   align-items: end;
-}
-
-.plusIconContainerActive {
-  background-color: var(--gray-300);
-  color: var(--static-white);
 }
 
 .plusIcon {
@@ -784,6 +794,44 @@
 .addActionItemIcon {
   width: 30px;
   height: 30px;
+}
+
+.searchMenuList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  position: absolute;
+  background-color: var(--bg-white);
+  border: 1px solid var(--border-neutral);
+  border-radius: 20px;
+  box-shadow: var(--shadow-normal);
+  left: 60px;
+  right: 60px;
+  bottom: calc(100% + 4px);
+  overflow: hidden;
+  padding: 6px 8px;
+
+  animation: search-menu-list-enter 160ms ease-out both;
+}
+
+@keyframes search-menu-list-enter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.searchMenuItem {
+  border-bottom: 1px solid var(--border-neutral);
+  padding: 10px 6px;
+}
+.searchMenuItem:last-child {
+  border-bottom: 0;
 }
 
 @media (prefers-reduced-motion: reduce) {
