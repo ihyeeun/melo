@@ -1266,9 +1266,7 @@ export default function ChatPage() {
     }
   };
 
-  const registerMealRecordParseResponse = async (
-    parseResponse: ChatMealRecordParseResponseDto,
-  ) => {
+  const registerMealRecordParseResponse = async (parseResponse: ChatMealRecordParseResponseDto) => {
     const parsedMenus = getMealRecordParseDraftMenus(parseResponse);
 
     if (parsedMenus.length === 0) {
@@ -1328,8 +1326,9 @@ export default function ChatPage() {
 
       await refetchMealRecordParseChatHistory({ previousChatItemIds, text });
       setPendingMealRecordInput(null);
-
-      if (!isRegistered) {
+      if (isRegistered) {
+        setSelectedChipId(null);
+      } else {
         setInputValue(text);
       }
     } catch (error) {
@@ -1977,11 +1976,7 @@ function getRecentDateKeys(baseDateKey: string, dayCount: number) {
   });
 }
 
-function getMealRecordDateKeys(
-  baseDateKey: string,
-  dayCount: number,
-  extraDateKeys: string[],
-) {
+function getMealRecordDateKeys(baseDateKey: string, dayCount: number, extraDateKeys: string[]) {
   const dateKeySet = new Set(getRecentDateKeys(baseDateKey, dayCount));
 
   extraDateKeys.forEach((dateKey) => {
