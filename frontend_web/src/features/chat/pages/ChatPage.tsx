@@ -1880,6 +1880,11 @@ export default function ChatPage() {
                         textInputRef.current?.focus();
                       }
                     }}
+                    onPointerDown={() => {
+                      if (isSelected) {
+                        setSelectedChipId(null);
+                      }
+                    }}
                     aria-pressed={isSelected}
                   >
                     <p className="typo-body2">{chip.label}</p>
