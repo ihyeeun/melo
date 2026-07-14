@@ -828,8 +828,16 @@
 
 .searchMenuItem {
   border-bottom: 1px solid var(--border-neutral);
+  cursor: pointer;
+  outline: none;
   padding: 10px 6px;
 }
+
+.searchMenuItem:focus-visible {
+  background-color: var(--bg-normal);
+  border-radius: 8px;
+}
+
 .searchMenuItem:last-child {
   border-bottom: 0;
 }

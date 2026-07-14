@@ -1,6 +1,13 @@
 import { useActivity } from "@stackflow/react";
 import { useQueries, useQueryClient } from "@tanstack/react-query";
-import type { FormEvent, KeyboardEvent, MouseEvent, PointerEvent, TouchEvent } from "react";
+import type {
+  FormEvent,
+  KeyboardEvent,
+  MouseEvent,
+  PointerEvent,
+  RefObject,
+  TouchEvent,
+} from "react";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 
 import { ChatCameraUpdateRequiredModal } from "@/features/camera/components/ChatCameraUpdateRequiredModal";
@@ -418,6 +425,7 @@ export default function ChatPage() {
   const todayDateKey = getTodayFormatDateKey();
   const mainRef = useRef<HTMLElement>(null);
   const endAnchorRef = useRef<HTMLDivElement>(null);
+  const textInputRef = useRef<HTMLTextAreaElement>(null);
   const timelineScrollElementRefs = useRef(new Map<string, HTMLElement>());
   const timelineScrollRequestIdRef = useRef(0);
   const assistantPlaybackRunIdRef = useRef(0);
@@ -1686,7 +1694,12 @@ export default function ChatPage() {
                     type="button"
                     className={`${styles.chipContainer} ${isSelected ? styles.selectedChip : ""}`}
                     onClick={() => {
-                      setSelectedChipId((prev) => (prev === chip.id ? null : chip.id));
+                      const isSelecting = selectedChipId !== chip.id;
+                      setSelectedChipId(isSelecting ? chip.id : null);
+
+                      if (isSelecting) {
+                        textInputRef.current?.focus();
+                      }
                     }}
                     aria-pressed={isSelected}
                   >
@@ -1730,6 +1743,7 @@ export default function ChatPage() {
           value={inputValue}
           isInputEmpty={isInputEmpty}
           isSendPending={isChatSendDisabled}
+          textInputRef={textInputRef}
           onChange={handleInputValueChange}
           onInputFocusChange={handleInputFocusChange}
           onDirectMenuRecordClick={handleNavigateDirectMenuRecord}
@@ -2179,6 +2193,7 @@ function ChatInput({
   value,
   isInputEmpty,
   isSendPending,
+  textInputRef,
   onChange,
   onInputFocusChange,
   onDirectMenuRecordClick,
@@ -2188,6 +2203,7 @@ function ChatInput({
   value: string;
   isInputEmpty: boolean;
   isSendPending: boolean;
+  textInputRef: RefObject<HTMLTextAreaElement | null>;
   onChange: (value: string) => void;
   onInputFocusChange: (isFocused: boolean) => void;
   onDirectMenuRecordClick: () => void;
@@ -2197,7 +2213,6 @@ function ChatInput({
   const [isAddActionOpen, setIsAddActionOpen] = useState(false);
   const textInputContainerRef = useRef<HTMLFormElement>(null);
   const textInputWrapperRef = useRef<HTMLDivElement>(null);
-  const textInputRef = useRef<HTMLTextAreaElement>(null);
   const lastPointerSubmitAtRef = useRef(0);
   const isSendDisabled = isInputEmpty || isSendPending;
   const [searchMenus, setSearchMenus] = useState<string[]>([]);
@@ -2239,7 +2254,7 @@ function ChatInput({
 
       delete element.dataset.multiline;
     });
-  }, []);
+  }, [textInputRef]);
 
   useLayoutEffect(() => {
     resizeTextInput();
@@ -2328,25 +2343,34 @@ function ChatInput({
     focusTextInput(cursorPosition);
   };
 
-  const handleSearchMenuTouchStart = (event: TouchEvent<HTMLButtonElement>) => {
+  const handleSearchMenuTouchStart = (event: TouchEvent<HTMLLIElement>) => {
     event.preventDefault();
   };
 
-  const handleSearchMenuTouchEnd = (event: TouchEvent<HTMLButtonElement>, menu: string) => {
-    event.preventDefault();
-    selectSearchMenu(menu);
-  };
-
-  const handleSearchMenuMouseDown = (event: MouseEvent<HTMLButtonElement>, menu: string) => {
+  const handleSearchMenuTouchEnd = (event: TouchEvent<HTMLLIElement>, menu: string) => {
     event.preventDefault();
     selectSearchMenu(menu);
   };
 
-  const handleSearchMenuClick = (event: MouseEvent<HTMLButtonElement>, menu: string) => {
+  const handleSearchMenuMouseDown = (event: MouseEvent<HTMLLIElement>, menu: string) => {
+    event.preventDefault();
+    selectSearchMenu(menu);
+  };
+
+  const handleSearchMenuClick = (event: MouseEvent<HTMLLIElement>, menu: string) => {
     if (event.detail !== 0) {
       return;
     }
 
+    selectSearchMenu(menu);
+  };
+
+  const handleSearchMenuKeyDown = (event: KeyboardEvent<HTMLLIElement>, menu: string) => {
+    if (event.key !== "Enter" && event.key !== " ") {
+      return;
+    }
+
+    event.preventDefault();
     selectSearchMenu(menu);
   };
 
@@ -2375,19 +2399,21 @@ function ChatInput({
   return (
     <div className={styles.chatInputContainer}>
       {isMealRecordTextMode && searchMenus.length > 0 && (
-        <ul className={styles.searchMenuList}>
+        <ul className={styles.searchMenuList} role="listbox">
           {searchMenus.map((menuName) => (
-            <li key={menuName} className={styles.searchMenuItem}>
-              <button
-                type="button"
-                className={`${styles.searchMenuButton} typo-body2`}
-                onTouchStart={handleSearchMenuTouchStart}
-                onTouchEnd={(event) => handleSearchMenuTouchEnd(event, menuName)}
-                onMouseDown={(event) => handleSearchMenuMouseDown(event, menuName)}
-                onClick={(event) => handleSearchMenuClick(event, menuName)}
-              >
-                {menuName}
-              </button>
+            <li
+              key={menuName}
+              className={`${styles.searchMenuItem} typo-body2`}
+              role="option"
+              tabIndex={0}
+              aria-selected="false"
+              onTouchStart={handleSearchMenuTouchStart}
+              onTouchEnd={(event) => handleSearchMenuTouchEnd(event, menuName)}
+              onMouseDown={(event) => handleSearchMenuMouseDown(event, menuName)}
+              onClick={(event) => handleSearchMenuClick(event, menuName)}
+              onKeyDown={(event) => handleSearchMenuKeyDown(event, menuName)}
+            >
+              {menuName}
             </li>
           ))}
         </ul>
