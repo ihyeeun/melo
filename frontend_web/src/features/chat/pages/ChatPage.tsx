@@ -77,6 +77,7 @@ import type { AppDeviceInfoPayload } from "@/shared/api/bridge/nativeBridge.type
 import { MEAL_TYPE_OPTIONS, type MealTime } from "@/shared/api/types/api.dto";
 import type {
   ChatHistoryItemResponseDto,
+  ChatMealRecordParseResponseDto,
   ChatNutritionLabelFeedbackResponseDto,
   ChatNutritionLabelMenuRegisteredResponseDto,
   ChatNutritionLabelRegisteredMenuDto,
@@ -98,6 +99,7 @@ import {
   formatDateKeyToMonthDayWeekdayLabel,
   formatTimeText,
   getTodayFormatDateKey,
+  isValidDateKey,
   parseDate,
   parseDateKey,
 } from "@/shared/utils/dateFormat";
@@ -127,6 +129,18 @@ type RecordedMenuSummary = {
   menu_id: number;
   menu_name: string;
   recordedCalories: number;
+};
+
+type MealRecordParseRegisterTarget = {
+  dateKey: string;
+  mealTime: MealTime;
+};
+
+type MealRecordDraftRegisterResult = "registered" | "unchanged" | "failed";
+
+type MealRecordDraftTrackingMenu = {
+  menu_id: number;
+  menu_name?: string;
 };
 
 type MealRecordSnapshot = {
@@ -453,6 +467,7 @@ export default function ChatPage() {
   const [timelineScrollTarget, setTimelineScrollTarget] = useState<TimelineScrollTarget | null>(
     null,
   );
+  const [extraMealRecordDateKeys, setExtraMealRecordDateKeys] = useState<string[]>([]);
   const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null);
   const [selectedChipId, setSelectedChipId] = useState<string | null>(null);
   const isMealRecordTextMode = selectedChipId === "meal-record";
@@ -507,8 +522,8 @@ export default function ChatPage() {
     [displayChatList, todayDateKey],
   );
   const mealRecordDateKeys = useMemo(
-    () => getRecentDateKeys(todayDateKey, MEAL_RECORD_LOOKBACK_DAYS),
-    [todayDateKey],
+    () => getMealRecordDateKeys(todayDateKey, MEAL_RECORD_LOOKBACK_DAYS, extraMealRecordDateKeys),
+    [extraMealRecordDateKeys, todayDateKey],
   );
   const dayMealQueries = useQueries({
     queries: mealRecordDateKeys.map((dateKey) => ({
@@ -559,7 +574,11 @@ export default function ChatPage() {
       ].join(":")
     : "idle";
   const isAssistantPlaybackActive = assistantPlayback !== null;
-  const isChatSendDisabled = isSendPending || isAssistantPlaybackActive || isMealRecordParsePending;
+  const isChatSendDisabled =
+    isSendPending ||
+    isAssistantPlaybackActive ||
+    isMealRecordParsePending ||
+    pendingMealRecordInput !== null;
   const isAwaitingChatResponse =
     pendingInput !== null || pendingMealRecordInput !== null || isAssistantPlaybackActive;
   const hasTimelineContent = timelineItems.length > 0 || isAwaitingChatResponse;
@@ -1043,6 +1062,7 @@ export default function ChatPage() {
       newChatItems.length === 0 ||
       !isTop ||
       pendingInput !== null ||
+      pendingMealRecordInput !== null ||
       assistantPlayback !== null
     ) {
       return;
@@ -1057,6 +1077,7 @@ export default function ChatPage() {
     isHistoryPending,
     isTop,
     pendingInput,
+    pendingMealRecordInput,
     queryClient,
     playAssistantResponse,
   ]);
@@ -1109,6 +1130,152 @@ export default function ChatPage() {
     }
   };
 
+  const fetchTargetDayMeals = async ({
+    dateKey,
+    dayMeals,
+    staleTime = Infinity,
+  }: {
+    dateKey: string;
+    dayMeals?: DayMealSummary;
+    staleTime?: number;
+  }) => {
+    let targetDayMeals: DayMealSummary;
+
+    if (dayMeals) {
+      targetDayMeals = dayMeals;
+    } else {
+      targetDayMeals = await queryClient.fetchQuery({
+        queryKey: homeQueryKeys.dayMeals.byDate(dateKey),
+        queryFn: () => getTodayMealRecordMenus(dateKey),
+        staleTime,
+      });
+    }
+
+    return targetDayMeals;
+  };
+
+  const registerMealRecordDraftMenus = async ({
+    dateKey,
+    dayMeals,
+    image,
+    mealTime,
+    menus,
+    previousMealRecord,
+    staleTime,
+    trackingMenusById,
+  }: {
+    dateKey: string;
+    dayMeals?: DayMealSummary;
+    image?: string;
+    mealTime: MealTime;
+    menus: MenuDraftType[];
+    previousMealRecord?: MealRecordSnapshot;
+    staleTime?: number;
+    trackingMenusById?: Map<number, MealRecordDraftTrackingMenu>;
+  }): Promise<MealRecordDraftRegisterResult> => {
+    let targetDayMeals: DayMealSummary;
+
+    try {
+      targetDayMeals = await fetchTargetDayMeals({ dateKey, dayMeals, staleTime });
+    } catch {
+      toast.warning("식사 기록을 등록할 수 없어요.");
+      return "failed";
+    }
+
+    const baseMenus = getMealRecordDraftMenus(targetDayMeals, mealTime);
+    const candidateMenuIds = menus.map((menu) => menu.id);
+    const nextMenus = mergeMenuDraftMenus({
+      baseMenus,
+      overrideMenus: menus,
+      candidateIds: candidateMenuIds,
+    });
+    const previousMenus = previousMealRecord?.menus ?? baseMenus;
+    const previousMenuById = new Map(previousMenus.map((menu) => [menu.id, menu]));
+    const changedMenus = menus.filter((menu) =>
+      isSelectedDiaryMealRecordMenuChanged(menu, previousMenuById.get(menu.id)),
+    );
+
+    if (changedMenus.length === 0) {
+      toast.warning("이미 식사 기록에 추가된 메뉴예요.");
+      return "unchanged";
+    }
+
+    if (nextMenus.length > MAX_MEAL_RECORD_MENUS) {
+      toast.warning(MEAL_RECORD_MENU_LIMIT_MESSAGE);
+      return "failed";
+    }
+
+    const hadMealRecord = baseMenus.length > 0;
+    const scrollTargetKey = prepareMealRecordScroll(dateKey, mealTime);
+    const request = buildMealRecordDraftRequest({
+      dateKey,
+      dayMeals: targetDayMeals,
+      mealTime,
+      menus: nextMenus,
+      image: image ?? getMealRecordImage(targetDayMeals, mealTime),
+    });
+
+    try {
+      await registerDiaryMealRecordMutate(request, {
+        onSuccess: () => {
+          trackChatMenuSave(
+            changedMenus.map((menu) => trackingMenusById?.get(menu.id) ?? { menu_id: menu.id }),
+          );
+        },
+      });
+
+      toast.success(hadMealRecord ? "식사 기록에 메뉴를 추가했어요." : "식사 기록이 등록되었어요.");
+      commitMealRecordScroll(scrollTargetKey);
+      return "registered";
+    } catch (error) {
+      cancelMealRecordScroll(scrollTargetKey);
+      toast.warning(
+        resolveErrorMessage(error, "식사 기록 저장에 실패했어요. 잠시 후 다시 시도해주세요."),
+      );
+      return "failed";
+    }
+  };
+
+  const registerMealRecordParseResponse = async (
+    parseResponse: ChatMealRecordParseResponseDto,
+  ) => {
+    const parsedMenus = getMealRecordParseDraftMenus(parseResponse);
+
+    if (parsedMenus.length === 0) {
+      toast.warning("기록할 메뉴를 찾지 못했어요.");
+      return false;
+    }
+
+    const target = getMealRecordParseRegisterTarget(parseResponse, new Date());
+    setExtraMealRecordDateKeys((previous) =>
+      previous.includes(target.dateKey) ? previous : [...previous, target.dateKey],
+    );
+
+    const registerResult = await registerMealRecordDraftMenus({
+      dateKey: target.dateKey,
+      mealTime: target.mealTime,
+      menus: parsedMenus,
+      staleTime: 0,
+    });
+
+    return registerResult !== "failed";
+  };
+
+  const refetchMealRecordParseChatHistory = async ({
+    previousChatItemIds,
+    text,
+  }: {
+    previousChatItemIds: Set<number>;
+    text: string;
+  }) => {
+    await refetchAndResolveChatHistoryItem(queryClient, {
+      match: (chatItem) =>
+        !previousChatItemIds.has(chatItem.id) &&
+        chatItem.input_text.trim() === text &&
+        chatItem.response_payload.chat_category === "meal_record_parse",
+    });
+  };
+
   const sendMealRecordText = async (rawInput: string) => {
     const text = rawInput.trim();
     if (!text || isChatSendDisabled) return;
@@ -1118,14 +1285,26 @@ export default function ChatPage() {
       saveCameraHintDismissedInSession();
     }
 
+    assistantPlaybackRunIdRef.current += 1;
     shouldFollowBottomRef.current = true;
+    setAssistantPlayback(null);
     setPendingMealRecordInput(text);
     setInputValue("");
 
     try {
-      await parseMenusFromTextMutation({ text });
+      const previousChatItemIds = new Set(chatList.map((chatItem) => chatItem.id));
+      const parseResponse = await parseMenusFromTextMutation({ text });
+      const isRegistered = await registerMealRecordParseResponse(parseResponse);
+
+      await refetchMealRecordParseChatHistory({ previousChatItemIds, text });
       setPendingMealRecordInput(null);
+
+      if (!isRegistered) {
+        setInputValue(text);
+      }
     } catch (error) {
+      assistantPlaybackRunIdRef.current += 1;
+      setAssistantPlayback(null);
       setPendingMealRecordInput(null);
       toast.warning(
         resolveErrorMessage(
@@ -1133,6 +1312,10 @@ export default function ChatPage() {
           "식사 기록 텍스트를 분석하지 못했어요. 잠시 후 다시 시도해주세요.",
         ),
       );
+      if (error instanceof ChatHistorySyncError) {
+        return;
+      }
+
       setInputValue(text);
     }
   };
@@ -1203,61 +1386,28 @@ export default function ChatPage() {
       return;
     }
 
-    if (!dateKey || !dayMeals) {
+    if (!dateKey) {
       toast.warning("식사 기록을 등록할 수 없어요.");
       return;
     }
 
-    const nextMealRecord = getMergedMealRecordPayload(
-      mealRecordMenus,
-      dayMeals,
-      currentMealTime,
-      mealRecord?.previousMealRecord,
+    const candidateMenus = getUniqueMealRecordMenus(mealRecordMenus);
+    const trackingMenusById = new Map(
+      candidateMenus.map((menu) => [
+        menu.menu_id,
+        { menu_id: menu.menu_id, menu_name: menu.menu_name },
+      ]),
     );
 
-    if (!nextMealRecord.wasAdded) {
-      toast.warning("이미 식사 기록에 추가된 메뉴예요.");
-      return;
-    }
-
-    if (nextMealRecord.menus.length > MAX_MEAL_RECORD_MENUS) {
-      toast.warning(MEAL_RECORD_MENU_LIMIT_MESSAGE);
-      return;
-    }
-
-    const hadMealRecord = getMealRecordDraftMenus(dayMeals, nextMealRecord.time).length > 0;
-    const scrollTargetKey = prepareMealRecordScroll(dateKey, nextMealRecord.time);
-    const request = buildMealRecordDraftRequest({
+    await registerMealRecordDraftMenus({
       dateKey,
       dayMeals,
-      mealTime: nextMealRecord.time,
-      menus: nextMealRecord.menus,
-      image: mealRecord?.image ?? getMealRecordImage(dayMeals, nextMealRecord.time),
+      image: mealRecord?.image,
+      mealTime: mealRecord?.previousMealRecord.time ?? currentMealTime,
+      menus: candidateMenus.map(toMenuDraftFromChatMealRecordMenu),
+      previousMealRecord: mealRecord?.previousMealRecord,
+      trackingMenusById,
     });
-
-    try {
-      await registerDiaryMealRecordMutate(request, {
-        onSuccess: () => {
-          trackChatMenuSave(nextMealRecord.addedMenus);
-        },
-      });
-
-      let successMessage = "식사 기록이 수정되었어요.";
-
-      if (nextMealRecord.addedMenus.length > 0) {
-        successMessage = hadMealRecord
-          ? "식사 기록에 메뉴를 추가했어요."
-          : "식사 기록이 등록되었어요.";
-      }
-
-      toast.success(successMessage);
-      commitMealRecordScroll(scrollTargetKey);
-    } catch (error) {
-      cancelMealRecordScroll(scrollTargetKey);
-      toast.warning(
-        resolveErrorMessage(error, "식사 기록 저장에 실패했어요. 잠시 후 다시 시도해주세요."),
-      );
-    }
   };
 
   const handleMealRecordEditClick = (mealRecord: MealRecordViewModel) => {
@@ -1797,12 +1947,92 @@ function getRecentDateKeys(baseDateKey: string, dayCount: number) {
   });
 }
 
+function getMealRecordDateKeys(
+  baseDateKey: string,
+  dayCount: number,
+  extraDateKeys: string[],
+) {
+  const dateKeySet = new Set(getRecentDateKeys(baseDateKey, dayCount));
+
+  extraDateKeys.forEach((dateKey) => {
+    if (isValidDateKey(dateKey)) {
+      dateKeySet.add(dateKey);
+    }
+  });
+
+  return [...dateKeySet];
+}
+
+function getMealRecordParseRegisterTarget(
+  parseResponse: ChatMealRecordParseResponseDto,
+  fallbackDate: Date,
+): MealRecordParseRegisterTarget {
+  const mealRecordParse = parseResponse.meal_record_parse;
+  const responseDate = parseResponse.date ?? mealRecordParse?.date;
+  const responseMealTime = parseResponse.time ?? mealRecordParse?.time;
+  const dateKey =
+    typeof responseDate === "string" && isValidDateKey(responseDate)
+      ? responseDate
+      : formatDateKey(fallbackDate);
+  const mealTime = isMealTime(responseMealTime)
+    ? responseMealTime
+    : (Number(getMealTypeFromCurrentTime(fallbackDate)) as MealTime);
+
+  return {
+    dateKey,
+    mealTime,
+  };
+}
+
+function getMealRecordParseDraftMenus(
+  parseResponse: ChatMealRecordParseResponseDto,
+): MenuDraftType[] {
+  const mealRecordParse = parseResponse.meal_record_parse;
+  const menuIds = Array.isArray(parseResponse.menu_ids)
+    ? parseResponse.menu_ids
+    : (mealRecordParse?.menu_ids ?? []);
+  const menuQuantities = Array.isArray(parseResponse.menu_quantities)
+    ? parseResponse.menu_quantities
+    : (mealRecordParse?.menu_quantities ?? []);
+
+  return menuIds.flatMap((menuId, index) => {
+    const quantity = getPositiveNumber(menuQuantities[index]);
+
+    if (!isPositiveInteger(menuId) || quantity === null) {
+      return [];
+    }
+
+    return [
+      {
+        id: menuId,
+        quantity,
+        mode: "weight" as const,
+      },
+    ];
+  });
+}
+
+function getPositiveNumber(value: unknown) {
+  return typeof value === "number" && Number.isFinite(value) && value > 0 ? value : null;
+}
+
+function isPositiveInteger(value: unknown) {
+  return Number.isInteger(value) && typeof value === "number" && value > 0;
+}
+
+function isMealTime(value: unknown): value is MealTime {
+  return typeof value === "number" && MEAL_TIME_LIST.includes(value as MealTime);
+}
+
 function getAssistantBubbleGroups(
   responsePayload: ChatRecommendResponseDto,
 ): AssistantBubbleGroup[] {
   const bubbleGroups: AssistantBubbleGroup[] = [];
 
-  if (isNonEmptyMessage(responsePayload.intro_message)) {
+  if (
+    responsePayload.chat_category !== "meal_record_parse" &&
+    isNonEmptyMessage(responsePayload.intro_message)
+  ) {
     bubbleGroups.push({ key: "intro", message: responsePayload.intro_message });
   }
 
@@ -3224,50 +3454,6 @@ function getChatDateKey(chatItem: ChatHistoryItemResponseDto) {
   return chatDate ? formatDateKey(chatDate) : null;
 }
 
-function getMergedMealRecordPayload(
-  mealRecordMenus: ChatMealRecordMenu[],
-  dayMeals: DayMealSummary,
-  fallbackMealTime: MealTime,
-  mealRecord?: MealRecordSnapshot,
-): {
-  time: MealTime;
-  menus: MenuDraftType[];
-  addedMenus: ChatMealRecordMenu[];
-  wasAdded: boolean;
-} {
-  const time = mealRecord?.time ?? fallbackMealTime;
-  const previousMenus = mealRecord ? mealRecord.menus : getMealRecordDraftMenus(dayMeals, time);
-  const candidateMenus = getUniqueMealRecordMenus(mealRecordMenus);
-  const candidateMenuIds = candidateMenus.map((menu) => menu.menu_id);
-  const nextSelectedMenus = candidateMenus.map(toMenuDraftFromChatMealRecordMenu);
-  const menus = mergeMenuDraftMenus({
-    baseMenus: getMealRecordDraftMenus(dayMeals, time),
-    overrideMenus: nextSelectedMenus,
-    candidateIds: candidateMenuIds,
-  });
-  const previousMenuById = new Map(previousMenus.map((menu) => [menu.id, menu]));
-  const addedMenus = candidateMenus.filter((menu) => !previousMenuById.has(menu.menu_id));
-  const wasChanged = nextSelectedMenus.some((menu) =>
-    isSelectedDiaryMealRecordMenuChanged(menu, previousMenuById.get(menu.id)),
-  );
-
-  if (!wasChanged) {
-    return {
-      time,
-      menus: previousMenus,
-      addedMenus,
-      wasAdded: false,
-    };
-  }
-
-  return {
-    time,
-    menus,
-    addedMenus,
-    wasAdded: true,
-  };
-}
-
 function isSelectedDiaryMealRecordMenuChanged(
   nextMenu: MenuDraftType,
   previousMenu: MenuDraftType | undefined,
@@ -3307,15 +3493,21 @@ function hasChatMealRecordMenus(
     return false;
   }
 
-  const chatMenuIds = getChatMealRecordMenus(chatItem).map((menu) => menu.menu_id);
+  const chatMenus = getChatMealRecordMenus(chatItem).map(toMenuDraftFromChatMealRecordMenu);
 
-  if (chatMenuIds.length === 0) {
+  if (chatMenus.length === 0) {
     return false;
   }
 
-  const recordedMenuIds = new Set(mealRecord.previousMealRecord.menus.map((menu) => menu.id));
+  const recordedMenuById = new Map(
+    mealRecord.previousMealRecord.menus.map((menu) => [menu.id, menu]),
+  );
 
-  return chatMenuIds.every((menuId) => recordedMenuIds.has(menuId));
+  return chatMenus.every((menu) => {
+    const recordedMenu = recordedMenuById.get(menu.id);
+
+    return recordedMenu !== undefined && !isSelectedDiaryMealRecordMenuChanged(menu, recordedMenu);
+  });
 }
 
 function getDateMealRecordViewModels(dayMeals: DayMealSummary, dateKey: string) {
