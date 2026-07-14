@@ -667,6 +667,29 @@ export default function ChatPage() {
     [isTop, scrollToBottom, timelineScrollTarget, updateIsScrolledAwayFromBottom],
   );
 
+  const forceScrollToBottom = useCallback(
+    (behavior: ScrollBehavior = "instant") => {
+      shouldFollowBottomRef.current = true;
+      skipNextAutoBottomScrollRef.current = false;
+      scrollToBottom(behavior);
+
+      if (behavior === "smooth") {
+        return;
+      }
+
+      if (typeof window === "undefined") {
+        updateIsScrolledAwayFromBottom();
+        return;
+      }
+
+      window.requestAnimationFrame(() => {
+        scrollToBottom("instant");
+        updateIsScrolledAwayFromBottom();
+      });
+    },
+    [scrollToBottom, updateIsScrolledAwayFromBottom],
+  );
+
   const setTimelineScrollElementRef = useCallback((key: string, element: HTMLElement | null) => {
     if (element) {
       timelineScrollElementRefs.current.set(key, element);
@@ -1026,12 +1049,19 @@ export default function ChatPage() {
   );
 
   useLayoutEffect(() => {
-    if (isHistoryPending) {
+    if (
+      isHistoryPending ||
+      !isTop ||
+      pendingInput !== null ||
+      pendingMealRecordInput !== null ||
+      assistantPlayback !== null
+    ) {
       return;
     }
 
     const currentChatItemIds = new Set(chatList.map((chatItem) => chatItem.id));
     const playbackBaselineChatIds = consumeChatHistoryPlaybackBaselineIds(queryClient);
+    const shouldForceBottomBeforePlayback = playbackBaselineChatIds !== null;
 
     if (playbackBaselineChatIds !== null) {
       knownHistoryChatItemIdsRef.current = new Set(playbackBaselineChatIds);
@@ -1058,22 +1088,22 @@ export default function ChatPage() {
       )
       .sort(compareChatHistoryItems);
 
-    if (
-      newChatItems.length === 0 ||
-      !isTop ||
-      pendingInput !== null ||
-      pendingMealRecordInput !== null ||
-      assistantPlayback !== null
-    ) {
+    if (newChatItems.length === 0) {
       return;
     }
 
     const nextChatItem = newChatItems[0];
     knownChatItemIds.add(nextChatItem.id);
+
+    if (shouldForceBottomBeforePlayback) {
+      forceScrollToBottom("instant");
+    }
+
     void playAssistantResponse(nextChatItem);
   }, [
     assistantPlayback,
     chatList,
+    forceScrollToBottom,
     isHistoryPending,
     isTop,
     pendingInput,
