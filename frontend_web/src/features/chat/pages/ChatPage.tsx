@@ -2597,28 +2597,30 @@ function ChatInput({
     });
   };
 
-  const selectSearchMenu = (menu: string) => {
+  const getSearchMenuSelection = (menu: string) => {
     const userInput = replaceLastKeyword(value, searchKeyword, menu);
     const keywordIndex = searchKeyword.length > 0 ? value.lastIndexOf(searchKeyword) : -1;
     const cursorPosition = keywordIndex === -1 ? userInput.length : keywordIndex + menu.length;
 
+    return { cursorPosition, userInput };
+  };
+
+  const handleSearchMenuTouchEnd = (event: TouchEvent<HTMLLIElement>, menu: string) => {
+    event.preventDefault();
+
+    const { cursorPosition, userInput } = getSearchMenuSelection(menu);
     onChange(userInput);
     setMenuSearchKeyword("");
     focusTextInput(cursorPosition);
   };
 
-  const handleSearchMenuTouchStart = (event: TouchEvent<HTMLLIElement>) => {
-    event.preventDefault();
-  };
-
-  const handleSearchMenuTouchEnd = (event: TouchEvent<HTMLLIElement>, menu: string) => {
-    event.preventDefault();
-    selectSearchMenu(menu);
-  };
-
   const handleSearchMenuMouseDown = (event: MouseEvent<HTMLLIElement>, menu: string) => {
     event.preventDefault();
-    selectSearchMenu(menu);
+
+    const { cursorPosition, userInput } = getSearchMenuSelection(menu);
+    onChange(userInput);
+    setMenuSearchKeyword("");
+    focusTextInput(cursorPosition);
   };
 
   const handleSearchMenuClick = (event: MouseEvent<HTMLLIElement>, menu: string) => {
@@ -2626,7 +2628,10 @@ function ChatInput({
       return;
     }
 
-    selectSearchMenu(menu);
+    const { cursorPosition, userInput } = getSearchMenuSelection(menu);
+    onChange(userInput);
+    setMenuSearchKeyword("");
+    focusTextInput(cursorPosition);
   };
 
   const handleSearchMenuKeyDown = (event: KeyboardEvent<HTMLLIElement>, menu: string) => {
@@ -2635,7 +2640,11 @@ function ChatInput({
     }
 
     event.preventDefault();
-    selectSearchMenu(menu);
+
+    const { cursorPosition, userInput } = getSearchMenuSelection(menu);
+    onChange(userInput);
+    setMenuSearchKeyword("");
+    focusTextInput(cursorPosition);
   };
 
   return (
@@ -2649,7 +2658,9 @@ function ChatInput({
               role="option"
               tabIndex={0}
               aria-selected="false"
-              onTouchStart={handleSearchMenuTouchStart}
+              onTouchStart={(event) => {
+                event.preventDefault();
+              }}
               onTouchEnd={(event) => handleSearchMenuTouchEnd(event, menuName)}
               onMouseDown={(event) => handleSearchMenuMouseDown(event, menuName)}
               onClick={(event) => handleSearchMenuClick(event, menuName)}
