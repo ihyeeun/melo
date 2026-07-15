@@ -1,6 +1,7 @@
 import { useMutation } from "@tanstack/react-query";
 
 import {
+  parseMenusFromText,
   registerMenuByNutritionLabelImageFeedback,
   sendMessage,
 } from "@/features/chat/api/chat.api";
@@ -25,6 +26,18 @@ export function useRegisterMenuByNutritionLabelImageMutation(
 ) {
   return useMutation({
     mutationFn: registerMenuByNutritionLabelImageFeedback,
+    onSuccess: () => {
+      if (options?.onSuccess) options.onSuccess();
+    },
+    onError: (error) => {
+      if (options?.onError) options.onError(error);
+    },
+  });
+}
+
+export function useParseMenusFromTextMutation(options?: UseSendMessageMutationOptions) {
+  return useMutation({
+    mutationFn: parseMenusFromText,
     onSuccess: () => {
       if (options?.onSuccess) options.onSuccess();
     },

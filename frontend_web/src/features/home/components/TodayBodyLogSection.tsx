@@ -6,18 +6,19 @@ import { useGetProfileQuery } from "@/features/profile/hooks/queries/useProfileQ
 import { PATH } from "@/router/path";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import { useNavigate } from "@/shared/navigation/stackflowNavigation";
-import { getTodayFormatDateKey } from "@/shared/utils/dateFormat";
+import { getTodayFormatDateKey, isFutureDateKey } from "@/shared/utils/dateFormat";
 
 export default function TodayBodyLogSection({ date }: { date: string }) {
   const navigate = useNavigate();
   const { data: bodyLog } = useGetBodyLog(date);
   const { data: profile } = useGetProfileQuery();
   const isToday = date === getTodayFormatDateKey();
+  const isFutureDate = isFutureDateKey(date);
   const isBodyLogLoaded = bodyLog !== undefined;
   const displayWeight = bodyLog?.weight ?? (isToday ? (profile?.weight ?? 0) : 0);
   const displaySteps = bodyLog?.steps ?? 0;
   const { nativeStepConnectionStatus } = useSyncNativeStepCount(date, {
-    enabled: isBodyLogLoaded,
+    enabled: isBodyLogLoaded && !isFutureDate,
     savedSteps: bodyLog?.steps,
   });
 

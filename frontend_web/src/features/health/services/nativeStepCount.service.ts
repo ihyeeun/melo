@@ -124,7 +124,7 @@ export async function readNativeStepCountRecordsRange(
     };
   } catch {
     return {
-      connectionStatus: "connected",
+      connectionStatus: "unknown",
       permissionStatus,
       readSucceeded: false,
       records: [],

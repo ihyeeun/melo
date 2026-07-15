@@ -155,10 +155,11 @@ export type ChatRecommendResponseDto =
   | ChatFeedbackResponseDto
   | ChatNutritionLabelFeedbackResponseDto
   | ChatNutritionLabelMenuRegisteredResponseDto
-  | ChatGeneralResponseDto;
+  | ChatGeneralResponseDto
+  | ChatMealRecordParseResponseDto;
 
 interface ChatResponseBaseDto {
-  chat_category: "recommendation" | "feedback" | "general";
+  chat_category: "recommendation" | "feedback" | "general" | "meal_record_parse";
   intro_message?: string;
   image_url?: string | null;
 }
@@ -177,6 +178,28 @@ export interface ChatFeedbackResponseDto extends ChatResponseBaseDto {
 export interface ChatGeneralResponseDto extends ChatResponseBaseDto {
   chat_category: "general";
   general_answer?: string;
+}
+
+export interface ChatMealRecordParseResponseDto extends ChatResponseBaseDto {
+  chat_category: "meal_record_parse";
+  meal_record_parse?: {
+    date?: string;
+    time?: 0 | 1 | 2 | 3 | 4;
+    menu_ids: number[];
+    parsed_items: Array<{
+      name: string;
+      brand?: string;
+      category: string;
+      quantityG: number;
+    }>;
+    matched_menus: Array<{
+      menu_id: number;
+      menu_name: string;
+      quantity_g: number;
+      input_menu_name: string;
+    }>;
+    menu_quantities: number[];
+  };
 }
 
 export interface ChatNutritionLabelFeedbackResponseDto extends ChatResponseBaseDto {
@@ -270,6 +293,18 @@ export interface ChatHistoryItemResponseDto {
     menu_quantities?: number[];
     menu_input_modes?: number[];
   };
+}
+
+export interface ChatMealRecordParseResponseDto {
+  chat_id: number;
+  menu_ids: number[];
+  menu_quantities: number[];
+  time?: 0 | 1 | 2 | 3 | 4;
+  date?: string;
+}
+
+export interface ChatUserMenuSearchResponseDto {
+  name: string[];
 }
 
 /* ======
