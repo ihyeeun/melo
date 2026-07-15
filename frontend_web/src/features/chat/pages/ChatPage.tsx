@@ -1847,7 +1847,7 @@ export default function ChatPage() {
                   <p className={`${styles.userBubble} typo-body2`}>{pendingMealRecordInput}</p>
                 </div>
 
-                {isMealRecordParsePending ? <AssistantPendingMessage /> : null}
+                <AssistantPendingMessage />
               </section>
             ) : null}
 
@@ -3800,7 +3800,7 @@ function getAiCoachResponseAnalyticsProperties(response: ChatRecommendResponseDt
 function getTypingMenuKeyword(text: string) {
   const parts = text
     .trimEnd()
-    .split(/[\s,，.、/]+|랑|하고|그리고|또|와|과/g)
+    .split(/[\s,，.、/]+/)
     .map((part) => part.trim())
     .filter(Boolean);
 
