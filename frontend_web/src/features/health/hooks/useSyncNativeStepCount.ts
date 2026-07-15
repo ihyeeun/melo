@@ -56,13 +56,17 @@ export function useSyncNativeStepCount(
           shouldRequestPermission: true,
         });
 
-        setNativeStepConnectionStatus(result.connectionStatus);
+        const nextConnectionStatus =
+          result.connectionStatus === "connected" && result.steps === null
+            ? "unknown"
+            : result.connectionStatus;
+        setNativeStepConnectionStatus(nextConnectionStatus);
 
-        if (!result.readSucceeded) {
+        if (!result.readSucceeded || result.steps === null) {
           return;
         }
 
-        if (result.steps !== null && savedSteps !== result.steps) {
+        if (savedSteps !== result.steps) {
           await registerNativeSteps({
             date,
             steps: result.steps,

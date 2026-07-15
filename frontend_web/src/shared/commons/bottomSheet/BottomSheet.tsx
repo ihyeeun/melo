@@ -14,9 +14,14 @@ type BottomSheetProps = {
   className?: string;
   bodyClassName?: string;
   positionerStyle?: CSSProperties;
+  bottomPadding?: number | string;
   modal?: boolean;
   disableContentDrag?: boolean;
   children: ReactNode;
+};
+
+type BottomSheetContentStyle = CSSProperties & {
+  "--bottom-sheet-extra-bottom-padding"?: string;
 };
 
 function cx(...classNames: Array<string | undefined>) {
@@ -42,6 +47,7 @@ export default function BottomSheet({
   className,
   bodyClassName,
   positionerStyle,
+  bottomPadding,
   modal = true,
   disableContentDrag = false,
   children,
@@ -49,6 +55,11 @@ export default function BottomSheet({
   const basePositionerStyle = useBottomSheetPositionerStyle();
   const isOpenRef = useRef(isOpen);
   const [isTabBarHidden, setIsTabBarHidden] = useState(isOpen);
+  const bottomPaddingValue =
+    typeof bottomPadding === "number" ? `${bottomPadding}px` : bottomPadding;
+  const contentStyle: BottomSheetContentStyle | undefined = bottomPadding
+    ? { "--bottom-sheet-extra-bottom-padding": bottomPaddingValue }
+    : undefined;
 
   useEffect(() => {
     isOpenRef.current = isOpen;
@@ -94,7 +105,11 @@ export default function BottomSheet({
             tabIndex={-1}
           />
         )}
-        <SeedBottomSheet.Content className={styles.sheetContent} aria-describedby={undefined}>
+        <SeedBottomSheet.Content
+          className={styles.sheetContent}
+          style={contentStyle}
+          aria-describedby={undefined}
+        >
           <SeedBottomSheet.Header
             className={styles.header}
             onPointerDownCapture={blurActiveElement}

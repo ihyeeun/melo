@@ -33,18 +33,21 @@
   display: flex;
   flex-direction: column;
   padding: 0 24px;
+  gap: 60px;
+}
+
+.sheetContainer:has(.weightNumberInput:focus) {
+  gap: 28px;
 }
 
 .sheetTitle {
   color: var(--label-normal);
-  padding-bottom: 16px;
 }
 
 .sheetActions {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  padding-top: 40px;
 }
 
 .sheetFieldLabel {

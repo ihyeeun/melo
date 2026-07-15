@@ -34,19 +34,24 @@
 }
 
 .sheetContent:global(.seed-bottom-sheet__content) {
-  --bottom-sheet-safe-area-bottom: var(--safe-area-bottom, 0px);
+  --bottom-sheet-content-bottom-padding: max(
+    var(--safe-area-bottom, 0px),
+    var(--bottom-sheet-extra-bottom-padding, 0px)
+  );
 
-  padding-bottom: var(--bottom-sheet-safe-area-bottom);
+  padding-bottom: var(--bottom-sheet-content-bottom-padding);
 }
 
 .sheetContent:global(.seed-bottom-sheet__content):has(
     :is(input, textarea, [contenteditable="true"]):focus
   ) {
-  --bottom-sheet-safe-area-bottom: 0px;
+  --bottom-sheet-content-bottom-padding: 0px;
 }
 
 .body:global(.seed-bottom-sheet__body) {
-  max-height: calc(100dvh - var(--safe-area-top, 0px) - var(--bottom-sheet-safe-area-bottom) - 56px);
+  max-height: calc(
+    100dvh - var(--safe-area-top, 0px) - var(--bottom-sheet-content-bottom-padding) - 56px
+  );
   overflow-y: auto;
   overscroll-behavior: contain;
   padding-left: 0;

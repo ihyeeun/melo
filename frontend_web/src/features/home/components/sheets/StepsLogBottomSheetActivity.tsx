@@ -13,7 +13,7 @@ import NumberField from "@/shared/commons/input/NumberField";
 import { LoadingOverlay } from "@/shared/commons/loading/Loading";
 import { toast } from "@/shared/commons/toast/toast";
 import { navigateBack } from "@/shared/navigation/stackflowNavigationController";
-import { getTodayFormatDateKey } from "@/shared/utils/dateFormat";
+import { getTodayFormatDateKey, isFutureDateKey } from "@/shared/utils/dateFormat";
 
 const MAX_STEPS = 999999;
 const HEALTH_ACCESS_GUIDE_URL = "https://third-princess-d57.notion.site/health-connect";
@@ -46,12 +46,16 @@ export default function StepsLogBottomSheetActivity() {
   const isOpen =
     activity.transitionState === "enter-active" || activity.transitionState === "enter-done";
   const canImportNativeSteps = isNativeApp();
+  const isFutureDate = isFutureDateKey(date);
   const nativeStepConnectionStatus = canImportNativeSteps
-    ? activity.params.nativeStepConnectionStatus
+    ? (activity.params.nativeStepConnectionStatus ?? "unknown")
     : "disconnected";
   const isNativeStepsConnected = canImportNativeSteps && nativeStepConnectionStatus === "connected";
-  const canInputSteps = !isNativeStepsConnected;
+  const canInputSteps = !isFutureDate && !isNativeStepsConnected;
   const nativeSyncedSteps = isNativeStepsConnected ? (bodyLog?.steps ?? null) : null;
+  const stepsUnavailableText = isFutureDate
+    ? "이 날은 아직 기록할 수 없어요"
+    : "걸음 수 데이터가 없어요";
 
   const closeSheet = () => {
     if (!activity.isActive) return;
@@ -146,17 +150,15 @@ export default function StepsLogBottomSheetActivity() {
                   suffix={<span className={`typo-caption1 ${style.stepsUnit}`}>보</span>}
                 />
 
-                {nativeStepConnectionStatus === "disconnected" && (
-                  <Button
-                    variant="text"
-                    color="normal"
-                    className={style.healthAccessNoticeButton}
-                    onClick={handleOpenHealthAccessGuide}
-                  >
-                    걸음 수 연동하기
-                    <SystemIcon name="chevron-right-normal" size={16} />
-                  </Button>
-                )}
+                <Button
+                  variant="text"
+                  color="normal"
+                  className={style.healthAccessNoticeButton}
+                  onClick={handleOpenHealthAccessGuide}
+                >
+                  걸음 수 연동하기
+                  <SystemIcon name="chevron-right-normal" size={16} />
+                </Button>
               </div>
             ) : (
               <p
@@ -168,7 +170,7 @@ export default function StepsLogBottomSheetActivity() {
                 }
               >
                 {nativeSyncedSteps === null
-                  ? "걸음 수 데이터가 없어요"
+                  ? stepsUnavailableText
                   : `${nativeSyncedSteps.toLocaleString()} 보`}
               </p>
             )}
