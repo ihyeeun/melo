@@ -1196,6 +1196,7 @@ export default function ChatPage() {
     previousMealRecord,
     staleTime,
     trackingMenusById,
+    trackMenuSave = trackChatMenuSave,
   }: {
     dateKey: string;
     dayMeals?: DayMealSummary;
@@ -1205,6 +1206,7 @@ export default function ChatPage() {
     previousMealRecord?: MealRecordSnapshot;
     staleTime?: number;
     trackingMenusById?: Map<number, MealRecordDraftTrackingMenu>;
+    trackMenuSave?: ((menus: MealRecordDraftTrackingMenu[]) => void) | null;
   }): Promise<MealRecordDraftRegisterResult> => {
     let targetDayMeals: DayMealSummary;
 
@@ -1251,7 +1253,9 @@ export default function ChatPage() {
     try {
       await registerDiaryMealRecordMutate(request, {
         onSuccess: () => {
-          trackChatMenuSave(
+          if (!trackMenuSave) return;
+
+          trackMenuSave(
             changedMenus.map((menu) => trackingMenusById?.get(menu.id) ?? { menu_id: menu.id }),
           );
         },
@@ -1287,7 +1291,14 @@ export default function ChatPage() {
       mealTime: target.mealTime,
       menus: parsedMenus,
       staleTime: 0,
+      trackMenuSave: null,
     });
+
+    if (registerResult === "registered") {
+      track(EVENT_NAME.CHAT_TEXT_MENU_SAVE, {
+        menu_ids: parsedMenus.map((menu) => menu.id),
+      });
+    }
 
     return registerResult !== "failed";
   };
