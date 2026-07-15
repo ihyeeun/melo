@@ -1871,28 +1871,25 @@ export default function ChatPage() {
                 const isSelected = selectedChipId === chip.id;
 
                 return (
-                  <button
+                  <div
                     key={chip.id}
-                    type="button"
+                    role="button"
                     className={`${styles.chipContainer} ${isSelected ? styles.selectedChip : ""}`}
-                    onClick={() => {
-                      const isSelecting = selectedChipId !== chip.id;
-                      setSelectedChipId(isSelecting ? chip.id : null);
-
-                      if (isSelecting) {
+                    onTouchStart={(event) => {
+                      event.preventDefault();
+                      setSelectedChipId(isSelected ? null : chip.id);
+                      if (!isSelected) {
                         textInputRef.current?.focus();
                       }
                     }}
-                    onPointerDown={() => {
-                      if (isSelected) {
-                        setSelectedChipId(null);
-                      }
+                    onTouchEnd={(event) => {
+                      event.preventDefault();
                     }}
                     aria-pressed={isSelected}
                   >
                     <p className="typo-body2">{chip.label}</p>
                     {isSelected && <SystemIcon name="close" size={18} />}
-                  </button>
+                  </div>
                 );
               })}
             </section>
@@ -1936,6 +1933,7 @@ export default function ChatPage() {
           onDirectMenuRecordClick={handleNavigateDirectMenuRecord}
           onSubmit={handleSubmit}
           isMealRecordTextMode={isMealRecordTextMode}
+          isInputFocused={isInputFocused}
         />
       </footer>
 
@@ -2462,6 +2460,7 @@ function ChatInput({
   onDirectMenuRecordClick,
   onSubmit,
   isMealRecordTextMode,
+  isInputFocused,
 }: {
   value: string;
   isInputEmpty: boolean;
@@ -2472,6 +2471,7 @@ function ChatInput({
   onDirectMenuRecordClick: () => void;
   onSubmit: (event?: FormEvent<HTMLFormElement>) => void | Promise<void>;
   isMealRecordTextMode: boolean;
+  isInputFocused: boolean;
 }) {
   const [isAddActionOpen, setIsAddActionOpen] = useState(false);
   const textInputContainerRef = useRef<HTMLFormElement>(null);
@@ -2649,7 +2649,7 @@ function ChatInput({
 
   return (
     <div className={styles.chatInputContainer}>
-      {isMealRecordTextMode && searchMenus.length > 0 && (
+      {isMealRecordTextMode && searchMenus.length > 0 && isInputFocused && (
         <ul className={styles.searchMenuList} role="listbox">
           {searchMenus.map((menuName) => (
             <li

@@ -656,8 +656,7 @@
   display: flex;
   align-items: flex-end;
   gap: 10px;
-  overflow-x: auto;
-  overflow-y: hidden;
+  overflow: visible;
   transition:
     height 220ms ease,
     opacity 180ms ease;
@@ -674,6 +673,7 @@
   display: flex;
   align-items: center;
   gap: 4px;
+  box-shadow: var(--shadow-normal);
 }
 
 .selectedChip {
