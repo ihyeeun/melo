@@ -72,6 +72,7 @@ import { track } from "@/shared/analytics/analytics";
 import { EVENT_NAME } from "@/shared/analytics/analytics.constants";
 import {
   trackChatMenuSave,
+  trackChatTextMenuSave,
   trackRecommendMenuCancel,
 } from "@/shared/analytics/recommendMenuEvents";
 import { AppApiError } from "@/shared/api/apiClient";
@@ -144,6 +145,7 @@ type MealRecordDraftRegisterResult = "registered" | "unchanged" | "failed";
 type MealRecordDraftTrackingMenu = {
   menu_id: number;
   menu_name?: string;
+  menu_weight?: number;
 };
 
 type MealRecordSnapshot = {
@@ -1196,6 +1198,7 @@ export default function ChatPage() {
     previousMealRecord,
     staleTime,
     trackingMenusById,
+    trackMenuSave = trackChatMenuSave,
   }: {
     dateKey: string;
     dayMeals?: DayMealSummary;
@@ -1205,6 +1208,7 @@ export default function ChatPage() {
     previousMealRecord?: MealRecordSnapshot;
     staleTime?: number;
     trackingMenusById?: Map<number, MealRecordDraftTrackingMenu>;
+    trackMenuSave?: (menus: MealRecordDraftTrackingMenu[]) => void;
   }): Promise<MealRecordDraftRegisterResult> => {
     let targetDayMeals: DayMealSummary;
 
@@ -1251,7 +1255,7 @@ export default function ChatPage() {
     try {
       await registerDiaryMealRecordMutate(request, {
         onSuccess: () => {
-          trackChatMenuSave(
+          trackMenuSave(
             changedMenus.map((menu) => trackingMenusById?.get(menu.id) ?? { menu_id: menu.id }),
           );
         },
@@ -1278,6 +1282,16 @@ export default function ChatPage() {
     }
 
     const target = getMealRecordParseRegisterTarget(parseResponse, new Date());
+    const trackingMenusById = new Map(
+      parsedMenus.map((menu) => [
+        menu.id,
+        {
+          menu_id: menu.id,
+          menu_weight: menu.quantity,
+        },
+      ]),
+    );
+
     setExtraMealRecordDateKeys((previous) =>
       previous.includes(target.dateKey) ? previous : [...previous, target.dateKey],
     );
@@ -1287,6 +1301,8 @@ export default function ChatPage() {
       mealTime: target.mealTime,
       menus: parsedMenus,
       staleTime: 0,
+      trackingMenusById,
+      trackMenuSave: trackChatTextMenuSave,
     });
 
     return registerResult !== "failed";

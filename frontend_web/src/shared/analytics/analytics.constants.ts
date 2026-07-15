@@ -24,15 +24,13 @@ export const EVENT_NAME = {
   AI_COACH_RESPONSE_FAIL: "ai_coach_response_fail",
 
   RECOMMEND_MENU_SAVE: "chat_menu_save",
+  CHAT_TEXT_MENU_SAVE: "chat_text_menu_save",
   RECOMMEND_MENU_CANCEL: "chat_menu_cancel",
   DIARY_MENU_SAVE: "diary_menu_save",
 
   USER_PROFILE_UPDATED: "user_profile_updated",
 
   CLICK_FEEDBACK_BUTTON: "click_feedback_button",
-
-  MENSTRUAL_CARE_CLICK: "menstrual_care_click",
-  MENSTRUAL_CARE_START_DATE_SUBMIT: "menstrual_care_start_date_submit",
 } as const;
 
 export type AnalyticsEventName = (typeof EVENT_NAME)[keyof typeof EVENT_NAME];
