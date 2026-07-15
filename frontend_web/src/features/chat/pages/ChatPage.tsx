@@ -17,14 +17,17 @@ import { AssistantPendingMessage } from "@/features/chat/components/AssistantPen
 import type { ChatMealRecordMenu } from "@/features/chat/components/ChatMealRecordBottomSheet";
 import {
   useParseMenusFromTextMutation,
-  useSearchMenuMutation,
   useSendMessageMutation,
 } from "@/features/chat/hooks/mutations/useSendMessageMutation";
 import {
   ChatHistorySyncError,
   refetchAndResolveChatHistoryItem,
 } from "@/features/chat/hooks/queries/chatHistoryCache";
-import { useGetChatHistoryQuery } from "@/features/chat/hooks/queries/useGetChatQuery";
+import {
+  useGetChatHistoryQuery,
+  useSearchMenuQuery,
+} from "@/features/chat/hooks/queries/useGetChatQuery";
+import { useDebounceValue } from "@/features/chat/hooks/useDebounceValue";
 import { useOpenChatMealRecordEditSheet } from "@/features/chat/stores/chatMealRecordEditSheet.store";
 import {
   useChatMealRecordFocusRequest,
@@ -2475,11 +2478,17 @@ function ChatInput({
   const textInputWrapperRef = useRef<HTMLDivElement>(null);
   const lastPointerSubmitAtRef = useRef(0);
   const isSendDisabled = isInputEmpty || isSendPending;
-  const [searchMenus, setSearchMenus] = useState<string[]>([]);
   const [menuSearchKeyword, setMenuSearchKeyword] = useState("");
   const searchKeyword = getTypingMenuKeyword(value);
 
-  const { mutateAsync: searchMenu } = useSearchMenuMutation();
+  const { data: searchMenusResponse } = useSearchMenuQuery(
+    useDebounceValue(menuSearchKeyword, 100),
+    {
+      enabled: isMealRecordTextMode,
+    },
+  );
+
+  const searchMenus = searchMenusResponse?.name ?? [];
 
   const resizeTextInput = useCallback(() => {
     const textInput = textInputRef.current;
@@ -2529,10 +2538,6 @@ function ChatInput({
 
     onChange(nextValue);
     setMenuSearchKeyword(nextSearchKeyword);
-
-    if (!isMealRecordTextMode || nextSearchKeyword.length === 0) {
-      setSearchMenus([]);
-    }
   };
 
   const handleInputFocus = () => {
@@ -2599,7 +2604,6 @@ function ChatInput({
 
     onChange(userInput);
     setMenuSearchKeyword("");
-    setSearchMenus([]);
     focusTextInput(cursorPosition);
   };
 
@@ -2633,28 +2637,6 @@ function ChatInput({
     event.preventDefault();
     selectSearchMenu(menu);
   };
-
-  useEffect(() => {
-    if (!isMealRecordTextMode || menuSearchKeyword.length === 0) {
-      return;
-    }
-
-    let isActive = true;
-    const timeoutId = window.setTimeout(() => {
-      void searchMenu({ text: menuSearchKeyword }).then((response) => {
-        if (!isActive) {
-          return;
-        }
-
-        setSearchMenus(response.name);
-      });
-    }, 200);
-
-    return () => {
-      isActive = false;
-      window.clearTimeout(timeoutId);
-    };
-  }, [menuSearchKeyword, isMealRecordTextMode, searchMenu]);
 
   return (
     <div className={styles.chatInputContainer}>
