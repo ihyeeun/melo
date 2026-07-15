@@ -2482,7 +2482,7 @@ function ChatInput({
   const searchKeyword = getTypingMenuKeyword(value);
 
   const { data: searchMenusResponse } = useSearchMenuQuery(
-    useDebounceValue(menuSearchKeyword, 100),
+    useDebounceValue(menuSearchKeyword, 150),
     {
       enabled: isMealRecordTextMode,
     },
