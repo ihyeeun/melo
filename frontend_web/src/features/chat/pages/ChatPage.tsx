@@ -2682,7 +2682,7 @@ function ChatInput({
             value={value}
             className={`${styles.textInput} typo-body2`}
             // placeholder="맥도날드에 왔는데 뭐 먹을까?"
-            onChange={async (event) => {
+            onChange={(event) => {
               handleInputChange(event.target.value.slice(0, 500));
             }}
             onFocus={handleInputFocus}
