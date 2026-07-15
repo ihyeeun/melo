@@ -9,17 +9,22 @@ export type RecommendMenuAnalyticsItem = {
 export type MenuSaveAnalyticsItem = {
   menu_id: number;
   menu_name?: string;
+  menu_weight?: number;
 };
 
 function getMenuAnalyticsProperties(menu: MenuSaveAnalyticsItem) {
   return {
     menu_id: menu.menu_id,
     ...(menu.menu_name ? { menu_name: menu.menu_name } : {}),
+    ...(typeof menu.menu_weight === "number" && Number.isFinite(menu.menu_weight)
+      ? { menu_weight: menu.menu_weight }
+      : {}),
   };
 }
 
 function trackMenuArrayEvent(
   eventName:
+    | typeof EVENT_NAME.CHAT_TEXT_MENU_SAVE
     | typeof EVENT_NAME.RECOMMEND_MENU_SAVE
     | typeof EVENT_NAME.RECOMMEND_MENU_CANCEL
     | typeof EVENT_NAME.DIARY_MENU_SAVE,
@@ -32,6 +37,10 @@ function trackMenuArrayEvent(
 
 export function trackChatMenuSave(menus: MenuSaveAnalyticsItem[]) {
   trackMenuArrayEvent(EVENT_NAME.RECOMMEND_MENU_SAVE, menus);
+}
+
+export function trackChatTextMenuSave(menus: MenuSaveAnalyticsItem[]) {
+  trackMenuArrayEvent(EVENT_NAME.CHAT_TEXT_MENU_SAVE, menus);
 }
 
 export function trackDiaryMenuSave(menus: MenuSaveAnalyticsItem[]) {
