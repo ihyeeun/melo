@@ -4,6 +4,7 @@ import { useUpsertFolderMutation } from "@/features/personal-menu/folder/hooks/m
 import {
   useFolderDraftBuildUpsertRequest,
   useFolderDraftClearDraft,
+  useFolderDraftFolderId,
   useFolderDraftName,
   useFolderDraftRemoveSelectedMenu,
   useFolderDraftSelectedMenus,
@@ -39,17 +40,22 @@ function isFolderCreationFlowPath(path: string) {
 
 export default function CreateFolderPage() {
   const navigate = useNavigate();
+  const folderId = useFolderDraftFolderId();
   const folderName = useFolderDraftName();
   const selectedMenus = useFolderDraftSelectedMenus();
   const setFolderName = useFolderDraftSetName();
   const removeSelectedMenu = useFolderDraftRemoveSelectedMenu();
   const clearDraft = useFolderDraftClearDraft();
   const buildUpsertRequest = useFolderDraftBuildUpsertRequest();
+  const isEditMode = typeof folderId === "number";
   const { mutate: upsertFolder, isPending: isUpsertFolderPending } = useUpsertFolderMutation({
     onSuccess: () => {
       clearDraft();
-      toast.success("폴더가 저장되었어요");
-      navigateBack({ fallbackTo: PATH.MEAL_RECORD_ADD_SEARCH, skipBackHandler: true });
+      toast.success(isEditMode ? "폴더가 수정되었어요" : "폴더가 저장되었어요");
+      navigateBack({
+        fallbackTo: PATH.MEAL_RECORD_ADD_SEARCH,
+        skipBackHandler: true,
+      });
     },
     onError: () => {
       toast.warning("폴더 저장에 실패했어요", "잠시 후 다시 시도해주세요.");
@@ -84,7 +90,10 @@ export default function CreateFolderPage() {
 
   const handleBack = () => {
     clearDraft();
-    navigateBack({ fallbackTo: PATH.MEAL_RECORD_ADD_SEARCH, skipBackHandler: true });
+    navigateBack({
+      fallbackTo: PATH.MEAL_RECORD_ADD_SEARCH,
+      skipBackHandler: true,
+    });
   };
 
   const handleSubmit = () => {
@@ -105,7 +114,7 @@ export default function CreateFolderPage() {
 
   return (
     <section className={styles.page}>
-      <PageHeader title="새 폴더 만들기" onBack={handleBack} />
+      <PageHeader title={isEditMode ? "폴더 수정" : "새 폴더 만들기"} onBack={handleBack} />
 
       <main className={styles.main}>
         <section className={styles.fieldSection}>
@@ -176,7 +185,7 @@ export default function CreateFolderPage() {
           fullWidth
           disabled={!canSubmit || isUpsertFolderPending}
         >
-          {isUpsertFolderPending ? "저장 중" : "저장하기"}
+          {isUpsertFolderPending ? "저장 중" : isEditMode ? "수정하기" : "저장하기"}
         </Button>
       </footer>
     </section>

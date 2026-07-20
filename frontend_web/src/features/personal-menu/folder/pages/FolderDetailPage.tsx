@@ -15,7 +15,9 @@ import {
   useSyncMenuDraftWithDayMeals,
 } from "@/features/meal-record/stores/menuDraft.store";
 import { getMealType, getSafeDateKey } from "@/features/meal-record/utils/mealRecord.queryParams";
+import { useFolderDraftSetDraft } from "@/features/personal-menu/folder/stores/folderDraft.store";
 import styles from "@/features/personal-menu/folder/styles/FolderDetailPage.module.css";
+import { PATH } from "@/router/path";
 import {
   getFolderDetailPath,
   getMealDetailPath,
@@ -94,6 +96,7 @@ export default function FolderDetailPage() {
   const upsertMenu = useMenuDraftUpsert();
   const removeMenu = useMenuDraftRemove();
   const upsertPreviews = useMenuDraftUpsertPreviews();
+  const setFolderDraft = useFolderDraftSetDraft();
 
   useSyncMenuDraftWithDayMeals({
     dateKey,
@@ -124,6 +127,26 @@ export default function FolderDetailPage() {
 
   const handleBack = () => {
     navigateBack({ fallbackTo: getMealSearchPath(dateKey, mealType) });
+  };
+
+  const handleEditFolder = () => {
+    if (!folderDetail) {
+      return;
+    }
+
+    setFolderDraft({
+      folderId,
+      folderName: folderDetail.folder_name,
+      selectedMenus: folderMenus.map((folderMenu) => ({
+        requestMenu: {
+          menuId: folderMenu.menu.id,
+          menuQuantity: folderMenu.quantity,
+          menuInputMode: folderMenu.inputMode,
+        },
+        viewMenu: folderMenu.menu,
+      })),
+    });
+    navigate(PATH.CREATE_FOLDER);
   };
 
   const handleMenuDetailOpen = (folderMenu: FolderDetailMenu) => {
@@ -257,7 +280,17 @@ export default function FolderDetailPage() {
 
   return (
     <section className={styles.page}>
-      <PageHeader title={folderDetail?.folder_name ?? "폴더"} onBack={handleBack} />
+      <PageHeader
+        title={folderDetail?.folder_name ?? "폴더"}
+        onBack={handleBack}
+        rightSlot={
+          folderDetail ? (
+            <Button variant="text" color="normal" onClick={handleEditFolder}>
+              수정
+            </Button>
+          ) : null
+        }
+      />
 
       <main className={styles.main}>{renderContent()}</main>
 

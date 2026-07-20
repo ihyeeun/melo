@@ -29,9 +29,17 @@ type UpsertFolderSelectedMenuParams = {
   menuInputMode?: MealServingInputMode;
 };
 
-type FolderDraftStoreState = {
+type SetFolderDraftParams = {
+  folderId?: number;
   folderName: string;
   selectedMenus: FolderDraftSelectedMenu[];
+};
+
+type FolderDraftStoreState = {
+  folderId?: number;
+  folderName: string;
+  selectedMenus: FolderDraftSelectedMenu[];
+  setDraft: (params: SetFolderDraftParams) => void;
   setFolderName: (folderName: string) => void;
   upsertSelectedMenu: (params: UpsertFolderSelectedMenuParams) => void;
   removeSelectedMenu: (menuId: number) => void;
@@ -59,8 +67,17 @@ function toFolderRequestInputMode(menuInputMode: MealServingInputMode | undefine
 export const useFolderDraftStore = create<FolderDraftStoreState>()(
   devtools(
     (set, get) => ({
+      folderId: undefined,
       folderName: "",
       selectedMenus: [],
+
+      setDraft: ({ folderId, folderName, selectedMenus }) => {
+        set({
+          folderId,
+          folderName,
+          selectedMenus: selectedMenus.slice(0, MAX_FOLDER_MENUS),
+        });
+      },
 
       setFolderName: (folderName) => {
         set({ folderName });
@@ -118,15 +135,17 @@ export const useFolderDraftStore = create<FolderDraftStoreState>()(
 
       clearDraft: () => {
         set({
+          folderId: undefined,
           folderName: "",
           selectedMenus: [],
         });
       },
 
       buildUpsertRequest: () => {
-        const { folderName, selectedMenus } = get();
+        const { folderId, folderName, selectedMenus } = get();
 
         return {
+          ...(typeof folderId === "number" ? { folder_id: folderId } : {}),
           folder_name: folderName.trim(),
           menu_ids: selectedMenus.map((menu) => menu.requestMenu.menuId),
           menu_quantities: selectedMenus.map((menu) => menu.requestMenu.menuQuantity),
@@ -140,11 +159,13 @@ export const useFolderDraftStore = create<FolderDraftStoreState>()(
   ),
 );
 
+export const useFolderDraftFolderId = () => useFolderDraftStore((store) => store.folderId);
 export const useFolderDraftName = () => useFolderDraftStore((store) => store.folderName);
 export const useFolderDraftSelectedMenus = () =>
   useFolderDraftStore((store) => store.selectedMenus);
 export const useFolderDraftSelectedCount = () =>
   useFolderDraftStore((store) => store.selectedMenus.length);
+export const useFolderDraftSetDraft = () => useFolderDraftStore((store) => store.setDraft);
 export const useFolderDraftSetName = () => useFolderDraftStore((store) => store.setFolderName);
 export const useFolderDraftUpsertSelectedMenu = () =>
   useFolderDraftStore((store) => store.upsertSelectedMenu);

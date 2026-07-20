@@ -9,8 +9,14 @@ export function useUpsertFolderMutation(callbacks?: UseMutationCallback) {
 
   return useMutation({
     mutationFn: upsertFolder,
-    onSuccess: async () => {
+    onSuccess: async (_data, variables) => {
       await queryClient.invalidateQueries({ queryKey: folderQueryKeys.list });
+
+      if (typeof variables.folder_id === "number") {
+        await queryClient.invalidateQueries({
+          queryKey: folderQueryKeys.detail(variables.folder_id),
+        });
+      }
       callbacks?.onSuccess?.();
     },
     onError: (error) => {
