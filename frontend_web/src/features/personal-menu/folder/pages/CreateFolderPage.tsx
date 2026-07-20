@@ -1,6 +1,6 @@
 import { useCallback, useEffect } from "react";
 
-import { useUpsertFolderMutation } from "@/features/personal-menu/folder/hooks/mutations/upsertFolder.mutation";
+import { useUpsertFolderMutation } from "@/features/personal-menu/folder/hooks/mutations/folder.mutation";
 import {
   useFolderDraftBuildUpsertRequest,
   useFolderDraftClearDraft,

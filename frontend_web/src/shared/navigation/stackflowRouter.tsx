@@ -120,6 +120,9 @@ const MealSearchPage = createLazyActivity(
 const CreateFolderPage = createLazyActivity(
   () => import("@/features/personal-menu/folder/pages/CreateFolderPage"),
 );
+const FolderDetailPage = createLazyActivity(
+  () => import("@/features/personal-menu/folder/pages/FolderDetailPage"),
+);
 const SettingsFeedbackPage = createLazyActivity(
   () => import("@/features/settings/SettingsFeedbackPage"),
 );
@@ -200,6 +203,7 @@ const ACTIVITIES = {
   MealRecordAddSearch: MealSearchPage,
   MealDetail: MealDetailPage,
   CreateFolder: CreateFolderPage,
+  FolderDetail: FolderDetailPage,
   MenuBoardCamera: MenuBoardCameraPage,
   FoodCamera: FoodCameraPage,
   NutrientAdd: NutrientAddPage,
@@ -241,6 +245,7 @@ const ACTIVITY_ROUTES: Record<keyof typeof ACTIVITIES, RoutePath> = {
   MealRecordAddSearch: PATH.MEAL_RECORD_ADD_SEARCH,
   MealDetail: PATH.MEAL_DETAIL,
   CreateFolder: PATH.CREATE_FOLDER,
+  FolderDetail: PATH.FOLDER_DETAIL,
   MenuBoardCamera: PATH.MENU_BOARD_CAMERA,
   FoodCamera: PATH.FOOD_CAMERA,
   NutrientAdd: PATH.NUTRIENT_ADD,

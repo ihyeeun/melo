@@ -351,14 +351,25 @@
   width: 100%;
 }
 
-.folderName {
-  color: var(--label-normal);
-}
-
 .folderMenuNames {
   color: var(--label-assistive);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   width: 100%;
+}
+
+.folderName {
+  display: flex;
+  width: 100%;
+  align-items: center;
+}
+
+.folderAddAction {
+  margin-left: auto;
+  margin-bottom: 10px;
+}
+
+.marginLeftAuto {
+  margin-left: auto;
 }

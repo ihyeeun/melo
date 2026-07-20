@@ -158,6 +158,13 @@ export interface FolerListItemResponseDto {
   menu_names: string[];
 }
 
+export interface FolderDetailResponseDto {
+  folder_name: string;
+  menu_list: MenuSimpleResponseDto[];
+  menu_quantities: number[];
+  menu_input_modes: Array<0 | 1>;
+}
+
 /* ======
  * 채팅
  * ====== */

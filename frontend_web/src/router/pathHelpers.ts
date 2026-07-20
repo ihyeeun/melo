@@ -42,6 +42,16 @@ export function getFolderMenuDetailPath(menuId: number) {
   return `${PATH.MEAL_DETAIL}?${params.toString()}`;
 }
 
+export function getFolderDetailPath(dateKey: string, mealType: MealType, folderId: number) {
+  const params = new URLSearchParams({
+    date: dateKey,
+    mealType,
+    folderId: String(folderId),
+  });
+
+  return `${PATH.FOLDER_DETAIL}?${params.toString()}`;
+}
+
 export function getMealDetailPath(
   dateKey: string,
   mealType: MealType,

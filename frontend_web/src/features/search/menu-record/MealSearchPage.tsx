@@ -44,11 +44,13 @@ import {
 } from "@/features/search/menu-record/hooks/queries/usePersonalMenusQuery";
 import { PATH } from "@/router/path";
 import {
+  getFolderDetailPath,
   getFolderMenuDetailPath,
   getMealDetailPath,
   getMealRecordPath,
   getPathWithMeal,
 } from "@/router/pathHelpers";
+import { type MealType } from "@/shared/api/types/api.dto";
 import { type MenuSimpleResponseDto } from "@/shared/api/types/api.response.dto";
 import { Button } from "@/shared/commons/button/Button";
 import { FloatingCameraButton } from "@/shared/commons/button/FloatingCameraButton";
@@ -404,6 +406,7 @@ export default function MealSearchPage() {
       >
         <span className={`${styles.bottomText} typo-body3`}>찾으시는 메뉴가 없나요?</span>
         직접 등록하기
+        <SystemIcon name="chevron-right-thin" size={16} />
       </Button>
     </div>
   );
@@ -450,6 +453,7 @@ export default function MealSearchPage() {
       <span className={`typo-body3`}>찾으시는 메뉴가 없나요?</span>
       <span className={`typo-label3 ${styles.directRegisterPromptAction}`}>
         영양 성분 직접 등록
+        <SystemIcon name="chevron-right-thin" size={18} />
       </span>
     </button>
   );
@@ -590,7 +594,11 @@ export default function MealSearchPage() {
 
           {!isFolderSearchMode ? (
             <Tabs.Panel value={PERSONAL_MENU_TAB.FOLDER} className={styles.personalMenuTabsPanel}>
-              <FolderPanel isActive={visiblePersonalMenuTab === PERSONAL_MENU_TAB.FOLDER} />
+              <FolderPanel
+                isActive={visiblePersonalMenuTab === PERSONAL_MENU_TAB.FOLDER}
+                dateKey={dateKey}
+                mealType={mealType}
+              />
             </Tabs.Panel>
           ) : null}
 
@@ -738,7 +746,15 @@ export default function MealSearchPage() {
   );
 }
 
-function FolderPanel({ isActive }: { isActive: boolean }) {
+function FolderPanel({
+  dateKey,
+  isActive,
+  mealType,
+}: {
+  dateKey: string;
+  isActive: boolean;
+  mealType: MealType;
+}) {
   const navigate = useNavigate();
   const {
     data: folders,
@@ -776,9 +792,28 @@ function FolderPanel({ isActive }: { isActive: boolean }) {
         </div>
       ) : folderList.length > 0 ? (
         <div className={styles.folderList}>
+          <Button
+            variant="text"
+            interaction="normal"
+            color="normal"
+            fullWidth
+            className={styles.folderAddAction}
+            onClick={() => navigate(PATH.CREATE_FOLDER)}
+          >
+            <span>새 폴더 만들기</span>
+            <SystemIcon name="chevron-right-thin" size={16} />
+          </Button>
           {folderList.map((folder) => (
-            <button key={folder.folder_id} type="button" className={styles.folderItem}>
-              <span className={`typo-label2 ${styles.folderName}`}>{folder.folder_name}</span>
+            <button
+              key={folder.folder_id}
+              type="button"
+              className={styles.folderItem}
+              onClick={() => navigate(getFolderDetailPath(dateKey, mealType, folder.folder_id))}
+            >
+              <div className={styles.folderName}>
+                <span className={`typo-label2 textNormal`}>{folder.folder_name}</span>
+                <SystemIcon name="chevron-right-thin" size={20} className={styles.marginLeftAuto} />
+              </div>
               <span className={`typo-body3 ${styles.folderMenuNames}`}>
                 {folder.menu_names.join(", ")}
               </span>

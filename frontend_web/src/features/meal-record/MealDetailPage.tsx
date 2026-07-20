@@ -26,7 +26,11 @@ import {
 } from "@/features/personal-menu/folder/stores/folderDraft.store";
 import { PATH } from "@/router/path";
 import { getFolderMenuSearchPath, getMealRecordPath } from "@/router/pathHelpers";
-import { type MealMenuItem, MENU_DATA_SOURCE } from "@/shared/api/types/api.dto";
+import {
+  type MealMenuItem,
+  type MealServingInputMode,
+  MENU_DATA_SOURCE,
+} from "@/shared/api/types/api.dto";
 import { Button } from "@/shared/commons/button/Button";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
 import { LoadingOverlay } from "@/shared/commons/loading/Loading";
@@ -49,8 +53,24 @@ const FOLDER_DETAIL_MODE = "folder";
 type MealDetailLocationState = {
   afterAddReturnPath?: string;
   backReturnPath?: string;
+  initialMode?: MealServingInputMode;
+  initialQuantity?: number;
   replaceMenuId?: number;
 };
+
+function getSafeInitialSelection(state: MealDetailLocationState | null) {
+  const quantity = state?.initialQuantity;
+  const mode = state?.initialMode;
+
+  if (typeof quantity !== "number" || !Number.isFinite(quantity) || quantity <= 0) {
+    return null;
+  }
+
+  return {
+    quantity,
+    mode: mode === "unit" || mode === "weight" ? mode : undefined,
+  };
+}
 
 function getMenuIsDeleted(menu: unknown) {
   const isDeleted = (menu as { is_deleted?: unknown }).is_deleted;
@@ -160,16 +180,26 @@ export default function MealDetailPage() {
 
     const mealSelection = mealSelectedMenus.find((item) => item.id === menuId) ?? null;
 
-    if (!mealSelection) {
-      return null;
+    if (mealSelection) {
+      return {
+        quantity: mealSelection.quantity,
+        mode: mealSelection.mode,
+      };
     }
 
-    return {
-      quantity: mealSelection.quantity,
-      mode: mealSelection.mode,
-    };
+    return getSafeInitialSelection(locationState);
+  }, [folderSelectedMenus, isFolderDetailMode, locationState, mealSelectedMenus, menuId]);
+  const isAlreadyQueued = useMemo(() => {
+    if (menuId === null) {
+      return false;
+    }
+
+    if (isFolderDetailMode) {
+      return folderSelectedMenus.some((item) => item.requestMenu.menuId === menuId);
+    }
+
+    return mealSelectedMenus.some((item) => item.id === menuId);
   }, [folderSelectedMenus, isFolderDetailMode, mealSelectedMenus, menuId]);
-  const isAlreadyQueued = existingSelection !== null;
 
   useEffect(() => {
     // 이미 draft에 담긴 메뉴를 수정한 경우, "담기"를 다시 누르지 않아도 preview를 최신 데이터로 동기화한다.
