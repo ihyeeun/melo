@@ -85,3 +85,7 @@
   padding: 0 20px;
   padding-bottom: var(--safe-area-bottom);
 }
+
+.marginLeftAuto {
+  margin-left: auto;
+}

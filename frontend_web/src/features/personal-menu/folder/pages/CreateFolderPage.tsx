@@ -129,6 +129,9 @@ export default function CreateFolderPage() {
             placeholder="폴더 이름을 입력해주세요"
             maxLength={20}
           />
+          <span className={`${styles.marginLeftAuto} typo-caption4 textAssistive`}>
+            최대 20자 이내
+          </span>
         </section>
 
         <section className={styles.menuSection}>
