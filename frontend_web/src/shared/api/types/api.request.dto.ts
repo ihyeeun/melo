@@ -38,3 +38,11 @@ export interface DeleteMealRequestDto {
   time: 0 | 1 | 2 | 3 | 4; //기록 시간대 0~4
   menu_id?: number;
 }
+
+export interface UpsertFolderRequestDto {
+  folder_id?: number;
+  folder_name: string;
+  menu_ids: number[];
+  menu_quantities: number[];
+  menu_input_modes: Array<0 | 1>; //0: 단위, 1: 중량
+}

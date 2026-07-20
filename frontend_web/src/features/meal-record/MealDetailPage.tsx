@@ -16,8 +16,16 @@ import {
 } from "@/features/meal-record/stores/menuDraft.store";
 import styles from "@/features/meal-record/styles/MealDetailPage.module.css";
 import type { NutrientModifyLocationState } from "@/features/nutrient-entry/types/nutrientEntry.state";
+import {
+  FOLDER_MENU_LIMIT_MESSAGE,
+  MAX_FOLDER_MENUS,
+} from "@/features/personal-menu/folder/constants/folder.constants";
+import {
+  useFolderDraftSelectedMenus,
+  useFolderDraftUpsertSelectedMenu,
+} from "@/features/personal-menu/folder/stores/folderDraft.store";
 import { PATH } from "@/router/path";
-import { getMealRecordPath } from "@/router/pathHelpers";
+import { getFolderMenuSearchPath, getMealRecordPath } from "@/router/pathHelpers";
 import { type MealMenuItem, MENU_DATA_SOURCE } from "@/shared/api/types/api.dto";
 import { Button } from "@/shared/commons/button/Button";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
@@ -35,6 +43,8 @@ import {
 
 import { MAX_MEAL_RECORD_MENUS, MEAL_RECORD_MENU_LIMIT_MESSAGE } from "./constants/menu.constants";
 import { getMealType, getSafeDateKey, getSafeKeyword } from "./utils/mealRecord.queryParams";
+
+const FOLDER_DETAIL_MODE = "folder";
 
 type MealDetailLocationState = {
   afterAddReturnPath?: string;
@@ -58,6 +68,7 @@ export default function MealDetailPage() {
   const dateKey = getSafeDateKey(searchParams.get("date"));
   const mealType = getMealType(searchParams.get("mealType"));
   const searchKeyword = getSafeKeyword(searchParams.get("keyword"));
+  const isFolderDetailMode = searchParams.get("mode") === FOLDER_DETAIL_MODE;
   const draftKey = formatMenuDraftKey(dateKey, mealType);
 
   const rawMenuId = searchParams.get("menuId");
@@ -70,7 +81,9 @@ export default function MealDetailPage() {
   const upsertMenu = useMenuDraftUpsert();
   const upsertPreviews = useMenuDraftUpsertPreviews();
   const removeMenu = useMenuDraftRemove();
-  const selectedMenus = useMenuDraftMenus(dateKey, mealType);
+  const mealSelectedMenus = useMenuDraftMenus(dateKey, mealType);
+  const folderSelectedMenus = useFolderDraftSelectedMenus();
+  const upsertFolderSelectedMenu = useFolderDraftUpsertSelectedMenu();
   const locationState = location.state as MealDetailLocationState | null;
   const replaceMenuIdCandidate = locationState?.replaceMenuId;
   const replaceMenuId =
@@ -84,6 +97,10 @@ export default function MealDetailPage() {
   const { data: meal, isPending, isError } = useMealDetailQuery(menuId);
 
   const getBackFallbackPath = () => {
+    if (isFolderDetailMode) {
+      return getFolderMenuSearchPath();
+    }
+
     return getMealRecordPath(dateKey, mealType);
   };
 
@@ -127,13 +144,36 @@ export default function MealDetailPage() {
       return null;
     }
 
-    return selectedMenus.find((item) => item.id === menuId) ?? null;
-  }, [menuId, selectedMenus]);
+    if (isFolderDetailMode) {
+      const folderSelection =
+        folderSelectedMenus.find((item) => item.requestMenu.menuId === menuId) ?? null;
+
+      if (!folderSelection) {
+        return null;
+      }
+
+      return {
+        quantity: folderSelection.requestMenu.menuQuantity,
+        mode: folderSelection.requestMenu.menuInputMode,
+      };
+    }
+
+    const mealSelection = mealSelectedMenus.find((item) => item.id === menuId) ?? null;
+
+    if (!mealSelection) {
+      return null;
+    }
+
+    return {
+      quantity: mealSelection.quantity,
+      mode: mealSelection.mode,
+    };
+  }, [folderSelectedMenus, isFolderDetailMode, mealSelectedMenus, menuId]);
   const isAlreadyQueued = existingSelection !== null;
 
   useEffect(() => {
     // 이미 draft에 담긴 메뉴를 수정한 경우, "담기"를 다시 누르지 않아도 preview를 최신 데이터로 동기화한다.
-    if (!meal || menuId === null || !existingSelection) {
+    if (isFolderDetailMode || !meal || menuId === null || !existingSelection) {
       return;
     }
 
@@ -152,7 +192,7 @@ export default function MealDetailPage() {
         },
       ],
     });
-  }, [draftKey, existingSelection, meal, menuId, upsertPreviews]);
+  }, [draftKey, existingSelection, isFolderDetailMode, meal, menuId, upsertPreviews]);
 
   const handleAddMenu = () => {
     if (!meal || !selection) {
@@ -161,12 +201,36 @@ export default function MealDetailPage() {
     }
 
     const nextMenuId = selection.menu.id;
+
+    if (isFolderDetailMode) {
+      const nextSelectedMenuIds = new Set(
+        folderSelectedMenus.map((item) => item.requestMenu.menuId),
+      );
+      nextSelectedMenuIds.add(nextMenuId);
+
+      if (nextSelectedMenuIds.size > MAX_FOLDER_MENUS) {
+        toast.warning(FOLDER_MENU_LIMIT_MESSAGE);
+        return;
+      }
+
+      upsertFolderSelectedMenu({
+        viewMenu: selection.menu,
+        menuQuantity: selection.quantity,
+        menuInputMode: selection.mode,
+      });
+
+      navigateBack({
+        fallbackTo: getBackFallbackPath(),
+      });
+      return;
+    }
+
     const shouldReplaceMenu =
       replaceMenuId !== null &&
       replaceMenuId !== nextMenuId &&
-      selectedMenus.some((item) => item.id === replaceMenuId);
+      mealSelectedMenus.some((item) => item.id === replaceMenuId);
 
-    const nextSelectedMenuIds = new Set(selectedMenus.map((item) => item.id));
+    const nextSelectedMenuIds = new Set(mealSelectedMenus.map((item) => item.id));
     if (shouldReplaceMenu) {
       nextSelectedMenuIds.delete(replaceMenuId);
     }

@@ -144,10 +144,14 @@
   border-bottom: 1px solid var(--border-neutral);
   display: grid;
   flex: 0 0 auto;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   position: relative;
   width: 100%;
   z-index: 1;
+}
+
+.personalMenuTabsListTwoColumns {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .personalMenuTabsTab {
@@ -320,4 +324,41 @@
   .personalMenuPanelContent {
     animation: none;
   }
+}
+
+.folderEmptyResult {
+  gap: 20px;
+}
+
+.folderList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 20px 0;
+}
+
+.folderItem {
+  align-items: flex-start;
+  background-color: var(--bg-white);
+  border: 1px solid var(--border-neutral);
+  border-radius: 8px;
+  color: var(--label-normal);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 16px 20px;
+  text-align: left;
+  width: 100%;
+}
+
+.folderName {
+  color: var(--label-normal);
+}
+
+.folderMenuNames {
+  color: var(--label-assistive);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  width: 100%;
 }

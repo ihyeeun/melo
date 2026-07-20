@@ -25,6 +25,23 @@ export function getMealSearchPath(dateKey: string, mealType: MealType, keyword?:
   return `${PATH.MEAL_RECORD_ADD_SEARCH}?${buildPathQuery(dateKey, mealType, undefined, keyword)}`;
 }
 
+export function getFolderMenuSearchPath() {
+  const params = new URLSearchParams({
+    mode: "folder",
+  });
+
+  return `${PATH.MEAL_RECORD_ADD_SEARCH}?${params.toString()}`;
+}
+
+export function getFolderMenuDetailPath(menuId: number) {
+  const params = new URLSearchParams({
+    mode: "folder",
+    menuId: String(menuId),
+  });
+
+  return `${PATH.MEAL_DETAIL}?${params.toString()}`;
+}
+
 export function getMealDetailPath(
   dateKey: string,
   mealType: MealType,

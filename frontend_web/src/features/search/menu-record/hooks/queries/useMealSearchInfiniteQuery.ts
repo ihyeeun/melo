@@ -1,6 +1,7 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
 
-import { postMealSearch } from "@/features/search/menu-record/api/mealSearch.api";
+import { folderQueryKeys } from "@/features/personal-menu/folder/hooks/queries/folder.queryKey";
+import { getFolders, postMealSearch } from "@/features/search/menu-record/api/mealSearch.api";
 
 type UseMealSearchInfiniteQueryOptions = {
   enabled?: boolean;
@@ -24,6 +25,21 @@ export function useMealSearchInfiniteQuery(
     initialPageParam: null as number | null,
     getNextPageParam: (lastPage) => lastPage.next_cursor ?? undefined,
     enabled: enabled && normalizedInput.length > 0,
+    gcTime: 0,
+  });
+}
+
+export function useFolderListInfiniteQuery({ enabled, limit }: UseMealSearchInfiniteQueryOptions) {
+  return useInfiniteQuery({
+    queryKey: folderQueryKeys.list,
+    queryFn: ({ pageParam }) =>
+      getFolders({
+        limit,
+        cursor: pageParam,
+      }),
+    initialPageParam: null as number | null,
+    getNextPageParam: (lastPage) => lastPage.next_cursor ?? undefined,
+    enabled,
     gcTime: 0,
   });
 }

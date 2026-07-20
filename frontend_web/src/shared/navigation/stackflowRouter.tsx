@@ -117,6 +117,9 @@ const BrandSearch = createLazyActivity(() => import("@/features/search/brand/Bra
 const MealSearchPage = createLazyActivity(
   () => import("@/features/search/menu-record/MealSearchPage"),
 );
+const CreateFolderPage = createLazyActivity(
+  () => import("@/features/personal-menu/folder/pages/CreateFolderPage"),
+);
 const SettingsFeedbackPage = createLazyActivity(
   () => import("@/features/settings/SettingsFeedbackPage"),
 );
@@ -196,6 +199,7 @@ const ACTIVITIES = {
   MealRecord: MealRecordPage,
   MealRecordAddSearch: MealSearchPage,
   MealDetail: MealDetailPage,
+  CreateFolder: CreateFolderPage,
   MenuBoardCamera: MenuBoardCameraPage,
   FoodCamera: FoodCameraPage,
   NutrientAdd: NutrientAddPage,
@@ -236,6 +240,7 @@ const ACTIVITY_ROUTES: Record<keyof typeof ACTIVITIES, RoutePath> = {
   MealRecord: PATH.MEAL_RECORD,
   MealRecordAddSearch: PATH.MEAL_RECORD_ADD_SEARCH,
   MealDetail: PATH.MEAL_DETAIL,
+  CreateFolder: PATH.CREATE_FOLDER,
   MenuBoardCamera: PATH.MENU_BOARD_CAMERA,
   FoodCamera: PATH.FOOD_CAMERA,
   NutrientAdd: PATH.NUTRIENT_ADD,
