@@ -576,8 +576,9 @@ function getClickableElementAtPoint(x: number, y: number) {
 }
 
 function forwardTapThroughEdgeSwipeZone(
-  event: ReactPointerEvent<HTMLElement>,
   pointerDownTarget: EventTarget | null,
+  clientX: number,
+  clientY: number,
 ) {
   if (!isEdgeSwipeZone(pointerDownTarget)) return;
 
@@ -585,7 +586,7 @@ function forwardTapThroughEdgeSwipeZone(
   const previousPointerEvents = edgeSwipeZone.style.pointerEvents;
   edgeSwipeZone.style.pointerEvents = "none";
 
-  const target = getClickableElementAtPoint(event.clientX, event.clientY);
+  const target = getClickableElementAtPoint(clientX, clientY);
   edgeSwipeZone.style.pointerEvents = previousPointerEvents;
 
   target?.click();
@@ -852,8 +853,15 @@ function StackActivityFrame({
       }
 
       if (!swipe.dragging) {
-        forwardTapThroughEdgeSwipeZone(event, swipe.pointerDownTarget);
+        const { pointerDownTarget } = swipe;
+        const { clientX, clientY } = event;
         clearSwipe();
+        // The forwarded click can call navigateBack(), which also uses this frame's
+        // swipe transition requester. Forward after the pointer event settles so the
+        // pending tap state does not force that navigation into the fallback path.
+        window.setTimeout(() => {
+          forwardTapThroughEdgeSwipeZone(pointerDownTarget, clientX, clientY);
+        }, 0);
         return;
       }
 
