@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 
 import {
   MAX_MEAL_RECORD_MENUS,
   MEAL_RECORD_MENU_LIMIT_MESSAGE,
 } from "@/features/meal-record/constants/menu.constants";
+import { useMenuCacheItems } from "@/features/meal-record/hooks/queries/menuCache";
 import {
   formatMenuDraftKey,
   useMenuDraftMenus,
@@ -12,6 +13,14 @@ import {
   useMenuDraftUpsertPreviews,
 } from "@/features/meal-record/stores/menuDraft.store";
 import { getMealType, getSafeDateKey } from "@/features/meal-record/utils/mealRecord.queryParams";
+import {
+  MENU_SELECTION_FLOW_TARGET,
+  useMenuSelectionFlowCreateFlow,
+} from "@/features/menu-selection-flow/stores/menuSelectionFlow.store";
+import {
+  getMenuSelectionFlowMenuDetailPath,
+  getMenuSelectionFlowSearchPath,
+} from "@/features/menu-selection-flow/utils/menuSelectionFlowRoutes";
 import { useUpsertMenuSetMutation } from "@/features/personal-menu/set/hooks/mutations/menuSet.mutation";
 import { useMenuSetDetailQuery } from "@/features/personal-menu/set/hooks/queries/useMenuSetDetailQuery";
 import {
@@ -23,12 +32,7 @@ import {
 } from "@/features/personal-menu/set/stores/menuSetDraft.store";
 import styles from "@/features/personal-menu/set/styles/MenuSetDetailPage.module.css";
 import { PATH } from "@/router/path";
-import {
-  getMealDetailPath,
-  getMealSearchPath,
-  getMenuSetDetailPath,
-  getMenuSetMenuSearchPath,
-} from "@/router/pathHelpers";
+import { getMealSearchPath, getMenuSetDetailPath } from "@/router/pathHelpers";
 import {
   type MealMenuInputMode,
   type MealServingInputMode,
@@ -54,6 +58,11 @@ type MenuSetDetailMenu = {
   quantity: number;
   inputMode: MealServingInputMode;
   displayCalories: number;
+};
+
+type EditableMenusState = {
+  sourceSignature: string;
+  menus: MenuSetDetailMenu[];
 };
 
 function toPositiveNumber(value: number | null | undefined) {
@@ -91,12 +100,15 @@ function scaleCaloriesByQuantity(menu: MenuSetDraftViewMenu, quantity: number) {
   return baseCalories * (quantity / baseWeight);
 }
 
-function toMenuSetDetailMenus(menuSetDetail: {
-  menu_list: MenuSimpleResponseDto[];
-  menu_quantities: number[];
-  menu_input_modes: MealMenuInputMode[];
-}): MenuSetDetailMenu[] {
-  return menuSetDetail.menu_list.map((menu, index) => {
+function toMenuSetDetailMenus(
+  menuSetDetail: {
+    menu_list: MenuSimpleResponseDto[];
+    menu_quantities: number[];
+    menu_input_modes: MealMenuInputMode[];
+  },
+  menuItems: MenuSimpleResponseDto[],
+): MenuSetDetailMenu[] {
+  return menuItems.map((menu, index) => {
     const quantity = getSafeMenuSetQuantity(menu, menuSetDetail.menu_quantities[index]);
 
     return {
@@ -147,8 +159,29 @@ function buildMenuSetMenusSignature(menus: MenuSetDetailMenu[]) {
     .join("|");
 }
 
+function buildMenuSetDisplaySignature(menus: MenuSetDetailMenu[]) {
+  return menus
+    .map(
+      (menu) =>
+        [
+          menu.menu.id,
+          menu.quantity,
+          toMenuInputMode(menu.inputMode),
+          menu.menu.name,
+          menu.menu.brand,
+          menu.menu.unit_quantity,
+          menu.menu.calories,
+          menu.menu.weight,
+          menu.menu.unit,
+          menu.menu.data_source,
+        ].join(":"),
+    )
+    .join("|");
+}
+
 export default function MenuSetDetailPage() {
   const navigate = useNavigate();
+  const createMenuSelectionFlow = useMenuSelectionFlowCreateFlow();
   const [searchParams] = useSearchParams();
   const dateKey = getSafeDateKey(searchParams.get("date"));
   const mealType = getMealType(searchParams.get("mealType"));
@@ -172,37 +205,59 @@ export default function MenuSetDetailPage() {
   const setMenuSetDraft = useMenuSetDraftSetDraft();
   const menuSetDraftSetId = useMenuSetDraftSetId();
   const menuSetDraftSelectedMenus = useMenuSetDraftSelectedMenus();
-  const [editableMenus, setEditableMenus] = useState<MenuSetDetailMenu[]>([]);
+  const [editableMenusState, setEditableMenusState] = useState<EditableMenusState>({
+    sourceSignature: "",
+    menus: [],
+  });
+  const menuSetMenuIds = useMemo(
+    () => menuSetDetail?.menu_list.map((menu) => menu.id) ?? [],
+    [menuSetDetail?.menu_list],
+  );
+  const menuSetMenuItems = useMenuCacheItems(menuSetMenuIds);
 
   const { mutateAsync: upsertMenuSet, isPending: isUpsertMenuSetPending } =
     useUpsertMenuSetMutation();
 
   const serverMenus = useMemo(
-    () => (menuSetDetail ? toMenuSetDetailMenus(menuSetDetail) : []),
-    [menuSetDetail],
+    () => (menuSetDetail ? toMenuSetDetailMenus(menuSetDetail, menuSetMenuItems) : []),
+    [menuSetDetail, menuSetMenuItems],
   );
+  const draftSourceMenus = useMemo(
+    () =>
+      menuSetDraftSetId === setId
+        ? toMenuSetDetailMenusFromDraft(menuSetDraftSelectedMenus)
+        : null,
+    [menuSetDraftSelectedMenus, menuSetDraftSetId, setId],
+  );
+  const sourceMenus = draftSourceMenus ?? serverMenus;
+  const sourceMenusSignature = buildMenuSetDisplaySignature(sourceMenus);
+  const editableMenusSourceSignature = `${draftSourceMenus ? "draft" : "server"}:${sourceMenusSignature}`;
+  const editableMenus =
+    editableMenusState.sourceSignature === editableMenusSourceSignature
+      ? editableMenusState.menus
+      : sourceMenus;
+
+  if (editableMenusState.sourceSignature !== editableMenusSourceSignature) {
+    setEditableMenusState({
+      sourceSignature: editableMenusSourceSignature,
+      menus: sourceMenus,
+    });
+  }
+
   const selectedMenuIdSet = useMemo(() => new Set(draftMenus.map((menu) => menu.id)), [draftMenus]);
   const totalCalories = useMemo(
     () => editableMenus.reduce((sum, menu) => sum + menu.displayCalories, 0),
     [editableMenus],
   );
+  const serverMenusSignature = useMemo(
+    () => buildMenuSetMenusSignature(serverMenus),
+    [serverMenus],
+  );
   const hasMenuSetChanges = useMemo(
-    () => buildMenuSetMenusSignature(editableMenus) !== buildMenuSetMenusSignature(serverMenus),
-    [editableMenus, serverMenus],
+    () => buildMenuSetMenusSignature(editableMenus) !== serverMenusSignature,
+    [editableMenus, serverMenusSignature],
   );
   const canApplyMenuSet = (editableMenus.length > 0 || hasMenuSetChanges) && !isUpsertMenuSetPending;
-
-  useEffect(() => {
-    setEditableMenus(serverMenus);
-  }, [serverMenus]);
-
-  useEffect(() => {
-    if (menuSetDraftSetId !== setId) {
-      return;
-    }
-
-    setEditableMenus(toMenuSetDetailMenusFromDraft(menuSetDraftSelectedMenus));
-  }, [menuSetDraftSelectedMenus, menuSetDraftSetId, setId]);
 
   const handleBack = () => {
     navigateBack({ fallbackTo: getMealSearchPath(dateKey, mealType) });
@@ -228,6 +283,14 @@ export default function MenuSetDetailPage() {
     return true;
   };
 
+  const createMenuSetDetailMenuSelectionFlow = () =>
+    createMenuSelectionFlow({
+      menuSelectionFlowTarget: MENU_SELECTION_FLOW_TARGET.MENU_SET,
+      menuSelectionCompletionReturnPath: menuSetDetailPath,
+      relatedMealRecordDateKey: dateKey,
+      relatedMealRecordMealType: mealType,
+    });
+
   const handleEditMenuSet = () => {
     if (!prepareMenuSetDraft()) {
       return;
@@ -241,18 +304,22 @@ export default function MenuSetDetailPage() {
       return;
     }
 
-    navigate(getMenuSetMenuSearchPath(menuSetDetailPath));
+    const menuSelectionFlowId = createMenuSetDetailMenuSelectionFlow();
+    navigate(getMenuSelectionFlowSearchPath(menuSelectionFlowId));
   };
 
   const handleMenuDetailOpen = (menuSetMenu: MenuSetDetailMenu) => {
-    navigate(getMealDetailPath(dateKey, mealType, menuSetMenu.menu.id), {
-      state: {
-        afterAddReturnPath: menuSetDetailPath,
-        backReturnPath: menuSetDetailPath,
-        initialMode: menuSetMenu.inputMode,
-        initialQuantity: menuSetMenu.quantity,
-      },
-    });
+    if (!prepareMenuSetDraft()) {
+      return;
+    }
+
+    const menuSelectionFlowId = createMenuSetDetailMenuSelectionFlow();
+    navigate(
+      getMenuSelectionFlowMenuDetailPath({
+        menuSelectionFlowId,
+        menuId: menuSetMenu.menu.id,
+      }),
+    );
   };
 
   const handleRemoveMenu = (menuId: number) => {
@@ -260,9 +327,10 @@ export default function MenuSetDetailPage() {
       return;
     }
 
-    setEditableMenus((previousMenus) =>
-      previousMenus.filter((menu) => menu.menu.id !== menuId),
-    );
+    setEditableMenusState((previousState) => ({
+      ...previousState,
+      menus: previousState.menus.filter((menu) => menu.menu.id !== menuId),
+    }));
   };
 
   const handleApplyMenuSet = async () => {

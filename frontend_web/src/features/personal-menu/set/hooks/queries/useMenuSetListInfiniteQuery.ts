@@ -22,6 +22,6 @@ export function useMenuSetListInfiniteQuery({
     initialPageParam: null as number | null,
     getNextPageParam: (lastPage) => lastPage.next_cursor ?? undefined,
     enabled,
-    gcTime: 0,
+    staleTime: Infinity,
   });
 }

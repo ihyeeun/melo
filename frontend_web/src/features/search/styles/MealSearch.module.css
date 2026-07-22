@@ -399,3 +399,7 @@
 .marginLeftAuto {
   margin-left: auto;
 }
+
+.marginTop {
+  margin-top: 10px;
+}

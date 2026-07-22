@@ -1,5 +1,14 @@
 import { useCallback, useEffect } from "react";
 
+import {
+  MENU_SELECTION_FLOW_TARGET,
+  useMenuSelectionFlowCreateFlow,
+} from "@/features/menu-selection-flow/stores/menuSelectionFlow.store";
+import {
+  getMenuSelectionFlowMenuDetailPath,
+  getMenuSelectionFlowSearchPath,
+  isDraftEditingMenuSelectionNavigationPath,
+} from "@/features/menu-selection-flow/utils/menuSelectionFlowRoutes";
 import { useUpsertFolderMutation } from "@/features/personal-menu/folder/hooks/mutations/folder.mutation";
 import {
   useFolderDraftBuildUpsertRequest,
@@ -12,7 +21,6 @@ import {
 } from "@/features/personal-menu/folder/stores/folderDraft.store";
 import styles from "@/features/personal-menu/folder/styles/CreateFolderPage.module.css";
 import { PATH } from "@/router/path";
-import { getFolderMenuDetailPath, getFolderMenuSearchPath } from "@/router/pathHelpers";
 import { Button } from "@/shared/commons/button/Button";
 import { MealMenuCard } from "@/shared/commons/card/MealMenuCard";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
@@ -24,29 +32,9 @@ import {
   useStackflowBackHandler,
 } from "@/shared/navigation/stackflowNavigation";
 
-function isFolderCreationFlowPath(path: string) {
-  const url = new URL(path, window.location.origin);
-
-  if (url.pathname === PATH.CREATE_FOLDER) {
-    return true;
-  }
-
-  if (url.searchParams.get("mode") !== "folder") {
-    return false;
-  }
-
-  return (
-    url.pathname === PATH.MEAL_RECORD_ADD_SEARCH ||
-    url.pathname === PATH.MEAL_DETAIL ||
-    url.pathname === PATH.NUTRIENT_ADD ||
-    url.pathname === PATH.NUTRIENT_ADD_REGISTER ||
-    url.pathname === PATH.NUTRIENT_ADD_MODIFY ||
-    url.pathname === PATH.NUTRIENT_CAMERA
-  );
-}
-
 export default function CreateFolderPage() {
   const navigate = useNavigate();
+  const createMenuSelectionFlow = useMenuSelectionFlowCreateFlow();
   const folderId = useFolderDraftFolderId();
   const folderName = useFolderDraftName();
   const selectedMenus = useFolderDraftSelectedMenus();
@@ -79,7 +67,12 @@ export default function CreateFolderPage() {
 
   useEffect(() => {
     return () => {
-      if (isFolderCreationFlowPath(window.location.href)) {
+      if (
+        isDraftEditingMenuSelectionNavigationPath({
+          currentPath: window.location.href,
+          draftPagePath: PATH.CREATE_FOLDER,
+        })
+      ) {
         return;
       }
 
@@ -87,12 +80,25 @@ export default function CreateFolderPage() {
     };
   }, [clearDraft]);
 
+  const createFolderMenuSelectionFlow = () =>
+    createMenuSelectionFlow({
+      menuSelectionFlowTarget: MENU_SELECTION_FLOW_TARGET.FOLDER,
+      menuSelectionCompletionReturnPath: PATH.CREATE_FOLDER,
+    });
+
   const handleAddMenu = () => {
-    navigate(getFolderMenuSearchPath());
+    const menuSelectionFlowId = createFolderMenuSelectionFlow();
+    navigate(getMenuSelectionFlowSearchPath(menuSelectionFlowId));
   };
 
   const handleMenuDetailOpen = (menuId: number) => {
-    navigate(getFolderMenuDetailPath(menuId));
+    const menuSelectionFlowId = createFolderMenuSelectionFlow();
+    navigate(
+      getMenuSelectionFlowMenuDetailPath({
+        menuSelectionFlowId,
+        menuId,
+      }),
+    );
   };
 
   const handleBack = () => {

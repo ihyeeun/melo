@@ -1,5 +1,6 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
+import { menuQueryKeys, writeMenuListCache } from "@/features/meal-record/hooks/queries/menuCache";
 import {
   getFrequentlyRecordedMenus,
   getRegisteredMenus,
@@ -9,20 +10,23 @@ type PersonalMenusQueryOptions = {
   enabled?: boolean;
 };
 
-export function useGetFrequentlyRecordedMenus({
-  enabled = true,
-}: PersonalMenusQueryOptions = {}) {
+export function useGetFrequentlyRecordedMenus({ enabled = true }: PersonalMenusQueryOptions = {}) {
+  const queryClient = useQueryClient();
+
   return useQuery({
-    queryKey: ["frequently-recorded-menus"],
-    queryFn: getFrequentlyRecordedMenus,
+    queryKey: menuQueryKeys.frequentlyRecorded(),
+    queryFn: async () => writeMenuListCache(queryClient, await getFrequentlyRecordedMenus()),
     enabled,
   });
 }
 
 export function useGetRegisteredMenus({ enabled = true }: PersonalMenusQueryOptions = {}) {
+  const queryClient = useQueryClient();
+
   return useQuery({
-    queryKey: ["registered-menus"],
-    queryFn: getRegisteredMenus,
+    queryKey: menuQueryKeys.registered(),
+    queryFn: async () => writeMenuListCache(queryClient, await getRegisteredMenus()),
     enabled,
+    staleTime: Infinity,
   });
 }

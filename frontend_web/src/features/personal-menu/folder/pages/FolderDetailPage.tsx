@@ -5,6 +5,7 @@ import {
   MAX_MEAL_RECORD_MENUS,
   MEAL_RECORD_MENU_LIMIT_MESSAGE,
 } from "@/features/meal-record/constants/menu.constants";
+import { useMenuCacheItems } from "@/features/meal-record/hooks/queries/menuCache";
 import {
   formatMenuDraftKey,
   useMenuDraftMenus,
@@ -15,14 +16,15 @@ import {
   useSyncMenuDraftWithDayMeals,
 } from "@/features/meal-record/stores/menuDraft.store";
 import { getMealType, getSafeDateKey } from "@/features/meal-record/utils/mealRecord.queryParams";
+import {
+  MENU_SELECTION_FLOW_TARGET,
+  useMenuSelectionFlowCreateFlow,
+} from "@/features/menu-selection-flow/stores/menuSelectionFlow.store";
+import { getMenuSelectionFlowMenuDetailPath } from "@/features/menu-selection-flow/utils/menuSelectionFlowRoutes";
 import { useFolderDraftSetDraft } from "@/features/personal-menu/folder/stores/folderDraft.store";
 import styles from "@/features/personal-menu/folder/styles/FolderDetailPage.module.css";
 import { PATH } from "@/router/path";
-import {
-  getFolderDetailPath,
-  getMealDetailPath,
-  getMealSearchPath,
-} from "@/router/pathHelpers";
+import { getFolderDetailPath, getMealSearchPath } from "@/router/pathHelpers";
 import { type MealServingInputMode, MENU_INPUT_MODE } from "@/shared/api/types/api.dto";
 import type { MenuSimpleResponseDto } from "@/shared/api/types/api.response.dto";
 import { Button } from "@/shared/commons/button/Button";
@@ -61,6 +63,13 @@ function getSafeFolderInputMode(inputMode: 0 | 1 | undefined): MealServingInputM
   return inputMode === MENU_INPUT_MODE.UNIT ? "unit" : "weight";
 }
 
+function getSafeDraftInputMode(
+  inputMode: MealServingInputMode | undefined,
+  fallbackInputMode: MealServingInputMode,
+) {
+  return inputMode === "unit" || inputMode === "weight" ? inputMode : fallbackInputMode;
+}
+
 function scaleCaloriesByQuantity(menu: MenuSimpleResponseDto, quantity: number) {
   const baseCalories = toPositiveNumber(menu.calories) ?? 0;
   const baseWeight = toPositiveNumber(menu.weight);
@@ -74,6 +83,7 @@ function scaleCaloriesByQuantity(menu: MenuSimpleResponseDto, quantity: number) 
 
 export default function FolderDetailPage() {
   const navigate = useNavigate();
+  const createMenuSelectionFlow = useMenuSelectionFlowCreateFlow();
   const [searchParams] = useSearchParams();
   const dateKey = getSafeDateKey(searchParams.get("date"));
   const mealType = getMealType(searchParams.get("mealType"));
@@ -97,6 +107,11 @@ export default function FolderDetailPage() {
   const removeMenu = useMenuDraftRemove();
   const upsertPreviews = useMenuDraftUpsertPreviews();
   const setFolderDraft = useFolderDraftSetDraft();
+  const folderMenuIds = useMemo(
+    () => folderDetail?.menu_list.map((menu) => menu.id) ?? [],
+    [folderDetail?.menu_list],
+  );
+  const folderMenuItems = useMenuCacheItems(folderMenuIds);
 
   useSyncMenuDraftWithDayMeals({
     dateKey,
@@ -104,12 +119,17 @@ export default function FolderDetailPage() {
     dayMeals,
   });
 
-  const folderMenus = useMemo<FolderDetailMenu[]>(() => {
+  const draftMenuById = useMemo(
+    () => new Map(draftMenus.map((menu) => [menu.id, menu])),
+    [draftMenus],
+  );
+
+  const serverFolderMenus = useMemo<FolderDetailMenu[]>(() => {
     if (!folderDetail) {
       return [];
     }
 
-    return folderDetail.menu_list.map((menu, index) => {
+    return folderMenuItems.map((menu, index) => {
       const quantity = getSafeFolderQuantity(menu, folderDetail.menu_quantities[index]);
 
       return {
@@ -119,7 +139,28 @@ export default function FolderDetailPage() {
         displayCalories: scaleCaloriesByQuantity(menu, quantity),
       };
     });
-  }, [folderDetail]);
+  }, [folderDetail, folderMenuItems]);
+
+  const folderMenus = useMemo<FolderDetailMenu[]>(
+    () =>
+      serverFolderMenus.map((folderMenu) => {
+        const draftMenu = draftMenuById.get(folderMenu.menu.id);
+        if (!draftMenu) {
+          return folderMenu;
+        }
+
+        const quantity = getSafeFolderQuantity(folderMenu.menu, draftMenu.quantity);
+        const inputMode = getSafeDraftInputMode(draftMenu.mode, folderMenu.inputMode);
+
+        return {
+          ...folderMenu,
+          quantity,
+          inputMode,
+          displayCalories: scaleCaloriesByQuantity(folderMenu.menu, quantity),
+        };
+      }),
+    [draftMenuById, serverFolderMenus],
+  );
 
   const selectedMenuIdSet = useMemo(() => new Set(draftMenus.map((menu) => menu.id)), [draftMenus]);
 
@@ -137,7 +178,7 @@ export default function FolderDetailPage() {
     setFolderDraft({
       folderId,
       folderName: folderDetail.folder_name,
-      selectedMenus: folderMenus.map((folderMenu) => ({
+      selectedMenus: serverFolderMenus.map((folderMenu) => ({
         requestMenu: {
           menuId: folderMenu.menu.id,
           menuQuantity: folderMenu.quantity,
@@ -150,14 +191,25 @@ export default function FolderDetailPage() {
   };
 
   const handleMenuDetailOpen = (folderMenu: FolderDetailMenu) => {
-    navigate(getMealDetailPath(dateKey, mealType, folderMenu.menu.id), {
-      state: {
-        afterAddReturnPath: folderDetailPath,
-        backReturnPath: folderDetailPath,
-        initialMode: folderMenu.inputMode,
-        initialQuantity: folderMenu.quantity,
+    const menuSelectionFlowId = createMenuSelectionFlow({
+      menuSelectionFlowTarget: MENU_SELECTION_FLOW_TARGET.MEAL_RECORD,
+      menuSelectionCompletionReturnPath: folderDetailPath,
+      relatedMealRecordDateKey: dateKey,
+      relatedMealRecordMealType: mealType,
+      initialMenuServingByMenuId: {
+        [folderMenu.menu.id]: {
+          menuQuantity: folderMenu.quantity,
+          menuInputMode: folderMenu.inputMode,
+        },
       },
     });
+
+    navigate(
+      getMenuSelectionFlowMenuDetailPath({
+        menuSelectionFlowId,
+        menuId: folderMenu.menu.id,
+      }),
+    );
   };
 
   const handleToggleMenuSelection = (folderMenu: FolderDetailMenu) => {

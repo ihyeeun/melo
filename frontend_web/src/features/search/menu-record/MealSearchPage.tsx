@@ -8,43 +8,22 @@ import {
   MAX_MEAL_RECORD_MENUS,
   MEAL_RECORD_MENU_LIMIT_MESSAGE,
 } from "@/features/meal-record/constants/menu.constants";
+import { useMenuCacheItems } from "@/features/meal-record/hooks/queries/menuCache";
 import {
   formatMenuDraftKey,
-  useMenuDraftMenus,
-  useMenuDraftRemove,
-  useMenuDraftSelectedCount,
   useMenuDraftStore,
-  useMenuDraftUpsert,
-  useMenuDraftUpsertPreviews,
   useSyncMenuDraftWithDayMeals,
 } from "@/features/meal-record/stores/menuDraft.store";
+import { getMealType, getSafeDateKey } from "@/features/meal-record/utils/mealRecord.queryParams";
+import { useMenuSelectionFlowAdapter } from "@/features/menu-selection-flow/hooks/useMenuSelectionFlowAdapter";
+import { MENU_SELECTION_FLOW_TARGET } from "@/features/menu-selection-flow/stores/menuSelectionFlow.store";
 import {
-  getMealType,
-  getSafeDateKey,
-  getSafeKeyword,
-} from "@/features/meal-record/utils/mealRecord.queryParams";
-import {
-  FOLDER_MENU_LIMIT_MESSAGE,
-  MAX_FOLDER_MENUS,
-} from "@/features/personal-menu/folder/constants/folder.constants";
-import {
-  useFolderDraftRemoveSelectedMenu,
-  useFolderDraftSelectedCount,
-  useFolderDraftSelectedMenus,
-  useFolderDraftUpsertSelectedMenu,
-} from "@/features/personal-menu/folder/stores/folderDraft.store";
-import {
-  MAX_MENU_SET_MENUS,
-  MENU_SET_MENU_LIMIT_MESSAGE,
-} from "@/features/personal-menu/set/constants/menuSet.constants";
+  getMenuSelectionFlowIdFromSearchParams,
+  getMenuSelectionFlowMenuDetailPath,
+  getMenuSelectionFlowPath,
+} from "@/features/menu-selection-flow/utils/menuSelectionFlowRoutes";
 import { useMenuSetListInfiniteQuery } from "@/features/personal-menu/set/hooks/queries/useMenuSetListInfiniteQuery";
-import {
-  useMenuSetDraftClearDraft,
-  useMenuSetDraftRemoveSelectedMenu,
-  useMenuSetDraftSelectedCount,
-  useMenuSetDraftSelectedMenus,
-  useMenuSetDraftUpsertSelectedMenu,
-} from "@/features/personal-menu/set/stores/menuSetDraft.store";
+import { useMenuSetDraftClearDraft } from "@/features/personal-menu/set/stores/menuSetDraft.store";
 import RegisterBottomSheet from "@/features/search/components/RegisterBottomSheet";
 import {
   useFolderListInfiniteQuery,
@@ -57,12 +36,10 @@ import {
 import { PATH } from "@/router/path";
 import {
   getFolderDetailPath,
-  getFolderMenuDetailPath,
   getMealDetailPath,
   getMealRecordPath,
   getMenuSetDetailPath,
-  getMenuSetMenuDetailPath,
-  getPathWithMealMode,
+  getPathWithMeal,
 } from "@/router/pathHelpers";
 import { type MealType } from "@/shared/api/types/api.dto";
 import type {
@@ -88,8 +65,6 @@ import styles from "../styles/MealSearch.module.css";
 
 const MENU_SEARCH_PAGE_LIMIT = 20;
 const DIRECT_REGISTER_BUTTON_INTERVAL = 15;
-const FOLDER_SEARCH_MODE = "folder";
-const SET_SEARCH_MODE = "set";
 const PERSONAL_MENU_TAB = {
   FREQUENTLY_RECORDED: "frequently-recorded",
   FOLDER: "folder",
@@ -113,28 +88,6 @@ function getDefaultConsumedWeight(weight: number) {
   return typeof weight === "number" && Number.isFinite(weight) && weight > 0 ? weight : 1;
 }
 
-function getSafeInternalReturnPath(value: string | null) {
-  const rawPath = value?.trim();
-
-  if (!rawPath?.startsWith("/")) {
-    return null;
-  }
-
-  let url: URL;
-
-  try {
-    url = new URL(rawPath, window.location.origin);
-  } catch {
-    return null;
-  }
-
-  if (url.origin !== window.location.origin) {
-    return null;
-  }
-
-  return `${url.pathname}${url.search}${url.hash}`;
-}
-
 export default function MealSearchPage() {
   const navigate = useNavigate();
   const { isTop } = useActivity();
@@ -142,13 +95,9 @@ export default function MealSearchPage() {
 
   const dateKey = getSafeDateKey(searchParams.get("date"));
   const mealType = getMealType(searchParams.get("mealType"));
-  const initialKeyword = getSafeKeyword(searchParams.get("keyword"));
-  const isFolderSearchMode = searchParams.get("mode") === FOLDER_SEARCH_MODE;
-  const isSetSearchMode = searchParams.get("mode") === SET_SEARCH_MODE;
-  const isPersonalMenuEditSearchMode = isFolderSearchMode || isSetSearchMode;
-  const personalMenuEditMode = isFolderSearchMode ? "folder" : isSetSearchMode ? "set" : null;
-  const [submittedKeyword, setSubmittedKeyword] = useState(initialKeyword);
-  const [searchKeyword, setSearchKeyword] = useState(initialKeyword);
+  const menuSelectionFlowId = getMenuSelectionFlowIdFromSearchParams(searchParams);
+  const [submittedKeyword, setSubmittedKeyword] = useState("");
+  const [searchKeyword, setSearchKeyword] = useState("");
   const [activePersonalMenuTab, setActivePersonalMenuTab] = useState<PersonalMenuTab>(
     PERSONAL_MENU_TAB.FREQUENTLY_RECORDED,
   );
@@ -159,6 +108,17 @@ export default function MealSearchPage() {
   const menuSetLoadMoreRef = useRef<HTMLDivElement>(null);
   const draftKey = formatMenuDraftKey(dateKey, mealType);
   const hasSearchKeyword = searchKeyword.trim().length > 0;
+  const menuSelectionFlowAdapter = useMenuSelectionFlowAdapter({
+    fallbackMealRecordDateKey: dateKey,
+    fallbackMealRecordMealType: mealType,
+    fallbackMenuSelectionFlowTarget: MENU_SELECTION_FLOW_TARGET.MEAL_RECORD,
+    menuSelectionFlowId,
+  });
+  const isFolderSearchMode =
+    menuSelectionFlowAdapter.menuSelectionFlowTarget === MENU_SELECTION_FLOW_TARGET.FOLDER;
+  const isSetSearchMode =
+    menuSelectionFlowAdapter.menuSelectionFlowTarget === MENU_SELECTION_FLOW_TARGET.MENU_SET;
+  const isPersonalMenuEditSearchMode = isFolderSearchMode || isSetSearchMode;
   const visiblePersonalMenuTab =
     isPersonalMenuEditSearchMode && activePersonalMenuTab === PERSONAL_MENU_TAB.FOLDER
       ? PERSONAL_MENU_TAB.FREQUENTLY_RECORDED
@@ -178,50 +138,16 @@ export default function MealSearchPage() {
     isPending: isDayMealsPending,
     isError: isDayMealsError,
   } = useDayMealsQuery(dateKey, { enabled: !isPersonalMenuEditSearchMode });
-  const upsertMenu = useMenuDraftUpsert();
-  const upsertPreviews = useMenuDraftUpsertPreviews();
-  const removeMenu = useMenuDraftRemove();
-  const mealSelectedMenus = useMenuDraftMenus(dateKey, mealType);
-  const mealSelectedCount = useMenuDraftSelectedCount(dateKey, mealType);
   const draft = useMenuDraftStore((store) => store.drafts[draftKey]);
   const hasDraft = Boolean(draft);
-  const upsertFolderSelectedMenu = useFolderDraftUpsertSelectedMenu();
-  const removeFolderSelectedMenu = useFolderDraftRemoveSelectedMenu();
-  const folderSelectedMenus = useFolderDraftSelectedMenus();
-  const folderSelectedCount = useFolderDraftSelectedCount();
-  const upsertMenuSetSelectedMenu = useMenuSetDraftUpsertSelectedMenu();
-  const removeMenuSetSelectedMenu = useMenuSetDraftRemoveSelectedMenu();
-  const menuSetSelectedMenus = useMenuSetDraftSelectedMenus();
-  const menuSetSelectedCount = useMenuSetDraftSelectedCount();
   const clearMenuSetDraft = useMenuSetDraftClearDraft();
-  const selectedCount = isFolderSearchMode
-    ? folderSelectedCount
-    : isSetSearchMode
-      ? menuSetSelectedCount
-      : mealSelectedCount;
+  const selectedCount = menuSelectionFlowAdapter.selectedCount;
+  const selectedMenuIdSet = menuSelectionFlowAdapter.selectedMenuIdSet;
   const isFoodCameraBlocked = useIsFeatureBlocked(FEATURE_GUARD.FOOD_CAMERA);
   const showFoodCameraButton = !isPersonalMenuEditSearchMode && !isFoodCameraBlocked;
-  const personalMenuEditReturnPath = getSafeInternalReturnPath(searchParams.get("returnPath"));
   const personalMenuEditFallbackPath =
-    personalMenuEditReturnPath ??
+    menuSelectionFlowAdapter.menuSelectionCompletionReturnPath ??
     (isFolderSearchMode ? PATH.CREATE_FOLDER : isSetSearchMode ? PATH.CREATE_MENU_SET : null);
-
-  const buildPersonalMenuEditSearchPath = (keyword = submittedKeyword) => {
-    const params = new URLSearchParams();
-
-    if (personalMenuEditMode) {
-      params.set("mode", personalMenuEditMode);
-    }
-    if (keyword.trim().length > 0) {
-      params.set("keyword", keyword.trim());
-    }
-    if (personalMenuEditReturnPath) {
-      params.set("returnPath", personalMenuEditReturnPath);
-    }
-
-    const query = params.toString();
-    return `${PATH.MEAL_RECORD_ADD_SEARCH}${query ? `?${query}` : ""}`;
-  };
 
   const {
     data: frequentlyRecordedMenus,
@@ -250,24 +176,6 @@ export default function MealSearchPage() {
     limit: MENU_SEARCH_PAGE_LIMIT,
   });
 
-  const selectedMenuIdSet = useMemo(
-    () =>
-      new Set(
-        isFolderSearchMode
-          ? folderSelectedMenus.map((menu) => menu.requestMenu.menuId)
-          : isSetSearchMode
-            ? menuSetSelectedMenus.map((menu) => menu.requestMenu.menuId)
-          : mealSelectedMenus.map((menu) => menu.id),
-      ),
-    [
-      folderSelectedMenus,
-      isFolderSearchMode,
-      isSetSearchMode,
-      mealSelectedMenus,
-      menuSetSelectedMenus,
-    ],
-  );
-
   const {
     data: searchResults,
     fetchNextPage,
@@ -282,12 +190,15 @@ export default function MealSearchPage() {
   });
 
   const firstSearchResult = searchResults?.pages[0];
-  const searchMenuList = useMemo(
-    () => searchResults?.pages.flatMap((page) => page.menu_list) ?? [],
+  const searchMenuIds = useMemo(
+    () => searchResults?.pages.flatMap((page) => page.menu_ids) ?? [],
     [searchResults?.pages],
   );
-  const frequentlyRecordedMenuList = frequentlyRecordedMenus?.menu_list ?? [];
-  const registeredMenuList = registeredMenus?.menu_list ?? [];
+  const searchMenuList = useMenuCacheItems(searchMenuIds);
+  const frequentlyRecordedMenuIds = frequentlyRecordedMenus?.menu_ids ?? [];
+  const registeredMenuIds = registeredMenus?.menu_ids ?? [];
+  const frequentlyRecordedMenuList = useMenuCacheItems(frequentlyRecordedMenuIds);
+  const registeredMenuList = useMenuCacheItems(registeredMenuIds);
   const menuSetList = useMemo(
     () => menuSetPages?.pages.flatMap((page) => page.set_list) ?? [],
     [menuSetPages?.pages],
@@ -332,95 +243,34 @@ export default function MealSearchPage() {
   const handleToggleMenuSelection = (menu: MenuSimpleResponseDto) => {
     const menuId = menu.id;
 
-    if (isFolderSearchMode) {
-      if (selectedMenuIdSet.has(menuId)) {
-        removeFolderSelectedMenu(menuId);
-        return;
-      }
-
-      if (folderSelectedCount >= MAX_FOLDER_MENUS) {
-        toast.warning(FOLDER_MENU_LIMIT_MESSAGE);
-        return;
-      }
-
-      upsertFolderSelectedMenu({
-        viewMenu: menu,
-        menuQuantity: getDefaultConsumedWeight(menu.weight),
-      });
-      return;
-    }
-
-    if (isSetSearchMode) {
-      if (selectedMenuIdSet.has(menuId)) {
-        removeMenuSetSelectedMenu(menuId);
-        return;
-      }
-
-      if (menuSetSelectedCount >= MAX_MENU_SET_MENUS) {
-        toast.warning(MENU_SET_MENU_LIMIT_MESSAGE);
-        return;
-      }
-
-      upsertMenuSetSelectedMenu({
-        viewMenu: menu,
-        menuQuantity: getDefaultConsumedWeight(menu.weight),
-      });
-      return;
-    }
-
     if (selectedMenuIdSet.has(menuId)) {
-      removeMenu({ key: draftKey, id: menuId });
+      menuSelectionFlowAdapter.removeSelectedMenu(menuId);
       return;
     }
 
-    if (selectedCount + 1 > MAX_MEAL_RECORD_MENUS) {
-      toast.warning(MEAL_RECORD_MENU_LIMIT_MESSAGE);
+    if (selectedCount >= menuSelectionFlowAdapter.maxSelectableMenuCount) {
+      toast.warning(menuSelectionFlowAdapter.menuCountLimitMessage);
       return;
     }
 
-    upsertMenu({
-      key: draftKey,
-      id: menuId,
-      quantity: getDefaultConsumedWeight(menu.weight),
-    });
-
-    upsertPreviews({
-      key: draftKey,
-      previews: [
-        {
-          id: menu.id,
-          name: menu.name,
-          brand: menu.brand,
-          unit_quantity: menu.unit_quantity,
-          calories: menu.calories,
-          weight: menu.weight,
-          unit: menu.unit,
-          data_source: menu.data_source,
-        },
-      ],
+    menuSelectionFlowAdapter.upsertSelectedMenu({
+      viewMenu: menu,
+      menuQuantity: getDefaultConsumedWeight(menu.weight),
     });
   };
 
   const handleMenuDetailPageOpen = (menuId: number) => {
-    if (isFolderSearchMode) {
-      navigate(getFolderMenuDetailPath(menuId), {
-        state: {
-          backReturnPath: buildPersonalMenuEditSearchPath(searchKeyword),
-        },
-      });
+    if (menuSelectionFlowId) {
+      navigate(
+        getMenuSelectionFlowMenuDetailPath({
+          menuSelectionFlowId,
+          menuId,
+        }),
+      );
       return;
     }
 
-    if (isSetSearchMode) {
-      navigate(getMenuSetMenuDetailPath(menuId), {
-        state: {
-          backReturnPath: buildPersonalMenuEditSearchPath(searchKeyword),
-        },
-      });
-      return;
-    }
-
-    navigate(getMealDetailPath(dateKey, mealType, menuId, searchKeyword));
+    navigate(getMealDetailPath(dateKey, mealType, menuId));
   };
 
   const handleApplySelectedMenus = () => {
@@ -458,49 +308,34 @@ export default function MealSearchPage() {
   };
   const handleNavigateNutrientAdd = () => {
     setIsDirectInputSheetOpen(false);
-    navigate(
-      getPathWithMealMode(
-        PATH.NUTRIENT_ADD_REGISTER,
-        dateKey,
-        mealType,
-        personalMenuEditMode,
-        submittedKeyword,
-      ),
-      {
-        state: isPersonalMenuEditSearchMode
-          ? {
-              backReturnPath: buildPersonalMenuEditSearchPath(submittedKeyword),
-              ...(personalMenuEditFallbackPath
-                ? { afterAddReturnPath: personalMenuEditFallbackPath }
-                : {}),
-            }
-          : undefined,
-      },
-    );
+
+    if (menuSelectionFlowId) {
+      navigate(
+        getMenuSelectionFlowPath({
+          path: PATH.NUTRIENT_ADD_REGISTER,
+          menuSelectionFlowId,
+        }),
+      );
+      return;
+    }
+
+    navigate(getPathWithMeal(PATH.NUTRIENT_ADD_REGISTER, dateKey, mealType));
   };
 
   const handleNavigateNutrientCamera = () => {
     setIsDirectInputSheetOpen(false);
 
-    navigate(
-      getPathWithMealMode(
-        PATH.NUTRIENT_ADD,
-        dateKey,
-        mealType,
-        personalMenuEditMode,
-        submittedKeyword,
-      ),
-      {
-        state: isPersonalMenuEditSearchMode
-          ? {
-              backReturnPath: buildPersonalMenuEditSearchPath(submittedKeyword),
-              ...(personalMenuEditFallbackPath
-                ? { afterAddReturnPath: personalMenuEditFallbackPath }
-                : {}),
-            }
-          : undefined,
-      },
-    );
+    if (menuSelectionFlowId) {
+      navigate(
+        getMenuSelectionFlowPath({
+          path: PATH.NUTRIENT_ADD,
+          menuSelectionFlowId,
+        }),
+      );
+      return;
+    }
+
+    navigate(getPathWithMeal(PATH.NUTRIENT_ADD, dateKey, mealType));
   };
 
   const handleCameraClick = () => {
@@ -512,7 +347,7 @@ export default function MealSearchPage() {
       return;
     }
 
-    navigate(getPathWithMealMode(PATH.FOOD_CAMERA, dateKey, mealType, null));
+    navigate(getPathWithMeal(PATH.FOOD_CAMERA, dateKey, mealType));
   };
 
   const handleCreateMenuSet = () => {
@@ -786,7 +621,7 @@ export default function MealSearchPage() {
     if (registeredMenuList.length > 0) {
       return (
         <div className={styles.compactResultList}>
-          <div className={styles.folderName}>
+          <div className={`${styles.folderName} ${styles.marginTop}`}>
             <h3 className="typo-title4 textNormal">음식</h3>
             <Button
               className={styles.directRegisterPromptAction}
@@ -831,7 +666,7 @@ export default function MealSearchPage() {
     if (menuSetList.length > 0) {
       return (
         <>
-          <div className={styles.folderName}>
+          <div className={`${styles.folderName} ${styles.marginTop}`}>
             <h3 className="typo-title4 textNormal">세트</h3>
             <Button
               className={styles.directRegisterPromptAction}
@@ -889,7 +724,7 @@ export default function MealSearchPage() {
       <div className={styles.registeredSectionList}>
         {!isRegisteredMenusError && registeredMenuList.length > 0 ? (
           <section className={styles.registeredResultSection}>
-            <div className={styles.folderName}>
+            <div className={`${styles.folderName} ${styles.marginTop}`}>
               <h3 className="typo-title4 textNormal">음식</h3>
               <Button
                 className={styles.directRegisterPromptAction}
@@ -911,7 +746,7 @@ export default function MealSearchPage() {
 
         {!isMenuSetsError && menuSetList.length > 0 ? (
           <section className={styles.registeredResultSection}>
-            <div className={styles.folderName}>
+            <div className={`${styles.folderName} ${styles.marginTop}`}>
               <h3 className="typo-title4 textNormal">세트</h3>
               <Button
                 className={styles.directRegisterPromptAction}

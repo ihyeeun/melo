@@ -1,5 +1,14 @@
 import { useCallback, useEffect } from "react";
 
+import {
+  MENU_SELECTION_FLOW_TARGET,
+  useMenuSelectionFlowCreateFlow,
+} from "@/features/menu-selection-flow/stores/menuSelectionFlow.store";
+import {
+  getMenuSelectionFlowMenuDetailPath,
+  getMenuSelectionFlowSearchPath,
+  isDraftEditingMenuSelectionNavigationPath,
+} from "@/features/menu-selection-flow/utils/menuSelectionFlowRoutes";
 import { useUpsertMenuSetMutation } from "@/features/personal-menu/set/hooks/mutations/menuSet.mutation";
 import {
   useMenuSetDraftBuildUpsertRequest,
@@ -12,7 +21,6 @@ import {
 } from "@/features/personal-menu/set/stores/menuSetDraft.store";
 import styles from "@/features/personal-menu/set/styles/CreateMenuSetPage.module.css";
 import { PATH } from "@/router/path";
-import { getMenuSetMenuDetailPath, getMenuSetMenuSearchPath } from "@/router/pathHelpers";
 import { Button } from "@/shared/commons/button/Button";
 import { MealMenuCard } from "@/shared/commons/card/MealMenuCard";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
@@ -30,29 +38,9 @@ function limitMenuSetName(value: string) {
   return Array.from(value).slice(0, MENU_SET_NAME_MAX_LENGTH).join("");
 }
 
-function isMenuSetCreationFlowPath(path: string) {
-  const url = new URL(path, window.location.origin);
-
-  if (url.pathname === PATH.CREATE_MENU_SET) {
-    return true;
-  }
-
-  if (url.searchParams.get("mode") !== "set") {
-    return false;
-  }
-
-  return (
-    url.pathname === PATH.MEAL_RECORD_ADD_SEARCH ||
-    url.pathname === PATH.MEAL_DETAIL ||
-    url.pathname === PATH.NUTRIENT_ADD ||
-    url.pathname === PATH.NUTRIENT_ADD_REGISTER ||
-    url.pathname === PATH.NUTRIENT_ADD_MODIFY ||
-    url.pathname === PATH.NUTRIENT_CAMERA
-  );
-}
-
 export default function CreateMenuSetPage() {
   const navigate = useNavigate();
+  const createMenuSelectionFlow = useMenuSelectionFlowCreateFlow();
   const setId = useMenuSetDraftSetId();
   const setName = useMenuSetDraftName();
   const selectedMenus = useMenuSetDraftSelectedMenus();
@@ -85,7 +73,12 @@ export default function CreateMenuSetPage() {
 
   useEffect(() => {
     return () => {
-      if (isMenuSetCreationFlowPath(window.location.href)) {
+      if (
+        isDraftEditingMenuSelectionNavigationPath({
+          currentPath: window.location.href,
+          draftPagePath: PATH.CREATE_MENU_SET,
+        })
+      ) {
         return;
       }
 
@@ -93,12 +86,25 @@ export default function CreateMenuSetPage() {
     };
   }, [clearDraft]);
 
+  const createMenuSetMenuSelectionFlow = () =>
+    createMenuSelectionFlow({
+      menuSelectionFlowTarget: MENU_SELECTION_FLOW_TARGET.MENU_SET,
+      menuSelectionCompletionReturnPath: PATH.CREATE_MENU_SET,
+    });
+
   const handleAddMenu = () => {
-    navigate(getMenuSetMenuSearchPath());
+    const menuSelectionFlowId = createMenuSetMenuSelectionFlow();
+    navigate(getMenuSelectionFlowSearchPath(menuSelectionFlowId));
   };
 
   const handleMenuDetailOpen = (menuId: number) => {
-    navigate(getMenuSetMenuDetailPath(menuId));
+    const menuSelectionFlowId = createMenuSetMenuSelectionFlow();
+    navigate(
+      getMenuSelectionFlowMenuDetailPath({
+        menuSelectionFlowId,
+        menuId,
+      }),
+    );
   };
 
   const handleBack = () => {

@@ -12,12 +12,15 @@ import {
   isCameraCaptureCancelled,
 } from "@/features/camera/utils/cameraCapture";
 import { getMealType, getSafeDateKey } from "@/features/meal-record/utils/mealRecord.queryParams";
-import { PATH } from "@/router/path";
 import {
-  getMealRecordPath,
-  getPathWithMealMode,
-  type PersonalMenuEditMode,
-} from "@/router/pathHelpers";
+  useMenuSelectionFlowById,
+} from "@/features/menu-selection-flow/stores/menuSelectionFlow.store";
+import {
+  getMenuSelectionFlowIdFromSearchParams,
+  getMenuSelectionFlowPath,
+} from "@/features/menu-selection-flow/utils/menuSelectionFlowRoutes";
+import { PATH } from "@/router/path";
+import { getPathWithMeal } from "@/router/pathHelpers";
 import { requestNativeCameraCapture } from "@/shared/api/bridge/nativeBridge";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
 import { CheckButtonModal } from "@/shared/commons/modals/CheckButtonModal";
@@ -30,11 +33,7 @@ import {
 } from "@/shared/navigation/stackflowNavigation";
 
 type NutritionLabelCreateLocationState = {
-  afterAddReturnPath?: string;
-  backReturnPath?: string;
   brand?: string;
-  keyword?: string;
-  mode?: PersonalMenuEditMode;
   name?: string;
 };
 
@@ -52,34 +51,46 @@ export default function NutrientCameraPage() {
     () => (location.state ?? {}) as NutritionLabelCreateLocationState,
     [location.state],
   );
-  const dateKey = getSafeDateKey(searchParams.get("date"));
-  const mealType = getMealType(searchParams.get("mealType"));
-  const editMode = getPersonalMenuEditMode(searchParams.get("mode") ?? locationState.mode ?? null);
-  const searchKeyword = searchParams.get("keyword")?.trim() || locationState.keyword;
+  const menuSelectionFlowId = getMenuSelectionFlowIdFromSearchParams(searchParams);
+  const menuSelectionFlow = useMenuSelectionFlowById(menuSelectionFlowId);
+  const dateKey = getSafeDateKey(
+    searchParams.get("date") ?? menuSelectionFlow?.relatedMealRecordDateKey ?? null,
+  );
+  const mealType = getMealType(
+    searchParams.get("mealType") ?? menuSelectionFlow?.relatedMealRecordMealType ?? null,
+  );
   const foodName = searchParams.get("name") ?? locationState.name ?? "";
   const brandName = searchParams.get("brand") ?? locationState.brand ?? "";
   const autoTriggeredRef = useRef(false);
 
   const returnFromCameraPage = useCallback(() => {
+    const nutrientAddFallbackPath = menuSelectionFlowId
+      ? getMenuSelectionFlowPath({
+          path: PATH.NUTRIENT_ADD,
+          menuSelectionFlowId,
+          extraSearchParams: {
+            name: foodName,
+            brand: brandName,
+          },
+        })
+      : getPathWithMeal(PATH.NUTRIENT_ADD, dateKey, mealType);
+
     navigateBack({
-      fallbackTo: getPathWithMealMode(
-        PATH.NUTRIENT_ADD,
-        dateKey,
-        mealType,
-        editMode,
-        searchKeyword,
-      ),
+      fallbackTo: nutrientAddFallbackPath,
       fallbackOptions: {
         state: {
-          ...locationState,
           name: foodName,
           brand: brandName,
-          keyword: searchKeyword,
-          mode: editMode ?? undefined,
         },
       },
     });
-  }, [brandName, dateKey, editMode, foodName, locationState, mealType, searchKeyword]);
+  }, [
+    brandName,
+    dateKey,
+    foodName,
+    mealType,
+    menuSelectionFlowId,
+  ]);
 
   const handleCameraActions = useCallback(async () => {
     if (isUploading) return;
@@ -108,21 +119,12 @@ export default function NutrientCameraPage() {
       setCapturedPreviewSrc(getCapturedImagePreviewSrc(capturedImage));
       setIsUploading(true);
       const imageData = await uploadImage(capturedImage);
-      const registerPath = getPathWithMealMode(
-        PATH.NUTRIENT_ADD_REGISTER,
-        dateKey,
-        mealType,
-        editMode,
-        searchKeyword,
-      );
-      const searchReturnPath = getPathWithMealMode(
-        PATH.MEAL_RECORD_ADD_SEARCH,
-        dateKey,
-        mealType,
-        editMode,
-        searchKeyword,
-      );
-
+      const registerPath = menuSelectionFlowId
+        ? getMenuSelectionFlowPath({
+            path: PATH.NUTRIENT_ADD_REGISTER,
+            menuSelectionFlowId,
+          })
+        : getPathWithMeal(PATH.NUTRIENT_ADD_REGISTER, dateKey, mealType);
       navigation(registerPath, {
         replace: true,
         animate: false,
@@ -133,16 +135,6 @@ export default function NutrientCameraPage() {
           entrySource: "camera" as const,
           dateKey,
           mealType,
-          keyword: searchKeyword,
-          mode: editMode ?? undefined,
-          backReturnPath: locationState.backReturnPath ?? searchReturnPath,
-          afterAddReturnPath:
-            locationState.afterAddReturnPath ??
-            (editMode === "folder"
-              ? PATH.CREATE_FOLDER
-              : editMode === "set"
-                ? PATH.CREATE_MENU_SET
-                : getMealRecordPath(dateKey, mealType)),
         },
       });
 
@@ -155,16 +147,13 @@ export default function NutrientCameraPage() {
     }
   }, [
     dateKey,
-    editMode,
     foodName,
     brandName,
     isUploading,
-    locationState.afterAddReturnPath,
-    locationState.backReturnPath,
     mealType,
+    menuSelectionFlowId,
     navigation,
     returnFromCameraPage,
-    searchKeyword,
     uploadImage,
   ]);
 
@@ -207,12 +196,4 @@ export default function NutrientCameraPage() {
       />
     </section>
   );
-}
-
-function getPersonalMenuEditMode(value: string | null): PersonalMenuEditMode | null {
-  if (value === "folder" || value === "set") {
-    return value;
-  }
-
-  return null;
 }

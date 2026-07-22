@@ -4,9 +4,16 @@ import { useMealDetailQuery } from "@/features/meal-record/hooks/queries/useMeal
 import {
   getMealType,
   getSafeDateKey,
-  getSafeKeyword,
   getSafeMenuId,
 } from "@/features/meal-record/utils/mealRecord.queryParams";
+import {
+  useMenuSelectionFlowById,
+} from "@/features/menu-selection-flow/stores/menuSelectionFlow.store";
+import {
+  getMenuSelectionFlowIdFromSearchParams,
+  getMenuSelectionFlowMenuDetailPath,
+  getMenuSelectionFlowSearchPath,
+} from "@/features/menu-selection-flow/utils/menuSelectionFlowRoutes";
 import { type RegisterManualMenuPayload } from "@/features/nutrient-entry/api/nutrient";
 import { NutrientDetailForm } from "@/features/nutrient-entry/components/NutrientDetailForm";
 import {
@@ -23,11 +30,8 @@ import {
 } from "@/features/nutrient-entry/utils/nutrientFields";
 import { PATH } from "@/router/path";
 import {
-  getFolderMenuDetailPath,
   getMealDetailPath,
   getMealRecordPath,
-  getMenuSetMenuDetailPath,
-  type PersonalMenuEditMode,
 } from "@/router/pathHelpers";
 import {
   type MealMenuItem,
@@ -52,18 +56,6 @@ import {
 
 import styles from "./styles/NutrientModifyPage.module.css";
 
-type MealDetailLocationState = {
-  replaceMenuId?: number;
-};
-
-function getPersonalMenuEditMode(value: string | null): PersonalMenuEditMode | null {
-  if (value === "folder" || value === "set") {
-    return value;
-  }
-
-  return null;
-}
-
 function buildInitialFormState(
   menu?: Partial<MealMenuItem> | null,
 ): Partial<RegisterMenuRequestDto> {
@@ -85,10 +77,14 @@ export default function NutrientModifyPage() {
   const locationState = (location.state ?? {}) as NutrientModifyLocationState;
   const menuInState = locationState.menu;
   const menuId = getSafeMenuId(searchParams.get("menuId"));
-  const dateKey = getSafeDateKey(searchParams.get("date"));
-  const mealType = getMealType(searchParams.get("mealType"));
-  const searchKeyword = getSafeKeyword(searchParams.get("keyword"));
-  const editMode = getPersonalMenuEditMode(searchParams.get("mode"));
+  const menuSelectionFlowId = getMenuSelectionFlowIdFromSearchParams(searchParams);
+  const menuSelectionFlow = useMenuSelectionFlowById(menuSelectionFlowId);
+  const dateKey = getSafeDateKey(
+    searchParams.get("date") ?? menuSelectionFlow?.relatedMealRecordDateKey ?? null,
+  );
+  const mealType = getMealType(
+    searchParams.get("mealType") ?? menuSelectionFlow?.relatedMealRecordMealType ?? null,
+  );
 
   const {
     data: fetchedMenu,
@@ -131,10 +127,9 @@ export default function NutrientModifyPage() {
     navigate(-1);
   }, [isMenuError, navigate]);
 
-  const foodName = (locationState.foodName ?? resolvedMenu?.name ?? "").trim();
-  const brandName = (locationState.brandName ?? resolvedMenu?.brand ?? "").trim();
-  const dataSource =
-    locationState.dataSource ?? resolvedMenu?.data_source ?? MENU_DATA_SOURCE.PERSONAL;
+  const foodName = (resolvedMenu?.name ?? "").trim();
+  const brandName = (resolvedMenu?.brand ?? "").trim();
+  const dataSource = resolvedMenu?.data_source ?? MENU_DATA_SOURCE.PERSONAL;
   const isPersonalData = dataSource === MENU_DATA_SOURCE.PERSONAL;
   const unit: MenuUnit =
     formState.unit === MENU_UNIT.MILLILITER ? MENU_UNIT.MILLILITER : MENU_UNIT.GRAM;
@@ -191,19 +186,22 @@ export default function NutrientModifyPage() {
       return getMenuDetailPathByMode(menuId);
     }
 
+    if (menuSelectionFlowId) {
+      return getMenuSelectionFlowSearchPath(menuSelectionFlowId);
+    }
+
     return getMealRecordPath(dateKey, mealType);
   };
 
   const getMenuDetailPathByMode = (targetMenuId: number) => {
-    if (editMode === "folder") {
-      return getFolderMenuDetailPath(targetMenuId);
+    if (menuSelectionFlowId) {
+      return getMenuSelectionFlowMenuDetailPath({
+        menuSelectionFlowId,
+        menuId: targetMenuId,
+      });
     }
 
-    if (editMode === "set") {
-      return getMenuSetMenuDetailPath(targetMenuId);
-    }
-
-    return getMealDetailPath(dateKey, mealType, targetMenuId, searchKeyword);
+    return getMealDetailPath(dateKey, mealType, targetMenuId);
   };
 
   const handleBack = () => {
@@ -275,14 +273,11 @@ export default function NutrientModifyPage() {
 
         toast.success("개인 메뉴로 등록했어요");
         const detailPath = getMenuDetailPathByMode(createdMenuId);
-        const detailPageState: MealDetailLocationState | undefined =
-          menuId !== null && menuId !== createdMenuId ? { replaceMenuId: menuId } : undefined;
 
         navigateBackAndPush({
           count: 2,
           animate: false,
           to: detailPath,
-          pushOptions: { state: detailPageState },
         });
       },
       onError: () => {

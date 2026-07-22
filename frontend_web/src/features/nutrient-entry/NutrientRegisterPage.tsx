@@ -1,89 +1,87 @@
 import {
   getMealType,
   getSafeDateKey,
-  getSafeKeyword,
 } from "@/features/meal-record/utils/mealRecord.queryParams";
+import {
+  useMenuSelectionFlowById,
+} from "@/features/menu-selection-flow/stores/menuSelectionFlow.store";
+import {
+  getMenuSelectionFlowIdFromSearchParams,
+  getMenuSelectionFlowMenuDetailPath,
+  getMenuSelectionFlowSearchPath,
+} from "@/features/menu-selection-flow/utils/menuSelectionFlowRoutes";
 import {
   NutrientRegisterFormPage,
   type NutrientRegisterFormState,
 } from "@/features/nutrient-entry/components/NutrientRegisterFormPage";
 import { PATH } from "@/router/path";
+import { getMealDetailPath, getPathWithMeal } from "@/router/pathHelpers";
 import {
-  getFolderMenuDetailPath,
-  getMealDetailPath,
-  getMealRecordPath,
-  getMenuSetMenuDetailPath,
-  getPathWithMealMode,
-  type PersonalMenuEditMode,
-} from "@/router/pathHelpers";
-import { useLocation, useNavigate, useSearchParams } from "@/shared/navigation/stackflowNavigation";
+  navigateBackAndPush,
+  useLocation,
+  useNavigate,
+  useSearchParams,
+} from "@/shared/navigation/stackflowNavigation";
 
 export default function NutrientRegisterPage() {
   const navigation = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
   const locationState = (location.state ?? {}) as NutrientRegisterFormState;
-  const dateKey = getSafeDateKey(searchParams.get("date") ?? locationState.dateKey ?? null);
-  const mealType = getMealType(searchParams.get("mealType") ?? locationState.mealType ?? null);
-  const searchKeyword = getSafeKeyword(
-    searchParams.get("keyword") ?? locationState.keyword ?? null,
+  const menuSelectionFlowId = getMenuSelectionFlowIdFromSearchParams(searchParams);
+  const menuSelectionFlow = useMenuSelectionFlowById(menuSelectionFlowId);
+  const dateKey = getSafeDateKey(
+    searchParams.get("date") ??
+      locationState.dateKey ??
+      menuSelectionFlow?.relatedMealRecordDateKey ??
+      null,
   );
-  const editMode = getPersonalMenuEditMode(searchParams.get("mode") ?? locationState.mode ?? null);
-  const backFallbackPath = getPathWithMealMode(
-    PATH.MEAL_RECORD_ADD_SEARCH,
-    dateKey,
-    mealType,
-    editMode,
-    searchKeyword,
+  const mealType = getMealType(
+    searchParams.get("mealType") ??
+      locationState.mealType ??
+      menuSelectionFlow?.relatedMealRecordMealType ??
+      null,
   );
-  const backReturnPath = locationState.backReturnPath;
-  const afterAddReturnPath =
-    locationState.afterAddReturnPath ??
-    (editMode === "folder"
-      ? PATH.CREATE_FOLDER
-      : editMode === "set"
-        ? PATH.CREATE_MENU_SET
-        : getMealRecordPath(dateKey, mealType));
+  const backFallbackPath = menuSelectionFlowId
+    ? getMenuSelectionFlowSearchPath(menuSelectionFlowId)
+    : getPathWithMeal(PATH.MEAL_RECORD_ADD_SEARCH, dateKey, mealType);
+  const shouldRemoveCameraEntryScreens = locationState.entrySource === "camera";
 
   const getRegisteredMenuDetailPath = (savedMenuId: number) => {
-    if (editMode === "folder") {
-      return getFolderMenuDetailPath(savedMenuId);
+    if (menuSelectionFlowId) {
+      return getMenuSelectionFlowMenuDetailPath({
+        menuSelectionFlowId,
+        menuId: savedMenuId,
+      });
     }
 
-    if (editMode === "set") {
-      return getMenuSetMenuDetailPath(savedMenuId);
-    }
-
-    return getMealDetailPath(dateKey, mealType, savedMenuId, searchKeyword);
+    return getMealDetailPath(dateKey, mealType, savedMenuId);
   };
 
   return (
     <NutrientRegisterFormPage
       backFallbackPath={backFallbackPath}
-      backReturnPath={backReturnPath}
       brandSearchReturnPath={PATH.NUTRIENT_ADD_REGISTER}
       dateKey={dateKey}
       initialState={locationState}
-      keyword={searchKeyword}
+      menuSelectionFlowId={menuSelectionFlowId}
       mealType={mealType}
-      mode={editMode}
       onRegisteredMenu={(savedMenuId) => {
-        navigation(getRegisteredMenuDetailPath(savedMenuId), {
+        const registeredMenuDetailPath = getRegisteredMenuDetailPath(savedMenuId);
+
+        if (shouldRemoveCameraEntryScreens) {
+          navigateBackAndPush({
+            count: 2,
+            animate: false,
+            to: registeredMenuDetailPath,
+          });
+          return;
+        }
+
+        navigation(registeredMenuDetailPath, {
           replace: true,
-          state: {
-            ...(backReturnPath ? { backReturnPath } : {}),
-            afterAddReturnPath,
-          },
         });
       }}
     />
   );
-}
-
-function getPersonalMenuEditMode(value: string | null): PersonalMenuEditMode | null {
-  if (value === "folder" || value === "set") {
-    return value;
-  }
-
-  return null;
 }
