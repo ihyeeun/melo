@@ -10,7 +10,10 @@ export function useMealDeleteMutation(callbacks?: UseMutationCallback) {
   return useMutation({
     mutationFn: deleteMeal,
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: menuQueryKeys.registered() });
+      await queryClient.invalidateQueries({
+        queryKey: menuQueryKeys.lists(),
+        refetchType: "active",
+      });
       callbacks?.onSuccess?.();
     },
     onError: (error) => {

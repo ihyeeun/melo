@@ -17,6 +17,7 @@ export function useGetFrequentlyRecordedMenus({ enabled = true }: PersonalMenusQ
     queryKey: menuQueryKeys.frequentlyRecorded(),
     queryFn: async () => writeMenuListCache(queryClient, await getFrequentlyRecordedMenus()),
     enabled,
+    staleTime: Infinity,
   });
 }
 
