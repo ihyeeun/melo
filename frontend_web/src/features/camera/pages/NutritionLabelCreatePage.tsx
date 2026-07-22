@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { CameraLoading } from "@/features/camera/components/CameraLoading";
 import { useCreateMenuByNutritionLabelImageMutation } from "@/features/camera/hooks/mutations/useImageRecognitionMutation";
@@ -13,19 +13,34 @@ import {
 } from "@/features/camera/utils/cameraCapture";
 import { getMealType, getSafeDateKey } from "@/features/meal-record/utils/mealRecord.queryParams";
 import { PATH } from "@/router/path";
-import { getMealRecordPath, getMealSearchPath, getPathWithMeal } from "@/router/pathHelpers";
+import {
+  getMealRecordPath,
+  getPathWithMealMode,
+  type PersonalMenuEditMode,
+} from "@/router/pathHelpers";
 import { requestNativeCameraCapture } from "@/shared/api/bridge/nativeBridge";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
 import { CheckButtonModal } from "@/shared/commons/modals/CheckButtonModal";
 import { toast } from "@/shared/commons/toast/toast";
 import {
   navigateBack,
+  useLocation,
   useNavigate,
   useSearchParams,
 } from "@/shared/navigation/stackflowNavigation";
 
+type NutritionLabelCreateLocationState = {
+  afterAddReturnPath?: string;
+  backReturnPath?: string;
+  brand?: string;
+  keyword?: string;
+  mode?: PersonalMenuEditMode;
+  name?: string;
+};
+
 export default function NutrientCameraPage() {
   const navigation = useNavigate();
+  const location = useLocation();
   const [isOpeningCamera, setIsOpeningCamera] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
   const [capturedPreviewSrc, setCapturedPreviewSrc] = useState<string | null>(null);
@@ -33,27 +48,38 @@ export default function NutrientCameraPage() {
     useState<CameraCaptureErrorFeedback | null>(null);
   const { mutateAsync: uploadImage } = useCreateMenuByNutritionLabelImageMutation();
   const [searchParams] = useSearchParams();
+  const locationState = useMemo(
+    () => (location.state ?? {}) as NutritionLabelCreateLocationState,
+    [location.state],
+  );
   const dateKey = getSafeDateKey(searchParams.get("date"));
   const mealType = getMealType(searchParams.get("mealType"));
+  const editMode = getPersonalMenuEditMode(searchParams.get("mode") ?? locationState.mode ?? null);
+  const searchKeyword = searchParams.get("keyword")?.trim() || locationState.keyword;
+  const foodName = searchParams.get("name") ?? locationState.name ?? "";
+  const brandName = searchParams.get("brand") ?? locationState.brand ?? "";
   const autoTriggeredRef = useRef(false);
 
   const returnFromCameraPage = useCallback(() => {
     navigateBack({
-      fallbackTo: getPathWithMeal(
+      fallbackTo: getPathWithMealMode(
         PATH.NUTRIENT_ADD,
         dateKey,
         mealType,
-        searchParams.get("keyword") ?? undefined,
+        editMode,
+        searchKeyword,
       ),
       fallbackOptions: {
         state: {
-          name: searchParams.get("name") ?? "",
-          brand: searchParams.get("brand") ?? "",
-          keyword: searchParams.get("keyword") ?? undefined,
+          ...locationState,
+          name: foodName,
+          brand: brandName,
+          keyword: searchKeyword,
+          mode: editMode ?? undefined,
         },
       },
     });
-  }, [dateKey, mealType, searchParams]);
+  }, [brandName, dateKey, editMode, foodName, locationState, mealType, searchKeyword]);
 
   const handleCameraActions = useCallback(async () => {
     if (isUploading) return;
@@ -82,23 +108,41 @@ export default function NutrientCameraPage() {
       setCapturedPreviewSrc(getCapturedImagePreviewSrc(capturedImage));
       setIsUploading(true);
       const imageData = await uploadImage(capturedImage);
-      const keyword = searchParams.get("keyword")?.trim() || undefined;
-      const registerPath = getPathWithMeal(PATH.NUTRIENT_ADD_REGISTER, dateKey, mealType, keyword);
-      const searchReturnPath = getMealSearchPath(dateKey, mealType, keyword);
+      const registerPath = getPathWithMealMode(
+        PATH.NUTRIENT_ADD_REGISTER,
+        dateKey,
+        mealType,
+        editMode,
+        searchKeyword,
+      );
+      const searchReturnPath = getPathWithMealMode(
+        PATH.MEAL_RECORD_ADD_SEARCH,
+        dateKey,
+        mealType,
+        editMode,
+        searchKeyword,
+      );
 
       navigation(registerPath, {
         replace: true,
         animate: false,
         state: {
           ...imageData, // unit, weight, calories, carbs...
-          name: searchParams.get("name") ?? "",
-          brand: searchParams.get("brand") ?? "",
+          name: foodName,
+          brand: brandName,
           entrySource: "camera" as const,
           dateKey,
           mealType,
-          keyword: keyword ?? undefined,
-          backReturnPath: searchReturnPath,
-          afterAddReturnPath: getMealRecordPath(dateKey, mealType),
+          keyword: searchKeyword,
+          mode: editMode ?? undefined,
+          backReturnPath: locationState.backReturnPath ?? searchReturnPath,
+          afterAddReturnPath:
+            locationState.afterAddReturnPath ??
+            (editMode === "folder"
+              ? PATH.CREATE_FOLDER
+              : editMode === "set"
+                ? PATH.CREATE_MENU_SET
+                : getMealRecordPath(dateKey, mealType)),
         },
       });
 
@@ -109,7 +153,20 @@ export default function NutrientCameraPage() {
     } finally {
       setIsUploading(false);
     }
-  }, [isUploading, navigation, returnFromCameraPage, searchParams, uploadImage, dateKey, mealType]);
+  }, [
+    dateKey,
+    editMode,
+    foodName,
+    brandName,
+    isUploading,
+    locationState.afterAddReturnPath,
+    locationState.backReturnPath,
+    mealType,
+    navigation,
+    returnFromCameraPage,
+    searchKeyword,
+    uploadImage,
+  ]);
 
   useEffect(() => {
     if (autoTriggeredRef.current) return;
@@ -150,4 +207,12 @@ export default function NutrientCameraPage() {
       />
     </section>
   );
+}
+
+function getPersonalMenuEditMode(value: string | null): PersonalMenuEditMode | null {
+  if (value === "folder" || value === "set") {
+    return value;
+  }
+
+  return null;
 }

@@ -68,6 +68,24 @@
   gap: 8px;
 }
 
+.menuActionRow {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+}
+
+.timeButton {
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+}
+
+.menuSetRegisterButton {
+  gap: 6px;
+  white-space: nowrap;
+}
+
 .menuCardSkeleton {
   background-color: var(--bg-white);
   border: 1px solid var(--border-neutral);
@@ -171,10 +189,6 @@
   align-items: center;
   width: 32px;
   height: 32px;
-}
-
-.marginLeftAuto {
-  margin-left: auto;
 }
 
 .timeSheetBody:global(.seed-bottom-sheet__body) {

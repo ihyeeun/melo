@@ -123,6 +123,15 @@ const CreateFolderPage = createLazyActivity(
 const FolderDetailPage = createLazyActivity(
   () => import("@/features/personal-menu/folder/pages/FolderDetailPage"),
 );
+const CreateMenuSetPage = createLazyActivity(
+  () => import("@/features/personal-menu/set/pages/CreateMenuSetPage"),
+);
+const MenuSetRegisterSheetPage = createLazyActivity(
+  () => import("@/features/personal-menu/set/pages/MenuSetRegisterSheetPage"),
+);
+const MenuSetDetailPage = createLazyActivity(
+  () => import("@/features/personal-menu/set/pages/MenuSetDetailPage"),
+);
 const SettingsFeedbackPage = createLazyActivity(
   () => import("@/features/settings/SettingsFeedbackPage"),
 );
@@ -204,6 +213,9 @@ const ACTIVITIES = {
   MealDetail: MealDetailPage,
   CreateFolder: CreateFolderPage,
   FolderDetail: FolderDetailPage,
+  CreateMenuSet: CreateMenuSetPage,
+  MenuSetDetail: MenuSetDetailPage,
+  MenuSetRegisterSheet: MenuSetRegisterSheetPage,
   MenuBoardCamera: MenuBoardCameraPage,
   FoodCamera: FoodCameraPage,
   NutrientAdd: NutrientAddPage,
@@ -246,6 +258,9 @@ const ACTIVITY_ROUTES: Record<keyof typeof ACTIVITIES, RoutePath> = {
   MealDetail: PATH.MEAL_DETAIL,
   CreateFolder: PATH.CREATE_FOLDER,
   FolderDetail: PATH.FOLDER_DETAIL,
+  CreateMenuSet: PATH.CREATE_MENU_SET,
+  MenuSetDetail: PATH.MENU_SET_DETAIL,
+  MenuSetRegisterSheet: PATH.MENU_SET_REGISTER_SHEET,
   MenuBoardCamera: PATH.MENU_BOARD_CAMERA,
   FoodCamera: PATH.FOOD_CAMERA,
   NutrientAdd: PATH.NUTRIENT_ADD,
@@ -276,6 +291,7 @@ const BOTTOM_SHEET_ACTIVITY_NAMES = new Set<ActivityName>([
   "HomeStepsLogSheet",
   "ProfileNicknameSheet",
   "ChatMealRecordSheet",
+  "MenuSetRegisterSheet",
 ]);
 
 const STACK_TRANSITION_DURATION = 270;

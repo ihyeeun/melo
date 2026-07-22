@@ -38,7 +38,12 @@ import {
   toMenuDraftSeed,
 } from "@/features/meal-record/utils/menuDraftSync";
 import { PATH } from "@/router/path";
-import { getMealDetailPath, getMealRecordPath, getMealSearchPath } from "@/router/pathHelpers";
+import {
+  getMealDetailPath,
+  getMealRecordPath,
+  getMealSearchPath,
+  getMenuSetRegisterSheetPath,
+} from "@/router/pathHelpers";
 import {
   type MenuSaveAnalyticsItem,
   trackDiaryMenuSave,
@@ -48,6 +53,7 @@ import {
   type MealServingInputMode,
   type MealTime,
   type MealType,
+  MENU_INPUT_MODE,
 } from "@/shared/api/types/api.dto";
 import type { RegisterMealRequestDto } from "@/shared/api/types/api.request.dto";
 import BottomSheet from "@/shared/commons/bottomSheet/BottomSheet";
@@ -551,6 +557,32 @@ export default function MealRecordPage() {
     navigate(getMealSearchPath(dateKey, mealType));
   };
 
+  const handleMenuSetRegisterOpen = () => {
+    const request = buildRegisterRequest({
+      dateKey,
+      mealType,
+      fallbackImage: mealImage,
+      fallbackMealTime: selectedMealRecordTime,
+    });
+    const menuIds = request.menu_ids ?? [];
+
+    if (menuIds.length === 0) {
+      toast.warning("세트로 등록할 메뉴가 없어요");
+      return;
+    }
+
+    navigate(getMenuSetRegisterSheetPath(dateKey, mealType), {
+      state: {
+        fallbackPath: getMealRecordPath(dateKey, mealType),
+        menus: menuIds.map((menuId, index) => ({
+          id: menuId,
+          quantity: request.menu_quantities?.[index] ?? 1,
+          inputMode: request.menu_input_modes?.[index] ?? MENU_INPUT_MODE.WEIGHT,
+        })),
+      },
+    });
+  };
+
   if (isSummaryReady) return <MealRecordPageSkeleton onBack={handleBack} />;
 
   return (
@@ -612,15 +644,28 @@ export default function MealRecordPage() {
 
           {displayMenuItems.length > 0 ? (
             <div className={styles.menuList}>
-              <Button
-                variant="text"
-                color="normal"
-                className={styles.marginLeftAuto}
-                onClick={handleOpenTimeSheet}
-              >
-                <span>{formattedMealRecordTime}</span>
-                <SystemIcon name="chevron-right-thin" size={20} />
-              </Button>
+              <div className={styles.menuActionRow}>
+                <Button
+                  variant="text"
+                  color="normal"
+                  className={styles.timeButton}
+                  onClick={handleOpenTimeSheet}
+                >
+                  <span>{formattedMealRecordTime}</span>
+                  <SystemIcon name="chevron-right-thin" size={20} />
+                </Button>
+
+                <Button
+                  variant="outlined"
+                  color="primary"
+                  size="small"
+                  className={styles.menuSetRegisterButton}
+                  onClick={handleMenuSetRegisterOpen}
+                >
+                  <SystemIcon name="plus" size={16} />
+                  세트 등록
+                </Button>
+              </div>
 
               {displayMenuItems.map((menu, index) => (
                 <MealMenuCard

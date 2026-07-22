@@ -132,6 +132,7 @@ export interface MealResponseDto {
   menu_list: MenuSimpleResponseDto[];
   menu_quantities: number[];
   menu_input_modes: number[];
+  set_list?: MeaSetResponseDto[];
 }
 
 export interface MealRecordedDatesResponseDto {
@@ -148,11 +149,11 @@ export interface MenuListResponseDto {
 }
 
 export interface FolderListResponseDto {
-  folder_list: FolerListItemResponseDto[];
+  folder_list: FolderListItemResponseDto[];
   next_cursor?: number;
 }
 
-export interface FolerListItemResponseDto {
+export interface FolderListItemResponseDto {
   folder_id: number;
   folder_name: string;
   menu_names: string[];
@@ -163,6 +164,37 @@ export interface FolderDetailResponseDto {
   menu_list: MenuSimpleResponseDto[];
   menu_quantities: number[];
   menu_input_modes: Array<0 | 1>;
+}
+
+export interface MeaSetResponseDto {
+  set_id: number;
+  set_name: string;
+  menu_list: MenuSimpleResponseDto[];
+  total_calories: number;
+}
+
+export interface MenuSetListResponseDto {
+  set_list: MenuSetListItemResponseDto[];
+  next_cursor?: number;
+}
+
+export interface MenuSetListItemResponseDto {
+  set_id: number;
+  set_name: string;
+  menu_names: string[];
+  total_calories: number;
+}
+
+export interface MenuSetDetailResponseDto {
+  set_id: number;
+  set_name: string;
+  menu_list: MenuSimpleResponseDto[];
+  menu_quantities: number[];
+  menu_input_modes: Array<0 | 1>;
+}
+
+export interface MenuSetIdResponseDto {
+  set_id: number;
 }
 
 /* ======

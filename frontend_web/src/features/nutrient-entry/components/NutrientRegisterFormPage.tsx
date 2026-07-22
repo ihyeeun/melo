@@ -14,7 +14,7 @@ import {
   useClearBrandSearchSelection,
 } from "@/features/search/brand/stores/brandSearchSelection.store";
 import { PATH } from "@/router/path";
-import { getPathWithMeal } from "@/router/pathHelpers";
+import { getPathWithMealMode, type PersonalMenuEditMode } from "@/router/pathHelpers";
 import type {
   MealType,
   MenuNutrientFields,
@@ -38,6 +38,7 @@ export type NutrientRegisterFormState = Partial<RegisterMenuRequestDto> & {
   dateKey?: string;
   mealType?: MealType;
   keyword?: string;
+  mode?: PersonalMenuEditMode;
   entrySource?: NutrientRegisterEntrySource;
   brandSearchReturnKey?: string;
 };
@@ -52,6 +53,7 @@ type NutrientRegisterFormPageProps = {
   isSubmitPending?: boolean;
   keyword?: string;
   mealType: MealType;
+  mode?: PersonalMenuEditMode | null;
   onRegisteredMenu?: (savedMenuId: number) => void;
   onSubmit?: (payload: NutrientRegisterSubmitPayload) => void | Promise<void>;
   submitLabel?: string;
@@ -74,6 +76,7 @@ export function NutrientRegisterFormPage({
   isSubmitPending = false,
   keyword = "",
   mealType,
+  mode = null,
   onRegisteredMenu,
   onSubmit,
   submitLabel = "등록하기",
@@ -127,10 +130,11 @@ export function NutrientRegisterFormPage({
         dateKey,
         mealType,
         keyword,
+        mode: mode ?? undefined,
         backReturnPath,
         brandSearchReturnKey,
         returnPath: appendMealQueryToBrandSearchReturn
-          ? getPathWithMeal(brandSearchReturnPath, dateKey, mealType, keyword)
+          ? getPathWithMealMode(brandSearchReturnPath, dateKey, mealType, mode, keyword)
           : brandSearchReturnPath,
       },
     });

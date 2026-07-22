@@ -24,8 +24,20 @@ import {
   useFolderDraftSelectedMenus,
   useFolderDraftUpsertSelectedMenu,
 } from "@/features/personal-menu/folder/stores/folderDraft.store";
+import {
+  MAX_MENU_SET_MENUS,
+  MENU_SET_MENU_LIMIT_MESSAGE,
+} from "@/features/personal-menu/set/constants/menuSet.constants";
+import {
+  useMenuSetDraftSelectedMenus,
+  useMenuSetDraftUpsertSelectedMenu,
+} from "@/features/personal-menu/set/stores/menuSetDraft.store";
 import { PATH } from "@/router/path";
-import { getFolderMenuSearchPath, getMealRecordPath } from "@/router/pathHelpers";
+import {
+  getFolderMenuSearchPath,
+  getMealRecordPath,
+  getMenuSetMenuSearchPath,
+} from "@/router/pathHelpers";
 import {
   type MealMenuItem,
   type MealServingInputMode,
@@ -49,6 +61,7 @@ import { MAX_MEAL_RECORD_MENUS, MEAL_RECORD_MENU_LIMIT_MESSAGE } from "./constan
 import { getMealType, getSafeDateKey, getSafeKeyword } from "./utils/mealRecord.queryParams";
 
 const FOLDER_DETAIL_MODE = "folder";
+const SET_DETAIL_MODE = "set";
 
 type MealDetailLocationState = {
   afterAddReturnPath?: string;
@@ -89,6 +102,8 @@ export default function MealDetailPage() {
   const mealType = getMealType(searchParams.get("mealType"));
   const searchKeyword = getSafeKeyword(searchParams.get("keyword"));
   const isFolderDetailMode = searchParams.get("mode") === FOLDER_DETAIL_MODE;
+  const isSetDetailMode = searchParams.get("mode") === SET_DETAIL_MODE;
+  const isPersonalMenuEditMode = isFolderDetailMode || isSetDetailMode;
   const draftKey = formatMenuDraftKey(dateKey, mealType);
 
   const rawMenuId = searchParams.get("menuId");
@@ -104,6 +119,8 @@ export default function MealDetailPage() {
   const mealSelectedMenus = useMenuDraftMenus(dateKey, mealType);
   const folderSelectedMenus = useFolderDraftSelectedMenus();
   const upsertFolderSelectedMenu = useFolderDraftUpsertSelectedMenu();
+  const menuSetSelectedMenus = useMenuSetDraftSelectedMenus();
+  const upsertMenuSetSelectedMenu = useMenuSetDraftUpsertSelectedMenu();
   const locationState = location.state as MealDetailLocationState | null;
   const replaceMenuIdCandidate = locationState?.replaceMenuId;
   const replaceMenuId =
@@ -119,6 +136,10 @@ export default function MealDetailPage() {
   const getBackFallbackPath = () => {
     if (isFolderDetailMode) {
       return getFolderMenuSearchPath();
+    }
+
+    if (isSetDetailMode) {
+      return getMenuSetMenuSearchPath();
     }
 
     return getMealRecordPath(dateKey, mealType);
@@ -178,6 +199,20 @@ export default function MealDetailPage() {
       };
     }
 
+    if (isSetDetailMode) {
+      const menuSetSelection =
+        menuSetSelectedMenus.find((item) => item.requestMenu.menuId === menuId) ?? null;
+
+      if (!menuSetSelection) {
+        return null;
+      }
+
+      return {
+        quantity: menuSetSelection.requestMenu.menuQuantity,
+        mode: menuSetSelection.requestMenu.menuInputMode,
+      };
+    }
+
     const mealSelection = mealSelectedMenus.find((item) => item.id === menuId) ?? null;
 
     if (mealSelection) {
@@ -188,7 +223,15 @@ export default function MealDetailPage() {
     }
 
     return getSafeInitialSelection(locationState);
-  }, [folderSelectedMenus, isFolderDetailMode, locationState, mealSelectedMenus, menuId]);
+  }, [
+    folderSelectedMenus,
+    isFolderDetailMode,
+    isSetDetailMode,
+    locationState,
+    mealSelectedMenus,
+    menuId,
+    menuSetSelectedMenus,
+  ]);
   const isAlreadyQueued = useMemo(() => {
     if (menuId === null) {
       return false;
@@ -198,12 +241,23 @@ export default function MealDetailPage() {
       return folderSelectedMenus.some((item) => item.requestMenu.menuId === menuId);
     }
 
+    if (isSetDetailMode) {
+      return menuSetSelectedMenus.some((item) => item.requestMenu.menuId === menuId);
+    }
+
     return mealSelectedMenus.some((item) => item.id === menuId);
-  }, [folderSelectedMenus, isFolderDetailMode, mealSelectedMenus, menuId]);
+  }, [
+    folderSelectedMenus,
+    isFolderDetailMode,
+    isSetDetailMode,
+    mealSelectedMenus,
+    menuId,
+    menuSetSelectedMenus,
+  ]);
 
   useEffect(() => {
     // 이미 draft에 담긴 메뉴를 수정한 경우, "담기"를 다시 누르지 않아도 preview를 최신 데이터로 동기화한다.
-    if (isFolderDetailMode || !meal || menuId === null || !existingSelection) {
+    if (isPersonalMenuEditMode || !meal || menuId === null || !existingSelection) {
       return;
     }
 
@@ -222,7 +276,7 @@ export default function MealDetailPage() {
         },
       ],
     });
-  }, [draftKey, existingSelection, isFolderDetailMode, meal, menuId, upsertPreviews]);
+  }, [draftKey, existingSelection, isPersonalMenuEditMode, meal, menuId, upsertPreviews]);
 
   const handleAddMenu = () => {
     if (!meal || !selection) {
@@ -231,6 +285,29 @@ export default function MealDetailPage() {
     }
 
     const nextMenuId = selection.menu.id;
+
+    if (isSetDetailMode) {
+      const nextSelectedMenuIds = new Set(
+        menuSetSelectedMenus.map((item) => item.requestMenu.menuId),
+      );
+      nextSelectedMenuIds.add(nextMenuId);
+
+      if (nextSelectedMenuIds.size > MAX_MENU_SET_MENUS) {
+        toast.warning(MENU_SET_MENU_LIMIT_MESSAGE);
+        return;
+      }
+
+      upsertMenuSetSelectedMenu({
+        viewMenu: selection.menu,
+        menuQuantity: selection.quantity,
+        menuInputMode: selection.mode,
+      });
+
+      navigateBack({
+        fallbackTo: locationState?.backReturnPath ?? getBackFallbackPath(),
+      });
+      return;
+    }
 
     if (isFolderDetailMode) {
       const nextSelectedMenuIds = new Set(
@@ -250,7 +327,7 @@ export default function MealDetailPage() {
       });
 
       navigateBack({
-        fallbackTo: getBackFallbackPath(),
+        fallbackTo: locationState?.backReturnPath ?? getBackFallbackPath(),
       });
       return;
     }
@@ -344,6 +421,12 @@ export default function MealDetailPage() {
       mealType,
       menuId: String(targetMenuId),
     });
+    if (isFolderDetailMode) {
+      modifyQueryParams.set("mode", FOLDER_DETAIL_MODE);
+    }
+    if (isSetDetailMode) {
+      modifyQueryParams.set("mode", SET_DETAIL_MODE);
+    }
     if (searchKeyword.length > 0) {
       modifyQueryParams.set("keyword", searchKeyword);
     }

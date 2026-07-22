@@ -1,18 +1,18 @@
 import { useCallback, useEffect } from "react";
 
-import { useUpsertFolderMutation } from "@/features/personal-menu/folder/hooks/mutations/folder.mutation";
+import { useUpsertMenuSetMutation } from "@/features/personal-menu/set/hooks/mutations/menuSet.mutation";
 import {
-  useFolderDraftBuildUpsertRequest,
-  useFolderDraftClearDraft,
-  useFolderDraftFolderId,
-  useFolderDraftName,
-  useFolderDraftRemoveSelectedMenu,
-  useFolderDraftSelectedMenus,
-  useFolderDraftSetName,
-} from "@/features/personal-menu/folder/stores/folderDraft.store";
-import styles from "@/features/personal-menu/folder/styles/CreateFolderPage.module.css";
+  useMenuSetDraftBuildUpsertRequest,
+  useMenuSetDraftClearDraft,
+  useMenuSetDraftName,
+  useMenuSetDraftRemoveSelectedMenu,
+  useMenuSetDraftSelectedMenus,
+  useMenuSetDraftSetId,
+  useMenuSetDraftSetName,
+} from "@/features/personal-menu/set/stores/menuSetDraft.store";
+import styles from "@/features/personal-menu/set/styles/CreateMenuSetPage.module.css";
 import { PATH } from "@/router/path";
-import { getFolderMenuDetailPath, getFolderMenuSearchPath } from "@/router/pathHelpers";
+import { getMenuSetMenuDetailPath, getMenuSetMenuSearchPath } from "@/router/pathHelpers";
 import { Button } from "@/shared/commons/button/Button";
 import { MealMenuCard } from "@/shared/commons/card/MealMenuCard";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
@@ -24,14 +24,20 @@ import {
   useStackflowBackHandler,
 } from "@/shared/navigation/stackflowNavigation";
 
-function isFolderCreationFlowPath(path: string) {
+const MENU_SET_NAME_MAX_LENGTH = 20;
+
+function limitMenuSetName(value: string) {
+  return Array.from(value).slice(0, MENU_SET_NAME_MAX_LENGTH).join("");
+}
+
+function isMenuSetCreationFlowPath(path: string) {
   const url = new URL(path, window.location.origin);
 
-  if (url.pathname === PATH.CREATE_FOLDER) {
+  if (url.pathname === PATH.CREATE_MENU_SET) {
     return true;
   }
 
-  if (url.searchParams.get("mode") !== "folder") {
+  if (url.searchParams.get("mode") !== "set") {
     return false;
   }
 
@@ -45,30 +51,30 @@ function isFolderCreationFlowPath(path: string) {
   );
 }
 
-export default function CreateFolderPage() {
+export default function CreateMenuSetPage() {
   const navigate = useNavigate();
-  const folderId = useFolderDraftFolderId();
-  const folderName = useFolderDraftName();
-  const selectedMenus = useFolderDraftSelectedMenus();
-  const setFolderName = useFolderDraftSetName();
-  const removeSelectedMenu = useFolderDraftRemoveSelectedMenu();
-  const clearDraft = useFolderDraftClearDraft();
-  const buildUpsertRequest = useFolderDraftBuildUpsertRequest();
-  const isEditMode = typeof folderId === "number";
-  const { mutate: upsertFolder, isPending: isUpsertFolderPending } = useUpsertFolderMutation({
+  const setId = useMenuSetDraftSetId();
+  const setName = useMenuSetDraftName();
+  const selectedMenus = useMenuSetDraftSelectedMenus();
+  const setSetName = useMenuSetDraftSetName();
+  const removeSelectedMenu = useMenuSetDraftRemoveSelectedMenu();
+  const clearDraft = useMenuSetDraftClearDraft();
+  const buildUpsertRequest = useMenuSetDraftBuildUpsertRequest();
+  const isEditMode = typeof setId === "number";
+  const { mutate: upsertMenuSet, isPending: isUpsertMenuSetPending } = useUpsertMenuSetMutation({
     onSuccess: () => {
       clearDraft();
-      toast.success(isEditMode ? "폴더가 수정되었어요" : "폴더가 저장되었어요");
+      toast.success(isEditMode ? "세트가 수정되었어요" : "세트가 저장되었어요");
       navigateBack({
         fallbackTo: PATH.MEAL_RECORD_ADD_SEARCH,
         skipBackHandler: true,
       });
     },
     onError: () => {
-      toast.warning("폴더 저장에 실패했어요", "잠시 후 다시 시도해주세요.");
+      toast.warning("세트 저장에 실패했어요", "잠시 후 다시 시도해주세요.");
     },
   });
-  const canSubmit = folderName.trim().length > 0 && selectedMenus.length > 0;
+  const canSubmit = setName.trim().length > 0 && selectedMenus.length > 0;
 
   const handleBackGuard = useCallback(() => {
     clearDraft();
@@ -79,7 +85,7 @@ export default function CreateFolderPage() {
 
   useEffect(() => {
     return () => {
-      if (isFolderCreationFlowPath(window.location.href)) {
+      if (isMenuSetCreationFlowPath(window.location.href)) {
         return;
       }
 
@@ -88,11 +94,11 @@ export default function CreateFolderPage() {
   }, [clearDraft]);
 
   const handleAddMenu = () => {
-    navigate(getFolderMenuSearchPath());
+    navigate(getMenuSetMenuSearchPath());
   };
 
   const handleMenuDetailOpen = (menuId: number) => {
-    navigate(getFolderMenuDetailPath(menuId));
+    navigate(getMenuSetMenuDetailPath(menuId));
   };
 
   const handleBack = () => {
@@ -104,37 +110,35 @@ export default function CreateFolderPage() {
   };
 
   const handleSubmit = () => {
-    if (isUpsertFolderPending) {
+    if (isUpsertMenuSetPending) {
       return;
     }
 
     if (!canSubmit) {
-      toast.warning(
-        folderName.trim().length === 0 ? "폴더 이름을 입력해주세요" : "음식을 추가해주세요",
-      );
+      toast.warning(setName.trim().length === 0 ? "세트명을 입력해주세요" : "음식을 추가해주세요");
       return;
     }
 
     const request = buildUpsertRequest();
-    upsertFolder(request);
+    upsertMenuSet(request);
   };
 
   return (
     <section className={styles.page}>
-      <PageHeader title={isEditMode ? "폴더 수정" : "새 폴더 만들기"} onBack={handleBack} />
+      <PageHeader title={isEditMode ? "세트 수정" : "새 세트 만들기"} onBack={handleBack} />
 
       <main className={styles.main}>
         <section className={styles.fieldSection}>
-          <label className={`typo-label2 ${styles.fieldLabel}`} htmlFor="folder-name">
-            폴더 이름
+          <label className={`typo-label2 ${styles.fieldLabel}`} htmlFor="set-name">
+            세트명
           </label>
           <input
-            id="folder-name"
-            className={`typo-body2 ${styles.folderNameInput}`}
-            value={folderName}
-            onChange={(event) => setFolderName(event.target.value)}
-            placeholder="폴더 이름을 입력해주세요"
-            maxLength={20}
+            id="set-name"
+            className={`typo-body2 ${styles.setNameInput}`}
+            value={setName}
+            onChange={(event) => setSetName(limitMenuSetName(event.target.value))}
+            placeholder="세트명을 입력해주세요"
+            maxLength={MENU_SET_NAME_MAX_LENGTH}
           />
           <span className={`${styles.marginLeftAuto} typo-caption4 textAssistive`}>
             최대 20자 이내
@@ -168,7 +172,7 @@ export default function CreateFolderPage() {
             </div>
           ) : (
             <div className={`typo-body2 ${styles.emptyMenuState}`}>
-              폴더에 담을 음식을 추가해주세요
+              세트에 담을 음식을 추가해주세요
             </div>
           )}
 
@@ -189,13 +193,13 @@ export default function CreateFolderPage() {
         <Button
           onClick={handleSubmit}
           variant="filled"
-          interaction={canSubmit && !isUpsertFolderPending ? "normal" : "disable"}
+          interaction={canSubmit && !isUpsertMenuSetPending ? "normal" : "disable"}
           size="large"
           color="primary"
           fullWidth
-          disabled={!canSubmit || isUpsertFolderPending}
+          disabled={!canSubmit || isUpsertMenuSetPending}
         >
-          {isUpsertFolderPending ? "저장 중" : isEditMode ? "수정하기" : "저장하기"}
+          {isUpsertMenuSetPending ? "저장 중" : isEditMode ? "수정하기" : "저장하기"}
         </Button>
       </footer>
     </section>

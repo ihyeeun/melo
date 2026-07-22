@@ -1,6 +1,8 @@
 import { PATH } from "@/router/path";
 import type { MealType } from "@/shared/api/types/api.dto";
 
+export type PersonalMenuEditMode = "folder" | "set";
+
 function buildPathQuery(dateKey: string, mealType: MealType, menuId?: number, keyword?: string) {
   const params = new URLSearchParams({
     date: dateKey,
@@ -25,10 +27,26 @@ export function getMealSearchPath(dateKey: string, mealType: MealType, keyword?:
   return `${PATH.MEAL_RECORD_ADD_SEARCH}?${buildPathQuery(dateKey, mealType, undefined, keyword)}`;
 }
 
-export function getFolderMenuSearchPath() {
+export function getFolderMenuSearchPath(returnPath?: string | null) {
   const params = new URLSearchParams({
     mode: "folder",
   });
+
+  if (returnPath) {
+    params.set("returnPath", returnPath);
+  }
+
+  return `${PATH.MEAL_RECORD_ADD_SEARCH}?${params.toString()}`;
+}
+
+export function getMenuSetMenuSearchPath(returnPath?: string | null) {
+  const params = new URLSearchParams({
+    mode: "set",
+  });
+
+  if (returnPath) {
+    params.set("returnPath", returnPath);
+  }
 
   return `${PATH.MEAL_RECORD_ADD_SEARCH}?${params.toString()}`;
 }
@@ -36,6 +54,15 @@ export function getFolderMenuSearchPath() {
 export function getFolderMenuDetailPath(menuId: number) {
   const params = new URLSearchParams({
     mode: "folder",
+    menuId: String(menuId),
+  });
+
+  return `${PATH.MEAL_DETAIL}?${params.toString()}`;
+}
+
+export function getMenuSetMenuDetailPath(menuId: number) {
+  const params = new URLSearchParams({
+    mode: "set",
     menuId: String(menuId),
   });
 
@@ -50,6 +77,20 @@ export function getFolderDetailPath(dateKey: string, mealType: MealType, folderI
   });
 
   return `${PATH.FOLDER_DETAIL}?${params.toString()}`;
+}
+
+export function getMenuSetRegisterSheetPath(dateKey: string, mealType: MealType) {
+  return `${PATH.MENU_SET_REGISTER_SHEET}?${buildPathQuery(dateKey, mealType)}`;
+}
+
+export function getMenuSetDetailPath(dateKey: string, mealType: MealType, setId: number) {
+  const params = new URLSearchParams({
+    date: dateKey,
+    mealType,
+    setId: String(setId),
+  });
+
+  return `${PATH.MENU_SET_DETAIL}?${params.toString()}`;
 }
 
 export function getMealDetailPath(
@@ -68,4 +109,20 @@ export function getPathWithMeal(
   keyword?: string,
 ) {
   return `${path}?${buildPathQuery(dateKey, mealType, undefined, keyword)}`;
+}
+
+export function getPathWithMealMode(
+  path: string,
+  dateKey: string,
+  mealType: MealType,
+  mode: PersonalMenuEditMode | null | undefined,
+  keyword?: string,
+) {
+  const params = new URLSearchParams(buildPathQuery(dateKey, mealType, undefined, keyword));
+
+  if (mode) {
+    params.set("mode", mode);
+  }
+
+  return `${path}?${params.toString()}`;
 }

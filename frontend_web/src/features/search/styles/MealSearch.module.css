@@ -88,14 +88,6 @@
   transform: translateY(-50%);
 }
 
-.categoryList {
-  display: flex;
-  gap: 6px;
-  -ms-overflow-style: none;
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-
 .categoryList::-webkit-scrollbar {
   display: none;
 }
@@ -204,6 +196,7 @@
   flex-direction: column;
   padding: 0 20px;
   width: 100%;
+  gap: 10px;
 }
 
 .directRegisterPrompt {
@@ -223,6 +216,39 @@
 .directRegisterPromptAction {
   color: var(--label-assistive);
   margin-left: auto;
+  align-items: center;
+  display: flex;
+}
+
+.directRegisterFilterChips {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding-top: 10px;
+}
+
+.directRegisterFilterChips::-webkit-scrollbar {
+  display: none;
+}
+
+.compactResultList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  animation: personal-menu-panel-enter 0.16s ease-out both;
+}
+
+.registeredSectionList {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.registeredResultSection {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .loadingContainer {

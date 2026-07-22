@@ -22,7 +22,13 @@ import {
   toNullableFiniteNumber,
 } from "@/features/nutrient-entry/utils/nutrientFields";
 import { PATH } from "@/router/path";
-import { getMealDetailPath, getMealRecordPath } from "@/router/pathHelpers";
+import {
+  getFolderMenuDetailPath,
+  getMealDetailPath,
+  getMealRecordPath,
+  getMenuSetMenuDetailPath,
+  type PersonalMenuEditMode,
+} from "@/router/pathHelpers";
 import {
   type MealMenuItem,
   MENU_DATA_SOURCE,
@@ -50,6 +56,14 @@ type MealDetailLocationState = {
   replaceMenuId?: number;
 };
 
+function getPersonalMenuEditMode(value: string | null): PersonalMenuEditMode | null {
+  if (value === "folder" || value === "set") {
+    return value;
+  }
+
+  return null;
+}
+
 function buildInitialFormState(
   menu?: Partial<MealMenuItem> | null,
 ): Partial<RegisterMenuRequestDto> {
@@ -74,6 +88,7 @@ export default function NutrientModifyPage() {
   const dateKey = getSafeDateKey(searchParams.get("date"));
   const mealType = getMealType(searchParams.get("mealType"));
   const searchKeyword = getSafeKeyword(searchParams.get("keyword"));
+  const editMode = getPersonalMenuEditMode(searchParams.get("mode"));
 
   const {
     data: fetchedMenu,
@@ -173,10 +188,22 @@ export default function NutrientModifyPage() {
 
   const getBackFallbackPath = () => {
     if (menuId !== null) {
-      return getMealDetailPath(dateKey, mealType, menuId, searchKeyword);
+      return getMenuDetailPathByMode(menuId);
     }
 
     return getMealRecordPath(dateKey, mealType);
+  };
+
+  const getMenuDetailPathByMode = (targetMenuId: number) => {
+    if (editMode === "folder") {
+      return getFolderMenuDetailPath(targetMenuId);
+    }
+
+    if (editMode === "set") {
+      return getMenuSetMenuDetailPath(targetMenuId);
+    }
+
+    return getMealDetailPath(dateKey, mealType, targetMenuId, searchKeyword);
   };
 
   const handleBack = () => {
@@ -227,7 +254,7 @@ export default function NutrientModifyPage() {
             navigateBackAndPush({
               count: 2,
               animate: false,
-              to: getMealDetailPath(dateKey, mealType, menuId, searchKeyword),
+              to: getMenuDetailPathByMode(menuId),
             });
           },
           onError: () => {
@@ -247,7 +274,7 @@ export default function NutrientModifyPage() {
         }
 
         toast.success("개인 메뉴로 등록했어요");
-        const detailPath = getMealDetailPath(dateKey, mealType, createdMenuId, searchKeyword);
+        const detailPath = getMenuDetailPathByMode(createdMenuId);
         const detailPageState: MealDetailLocationState | undefined =
           menuId !== null && menuId !== createdMenuId ? { replaceMenuId: menuId } : undefined;
 

@@ -8,7 +8,14 @@ import {
   type NutrientRegisterFormState,
 } from "@/features/nutrient-entry/components/NutrientRegisterFormPage";
 import { PATH } from "@/router/path";
-import { getMealDetailPath, getMealRecordPath, getMealSearchPath } from "@/router/pathHelpers";
+import {
+  getFolderMenuDetailPath,
+  getMealDetailPath,
+  getMealRecordPath,
+  getMenuSetMenuDetailPath,
+  getPathWithMealMode,
+  type PersonalMenuEditMode,
+} from "@/router/pathHelpers";
 import { useLocation, useNavigate, useSearchParams } from "@/shared/navigation/stackflowNavigation";
 
 export default function NutrientRegisterPage() {
@@ -21,10 +28,34 @@ export default function NutrientRegisterPage() {
   const searchKeyword = getSafeKeyword(
     searchParams.get("keyword") ?? locationState.keyword ?? null,
   );
-  const backFallbackPath = getMealSearchPath(dateKey, mealType, searchKeyword);
+  const editMode = getPersonalMenuEditMode(searchParams.get("mode") ?? locationState.mode ?? null);
+  const backFallbackPath = getPathWithMealMode(
+    PATH.MEAL_RECORD_ADD_SEARCH,
+    dateKey,
+    mealType,
+    editMode,
+    searchKeyword,
+  );
   const backReturnPath = locationState.backReturnPath;
   const afterAddReturnPath =
-    locationState.afterAddReturnPath ?? getMealRecordPath(dateKey, mealType);
+    locationState.afterAddReturnPath ??
+    (editMode === "folder"
+      ? PATH.CREATE_FOLDER
+      : editMode === "set"
+        ? PATH.CREATE_MENU_SET
+        : getMealRecordPath(dateKey, mealType));
+
+  const getRegisteredMenuDetailPath = (savedMenuId: number) => {
+    if (editMode === "folder") {
+      return getFolderMenuDetailPath(savedMenuId);
+    }
+
+    if (editMode === "set") {
+      return getMenuSetMenuDetailPath(savedMenuId);
+    }
+
+    return getMealDetailPath(dateKey, mealType, savedMenuId, searchKeyword);
+  };
 
   return (
     <NutrientRegisterFormPage
@@ -35,8 +66,9 @@ export default function NutrientRegisterPage() {
       initialState={locationState}
       keyword={searchKeyword}
       mealType={mealType}
+      mode={editMode}
       onRegisteredMenu={(savedMenuId) => {
-        navigation(getMealDetailPath(dateKey, mealType, savedMenuId, searchKeyword), {
+        navigation(getRegisteredMenuDetailPath(savedMenuId), {
           replace: true,
           state: {
             ...(backReturnPath ? { backReturnPath } : {}),
@@ -46,4 +78,12 @@ export default function NutrientRegisterPage() {
       }}
     />
   );
+}
+
+function getPersonalMenuEditMode(value: string | null): PersonalMenuEditMode | null {
+  if (value === "folder" || value === "set") {
+    return value;
+  }
+
+  return null;
 }

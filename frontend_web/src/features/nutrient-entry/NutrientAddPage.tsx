@@ -11,8 +11,7 @@ import {
   useClearBrandSearchSelection,
 } from "@/features/search/brand/stores/brandSearchSelection.store";
 import { PATH } from "@/router/path";
-import { getMealSearchPath } from "@/router/pathHelpers";
-import { getPathWithMeal } from "@/router/pathHelpers";
+import { getPathWithMealMode, type PersonalMenuEditMode } from "@/router/pathHelpers";
 import type { MealType, RegisterMenuRequestDto } from "@/shared/api/types/api.dto";
 import { Button } from "@/shared/commons/button/Button";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
@@ -27,6 +26,8 @@ import {
 import styles from "./styles/NutrientAddPage.module.css";
 
 type NutrientAddLocationState = Omit<Partial<RegisterMenuRequestDto>, "unit"> & {
+  afterAddReturnPath?: string;
+  backReturnPath?: string;
   dateKey?: string;
   mealType?: MealType;
   brandName?: string;
@@ -34,6 +35,7 @@ type NutrientAddLocationState = Omit<Partial<RegisterMenuRequestDto>, "unit"> & 
   returnPath?: string;
   keyword?: string;
   brandSearchReturnKey?: string;
+  mode?: PersonalMenuEditMode;
   unit?: number;
 };
 
@@ -51,6 +53,7 @@ type NutrientAddFormPageProps = {
   isSubmitPending?: boolean;
   keyword?: string;
   mealType: MealType;
+  mode?: PersonalMenuEditMode | null;
   nextLabel?: string;
   onNext: (payload: NutrientAddSubmitPayload) => void;
   title?: string;
@@ -67,6 +70,7 @@ export default function NutrientAddPage() {
   const searchKeyword = getSafeKeyword(
     searchParams.get("keyword") ?? locationState.keyword ?? null,
   );
+  const editMode = getPersonalMenuEditMode(searchParams.get("mode") ?? locationState.mode ?? null);
 
   const handleNext = ({ brand, name }: NutrientAddSubmitPayload) => {
     const params = new URLSearchParams({
@@ -75,6 +79,9 @@ export default function NutrientAddPage() {
       name,
     });
 
+    if (editMode) {
+      params.set("mode", editMode);
+    }
     if (brand.trim()) {
       params.set("brand", brand.trim());
     }
@@ -82,17 +89,37 @@ export default function NutrientAddPage() {
       params.set("keyword", searchKeyword);
     }
 
-    navigation(PATH.NUTRIENT_CAMERA + "?" + params.toString());
+    navigation(PATH.NUTRIENT_CAMERA + "?" + params.toString(), {
+      state: {
+        ...locationState,
+        name,
+        brand,
+        dateKey,
+        mealType,
+        keyword: searchKeyword || undefined,
+        mode: editMode ?? undefined,
+      },
+    });
   };
 
   return (
     <NutrientAddFormPage
-      backFallbackPath={getMealSearchPath(dateKey, mealType, searchKeyword)}
+      backFallbackPath={
+        locationState.backReturnPath ??
+        getPathWithMealMode(
+          PATH.MEAL_RECORD_ADD_SEARCH,
+          dateKey,
+          mealType,
+          editMode,
+          searchKeyword,
+        )
+      }
       brandSearchReturnPath={PATH.NUTRIENT_ADD}
       dateKey={dateKey}
       initialState={locationState}
       keyword={searchKeyword}
       mealType={mealType}
+      mode={editMode}
       onNext={handleNext}
     />
   );
@@ -107,6 +134,7 @@ export function NutrientAddFormPage({
   isSubmitPending = false,
   keyword = "",
   mealType,
+  mode = null,
   nextLabel = "다음",
   onNext,
   title = "영양성분 등록",
@@ -137,7 +165,7 @@ export function NutrientAddFormPage({
 
   const handleOpenBrandSearch = () => {
     const returnPath = appendMealQueryToBrandSearchReturn
-      ? getPathWithMeal(brandSearchReturnPath, dateKey, mealType, keyword)
+      ? getPathWithMealMode(brandSearchReturnPath, dateKey, mealType, mode, keyword)
       : brandSearchReturnPath;
 
     navigation(PATH.BRAND_SEARCH, {
@@ -148,6 +176,7 @@ export function NutrientAddFormPage({
         dateKey,
         mealType,
         keyword,
+        mode: mode ?? undefined,
         brandSearchReturnKey,
         returnPath,
       },
@@ -230,4 +259,12 @@ export function NutrientAddFormPage({
       </footer>
     </section>
   );
+}
+
+function getPersonalMenuEditMode(value: string | null): PersonalMenuEditMode | null {
+  if (value === "folder" || value === "set") {
+    return value;
+  }
+
+  return null;
 }
