@@ -26,6 +26,7 @@ import { useMenuSetDetailQuery } from "@/features/personal-menu/set/hooks/querie
 import {
   type MenuSetDraftSelectedMenu,
   type MenuSetDraftViewMenu,
+  useMenuSetDraftClearDraft,
   useMenuSetDraftSelectedMenus,
   useMenuSetDraftSetDraft,
   useMenuSetDraftSetId,
@@ -203,6 +204,7 @@ export default function MenuSetDetailPage() {
   const upsertMenu = useMenuDraftUpsert();
   const upsertPreviews = useMenuDraftUpsertPreviews();
   const setMenuSetDraft = useMenuSetDraftSetDraft();
+  const clearMenuSetDraft = useMenuSetDraftClearDraft();
   const menuSetDraftSetId = useMenuSetDraftSetId();
   const menuSetDraftSelectedMenus = useMenuSetDraftSelectedMenus();
   const [editableMenusState, setEditableMenusState] = useState<EditableMenusState>({
@@ -352,6 +354,7 @@ export default function MenuSetDetailPage() {
             menus: editableMenus,
           }),
         );
+        clearMenuSetDraft();
         toast.success("세트가 수정되었어요");
         navigateBack({ fallbackTo: getMealSearchPath(dateKey, mealType) });
       } catch {
@@ -384,6 +387,8 @@ export default function MenuSetDetailPage() {
         return;
       }
     }
+
+    clearMenuSetDraft();
 
     editableMenus.forEach((menuSetMenu) => {
       upsertMenu({
