@@ -35,6 +35,26 @@ export type WebToAppNavigationBackMessage = {
   context?: BridgeMessageContext;
 };
 
+export type HapticType =
+  | "selection"
+  | "light"
+  | "medium"
+  | "heavy"
+  | "success"
+  | "warning"
+  | "error";
+
+export type HapticTriggerRequestPayload = {
+  type?: HapticType;
+};
+
+export type WebToAppHapticTriggerRequestMessage = {
+  id: string;
+  type: "HAPTIC_TRIGGER_REQUEST";
+  payload?: HapticTriggerRequestPayload;
+  context?: BridgeMessageContext;
+};
+
 export type AppDeviceInfoPayload = {
   appVersion: string;
   appBuild: string | null;
@@ -131,6 +151,7 @@ export type WebToAppMessage =
   | WebToAppApiRequestMessage
   | WebToAppTabSyncMessage
   | WebToAppNavigationBackMessage
+  | WebToAppHapticTriggerRequestMessage
   | WebToAppAppDeviceInfoRequestMessage
   | WebToAppFeatureGuardSyncMessage
   | WebToAppTabBarVisibilitySyncMessage

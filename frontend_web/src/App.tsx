@@ -7,7 +7,7 @@ import KakaoWebLoginPage from "@/features/kakao-web-auth/pages/KakaoWebLoginPage
 import { PATH } from "@/router/path";
 import { initAnalytics, track } from "@/shared/analytics/analytics";
 import { EVENT_NAME } from "@/shared/analytics/analytics.constants";
-import { initNativeBridgeListener } from "@/shared/api/bridge/nativeBridge";
+import { initNativeBridgeListener, initNativeClickHaptics } from "@/shared/api/bridge/nativeBridge";
 import { initQueryClientLifecycleSync } from "@/shared/api/queryClient";
 import { LoadingScreen } from "@/shared/commons/loading/Loading";
 import { syncFeatureGuardStateToApp } from "@/shared/guards/featureGuard";
@@ -34,6 +34,7 @@ export default function App() {
     initAnalytics();
     track(EVENT_NAME.APP_OPEN);
     const cleanupNativeBridgeListener = initNativeBridgeListener();
+    const cleanupNativeClickHaptics = initNativeClickHaptics();
     const cleanupQueryClientLifecycleSync = initQueryClientLifecycleSync();
     const cleanupContentInteractionGuard = initContentInteractionGuard();
     const cleanupInputCharacterRestriction = initInputCharacterRestriction();
@@ -43,6 +44,7 @@ export default function App() {
       cleanupInputCharacterRestriction();
       cleanupContentInteractionGuard();
       cleanupQueryClientLifecycleSync();
+      cleanupNativeClickHaptics();
       cleanupNativeBridgeListener();
     };
   }, []);
