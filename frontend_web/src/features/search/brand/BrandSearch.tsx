@@ -8,6 +8,7 @@ import { PATH } from "@/router/path";
 import type { RegisterMenuRequestDto } from "@/shared/api/types/api.dto";
 import { Button } from "@/shared/commons/button/Button";
 import { SearchInputHeader } from "@/shared/commons/header/SearchInputHeader";
+import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import { LoadingIndicator } from "@/shared/commons/loading/Loading";
 import { navigateBack, useLocation } from "@/shared/navigation/stackflowNavigation";
 
@@ -170,6 +171,7 @@ export default function BrandSearch() {
                       disabled={isDirectRegisterDisabled}
                     >
                       브랜드 직접 등록
+                      <SystemIcon name="chevron-right-thin" size={18} />
                     </Button>
                   </>
                 )}
@@ -194,6 +196,7 @@ export default function BrandSearch() {
                 disabled={isDirectRegisterDisabled}
               >
                 브랜드 직접 입력
+                <SystemIcon name="chevron-right-thin" size={18} />
               </Button>
             </section>
           )}

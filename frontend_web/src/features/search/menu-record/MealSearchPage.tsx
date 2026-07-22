@@ -1106,7 +1106,7 @@ function FolderPanel({
               onClick={() => navigate(getFolderDetailPath(dateKey, mealType, folder.folder_id))}
             >
               <div className={styles.folderName}>
-                <span className={`typo-label2 textNormal`}>{folder.folder_name}</span>
+                <span className={`typo-title3 textNormal`}>{folder.folder_name}</span>
                 <SystemIcon name="chevron-right-thin" size={20} className={styles.marginLeftAuto} />
               </div>
               <span className={`typo-body3 ${styles.folderMenuNames}`}>
