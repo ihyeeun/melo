@@ -1155,6 +1155,7 @@ export default function ChatPage() {
       menus,
       previousMealRecord,
       staleTime,
+      shouldPreserveExistingImage = false,
       shouldScrollToMealRecord = true,
       shouldShowToast = true,
       trackingMenusById,
@@ -1167,6 +1168,7 @@ export default function ChatPage() {
       menus: MenuDraftType[];
       previousMealRecord?: MealRecordSnapshot;
       staleTime?: number;
+      shouldPreserveExistingImage?: boolean;
       shouldScrollToMealRecord?: boolean;
       shouldShowToast?: boolean;
       trackingMenusById?: Map<number, MealRecordDraftTrackingMenu>;
@@ -1214,12 +1216,13 @@ export default function ChatPage() {
       const scrollTargetKey = shouldScrollToMealRecord
         ? prepareMealRecordScroll(dateKey, mealTime)
         : null;
+      const existingImage = getMealRecordImage(targetDayMeals, mealTime);
       const request = buildMealRecordDraftRequest({
         dateKey,
         dayMeals: targetDayMeals,
         mealTime,
         menus: nextMenus,
-        image: image ?? getMealRecordImage(targetDayMeals, mealTime),
+        image: shouldPreserveExistingImage ? existingImage ?? image : image ?? existingImage,
       });
 
       try {
@@ -1495,6 +1498,7 @@ export default function ChatPage() {
         mealTime: currentMealTime,
         menus: candidateMenus.map(toMenuDraftFromChatMealRecordMenu),
         staleTime: 0,
+        shouldPreserveExistingImage: true,
         shouldScrollToMealRecord: false,
         shouldShowToast: false,
         trackingMenusById,
