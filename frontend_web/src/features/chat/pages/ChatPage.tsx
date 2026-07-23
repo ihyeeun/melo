@@ -3353,7 +3353,7 @@ function FeedbackSection({
             <br />
             직접 추가할 수 있어요
           </span>
-          <SystemIcon name="chevron-right-normal" size={20} />
+          <SystemIcon name="chevron-right-thin" size={20} />
         </button>
       )}
     </div>

@@ -32,7 +32,7 @@ import {
 } from "@/features/meal-record/stores/menuDraft.store";
 import { toMenuDraftSeed } from "@/features/meal-record/utils/menuDraftSync";
 import { PATH } from "@/router/path";
-import { getMealRecordPath } from "@/router/pathHelpers";
+import { getMealSearchPath } from "@/router/pathHelpers";
 import type { MealServingInputMode, MealTime, MealType } from "@/shared/api/types/api.dto";
 import { toast } from "@/shared/commons/toast/toast";
 import { navigateBack, useNavigate } from "@/shared/navigation/stackflowNavigation";
@@ -145,7 +145,7 @@ export default function ChatMealRecordBottomSheetPage() {
       return;
     }
 
-    navigate(getMealRecordPath(context.dateKey, mealType), {
+    navigate(getMealSearchPath(context.dateKey, mealType), {
       replace: true,
       state: buildChatMealRecordTransferState({
         dateKey: context.dateKey,
@@ -318,7 +318,10 @@ function getBaseCalories(menu: MenuWithQuantity) {
   return menu.calories;
 }
 
-function getMealRecordImage(dayMeals: { imagesByTime?: Record<MealTime, string> }, mealTime: MealTime) {
+function getMealRecordImage(
+  dayMeals: { imagesByTime?: Record<MealTime, string> },
+  mealTime: MealTime,
+) {
   const image = dayMeals.imagesByTime?.[mealTime];
   return typeof image === "string" && image.trim().length > 0 ? image : undefined;
 }
