@@ -79,9 +79,12 @@
   align-items: center;
   gap: 2px;
   min-width: 0;
+  margin-left: auto;
 }
 
 .menuSetRegisterButton {
+  /* TODO 세트 기능 임시처리 */
+  display: none;
   gap: 6px;
   white-space: nowrap;
 }

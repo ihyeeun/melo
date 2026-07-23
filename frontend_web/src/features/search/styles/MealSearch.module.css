@@ -221,7 +221,8 @@
 }
 
 .directRegisterFilterChips {
-  display: flex;
+  /* TODO 세트 기능 임시처리 */
+  display: none;
   gap: 6px;
   overflow-x: auto;
   scrollbar-width: none;
@@ -360,7 +361,7 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
-  padding: 20px 0;
+  padding: 15px 0;
 }
 
 .folderItem {
@@ -393,7 +394,7 @@
 
 .folderAddAction {
   margin-left: auto;
-  margin-bottom: 10px;
+  margin-bottom: 5px;
 }
 
 .marginLeftAuto {
@@ -401,5 +402,6 @@
 }
 
 .marginTop {
-  margin-top: 10px;
+  margin-top: 15px;
+  margin-bottom: 5px;
 }
