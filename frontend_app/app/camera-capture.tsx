@@ -256,6 +256,25 @@ function LoadingView() {
   );
 }
 
+function CameraProcessingOverlay({ message }: { message: string }) {
+  return (
+    <View
+      style={styles.processingOverlay}
+      accessible
+      accessibilityRole="progressbar"
+      accessibilityLabel={message}
+    >
+      <ActivityIndicator size="large" color="#ff8a00" />
+      <Text allowFontScaling={false} style={styles.processingTitle}>
+        {message}
+      </Text>
+      <Text allowFontScaling={false} style={styles.processingDescription}>
+        조금만 기다려주세요
+      </Text>
+    </View>
+  );
+}
+
 function CameraOnboardingOverlay({
   config,
   onClose,
@@ -344,8 +363,12 @@ export default function CameraCaptureScreen() {
   const [isDeviceDetectionFinished, setIsDeviceDetectionFinished] = useState(false);
   const [isCameraInitialized, setIsCameraInitialized] = useState(false);
   const [isCapturing, setIsCapturing] = useState(false);
+  const [isResolvingCapturedPhoto, setIsResolvingCapturedPhoto] = useState(false);
   const [isPickingGallery, setIsPickingGallery] = useState(false);
   const isProcessing = isCapturing || isPickingGallery;
+  const processingMessage = isPickingGallery
+    ? "사진을 불러오는 중이에요"
+    : "촬영한 사진을 준비하고 있어요";
   const capturePayload = useMemo(() => getPendingCameraCapturePayload(), []);
   const selectableCameraModes = useMemo(
     () => getSelectableCameraModes(capturePayload),
@@ -540,11 +563,14 @@ export default function CameraCaptureScreen() {
 
     isProcessingRef.current = true;
     setIsCapturing(true);
+    setIsResolvingCapturedPhoto(false);
 
     try {
       const photo = await cameraRef.current.takePhoto({
         flash: "off",
       });
+      setIsResolvingCapturedPhoto(true);
+
       const uri = resolvePhotoUri(photo.path);
       const previewThumbnail = await createPreviewThumbnail(uri, photo.width, photo.height);
 
@@ -578,6 +604,7 @@ export default function CameraCaptureScreen() {
       router.back();
     } finally {
       isProcessingRef.current = false;
+      setIsResolvingCapturedPhoto(false);
       setIsCapturing(false);
     }
   }, [captureMode, isCameraInitialized, isFocused, isProcessing]);
@@ -752,7 +779,7 @@ export default function CameraCaptureScreen() {
         ref={cameraRef}
         style={StyleSheet.absoluteFill}
         device={device}
-        isActive={isFocused && !isPickingGallery}
+        isActive={isFocused && !isPickingGallery && !isResolvingCapturedPhoto}
         photo={true}
         audio={false}
         photoQualityBalance={photoQualityBalance}
@@ -886,6 +913,8 @@ export default function CameraCaptureScreen() {
           onSkip={handleCameraOnboardingSkip}
         />
       ) : null}
+
+      {isProcessing ? <CameraProcessingOverlay message={processingMessage} /> : null}
     </View>
   );
 }
@@ -953,6 +982,26 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: "#000000",
+  },
+  processingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.78)",
+    paddingHorizontal: 24,
+    zIndex: 60,
+  },
+  processingTitle: {
+    ...typography["typo-title4"],
+    color: "#ffffff",
+    marginTop: 18,
+    textAlign: "center",
+  },
+  processingDescription: {
+    ...typography["typo-body3"],
+    color: "rgba(255, 255, 255, 0.72)",
+    marginTop: 6,
+    textAlign: "center",
   },
   cameraOverlay: {
     flex: 1,
