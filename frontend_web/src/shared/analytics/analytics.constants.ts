@@ -26,11 +26,13 @@ export const EVENT_NAME = {
   RECOMMEND_MENU_SAVE: "chat_menu_save",
   CHAT_TEXT_MENU_SAVE: "chat_text_menu_save",
   RECOMMEND_MENU_CANCEL: "chat_menu_cancel",
-  DIARY_MENU_SAVE: "diary_menu_save",
+  DIARY_MENU_SAVE: "manual_menu_save",
 
   USER_PROFILE_UPDATED: "user_profile_updated",
 
   CLICK_FEEDBACK_BUTTON: "click_feedback_button",
+
+  BODY_WEIGHT_RECORDED: "body_weight_recorded",
 } as const;
 
 export type AnalyticsEventName = (typeof EVENT_NAME)[keyof typeof EVENT_NAME];

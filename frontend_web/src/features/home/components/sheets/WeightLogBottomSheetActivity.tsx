@@ -6,6 +6,8 @@ import { useGetBodyLog } from "@/features/home/hooks/queries/useTodayRecordQuery
 import style from "@/features/home/styles/TodayBodyLogSection.module.css";
 import { useGetProfileQuery } from "@/features/profile/hooks/queries/useProfileQuery";
 import { PATH } from "@/router/path";
+import { track } from "@/shared/analytics/analytics";
+import { EVENT_NAME } from "@/shared/analytics/analytics.constants";
 import BottomSheet from "@/shared/commons/bottomSheet/BottomSheet";
 import { Button } from "@/shared/commons/button/Button";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
@@ -24,26 +26,6 @@ function isWeightInputAllowed(inputValue: string) {
   if (!/^\d{0,3}(?:\.\d?)?$/.test(normalized)) return false;
 
   return Number(normalized) <= MAX_WEIGHT;
-}
-
-function resolveWeightSuccessMessage({
-  previousWeight,
-  nextWeight,
-}: {
-  previousWeight: number | null;
-  nextWeight: number;
-}) {
-  if (previousWeight === null) {
-    return "체중이 기록되었어요";
-  }
-
-  const weightDiff = toOneDecimalPlace(nextWeight - previousWeight);
-
-  if (weightDiff < 0) {
-    return `${weightDiff.toFixed(1)}kg 감량했어요!`;
-  }
-
-  return "체중이 기록되었어요";
 }
 
 export default function WeightLogBottomSheetActivity() {
@@ -92,7 +74,26 @@ export default function WeightLogBottomSheetActivity() {
       { date, weight: nextWeight },
       {
         onSuccess: () => {
-          toast.success(resolveWeightSuccessMessage({ previousWeight, nextWeight }));
+          const weightDiff =
+            previousWeight === null ? null : toOneDecimalPlace(nextWeight - previousWeight);
+          const body_weight_change =
+            weightDiff === null
+              ? null
+              : weightDiff < 0
+                ? "decreased"
+                : weightDiff > 0
+                  ? "increased"
+                  : "unchanged";
+
+          if (body_weight_change !== null) {
+            track(EVENT_NAME.BODY_WEIGHT_RECORDED, { body_weight_change });
+          }
+
+          toast.success(
+            weightDiff !== null && weightDiff < 0
+              ? `${weightDiff.toFixed(1)}kg 감량했어요!`
+              : "체중이 기록되었어요",
+          );
           closeSheet();
         },
       },
