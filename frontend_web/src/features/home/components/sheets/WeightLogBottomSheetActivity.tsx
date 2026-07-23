@@ -26,6 +26,26 @@ function isWeightInputAllowed(inputValue: string) {
   return Number(normalized) <= MAX_WEIGHT;
 }
 
+function resolveWeightSuccessMessage({
+  previousWeight,
+  nextWeight,
+}: {
+  previousWeight: number | null;
+  nextWeight: number;
+}) {
+  if (previousWeight === null) {
+    return "체중이 기록되었어요";
+  }
+
+  const weightDiff = toOneDecimalPlace(nextWeight - previousWeight);
+
+  if (weightDiff < 0) {
+    return `${weightDiff.toFixed(1)}kg 감량했어요!`;
+  }
+
+  return "체중이 기록되었어요";
+}
+
 export default function WeightLogBottomSheetActivity() {
   const activity = useActivity();
   const date = activity.params.date ?? getTodayFormatDateKey();
@@ -43,10 +63,6 @@ export default function WeightLogBottomSheetActivity() {
   };
 
   const { mutate: registerWeight, isPending: isWeightPending } = useRegisterWeightMutation({
-    onSuccess: () => {
-      toast.success("체중이 기록되었어요");
-      closeSheet();
-    },
     onError: () => {
       toast.error("체중 기록에 실패했어요");
     },
@@ -71,7 +87,16 @@ export default function WeightLogBottomSheetActivity() {
       return;
     }
 
-    registerWeight({ date, weight: nextWeight });
+    const previousWeight = initialWeight ?? null;
+    registerWeight(
+      { date, weight: nextWeight },
+      {
+        onSuccess: () => {
+          toast.success(resolveWeightSuccessMessage({ previousWeight, nextWeight }));
+          closeSheet();
+        },
+      },
+    );
   };
 
   return (
