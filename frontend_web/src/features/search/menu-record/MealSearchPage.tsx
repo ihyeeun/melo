@@ -963,7 +963,11 @@ export default function MealSearchPage() {
   };
 
   const handleSearchPageBack = () => {
-    resetSearchState();
+    if (hasSearchKeyword) {
+      resetSearchState();
+      return;
+    }
+
     navigateBack({
       fallbackTo: isFolderSearchMode
         ? (personalMenuEditFallbackPath ?? PATH.CREATE_FOLDER)
