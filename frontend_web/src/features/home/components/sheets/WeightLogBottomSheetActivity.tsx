@@ -86,7 +86,7 @@ export default function WeightLogBottomSheetActivity() {
                   : "unchanged";
 
           if (body_weight_change !== null) {
-            track(EVENT_NAME.BODY_WEIGHT_RECORDED, { body_weight_change });
+            track(EVENT_NAME.BODY_WEIGHT_RECORDED, { body_weight_change, weight_diff: weightDiff });
           }
 
           toast.success(
