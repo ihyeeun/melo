@@ -22,8 +22,9 @@ type MealMenuCardProps = {
   weight?: number;
   quantity?: number;
   data_source?: MenuDataSource | number;
-  icon?: MealMenuCardIcon;
+  icon?: MealMenuCardIcon | null;
   state?: MealMenuCardState;
+  hideServingInfo?: boolean;
   className?: string;
   onClick?: () => void;
   onIconClick?: () => void;
@@ -81,6 +82,7 @@ export function MealMenuCard({
   data_source,
   icon = "delete",
   state = "default",
+  hideServingInfo = false,
   className,
   onClick,
   onIconClick,
@@ -122,6 +124,15 @@ export function MealMenuCard({
     typeof calories === "number" && Number.isFinite(calories) ? calories : null;
   const weightUnitText = unit === 1 ? "ml" : "g";
   const servingUnitLabel = getServingUnitLabel(unit_quantity);
+  const shouldShowCalories = displayedCalories !== null;
+  const shouldShowServingInfo = !hideServingInfo;
+  const shouldShowMeta = shouldShowServingInfo || shouldShowCalories;
+  const metaClassName = [
+    styles.meta,
+    !shouldShowServingInfo && shouldShowCalories ? styles.metaOnlyCalories : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
   // const servingAmountLabel =
   //   servingUnitLabel === "인분"
   //     ? `${formatQuantity(safeDisplayUnitCount)}${servingUnitLabel}`
@@ -144,42 +155,50 @@ export function MealMenuCard({
           <div className={styles.titleSection}>
             <p className={`${styles.title} typo-title3 ellipsis`}>{name}</p>
 
-            <button
-              type="button"
-              className={styles.iconButton}
-              onClick={handleIconClick}
-              disabled={!onIconClick}
-              aria-label={getActionAriaLabel(icon)}
-            >
-              <ActionIcon icon={icon} />
-            </button>
+            {icon !== null && (
+              <button
+                type="button"
+                className={styles.iconButton}
+                onClick={handleIconClick}
+                disabled={!onIconClick}
+                aria-label={getActionAriaLabel(icon)}
+              >
+                <ActionIcon icon={icon} />
+              </button>
+            )}
           </div>
-          {description && (
-            <p className={`typo-body3 ${styles.description} ellipsis`}>{description}</p>
-          )}
         </section>
 
-        <section className={styles.meta}>
-          <p className={styles.prouductInfo}>
-            {brand && (
-              <span className={`${styles.brand} typo-label4`} title={brand}>
-                {brand}
-              </span>
+        {shouldShowMeta ? (
+          <section className={metaClassName}>
+            {shouldShowServingInfo ? (
+              <p className={styles.prouductInfo}>
+                {brand && (
+                  <span className={`${styles.brand} typo-label4`} title={brand}>
+                    {brand}
+                  </span>
+                )}
+                <span className={`${styles.unitAmount} typo-label4`}>
+                  {formatQuantity(safeDisplayUnitCount)}
+                  {servingUnitLabel}
+                </span>
+                <span
+                  className={`${styles.unitAmount} typo-label4`}
+                >{`(${formatQuantity(resolvedConsumedWeight)}${weightUnitText})`}</span>
+              </p>
+            ) : null}
+
+            {description && (
+              <p className={`typo-body3 ${styles.description} ellipsis`}>{description}</p>
             )}
-            <span className={`${styles.unitAmount} typo-label4`}>
-              {formatQuantity(safeDisplayUnitCount)}
-              {servingUnitLabel}
-            </span>
-            <span
-              className={`${styles.unitAmount} typo-label4`}
-            >{`(${formatQuantity(resolvedConsumedWeight)}${weightUnitText})`}</span>
-          </p>
-          {displayedCalories !== null && (
-            <span className={`${styles.calories} textNoWrap typo-title3`}>
-              {formatNumberWithMaxOneDecimal(displayedCalories)}kcal
-            </span>
-          )}
-        </section>
+
+            {shouldShowCalories ? (
+              <span className={`${styles.calories} textNoWrap typo-title3`}>
+                {formatNumberWithMaxOneDecimal(displayedCalories)}kcal
+              </span>
+            ) : null}
+          </section>
+        ) : null}
       </div>
 
       {shouldShowChipList && (

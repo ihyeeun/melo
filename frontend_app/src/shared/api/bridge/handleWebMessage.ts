@@ -11,6 +11,10 @@ import { Platform } from "react-native";
 import { clearTokens } from "@/features/auth/store/tokenStore";
 import { apiClient } from "@/src/shared/api/apiClient";
 import { emitAuthExpired } from "@/src/shared/auth/authSessionEvents";
+import {
+  isNativeHapticType,
+  triggerNativeHaptic,
+} from "@/src/shared/native/haptics";
 import { BridgeHandledError, isBridgeHandledError } from "./bridgeError";
 import { beginCameraCaptureSession } from "./cameraCaptureSession";
 import type {
@@ -558,6 +562,13 @@ function isWebToAppMessage(value: unknown): value is WebToAppMessage {
     return true;
   }
 
+  if (value.type === "HAPTIC_TRIGGER_REQUEST") {
+    if (value.payload === undefined) return true;
+    if (!isRecord(value.payload)) return false;
+
+    return value.payload.type === undefined || isNativeHapticType(value.payload.type);
+  }
+
   if (value.type === "APP_DEVICE_INFO_REQUEST") {
     return true;
   }
@@ -678,6 +689,11 @@ export async function handleWebMessage(
       if (router.canGoBack()) {
         router.back();
       }
+      return;
+    }
+
+    if (message.type === "HAPTIC_TRIGGER_REQUEST") {
+      triggerNativeHaptic(message.payload?.type);
       return;
     }
 

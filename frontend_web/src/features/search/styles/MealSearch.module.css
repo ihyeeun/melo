@@ -88,14 +88,6 @@
   transform: translateY(-50%);
 }
 
-.categoryList {
-  display: flex;
-  gap: 6px;
-  -ms-overflow-style: none;
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-
 .categoryList::-webkit-scrollbar {
   display: none;
 }
@@ -144,10 +136,14 @@
   border-bottom: 1px solid var(--border-neutral);
   display: grid;
   flex: 0 0 auto;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   position: relative;
   width: 100%;
   z-index: 1;
+}
+
+.personalMenuTabsListTwoColumns {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .personalMenuTabsTab {
@@ -200,6 +196,7 @@
   flex-direction: column;
   padding: 0 20px;
   width: 100%;
+  gap: 10px;
 }
 
 .directRegisterPrompt {
@@ -219,6 +216,40 @@
 .directRegisterPromptAction {
   color: var(--label-assistive);
   margin-left: auto;
+  align-items: center;
+  display: flex;
+}
+
+.directRegisterFilterChips {
+  /* TODO 세트 기능 임시처리 */
+  display: none;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding-top: 10px;
+}
+
+.directRegisterFilterChips::-webkit-scrollbar {
+  display: none;
+}
+
+.compactResultList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  animation: personal-menu-panel-enter 0.16s ease-out both;
+}
+
+.registeredSectionList {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.registeredResultSection {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .loadingContainer {
@@ -320,4 +351,57 @@
   .personalMenuPanelContent {
     animation: none;
   }
+}
+
+.folderEmptyResult {
+  gap: 20px;
+}
+
+.folderList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 15px 0;
+}
+
+.folderItem {
+  align-items: flex-start;
+  background-color: var(--bg-white);
+  border: 1px solid var(--border-neutral);
+  border-radius: 8px;
+  color: var(--label-normal);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 16px 20px;
+  text-align: left;
+  width: 100%;
+}
+
+.folderMenuNames {
+  color: var(--label-assistive);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  width: 100%;
+}
+
+.folderName {
+  display: flex;
+  width: 100%;
+  align-items: center;
+}
+
+.folderAddAction {
+  margin-left: auto;
+  margin-bottom: 5px;
+}
+
+.marginLeftAuto {
+  margin-left: auto;
+}
+
+.marginTop {
+  margin-top: 15px;
+  margin-bottom: 5px;
 }

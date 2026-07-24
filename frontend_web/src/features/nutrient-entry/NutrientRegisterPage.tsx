@@ -1,47 +1,85 @@
 import {
   getMealType,
   getSafeDateKey,
-  getSafeKeyword,
 } from "@/features/meal-record/utils/mealRecord.queryParams";
+import {
+  useMenuSelectionFlowById,
+} from "@/features/menu-selection-flow/stores/menuSelectionFlow.store";
+import {
+  getMenuSelectionFlowIdFromSearchParams,
+  getMenuSelectionFlowMenuDetailPath,
+  getMenuSelectionFlowSearchPath,
+} from "@/features/menu-selection-flow/utils/menuSelectionFlowRoutes";
 import {
   NutrientRegisterFormPage,
   type NutrientRegisterFormState,
 } from "@/features/nutrient-entry/components/NutrientRegisterFormPage";
 import { PATH } from "@/router/path";
-import { getMealDetailPath, getMealRecordPath, getMealSearchPath } from "@/router/pathHelpers";
-import { useLocation, useNavigate, useSearchParams } from "@/shared/navigation/stackflowNavigation";
+import { getMealDetailPath, getPathWithMeal } from "@/router/pathHelpers";
+import {
+  navigateBackAndPush,
+  useLocation,
+  useNavigate,
+  useSearchParams,
+} from "@/shared/navigation/stackflowNavigation";
 
 export default function NutrientRegisterPage() {
   const navigation = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
   const locationState = (location.state ?? {}) as NutrientRegisterFormState;
-  const dateKey = getSafeDateKey(searchParams.get("date") ?? locationState.dateKey ?? null);
-  const mealType = getMealType(searchParams.get("mealType") ?? locationState.mealType ?? null);
-  const searchKeyword = getSafeKeyword(
-    searchParams.get("keyword") ?? locationState.keyword ?? null,
+  const menuSelectionFlowId = getMenuSelectionFlowIdFromSearchParams(searchParams);
+  const menuSelectionFlow = useMenuSelectionFlowById(menuSelectionFlowId);
+  const dateKey = getSafeDateKey(
+    searchParams.get("date") ??
+      locationState.dateKey ??
+      menuSelectionFlow?.relatedMealRecordDateKey ??
+      null,
   );
-  const backFallbackPath = getMealSearchPath(dateKey, mealType, searchKeyword);
-  const backReturnPath = locationState.backReturnPath;
-  const afterAddReturnPath =
-    locationState.afterAddReturnPath ?? getMealRecordPath(dateKey, mealType);
+  const mealType = getMealType(
+    searchParams.get("mealType") ??
+      locationState.mealType ??
+      menuSelectionFlow?.relatedMealRecordMealType ??
+      null,
+  );
+  const backFallbackPath = menuSelectionFlowId
+    ? getMenuSelectionFlowSearchPath(menuSelectionFlowId)
+    : getPathWithMeal(PATH.MEAL_RECORD_ADD_SEARCH, dateKey, mealType);
+  const shouldRemoveCameraEntryScreens = locationState.entrySource === "camera";
+
+  const getRegisteredMenuDetailPath = (savedMenuId: number) => {
+    if (menuSelectionFlowId) {
+      return getMenuSelectionFlowMenuDetailPath({
+        menuSelectionFlowId,
+        menuId: savedMenuId,
+      });
+    }
+
+    return getMealDetailPath(dateKey, mealType, savedMenuId);
+  };
 
   return (
     <NutrientRegisterFormPage
       backFallbackPath={backFallbackPath}
-      backReturnPath={backReturnPath}
       brandSearchReturnPath={PATH.NUTRIENT_ADD_REGISTER}
       dateKey={dateKey}
       initialState={locationState}
-      keyword={searchKeyword}
+      menuSelectionFlowId={menuSelectionFlowId}
       mealType={mealType}
       onRegisteredMenu={(savedMenuId) => {
-        navigation(getMealDetailPath(dateKey, mealType, savedMenuId, searchKeyword), {
+        const registeredMenuDetailPath = getRegisteredMenuDetailPath(savedMenuId);
+
+        if (shouldRemoveCameraEntryScreens) {
+          navigateBackAndPush({
+            count: 2,
+            animate: false,
+            to: registeredMenuDetailPath,
+          });
+          return;
+        }
+
+        navigation(registeredMenuDetailPath, {
           replace: true,
-          state: {
-            ...(backReturnPath ? { backReturnPath } : {}),
-            afterAddReturnPath,
-          },
         });
       }}
     />

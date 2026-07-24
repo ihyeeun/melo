@@ -50,6 +50,7 @@
 
 .description {
   color: var(--label-assistive);
+  flex: 1;
 }
 
 .chipList {
@@ -104,6 +105,10 @@
   min-width: 0;
 }
 
+.metaOnlyCalories {
+  justify-content: flex-end;
+}
+
 .prouductInfo {
   align-items: baseline;
   display: flex;
@@ -115,6 +120,7 @@
 
 .calories {
   color: var(--label-normal);
+  margin-left: auto;
 }
 
 .brand {
@@ -126,6 +132,7 @@
   word-break: normal;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 1;
+  line-clamp: 1;
 }
 
 .unitAmount {

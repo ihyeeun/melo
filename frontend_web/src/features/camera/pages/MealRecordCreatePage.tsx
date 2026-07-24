@@ -90,7 +90,6 @@ export default function MealRecordCreatePage() {
   const createNutritionLabelRegisterPath = useCallback(() => {
     const rawDateKey = searchParams.get("date");
     const rawMealType = searchParams.get("mealType");
-    const keyword = searchParams.get("keyword");
     const registerParams = new URLSearchParams();
 
     if (rawDateKey) {
@@ -98,9 +97,6 @@ export default function MealRecordCreatePage() {
     }
     if (rawMealType) {
       registerParams.set("mealType", rawMealType);
-    }
-    if (keyword && keyword.trim().length > 0) {
-      registerParams.set("keyword", keyword.trim());
     }
 
     return registerParams.toString().length
@@ -242,7 +238,6 @@ export default function MealRecordCreatePage() {
 
       const rawDateKey = searchParams.get("date");
       const rawMealType = searchParams.get("mealType");
-      const keyword = searchParams.get("keyword");
       const registerPath = createNutritionLabelRegisterPath();
 
       navigate(registerPath, {
@@ -252,7 +247,6 @@ export default function MealRecordCreatePage() {
           ...imageData,
           dateKey: rawDateKey ?? undefined,
           mealType: rawMealType ?? undefined,
-          keyword: keyword ?? undefined,
         },
       });
 

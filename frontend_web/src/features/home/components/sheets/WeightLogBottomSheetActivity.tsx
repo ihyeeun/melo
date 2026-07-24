@@ -6,6 +6,8 @@ import { useGetBodyLog } from "@/features/home/hooks/queries/useTodayRecordQuery
 import style from "@/features/home/styles/TodayBodyLogSection.module.css";
 import { useGetProfileQuery } from "@/features/profile/hooks/queries/useProfileQuery";
 import { PATH } from "@/router/path";
+import { track } from "@/shared/analytics/analytics";
+import { EVENT_NAME } from "@/shared/analytics/analytics.constants";
 import BottomSheet from "@/shared/commons/bottomSheet/BottomSheet";
 import { Button } from "@/shared/commons/button/Button";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
@@ -43,10 +45,6 @@ export default function WeightLogBottomSheetActivity() {
   };
 
   const { mutate: registerWeight, isPending: isWeightPending } = useRegisterWeightMutation({
-    onSuccess: () => {
-      toast.success("체중이 기록되었어요");
-      closeSheet();
-    },
     onError: () => {
       toast.error("체중 기록에 실패했어요");
     },
@@ -71,7 +69,35 @@ export default function WeightLogBottomSheetActivity() {
       return;
     }
 
-    registerWeight({ date, weight: nextWeight });
+    const previousWeight = initialWeight ?? null;
+    registerWeight(
+      { date, weight: nextWeight },
+      {
+        onSuccess: () => {
+          const weightDiff =
+            previousWeight === null ? null : toOneDecimalPlace(nextWeight - previousWeight);
+          const body_weight_change =
+            weightDiff === null
+              ? null
+              : weightDiff < 0
+                ? "decreased"
+                : weightDiff > 0
+                  ? "increased"
+                  : "unchanged";
+
+          if (body_weight_change !== null) {
+            track(EVENT_NAME.BODY_WEIGHT_RECORDED, { body_weight_change, weight_diff: weightDiff });
+          }
+
+          toast.success(
+            weightDiff !== null && weightDiff < 0
+              ? `${weightDiff.toFixed(1)}kg 감량했어요!`
+              : "체중이 기록되었어요",
+          );
+          closeSheet();
+        },
+      },
+    );
   };
 
   return (

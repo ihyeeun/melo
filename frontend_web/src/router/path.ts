@@ -21,6 +21,11 @@ export const PATH = {
   NUTRIENT_ADD_REGISTER: "/nutrient-add/register",
   NUTRIENT_ADD_MODIFY: "/nutrient-add/modify",
   BRAND_SEARCH: "/brand-search",
+  CREATE_FOLDER: "/personal-menu/folder/create",
+  FOLDER_DETAIL: "/personal-menu/folder/detail",
+  CREATE_MENU_SET: "/personal-menu/set/create",
+  MENU_SET_DETAIL: "/personal-menu/set/detail",
+  MENU_SET_REGISTER_SHEET: "/personal-menu/set/register",
 
   // Chat
   CHAT: "/chat",

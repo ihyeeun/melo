@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { CameraLoading } from "@/features/camera/components/CameraLoading";
 import { useCreateMenuByNutritionLabelImageMutation } from "@/features/camera/hooks/mutations/useImageRecognitionMutation";
@@ -12,20 +12,34 @@ import {
   isCameraCaptureCancelled,
 } from "@/features/camera/utils/cameraCapture";
 import { getMealType, getSafeDateKey } from "@/features/meal-record/utils/mealRecord.queryParams";
+import {
+  useMenuSelectionFlowById,
+} from "@/features/menu-selection-flow/stores/menuSelectionFlow.store";
+import {
+  getMenuSelectionFlowIdFromSearchParams,
+  getMenuSelectionFlowPath,
+} from "@/features/menu-selection-flow/utils/menuSelectionFlowRoutes";
 import { PATH } from "@/router/path";
-import { getMealRecordPath, getMealSearchPath, getPathWithMeal } from "@/router/pathHelpers";
+import { getPathWithMeal } from "@/router/pathHelpers";
 import { requestNativeCameraCapture } from "@/shared/api/bridge/nativeBridge";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
 import { CheckButtonModal } from "@/shared/commons/modals/CheckButtonModal";
 import { toast } from "@/shared/commons/toast/toast";
 import {
   navigateBack,
+  useLocation,
   useNavigate,
   useSearchParams,
 } from "@/shared/navigation/stackflowNavigation";
 
+type NutritionLabelCreateLocationState = {
+  brand?: string;
+  name?: string;
+};
+
 export default function NutrientCameraPage() {
   const navigation = useNavigate();
+  const location = useLocation();
   const [isOpeningCamera, setIsOpeningCamera] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
   const [capturedPreviewSrc, setCapturedPreviewSrc] = useState<string | null>(null);
@@ -33,27 +47,50 @@ export default function NutrientCameraPage() {
     useState<CameraCaptureErrorFeedback | null>(null);
   const { mutateAsync: uploadImage } = useCreateMenuByNutritionLabelImageMutation();
   const [searchParams] = useSearchParams();
-  const dateKey = getSafeDateKey(searchParams.get("date"));
-  const mealType = getMealType(searchParams.get("mealType"));
+  const locationState = useMemo(
+    () => (location.state ?? {}) as NutritionLabelCreateLocationState,
+    [location.state],
+  );
+  const menuSelectionFlowId = getMenuSelectionFlowIdFromSearchParams(searchParams);
+  const menuSelectionFlow = useMenuSelectionFlowById(menuSelectionFlowId);
+  const dateKey = getSafeDateKey(
+    searchParams.get("date") ?? menuSelectionFlow?.relatedMealRecordDateKey ?? null,
+  );
+  const mealType = getMealType(
+    searchParams.get("mealType") ?? menuSelectionFlow?.relatedMealRecordMealType ?? null,
+  );
+  const foodName = searchParams.get("name") ?? locationState.name ?? "";
+  const brandName = searchParams.get("brand") ?? locationState.brand ?? "";
   const autoTriggeredRef = useRef(false);
 
   const returnFromCameraPage = useCallback(() => {
+    const nutrientAddFallbackPath = menuSelectionFlowId
+      ? getMenuSelectionFlowPath({
+          path: PATH.NUTRIENT_ADD,
+          menuSelectionFlowId,
+          extraSearchParams: {
+            name: foodName,
+            brand: brandName,
+          },
+        })
+      : getPathWithMeal(PATH.NUTRIENT_ADD, dateKey, mealType);
+
     navigateBack({
-      fallbackTo: getPathWithMeal(
-        PATH.NUTRIENT_ADD,
-        dateKey,
-        mealType,
-        searchParams.get("keyword") ?? undefined,
-      ),
+      fallbackTo: nutrientAddFallbackPath,
       fallbackOptions: {
         state: {
-          name: searchParams.get("name") ?? "",
-          brand: searchParams.get("brand") ?? "",
-          keyword: searchParams.get("keyword") ?? undefined,
+          name: foodName,
+          brand: brandName,
         },
       },
     });
-  }, [dateKey, mealType, searchParams]);
+  }, [
+    brandName,
+    dateKey,
+    foodName,
+    mealType,
+    menuSelectionFlowId,
+  ]);
 
   const handleCameraActions = useCallback(async () => {
     if (isUploading) return;
@@ -82,23 +119,22 @@ export default function NutrientCameraPage() {
       setCapturedPreviewSrc(getCapturedImagePreviewSrc(capturedImage));
       setIsUploading(true);
       const imageData = await uploadImage(capturedImage);
-      const keyword = searchParams.get("keyword")?.trim() || undefined;
-      const registerPath = getPathWithMeal(PATH.NUTRIENT_ADD_REGISTER, dateKey, mealType, keyword);
-      const searchReturnPath = getMealSearchPath(dateKey, mealType, keyword);
-
+      const registerPath = menuSelectionFlowId
+        ? getMenuSelectionFlowPath({
+            path: PATH.NUTRIENT_ADD_REGISTER,
+            menuSelectionFlowId,
+          })
+        : getPathWithMeal(PATH.NUTRIENT_ADD_REGISTER, dateKey, mealType);
       navigation(registerPath, {
         replace: true,
         animate: false,
         state: {
           ...imageData, // unit, weight, calories, carbs...
-          name: searchParams.get("name") ?? "",
-          brand: searchParams.get("brand") ?? "",
+          name: foodName,
+          brand: brandName,
           entrySource: "camera" as const,
           dateKey,
           mealType,
-          keyword: keyword ?? undefined,
-          backReturnPath: searchReturnPath,
-          afterAddReturnPath: getMealRecordPath(dateKey, mealType),
         },
       });
 
@@ -109,7 +145,17 @@ export default function NutrientCameraPage() {
     } finally {
       setIsUploading(false);
     }
-  }, [isUploading, navigation, returnFromCameraPage, searchParams, uploadImage, dateKey, mealType]);
+  }, [
+    dateKey,
+    foodName,
+    brandName,
+    isUploading,
+    mealType,
+    menuSelectionFlowId,
+    navigation,
+    returnFromCameraPage,
+    uploadImage,
+  ]);
 
   useEffect(() => {
     if (autoTriggeredRef.current) return;

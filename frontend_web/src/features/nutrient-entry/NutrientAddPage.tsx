@@ -3,15 +3,19 @@ import { type ChangeEvent, useEffect, useState } from "react";
 import {
   getMealType,
   getSafeDateKey,
-  getSafeKeyword,
 } from "@/features/meal-record/utils/mealRecord.queryParams";
+import { useMenuSelectionFlowById } from "@/features/menu-selection-flow/stores/menuSelectionFlow.store";
+import {
+  getMenuSelectionFlowIdFromSearchParams,
+  getMenuSelectionFlowPath,
+  getMenuSelectionFlowSearchPath,
+} from "@/features/menu-selection-flow/utils/menuSelectionFlowRoutes";
 import {
   createBrandSearchSelectionKey,
   useBrandSearchSelectedBrand,
   useClearBrandSearchSelection,
 } from "@/features/search/brand/stores/brandSearchSelection.store";
 import { PATH } from "@/router/path";
-import { getMealSearchPath } from "@/router/pathHelpers";
 import { getPathWithMeal } from "@/router/pathHelpers";
 import type { MealType, RegisterMenuRequestDto } from "@/shared/api/types/api.dto";
 import { Button } from "@/shared/commons/button/Button";
@@ -31,8 +35,6 @@ type NutrientAddLocationState = Omit<Partial<RegisterMenuRequestDto>, "unit"> & 
   mealType?: MealType;
   brandName?: string;
   chatId?: number;
-  returnPath?: string;
-  keyword?: string;
   brandSearchReturnKey?: string;
   unit?: number;
 };
@@ -49,8 +51,8 @@ type NutrientAddFormPageProps = {
   dateKey: string;
   initialState: NutrientAddLocationState;
   isSubmitPending?: boolean;
-  keyword?: string;
   mealType: MealType;
+  menuSelectionFlowId?: string | null;
   nextLabel?: string;
   onNext: (payload: NutrientAddSubmitPayload) => void;
   title?: string;
@@ -61,11 +63,20 @@ export default function NutrientAddPage() {
   const location = useLocation();
   const [searchParams] = useSearchParams();
   const locationState = (location.state ?? {}) as NutrientAddLocationState;
+  const menuSelectionFlowId = getMenuSelectionFlowIdFromSearchParams(searchParams);
+  const menuSelectionFlow = useMenuSelectionFlowById(menuSelectionFlowId);
 
-  const dateKey = getSafeDateKey(searchParams.get("date") ?? locationState.dateKey ?? null);
-  const mealType = getMealType(searchParams.get("mealType") ?? locationState.mealType ?? null);
-  const searchKeyword = getSafeKeyword(
-    searchParams.get("keyword") ?? locationState.keyword ?? null,
+  const dateKey = getSafeDateKey(
+    searchParams.get("date") ??
+      locationState.dateKey ??
+      menuSelectionFlow?.relatedMealRecordDateKey ??
+      null,
+  );
+  const mealType = getMealType(
+    searchParams.get("mealType") ??
+      locationState.mealType ??
+      menuSelectionFlow?.relatedMealRecordMealType ??
+      null,
   );
 
   const handleNext = ({ brand, name }: NutrientAddSubmitPayload) => {
@@ -78,21 +89,40 @@ export default function NutrientAddPage() {
     if (brand.trim()) {
       params.set("brand", brand.trim());
     }
-    if (searchKeyword.length > 0) {
-      params.set("keyword", searchKeyword);
-    }
 
-    navigation(PATH.NUTRIENT_CAMERA + "?" + params.toString());
+    const nutrientCameraPath = menuSelectionFlowId
+      ? getMenuSelectionFlowPath({
+          path: PATH.NUTRIENT_CAMERA,
+          menuSelectionFlowId,
+          extraSearchParams: {
+            name,
+            brand: brand.trim() || undefined,
+          },
+        })
+      : PATH.NUTRIENT_CAMERA + "?" + params.toString();
+
+    navigation(nutrientCameraPath, {
+      state: {
+        name,
+        brand,
+        dateKey,
+        mealType,
+      },
+    });
   };
 
   return (
     <NutrientAddFormPage
-      backFallbackPath={getMealSearchPath(dateKey, mealType, searchKeyword)}
+      backFallbackPath={
+        menuSelectionFlowId
+          ? getMenuSelectionFlowSearchPath(menuSelectionFlowId)
+          : getPathWithMeal(PATH.MEAL_RECORD_ADD_SEARCH, dateKey, mealType)
+      }
       brandSearchReturnPath={PATH.NUTRIENT_ADD}
       dateKey={dateKey}
       initialState={locationState}
-      keyword={searchKeyword}
       mealType={mealType}
+      menuSelectionFlowId={menuSelectionFlowId}
       onNext={handleNext}
     />
   );
@@ -105,8 +135,8 @@ export function NutrientAddFormPage({
   dateKey,
   initialState,
   isSubmitPending = false,
-  keyword = "",
   mealType,
+  menuSelectionFlowId = null,
   nextLabel = "다음",
   onNext,
   title = "영양성분 등록",
@@ -136,18 +166,27 @@ export function NutrientAddFormPage({
   };
 
   const handleOpenBrandSearch = () => {
-    const returnPath = appendMealQueryToBrandSearchReturn
-      ? getPathWithMeal(brandSearchReturnPath, dateKey, mealType, keyword)
-      : brandSearchReturnPath;
+    const brandSearchPath = menuSelectionFlowId
+      ? getMenuSelectionFlowPath({
+          path: PATH.BRAND_SEARCH,
+          menuSelectionFlowId,
+        })
+      : PATH.BRAND_SEARCH;
+    const returnPath = menuSelectionFlowId
+      ? getMenuSelectionFlowPath({
+          path: brandSearchReturnPath,
+          menuSelectionFlowId,
+        })
+      : appendMealQueryToBrandSearchReturn
+        ? getPathWithMeal(brandSearchReturnPath, dateKey, mealType)
+        : brandSearchReturnPath;
 
-    navigation(PATH.BRAND_SEARCH, {
+    navigation(brandSearchPath, {
       state: {
-        ...initialState,
         name: foodName,
         brand: brandName,
         dateKey,
         mealType,
-        keyword,
         brandSearchReturnKey,
         returnPath,
       },

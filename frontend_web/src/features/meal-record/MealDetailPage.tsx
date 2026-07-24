@@ -9,16 +9,27 @@ import { useMealDeleteMutation } from "@/features/meal-record/hooks/mutations/us
 import { useMealDetailQuery } from "@/features/meal-record/hooks/queries/useMealDetailQuery";
 import {
   formatMenuDraftKey,
-  useMenuDraftMenus,
-  useMenuDraftRemove,
-  useMenuDraftUpsert,
   useMenuDraftUpsertPreviews,
 } from "@/features/meal-record/stores/menuDraft.store";
 import styles from "@/features/meal-record/styles/MealDetailPage.module.css";
+import { useMenuSelectionFlowAdapter } from "@/features/menu-selection-flow/hooks/useMenuSelectionFlowAdapter";
+import {
+  MENU_SELECTION_FLOW_TARGET,
+  useMenuSelectionFlowCreateFlow,
+  useMenuSelectionFlowSetPendingReplacementSourceMenuId,
+} from "@/features/menu-selection-flow/stores/menuSelectionFlow.store";
+import {
+  getMenuSelectionFlowIdFromSearchParams,
+  getMenuSelectionFlowPath,
+  getMenuSelectionFlowSearchPath,
+} from "@/features/menu-selection-flow/utils/menuSelectionFlowRoutes";
 import type { NutrientModifyLocationState } from "@/features/nutrient-entry/types/nutrientEntry.state";
 import { PATH } from "@/router/path";
 import { getMealRecordPath } from "@/router/pathHelpers";
-import { type MealMenuItem, MENU_DATA_SOURCE } from "@/shared/api/types/api.dto";
+import {
+  type MealMenuItem,
+  MENU_DATA_SOURCE,
+} from "@/shared/api/types/api.dto";
 import { Button } from "@/shared/commons/button/Button";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
 import { LoadingOverlay } from "@/shared/commons/loading/Loading";
@@ -27,20 +38,11 @@ import { Skeleton } from "@/shared/commons/skeleton/Skeleton";
 import { toast } from "@/shared/commons/toast/toast";
 import {
   navigateBack,
-  resetStackflow,
-  useLocation,
   useNavigate,
   useSearchParams,
 } from "@/shared/navigation/stackflowNavigation";
 
-import { MAX_MEAL_RECORD_MENUS, MEAL_RECORD_MENU_LIMIT_MESSAGE } from "./constants/menu.constants";
-import { getMealType, getSafeDateKey, getSafeKeyword } from "./utils/mealRecord.queryParams";
-
-type MealDetailLocationState = {
-  afterAddReturnPath?: string;
-  backReturnPath?: string;
-  replaceMenuId?: number;
-};
+import { getMealType, getSafeDateKey } from "./utils/mealRecord.queryParams";
 
 function getMenuIsDeleted(menu: unknown) {
   const isDeleted = (menu as { is_deleted?: unknown }).is_deleted;
@@ -49,7 +51,6 @@ function getMenuIsDeleted(menu: unknown) {
 
 export default function MealDetailPage() {
   const navigate = useNavigate();
-  const location = useLocation();
   const [searchParams] = useSearchParams();
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [selection, setSelection] = useState<MealMenuNutrientSelection | null>(null);
@@ -57,8 +58,7 @@ export default function MealDetailPage() {
 
   const dateKey = getSafeDateKey(searchParams.get("date"));
   const mealType = getMealType(searchParams.get("mealType"));
-  const searchKeyword = getSafeKeyword(searchParams.get("keyword"));
-  const draftKey = formatMenuDraftKey(dateKey, mealType);
+  const menuSelectionFlowId = getMenuSelectionFlowIdFromSearchParams(searchParams);
 
   const rawMenuId = searchParams.get("menuId");
   const parsedMenuId = rawMenuId ? Number(rawMenuId) : null;
@@ -67,32 +67,36 @@ export default function MealDetailPage() {
       ? parsedMenuId
       : null;
 
-  const upsertMenu = useMenuDraftUpsert();
   const upsertPreviews = useMenuDraftUpsertPreviews();
-  const removeMenu = useMenuDraftRemove();
-  const selectedMenus = useMenuDraftMenus(dateKey, mealType);
-  const locationState = location.state as MealDetailLocationState | null;
-  const replaceMenuIdCandidate = locationState?.replaceMenuId;
-  const replaceMenuId =
-    typeof replaceMenuIdCandidate === "number" &&
-    Number.isInteger(replaceMenuIdCandidate) &&
-    replaceMenuIdCandidate > 0 &&
-    replaceMenuIdCandidate !== menuId
-      ? replaceMenuIdCandidate
-      : null;
+  const createMenuSelectionFlow = useMenuSelectionFlowCreateFlow();
+  const setPendingReplacementSourceMenuId =
+    useMenuSelectionFlowSetPendingReplacementSourceMenuId();
+  const menuSelectionFlowAdapter = useMenuSelectionFlowAdapter({
+    fallbackMealRecordDateKey: dateKey,
+    fallbackMealRecordMealType: mealType,
+    fallbackMenuSelectionFlowTarget: MENU_SELECTION_FLOW_TARGET.MEAL_RECORD,
+    menuSelectionFlowId,
+  });
+  const isPersonalMenuEditMode =
+    menuSelectionFlowAdapter.menuSelectionFlowTarget === MENU_SELECTION_FLOW_TARGET.FOLDER ||
+    menuSelectionFlowAdapter.menuSelectionFlowTarget === MENU_SELECTION_FLOW_TARGET.MENU_SET;
+  const draftKey =
+    menuSelectionFlowAdapter.relatedMealRecordDraftKey ?? formatMenuDraftKey(dateKey, mealType);
 
   const { data: meal, isPending, isError } = useMealDetailQuery(menuId);
 
   const getBackFallbackPath = () => {
+    if (menuSelectionFlowId) {
+      return (
+        menuSelectionFlowAdapter.menuSelectionCompletionReturnPath ??
+        getMenuSelectionFlowSearchPath(menuSelectionFlowId)
+      );
+    }
+
     return getMealRecordPath(dateKey, mealType);
   };
 
   const handleGoBack = () => {
-    if (locationState?.backReturnPath) {
-      resetStackflow(locationState.backReturnPath, { animate: false });
-      return;
-    }
-
     navigateBack({ fallbackTo: getBackFallbackPath() });
   };
 
@@ -127,13 +131,19 @@ export default function MealDetailPage() {
       return null;
     }
 
-    return selectedMenus.find((item) => item.id === menuId) ?? null;
-  }, [menuId, selectedMenus]);
-  const isAlreadyQueued = existingSelection !== null;
+    return menuSelectionFlowAdapter.getMenuDetailServing(menuId);
+  }, [menuId, menuSelectionFlowAdapter]);
+  const isAlreadyQueued = useMemo(() => {
+    if (menuId === null) {
+      return false;
+    }
+
+    return menuSelectionFlowAdapter.selectedMenuIdSet.has(menuId);
+  }, [menuId, menuSelectionFlowAdapter.selectedMenuIdSet]);
 
   useEffect(() => {
     // 이미 draft에 담긴 메뉴를 수정한 경우, "담기"를 다시 누르지 않아도 preview를 최신 데이터로 동기화한다.
-    if (!meal || menuId === null || !existingSelection) {
+    if (isPersonalMenuEditMode || !meal || menuId === null || !existingSelection) {
       return;
     }
 
@@ -152,7 +162,7 @@ export default function MealDetailPage() {
         },
       ],
     });
-  }, [draftKey, existingSelection, meal, menuId, upsertPreviews]);
+  }, [draftKey, existingSelection, isPersonalMenuEditMode, meal, menuId, upsertPreviews]);
 
   const handleAddMenu = () => {
     if (!meal || !selection) {
@@ -161,61 +171,48 @@ export default function MealDetailPage() {
     }
 
     const nextMenuId = selection.menu.id;
-    const shouldReplaceMenu =
-      replaceMenuId !== null &&
-      replaceMenuId !== nextMenuId &&
-      selectedMenus.some((item) => item.id === replaceMenuId);
+    const replacementSourceMenuIdCandidate =
+      menuSelectionFlowAdapter.pendingReplacementSourceMenuId;
+    const replacementSourceMenuId =
+      typeof replacementSourceMenuIdCandidate === "number" &&
+      Number.isInteger(replacementSourceMenuIdCandidate) &&
+      replacementSourceMenuIdCandidate > 0
+        ? replacementSourceMenuIdCandidate
+        : null;
 
-    const nextSelectedMenuIds = new Set(selectedMenus.map((item) => item.id));
+    const shouldReplaceMenu =
+      replacementSourceMenuId !== null &&
+      replacementSourceMenuId !== nextMenuId &&
+      menuSelectionFlowAdapter.selectedMenuIdSet.has(replacementSourceMenuId);
+
+    const nextSelectedMenuIds = new Set(menuSelectionFlowAdapter.selectedMenuIdSet);
     if (shouldReplaceMenu) {
-      nextSelectedMenuIds.delete(replaceMenuId);
+      nextSelectedMenuIds.delete(replacementSourceMenuId);
     }
     nextSelectedMenuIds.add(nextMenuId);
 
-    if (nextSelectedMenuIds.size > MAX_MEAL_RECORD_MENUS) {
-      toast.warning(MEAL_RECORD_MENU_LIMIT_MESSAGE);
+    if (nextSelectedMenuIds.size > menuSelectionFlowAdapter.maxSelectableMenuCount) {
+      toast.warning(menuSelectionFlowAdapter.menuCountLimitMessage);
       return;
     }
 
     if (shouldReplaceMenu) {
-      removeMenu({ key: draftKey, id: replaceMenuId });
-    }
-
-    upsertMenu({
-      key: draftKey,
-      id: nextMenuId,
-      quantity: selection.quantity,
-      mode: selection.mode,
-    });
-
-    // MealRecordPage는 현재 식단 목록에 없는 id를 렌더링할 때 draft preview를 사용한다.
-    // 새로 생성된 개인 메뉴(id 변경)는 summary 목록에 아직 없으므로 preview를 함께 저장해야 즉시 보인다.
-    const previewMenu = selection.menu.id === meal.id ? meal : selection.menu;
-    upsertPreviews({
-      key: draftKey,
-      previews: [
-        {
-          id: nextMenuId,
-          name: previewMenu.name,
-          brand: previewMenu.brand,
-          unit_quantity: previewMenu.unit_quantity,
-          calories: previewMenu.calories,
-          weight: previewMenu.weight ?? undefined,
-          unit: previewMenu.unit,
-          data_source: previewMenu.data_source,
-        },
-      ],
-    });
-
-    const backFallbackPath = getBackFallbackPath();
-
-    if (locationState?.afterAddReturnPath) {
-      resetStackflow(locationState.afterAddReturnPath, { animate: false });
-      return;
+      menuSelectionFlowAdapter.replaceSelectedMenu({
+        previousMenuId: replacementSourceMenuId,
+        viewMenu: selection.menu,
+        menuQuantity: selection.quantity,
+        menuInputMode: selection.mode,
+      });
+    } else {
+      menuSelectionFlowAdapter.upsertSelectedMenu({
+        viewMenu: selection.menu,
+        menuQuantity: selection.quantity,
+        menuInputMode: selection.mode,
+      });
     }
 
     navigateBack({
-      fallbackTo: backFallbackPath,
+      fallbackTo: getBackFallbackPath(),
     });
   };
 
@@ -244,34 +241,60 @@ export default function MealDetailPage() {
   const isPersonalMenuData = meal.data_source === MENU_DATA_SOURCE.PERSONAL;
   const mealIsDeleted = getMenuIsDeleted(meal);
 
-  const getNutrientModifyPath = (targetMenuId: number) => {
+  const getNutrientModifyPath = (targetMenuId: number, targetMenuSelectionFlowId = menuSelectionFlowId) => {
+    if (targetMenuSelectionFlowId) {
+      return getMenuSelectionFlowPath({
+        path: PATH.NUTRIENT_ADD_MODIFY,
+        menuSelectionFlowId: targetMenuSelectionFlowId,
+        menuId: targetMenuId,
+      });
+    }
+
     const modifyQueryParams = new URLSearchParams({
       date: dateKey,
       mealType,
       menuId: String(targetMenuId),
     });
-    if (searchKeyword.length > 0) {
-      modifyQueryParams.set("keyword", searchKeyword);
-    }
 
     return `${PATH.NUTRIENT_ADD_MODIFY}?${modifyQueryParams.toString()}`;
   };
 
   const handleEditAndAdd = () => {
     if (isPersonalMenuData) {
-      navigate(getNutrientModifyPath(meal.id));
+      moveToNutrientModify(meal);
       return;
     }
 
-    moveToNutrientModify(selection?.menu ?? meal);
+    if (menuId === null) {
+      return;
+    }
+
+    const replacementMenuSelectionFlowId =
+      menuSelectionFlowId ??
+      createMenuSelectionFlow({
+        menuSelectionFlowTarget: MENU_SELECTION_FLOW_TARGET.MEAL_RECORD,
+        menuSelectionCompletionReturnPath: getMealRecordPath(dateKey, mealType),
+        relatedMealRecordDateKey: dateKey,
+        relatedMealRecordMealType: mealType,
+      });
+
+    setPendingReplacementSourceMenuId({
+      menuSelectionFlowId: replacementMenuSelectionFlowId,
+      pendingReplacementSourceMenuId: menuId,
+    });
+
+    moveToNutrientModify(selection?.menu ?? meal, replacementMenuSelectionFlowId);
   };
 
-  const moveToNutrientModify = (menuToModify: MealMenuItem) => {
+  const moveToNutrientModify = (
+    menuToModify: MealMenuItem,
+    targetMenuSelectionFlowId = menuSelectionFlowId,
+  ) => {
     const state: NutrientModifyLocationState = {
       menu: menuToModify,
     };
 
-    navigate(getNutrientModifyPath(menuToModify.id), { state });
+    navigate(getNutrientModifyPath(menuToModify.id, targetMenuSelectionFlowId), { state });
   };
 
   const handleDelete = () => {

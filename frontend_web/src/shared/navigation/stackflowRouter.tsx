@@ -117,6 +117,21 @@ const BrandSearch = createLazyActivity(() => import("@/features/search/brand/Bra
 const MealSearchPage = createLazyActivity(
   () => import("@/features/search/menu-record/MealSearchPage"),
 );
+const CreateFolderPage = createLazyActivity(
+  () => import("@/features/personal-menu/folder/pages/CreateFolderPage"),
+);
+const FolderDetailPage = createLazyActivity(
+  () => import("@/features/personal-menu/folder/pages/FolderDetailPage"),
+);
+const CreateMenuSetPage = createLazyActivity(
+  () => import("@/features/personal-menu/set/pages/CreateMenuSetPage"),
+);
+const MenuSetRegisterSheetPage = createLazyActivity(
+  () => import("@/features/personal-menu/set/pages/MenuSetRegisterSheetPage"),
+);
+const MenuSetDetailPage = createLazyActivity(
+  () => import("@/features/personal-menu/set/pages/MenuSetDetailPage"),
+);
 const SettingsFeedbackPage = createLazyActivity(
   () => import("@/features/settings/SettingsFeedbackPage"),
 );
@@ -196,6 +211,11 @@ const ACTIVITIES = {
   MealRecord: MealRecordPage,
   MealRecordAddSearch: MealSearchPage,
   MealDetail: MealDetailPage,
+  CreateFolder: CreateFolderPage,
+  FolderDetail: FolderDetailPage,
+  CreateMenuSet: CreateMenuSetPage,
+  MenuSetDetail: MenuSetDetailPage,
+  MenuSetRegisterSheet: MenuSetRegisterSheetPage,
   MenuBoardCamera: MenuBoardCameraPage,
   FoodCamera: FoodCameraPage,
   NutrientAdd: NutrientAddPage,
@@ -236,6 +256,11 @@ const ACTIVITY_ROUTES: Record<keyof typeof ACTIVITIES, RoutePath> = {
   MealRecord: PATH.MEAL_RECORD,
   MealRecordAddSearch: PATH.MEAL_RECORD_ADD_SEARCH,
   MealDetail: PATH.MEAL_DETAIL,
+  CreateFolder: PATH.CREATE_FOLDER,
+  FolderDetail: PATH.FOLDER_DETAIL,
+  CreateMenuSet: PATH.CREATE_MENU_SET,
+  MenuSetDetail: PATH.MENU_SET_DETAIL,
+  MenuSetRegisterSheet: PATH.MENU_SET_REGISTER_SHEET,
   MenuBoardCamera: PATH.MENU_BOARD_CAMERA,
   FoodCamera: PATH.FOOD_CAMERA,
   NutrientAdd: PATH.NUTRIENT_ADD,
@@ -266,6 +291,7 @@ const BOTTOM_SHEET_ACTIVITY_NAMES = new Set<ActivityName>([
   "HomeStepsLogSheet",
   "ProfileNicknameSheet",
   "ChatMealRecordSheet",
+  "MenuSetRegisterSheet",
 ]);
 
 const STACK_TRANSITION_DURATION = 270;
@@ -550,8 +576,9 @@ function getClickableElementAtPoint(x: number, y: number) {
 }
 
 function forwardTapThroughEdgeSwipeZone(
-  event: ReactPointerEvent<HTMLElement>,
   pointerDownTarget: EventTarget | null,
+  clientX: number,
+  clientY: number,
 ) {
   if (!isEdgeSwipeZone(pointerDownTarget)) return;
 
@@ -559,7 +586,7 @@ function forwardTapThroughEdgeSwipeZone(
   const previousPointerEvents = edgeSwipeZone.style.pointerEvents;
   edgeSwipeZone.style.pointerEvents = "none";
 
-  const target = getClickableElementAtPoint(event.clientX, event.clientY);
+  const target = getClickableElementAtPoint(clientX, clientY);
   edgeSwipeZone.style.pointerEvents = previousPointerEvents;
 
   target?.click();
@@ -826,8 +853,15 @@ function StackActivityFrame({
       }
 
       if (!swipe.dragging) {
-        forwardTapThroughEdgeSwipeZone(event, swipe.pointerDownTarget);
+        const { pointerDownTarget } = swipe;
+        const { clientX, clientY } = event;
         clearSwipe();
+        // The forwarded click can call navigateBack(), which also uses this frame's
+        // swipe transition requester. Forward after the pointer event settles so the
+        // pending tap state does not force that navigation into the fallback path.
+        window.setTimeout(() => {
+          forwardTapThroughEdgeSwipeZone(pointerDownTarget, clientX, clientY);
+        }, 0);
         return;
       }
 

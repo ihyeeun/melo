@@ -1,4 +1,4 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { type QueryClient, useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { queryKeys as calendarQueryKeys } from "@/features/calendar/hooks/queries/calendar.queryKey";
 import { queryKeys } from "@/features/home/hooks/queries/todayRecord.queryKey";
@@ -6,6 +6,7 @@ import {
   deleteTodayMealRecord,
   postTodayMealRecordRegister,
 } from "@/features/meal-record/api/DayMeal";
+import { menuQueryKeys } from "@/features/meal-record/hooks/queries/menuCache";
 import {
   type MealServingInputMode,
   type MealTime,
@@ -14,23 +15,25 @@ import {
 import type { RegisterMealRequestDto } from "@/shared/api/types/api.request.dto";
 import type { UseMutationCallback } from "@/shared/api/types/callback.types";
 
+function invalidateMealRecordRelatedQueries(queryClient: QueryClient, date: string) {
+  return Promise.all([
+    queryClient.invalidateQueries({ queryKey: queryKeys.dayMeals.byDate(date) }),
+    queryClient.invalidateQueries({ queryKey: calendarQueryKeys.recordedDates.all }),
+    queryClient.invalidateQueries({ queryKey: menuQueryKeys.frequentlyRecorded() }),
+  ]);
+}
+
 export function useTodayMealRecordRegisterMutation(callbacks?: UseMutationCallback) {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: postTodayMealRecordRegister,
     onSuccess: async (_data, variables) => {
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: queryKeys.dayMeals.byDate(variables.date) }),
-        queryClient.invalidateQueries({ queryKey: calendarQueryKeys.recordedDates.all }),
-      ]);
+      await invalidateMealRecordRelatedQueries(queryClient, variables.date);
       callbacks?.onSuccess?.();
     },
     onError: async (error, variables) => {
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: queryKeys.dayMeals.byDate(variables.date) }),
-        queryClient.invalidateQueries({ queryKey: calendarQueryKeys.recordedDates.all }),
-      ]);
+      await invalidateMealRecordRelatedQueries(queryClient, variables.date);
       callbacks?.onError?.(error);
     },
   });
@@ -42,17 +45,11 @@ export function useTodayMealRecordDeleteMutation(callbacks?: UseMutationCallback
   return useMutation({
     mutationFn: deleteTodayMealRecord,
     onSuccess: async (_data, variables) => {
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: queryKeys.dayMeals.byDate(variables.date) }),
-        queryClient.invalidateQueries({ queryKey: calendarQueryKeys.recordedDates.all }),
-      ]);
+      await invalidateMealRecordRelatedQueries(queryClient, variables.date);
       callbacks?.onSuccess?.();
     },
     onError: async (error, variables) => {
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: queryKeys.dayMeals.byDate(variables.date) }),
-        queryClient.invalidateQueries({ queryKey: calendarQueryKeys.recordedDates.all }),
-      ]);
+      await invalidateMealRecordRelatedQueries(queryClient, variables.date);
       callbacks?.onError?.(error);
     },
   });
@@ -119,8 +116,7 @@ export function useTodayMealRecordDeleteWithRollbackMutation() {
           });
         }
 
-        await queryClient.invalidateQueries({ queryKey: queryKeys.dayMeals.byDate(dateKey) });
-        await queryClient.invalidateQueries({ queryKey: calendarQueryKeys.recordedDates.all });
+        await invalidateMealRecordRelatedQueries(queryClient, dateKey);
         return DELETE_MEAL_RECORD_RESULT.DELETED;
       } catch {
         let rollbackSucceeded = true;
@@ -133,8 +129,7 @@ export function useTodayMealRecordDeleteWithRollbackMutation() {
           rollbackSucceeded = false;
         }
 
-        await queryClient.invalidateQueries({ queryKey: queryKeys.dayMeals.byDate(dateKey) });
-        await queryClient.invalidateQueries({ queryKey: calendarQueryKeys.recordedDates.all });
+        await invalidateMealRecordRelatedQueries(queryClient, dateKey);
 
         return rollbackSucceeded
           ? DELETE_MEAL_RECORD_RESULT.FAILED_RECOVERED
