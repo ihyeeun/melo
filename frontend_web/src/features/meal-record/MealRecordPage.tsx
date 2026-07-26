@@ -778,7 +778,6 @@ export default function MealRecordPage() {
 
               {displayMenuSetItems.map((menuSet) => (
                 <MealMenuCard
-                  className={styles.menuSetFeatureHidden}
                   key={`${mealType}-set-${menuSet.set_id}`}
                   name={menuSet.set_name}
                   description={menuSet.menu_names.join(", ")}
