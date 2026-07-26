@@ -350,6 +350,118 @@
   font-weight: var(--fw-bold);
 }
 
+.mealRecordModeGuideList {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.mealRecordModeGuideItem {
+  align-items: flex-start;
+  display: flex;
+  gap: 8px;
+}
+
+.mealRecordModeGuideNumber {
+  align-items: center;
+  background-color: var(--primary-normal);
+  border-radius: 100px;
+  color: var(--static-white);
+  display: inline-flex;
+  padding: 2px 6px;
+  justify-content: center;
+  margin-top: 2px;
+}
+
+.mealRecordModeGuideText {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.mealRecordModeExampleCard {
+  background-color: var(--bg-white);
+  border: 1px solid var(--border-neutral);
+  border-radius: 8px;
+  box-shadow: var(--shadow-normal);
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  padding: 14px 18px;
+}
+
+.mealRecordModeExampleSummary {
+  align-items: center;
+  display: flex;
+  gap: 4px;
+  margin-top: 8px;
+  min-width: 0;
+}
+
+.mealRecordModeExampleName {
+  display: -webkit-box;
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+.mealRecordModeExampleCalories {
+  flex: 0 0 auto;
+  margin-left: 8px;
+}
+
+.mealRecordModeExampleAction {
+  display: grid;
+  gap: 6px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-top: 14px;
+}
+
+.mealRecordModeExampleButton {
+  align-items: center;
+  border: 1px solid var(--border-neutral);
+  border-radius: 6px;
+  color: var(--label-assistive);
+  display: inline-flex;
+  justify-content: center;
+  min-height: 36px;
+  min-width: 0;
+  padding: 8px 10px;
+  text-align: center;
+  white-space: normal;
+}
+
+.mealRecordModeExampleButtonPrimary {
+  border-color: var(--border-primary);
+  color: var(--label-primary);
+}
+
+.mealRecordModeTipCard {
+  align-items: center;
+  background-color: var(--orange-100);
+  border: 1px solid var(--orange-300);
+  border-radius: 8px;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  max-width: 100%;
+  padding: 14px 16px;
+  width: 100%;
+}
+
+.mealRecordModeTipTitle {
+  color: var(--label-primary);
+}
+
 .assistantBubbleWithTime,
 .mealRecordCardWithTime {
   position: relative;
@@ -668,6 +780,12 @@
     opacity 180ms ease;
 }
 
+.quickChipWrapper {
+  display: inline-flex;
+  flex-shrink: 0;
+  position: relative;
+}
+
 .chipContainer {
   background-color: var(--bg-white);
   color: var(--label-primary);
@@ -680,6 +798,32 @@
   align-items: center;
   gap: 4px;
   box-shadow: var(--shadow-normal);
+}
+
+.mealRecordModeHintBubble {
+  background-color: var(--bg-primary-1);
+  border-radius: 6px;
+  bottom: calc(100% + 12px);
+  box-shadow: var(--shadow-strong);
+  color: var(--label-white);
+  left: 0;
+  max-width: min(230px, calc(100vw - 40px));
+  padding: 10px 12px;
+  position: absolute;
+  white-space: pre-line;
+  width: max-content;
+  z-index: 1;
+}
+
+.mealRecordModeHintBubble::after {
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-top: 9px solid var(--bg-primary-1);
+  content: "";
+  left: 42px;
+  position: absolute;
+  top: 100%;
+  transform: translateX(-50%);
 }
 
 .selectedChip {

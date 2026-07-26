@@ -15,6 +15,7 @@ import { navigateToChatCameraIfSupported } from "@/features/camera/utils/chatCam
 import { AssistantMessageText } from "@/features/chat/components/AssistantMessageText";
 import { AssistantPendingMessage } from "@/features/chat/components/AssistantPendingMessage";
 import type { ChatMealRecordMenu } from "@/features/chat/components/ChatMealRecordBottomSheet";
+import { CHAT_MEAL_RECORD_MODE_ONBOARDING_STORAGE_KEY } from "@/features/chat/constants/mealRecordModeOnboarding";
 import {
   useParseMenusFromTextMutation,
   useSendMessageMutation,
@@ -115,7 +116,8 @@ import {
 import { formatNumberWithMaxOneDecimal } from "@/shared/utils/numberFormat";
 import { formatBaseServingUnit, SERVING_UNIT_PERSON } from "@/shared/utils/servingUnit";
 
-const QUICK_CHIP_LIST = [{ id: "meal-record", label: "식사 기록 모드" }];
+const MEAL_RECORD_MODE_CHIP_ID = "meal-record";
+const QUICK_CHIP_LIST = [{ id: MEAL_RECORD_MODE_CHIP_ID, label: "식사 기록 모드" }];
 const FEEDBACK_GAUGE_VIEWBOX_WIDTH = 220;
 const FEEDBACK_GAUGE_VIEWBOX_HEIGHT = 100;
 const FEEDBACK_GAUGE_CENTER_X = 110;
@@ -133,6 +135,8 @@ const ASSISTANT_BUBBLE_GAP_MS = 1000;
 const ASSISTANT_RESULT_REVEAL_DELAY_MS = 1000;
 const ASSISTANT_RESULT_CARD_GAP_MS = 460;
 const MEAL_RECORD_LOOKBACK_DAYS = 7;
+const MEAL_RECORD_MODE_HINT_MESSAGE =
+  "식사 기록 모드란?\n채팅으로 식사를 입력하면\n자동으로 기록해주는 기능이에요.";
 
 type RecordedMenuSummary = {
   menu_id: number;
@@ -501,7 +505,11 @@ export default function ChatPage() {
   const [extraMealRecordDateKeys, setExtraMealRecordDateKeys] = useState<string[]>([]);
   const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null);
   const [selectedChipId, setSelectedChipId] = useState<string | null>(null);
-  const isMealRecordTextMode = selectedChipId === "meal-record";
+  const [isMealRecordModeOnboardingDone, setIsMealRecordModeOnboardingDone] = useState(
+    getIsMealRecordModeOnboardingDone,
+  );
+  const [isMealRecordModeGuideVisible, setIsMealRecordModeGuideVisible] = useState(false);
+  const isMealRecordTextMode = selectedChipId === MEAL_RECORD_MODE_CHIP_ID;
   const clientOsName = useClientOsName();
   const isSoftKeyboardVisible = useSoftKeyboardVisible(isInputFocused, clientOsName);
 
@@ -626,10 +634,14 @@ export default function ChatPage() {
     pendingMealRecordInput !== null;
   const isAwaitingChatResponse =
     pendingInput !== null || pendingMealRecordInput !== null || isAssistantPlaybackActive;
-  const hasTimelineContent = timelineItems.length > 0 || isAwaitingChatResponse;
+  const shouldRenderMealRecordModeGuide = isMealRecordModeGuideVisible;
+  const hasTimelineContent =
+    timelineItems.length > 0 || isAwaitingChatResponse || shouldRenderMealRecordModeGuide;
   const isTypingPending = isAwaitingChatResponse && isSendPending;
   const isInputEmpty = inputValue.trim().length === 0;
   const isQuickActionVisible = isInputEmpty && !isSoftKeyboardVisible && !isAwaitingChatResponse;
+  const shouldShowMealRecordModeHint =
+    isQuickActionVisible && !isMealRecordModeOnboardingDone && !isMealRecordTextMode;
   const shouldDeferTimelineRender = pendingInput === null && isTimelineDataPending;
   const shouldRenderTimeline = hasTimelineContent && !shouldDeferTimelineRender;
   const shouldShowTimelineSkeleton = shouldDeferTimelineRender;
@@ -1248,7 +1260,7 @@ export default function ChatPage() {
         mealTime,
         menus: nextMenus,
         menuSets: baseMenuSets,
-        image: shouldPreserveExistingImage ? existingImage ?? image : image ?? existingImage,
+        image: shouldPreserveExistingImage ? (existingImage ?? image) : (image ?? existingImage),
       });
 
       try {
@@ -1412,6 +1424,27 @@ export default function ChatPage() {
 
   const handleInputFocusChange = (isFocused: boolean) => {
     setIsInputFocused(isFocused);
+  };
+
+  const handleQuickChipToggle = (chipId: string, isSelected: boolean) => {
+    const shouldSelect = !isSelected;
+
+    setSelectedChipId(shouldSelect ? chipId : null);
+
+    if (!shouldSelect) {
+      return;
+    }
+
+    textInputRef.current?.focus();
+
+    if (chipId !== MEAL_RECORD_MODE_CHIP_ID || isMealRecordModeOnboardingDone) {
+      return;
+    }
+
+    saveMealRecordModeOnboardingDone();
+    setIsMealRecordModeOnboardingDone(true);
+    setIsMealRecordModeGuideVisible(true);
+    shouldFollowBottomRef.current = true;
   };
 
   const handleScrollToBottom = () => {
@@ -2051,6 +2084,16 @@ export default function ChatPage() {
               );
             })}
 
+            {shouldRenderMealRecordModeGuide ? (
+              <section className={styles.conversationSection} aria-live="polite">
+                <div className={styles.assistantMessageRow}>
+                  <div className={styles.assistantMessageContent}>
+                    <MealRecordModeGuide />
+                  </div>
+                </div>
+              </section>
+            ) : null}
+
             {pendingMealRecordInput !== null ? (
               <section className={styles.conversationSection} aria-live="polite">
                 <div className={styles.userMessageGroup}>
@@ -2080,26 +2123,32 @@ export default function ChatPage() {
             <section className={`${styles.chipSection}`}>
               {QUICK_CHIP_LIST.map((chip) => {
                 const isSelected = selectedChipId === chip.id;
+                const shouldShowHint =
+                  shouldShowMealRecordModeHint && chip.id === MEAL_RECORD_MODE_CHIP_ID;
 
                 return (
-                  <div
-                    key={chip.id}
-                    role="button"
-                    className={`${styles.chipContainer} ${isSelected ? styles.selectedChip : ""}`}
-                    onTouchStart={(event) => {
-                      event.preventDefault();
-                      setSelectedChipId(isSelected ? null : chip.id);
-                      if (!isSelected) {
-                        textInputRef.current?.focus();
-                      }
-                    }}
-                    onTouchEnd={(event) => {
-                      event.preventDefault();
-                    }}
-                    aria-pressed={isSelected}
-                  >
-                    <p className="typo-body2">{chip.label}</p>
-                    {isSelected && <SystemIcon name="close" size={18} />}
+                  <div key={chip.id} className={styles.quickChipWrapper}>
+                    {shouldShowHint ? (
+                      <p className={`${styles.mealRecordModeHintBubble} typo-body3`}>
+                        {MEAL_RECORD_MODE_HINT_MESSAGE}
+                      </p>
+                    ) : null}
+                    <button
+                      type="button"
+                      className={`${styles.chipContainer} ${isSelected ? styles.selectedChip : ""}`}
+                      onTouchStart={(event) => {
+                        event.preventDefault();
+                        handleQuickChipToggle(chip.id, isSelected);
+                      }}
+                      onTouchEnd={(event) => {
+                        event.preventDefault();
+                      }}
+                      onClick={() => handleQuickChipToggle(chip.id, isSelected)}
+                      aria-pressed={isSelected}
+                    >
+                      <span className="typo-body2">{chip.label}</span>
+                      {isSelected && <SystemIcon name="close" size={18} />}
+                    </button>
                   </div>
                 );
               })}
@@ -2181,6 +2230,30 @@ function delayAssistantPlayback(delayMs: number) {
   return new Promise<void>((resolve) => {
     globalThis.setTimeout(resolve, delayMs);
   });
+}
+
+function getIsMealRecordModeOnboardingDone() {
+  if (typeof window === "undefined") {
+    return true;
+  }
+
+  try {
+    return window.localStorage.getItem(CHAT_MEAL_RECORD_MODE_ONBOARDING_STORAGE_KEY) === "done";
+  } catch {
+    return false;
+  }
+}
+
+function saveMealRecordModeOnboardingDone() {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  try {
+    window.localStorage.setItem(CHAT_MEAL_RECORD_MODE_ONBOARDING_STORAGE_KEY, "done");
+  } catch {
+    // Storage failure should not block meal record mode.
+  }
 }
 
 function getRecentDateKeys(baseDateKey: string, dayCount: number) {
@@ -2528,6 +2601,90 @@ function ChatHistorySkeleton() {
         </div>
       </section>
     </SkeletonStatus>
+  );
+}
+
+function MealRecordModeGuide() {
+  return (
+    <>
+      <article className={`${styles.feedbackCard} ${styles.assistantResultCardAnimated}`}>
+        <p className={`textNormal typo-title4`}>식사 기록 모드 사용 방법 📌</p>
+
+        <ol className={styles.mealRecordModeGuideList}>
+          <li className={styles.mealRecordModeGuideItem}>
+            <span className={`${styles.mealRecordModeGuideNumber} typo-caption4`}>1</span>
+            <div className={styles.mealRecordModeGuideText}>
+              <p className={`${styles.textNormal} typo-body3`}>
+                자연스럽게 식사 내용을 입력해 주세요.
+              </p>
+              <p className={`${styles.textAssistive} typo-body3`}>
+                예) 아침에 사과 1개와 그릭요거트 먹었어
+              </p>
+            </div>
+          </li>
+
+          <li className={styles.mealRecordModeGuideItem}>
+            <span className={`${styles.mealRecordModeGuideNumber} typo-caption4`}>2</span>
+            <div className={styles.mealRecordModeGuideText}>
+              <p className={`${styles.textNormal} typo-body3`}>
+                멜로가 내용을 인식해서
+                <br />
+                칼로리와 식단을 자동으로 기록해요. 🤖
+              </p>
+            </div>
+          </li>
+
+          <li className={styles.mealRecordModeGuideItem}>
+            <span className={`${styles.mealRecordModeGuideNumber} typo-caption4`}>3</span>
+            <div className={styles.mealRecordModeGuideText}>
+              <p className={`${styles.textNormal} typo-body3`}>
+                기록이 완료되면 이렇게 확인할 수 있어요. 👀
+              </p>
+            </div>
+          </li>
+        </ol>
+
+        <div className={styles.mealRecordModeExampleCard} aria-hidden="true">
+          <p className={`${styles.textPrimary} typo-body3`}>아침 기록 완료!</p>
+          <div className={styles.mealRecordModeExampleSummary}>
+            <p className={`${styles.mealRecordModeExampleName} ${styles.textNormal} typo-body3`}>
+              사과 1개, 그릭요거트
+            </p>
+            <span
+              className={`${styles.mealRecordModeExampleCalories} ${styles.textNormal} textNoWrap typo-body3`}
+            >
+              231kcal
+            </span>
+            <SystemIcon name="chevron-down-thin" size={18} />
+          </div>
+          <div className={styles.mealRecordModeExampleAction}>
+            <span className={`${styles.mealRecordModeExampleButton} typo-label4`}>기록 취소</span>
+            <span
+              className={`${styles.mealRecordModeExampleButton} ${styles.mealRecordModeExampleButtonPrimary} typo-label4`}
+            >
+              수정하기
+            </span>
+          </div>
+        </div>
+      </article>
+
+      <p className={`${styles.assistantBubble} ${styles.assistantBubbleAnimated} typo-body3`}>
+        편하게 채팅하듯 입력하면
+        <br />
+        멜로가 알아서 기록해줄게요! ✨
+      </p>
+
+      <aside className={`${styles.mealRecordModeTipCard}`}>
+        <div>
+          <p className={`${styles.mealRecordModeTipTitle} typo-title4`}>💡 TIP</p>
+          <p className={`${styles.textNormal} typo-body3`}>
+            모드를 끄고 싶을 때는
+            <br />
+            다시 '식사 기록 모드' 버튼을 눌러주세요!
+          </p>
+        </div>
+      </aside>
+    </>
   );
 }
 
