@@ -50,7 +50,11 @@ import {
 } from "@/features/chat/utils/recommendNavigation";
 import { getTodayMealRecordMenus } from "@/features/home/api/todayRecord.api";
 import { queryKeys as homeQueryKeys } from "@/features/home/hooks/queries/todayRecord.queryKey";
-import type { DayMealSummary, MenuWithQuantity } from "@/features/home/utils/dayMealSummary";
+import type {
+  DayMealSummary,
+  MenuSetWithMenus,
+  MenuWithQuantity,
+} from "@/features/home/utils/dayMealSummary";
 import {
   MAX_MEAL_RECORD_MENUS,
   MEAL_RECORD_MENU_LIMIT_MESSAGE,
@@ -62,6 +66,7 @@ import {
 } from "@/features/meal-record/hooks/mutations/useTodayMealRecordMutation";
 import {
   type MenuDraftType,
+  type MenuSetDraftType,
   mergeMenuDraftMenus,
   useMenuDraftPrepareRegisterRequest,
 } from "@/features/meal-record/stores/menuDraft.store";
@@ -135,6 +140,17 @@ type RecordedMenuSummary = {
   recordedCalories: number;
 };
 
+type RecordedMenuSetSummary = {
+  set_id: number;
+  set_name: string;
+  menu_names: string[];
+  recordedCalories: number;
+};
+
+type RecordedMealRecordItem =
+  | ({ type: "menu" } & RecordedMenuSummary)
+  | ({ type: "set" } & RecordedMenuSetSummary);
+
 type MealRecordParseRegisterTarget = {
   dateKey: string;
   mealTime: MealTime;
@@ -151,6 +167,7 @@ type MealRecordDraftTrackingMenu = {
 type MealRecordSnapshot = {
   time: MealTime;
   menus: MenuDraftType[];
+  menuSets: MenuSetDraftType[];
 };
 
 type MealRecordViewModel = {
@@ -160,7 +177,9 @@ type MealRecordViewModel = {
   time: MealTime;
   updatedAt?: string;
   menus: ChatMealRecordMenu[];
+  menuSets: MenuSetWithMenus[];
   recordedMenus: RecordedMenuSummary[];
+  recordedItems: RecordedMealRecordItem[];
   previousMealRecord: MealRecordSnapshot;
 };
 
@@ -507,12 +526,14 @@ export default function ChatPage() {
       image,
       mealTime,
       menus,
+      menuSets,
     }: {
       dateKey: string;
       dayMeals: DayMealSummary;
       image?: string;
       mealTime: MealTime;
       menus: MenuDraftType[];
+      menuSets?: MenuSetDraftType[];
     }) => {
       const mealType = getMealTypeFromChatMealTime(mealTime);
 
@@ -520,6 +541,7 @@ export default function ChatPage() {
         dateKey,
         mealType,
         menus,
+        menuSets,
         image,
         mealTime: dayMeals.mealRecordMealTimesByTime[mealTime],
       });
@@ -1186,15 +1208,18 @@ export default function ChatPage() {
       }
 
       const baseMenus = getMealRecordDraftMenus(targetDayMeals, mealTime);
-      const candidateMenuIds = menus.map((menu) => menu.id);
+      const baseMenuSets = getMealRecordDraftMenuSets(targetDayMeals, mealTime);
+      const baseMenuSetMenuIdSet = new Set(baseMenuSets.flatMap((menuSet) => menuSet.menu_ids));
+      const candidateMenus = menus.filter((menu) => !baseMenuSetMenuIdSet.has(menu.id));
+      const candidateMenuIds = candidateMenus.map((menu) => menu.id);
       const nextMenus = mergeMenuDraftMenus({
         baseMenus,
-        overrideMenus: menus,
+        overrideMenus: candidateMenus,
         candidateIds: candidateMenuIds,
       });
       const previousMenus = previousMealRecord?.menus ?? baseMenus;
       const previousMenuById = new Map(previousMenus.map((menu) => [menu.id, menu]));
-      const changedMenus = menus.filter((menu) =>
+      const changedMenus = candidateMenus.filter((menu) =>
         isSelectedDiaryMealRecordMenuChanged(menu, previousMenuById.get(menu.id)),
       );
 
@@ -1205,7 +1230,7 @@ export default function ChatPage() {
         return "unchanged";
       }
 
-      if (nextMenus.length > MAX_MEAL_RECORD_MENUS) {
+      if (nextMenus.length + baseMenuSets.length > MAX_MEAL_RECORD_MENUS) {
         if (shouldShowToast) {
           toast.warning(MEAL_RECORD_MENU_LIMIT_MESSAGE);
         }
@@ -1222,6 +1247,7 @@ export default function ChatPage() {
         dayMeals: targetDayMeals,
         mealTime,
         menus: nextMenus,
+        menuSets: baseMenuSets,
         image: shouldPreserveExistingImage ? existingImage ?? image : image ?? existingImage,
       });
 
@@ -1653,7 +1679,7 @@ export default function ChatPage() {
       return;
     }
 
-    if (remainingMenus.length === 0) {
+    if (remainingMenus.length === 0 && previousMealRecord.menuSets.length === 0) {
       try {
         const deleteResult = await deleteDiaryMealRecordMutate({
           dateKey: mealRecord.dateKey,
@@ -1662,9 +1688,11 @@ export default function ChatPage() {
             dayMeals: mealRecord.dayMeals,
             mealTime: previousMealRecord.time,
             menus: [],
+            menuSets: [],
             image: mealRecord.image,
           }),
           currentMenusByTime: mealRecord.dayMeals.menusByTime,
+          currentMenuSetsByTime: mealRecord.dayMeals.menuSetsByTime,
         });
 
         if (deleteResult !== DELETE_MEAL_RECORD_RESULT.DELETED) {
@@ -1689,6 +1717,7 @@ export default function ChatPage() {
           dayMeals: mealRecord.dayMeals,
           mealTime: previousMealRecord.time,
           menus: remainingMenus,
+          menuSets: previousMealRecord.menuSets,
           image: mealRecord.image,
         }),
       );
@@ -1713,9 +1742,11 @@ export default function ChatPage() {
           dayMeals: mealRecord.dayMeals,
           mealTime: mealRecord.time,
           menus: [],
+          menuSets: [],
           image: mealRecord.image,
         }),
         currentMenusByTime: mealRecord.dayMeals.menusByTime,
+        currentMenuSetsByTime: mealRecord.dayMeals.menuSetsByTime,
       });
 
       if (deleteResult !== DELETE_MEAL_RECORD_RESULT.DELETED) {
@@ -1813,7 +1844,7 @@ export default function ChatPage() {
                     <div className={styles.assistantMessageRow}>
                       <MealRecordCard
                         animate={animatedMealRecordTimelineItemKeySet.has(timelineItem.key)}
-                        menus={mealRecord.recordedMenus}
+                        items={mealRecord.recordedItems}
                         mealRecordTime={mealRecord.time}
                         dateKey={mealRecord.dateKey}
                         timeText={formatTimeText(getMealRecordUpdatedAt(mealRecord))}
@@ -2916,7 +2947,7 @@ function ChatInput({
 
 function MealRecordCard({
   animate = false,
-  menus,
+  items,
   mealRecordTime,
   dateKey,
   timeText,
@@ -2924,7 +2955,7 @@ function MealRecordCard({
   onEditClick,
 }: {
   animate?: boolean;
-  menus: RecordedMenuSummary[];
+  items: RecordedMealRecordItem[];
   mealRecordTime: MealTime;
   dateKey: string;
   timeText: string;
@@ -2932,19 +2963,21 @@ function MealRecordCard({
   onEditClick: () => void;
 }) {
   const [isOpen, setIsOpen] = useState(false);
-  const primaryMenu = menus[0];
-  const hasMultipleMenus = menus.length > 1;
-  const totalCalories = menus.reduce((sum, menu) => sum + menu.recordedCalories, 0);
+  const primaryItem = items[0];
+  const hasMultipleItems = items.length > 1;
+  const totalCalories = items.reduce((sum, item) => sum + item.recordedCalories, 0);
 
   const mealType = getMealTypeFromChatMealTime(mealRecordTime);
   const mealTimeLabel =
     MEAL_TYPE_OPTIONS.find((option) => option.key === mealType)?.label ?? "식사";
 
-  if (!primaryMenu) return null;
+  if (!primaryItem) return null;
   const handleCancelClick = () => {
     setIsOpen(false);
     onCancelClick();
   };
+  const getItemName = (item: RecordedMealRecordItem) =>
+    item.type === "set" ? item.set_name : item.menu_name;
 
   return (
     <section
@@ -2960,25 +2993,25 @@ function MealRecordCard({
         type="button"
         className={styles.mealRecordSummary}
         onClick={() => {
-          if (hasMultipleMenus) {
+          if (hasMultipleItems) {
             setIsOpen((prev) => !prev);
           } else {
             onEditClick();
           }
         }}
-        aria-expanded={hasMultipleMenus ? isOpen : undefined}
+        aria-expanded={hasMultipleItems ? isOpen : undefined}
       >
         <p className={`${styles.mealRecordSummaryName} ${styles.textNormal} typo-title4`}>
-          {hasMultipleMenus
-            ? `${primaryMenu.menu_name} 외 ${menus.length - 1}개`
-            : primaryMenu.menu_name}
+          {hasMultipleItems
+            ? `${getItemName(primaryItem)} 외 ${items.length - 1}개`
+            : getItemName(primaryItem)}
         </p>
         <span
           className={`${styles.mealRecordSummaryCalories} ${styles.recommendCalories} textNoWrap typo-title3`}
         >
           {formatNumberWithMaxOneDecimal(totalCalories)}kcal
         </span>
-        {hasMultipleMenus ? (
+        {hasMultipleItems ? (
           <SystemIcon
             name="chevron-up-normal"
             size={24}
@@ -2987,17 +3020,27 @@ function MealRecordCard({
         ) : null}
       </button>
 
-      {hasMultipleMenus && isOpen ? (
+      {hasMultipleItems && isOpen ? (
         <button type="button" onClick={onEditClick} className={styles.mealRecordMenuList}>
-          {menus.map((menu) => (
-            <div key={menu.menu_id} className={styles.mealRecordMenuItem}>
-              <p className={`${styles.mealRecordMenuName} ${styles.textNormal} typo-body3`}>
-                {menu.menu_name}
-              </p>
+          {items.map((item) => (
+            <div
+              key={item.type === "set" ? `set-${item.set_id}` : `menu-${item.menu_id}`}
+              className={styles.mealRecordMenuItem}
+            >
+              <div className={styles.mealRecordMenuText}>
+                <p className={`${styles.mealRecordMenuName} ${styles.textNormal} typo-body3`}>
+                  {getItemName(item)}
+                </p>
+                {item.type === "set" && item.menu_names.length > 0 ? (
+                  <p className={`${styles.mealRecordMenuDescription} typo-caption4`}>
+                    {item.menu_names.join(", ")}
+                  </p>
+                ) : null}
+              </div>
               <span
                 className={`${styles.mealRecordMenuCalories} ${styles.textAlternative} textNoWrap typo-body3`}
               >
-                {formatNumberWithMaxOneDecimal(menu.recordedCalories)}kcal
+                {formatNumberWithMaxOneDecimal(item.recordedCalories)}kcal
               </span>
             </div>
           ))}
@@ -3745,12 +3788,14 @@ function buildMealRecordViewModel(
   mealTime: MealTime,
 ): MealRecordViewModel | null {
   const menus = dayMeals.menusByTime?.[mealTime] ?? [];
+  const menuSets = dayMeals.menuSetsByTime?.[mealTime] ?? [];
 
-  if (menus.length === 0) {
+  if (menus.length === 0 && menuSets.length === 0) {
     return null;
   }
 
   const selectedMenus = getMealRecordDraftMenus(dayMeals, mealTime);
+  const selectedMenuSets = getMealRecordDraftMenuSets(dayMeals, mealTime);
 
   return {
     dateKey,
@@ -3759,16 +3804,37 @@ function buildMealRecordViewModel(
     time: mealTime,
     updatedAt: dayMeals.mealRecordTimestampsByTime?.[mealTime]?.updatedAt,
     menus: menus.map(toChatMealRecordMenu),
+    menuSets,
     recordedMenus: menus.map(toRecordedMenuSummary),
+    recordedItems: [
+      ...menus.map((menu) => ({ type: "menu" as const, ...toRecordedMenuSummary(menu) })),
+      ...menuSets.map((menuSet) => ({
+        type: "set" as const,
+        ...toRecordedMenuSetSummary(menuSet),
+      })),
+    ],
     previousMealRecord: {
       time: mealTime,
       menus: selectedMenus,
+      menuSets: selectedMenuSets,
     },
   };
 }
 
 function getMealRecordDraftMenus(dayMeals: DayMealSummary, mealTime: MealTime) {
   return dayMeals.menusByTime?.[mealTime]?.map(toMenuDraftSeed) ?? [];
+}
+
+function getMealRecordDraftMenuSets(dayMeals: DayMealSummary, mealTime: MealTime) {
+  return (
+    dayMeals.menuSetsByTime?.[mealTime]?.map((menuSet) => ({
+      set_id: menuSet.set_id,
+      set_name: menuSet.set_name,
+      menu_ids: menuSet.menu_ids,
+      menu_names: menuSet.menu_names,
+      total_calories: menuSet.total_calories,
+    })) ?? []
+  );
 }
 
 function getMealRecordImage(dayMeals: DayMealSummary, mealTime: MealTime) {
@@ -3838,6 +3904,15 @@ function toRecordedMenuSummary(menu: MenuWithQuantity): RecordedMenuSummary {
     menu_id: menu.id,
     menu_name: menu.name,
     recordedCalories: menu.calories,
+  };
+}
+
+function toRecordedMenuSetSummary(menuSet: MenuSetWithMenus): RecordedMenuSetSummary {
+  return {
+    set_id: menuSet.set_id,
+    set_name: menuSet.set_name,
+    menu_names: menuSet.menu_names,
+    recordedCalories: menuSet.total_calories,
   };
 }
 

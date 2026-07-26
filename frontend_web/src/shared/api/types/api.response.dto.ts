@@ -182,6 +182,7 @@ export interface MenuSetListItemResponseDto {
   set_id: number;
   set_name: string;
   menu_names: string[];
+  menu_ids: number[];
   total_calories: number;
 }
 
@@ -349,6 +350,7 @@ export interface ChatMealRecordParseResponseDto {
   chat_id: number;
   menu_ids: number[];
   menu_quantities: number[];
+  menu_set_ids: number[];
   time?: 0 | 1 | 2 | 3 | 4;
   date?: string;
 }

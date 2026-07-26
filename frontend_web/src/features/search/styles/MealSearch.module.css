@@ -221,8 +221,7 @@
 }
 
 .directRegisterFilterChips {
-  /* TODO 세트 기능 임시처리 */
-  display: none;
+  display: flex;
   gap: 6px;
   overflow-x: auto;
   scrollbar-width: none;
@@ -404,4 +403,10 @@
 .marginTop {
   margin-top: 15px;
   margin-bottom: 5px;
+}
+
+.emptyActionButton {
+  display: flex;
+  justify-content: space-around;
+  width: 100%;
 }

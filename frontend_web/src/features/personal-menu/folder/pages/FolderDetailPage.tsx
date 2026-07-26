@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 
 import { useDayMealsQuery } from "@/features/home/hooks/queries/useTodayRecordQuery";
 import {
@@ -21,7 +21,12 @@ import {
   useMenuSelectionFlowCreateFlow,
 } from "@/features/menu-selection-flow/stores/menuSelectionFlow.store";
 import { getMenuSelectionFlowMenuDetailPath } from "@/features/menu-selection-flow/utils/menuSelectionFlowRoutes";
-import { useFolderDraftSetDraft } from "@/features/personal-menu/folder/stores/folderDraft.store";
+import { DetailActionSelect } from "@/features/personal-menu/components/DetailActionSelect";
+import { useDeleteFolderMutation } from "@/features/personal-menu/folder/hooks/mutations/folder.mutation";
+import {
+  useFolderDraftClearDraft,
+  useFolderDraftSetDraft,
+} from "@/features/personal-menu/folder/stores/folderDraft.store";
 import styles from "@/features/personal-menu/folder/styles/FolderDetailPage.module.css";
 import { PATH } from "@/router/path";
 import { getFolderDetailPath, getMealSearchPath } from "@/router/pathHelpers";
@@ -30,7 +35,8 @@ import type { MenuSimpleResponseDto } from "@/shared/api/types/api.response.dto"
 import { Button } from "@/shared/commons/button/Button";
 import { MealMenuCard } from "@/shared/commons/card/MealMenuCard";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
-import { LoadingIndicator } from "@/shared/commons/loading/Loading";
+import { LoadingIndicator, LoadingOverlay } from "@/shared/commons/loading/Loading";
+import { ConfirmModal } from "@/shared/commons/modals/ConfirmModal";
 import { toast } from "@/shared/commons/toast/toast";
 import {
   navigateBack,
@@ -89,6 +95,7 @@ export default function FolderDetailPage() {
   const mealType = getMealType(searchParams.get("mealType"));
   const folderId = Number(searchParams.get("folderId"));
   const draftKey = formatMenuDraftKey(dateKey, mealType);
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
 
   const {
     data: folderDetail,
@@ -107,6 +114,9 @@ export default function FolderDetailPage() {
   const removeMenu = useMenuDraftRemove();
   const upsertPreviews = useMenuDraftUpsertPreviews();
   const setFolderDraft = useFolderDraftSetDraft();
+  const clearFolderDraft = useFolderDraftClearDraft();
+  const { mutateAsync: deleteFolder, isPending: isDeleteFolderPending } =
+    useDeleteFolderMutation();
   const folderMenuIds = useMemo(
     () => folderDetail?.menu_list.map((menu) => menu.id) ?? [],
     [folderDetail?.menu_list],
@@ -188,6 +198,22 @@ export default function FolderDetailPage() {
       })),
     });
     navigate(PATH.CREATE_FOLDER);
+  };
+
+  const handleDeleteFolderConfirm = async () => {
+    if (!folderDetail || isDeleteFolderPending) {
+      return;
+    }
+
+    try {
+      await deleteFolder({ folder_id: folderId });
+      clearFolderDraft();
+      toast.success("폴더가 삭제되었어요");
+      navigateBack({ fallbackTo: getMealSearchPath(dateKey, mealType) });
+    } catch (error) {
+      toast.warning("폴더 삭제에 실패했어요", "잠시 후 다시 시도해주세요.");
+      throw error;
+    }
   };
 
   const handleMenuDetailOpen = (folderMenu: FolderDetailMenu) => {
@@ -337,9 +363,11 @@ export default function FolderDetailPage() {
         onBack={handleBack}
         rightSlot={
           folderDetail ? (
-            <Button variant="text" color="normal" onClick={handleEditFolder}>
-              수정
-            </Button>
+            <DetailActionSelect
+              disabled={isDeleteFolderPending}
+              onEdit={handleEditFolder}
+              onDelete={() => setIsDeleteConfirmOpen(true)}
+            />
           ) : null
         }
       />
@@ -359,6 +387,20 @@ export default function FolderDetailPage() {
           담기
         </Button>
       </footer>
+
+      <ConfirmModal
+        open={isDeleteConfirmOpen}
+        onOpenChange={setIsDeleteConfirmOpen}
+        title="폴더를 삭제할까요?"
+        description="폴더만 삭제되며, 음식 기록은 유지돼요."
+        cancelText="취소"
+        confirmText="삭제"
+        confirmDisabled={isDeleteFolderPending}
+        closeOnConfirm={false}
+        onConfirm={handleDeleteFolderConfirm}
+      />
+
+      {isDeleteFolderPending ? <LoadingOverlay label="폴더를 삭제하는 중입니다." /> : null}
     </section>
   );
 }

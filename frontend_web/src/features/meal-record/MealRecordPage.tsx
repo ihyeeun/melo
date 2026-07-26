@@ -15,8 +15,10 @@ import {
   useMenuDraftBuildRegisterRequest,
   useMenuDraftClear,
   useMenuDraftMenus,
+  useMenuDraftMenuSets,
   useMenuDraftRemove,
   useMenuDraftRemoveImage,
+  useMenuDraftRemoveMenuSet,
   useMenuDraftReplace,
   useMenuDraftSetMealTime,
   useMenuDraftStore,
@@ -42,6 +44,7 @@ import {
   getMealDetailPath,
   getMealRecordPath,
   getMealSearchPath,
+  getMenuSetDetailPath,
   getMenuSetRegisterSheetPath,
 } from "@/router/pathHelpers";
 import {
@@ -120,6 +123,30 @@ function buildMenuSignature(
     .join("|");
 }
 
+function buildMenuSetSignature(
+  menuSets: Array<{
+    set_id: number;
+    set_name: string;
+    menu_ids: number[];
+    total_calories: number;
+  }>,
+) {
+  return menuSets
+    .map((menuSet) => [
+      menuSet.set_id,
+      menuSet.set_name,
+      menuSet.total_calories,
+      [...new Set(menuSet.menu_ids)].sort((a, b) => a - b).join(","),
+    ])
+    .sort((a, b) => Number(a[0]) - Number(b[0]))
+    .map((parts) => parts.join(":"))
+    .join("|");
+}
+
+function getRegisterRequestItemCount(request: RegisterMealRequestDto) {
+  return (request.menu_ids?.length ?? 0) + (request.menu_set_ids?.length ?? 0);
+}
+
 type DisplayMenuItem = {
   id: number;
   name: string;
@@ -130,6 +157,13 @@ type DisplayMenuItem = {
   unit?: number;
   weight?: number;
   data_source?: number;
+};
+
+type DisplayMenuSetItem = {
+  set_id: number;
+  set_name: string;
+  menu_names: string[];
+  total_calories: number;
 };
 
 const MEAL_RECORD_PERIOD_OPTIONS: MealRecordPeriod[] = ["오전", "오후"];
@@ -147,8 +181,8 @@ export default function MealRecordPage() {
   const [isExitConfirmOpen, setIsExitConfirmOpen] = useState(false);
   const [isTimeSheetOpen, setIsTimeSheetOpen] = useState(false);
   const initialMealRecordTime = useMemo(() => getCurrentMealRecordTime(), []);
-  const [draftMealRecordTime, setDraftMealRecordTime] = useState<MealRecordTimeValue>(
-    () => toMealRecordTimeValue(initialMealRecordTime),
+  const [draftMealRecordTime, setDraftMealRecordTime] = useState<MealRecordTimeValue>(() =>
+    toMealRecordTimeValue(initialMealRecordTime),
   );
   const hasAppliedTransferRef = useRef(false);
 
@@ -167,11 +201,13 @@ export default function MealRecordPage() {
   const replaceDraft = useMenuDraftReplace();
   const upsertPreviews = useMenuDraftUpsertPreviews();
   const removeMenu = useMenuDraftRemove();
+  const removeMenuSet = useMenuDraftRemoveMenuSet();
   const removeImage = useMenuDraftRemoveImage();
   const setMealTime = useMenuDraftSetMealTime();
   const buildRegisterRequest = useMenuDraftBuildRegisterRequest();
   const clearDraft = useMenuDraftClear();
   const draftMenus = useMenuDraftMenus(dateKey, mealType);
+  const draftMenuSets = useMenuDraftMenuSets(dateKey, mealType);
   const allDrafts = useMenuDraftStore((store) => store.drafts);
   const currentDraft = allDrafts[draftKey];
   const hasCurrentDraft = Boolean(currentDraft);
@@ -188,15 +224,21 @@ export default function MealRecordPage() {
     () => currentMenus?.menusByTime[mealType] ?? [],
     [currentMenus, mealType],
   );
+  const currentMenuSetItems = useMemo(
+    () => currentMenus?.menuSetsByTime[mealType] ?? [],
+    [currentMenus, mealType],
+  );
   const currentSeedMenus = useMemo(() => currentMenuItems.map(toMenuDraftSeed), [currentMenuItems]);
+  const currentSeedMenuSets = currentMenuSetItems;
   const currentServerSignature = useMemo(
     () =>
       buildMenuDraftSignature({
         menus: currentSeedMenus,
+        menuSets: currentSeedMenuSets,
         image: currentMenus?.imagesByTime[mealType],
         mealTime: currentMenus?.mealRecordMealTimesByTime[mealType],
       }),
-    [currentMenus, currentSeedMenus, mealType],
+    [currentMenus, currentSeedMenuSets, currentSeedMenus, mealType],
   );
   useSyncMenuDraftWithDayMeals({
     dateKey,
@@ -236,8 +278,10 @@ export default function MealRecordPage() {
 
       const clearKey = formatMenuDraftKey(dateKey, clearMealType);
       const clearSeedMenus = currentMenus.menusByTime[clearMealType].map(toMenuDraftSeed);
+      const clearSeedMenuSets = currentMenus.menuSetsByTime[clearMealType];
       const clearServerSignature = buildMenuDraftSignature({
         menus: clearSeedMenus,
+        menuSets: clearSeedMenuSets,
         image: currentMenus.imagesByTime[clearMealType],
         mealTime: currentMenus.mealRecordMealTimesByTime[clearMealType],
       });
@@ -247,6 +291,7 @@ export default function MealRecordPage() {
         key: clearKey,
         existingMenuCount: clearSeedMenus.length,
         menus: [],
+        menuSets: [],
         image: currentMenus.imagesByTime[clearMealType],
         mealTime: currentMenus.mealRecordMealTimesByTime[clearMealType],
         serverSignature: clearServerSignature,
@@ -258,6 +303,7 @@ export default function MealRecordPage() {
       key: draftKey,
       existingMenuCount: currentSeedMenus.length,
       menus: transferState.menus,
+      menuSets: [],
       image: currentMenus.imagesByTime[mealType],
       mealTime: currentMenus.mealRecordMealTimesByTime[mealType],
       serverSignature: currentServerSignature,
@@ -287,6 +333,10 @@ export default function MealRecordPage() {
   const menuById = useMemo(
     () => new Map(currentMenuItems.map((menu) => [menu.id, menu])),
     [currentMenuItems],
+  );
+  const menuSetById = useMemo(
+    () => new Map(currentMenuSetItems.map((menuSet) => [menuSet.set_id, menuSet])),
+    [currentMenuSetItems],
   );
 
   const displayMenuItems = useMemo(() => {
@@ -342,6 +392,24 @@ export default function MealRecordPage() {
     }, []);
   }, [currentMenuItems, draftMenus, draftPreviewsById, hasCurrentDraft, menuById]);
 
+  const displayMenuSetItems = useMemo<DisplayMenuSetItem[]>(() => {
+    const toDisplayItem = (menuSet: DisplayMenuSetItem): DisplayMenuSetItem => ({
+      set_id: menuSet.set_id,
+      set_name: menuSet.set_name,
+      menu_names: menuSet.menu_names,
+      total_calories: menuSet.total_calories,
+    });
+
+    if (!hasCurrentDraft) {
+      return currentMenuSetItems.map(toDisplayItem);
+    }
+
+    return draftMenuSets.map((draftMenuSet) => {
+      const baseMenuSet = menuSetById.get(draftMenuSet.set_id);
+      return toDisplayItem(baseMenuSet ?? draftMenuSet);
+    });
+  }, [currentMenuSetItems, draftMenuSets, hasCurrentDraft, menuSetById]);
+
   const changedRequests = useMemo(() => {
     if (!currentMenus) {
       return [] as RegisterMealRequestDto[];
@@ -355,14 +423,18 @@ export default function MealRecordPage() {
       if (!draftMenusByType) {
         return requests;
       }
+      const draftMenuSetsByType = draftByType.existingMenuSets;
 
       const currentMenusByType = currentMenus.menusByTime[type].map((menu) => ({
         id: menu.id,
         quantity: menu.quantity,
         mode: menu.serving_input_mode,
       }));
+      const currentMenuSetsByType = currentMenus.menuSetsByTime[type];
       const hasMenuChanged =
         buildMenuSignature(currentMenusByType) !== buildMenuSignature(draftMenusByType);
+      const hasMenuSetChanged =
+        buildMenuSetSignature(currentMenuSetsByType) !== buildMenuSetSignature(draftMenuSetsByType);
       const currentImage = normalizeMealImage(currentMenus.imagesByTime[type]);
       const nextImage =
         draftByType.image === null
@@ -374,7 +446,7 @@ export default function MealRecordPage() {
         normalizeMealRecordTime(draftByType.mealTime) ?? baselineMealRecordTime;
       const hasMealRecordTimeChanged = nextMealRecordTime !== baselineMealRecordTime;
 
-      if (!hasMenuChanged && !hasImageChanged && !hasMealRecordTimeChanged) {
+      if (!hasMenuChanged && !hasMenuSetChanged && !hasImageChanged && !hasMealRecordTimeChanged) {
         return requests;
       }
 
@@ -393,11 +465,18 @@ export default function MealRecordPage() {
   const hasUnsavedChanges = changedRequests.length > 0;
 
   const totalCalories = useMemo(() => {
-    return displayMenuItems.reduce((sum, menu) => {
+    const menuCalories = displayMenuItems.reduce((sum, menu) => {
       return sum + menu.calories;
     }, 0);
-  }, [displayMenuItems]);
-  const showDidNotEatState = didNotEat && displayMenuItems.length === 0;
+    const menuSetCalories = displayMenuSetItems.reduce((sum, menuSet) => {
+      return sum + menuSet.total_calories;
+    }, 0);
+
+    return menuCalories + menuSetCalories;
+  }, [displayMenuItems, displayMenuSetItems]);
+  const hasDisplayItems = displayMenuItems.length > 0 || displayMenuSetItems.length > 0;
+  const canRegisterMenuSet = displayMenuItems.length > 1 && displayMenuSetItems.length === 0;
+  const showDidNotEatState = didNotEat && !hasDisplayItems;
   const selectedMealRecordTime =
     normalizeMealRecordTime(currentDraft?.mealTime) ??
     getBaselineMealRecordTime(mealType) ??
@@ -436,6 +515,10 @@ export default function MealRecordPage() {
 
   const handleRemoveMenu = (menuId: number) => {
     removeMenu({ key: draftKey, id: menuId });
+  };
+
+  const handleRemoveMenuSet = (setId: number) => {
+    removeMenuSet({ key: draftKey, setId });
   };
 
   const handleRemoveImage = () => {
@@ -478,18 +561,21 @@ export default function MealRecordPage() {
       }
 
       if (
-        changedRequests.some((request) => (request.menu_ids?.length ?? 0) > MAX_MEAL_RECORD_MENUS)
+        changedRequests.some(
+          (request) => getRegisterRequestItemCount(request) > MAX_MEAL_RECORD_MENUS,
+        )
       ) {
         toast.warning(MEAL_RECORD_MENU_LIMIT_MESSAGE);
         return;
       }
 
       for (const request of changedRequests) {
-        if ((request.menu_ids?.length ?? 0) === 0) {
+        if (getRegisterRequestItemCount(request) === 0) {
           const deleteResult = await deleteWithRollbackAsync({
             dateKey,
             request,
             currentMenusByTime: currentMenus.menusByTime,
+            currentMenuSetsByTime: currentMenus.menuSetsByTime,
           });
 
           if (deleteResult === DELETE_MEAL_RECORD_RESULT.FAILED_RECOVERED) {
@@ -526,6 +612,10 @@ export default function MealRecordPage() {
 
   const handleMenuDetail = (menuId: number) => {
     navigate(getMealDetailPath(dateKey, mealType, menuId));
+  };
+
+  const handleMenuSetDetail = (setId: number) => {
+    navigate(getMenuSetDetailPath(dateKey, mealType, setId));
   };
 
   const handleBackGuard = useCallback(() => {
@@ -642,7 +732,7 @@ export default function MealRecordPage() {
             </article>
           ) : null}
 
-          {displayMenuItems.length > 0 ? (
+          {hasDisplayItems ? (
             <div className={styles.menuList}>
               <div className={styles.menuActionRow}>
                 <Button
@@ -655,16 +745,18 @@ export default function MealRecordPage() {
                   <SystemIcon name="chevron-right-thin" size={20} />
                 </Button>
 
-                <Button
-                  variant="outlined"
-                  color="primary"
-                  size="small"
-                  className={styles.menuSetRegisterButton}
-                  onClick={handleMenuSetRegisterOpen}
-                >
-                  <SystemIcon name="plus" size={16} />
-                  세트 등록
-                </Button>
+                {canRegisterMenuSet ? (
+                  <Button
+                    variant="outlined"
+                    color="primary"
+                    size="small"
+                    className={styles.menuSetRegisterButton}
+                    onClick={handleMenuSetRegisterOpen}
+                  >
+                    <SystemIcon name="plus" size={16} />
+                    세트 등록
+                  </Button>
+                ) : null}
               </div>
 
               {displayMenuItems.map((menu, index) => (
@@ -681,6 +773,19 @@ export default function MealRecordPage() {
                   icon="delete"
                   onIconClick={() => handleRemoveMenu(menu.id)}
                   onClick={() => handleMenuDetail(menu.id)}
+                />
+              ))}
+
+              {displayMenuSetItems.map((menuSet) => (
+                <MealMenuCard
+                  key={`${mealType}-set-${menuSet.set_id}`}
+                  name={menuSet.set_name}
+                  description={menuSet.menu_names.join(", ")}
+                  calories={menuSet.total_calories}
+                  hideServingInfo
+                  icon="delete"
+                  onIconClick={() => handleRemoveMenuSet(menuSet.set_id)}
+                  onClick={() => handleMenuSetDetail(menuSet.set_id)}
                 />
               ))}
             </div>

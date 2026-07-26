@@ -28,6 +28,7 @@ import {
   useMenuDraftBuildRegisterRequest,
   useMenuDraftClear,
   useMenuDraftMenus,
+  useMenuDraftSelectedCount,
   useMenuDraftUpsert,
   useSyncMenuDraftWithDayMeals,
 } from "@/features/meal-record/stores/menuDraft.store";
@@ -77,6 +78,7 @@ export default function ChatMenuDetailPage() {
   const clearDraft = useMenuDraftClear();
   const buildRegisterRequest = useMenuDraftBuildRegisterRequest();
   const directDraftMenus = useMenuDraftMenus(getTodayFormatDateKey(), directMealType);
+  const directDraftItemCount = useMenuDraftSelectedCount(getTodayFormatDateKey(), directMealType);
   const fallbackTo =
     location.state?.fallbackTo ??
     (chatId === null || !hasSelectionCallback
@@ -175,7 +177,7 @@ export default function ChatMenuDetailPage() {
       const targetDraftKey = formatMenuDraftKey(recordDateKey, targetMealType);
       const isAlreadySelected = directDraftMenus.some((menu) => menu.id === menuId);
 
-      if (!isAlreadySelected && directDraftMenus.length + 1 > MAX_MEAL_RECORD_MENUS) {
+      if (!isAlreadySelected && directDraftItemCount + 1 > MAX_MEAL_RECORD_MENUS) {
         toast.warning(MEAL_RECORD_MENU_LIMIT_MESSAGE);
         return;
       }

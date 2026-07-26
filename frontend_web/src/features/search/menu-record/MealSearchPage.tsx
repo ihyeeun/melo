@@ -10,7 +10,11 @@ import {
 } from "@/features/meal-record/constants/menu.constants";
 import { useMenuCacheItems } from "@/features/meal-record/hooks/queries/menuCache";
 import {
+  APPLY_MENU_SET_RESULT,
   formatMenuDraftKey,
+  useMenuDraftApplyMenuSet,
+  useMenuDraftMenuSets,
+  useMenuDraftRemoveMenuSet,
   useMenuDraftStore,
   useSyncMenuDraftWithDayMeals,
 } from "@/features/meal-record/stores/menuDraft.store";
@@ -101,9 +105,8 @@ export default function MealSearchPage() {
   const [activePersonalMenuTab, setActivePersonalMenuTab] = useState<PersonalMenuTab>(
     PERSONAL_MENU_TAB.FREQUENTLY_RECORDED,
   );
-  // TODO 세트 기능 임시처리
   const [activeDirectRegisterFilter, setActiveDirectRegisterFilter] =
-    useState<DirectRegisterFilter>(DIRECT_REGISTER_FILTER.FOOD);
+    useState<DirectRegisterFilter>(DIRECT_REGISTER_FILTER.ALL);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const loadMoreRef = useRef<HTMLDivElement>(null);
   const menuSetLoadMoreRef = useRef<HTMLDivElement>(null);
@@ -141,9 +144,16 @@ export default function MealSearchPage() {
   } = useDayMealsQuery(dateKey, { enabled: !isPersonalMenuEditSearchMode });
   const draft = useMenuDraftStore((store) => store.drafts[draftKey]);
   const hasDraft = Boolean(draft);
+  const selectedMenuSets = useMenuDraftMenuSets(dateKey, mealType);
+  const applyMenuSet = useMenuDraftApplyMenuSet();
+  const removeMenuSet = useMenuDraftRemoveMenuSet();
   const clearMenuSetDraft = useMenuSetDraftClearDraft();
   const selectedCount = menuSelectionFlowAdapter.selectedCount;
   const selectedMenuIdSet = menuSelectionFlowAdapter.selectedMenuIdSet;
+  const selectedMenuSetIdSet = useMemo(
+    () => new Set(selectedMenuSets.map((menuSet) => menuSet.set_id)),
+    [selectedMenuSets],
+  );
   const isFoodCameraBlocked = useIsFeatureBlocked(FEATURE_GUARD.FOOD_CAMERA);
   const showFoodCameraButton = !isPersonalMenuEditSearchMode && !isFoodCameraBlocked;
   const personalMenuEditFallbackPath =
@@ -258,6 +268,33 @@ export default function MealSearchPage() {
       viewMenu: menu,
       menuQuantity: getDefaultConsumedWeight(menu.weight),
     });
+  };
+
+  const handleToggleMenuSetSelection = (menuSet: MenuSetListItemResponseDto) => {
+    if (selectedMenuSetIdSet.has(menuSet.set_id)) {
+      removeMenuSet({ key: draftKey, setId: menuSet.set_id });
+      return;
+    }
+
+    const applyResult = applyMenuSet({
+      key: draftKey,
+      menuSet: {
+        set_id: menuSet.set_id,
+        set_name: menuSet.set_name,
+        menu_ids: menuSet.menu_ids,
+        menu_names: menuSet.menu_names,
+        total_calories: menuSet.total_calories,
+      },
+    });
+
+    if (applyResult === APPLY_MENU_SET_RESULT.LIMIT_EXCEEDED) {
+      toast.warning(MEAL_RECORD_MENU_LIMIT_MESSAGE);
+      return;
+    }
+
+    if (applyResult === APPLY_MENU_SET_RESULT.INVALID) {
+      toast.warning("세트를 담을 수 없어요", "잠시 후 다시 시도해주세요.");
+    }
   };
 
   const handleMenuDetailPageOpen = (menuId: number) => {
@@ -563,23 +600,52 @@ export default function MealSearchPage() {
   );
 
   const renderPersonalMenuEmptyState = (message: string) => (
-    <section className={styles.loadingContainer}>
+    <section className={styles.emptyResult}>
       <p className="typo-body2">{message}</p>
+      <div className={styles.emptyActionButton}>
+        <Button
+          onClick={() => {
+            setIsDirectInputSheetOpen(true);
+          }}
+          variant="text"
+          interaction="normal"
+          size="small"
+          color="normal"
+        >
+          영양 성분 직접 등록
+          <SystemIcon name="chevron-right-thin" size={18} />
+        </Button>
+        <Button
+          variant="text"
+          interaction="normal"
+          size="small"
+          color="normal"
+          onClick={handleCreateMenuSet}
+        >
+          세트 만들기
+          <SystemIcon name="chevron-right-thin" size={18} />
+        </Button>
+      </div>
     </section>
   );
 
-  const renderMenuSetCard = (menuSet: MenuSetListItemResponseDto) => (
-    <MealMenuCard
-      key={menuSet.set_id}
-      name={menuSet.set_name}
-      description={menuSet.menu_names.join(", ")}
-      calories={menuSet.total_calories}
-      hideServingInfo
-      icon="add"
-      onClick={() => navigate(getMenuSetDetailPath(dateKey, mealType, menuSet.set_id))}
-      onIconClick={() => navigate(getMenuSetDetailPath(dateKey, mealType, menuSet.set_id))}
-    />
-  );
+  const renderMenuSetCard = (menuSet: MenuSetListItemResponseDto) => {
+    const isSelected = selectedMenuSetIdSet.has(menuSet.set_id);
+
+    return (
+      <MealMenuCard
+        key={menuSet.set_id}
+        name={menuSet.set_name}
+        description={menuSet.menu_names.join(", ")}
+        calories={menuSet.total_calories}
+        hideServingInfo
+        icon={isSelected ? "check" : "add"}
+        state={isSelected ? "select" : "default"}
+        onClick={() => navigate(getMenuSetDetailPath(dateKey, mealType, menuSet.set_id))}
+        onIconClick={() => handleToggleMenuSetSelection(menuSet)}
+      />
+    );
+  };
 
   const renderDirectRegisterFilterChips = () => (
     <div className={styles.directRegisterFilterChips} aria-label="직접 등록 필터">
@@ -623,8 +689,7 @@ export default function MealSearchPage() {
       return (
         <div className={styles.compactResultList}>
           <div className={`${styles.folderName} ${styles.marginTop}`}>
-            {/* TODO 세트 기능 임시처리 */}
-            {/* <h3 className="typo-title4 textNormal">음식</h3> */}
+            <h3 className="typo-title4 textNormal">음식</h3>
             <Button
               className={styles.directRegisterPromptAction}
               onClick={() => {
@@ -644,7 +709,23 @@ export default function MealSearchPage() {
       );
     }
 
-    return renderPersonalMenuEmptyState(emptyText);
+    return (
+      <section className={styles.emptyResult}>
+        <p className="typo-body2">{emptyText}</p>
+        <Button
+          onClick={() => {
+            setIsDirectInputSheetOpen(true);
+          }}
+          variant="text"
+          interaction="normal"
+          size="small"
+          color="normal"
+        >
+          영양 성분 직접 등록
+          <SystemIcon name="chevron-right-thin" size={18} />
+        </Button>
+      </section>
+    );
   };
 
   const renderMenuSetResult = ({
@@ -689,7 +770,7 @@ export default function MealSearchPage() {
     }
 
     return (
-      <section className={styles.loadingContainer}>
+      <section className={styles.emptyResult}>
         <p className="typo-body2">{emptyText}</p>
         <Button
           variant="text"

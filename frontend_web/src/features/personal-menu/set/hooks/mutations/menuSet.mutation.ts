@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-import { upsertMenuSet } from "@/features/personal-menu/set/api/menuSet.api";
+import { deleteSet, upsertMenuSet } from "@/features/personal-menu/set/api/menuSet.api";
 import { menuSetQueryKeys } from "@/features/personal-menu/set/hooks/queries/menuSet.queryKey";
 import type { UseMutationCallback } from "@/shared/api/types/callback.types";
 
@@ -17,6 +17,26 @@ export function useUpsertMenuSetMutation(callbacks?: UseMutationCallback) {
           queryKey: menuSetQueryKeys.detail(variables.set_id),
         });
       }
+
+      callbacks?.onSuccess?.();
+    },
+    onError: (error) => {
+      callbacks?.onError?.(error);
+    },
+  });
+}
+
+export function useDeleteMenuSetMutation(callbacks?: UseMutationCallback) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: deleteSet,
+    onSuccess: async (_data, variables) => {
+      const detailQueryKey = menuSetQueryKeys.detail(variables.set_id);
+
+      await queryClient.cancelQueries({ queryKey: detailQueryKey });
+      queryClient.removeQueries({ queryKey: detailQueryKey, exact: true });
+      await queryClient.invalidateQueries({ queryKey: menuSetQueryKeys.list });
 
       callbacks?.onSuccess?.();
     },

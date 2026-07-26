@@ -6,6 +6,7 @@ import {
   formatMenuDraftKey,
   useMenuDraftMenus,
   useMenuDraftRemove,
+  useMenuDraftSelectedCount,
   useMenuDraftUpsert,
   useMenuDraftUpsertPreviews,
 } from "@/features/meal-record/stores/menuDraft.store";
@@ -107,6 +108,10 @@ export function useMenuSelectionFlowAdapter({
     relatedMealRecordDateKey,
     relatedMealRecordMealType,
   );
+  const mealRecordSelectedCount = useMenuDraftSelectedCount(
+    relatedMealRecordDateKey,
+    relatedMealRecordMealType,
+  );
   const upsertMealRecordSelectedMenu = useMenuDraftUpsert();
   const removeMealRecordSelectedMenu = useMenuDraftRemove();
   const upsertMealRecordMenuPreviews = useMenuDraftUpsertPreviews();
@@ -142,7 +147,10 @@ export function useMenuSelectionFlowAdapter({
             menuInputMode: menu.mode,
           }));
   const selectedMenuIdSet = new Set(selectedMenus.map((menu) => menu.menuId));
-  const selectedCount = selectedMenus.length;
+  const selectedCount =
+    menuSelectionFlowTarget === MENU_SELECTION_FLOW_TARGET.MEAL_RECORD
+      ? mealRecordSelectedCount
+      : selectedMenus.length;
   const maxSelectableMenuCount =
     menuSelectionFlowTarget === MENU_SELECTION_FLOW_TARGET.FOLDER
       ? MAX_FOLDER_MENUS

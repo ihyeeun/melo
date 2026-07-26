@@ -21,3 +21,11 @@ export async function getFolderItems({ folder_id }: { folder_id: number }) {
 
   return response;
 }
+
+export async function deleteFolder({ folder_id }: { folder_id: number }) {
+  await appApiData({
+    endpoint: "/home/folder/delete",
+    method: "POST",
+    body: { folder_id },
+  });
+}

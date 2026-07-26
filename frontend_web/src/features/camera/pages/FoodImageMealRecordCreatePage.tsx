@@ -113,13 +113,22 @@ export default function FoodCameraPage() {
         source: "meal_record_camera",
       });
 
-      const currentMenus = useMenuDraftStore.getState().drafts[draftKey]?.existingMenus ?? [];
+      const currentDraft = useMenuDraftStore.getState().drafts[draftKey];
+      const currentMenus = currentDraft?.existingMenus ?? [];
       const nextMenuIds = new Set(currentMenus.map((menu) => menu.id));
+      const currentMenuSetMenuIds = new Set(
+        currentDraft?.existingMenuSets.flatMap((menuSet) => menuSet.menu_ids) ?? [],
+      );
       imageData.menu_ids.forEach((id) => {
-        nextMenuIds.add(id);
+        if (!currentMenuSetMenuIds.has(id)) {
+          nextMenuIds.add(id);
+        }
       });
 
-      if (nextMenuIds.size > MAX_MEAL_RECORD_MENUS) {
+      const nextItemCount =
+        (currentDraft?.existingMenuSets.length ?? 0) + nextMenuIds.size;
+
+      if (nextItemCount > MAX_MEAL_RECORD_MENUS) {
         toast.warning(MEAL_RECORD_MENU_LIMIT_MESSAGE);
         setCapturedPreviewSrc(null);
         setIsUploading(false);
@@ -135,13 +144,15 @@ export default function FoodCameraPage() {
         });
       });
 
-      const latestMenus = useMenuDraftStore.getState().drafts[draftKey]?.existingMenus ?? [];
+      const latestDraft = useMenuDraftStore.getState().drafts[draftKey];
+      const latestMenus = latestDraft?.existingMenus ?? [];
 
       await mealRegisterAsync(
         prepareRegisterRequest({
           dateKey,
           mealType,
           menus: latestMenus,
+          menuSets: latestDraft?.existingMenuSets,
           image: imageData.image_url,
         }),
         {

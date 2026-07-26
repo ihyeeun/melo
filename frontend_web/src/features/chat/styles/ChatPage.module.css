@@ -1018,15 +1018,29 @@
   min-width: 0;
 }
 
+.mealRecordMenuText {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
 .mealRecordMenuName {
   display: -webkit-box;
-  flex: 1 1 auto;
   min-width: 0;
   overflow: hidden;
   overflow-wrap: anywhere;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
   line-clamp: 2;
+}
+
+.mealRecordMenuDescription {
+  color: var(--label-assistive);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .mealRecordMenuCalories {

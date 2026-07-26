@@ -40,3 +40,11 @@ export async function upsertMenuSet(body: UpsertMenuSetRequestDto) {
 
   return response;
 }
+
+export async function deleteSet({ set_id }: { set_id: number }) {
+  await appApiData({
+    endpoint: "/home/set/delete",
+    method: "POST",
+    body: { set_id },
+  });
+}

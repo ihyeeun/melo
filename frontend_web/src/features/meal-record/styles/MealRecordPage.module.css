@@ -66,6 +66,7 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
+  justify-content: space-between;
 }
 
 .menuActionRow {
@@ -79,12 +80,10 @@
   align-items: center;
   gap: 2px;
   min-width: 0;
-  margin-left: auto;
 }
 
 .menuSetRegisterButton {
-  /* TODO 세트 기능 임시처리 */
-  display: none;
+  display: flex;
   gap: 6px;
   white-space: nowrap;
 }

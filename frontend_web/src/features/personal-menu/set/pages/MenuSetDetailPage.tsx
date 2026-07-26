@@ -1,16 +1,12 @@
 import { useMemo, useState } from "react";
 
-import {
-  MAX_MEAL_RECORD_MENUS,
-  MEAL_RECORD_MENU_LIMIT_MESSAGE,
-} from "@/features/meal-record/constants/menu.constants";
+import { MEAL_RECORD_MENU_LIMIT_MESSAGE } from "@/features/meal-record/constants/menu.constants";
 import { useMenuCacheItems } from "@/features/meal-record/hooks/queries/menuCache";
 import {
+  APPLY_MENU_SET_RESULT,
   formatMenuDraftKey,
-  useMenuDraftMenus,
-  useMenuDraftSelectedCount,
-  useMenuDraftUpsert,
-  useMenuDraftUpsertPreviews,
+  useMenuDraftApplyMenuSet,
+  useMenuDraftRemoveMenuSet,
 } from "@/features/meal-record/stores/menuDraft.store";
 import { getMealType, getSafeDateKey } from "@/features/meal-record/utils/mealRecord.queryParams";
 import {
@@ -21,7 +17,11 @@ import {
   getMenuSelectionFlowMenuDetailPath,
   getMenuSelectionFlowSearchPath,
 } from "@/features/menu-selection-flow/utils/menuSelectionFlowRoutes";
-import { useUpsertMenuSetMutation } from "@/features/personal-menu/set/hooks/mutations/menuSet.mutation";
+import { DetailActionSelect } from "@/features/personal-menu/components/DetailActionSelect";
+import {
+  useDeleteMenuSetMutation,
+  useUpsertMenuSetMutation,
+} from "@/features/personal-menu/set/hooks/mutations/menuSet.mutation";
 import { useMenuSetDetailQuery } from "@/features/personal-menu/set/hooks/queries/useMenuSetDetailQuery";
 import {
   type MenuSetDraftSelectedMenu,
@@ -46,6 +46,7 @@ import { MealMenuCard } from "@/shared/commons/card/MealMenuCard";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import { LoadingIndicator, LoadingOverlay } from "@/shared/commons/loading/Loading";
+import { ConfirmModal } from "@/shared/commons/modals/ConfirmModal";
 import { toast } from "@/shared/commons/toast/toast";
 import {
   navigateBack,
@@ -189,6 +190,7 @@ export default function MenuSetDetailPage() {
   const setId = Number(searchParams.get("setId"));
   const isValidSetId = Number.isInteger(setId) && setId > 0;
   const draftKey = formatMenuDraftKey(dateKey, mealType);
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const menuSetDetailPath = isValidSetId
     ? getMenuSetDetailPath(dateKey, mealType, setId)
     : getMealSearchPath(dateKey, mealType);
@@ -199,10 +201,8 @@ export default function MenuSetDetailPage() {
     isError: isMenuSetError,
     refetch: refetchMenuSetDetail,
   } = useMenuSetDetailQuery(setId, { enabled: isValidSetId });
-  const draftMenus = useMenuDraftMenus(dateKey, mealType);
-  const selectedCount = useMenuDraftSelectedCount(dateKey, mealType);
-  const upsertMenu = useMenuDraftUpsert();
-  const upsertPreviews = useMenuDraftUpsertPreviews();
+  const applyMenuSet = useMenuDraftApplyMenuSet();
+  const removeDraftMenuSet = useMenuDraftRemoveMenuSet();
   const setMenuSetDraft = useMenuSetDraftSetDraft();
   const clearMenuSetDraft = useMenuSetDraftClearDraft();
   const menuSetDraftSetId = useMenuSetDraftSetId();
@@ -219,6 +219,8 @@ export default function MenuSetDetailPage() {
 
   const { mutateAsync: upsertMenuSet, isPending: isUpsertMenuSetPending } =
     useUpsertMenuSetMutation();
+  const { mutateAsync: deleteMenuSet, isPending: isDeleteMenuSetPending } =
+    useDeleteMenuSetMutation();
 
   const serverMenus = useMemo(
     () => (menuSetDetail ? toMenuSetDetailMenus(menuSetDetail, menuSetMenuItems) : []),
@@ -246,7 +248,6 @@ export default function MenuSetDetailPage() {
     });
   }
 
-  const selectedMenuIdSet = useMemo(() => new Set(draftMenus.map((menu) => menu.id)), [draftMenus]);
   const totalCalories = useMemo(
     () => editableMenus.reduce((sum, menu) => sum + menu.displayCalories, 0),
     [editableMenus],
@@ -259,7 +260,10 @@ export default function MenuSetDetailPage() {
     () => buildMenuSetMenusSignature(editableMenus) !== serverMenusSignature,
     [editableMenus, serverMenusSignature],
   );
-  const canApplyMenuSet = (editableMenus.length > 0 || hasMenuSetChanges) && !isUpsertMenuSetPending;
+  const canApplyMenuSet =
+    (editableMenus.length > 0 || hasMenuSetChanges) &&
+    !isUpsertMenuSetPending &&
+    !isDeleteMenuSetPending;
 
   const handleBack = () => {
     navigateBack({ fallbackTo: getMealSearchPath(dateKey, mealType) });
@@ -301,6 +305,23 @@ export default function MenuSetDetailPage() {
     navigate(PATH.CREATE_MENU_SET);
   };
 
+  const handleDeleteMenuSetConfirm = async () => {
+    if (!menuSetDetail || !isValidSetId || isDeleteMenuSetPending) {
+      return;
+    }
+
+    try {
+      await deleteMenuSet({ set_id: setId });
+      clearMenuSetDraft();
+      removeDraftMenuSet({ key: draftKey, setId });
+      toast.success("세트가 삭제되었어요");
+      navigateBack({ fallbackTo: getMealSearchPath(dateKey, mealType) });
+    } catch (error) {
+      toast.warning("세트 삭제에 실패했어요", "잠시 후 다시 시도해주세요.");
+      throw error;
+    }
+  };
+
   const handleAddMenu = () => {
     if (!prepareMenuSetDraft()) {
       return;
@@ -336,7 +357,7 @@ export default function MenuSetDetailPage() {
   };
 
   const handleApplyMenuSet = async () => {
-    if (!menuSetDetail || isUpsertMenuSetPending) {
+    if (!menuSetDetail || isUpsertMenuSetPending || isDeleteMenuSetPending) {
       return;
     }
 
@@ -364,15 +385,6 @@ export default function MenuSetDetailPage() {
       return;
     }
 
-    const nextMenuCount = editableMenus.filter(
-      (menuSetMenu) => !selectedMenuIdSet.has(menuSetMenu.menu.id),
-    ).length;
-
-    if (selectedCount + nextMenuCount > MAX_MEAL_RECORD_MENUS) {
-      toast.warning(MEAL_RECORD_MENU_LIMIT_MESSAGE);
-      return;
-    }
-
     if (hasMenuSetChanges) {
       try {
         await upsertMenuSet(
@@ -388,31 +400,28 @@ export default function MenuSetDetailPage() {
       }
     }
 
-    clearMenuSetDraft();
-
-    editableMenus.forEach((menuSetMenu) => {
-      upsertMenu({
-        key: draftKey,
-        id: menuSetMenu.menu.id,
-        quantity: menuSetMenu.quantity,
-        mode: menuSetMenu.inputMode,
-      });
-    });
-
-    upsertPreviews({
+    const applyResult = applyMenuSet({
       key: draftKey,
-      previews: editableMenus.map((menuSetMenu) => ({
-        id: menuSetMenu.menu.id,
-        name: menuSetMenu.menu.name,
-        brand: menuSetMenu.menu.brand,
-        unit_quantity: menuSetMenu.menu.unit_quantity,
-        calories: menuSetMenu.menu.calories,
-        weight: menuSetMenu.menu.weight ?? undefined,
-        unit: menuSetMenu.menu.unit,
-        data_source: menuSetMenu.menu.data_source,
-      })),
+      menuSet: {
+        set_id: setId,
+        set_name: menuSetDetail.set_name,
+        menu_ids: editableMenus.map((menuSetMenu) => menuSetMenu.menu.id),
+        menu_names: editableMenus.map((menuSetMenu) => menuSetMenu.menu.name),
+        total_calories: totalCalories,
+      },
     });
 
+    if (applyResult === APPLY_MENU_SET_RESULT.LIMIT_EXCEEDED) {
+      toast.warning(MEAL_RECORD_MENU_LIMIT_MESSAGE);
+      return;
+    }
+
+    if (applyResult === APPLY_MENU_SET_RESULT.INVALID) {
+      toast.warning("세트를 담을 수 없어요", "잠시 후 다시 시도해주세요.");
+      return;
+    }
+
+    clearMenuSetDraft();
     navigateBack({ fallbackTo: getMealSearchPath(dateKey, mealType) });
   };
 
@@ -507,9 +516,11 @@ export default function MenuSetDetailPage() {
         onBack={handleBack}
         rightSlot={
           menuSetDetail ? (
-            <Button variant="text" color="normal" onClick={handleEditMenuSet}>
-              수정
-            </Button>
+            <DetailActionSelect
+              disabled={isUpsertMenuSetPending || isDeleteMenuSetPending}
+              onEdit={handleEditMenuSet}
+              onDelete={() => setIsDeleteConfirmOpen(true)}
+            />
           ) : null
         }
       />
@@ -530,7 +541,23 @@ export default function MenuSetDetailPage() {
         </Button>
       </footer>
 
-      {isUpsertMenuSetPending ? <LoadingOverlay label="세트를 수정하는 중입니다." /> : null}
+      <ConfirmModal
+        open={isDeleteConfirmOpen}
+        onOpenChange={setIsDeleteConfirmOpen}
+        title="세트를 삭제할까요?"
+        description="세트만 삭제되며, 음식 기록은 유지돼요."
+        cancelText="취소"
+        confirmText="삭제"
+        confirmDisabled={isDeleteMenuSetPending}
+        closeOnConfirm={false}
+        onConfirm={handleDeleteMenuSetConfirm}
+      />
+
+      {isDeleteMenuSetPending ? (
+        <LoadingOverlay label="세트를 삭제하는 중입니다." />
+      ) : isUpsertMenuSetPending ? (
+        <LoadingOverlay label="세트를 수정하는 중입니다." />
+      ) : null}
     </section>
   );
 }
