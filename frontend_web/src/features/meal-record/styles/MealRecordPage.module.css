@@ -79,13 +79,20 @@
 .timeButton {
   align-items: center;
   gap: 2px;
+  margin-left: auto;
   min-width: 0;
 }
 
 .menuSetRegisterButton {
-  display: flex;
+  /* TODO 세트 기능 임시처리 */
+  display: none;
   gap: 6px;
   white-space: nowrap;
+}
+
+.menuSetFeatureHidden {
+  /* TODO 세트 기능 임시처리 */
+  display: none;
 }
 
 .menuCardSkeleton {

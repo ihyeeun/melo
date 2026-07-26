@@ -221,7 +221,8 @@
 }
 
 .directRegisterFilterChips {
-  display: flex;
+  /* TODO 세트 기능 임시처리 */
+  display: none;
   gap: 6px;
   overflow-x: auto;
   scrollbar-width: none;

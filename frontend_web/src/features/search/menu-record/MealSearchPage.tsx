@@ -105,8 +105,9 @@ export default function MealSearchPage() {
   const [activePersonalMenuTab, setActivePersonalMenuTab] = useState<PersonalMenuTab>(
     PERSONAL_MENU_TAB.FREQUENTLY_RECORDED,
   );
+  // TODO 세트 기능 임시처리
   const [activeDirectRegisterFilter, setActiveDirectRegisterFilter] =
-    useState<DirectRegisterFilter>(DIRECT_REGISTER_FILTER.ALL);
+    useState<DirectRegisterFilter>(DIRECT_REGISTER_FILTER.FOOD);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const loadMoreRef = useRef<HTMLDivElement>(null);
   const menuSetLoadMoreRef = useRef<HTMLDivElement>(null);
@@ -710,7 +711,7 @@ export default function MealSearchPage() {
     }
 
     return (
-      <section className={styles.emptyResult}>
+      <section className={`${styles.emptyResult} ${styles.emptyResultContainer}`}>
         <p className="typo-body2">{emptyText}</p>
         <Button
           onClick={() => {
