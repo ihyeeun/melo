@@ -1406,6 +1406,8 @@ export default function ChatPage() {
 
   const handleQuickChipToggle = (chipId: string, isSelected: boolean) => {
     const shouldSelect = !isSelected;
+    const shouldShowMealRecordModeGuideOnSelect =
+      chipId === MEAL_RECORD_MODE_CHIP_ID && !isMealRecordModeOnboardingDone;
 
     setSelectedChipId(shouldSelect ? chipId : null);
 
@@ -1413,16 +1415,19 @@ export default function ChatPage() {
       return;
     }
 
-    textInputRef.current?.focus();
+    shouldFollowBottomRef.current = true;
 
-    if (chipId !== MEAL_RECORD_MODE_CHIP_ID || isMealRecordModeOnboardingDone) {
+    if (!shouldShowMealRecordModeGuideOnSelect) {
+      textInputRef.current?.focus();
+      forceScrollToBottom("instant");
       return;
     }
 
+    textInputRef.current?.blur();
     saveMealRecordModeOnboardingDone();
     setIsMealRecordModeOnboardingDone(true);
     setIsMealRecordModeGuideVisible(true);
-    shouldFollowBottomRef.current = true;
+    forceScrollToBottom("instant");
   };
 
   const handleScrollToBottom = () => {
@@ -2621,7 +2626,7 @@ function MealRecordModeGuide() {
           <p className={`${styles.textPrimary} typo-body3`}>아침 기록 완료!</p>
           <div className={styles.mealRecordModeExampleSummary}>
             <p className={`${styles.mealRecordModeExampleName} ${styles.textNormal} typo-body3`}>
-              사과 1개, 그릭요거트
+              사과 외 1개
             </p>
             <span
               className={`${styles.mealRecordModeExampleCalories} ${styles.textNormal} textNoWrap typo-body3`}
