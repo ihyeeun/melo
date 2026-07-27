@@ -62,15 +62,10 @@ type MenuSnapshot = {
   mode?: MealServingInputMode;
 };
 
-type MenuSetSnapshot = {
-  set_id: number;
-};
-
 type DeleteWithRollbackParams = {
   dateKey: string;
   request: RegisterMealRequestDto;
   currentMenusByTime: Record<MealTime, MenuSnapshot[]>;
-  currentMenuSetsByTime?: Record<MealTime, MenuSetSnapshot[]>;
 };
 
 export const DELETE_MEAL_RECORD_RESULT = {
@@ -90,10 +85,8 @@ export function useTodayMealRecordDeleteWithRollbackMutation() {
       dateKey,
       request,
       currentMenusByTime,
-      currentMenuSetsByTime,
     }: DeleteWithRollbackParams): Promise<DeleteMealRecordResult> => {
       const menusByTime = currentMenusByTime[request.time];
-      const menuSetsByTime = currentMenuSetsByTime?.[request.time] ?? [];
       const snapshot: RegisterMealRequestDto = {
         date: request.date,
         time: request.time,
@@ -104,9 +97,6 @@ export function useTodayMealRecordDeleteWithRollbackMutation() {
             ? MENU_INPUT_MODE.UNIT
             : MENU_INPUT_MODE.WEIGHT,
         ),
-        ...(menuSetsByTime.length > 0
-          ? { menu_set_ids: menuSetsByTime.map((menuSet) => menuSet.set_id) }
-          : {}),
       };
 
       if (typeof request.image === "string" && request.image.trim().length > 0) {
@@ -132,7 +122,7 @@ export function useTodayMealRecordDeleteWithRollbackMutation() {
         let rollbackSucceeded = true;
 
         try {
-          if ((snapshot.menu_ids?.length ?? 0) > 0 || (snapshot.menu_set_ids?.length ?? 0) > 0) {
+          if ((snapshot.menu_ids?.length ?? 0) > 0) {
             await postTodayMealRecordRegister(snapshot);
           }
         } catch {

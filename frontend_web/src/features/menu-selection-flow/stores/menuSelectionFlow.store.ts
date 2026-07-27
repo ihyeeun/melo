@@ -6,7 +6,6 @@ import type { MealServingInputMode, MealType } from "@/shared/api/types/api.dto"
 export const MENU_SELECTION_FLOW_TARGET = {
   MEAL_RECORD: "meal-record",
   FOLDER: "folder",
-  MENU_SET: "menu-set",
 } as const;
 
 export type MenuSelectionFlowTarget =

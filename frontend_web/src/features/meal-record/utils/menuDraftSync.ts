@@ -7,13 +7,6 @@ export type MenuDraftSeed = {
   mode?: MealServingInputMode;
 };
 
-export type MenuSetDraftSeed = {
-  set_id: number;
-  set_name: string;
-  menu_ids: number[];
-  total_calories: number;
-};
-
 export function normalizeServingInputMode(mode: MealServingInputMode | undefined) {
   return mode === "unit" ? "unit" : "weight";
 }
@@ -28,12 +21,10 @@ export function toMenuDraftSeed(menu: MenuWithQuantity): MenuDraftSeed {
 
 export function buildMenuDraftSignature({
   menus,
-  menuSets = [],
   image,
   mealTime,
 }: {
   menus: MenuDraftSeed[];
-  menuSets?: MenuSetDraftSeed[];
   image?: string | null;
   mealTime?: string | null;
 }) {
@@ -42,16 +33,6 @@ export function buildMenuDraftSignature({
     .sort((a, b) => a[0] - b[0])
     .map(([id, quantity, mode]) => `${id}:${quantity}:${mode}`)
     .join("|");
-  const menuSetSignature = menuSets
-    .map((menuSet) => [
-      menuSet.set_id,
-      menuSet.set_name,
-      menuSet.total_calories,
-      [...new Set(menuSet.menu_ids)].sort((a, b) => a - b).join(","),
-    ])
-    .sort((a, b) => Number(a[0]) - Number(b[0]))
-    .map((parts) => parts.join(":"))
-    .join("|");
 
-  return `${menuSignature}|sets:${menuSetSignature}|image:${image ?? ""}|mealTime:${mealTime ?? ""}`;
+  return `${menuSignature}|image:${image ?? ""}|mealTime:${mealTime ?? ""}`;
 }

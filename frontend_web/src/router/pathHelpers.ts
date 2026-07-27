@@ -32,20 +32,6 @@ export function getFolderDetailPath(dateKey: string, mealType: MealType, folderI
   return `${PATH.FOLDER_DETAIL}?${params.toString()}`;
 }
 
-export function getMenuSetRegisterSheetPath(dateKey: string, mealType: MealType) {
-  return `${PATH.MENU_SET_REGISTER_SHEET}?${buildPathQuery(dateKey, mealType)}`;
-}
-
-export function getMenuSetDetailPath(dateKey: string, mealType: MealType, setId: number) {
-  const params = new URLSearchParams({
-    date: dateKey,
-    mealType,
-    setId: String(setId),
-  });
-
-  return `${PATH.MENU_SET_DETAIL}?${params.toString()}`;
-}
-
 export function getMealDetailPath(
   dateKey: string,
   mealType: MealType,

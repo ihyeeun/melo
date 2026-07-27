@@ -78,8 +78,7 @@ export default function MealDetailPage() {
     menuSelectionFlowId,
   });
   const isPersonalMenuEditMode =
-    menuSelectionFlowAdapter.menuSelectionFlowTarget === MENU_SELECTION_FLOW_TARGET.FOLDER ||
-    menuSelectionFlowAdapter.menuSelectionFlowTarget === MENU_SELECTION_FLOW_TARGET.MENU_SET;
+    menuSelectionFlowAdapter.menuSelectionFlowTarget === MENU_SELECTION_FLOW_TARGET.FOLDER;
   const draftKey =
     menuSelectionFlowAdapter.relatedMealRecordDraftKey ?? formatMenuDraftKey(dateKey, mealType);
 

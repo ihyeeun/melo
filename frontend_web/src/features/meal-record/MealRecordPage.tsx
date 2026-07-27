@@ -15,10 +15,8 @@ import {
   useMenuDraftBuildRegisterRequest,
   useMenuDraftClear,
   useMenuDraftMenus,
-  useMenuDraftMenuSets,
   useMenuDraftRemove,
   useMenuDraftRemoveImage,
-  useMenuDraftRemoveMenuSet,
   useMenuDraftReplace,
   useMenuDraftSetMealTime,
   useMenuDraftStore,
@@ -40,13 +38,7 @@ import {
   toMenuDraftSeed,
 } from "@/features/meal-record/utils/menuDraftSync";
 import { PATH } from "@/router/path";
-import {
-  getMealDetailPath,
-  getMealRecordPath,
-  getMealSearchPath,
-  getMenuSetDetailPath,
-  getMenuSetRegisterSheetPath,
-} from "@/router/pathHelpers";
+import { getMealDetailPath, getMealRecordPath, getMealSearchPath } from "@/router/pathHelpers";
 import {
   type MenuSaveAnalyticsItem,
   trackDiaryMenuSave,
@@ -56,7 +48,6 @@ import {
   type MealServingInputMode,
   type MealTime,
   type MealType,
-  MENU_INPUT_MODE,
 } from "@/shared/api/types/api.dto";
 import type { RegisterMealRequestDto } from "@/shared/api/types/api.request.dto";
 import BottomSheet from "@/shared/commons/bottomSheet/BottomSheet";
@@ -123,30 +114,6 @@ function buildMenuSignature(
     .join("|");
 }
 
-function buildMenuSetSignature(
-  menuSets: Array<{
-    set_id: number;
-    set_name: string;
-    menu_ids: number[];
-    total_calories: number;
-  }>,
-) {
-  return menuSets
-    .map((menuSet) => [
-      menuSet.set_id,
-      menuSet.set_name,
-      menuSet.total_calories,
-      [...new Set(menuSet.menu_ids)].sort((a, b) => a - b).join(","),
-    ])
-    .sort((a, b) => Number(a[0]) - Number(b[0]))
-    .map((parts) => parts.join(":"))
-    .join("|");
-}
-
-function getRegisterRequestItemCount(request: RegisterMealRequestDto) {
-  return (request.menu_ids?.length ?? 0) + (request.menu_set_ids?.length ?? 0);
-}
-
 type DisplayMenuItem = {
   id: number;
   name: string;
@@ -157,13 +124,6 @@ type DisplayMenuItem = {
   unit?: number;
   weight?: number;
   data_source?: number;
-};
-
-type DisplayMenuSetItem = {
-  set_id: number;
-  set_name: string;
-  menu_names: string[];
-  total_calories: number;
 };
 
 const MEAL_RECORD_PERIOD_OPTIONS: MealRecordPeriod[] = ["오전", "오후"];
@@ -201,13 +161,11 @@ export default function MealRecordPage() {
   const replaceDraft = useMenuDraftReplace();
   const upsertPreviews = useMenuDraftUpsertPreviews();
   const removeMenu = useMenuDraftRemove();
-  const removeMenuSet = useMenuDraftRemoveMenuSet();
   const removeImage = useMenuDraftRemoveImage();
   const setMealTime = useMenuDraftSetMealTime();
   const buildRegisterRequest = useMenuDraftBuildRegisterRequest();
   const clearDraft = useMenuDraftClear();
   const draftMenus = useMenuDraftMenus(dateKey, mealType);
-  const draftMenuSets = useMenuDraftMenuSets(dateKey, mealType);
   const allDrafts = useMenuDraftStore((store) => store.drafts);
   const currentDraft = allDrafts[draftKey];
   const hasCurrentDraft = Boolean(currentDraft);
@@ -224,21 +182,15 @@ export default function MealRecordPage() {
     () => currentMenus?.menusByTime[mealType] ?? [],
     [currentMenus, mealType],
   );
-  const currentMenuSetItems = useMemo(
-    () => currentMenus?.menuSetsByTime[mealType] ?? [],
-    [currentMenus, mealType],
-  );
   const currentSeedMenus = useMemo(() => currentMenuItems.map(toMenuDraftSeed), [currentMenuItems]);
-  const currentSeedMenuSets = currentMenuSetItems;
   const currentServerSignature = useMemo(
     () =>
       buildMenuDraftSignature({
         menus: currentSeedMenus,
-        menuSets: currentSeedMenuSets,
         image: currentMenus?.imagesByTime[mealType],
         mealTime: currentMenus?.mealRecordMealTimesByTime[mealType],
       }),
-    [currentMenus, currentSeedMenuSets, currentSeedMenus, mealType],
+    [currentMenus, currentSeedMenus, mealType],
   );
   useSyncMenuDraftWithDayMeals({
     dateKey,
@@ -278,10 +230,8 @@ export default function MealRecordPage() {
 
       const clearKey = formatMenuDraftKey(dateKey, clearMealType);
       const clearSeedMenus = currentMenus.menusByTime[clearMealType].map(toMenuDraftSeed);
-      const clearSeedMenuSets = currentMenus.menuSetsByTime[clearMealType];
       const clearServerSignature = buildMenuDraftSignature({
         menus: clearSeedMenus,
-        menuSets: clearSeedMenuSets,
         image: currentMenus.imagesByTime[clearMealType],
         mealTime: currentMenus.mealRecordMealTimesByTime[clearMealType],
       });
@@ -291,7 +241,6 @@ export default function MealRecordPage() {
         key: clearKey,
         existingMenuCount: clearSeedMenus.length,
         menus: [],
-        menuSets: [],
         image: currentMenus.imagesByTime[clearMealType],
         mealTime: currentMenus.mealRecordMealTimesByTime[clearMealType],
         serverSignature: clearServerSignature,
@@ -303,7 +252,6 @@ export default function MealRecordPage() {
       key: draftKey,
       existingMenuCount: currentSeedMenus.length,
       menus: transferState.menus,
-      menuSets: [],
       image: currentMenus.imagesByTime[mealType],
       mealTime: currentMenus.mealRecordMealTimesByTime[mealType],
       serverSignature: currentServerSignature,
@@ -333,10 +281,6 @@ export default function MealRecordPage() {
   const menuById = useMemo(
     () => new Map(currentMenuItems.map((menu) => [menu.id, menu])),
     [currentMenuItems],
-  );
-  const menuSetById = useMemo(
-    () => new Map(currentMenuSetItems.map((menuSet) => [menuSet.set_id, menuSet])),
-    [currentMenuSetItems],
   );
 
   const displayMenuItems = useMemo(() => {
@@ -392,24 +336,6 @@ export default function MealRecordPage() {
     }, []);
   }, [currentMenuItems, draftMenus, draftPreviewsById, hasCurrentDraft, menuById]);
 
-  const displayMenuSetItems = useMemo<DisplayMenuSetItem[]>(() => {
-    const toDisplayItem = (menuSet: DisplayMenuSetItem): DisplayMenuSetItem => ({
-      set_id: menuSet.set_id,
-      set_name: menuSet.set_name,
-      menu_names: menuSet.menu_names,
-      total_calories: menuSet.total_calories,
-    });
-
-    if (!hasCurrentDraft) {
-      return currentMenuSetItems.map(toDisplayItem);
-    }
-
-    return draftMenuSets.map((draftMenuSet) => {
-      const baseMenuSet = menuSetById.get(draftMenuSet.set_id);
-      return toDisplayItem(baseMenuSet ?? draftMenuSet);
-    });
-  }, [currentMenuSetItems, draftMenuSets, hasCurrentDraft, menuSetById]);
-
   const changedRequests = useMemo(() => {
     if (!currentMenus) {
       return [] as RegisterMealRequestDto[];
@@ -423,18 +349,14 @@ export default function MealRecordPage() {
       if (!draftMenusByType) {
         return requests;
       }
-      const draftMenuSetsByType = draftByType.existingMenuSets;
 
       const currentMenusByType = currentMenus.menusByTime[type].map((menu) => ({
         id: menu.id,
         quantity: menu.quantity,
         mode: menu.serving_input_mode,
       }));
-      const currentMenuSetsByType = currentMenus.menuSetsByTime[type];
       const hasMenuChanged =
         buildMenuSignature(currentMenusByType) !== buildMenuSignature(draftMenusByType);
-      const hasMenuSetChanged =
-        buildMenuSetSignature(currentMenuSetsByType) !== buildMenuSetSignature(draftMenuSetsByType);
       const currentImage = normalizeMealImage(currentMenus.imagesByTime[type]);
       const nextImage =
         draftByType.image === null
@@ -446,7 +368,7 @@ export default function MealRecordPage() {
         normalizeMealRecordTime(draftByType.mealTime) ?? baselineMealRecordTime;
       const hasMealRecordTimeChanged = nextMealRecordTime !== baselineMealRecordTime;
 
-      if (!hasMenuChanged && !hasMenuSetChanged && !hasImageChanged && !hasMealRecordTimeChanged) {
+      if (!hasMenuChanged && !hasImageChanged && !hasMealRecordTimeChanged) {
         return requests;
       }
 
@@ -465,18 +387,11 @@ export default function MealRecordPage() {
   const hasUnsavedChanges = changedRequests.length > 0;
 
   const totalCalories = useMemo(() => {
-    const menuCalories = displayMenuItems.reduce((sum, menu) => {
+    return displayMenuItems.reduce((sum, menu) => {
       return sum + menu.calories;
     }, 0);
-    const menuSetCalories = displayMenuSetItems.reduce((sum, menuSet) => {
-      return sum + menuSet.total_calories;
-    }, 0);
-
-    return menuCalories + menuSetCalories;
-  }, [displayMenuItems, displayMenuSetItems]);
-  const hasDisplayItems = displayMenuItems.length > 0 || displayMenuSetItems.length > 0;
-  const canRegisterMenuSet = displayMenuItems.length > 1 && displayMenuSetItems.length === 0;
-  const showDidNotEatState = didNotEat && !hasDisplayItems;
+  }, [displayMenuItems]);
+  const showDidNotEatState = didNotEat && displayMenuItems.length === 0;
   const selectedMealRecordTime =
     normalizeMealRecordTime(currentDraft?.mealTime) ??
     getBaselineMealRecordTime(mealType) ??
@@ -515,10 +430,6 @@ export default function MealRecordPage() {
 
   const handleRemoveMenu = (menuId: number) => {
     removeMenu({ key: draftKey, id: menuId });
-  };
-
-  const handleRemoveMenuSet = (setId: number) => {
-    removeMenuSet({ key: draftKey, setId });
   };
 
   const handleRemoveImage = () => {
@@ -561,21 +472,18 @@ export default function MealRecordPage() {
       }
 
       if (
-        changedRequests.some(
-          (request) => getRegisterRequestItemCount(request) > MAX_MEAL_RECORD_MENUS,
-        )
+        changedRequests.some((request) => (request.menu_ids?.length ?? 0) > MAX_MEAL_RECORD_MENUS)
       ) {
         toast.warning(MEAL_RECORD_MENU_LIMIT_MESSAGE);
         return;
       }
 
       for (const request of changedRequests) {
-        if (getRegisterRequestItemCount(request) === 0) {
+        if ((request.menu_ids?.length ?? 0) === 0) {
           const deleteResult = await deleteWithRollbackAsync({
             dateKey,
             request,
             currentMenusByTime: currentMenus.menusByTime,
-            currentMenuSetsByTime: currentMenus.menuSetsByTime,
           });
 
           if (deleteResult === DELETE_MEAL_RECORD_RESULT.FAILED_RECOVERED) {
@@ -614,10 +522,6 @@ export default function MealRecordPage() {
     navigate(getMealDetailPath(dateKey, mealType, menuId));
   };
 
-  const handleMenuSetDetail = (setId: number) => {
-    navigate(getMenuSetDetailPath(dateKey, mealType, setId));
-  };
-
   const handleBackGuard = useCallback(() => {
     if (hasUnsavedChanges) {
       setIsExitConfirmOpen(true);
@@ -645,32 +549,6 @@ export default function MealRecordPage() {
 
   const handleMealSearchNavigate = () => {
     navigate(getMealSearchPath(dateKey, mealType));
-  };
-
-  const handleMenuSetRegisterOpen = () => {
-    const request = buildRegisterRequest({
-      dateKey,
-      mealType,
-      fallbackImage: mealImage,
-      fallbackMealTime: selectedMealRecordTime,
-    });
-    const menuIds = request.menu_ids ?? [];
-
-    if (menuIds.length === 0) {
-      toast.warning("세트로 등록할 메뉴가 없어요");
-      return;
-    }
-
-    navigate(getMenuSetRegisterSheetPath(dateKey, mealType), {
-      state: {
-        fallbackPath: getMealRecordPath(dateKey, mealType),
-        menus: menuIds.map((menuId, index) => ({
-          id: menuId,
-          quantity: request.menu_quantities?.[index] ?? 1,
-          inputMode: request.menu_input_modes?.[index] ?? MENU_INPUT_MODE.WEIGHT,
-        })),
-      },
-    });
   };
 
   if (isSummaryReady) return <MealRecordPageSkeleton onBack={handleBack} />;
@@ -732,32 +610,17 @@ export default function MealRecordPage() {
             </article>
           ) : null}
 
-          {hasDisplayItems ? (
+          {displayMenuItems.length > 0 ? (
             <div className={styles.menuList}>
-              <div className={styles.menuActionRow}>
-                <Button
-                  variant="text"
-                  color="normal"
-                  className={styles.timeButton}
-                  onClick={handleOpenTimeSheet}
-                >
-                  <span>{formattedMealRecordTime}</span>
-                  <SystemIcon name="chevron-right-thin" size={20} />
-                </Button>
-
-                {canRegisterMenuSet ? (
-                  <Button
-                    variant="outlined"
-                    color="primary"
-                    size="small"
-                    className={styles.menuSetRegisterButton}
-                    onClick={handleMenuSetRegisterOpen}
-                  >
-                    <SystemIcon name="plus" size={16} />
-                    세트 등록
-                  </Button>
-                ) : null}
-              </div>
+              <Button
+                variant="text"
+                color="normal"
+                className={styles.marginLeftAuto}
+                onClick={handleOpenTimeSheet}
+              >
+                <span>{formattedMealRecordTime}</span>
+                <SystemIcon name="chevron-right-thin" size={20} />
+              </Button>
 
               {displayMenuItems.map((menu, index) => (
                 <MealMenuCard
@@ -773,19 +636,6 @@ export default function MealRecordPage() {
                   icon="delete"
                   onIconClick={() => handleRemoveMenu(menu.id)}
                   onClick={() => handleMenuDetail(menu.id)}
-                />
-              ))}
-
-              {displayMenuSetItems.map((menuSet) => (
-                <MealMenuCard
-                  key={`${mealType}-set-${menuSet.set_id}`}
-                  name={menuSet.set_name}
-                  description={menuSet.menu_names.join(", ")}
-                  calories={menuSet.total_calories}
-                  hideServingInfo
-                  icon="delete"
-                  onIconClick={() => handleRemoveMenuSet(menuSet.set_id)}
-                  onClick={() => handleMenuSetDetail(menuSet.set_id)}
                 />
               ))}
             </div>

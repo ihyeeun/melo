@@ -1180,13 +1180,6 @@
   line-clamp: 2;
 }
 
-.mealRecordMenuDescription {
-  color: var(--label-assistive);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 .mealRecordMenuCalories {
   flex: 0 0 auto;
   white-space: nowrap;

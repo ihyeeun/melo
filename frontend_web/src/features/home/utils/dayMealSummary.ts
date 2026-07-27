@@ -6,7 +6,6 @@ import { MENU_INPUT_MODE } from "@/shared/api/types/api.dto";
 import type {
   MealRecordResponseDto,
   MealResponseDto,
-  MeaSetResponseDto,
   MenuSimpleResponseDto,
 } from "@/shared/api/types/api.response.dto";
 
@@ -89,83 +88,10 @@ function getMealRecordSavedAtTime(meal: MealResponseDto) {
   return Number.isFinite(createdAt) ? createdAt : null;
 }
 
-function normalizeMealSet(menuSet: MeaSetResponseDto): MenuSetWithMenus | null {
-  if (
-    typeof menuSet.set_id !== "number" ||
-    !Number.isInteger(menuSet.set_id) ||
-    menuSet.set_id <= 0
-  ) {
-    return null;
-  }
-
-  const setName = typeof menuSet.set_name === "string" ? menuSet.set_name.trim() : "";
-  if (setName.length === 0) {
-    return null;
-  }
-
-  const menuList = Array.isArray(menuSet.menu_list) ? menuSet.menu_list : [];
-  const menuIds = [
-    ...new Set(menuList.map((menu) => menu.id).filter((id) => Number.isInteger(id) && id > 0)),
-  ];
-  const totalCalories =
-    typeof menuSet.total_calories === "number" && Number.isFinite(menuSet.total_calories)
-      ? Math.max(0, menuSet.total_calories)
-      : 0;
-
-  return {
-    set_id: menuSet.set_id,
-    set_name: setName,
-    menu_ids: menuIds,
-    menu_names: menuList
-      .map((menu) => menu.name)
-      .filter((name) => typeof name === "string" && name.trim().length > 0),
-    menu_list: menuList,
-    total_calories: totalCalories,
-  };
-}
-
-function resolveMenuSetNutrients(menuSet: MenuSetWithMenus) {
-  const baseCalories = sumFiniteNutrientValues(menuSet.menu_list.map((menu) => menu.calories));
-  const scaleFactor =
-    baseCalories !== null && baseCalories > 0 ? menuSet.total_calories / baseCalories : 1;
-
-  return {
-    calories: menuSet.total_calories,
-    carbs:
-      (sumFiniteNutrientValues(
-        menuSet.menu_list.map(
-          (menu) => resolveSummaryNutrientValue(menu.carbs, [menu.sugars]).value,
-        ),
-      ) ?? 0) * scaleFactor,
-    protein:
-      (sumFiniteNutrientValues(menuSet.menu_list.map((menu) => menu.protein)) ?? 0) * scaleFactor,
-    fat:
-      (sumFiniteNutrientValues(
-        menuSet.menu_list.map(
-          (menu) =>
-            resolveSummaryNutrientValue(menu.fat, [
-              menu.sat_fat,
-              menu.trans_fat,
-              menu.un_sat_fat,
-            ]).value,
-        ),
-      ) ?? 0) * scaleFactor,
-  };
-}
-
 export type MenuWithQuantity = MenuSimpleResponseDto & {
   is_deleted?: number;
   quantity: number;
   serving_input_mode: MealServingInputMode;
-};
-
-export type MenuSetWithMenus = {
-  set_id: number;
-  set_name: string;
-  menu_ids: number[];
-  menu_names: string[];
-  menu_list: MenuSimpleResponseDto[];
-  total_calories: number;
 };
 
 export type MealRecordTimestamp = Pick<MealResponseDto, "createdAt" | "updatedAt">;
@@ -222,13 +148,6 @@ export type DayMealSummary = {
     3: MenuWithQuantity[];
     4: MenuWithQuantity[];
   };
-  menuSetsByTime: {
-    0: MenuSetWithMenus[];
-    1: MenuSetWithMenus[];
-    2: MenuSetWithMenus[];
-    3: MenuSetWithMenus[];
-    4: MenuSetWithMenus[];
-  };
   imagesByTime: {
     0: string;
     1: string;
@@ -281,13 +200,6 @@ export function dayMealSummary(meals: MealRecordResponseDto): DayMealSummary {
     lateNight: { carbs: 0, protein: 0, fat: 0 },
   };
   const menusByTime: Record<MealTimeKey, MenuWithQuantity[]> = {
-    0: [],
-    1: [],
-    2: [],
-    3: [],
-    4: [],
-  };
-  const menuSetsByTime: Record<MealTimeKey, MenuSetWithMenus[]> = {
     0: [],
     1: [],
     2: [],
@@ -433,34 +345,7 @@ export function dayMealSummary(meals: MealRecordResponseDto): DayMealSummary {
       imagesByTime[mealTime] = meal.image;
     }
 
-    const mealSets = Array.isArray(meal.set_list)
-      ? meal.set_list
-          .map(normalizeMealSet)
-          .filter((menuSet): menuSet is MenuSetWithMenus => menuSet !== null)
-      : [];
-    const mealSetMenuIdSet = new Set(mealSets.flatMap((menuSet) => menuSet.menu_ids));
-
-    mealSets.forEach((menuSet) => {
-      const existingMenuSetIndex = menuSetsByTime[mealTime].findIndex(
-        (item) => item.set_id === menuSet.set_id,
-      );
-
-      if (existingMenuSetIndex !== -1) {
-        const [existingMenuSet] = menuSetsByTime[mealTime].splice(existingMenuSetIndex, 1);
-        if (existingMenuSet) {
-          applyMenuNutrients(mealTime, resolveMenuSetNutrients(existingMenuSet), -1);
-        }
-      }
-
-      menuSetsByTime[mealTime].push(menuSet);
-      applyMenuNutrients(mealTime, resolveMenuSetNutrients(menuSet), 1);
-    });
-
     meal.menu_list.forEach((menu, menuIndex) => {
-      if (mealSetMenuIdSet.has(menu.id)) {
-        return;
-      }
-
       const servingInputMode = resolveServingInputMode(meal, menuIndex);
       const consumedWeight = resolveConsumedWeight(meal, menu, menuIndex);
       const baseWeight =
@@ -529,16 +414,15 @@ export function dayMealSummary(meals: MealRecordResponseDto): DayMealSummary {
     caloriesByTime,
     nutrientsByTime,
     menusByTime,
-    menuSetsByTime,
     imagesByTime,
     mealRecordTimestampsByTime,
     mealRecordMealTimesByTime,
     didNotEatByTime: {
-      0: recordCountByTime[0] > 0 && menusByTime[0].length === 0 && menuSetsByTime[0].length === 0,
-      1: recordCountByTime[1] > 0 && menusByTime[1].length === 0 && menuSetsByTime[1].length === 0,
-      2: recordCountByTime[2] > 0 && menusByTime[2].length === 0 && menuSetsByTime[2].length === 0,
-      3: recordCountByTime[3] > 0 && menusByTime[3].length === 0 && menuSetsByTime[3].length === 0,
-      4: recordCountByTime[4] > 0 && menusByTime[4].length === 0 && menuSetsByTime[4].length === 0,
+      0: recordCountByTime[0] > 0 && menusByTime[0].length === 0,
+      1: recordCountByTime[1] > 0 && menusByTime[1].length === 0,
+      2: recordCountByTime[2] > 0 && menusByTime[2].length === 0,
+      3: recordCountByTime[3] > 0 && menusByTime[3].length === 0,
+      4: recordCountByTime[4] > 0 && menusByTime[4].length === 0,
     },
   };
 }

@@ -10,11 +10,7 @@ import {
 } from "@/features/meal-record/constants/menu.constants";
 import { useMenuCacheItems } from "@/features/meal-record/hooks/queries/menuCache";
 import {
-  APPLY_MENU_SET_RESULT,
   formatMenuDraftKey,
-  useMenuDraftApplyMenuSet,
-  useMenuDraftMenuSets,
-  useMenuDraftRemoveMenuSet,
   useMenuDraftStore,
   useSyncMenuDraftWithDayMeals,
 } from "@/features/meal-record/stores/menuDraft.store";
@@ -26,8 +22,6 @@ import {
   getMenuSelectionFlowMenuDetailPath,
   getMenuSelectionFlowPath,
 } from "@/features/menu-selection-flow/utils/menuSelectionFlowRoutes";
-import { useMenuSetListInfiniteQuery } from "@/features/personal-menu/set/hooks/queries/useMenuSetListInfiniteQuery";
-import { useMenuSetDraftClearDraft } from "@/features/personal-menu/set/stores/menuSetDraft.store";
 import RegisterBottomSheet from "@/features/search/components/RegisterBottomSheet";
 import {
   useFolderListInfiniteQuery,
@@ -42,14 +36,10 @@ import {
   getFolderDetailPath,
   getMealDetailPath,
   getMealRecordPath,
-  getMenuSetDetailPath,
   getPathWithMeal,
 } from "@/router/pathHelpers";
 import { type MealType } from "@/shared/api/types/api.dto";
-import type {
-  MenuSetListItemResponseDto,
-  MenuSimpleResponseDto,
-} from "@/shared/api/types/api.response.dto";
+import type { MenuSimpleResponseDto } from "@/shared/api/types/api.response.dto";
 import { Button } from "@/shared/commons/button/Button";
 import { FloatingCameraButton } from "@/shared/commons/button/FloatingCameraButton";
 import { MealMenuCard } from "@/shared/commons/card/MealMenuCard";
@@ -74,19 +64,8 @@ const PERSONAL_MENU_TAB = {
   FOLDER: "folder",
   REGISTERED: "registered",
 } as const;
-const DIRECT_REGISTER_FILTER = {
-  ALL: "all",
-  FOOD: "food",
-  SET: "set",
-} as const;
-const DIRECT_REGISTER_FILTER_OPTIONS = [
-  { key: DIRECT_REGISTER_FILTER.ALL, label: "전체" },
-  { key: DIRECT_REGISTER_FILTER.FOOD, label: "음식" },
-  { key: DIRECT_REGISTER_FILTER.SET, label: "세트" },
-] as const;
 
 type PersonalMenuTab = (typeof PERSONAL_MENU_TAB)[keyof typeof PERSONAL_MENU_TAB];
-type DirectRegisterFilter = (typeof DIRECT_REGISTER_FILTER)[keyof typeof DIRECT_REGISTER_FILTER];
 
 function getDefaultConsumedWeight(weight: number) {
   return typeof weight === "number" && Number.isFinite(weight) && weight > 0 ? weight : 1;
@@ -105,11 +84,8 @@ export default function MealSearchPage() {
   const [activePersonalMenuTab, setActivePersonalMenuTab] = useState<PersonalMenuTab>(
     PERSONAL_MENU_TAB.FREQUENTLY_RECORDED,
   );
-  const [activeDirectRegisterFilter, setActiveDirectRegisterFilter] =
-    useState<DirectRegisterFilter>(DIRECT_REGISTER_FILTER.ALL);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const loadMoreRef = useRef<HTMLDivElement>(null);
-  const menuSetLoadMoreRef = useRef<HTMLDivElement>(null);
   const draftKey = formatMenuDraftKey(dateKey, mealType);
   const hasSearchKeyword = searchKeyword.trim().length > 0;
   const menuSelectionFlowAdapter = useMenuSelectionFlowAdapter({
@@ -120,22 +96,14 @@ export default function MealSearchPage() {
   });
   const isFolderSearchMode =
     menuSelectionFlowAdapter.menuSelectionFlowTarget === MENU_SELECTION_FLOW_TARGET.FOLDER;
-  const isSetSearchMode =
-    menuSelectionFlowAdapter.menuSelectionFlowTarget === MENU_SELECTION_FLOW_TARGET.MENU_SET;
-  const isPersonalMenuEditSearchMode = isFolderSearchMode || isSetSearchMode;
+  const isPersonalMenuEditSearchMode = isFolderSearchMode;
   const visiblePersonalMenuTab =
     isPersonalMenuEditSearchMode && activePersonalMenuTab === PERSONAL_MENU_TAB.FOLDER
       ? PERSONAL_MENU_TAB.FREQUENTLY_RECORDED
       : activePersonalMenuTab;
   const shouldFetchRegisteredMenus =
     visiblePersonalMenuTab === PERSONAL_MENU_TAB.REGISTERED &&
-    !hasSearchKeyword &&
-    (isPersonalMenuEditSearchMode || activeDirectRegisterFilter !== DIRECT_REGISTER_FILTER.SET);
-  const shouldFetchMenuSets =
-    !isPersonalMenuEditSearchMode &&
-    visiblePersonalMenuTab === PERSONAL_MENU_TAB.REGISTERED &&
-    !hasSearchKeyword &&
-    activeDirectRegisterFilter !== DIRECT_REGISTER_FILTER.FOOD;
+    !hasSearchKeyword;
 
   const {
     data: dayMeals,
@@ -144,21 +112,13 @@ export default function MealSearchPage() {
   } = useDayMealsQuery(dateKey, { enabled: !isPersonalMenuEditSearchMode });
   const draft = useMenuDraftStore((store) => store.drafts[draftKey]);
   const hasDraft = Boolean(draft);
-  const selectedMenuSets = useMenuDraftMenuSets(dateKey, mealType);
-  const applyMenuSet = useMenuDraftApplyMenuSet();
-  const removeMenuSet = useMenuDraftRemoveMenuSet();
-  const clearMenuSetDraft = useMenuSetDraftClearDraft();
   const selectedCount = menuSelectionFlowAdapter.selectedCount;
   const selectedMenuIdSet = menuSelectionFlowAdapter.selectedMenuIdSet;
-  const selectedMenuSetIdSet = useMemo(
-    () => new Set(selectedMenuSets.map((menuSet) => menuSet.set_id)),
-    [selectedMenuSets],
-  );
   const isFoodCameraBlocked = useIsFeatureBlocked(FEATURE_GUARD.FOOD_CAMERA);
   const showFoodCameraButton = !isPersonalMenuEditSearchMode && !isFoodCameraBlocked;
   const personalMenuEditFallbackPath =
     menuSelectionFlowAdapter.menuSelectionCompletionReturnPath ??
-    (isFolderSearchMode ? PATH.CREATE_FOLDER : isSetSearchMode ? PATH.CREATE_MENU_SET : null);
+    (isFolderSearchMode ? PATH.CREATE_FOLDER : null);
 
   const {
     data: frequentlyRecordedMenus,
@@ -174,19 +134,6 @@ export default function MealSearchPage() {
   } = useGetRegisteredMenus({
     enabled: shouldFetchRegisteredMenus,
   });
-  const {
-    data: menuSetPages,
-    fetchNextPage: fetchNextMenuSetPage,
-    hasNextPage: hasNextMenuSetPage,
-    isFetchingNextPage: isFetchingNextMenuSetPage,
-    isPending: isMenuSetsPending,
-    isError: isMenuSetsError,
-    refetch: refetchMenuSets,
-  } = useMenuSetListInfiniteQuery({
-    enabled: shouldFetchMenuSets,
-    limit: MENU_SEARCH_PAGE_LIMIT,
-  });
-
   const {
     data: searchResults,
     fetchNextPage,
@@ -210,10 +157,6 @@ export default function MealSearchPage() {
   const registeredMenuIds = registeredMenus?.menu_ids ?? [];
   const frequentlyRecordedMenuList = useMenuCacheItems(frequentlyRecordedMenuIds);
   const registeredMenuList = useMenuCacheItems(registeredMenuIds);
-  const menuSetList = useMemo(
-    () => menuSetPages?.pages.flatMap((page) => page.set_list) ?? [],
-    [menuSetPages?.pages],
-  );
 
   const resetSearchState = () => {
     setSubmittedKeyword("");
@@ -270,33 +213,6 @@ export default function MealSearchPage() {
     });
   };
 
-  const handleToggleMenuSetSelection = (menuSet: MenuSetListItemResponseDto) => {
-    if (selectedMenuSetIdSet.has(menuSet.set_id)) {
-      removeMenuSet({ key: draftKey, setId: menuSet.set_id });
-      return;
-    }
-
-    const applyResult = applyMenuSet({
-      key: draftKey,
-      menuSet: {
-        set_id: menuSet.set_id,
-        set_name: menuSet.set_name,
-        menu_ids: menuSet.menu_ids,
-        menu_names: menuSet.menu_names,
-        total_calories: menuSet.total_calories,
-      },
-    });
-
-    if (applyResult === APPLY_MENU_SET_RESULT.LIMIT_EXCEEDED) {
-      toast.warning(MEAL_RECORD_MENU_LIMIT_MESSAGE);
-      return;
-    }
-
-    if (applyResult === APPLY_MENU_SET_RESULT.INVALID) {
-      toast.warning("세트를 담을 수 없어요", "잠시 후 다시 시도해주세요.");
-    }
-  };
-
   const handleMenuDetailPageOpen = (menuId: number) => {
     if (menuSelectionFlowId) {
       navigate(
@@ -318,11 +234,6 @@ export default function MealSearchPage() {
 
     if (isFolderSearchMode) {
       navigateBack({ fallbackTo: personalMenuEditFallbackPath ?? PATH.CREATE_FOLDER });
-      return;
-    }
-
-    if (isSetSearchMode) {
-      navigateBack({ fallbackTo: personalMenuEditFallbackPath ?? PATH.CREATE_MENU_SET });
       return;
     }
 
@@ -388,11 +299,6 @@ export default function MealSearchPage() {
     navigate(getPathWithMeal(PATH.FOOD_CAMERA, dateKey, mealType));
   };
 
-  const handleCreateMenuSet = () => {
-    clearMenuSetDraft();
-    navigate(PATH.CREATE_MENU_SET);
-  };
-
   const handleMealSearch = (keyword = submittedKeyword) => {
     const normalizedKeyword = keyword.trim();
 
@@ -403,17 +309,10 @@ export default function MealSearchPage() {
     if (hasSearchKeyword) return;
 
     if (visiblePersonalMenuTab === PERSONAL_MENU_TAB.REGISTERED) {
-      const refreshTasks: Array<Promise<unknown>> = [];
-
       if (shouldFetchRegisteredMenus) {
-        refreshTasks.push(refetchRegisteredMenus());
+        await refetchRegisteredMenus();
       }
 
-      if (shouldFetchMenuSets) {
-        refreshTasks.push(refetchMenuSets());
-      }
-
-      await Promise.all(refreshTasks);
       return;
     }
 
@@ -450,38 +349,6 @@ export default function MealSearchPage() {
     };
   }, [fetchNextPage, hasNextPage, isFetchingNextPage, searchMenuList.length]);
 
-  useEffect(() => {
-    const target = menuSetLoadMoreRef.current;
-    if (!target || !shouldFetchMenuSets || !hasNextMenuSetPage) {
-      return;
-    }
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (!entry?.isIntersecting || isFetchingNextMenuSetPage) {
-          return;
-        }
-
-        void fetchNextMenuSetPage();
-      },
-      {
-        rootMargin: "160px 0px",
-      },
-    );
-
-    observer.observe(target);
-
-    return () => {
-      observer.disconnect();
-    };
-  }, [
-    fetchNextMenuSetPage,
-    hasNextMenuSetPage,
-    isFetchingNextMenuSetPage,
-    menuSetList.length,
-    shouldFetchMenuSets,
-  ]);
-
   const renderMenuCard = (menu: MenuSimpleResponseDto) => {
     const isSelected = selectedMenuIdSet.has(menu.id);
 
@@ -507,14 +374,6 @@ export default function MealSearchPage() {
     <div ref={loadMoreRef} className={styles.loadMoreState}>
       {isFetchingNextPage ? (
         <LoadingIndicator iconSize={24} label="메뉴를 더 불러오는 중입니다." />
-      ) : null}
-    </div>
-  );
-
-  const renderMenuSetLoadMoreState = () => (
-    <div ref={menuSetLoadMoreRef} className={styles.loadMoreState}>
-      {isFetchingNextMenuSetPage ? (
-        <LoadingIndicator iconSize={24} label="세트를 더 불러오는 중입니다." />
       ) : null}
     </div>
   );
@@ -615,56 +474,8 @@ export default function MealSearchPage() {
           영양 성분 직접 등록
           <SystemIcon name="chevron-right-thin" size={18} />
         </Button>
-        <Button
-          variant="text"
-          interaction="normal"
-          size="small"
-          color="normal"
-          onClick={handleCreateMenuSet}
-        >
-          세트 만들기
-          <SystemIcon name="chevron-right-thin" size={18} />
-        </Button>
       </div>
     </section>
-  );
-
-  const renderMenuSetCard = (menuSet: MenuSetListItemResponseDto) => {
-    const isSelected = selectedMenuSetIdSet.has(menuSet.set_id);
-
-    return (
-      <MealMenuCard
-        key={menuSet.set_id}
-        name={menuSet.set_name}
-        description={menuSet.menu_names.join(", ")}
-        calories={menuSet.total_calories}
-        hideServingInfo
-        icon={isSelected ? "check" : "add"}
-        state={isSelected ? "select" : "default"}
-        onClick={() => navigate(getMenuSetDetailPath(dateKey, mealType, menuSet.set_id))}
-        onIconClick={() => handleToggleMenuSetSelection(menuSet)}
-      />
-    );
-  };
-
-  const renderDirectRegisterFilterChips = () => (
-    <div className={styles.directRegisterFilterChips} aria-label="직접 등록 필터">
-      {DIRECT_REGISTER_FILTER_OPTIONS.map((option) => {
-        const isActive = activeDirectRegisterFilter === option.key;
-
-        return (
-          <button
-            key={option.key}
-            type="button"
-            className={`${styles.categoryChip} ${isActive ? styles.categoryChipSelected : ""}`}
-            aria-pressed={isActive}
-            onClick={() => setActiveDirectRegisterFilter(option.key)}
-          >
-            <span className="typo-label3">{option.label}</span>
-          </button>
-        );
-      })}
-    </div>
   );
 
   const renderRegisteredFoodResult = ({
@@ -728,138 +539,9 @@ export default function MealSearchPage() {
     );
   };
 
-  const renderMenuSetResult = ({
-    emptyText = "등록된 세트가 없어요",
-  }: {
-    compact?: boolean;
-    emptyText?: string;
-  } = {}) => {
-    if (isMenuSetsPending) {
-      return (
-        <section className={styles.loadingContainer}>
-          <LoadingIndicator />
-        </section>
-      );
-    }
-
-    if (isMenuSetsError) {
-      return renderPersonalMenuEmptyState("세트를 불러오지 못했어요");
-    }
-
-    if (menuSetList.length > 0) {
-      return (
-        <>
-          <div className={`${styles.folderName} ${styles.marginTop}`}>
-            <h3 className="typo-title4 textNormal">세트</h3>
-            <Button
-              className={styles.directRegisterPromptAction}
-              onClick={handleCreateMenuSet}
-              variant="text"
-              interaction="normal"
-              size="small"
-              color="normal"
-            >
-              세트 만들기
-              <SystemIcon name="chevron-right-thin" size={18} />
-            </Button>
-          </div>
-          <div className={styles.compactResultList}>{menuSetList.map(renderMenuSetCard)}</div>
-          {hasNextMenuSetPage ? renderMenuSetLoadMoreState() : null}
-        </>
-      );
-    }
-
-    return (
-      <section className={styles.emptyResult}>
-        <p className="typo-body2">{emptyText}</p>
-        <Button
-          variant="text"
-          interaction="normal"
-          size="small"
-          color="normal"
-          onClick={handleCreateMenuSet}
-        >
-          세트 만들기
-          <SystemIcon name="chevron-right-thin" size={18} />
-        </Button>
-      </section>
-    );
-  };
-
-  const renderRegisteredAllResult = () => {
-    if (isRegisteredMenusPending || isMenuSetsPending) {
-      return (
-        <section className={styles.loadingContainer}>
-          <LoadingIndicator />
-        </section>
-      );
-    }
-
-    if (isRegisteredMenusError && isMenuSetsError) {
-      return renderPersonalMenuEmptyState("직접 등록한 항목을 불러오지 못했어요");
-    }
-
-    if (registeredMenuList.length === 0 && menuSetList.length === 0) {
-      return renderPersonalMenuEmptyState("직접 등록한 음식/세트가 없어요");
-    }
-
-    return (
-      <div className={styles.registeredSectionList}>
-        {!isRegisteredMenusError && registeredMenuList.length > 0 ? (
-          <section className={styles.registeredResultSection}>
-            <div className={`${styles.folderName} ${styles.marginTop}`}>
-              <h3 className="typo-title4 textNormal">음식</h3>
-              <Button
-                className={styles.directRegisterPromptAction}
-                onClick={() => {
-                  setIsDirectInputSheetOpen(true);
-                }}
-                variant="text"
-                interaction="normal"
-                size="small"
-                color="normal"
-              >
-                영양 성분 직접 등록
-                <SystemIcon name="chevron-right-thin" size={18} />
-              </Button>
-            </div>
-            <div className={styles.compactResultList}>{registeredMenuList.map(renderMenuCard)}</div>
-          </section>
-        ) : null}
-
-        {!isMenuSetsError && menuSetList.length > 0 ? (
-          <section className={styles.registeredResultSection}>
-            <div className={`${styles.folderName} ${styles.marginTop}`}>
-              <h3 className="typo-title4 textNormal">세트</h3>
-              <Button
-                className={styles.directRegisterPromptAction}
-                onClick={handleCreateMenuSet}
-                variant="text"
-                interaction="normal"
-                size="small"
-                color="normal"
-              >
-                세트 만들기
-                <SystemIcon name="chevron-right-thin" size={18} />
-              </Button>
-            </div>
-            <div className={styles.compactResultList}>{menuSetList.map(renderMenuSetCard)}</div>
-            {hasNextMenuSetPage ? renderMenuSetLoadMoreState() : null}
-          </section>
-        ) : null}
-      </div>
-    );
-  };
-
   const renderRegisteredPersonalMenuPanel = () => (
     <div className={styles.personalMenuPanelContent}>
-      {!isPersonalMenuEditSearchMode ? renderDirectRegisterFilterChips() : null}
-
-      {isPersonalMenuEditSearchMode || activeDirectRegisterFilter === DIRECT_REGISTER_FILTER.FOOD
-        ? renderRegisteredFoodResult()
-        : activeDirectRegisterFilter === DIRECT_REGISTER_FILTER.SET
-          ? renderMenuSetResult()
-          : renderRegisteredAllResult()}
+      {renderRegisteredFoodResult()}
     </div>
   );
 
@@ -1052,9 +734,7 @@ export default function MealSearchPage() {
     navigateBack({
       fallbackTo: isFolderSearchMode
         ? (personalMenuEditFallbackPath ?? PATH.CREATE_FOLDER)
-        : isSetSearchMode
-          ? (personalMenuEditFallbackPath ?? PATH.CREATE_MENU_SET)
-          : getMealRecordPath(dateKey, mealType),
+        : getMealRecordPath(dateKey, mealType),
     });
   };
 

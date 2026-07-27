@@ -8,10 +8,7 @@ import { useActivityCalories } from "@/features/health/hooks/useActivityCalories
 import ActionCard from "@/features/home/components/cards/ActionCard";
 import TodayBodyLogSection from "@/features/home/components/TodayBodyLogSection";
 import { useDayMealsQuery } from "@/features/home/hooks/queries/useTodayRecordQuery";
-import type {
-  MenuSetWithMenus,
-  MenuWithQuantity,
-} from "@/features/home/utils/dayMealSummary";
+import type { MenuWithQuantity } from "@/features/home/utils/dayMealSummary";
 import {
   getActivityAdjustedTargetCalories,
   getActivityCalorieProgressDash,
@@ -108,7 +105,6 @@ export default function DiaryPage() {
   const handleMoveMealRecord = (mealType: MealType) => {
     const hasRecord =
       (dayMeals?.menusByTime[mealType]?.length ?? 0) > 0 ||
-      (dayMeals?.menuSetsByTime[mealType]?.length ?? 0) > 0 ||
       Boolean(dayMeals?.didNotEatByTime[mealType]);
 
     if (hasRecord) {
@@ -181,8 +177,7 @@ export default function DiaryPage() {
               ? DIARY_MEALS.map((meal) => <MealRecordCardSkeleton key={meal.type} />)
               : DIARY_MEALS.map((meal) => {
                   const mealMenus = dayMeals?.menusByTime[meal.type] ?? [];
-                  const mealMenuSets = dayMeals?.menuSetsByTime[meal.type] ?? [];
-                  const mealCalories = getTotalMealCalories(mealMenus, mealMenuSets);
+                  const mealCalories = getTotalMealCalories(mealMenus);
                   const didNotEat = Boolean(dayMeals?.didNotEatByTime[meal.type]);
 
                   return (
@@ -191,7 +186,6 @@ export default function DiaryPage() {
                       title={meal.label}
                       iconSrc={meal.iconSrc}
                       menus={mealMenus}
-                      menuSets={mealMenuSets}
                       calories={mealCalories}
                       emptyStatusText={meal.emptyStatusText}
                       didNotEat={didNotEat}
@@ -266,7 +260,6 @@ function MealRecordCard({
   title,
   iconSrc,
   menus,
-  menuSets,
   calories,
   emptyStatusText,
   didNotEat,
@@ -279,7 +272,6 @@ function MealRecordCard({
   title: string;
   iconSrc: string;
   menus: MenuWithQuantity[];
-  menuSets: MenuSetWithMenus[];
   calories: number;
   emptyStatusText?: string;
   didNotEat: boolean;
@@ -289,7 +281,7 @@ function MealRecordCard({
   mealType: MealType;
   selectedDate: Date;
 }) {
-  const hasMenus = menus.length > 0 || menuSets.length > 0;
+  const hasMenus = menus.length > 0;
   const { mutate: registerDidNotEatMutate, isPending: isRegisterDidNotEatPending } =
     useTodayMealRecordRegisterMutation();
   const { mutate: deleteDidNotEatMutate, isPending: isDeleteDidNotEatPending } =
@@ -397,7 +389,7 @@ function MealRecordCard({
             aria-label={`${title} 상세 ${isExpanded ? "접기" : "펼치기"}`}
           >
             <span className={`${styles.mealSummaryTitle} typo-title4`}>
-              {getMealSummaryText(menus, menuSets)}
+              {getMealSummaryText(menus)}
             </span>
 
             <span className={styles.mealSummaryMeta}>
@@ -415,18 +407,10 @@ function MealRecordCard({
           {isExpanded ? (
             <ul className={styles.mealDetailList}>
               {menus.map((menu) => (
-                <li key={`menu-${menu.id}`} className={styles.mealDetailItem}>
+                <li key={menu.id} className={styles.mealDetailItem}>
                   <span className="typo-body3">{menu.name}</span>
                   <span className={`${styles.textAlternative} textNoWrap typo-body3`}>
                     {formatNumberWithMaxOneDecimal(menu.calories)}kcal
-                  </span>
-                </li>
-              ))}
-              {menuSets.map((menuSet) => (
-                <li key={`set-${menuSet.set_id}`} className={styles.mealDetailItem}>
-                  <span className="typo-body3">{menuSet.set_name}</span>
-                  <span className={`${styles.textAlternative} textNoWrap typo-body3`}>
-                    {formatNumberWithMaxOneDecimal(menuSet.total_calories)}kcal
                   </span>
                 </li>
               ))}
@@ -442,24 +426,18 @@ function MealRecordCard({
   );
 }
 
-function getTotalMealCalories(menus: MenuWithQuantity[], menuSets: MenuSetWithMenus[]) {
-  const menuCalories = menus.reduce((sum, menu) => sum + menu.calories, 0);
-  const menuSetCalories = menuSets.reduce((sum, menuSet) => sum + menuSet.total_calories, 0);
-
-  return menuCalories + menuSetCalories;
+function getTotalMealCalories(menus: MenuWithQuantity[]) {
+  return menus.reduce((sum, menu) => sum + menu.calories, 0);
 }
 
-function getMealSummaryText(menus: MenuWithQuantity[], menuSets: MenuSetWithMenus[]) {
-  const firstItemName = menus[0]?.name ?? menuSets[0]?.set_name;
-  const itemCount = menus.length + menuSets.length;
-
-  if (itemCount === 0 || !firstItemName) {
+function getMealSummaryText(menus: MenuWithQuantity[]) {
+  if (menus.length === 0) {
     return "기록된 식사가 없어요";
   }
 
-  if (itemCount === 1) {
-    return firstItemName;
+  if (menus.length === 1) {
+    return menus[0].name;
   }
 
-  return `${firstItemName} 외 ${itemCount - 1}개`;
+  return `${menus[0].name} 외 ${menus.length - 1}개`;
 }

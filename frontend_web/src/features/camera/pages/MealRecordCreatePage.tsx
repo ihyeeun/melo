@@ -149,11 +149,7 @@ export default function MealRecordCreatePage() {
           source: "meal_record_camera",
         });
 
-        const currentDraft = useMenuDraftStore.getState().drafts[draftKey];
-        const currentMenus = currentDraft?.existingMenus ?? [];
-        const currentMenuSetMenuIds = new Set(
-          currentDraft?.existingMenuSets.flatMap((menuSet) => menuSet.menu_ids) ?? [],
-        );
+        const currentMenus = useMenuDraftStore.getState().drafts[draftKey]?.existingMenus ?? [];
         const nextMenus = recognizedMenus.reduce<typeof currentMenus>(
           (menus, recognizedMenu) => {
             if (!recognizedMenu) {
@@ -161,10 +157,6 @@ export default function MealRecordCreatePage() {
             }
 
             const { id, quantity } = recognizedMenu;
-            if (currentMenuSetMenuIds.has(id)) {
-              return menus;
-            }
-
             const existingIndex = menus.findIndex((menu) => menu.id === id);
 
             if (existingIndex < 0) {
@@ -178,7 +170,7 @@ export default function MealRecordCreatePage() {
           [...currentMenus],
         );
 
-        if ((currentDraft?.existingMenuSets.length ?? 0) + nextMenus.length > MAX_MEAL_RECORD_MENUS) {
+        if (nextMenus.length > MAX_MEAL_RECORD_MENUS) {
           toast.warning(MEAL_RECORD_MENU_LIMIT_MESSAGE);
           setCapturedPreviewSrc(null);
           setIsUploading(false);
@@ -191,7 +183,6 @@ export default function MealRecordCreatePage() {
             dateKey,
             mealType,
             menus: nextMenus,
-            menuSets: currentDraft?.existingMenuSets,
             image: imageData.image_url,
           }),
           {

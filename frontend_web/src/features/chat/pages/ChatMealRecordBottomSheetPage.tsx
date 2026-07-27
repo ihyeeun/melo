@@ -123,17 +123,12 @@ export default function ChatMealRecordBottomSheetPage() {
     const nextTime = Number(nextMealType) as MealTime;
     const movedMenus = getEditingMovedMenus(selectedMenus);
     const nextServerMenus = context.dayMeals.menusByTime[nextTime].map(toMenuDraftSeed);
-    const nextServerMenuSets = context.dayMeals.menuSetsByTime[nextTime];
-    const nextServerMenuSetMenuIds = new Set(
-      nextServerMenuSets.flatMap((menuSet) => menuSet.menu_ids),
-    );
-    const safeMovedMenus = movedMenus.filter((menu) => !nextServerMenuSetMenuIds.has(menu.id));
     const nextMenus =
       previousMealRecord.time === nextTime
-        ? safeMovedMenus
+        ? movedMenus
         : mergeMenuDraftMenus({
             baseMenus: nextServerMenus,
-            overrideMenus: safeMovedMenus,
+            overrideMenus: movedMenus,
           });
 
     setMealType(nextMealType);
@@ -175,12 +170,8 @@ export default function ChatMealRecordBottomSheetPage() {
     const previousMealType = getMealTypeFromChatMealTime(previousMealRecord.time);
     const nextTime = Number(mealType) as MealTime;
     const nextMenus = selectedMenus;
-    const nextMenuSets =
-      previousMealRecord.time === nextTime
-        ? previousMealRecord.menuSets
-        : context.dayMeals.menuSetsByTime[nextTime];
 
-    if (nextMenus.length + nextMenuSets.length > MAX_MEAL_RECORD_MENUS) {
+    if (nextMenus.length > MAX_MEAL_RECORD_MENUS) {
       toast.warning(MEAL_RECORD_MENU_LIMIT_MESSAGE);
       return false;
     }
@@ -195,7 +186,6 @@ export default function ChatMealRecordBottomSheetPage() {
           dateKey: context.dateKey,
           mealType: previousMealType,
           menus: previousMealRecord.menus,
-          menuSets: previousMealRecord.menuSets,
           image: context.image,
           mealTime: context.dayMeals.mealRecordMealTimesByTime[previousMealRecord.time],
         }),
@@ -204,71 +194,31 @@ export default function ChatMealRecordBottomSheetPage() {
 
     try {
       if (previousMealRecord.time !== nextTime) {
-        if (previousMealRecord.menuSets.length > 0) {
-          await registerDiaryMealRecordMutate(
-            prepareRegisterRequest({
-              dateKey: context.dateKey,
-              mealType: previousMealType,
-              menus: [],
-              menuSets: previousMealRecord.menuSets,
-              image: context.image,
-              mealTime: context.dayMeals.mealRecordMealTimesByTime[previousMealRecord.time],
-            }),
-          );
-        } else {
-          const deleteResult = await deleteDiaryMealRecordMutate({
+        const deleteResult = await deleteDiaryMealRecordMutate({
             dateKey: context.dateKey,
             request: prepareRegisterRequest({
               dateKey: context.dateKey,
               mealType: previousMealType,
               menus: [],
-              menuSets: [],
               image: context.image,
               mealTime: context.dayMeals.mealRecordMealTimesByTime[previousMealRecord.time],
             }),
             currentMenusByTime: context.dayMeals.menusByTime,
-            currentMenuSetsByTime: context.dayMeals.menuSetsByTime,
           });
 
-          if (deleteResult !== DELETE_MEAL_RECORD_RESULT.DELETED) {
-            toast.warning("식사 기록 저장에 실패했어요. 잠시 후 다시 시도해주세요.");
-            return false;
-          }
+        if (deleteResult !== DELETE_MEAL_RECORD_RESULT.DELETED) {
+          toast.warning("식사 기록 저장에 실패했어요. 잠시 후 다시 시도해주세요.");
+          return false;
         }
       }
 
       if (nextMenus.length === 0) {
-        if (nextMenuSets.length > 0) {
-          await registerDiaryMealRecordMutate(
-            prepareRegisterRequest({
-              dateKey: context.dateKey,
-              mealType,
-              menus: [],
-              menuSets: nextMenuSets,
-              image:
-                previousMealRecord.time === nextTime
-                  ? context.image
-                  : getMealRecordImage(context.dayMeals, nextTime),
-              mealTime: context.dayMeals.mealRecordMealTimesByTime[nextTime],
-            }),
-          );
-
-          toast.success("식사 기록이 수정되었어요.");
-          requestChatMealRecordFocus({
-            dateKey: context.dateKey,
-            mealTime: nextTime,
-          });
-          navigateBack({ fallbackTo: PATH.CHAT });
-          return true;
-        }
-
         const deleteResult = await deleteDiaryMealRecordMutate({
           dateKey: context.dateKey,
           request: prepareRegisterRequest({
             dateKey: context.dateKey,
             mealType,
             menus: [],
-            menuSets: [],
             image:
               previousMealRecord.time === nextTime
                 ? context.image
@@ -276,7 +226,6 @@ export default function ChatMealRecordBottomSheetPage() {
             mealTime: context.dayMeals.mealRecordMealTimesByTime[nextTime],
           }),
           currentMenusByTime: context.dayMeals.menusByTime,
-          currentMenuSetsByTime: context.dayMeals.menuSetsByTime,
         });
 
         if (deleteResult !== DELETE_MEAL_RECORD_RESULT.DELETED) {
@@ -295,7 +244,6 @@ export default function ChatMealRecordBottomSheetPage() {
           dateKey: context.dateKey,
           mealType,
           menus: nextMenus,
-          menuSets: nextMenuSets,
           image:
             previousMealRecord.time === nextTime
               ? context.image

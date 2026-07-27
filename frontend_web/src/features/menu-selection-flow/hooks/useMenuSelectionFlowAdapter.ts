@@ -25,16 +25,6 @@ import {
   useFolderDraftSelectedMenus,
   useFolderDraftUpsertSelectedMenu,
 } from "@/features/personal-menu/folder/stores/folderDraft.store";
-import {
-  MAX_MENU_SET_MENUS,
-  MENU_SET_MENU_LIMIT_MESSAGE,
-} from "@/features/personal-menu/set/constants/menuSet.constants";
-import {
-  type MenuSetDraftViewMenu,
-  useMenuSetDraftRemoveSelectedMenu,
-  useMenuSetDraftSelectedMenus,
-  useMenuSetDraftUpsertSelectedMenu,
-} from "@/features/personal-menu/set/stores/menuSetDraft.store";
 import type { MealMenuItem, MealServingInputMode, MealType } from "@/shared/api/types/api.dto";
 import type { MenuSimpleResponseDto } from "@/shared/api/types/api.response.dto";
 import type { MealRecordTransferPreview } from "@/shared/types/mealRecordTransfer";
@@ -120,9 +110,6 @@ export function useMenuSelectionFlowAdapter({
   const upsertFolderSelectedMenu = useFolderDraftUpsertSelectedMenu();
   const removeFolderSelectedMenu = useFolderDraftRemoveSelectedMenu();
 
-  const menuSetSelectedMenus = useMenuSetDraftSelectedMenus();
-  const upsertMenuSetSelectedMenu = useMenuSetDraftUpsertSelectedMenu();
-  const removeMenuSetSelectedMenu = useMenuSetDraftRemoveSelectedMenu();
   const clearPendingReplacementSourceMenuId =
     useMenuSelectionFlowClearPendingReplacementSourceMenuId();
 
@@ -134,18 +121,11 @@ export function useMenuSelectionFlowAdapter({
           menuInputMode: requestMenu.menuInputMode,
           viewMenu,
         }))
-      : menuSelectionFlowTarget === MENU_SELECTION_FLOW_TARGET.MENU_SET
-        ? menuSetSelectedMenus.map(({ requestMenu, viewMenu }) => ({
-            menuId: requestMenu.menuId,
-            menuQuantity: requestMenu.menuQuantity,
-            menuInputMode: requestMenu.menuInputMode,
-            viewMenu,
-          }))
-        : mealRecordSelectedMenus.map((menu) => ({
-            menuId: menu.id,
-            menuQuantity: menu.quantity,
-            menuInputMode: menu.mode,
-          }));
+      : mealRecordSelectedMenus.map((menu) => ({
+          menuId: menu.id,
+          menuQuantity: menu.quantity,
+          menuInputMode: menu.mode,
+        }));
   const selectedMenuIdSet = new Set(selectedMenus.map((menu) => menu.menuId));
   const selectedCount =
     menuSelectionFlowTarget === MENU_SELECTION_FLOW_TARGET.MEAL_RECORD
@@ -154,15 +134,11 @@ export function useMenuSelectionFlowAdapter({
   const maxSelectableMenuCount =
     menuSelectionFlowTarget === MENU_SELECTION_FLOW_TARGET.FOLDER
       ? MAX_FOLDER_MENUS
-      : menuSelectionFlowTarget === MENU_SELECTION_FLOW_TARGET.MENU_SET
-        ? MAX_MENU_SET_MENUS
-        : MAX_MEAL_RECORD_MENUS;
+      : MAX_MEAL_RECORD_MENUS;
   const menuCountLimitMessage =
     menuSelectionFlowTarget === MENU_SELECTION_FLOW_TARGET.FOLDER
       ? FOLDER_MENU_LIMIT_MESSAGE
-      : menuSelectionFlowTarget === MENU_SELECTION_FLOW_TARGET.MENU_SET
-        ? MENU_SET_MENU_LIMIT_MESSAGE
-        : MEAL_RECORD_MENU_LIMIT_MESSAGE;
+      : MEAL_RECORD_MENU_LIMIT_MESSAGE;
 
   const getSelectedMenuServing = (menuId: number) => {
     const selectedMenu = selectedMenus.find((menu) => menu.menuId === menuId);
@@ -197,11 +173,6 @@ export function useMenuSelectionFlowAdapter({
       return;
     }
 
-    if (menuSelectionFlowTarget === MENU_SELECTION_FLOW_TARGET.MENU_SET) {
-      removeMenuSetSelectedMenu(menuId);
-      return;
-    }
-
     removeMealRecordSelectedMenu({
       key: relatedMealRecordDraftKey,
       id: menuId,
@@ -218,15 +189,6 @@ export function useMenuSelectionFlowAdapter({
     if (menuSelectionFlowTarget === MENU_SELECTION_FLOW_TARGET.FOLDER) {
       upsertFolderSelectedMenu({
         viewMenu,
-        menuQuantity: normalizedMenuQuantity,
-        menuInputMode,
-      });
-      return;
-    }
-
-    if (menuSelectionFlowTarget === MENU_SELECTION_FLOW_TARGET.MENU_SET) {
-      upsertMenuSetSelectedMenu({
-        viewMenu: viewMenu as MenuSetDraftViewMenu,
         menuQuantity: normalizedMenuQuantity,
         menuInputMode,
       });
