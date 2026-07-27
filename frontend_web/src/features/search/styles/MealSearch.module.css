@@ -340,17 +340,50 @@
 }
 
 .folderItem {
-  align-items: flex-start;
+  align-items: stretch;
   background-color: var(--bg-white);
   border: 1px solid var(--border-neutral);
   border-radius: 8px;
   color: var(--label-normal);
   display: flex;
+  gap: 8px;
+  overflow: hidden;
+  width: 100%;
+}
+
+.folderItemSelected {
+  border-color: var(--primary-normal);
+  background-color: var(--interaction-primary);
+}
+
+.folderContentButton {
+  align-items: flex-start;
+  background: transparent;
+  border: 0;
+  color: inherit;
+  display: flex;
+  flex: 1 1 auto;
   flex-direction: column;
   gap: 6px;
-  padding: 16px 20px;
+  min-width: 0;
+  padding: 16px 0 16px 20px;
   text-align: left;
-  width: 100%;
+}
+
+.folderIconButton {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  color: var(--label-assistive);
+  display: inline-flex;
+  flex: 0 0 52px;
+  justify-content: center;
+  padding: 0 16px 0 4px;
+}
+
+.folderIconButton:disabled {
+  cursor: default;
+  opacity: 0.72;
 }
 
 .folderMenuNames {
@@ -362,9 +395,17 @@
 }
 
 .folderName {
-  display: flex;
-  width: 100%;
   align-items: center;
+  display: flex;
+  min-width: 0;
+  width: 100%;
+}
+
+.folderTitle {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .folderAddAction {

@@ -1,21 +1,10 @@
 import { useMemo, useState } from "react";
 
 import { useDayMealsQuery } from "@/features/home/hooks/queries/useTodayRecordQuery";
-import {
-  MAX_MEAL_RECORD_MENUS,
-  MEAL_RECORD_MENU_LIMIT_MESSAGE,
-} from "@/features/meal-record/constants/menu.constants";
 import { useMenuCacheItems } from "@/features/meal-record/hooks/queries/menuCache";
-import {
-  formatMenuDraftKey,
-  useMenuDraftMenus,
-  useMenuDraftRemove,
-  useMenuDraftSelectedCount,
-  useMenuDraftUpsert,
-  useMenuDraftUpsertPreviews,
-  useSyncMenuDraftWithDayMeals,
-} from "@/features/meal-record/stores/menuDraft.store";
+import { useSyncMenuDraftWithDayMeals } from "@/features/meal-record/stores/menuDraft.store";
 import { getMealType, getSafeDateKey } from "@/features/meal-record/utils/mealRecord.queryParams";
+import { useMenuSelectionFlowAdapter } from "@/features/menu-selection-flow/hooks/useMenuSelectionFlowAdapter";
 import {
   MENU_SELECTION_FLOW_TARGET,
   useMenuSelectionFlowCreateFlow,
@@ -35,6 +24,7 @@ import type { MenuSimpleResponseDto } from "@/shared/api/types/api.response.dto"
 import { Button } from "@/shared/commons/button/Button";
 import { MealMenuCard } from "@/shared/commons/card/MealMenuCard";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
+import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import { LoadingIndicator, LoadingOverlay } from "@/shared/commons/loading/Loading";
 import { ConfirmModal } from "@/shared/commons/modals/ConfirmModal";
 import { toast } from "@/shared/commons/toast/toast";
@@ -94,7 +84,6 @@ export default function FolderDetailPage() {
   const dateKey = getSafeDateKey(searchParams.get("date"));
   const mealType = getMealType(searchParams.get("mealType"));
   const folderId = Number(searchParams.get("folderId"));
-  const draftKey = formatMenuDraftKey(dateKey, mealType);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
 
   const {
@@ -108,15 +97,22 @@ export default function FolderDetailPage() {
     isPending: isDayMealsPending,
     isError: isDayMealsError,
   } = useDayMealsQuery(dateKey);
-  const draftMenus = useMenuDraftMenus(dateKey, mealType);
-  const selectedCount = useMenuDraftSelectedCount(dateKey, mealType);
-  const upsertMenu = useMenuDraftUpsert();
-  const removeMenu = useMenuDraftRemove();
-  const upsertPreviews = useMenuDraftUpsertPreviews();
+  const {
+    maxSelectableMenuCount,
+    menuCountLimitMessage,
+    removeSelectedMenu,
+    selectedCount,
+    selectedMenuIdSet,
+    selectedMenus,
+    upsertSelectedMenu,
+  } = useMenuSelectionFlowAdapter({
+    fallbackMealRecordDateKey: dateKey,
+    fallbackMealRecordMealType: mealType,
+    fallbackMenuSelectionFlowTarget: MENU_SELECTION_FLOW_TARGET.MEAL_RECORD,
+  });
   const setFolderDraft = useFolderDraftSetDraft();
   const clearFolderDraft = useFolderDraftClearDraft();
-  const { mutateAsync: deleteFolder, isPending: isDeleteFolderPending } =
-    useDeleteFolderMutation();
+  const { mutateAsync: deleteFolder, isPending: isDeleteFolderPending } = useDeleteFolderMutation();
   const folderMenuIds = useMemo(
     () => folderDetail?.menu_list.map((menu) => menu.id) ?? [],
     [folderDetail?.menu_list],
@@ -130,8 +126,8 @@ export default function FolderDetailPage() {
   });
 
   const draftMenuById = useMemo(
-    () => new Map(draftMenus.map((menu) => [menu.id, menu])),
-    [draftMenus],
+    () => new Map(selectedMenus.map((menu) => [menu.menuId, menu])),
+    [selectedMenus],
   );
 
   const serverFolderMenus = useMemo<FolderDetailMenu[]>(() => {
@@ -159,8 +155,8 @@ export default function FolderDetailPage() {
           return folderMenu;
         }
 
-        const quantity = getSafeFolderQuantity(folderMenu.menu, draftMenu.quantity);
-        const inputMode = getSafeDraftInputMode(draftMenu.mode, folderMenu.inputMode);
+        const quantity = getSafeFolderQuantity(folderMenu.menu, draftMenu.menuQuantity);
+        const inputMode = getSafeDraftInputMode(draftMenu.menuInputMode, folderMenu.inputMode);
 
         return {
           ...folderMenu,
@@ -172,7 +168,9 @@ export default function FolderDetailPage() {
     [draftMenuById, serverFolderMenus],
   );
 
-  const selectedMenuIdSet = useMemo(() => new Set(draftMenus.map((menu) => menu.id)), [draftMenus]);
+  const areAllFolderMenusSelected =
+    serverFolderMenus.length > 0 &&
+    serverFolderMenus.every((folderMenu) => selectedMenuIdSet.has(folderMenu.menu.id));
 
   const folderDetailPath = getFolderDetailPath(dateKey, mealType, folderId);
 
@@ -208,7 +206,7 @@ export default function FolderDetailPage() {
     try {
       await deleteFolder({ folder_id: folderId });
       clearFolderDraft();
-      toast.success("폴더가 삭제되었어요");
+      toast.success("삭제되었어요");
       navigateBack({ fallbackTo: getMealSearchPath(dateKey, mealType) });
     } catch (error) {
       toast.warning("폴더 삭제에 실패했어요", "잠시 후 다시 시도해주세요.");
@@ -238,50 +236,73 @@ export default function FolderDetailPage() {
     );
   };
 
-  const handleToggleMenuSelection = (folderMenu: FolderDetailMenu) => {
+  const canUpdateMealRecordDraft = () => {
     if (isDayMealsPending) {
       toast.warning("식사 기록 정보를 불러오는 중입니다.");
-      return;
+      return false;
     }
 
     if (isDayMealsError || !dayMeals) {
       toast.warning("식사 기록을 불러오지 못했어요", "잠시 후 다시 시도해주세요.");
+      return false;
+    }
+
+    return true;
+  };
+
+  const handleToggleMenuSelection = (folderMenu: FolderDetailMenu) => {
+    if (!canUpdateMealRecordDraft()) {
       return;
     }
 
     const menuId = folderMenu.menu.id;
 
     if (selectedMenuIdSet.has(menuId)) {
-      removeMenu({ key: draftKey, id: menuId });
+      removeSelectedMenu(menuId);
       return;
     }
 
-    if (selectedCount + 1 > MAX_MEAL_RECORD_MENUS) {
-      toast.warning(MEAL_RECORD_MENU_LIMIT_MESSAGE);
+    if (selectedCount + 1 > maxSelectableMenuCount) {
+      toast.warning(menuCountLimitMessage);
       return;
     }
 
-    upsertMenu({
-      key: draftKey,
-      id: menuId,
-      quantity: folderMenu.quantity,
-      mode: folderMenu.inputMode,
+    upsertSelectedMenu({
+      viewMenu: folderMenu.menu,
+      menuQuantity: folderMenu.quantity,
+      menuInputMode: folderMenu.inputMode,
+    });
+  };
+
+  const handleToggleAllFolderMenus = () => {
+    if (!canUpdateMealRecordDraft()) {
+      return;
+    }
+
+    if (areAllFolderMenusSelected) {
+      serverFolderMenus.forEach((folderMenu) => {
+        removeSelectedMenu(folderMenu.menu.id);
+      });
+      return;
+    }
+
+    const nextMenuIdSet = new Set(selectedMenuIdSet);
+
+    serverFolderMenus.forEach((folderMenu) => {
+      nextMenuIdSet.add(folderMenu.menu.id);
     });
 
-    upsertPreviews({
-      key: draftKey,
-      previews: [
-        {
-          id: folderMenu.menu.id,
-          name: folderMenu.menu.name,
-          brand: folderMenu.menu.brand,
-          unit_quantity: folderMenu.menu.unit_quantity,
-          calories: folderMenu.menu.calories,
-          weight: folderMenu.menu.weight,
-          unit: folderMenu.menu.unit,
-          data_source: folderMenu.menu.data_source,
-        },
-      ],
+    if (nextMenuIdSet.size > maxSelectableMenuCount) {
+      toast.warning(menuCountLimitMessage);
+      return;
+    }
+
+    serverFolderMenus.forEach((folderMenu) => {
+      upsertSelectedMenu({
+        viewMenu: folderMenu.menu,
+        menuQuantity: folderMenu.quantity,
+        menuInputMode: folderMenu.inputMode,
+      });
     });
   };
 
@@ -328,31 +349,50 @@ export default function FolderDetailPage() {
     }
 
     return (
-      <div className={styles.menuList}>
-        {folderMenus.map((folderMenu) => {
-          const isSelected = selectedMenuIdSet.has(folderMenu.menu.id);
+      <section className={styles.menuSection}>
+        <div className={styles.menuSectionHeader}>
+          <div className={styles.menuTitleGroup}>
+            <span className={`typo-label4 ${styles.menuCount}`}>{folderMenus.length}개</span>
+          </div>
 
-          return (
-            <MealMenuCard
-              key={folderMenu.menu.id}
-              name={folderMenu.menu.name}
-              calories={folderMenu.displayCalories}
-              unit_quantity={folderMenu.menu.unit_quantity}
-              brand={folderMenu.menu.brand}
-              data_source={folderMenu.menu.data_source}
-              weight={folderMenu.menu.weight}
-              unit={folderMenu.menu.unit}
-              quantity={folderMenu.quantity}
-              icon={isSelected ? "check" : "add"}
-              state={isSelected ? "select" : "default"}
-              onClick={() => handleMenuDetailOpen(folderMenu)}
-              onIconClick={() => {
-                handleToggleMenuSelection(folderMenu);
-              }}
-            />
-          );
-        })}
-      </div>
+          <Button
+            className={styles.bulkActionButton}
+            variant="text"
+            color={areAllFolderMenusSelected ? "normal" : "primary"}
+            size="small"
+            onClick={handleToggleAllFolderMenus}
+          >
+            <SystemIcon name={areAllFolderMenusSelected ? "minus" : "plus"} size={14} />
+            {areAllFolderMenusSelected ? "선택 해제" : "전체 선택"}
+          </Button>
+        </div>
+
+        <div className={styles.menuList}>
+          {folderMenus.map((folderMenu) => {
+            const isSelected = selectedMenuIdSet.has(folderMenu.menu.id);
+
+            return (
+              <MealMenuCard
+                key={folderMenu.menu.id}
+                name={folderMenu.menu.name}
+                calories={folderMenu.displayCalories}
+                unit_quantity={folderMenu.menu.unit_quantity}
+                brand={folderMenu.menu.brand}
+                data_source={folderMenu.menu.data_source}
+                weight={folderMenu.menu.weight}
+                unit={folderMenu.menu.unit}
+                quantity={folderMenu.quantity}
+                icon={isSelected ? "check" : "add"}
+                state={isSelected ? "select" : "default"}
+                onClick={() => handleMenuDetailOpen(folderMenu)}
+                onIconClick={() => {
+                  handleToggleMenuSelection(folderMenu);
+                }}
+              />
+            );
+          })}
+        </div>
+      </section>
     );
   };
 
@@ -391,8 +431,8 @@ export default function FolderDetailPage() {
       <ConfirmModal
         open={isDeleteConfirmOpen}
         onOpenChange={setIsDeleteConfirmOpen}
-        title="폴더를 삭제할까요?"
-        description="폴더만 삭제되며, 음식 기록은 유지돼요."
+        title="폴더 삭제"
+        description="폴더를 삭제할까요?"
         cancelText="취소"
         confirmText="삭제"
         confirmDisabled={isDeleteFolderPending}

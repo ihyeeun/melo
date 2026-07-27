@@ -34,8 +34,11 @@ export function useDeleteFolderMutation(callbacks?: UseMutationCallback) {
       const detailQueryKey = folderQueryKeys.detail(variables.folder_id);
 
       await queryClient.cancelQueries({ queryKey: detailQueryKey });
-      queryClient.removeQueries({ queryKey: detailQueryKey, exact: true });
-      await queryClient.invalidateQueries({ queryKey: folderQueryKeys.list });
+      void queryClient.invalidateQueries({
+        queryKey: detailQueryKey,
+        refetchType: "none",
+      });
+      void queryClient.invalidateQueries({ queryKey: folderQueryKeys.list });
 
       callbacks?.onSuccess?.();
     },
