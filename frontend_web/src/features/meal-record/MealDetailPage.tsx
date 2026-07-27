@@ -26,10 +26,7 @@ import {
 import type { NutrientModifyLocationState } from "@/features/nutrient-entry/types/nutrientEntry.state";
 import { PATH } from "@/router/path";
 import { getMealRecordPath } from "@/router/pathHelpers";
-import {
-  type MealMenuItem,
-  MENU_DATA_SOURCE,
-} from "@/shared/api/types/api.dto";
+import { type MealMenuItem, MENU_DATA_SOURCE } from "@/shared/api/types/api.dto";
 import { Button } from "@/shared/commons/button/Button";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
 import { LoadingOverlay } from "@/shared/commons/loading/Loading";
@@ -69,8 +66,7 @@ export default function MealDetailPage() {
 
   const upsertPreviews = useMenuDraftUpsertPreviews();
   const createMenuSelectionFlow = useMenuSelectionFlowCreateFlow();
-  const setPendingReplacementSourceMenuId =
-    useMenuSelectionFlowSetPendingReplacementSourceMenuId();
+  const setPendingReplacementSourceMenuId = useMenuSelectionFlowSetPendingReplacementSourceMenuId();
   const menuSelectionFlowAdapter = useMenuSelectionFlowAdapter({
     fallbackMealRecordDateKey: dateKey,
     fallbackMealRecordMealType: mealType,
@@ -243,7 +239,10 @@ export default function MealDetailPage() {
     !menuSelectionFlowAdapter.menuSelectionFlow?.hideMenuDetailEditSection &&
     (meal.data_source === MENU_DATA_SOURCE.PUBLIC || mealIsDeleted === 0);
 
-  const getNutrientModifyPath = (targetMenuId: number, targetMenuSelectionFlowId = menuSelectionFlowId) => {
+  const getNutrientModifyPath = (
+    targetMenuId: number,
+    targetMenuSelectionFlowId = menuSelectionFlowId,
+  ) => {
     if (targetMenuSelectionFlowId) {
       return getMenuSelectionFlowPath({
         path: PATH.NUTRIENT_ADD_MODIFY,
@@ -345,9 +344,9 @@ export default function MealDetailPage() {
           fullWidth
           onClick={handleAddMenu}
           interaction={selection ? "normal" : "disable"}
-          disabled={!selection}
+          disabled={!selection || mealIsDeleted !== 0}
         >
-          {isAlreadyQueued ? "수정하기" : "담기"}
+          {isAlreadyQueued ? "수정하기" : mealIsDeleted ? "삭제된 메뉴라 담을 수 없어요" : "담기"}
         </Button>
       </footer>
 
