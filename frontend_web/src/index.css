@@ -148,7 +148,11 @@ select:focus {
   outline: 1px solid var(--border-primary);
 }
 
-button {
+button,
+a,
+[role="button"],
+[role="tab"],
+[tabindex] {
   -webkit-tap-highlight-color: transparent;
 }
 
