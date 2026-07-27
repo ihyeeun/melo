@@ -26,6 +26,7 @@ export type MenuSelectionFlow = {
   relatedMealRecordDateKey?: string;
   relatedMealRecordMealType?: MealType;
   initialMenuServingByMenuId?: Record<number, MenuSelectionFlowInitialMenuServing>;
+  hideMenuDetailEditSection?: boolean;
   pendingReplacementSourceMenuId?: number;
 };
 
@@ -36,6 +37,7 @@ export type CreateMenuSelectionFlowParams = {
   relatedMealRecordDateKey?: string;
   relatedMealRecordMealType?: MealType;
   initialMenuServingByMenuId?: Record<number, MenuSelectionFlowInitialMenuServing>;
+  hideMenuDetailEditSection?: boolean;
 };
 
 type SetPendingReplacementSourceMenuIdParams = {
@@ -78,6 +80,7 @@ export const useMenuSelectionFlowStore = create<MenuSelectionFlowStoreState>()(
         relatedMealRecordDateKey,
         relatedMealRecordMealType,
         initialMenuServingByMenuId,
+        hideMenuDetailEditSection,
       }) => {
         const menuSelectionFlowId = createMenuSelectionFlowId();
 
@@ -96,6 +99,7 @@ export const useMenuSelectionFlowStore = create<MenuSelectionFlowStoreState>()(
               ...(initialMenuServingByMenuId
                 ? { initialMenuServingByMenuId }
                 : {}),
+              ...(hideMenuDetailEditSection ? { hideMenuDetailEditSection } : {}),
             },
           },
         }));

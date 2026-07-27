@@ -239,6 +239,9 @@ export default function MealDetailPage() {
 
   const isPersonalMenuData = meal.data_source === MENU_DATA_SOURCE.PERSONAL;
   const mealIsDeleted = getMenuIsDeleted(meal);
+  const showEditSection =
+    !menuSelectionFlowAdapter.menuSelectionFlow?.hideMenuDetailEditSection &&
+    (meal.data_source === MENU_DATA_SOURCE.PUBLIC || mealIsDeleted === 0);
 
   const getNutrientModifyPath = (targetMenuId: number, targetMenuSelectionFlowId = menuSelectionFlowId) => {
     if (targetMenuSelectionFlowId) {
@@ -329,7 +332,7 @@ export default function MealDetailPage() {
             onToggleDetail={() => setIsDetailOpen((prev) => !prev)}
             onSelectionChange={setSelection}
             onEditAndAdd={handleEditAndAdd}
-            showEditSection={meal.data_source === MENU_DATA_SOURCE.PUBLIC || mealIsDeleted === 0}
+            showEditSection={showEditSection}
           />
         </div>
       </main>

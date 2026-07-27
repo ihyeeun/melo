@@ -220,6 +220,7 @@ export default function FolderDetailPage() {
       menuSelectionCompletionReturnPath: folderDetailPath,
       relatedMealRecordDateKey: dateKey,
       relatedMealRecordMealType: mealType,
+      hideMenuDetailEditSection: true,
       initialMenuServingByMenuId: {
         [folderMenu.menu.id]: {
           menuQuantity: folderMenu.quantity,
