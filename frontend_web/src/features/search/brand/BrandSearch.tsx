@@ -1,6 +1,8 @@
 import { useEnterDoneEffect } from "@stackflow/react";
 import { useRef, useState } from "react";
 
+import { useRemoveMenuSelectionFlowOnExit } from "@/features/menu-selection-flow/hooks/useRemoveMenuSelectionFlowOnExit";
+import { getMenuSelectionFlowIdFromSearchParams } from "@/features/menu-selection-flow/utils/menuSelectionFlowRoutes";
 import { useGetBrandSearchQuery } from "@/features/search/brand/hooks/queries/useBrandSearchQuery";
 import { useSetBrandSearchSelection } from "@/features/search/brand/stores/brandSearchSelection.store";
 import styles from "@/features/search/styles/BrandSearch.module.css";
@@ -10,7 +12,11 @@ import { Button } from "@/shared/commons/button/Button";
 import { SearchInputHeader } from "@/shared/commons/header/SearchInputHeader";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import { LoadingIndicator } from "@/shared/commons/loading/Loading";
-import { navigateBack, useLocation } from "@/shared/navigation/stackflowNavigation";
+import {
+  navigateBack,
+  useLocation,
+  useSearchParams,
+} from "@/shared/navigation/stackflowNavigation";
 
 type BrandSearchResult = {
   id: string;
@@ -40,6 +46,9 @@ function mapBrandList(brandList: string[]): BrandSearchResult[] {
 
 export default function BrandSearch() {
   const location = useLocation();
+  const [searchParams] = useSearchParams();
+  const menuSelectionFlowId = getMenuSelectionFlowIdFromSearchParams(searchParams);
+  useRemoveMenuSelectionFlowOnExit(menuSelectionFlowId);
   const formState = (location.state ?? {}) as BrandSearchLocationState;
   const returnPath = formState.returnPath?.trim() || PATH.NUTRIENT_ADD_REGISTER;
   const setBrandSearchSelection = useSetBrandSearchSelection();

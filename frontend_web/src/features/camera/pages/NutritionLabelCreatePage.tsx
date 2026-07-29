@@ -12,6 +12,7 @@ import {
   isCameraCaptureCancelled,
 } from "@/features/camera/utils/cameraCapture";
 import { getMealType, getSafeDateKey } from "@/features/meal-record/utils/mealRecord.queryParams";
+import { useRemoveMenuSelectionFlowOnExit } from "@/features/menu-selection-flow/hooks/useRemoveMenuSelectionFlowOnExit";
 import {
   useMenuSelectionFlowById,
 } from "@/features/menu-selection-flow/stores/menuSelectionFlow.store";
@@ -52,6 +53,7 @@ export default function NutrientCameraPage() {
     [location.state],
   );
   const menuSelectionFlowId = getMenuSelectionFlowIdFromSearchParams(searchParams);
+  useRemoveMenuSelectionFlowOnExit(menuSelectionFlowId);
   const menuSelectionFlow = useMenuSelectionFlowById(menuSelectionFlowId);
   const dateKey = getSafeDateKey(
     searchParams.get("date") ?? menuSelectionFlow?.relatedMealRecordDateKey ?? null,

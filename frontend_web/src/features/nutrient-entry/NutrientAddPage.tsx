@@ -4,6 +4,7 @@ import {
   getMealType,
   getSafeDateKey,
 } from "@/features/meal-record/utils/mealRecord.queryParams";
+import { useRemoveMenuSelectionFlowOnExit } from "@/features/menu-selection-flow/hooks/useRemoveMenuSelectionFlowOnExit";
 import { useMenuSelectionFlowById } from "@/features/menu-selection-flow/stores/menuSelectionFlow.store";
 import {
   getMenuSelectionFlowIdFromSearchParams,
@@ -64,6 +65,7 @@ export default function NutrientAddPage() {
   const [searchParams] = useSearchParams();
   const locationState = (location.state ?? {}) as NutrientAddLocationState;
   const menuSelectionFlowId = getMenuSelectionFlowIdFromSearchParams(searchParams);
+  useRemoveMenuSelectionFlowOnExit(menuSelectionFlowId);
   const menuSelectionFlow = useMenuSelectionFlowById(menuSelectionFlowId);
 
   const dateKey = getSafeDateKey(

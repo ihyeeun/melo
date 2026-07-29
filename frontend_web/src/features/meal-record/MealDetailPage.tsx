@@ -13,6 +13,7 @@ import {
 } from "@/features/meal-record/stores/menuDraft.store";
 import styles from "@/features/meal-record/styles/MealDetailPage.module.css";
 import { useMenuSelectionFlowAdapter } from "@/features/menu-selection-flow/hooks/useMenuSelectionFlowAdapter";
+import { useRemoveMenuSelectionFlowOnExit } from "@/features/menu-selection-flow/hooks/useRemoveMenuSelectionFlowOnExit";
 import {
   MENU_SELECTION_FLOW_TARGET,
   useMenuSelectionFlowCreateFlow,
@@ -56,6 +57,7 @@ export default function MealDetailPage() {
   const dateKey = getSafeDateKey(searchParams.get("date"));
   const mealType = getMealType(searchParams.get("mealType"));
   const menuSelectionFlowId = getMenuSelectionFlowIdFromSearchParams(searchParams);
+  useRemoveMenuSelectionFlowOnExit(menuSelectionFlowId);
 
   const rawMenuId = searchParams.get("menuId");
   const parsedMenuId = rawMenuId ? Number(rawMenuId) : null;
