@@ -29,19 +29,19 @@ type BrandSearchLocationState = Partial<RegisterMenuRequestDto> & {
 };
 
 function mapBrandList(brandList: string[]): BrandSearchResult[] {
-  return brandList
-    .map((brandName, index) => {
-      const normalizedName = brandName.trim();
-      if (!normalizedName) {
-        return null;
-      }
+  return brandList.reduce<BrandSearchResult[]>((results, brandName, index) => {
+    const normalizedName = brandName.trim();
+    if (!normalizedName) {
+      return results;
+    }
 
-      return {
-        id: `${normalizedName}-${index}`,
-        name: normalizedName,
-      };
-    })
-    .filter((brand): brand is BrandSearchResult => brand !== null);
+    results.push({
+      id: `${normalizedName}-${index}`,
+      name: normalizedName,
+    });
+
+    return results;
+  }, []);
 }
 
 export default function BrandSearch() {

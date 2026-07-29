@@ -70,7 +70,15 @@ function toMenuDetailCacheResponseDto(
 }
 
 function getMenuIds(menuList: MenuSimpleResponseDto[]) {
-  return menuList.map((menu) => menu.id).filter(isValidMenuId);
+  const menuIds: number[] = [];
+
+  for (const menu of menuList) {
+    if (isValidMenuId(menu.id)) {
+      menuIds.push(menu.id);
+    }
+  }
+
+  return menuIds;
 }
 
 export function writeMenuSimpleCache(
@@ -175,8 +183,15 @@ export function useMenuCacheItems(menuIds: readonly number[]) {
       }
     });
 
-    return normalizedMenuIds
-      .map((menuId) => menuById.get(menuId))
-      .filter((menu): menu is MenuDetailCacheResponseDto => Boolean(menu));
+    const cachedMenus: MenuDetailCacheResponseDto[] = [];
+
+    for (const menuId of normalizedMenuIds) {
+      const menu = menuById.get(menuId);
+      if (menu) {
+        cachedMenus.push(menu);
+      }
+    }
+
+    return cachedMenus;
   }, [normalizedMenuIds, queryResults, uniqueMenuIds]);
 }
