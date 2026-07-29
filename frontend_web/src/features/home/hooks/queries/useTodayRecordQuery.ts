@@ -11,11 +11,11 @@ import { queryKeys as profileQueryKeys } from "@/features/profile/hooks/queries/
 import { queryClient } from "@/shared/api/queryClient";
 import { getTodayFormatDateKey, isValidDateKey } from "@/shared/utils/dateFormat";
 
-export function useDayMealsQuery(date: string) {
+export function useDayMealsQuery(date: string, { enabled = true }: { enabled?: boolean } = {}) {
   return useQuery({
     queryKey: queryKeys.dayMeals.byDate(date),
     queryFn: () => getTodayMealRecordMenus(date),
-    enabled: isValidDateKey(date),
+    enabled: enabled && isValidDateKey(date),
     staleTime: Infinity,
   });
 }

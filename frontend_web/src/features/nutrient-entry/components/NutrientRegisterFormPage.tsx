@@ -1,5 +1,6 @@
 import { type ChangeEvent, useEffect, useState } from "react";
 
+import { getMenuSelectionFlowPath } from "@/features/menu-selection-flow/utils/menuSelectionFlowRoutes";
 import { type RegisterManualMenuPayload } from "@/features/nutrient-entry/api/nutrient";
 import { NutrientDetailForm } from "@/features/nutrient-entry/components/NutrientDetailForm";
 import { useRegisterMenuMutation } from "@/features/nutrient-entry/hooks/mutations/useNutrientMutation";
@@ -26,18 +27,15 @@ import { PageHeader } from "@/shared/commons/header/PageHeader";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import { LoadingOverlay } from "@/shared/commons/loading/Loading";
 import { toast } from "@/shared/commons/toast/toast";
-import { navigateBack, resetStackflow, useNavigate } from "@/shared/navigation/stackflowNavigation";
+import { navigateBack, useNavigate } from "@/shared/navigation/stackflowNavigation";
 
 export type NutrientRegisterEntrySource = "camera" | "manual" | "chatNutritionLabel";
 
 export type NutrientRegisterFormState = Partial<RegisterMenuRequestDto> & {
-  afterAddReturnPath?: string;
-  backReturnPath?: string;
   brandName?: string;
   chatId?: number;
   dateKey?: string;
   mealType?: MealType;
-  keyword?: string;
   entrySource?: NutrientRegisterEntrySource;
   brandSearchReturnKey?: string;
 };
@@ -45,13 +43,12 @@ export type NutrientRegisterFormState = Partial<RegisterMenuRequestDto> & {
 type NutrientRegisterFormPageProps = {
   appendMealQueryToBrandSearchReturn?: boolean;
   backFallbackPath: string;
-  backReturnPath?: string;
   brandSearchReturnPath?: string;
   dateKey: string;
   initialState: NutrientRegisterFormState;
   isSubmitPending?: boolean;
-  keyword?: string;
   mealType: MealType;
+  menuSelectionFlowId?: string | null;
   onRegisteredMenu?: (savedMenuId: number) => void;
   onSubmit?: (payload: NutrientRegisterSubmitPayload) => void | Promise<void>;
   submitLabel?: string;
@@ -67,13 +64,12 @@ export type NutrientRegisterSubmitPayload = Pick<
 export function NutrientRegisterFormPage({
   appendMealQueryToBrandSearchReturn = true,
   backFallbackPath,
-  backReturnPath,
   brandSearchReturnPath = PATH.NUTRIENT_ADD_REGISTER,
   dateKey,
   initialState,
   isSubmitPending = false,
-  keyword = "",
   mealType,
+  menuSelectionFlowId = null,
   onRegisteredMenu,
   onSubmit,
   submitLabel = "등록하기",
@@ -120,18 +116,29 @@ export function NutrientRegisterFormPage({
   };
 
   const handleOpenBrandSearch = () => {
-    navigation(PATH.BRAND_SEARCH, {
+    const brandSearchPath = menuSelectionFlowId
+      ? getMenuSelectionFlowPath({
+          path: PATH.BRAND_SEARCH,
+          menuSelectionFlowId,
+        })
+      : PATH.BRAND_SEARCH;
+    const returnPath = menuSelectionFlowId
+      ? getMenuSelectionFlowPath({
+          path: brandSearchReturnPath,
+          menuSelectionFlowId,
+        })
+      : appendMealQueryToBrandSearchReturn
+        ? getPathWithMeal(brandSearchReturnPath, dateKey, mealType)
+        : brandSearchReturnPath;
+
+    navigation(brandSearchPath, {
       state: {
         ...formState,
         brand: brandName,
         dateKey,
         mealType,
-        keyword,
-        backReturnPath,
         brandSearchReturnKey,
-        returnPath: appendMealQueryToBrandSearchReturn
-          ? getPathWithMeal(brandSearchReturnPath, dateKey, mealType, keyword)
-          : brandSearchReturnPath,
+        returnPath,
       },
     });
   };
@@ -189,11 +196,6 @@ export function NutrientRegisterFormPage({
   };
 
   const handleBack = () => {
-    if (backReturnPath) {
-      resetStackflow(backReturnPath, { animate: false });
-      return;
-    }
-
     navigateBack({ fallbackTo: backFallbackPath });
   };
 

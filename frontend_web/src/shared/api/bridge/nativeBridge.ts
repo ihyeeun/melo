@@ -6,6 +6,7 @@ import type {
   CameraCaptureRequestPayload,
   CameraCaptureResponsePayload,
   GalleryPickRequestPayload,
+  HapticType,
   HealthPermissionResponsePayload,
   HealthStepCountResponsePayload,
   HealthStepsReadRequestPayload,
@@ -26,6 +27,21 @@ const MESSAGE_TYPES_REQUIRING_NAV_CONTEXT = new Set<WebToAppMessage["type"]>([
   "TAB_SYNC",
   "NAVIGATION_BACK",
 ]);
+const CLICK_HAPTIC_TARGET_SELECTOR = [
+  "button",
+  "a[href]",
+  "[role='button']",
+  "[role='tab']",
+  "input[type='button']",
+  "input[type='submit']",
+  "input[type='reset']",
+  "input[type='checkbox']",
+  "input[type='radio']",
+  "select",
+  "[data-native-haptic]",
+].join(",");
+const CLICK_HAPTIC_DISABLED_SELECTOR =
+  "[disabled], [aria-disabled='true'], [data-native-haptic='off']";
 
 function generateRequestId() {
   return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
@@ -226,6 +242,48 @@ export function requestAppBack() {
     id: generateRequestId(),
     type: "NAVIGATION_BACK",
   });
+}
+
+export function triggerNativeHaptic(type: HapticType = "selection") {
+  if (!isNativeApp()) return;
+
+  postMessageToApp({
+    id: generateRequestId(),
+    type: "HAPTIC_TRIGGER_REQUEST",
+    payload: {
+      type,
+    },
+  });
+}
+
+function resolveClickHapticTarget(target: EventTarget | null) {
+  if (!(target instanceof Element)) return null;
+
+  const hapticTarget = target.closest(CLICK_HAPTIC_TARGET_SELECTOR);
+  if (!hapticTarget) return null;
+  if (hapticTarget.closest(CLICK_HAPTIC_DISABLED_SELECTOR)) return null;
+
+  return hapticTarget;
+}
+
+export function initNativeClickHaptics() {
+  if (!isNativeApp()) {
+    return () => {};
+  }
+
+  const handleClick = (event: MouseEvent) => {
+    if (event.defaultPrevented) return;
+    if (event.button !== 0) return;
+    if (!resolveClickHapticTarget(event.target)) return;
+
+    triggerNativeHaptic("selection");
+  };
+
+  document.addEventListener("click", handleClick, true);
+
+  return () => {
+    document.removeEventListener("click", handleClick, true);
+  };
 }
 
 export function requestNativeAppDeviceInfo() {

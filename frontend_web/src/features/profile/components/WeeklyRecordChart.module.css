@@ -7,6 +7,12 @@
   aspect-ratio: 1;
 }
 
+.chartContainer :global(.recharts-surface),
+.chartContainer :global(.recharts-surface *) {
+  -webkit-tap-highlight-color: transparent;
+  outline: none;
+}
+
 .chartContainer :global(.recharts-wrapper),
 .chartContainer :global(.recharts-surface) {
   overflow: visible;

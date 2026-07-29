@@ -19,7 +19,7 @@ export function calculateActivityCalories({
   const walkingHour = walkingDistanceKm / averageWalkingSpeedKmHour(age);
 
   // step 3. kcal 계산
-  const kcal = 3.3 * weightKg * walkingHour;
+  const kcal = 2.3 * weightKg * walkingHour;
 
   // 최종 결과는 반올림하여 정수로 저장
   return Math.round(kcal);

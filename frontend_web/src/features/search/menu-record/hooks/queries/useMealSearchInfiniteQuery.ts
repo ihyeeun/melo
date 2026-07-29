@@ -1,6 +1,11 @@
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 
-import { postMealSearch } from "@/features/search/menu-record/api/mealSearch.api";
+import {
+  menuQueryKeys,
+  writeSearchMenuListCache,
+} from "@/features/meal-record/hooks/queries/menuCache";
+import { folderQueryKeys } from "@/features/personal-menu/folder/hooks/queries/folder.queryKey";
+import { getFolders, postMealSearch } from "@/features/search/menu-record/api/mealSearch.api";
 
 type UseMealSearchInfiniteQueryOptions = {
   enabled?: boolean;
@@ -12,18 +17,37 @@ export function useMealSearchInfiniteQuery(
   { enabled = true, limit }: UseMealSearchInfiniteQueryOptions,
 ) {
   const normalizedInput = input.trim();
+  const queryClient = useQueryClient();
 
   return useInfiniteQuery({
-    queryKey: ["meal-search", normalizedInput, limit],
-    queryFn: ({ pageParam }) =>
-      postMealSearch({
+    queryKey: menuQueryKeys.search(normalizedInput, limit),
+    queryFn: async ({ pageParam }) => {
+      const response = await postMealSearch({
         input: normalizedInput,
+        limit,
+        cursor: pageParam,
+      });
+
+      return writeSearchMenuListCache(queryClient, response);
+    },
+    initialPageParam: null as number | null,
+    getNextPageParam: (lastPage) => lastPage.next_cursor ?? undefined,
+    enabled: enabled && normalizedInput.length > 0,
+    gcTime: 0,
+  });
+}
+
+export function useFolderListInfiniteQuery({ enabled, limit }: UseMealSearchInfiniteQueryOptions) {
+  return useInfiniteQuery({
+    queryKey: folderQueryKeys.list,
+    queryFn: ({ pageParam }) =>
+      getFolders({
         limit,
         cursor: pageParam,
       }),
     initialPageParam: null as number | null,
     getNextPageParam: (lastPage) => lastPage.next_cursor ?? undefined,
-    enabled: enabled && normalizedInput.length > 0,
-    gcTime: 0,
+    enabled,
+    staleTime: Infinity,
   });
 }

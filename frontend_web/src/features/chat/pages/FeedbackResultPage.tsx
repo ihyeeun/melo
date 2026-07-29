@@ -23,6 +23,7 @@ import {
   useMenuDraftClear,
   useMenuDraftMenus,
   useMenuDraftRemove,
+  useMenuDraftSelectedCount,
   useMenuDraftUpsert,
   useSyncMenuDraftWithDayMeals,
 } from "@/features/meal-record/stores/menuDraft.store";
@@ -208,6 +209,7 @@ function FeedbackResultContent({
   const mealType: MealType = getMealTypeFromChatMealTime(targetMealTime);
   const draftKey = formatMenuDraftKey(recordDateKey, mealType);
   const selectedMenus = useMenuDraftMenus(recordDateKey, mealType);
+  const selectedItemCount = useMenuDraftSelectedCount(recordDateKey, mealType);
   const requestChatMealRecordFocus = useRequestChatMealRecordFocus();
   const selectedMenuIds = useMemo(() => {
     return new Set(selectedMenus.map((menu) => menu.id));
@@ -267,7 +269,7 @@ function FeedbackResultContent({
       return;
     }
 
-    if (selectedMenus.length + 1 > MAX_MEAL_RECORD_MENUS) {
+    if (selectedItemCount + 1 > MAX_MEAL_RECORD_MENUS) {
       toast.warning(MEAL_RECORD_MENU_LIMIT_MESSAGE);
       return;
     }
@@ -287,7 +289,7 @@ function FeedbackResultContent({
     }
 
     try {
-      if (selectedMenus.length > MAX_MEAL_RECORD_MENUS) {
+      if (selectedItemCount > MAX_MEAL_RECORD_MENUS) {
         toast.warning(MEAL_RECORD_MENU_LIMIT_MESSAGE);
         return;
       }

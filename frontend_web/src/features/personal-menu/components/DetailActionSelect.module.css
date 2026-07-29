@@ -1,0 +1,68 @@
+.trigger {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  color: var(--label-assistive);
+  cursor: pointer;
+  display: inline-flex;
+  gap: 2px;
+  justify-content: center;
+  min-height: 32px;
+  padding: 4px 0 4px 8px;
+}
+
+.trigger:focus-visible {
+  outline: 2px solid var(--primary-strong);
+  outline-offset: 2px;
+}
+
+.trigger[data-disabled] {
+  color: var(--label-disable);
+  cursor: not-allowed;
+}
+
+.icon {
+  align-items: center;
+  display: inline-flex;
+  justify-content: center;
+}
+
+.positioner {
+  margin-top: 8px;
+  z-index: 20;
+}
+
+.popup {
+  background-color: var(--bg-white);
+  border: 1px solid var(--border-neutral);
+  border-radius: 8px;
+  box-shadow: var(--shadow-emphasize);
+  min-width: 112px;
+  overflow: hidden;
+  padding: 6px;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+}
+
+.item {
+  align-items: center;
+  border-radius: 6px;
+  color: var(--label-normal);
+  cursor: pointer;
+  display: flex;
+  justify-content: flex-start;
+  min-height: 40px;
+  outline: none;
+  padding: 9px 10px;
+}
+
+.item[data-highlighted] {
+  background-color: var(--bg-normal);
+}
+
+.dangerItem {
+  color: var(--status-error);
+}

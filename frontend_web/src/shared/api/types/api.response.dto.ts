@@ -147,6 +147,24 @@ export interface MenuListResponseDto {
   menu_list: MenuSimpleResponseDto[];
 }
 
+export interface FolderListResponseDto {
+  folder_list: FolderListItemResponseDto[];
+  next_cursor?: number;
+}
+
+export interface FolderListItemResponseDto {
+  folder_id: number;
+  folder_name: string;
+  menu_names: string[];
+}
+
+export interface FolderDetailResponseDto {
+  folder_name: string;
+  menu_list: MenuSimpleResponseDto[];
+  menu_quantities: number[];
+  menu_input_modes: Array<0 | 1>;
+}
+
 /* ======
  * 채팅
  * ====== */

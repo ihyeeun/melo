@@ -58,6 +58,11 @@ const SUMMARY_MACROS: ReadonlyArray<{ key: MainNutrientKey; label: string }> = [
   { key: "fat", label: "지방" },
 ];
 
+type SummaryMacroItem = (typeof SUMMARY_MACROS)[number] & {
+  showWarning: boolean;
+  value: number;
+};
+
 type ParsedServingContext = {
   baseUnitCount: number;
   baseWeight: number;
@@ -359,11 +364,20 @@ export function MealMenuNutrientDetail({
     const baseValue = quantity ?? getCurrentFallbackValue(inputMode);
     setQuantityInput(getSteppedQuantity(baseValue, direction));
   };
-  const summaryMacroItems = SUMMARY_MACROS.map((macro) => ({
-    ...macro,
-    value: mainNutrientStates[macro.key].value,
-    showWarning: mainNutrientStates[macro.key].isEstimated,
-  })).filter((macro) => macro.value !== null);
+  const summaryMacroItems = SUMMARY_MACROS.reduce<SummaryMacroItem[]>((items, macro) => {
+    const nutrientState = mainNutrientStates[macro.key];
+    if (nutrientState.value === null) {
+      return items;
+    }
+
+    items.push({
+      ...macro,
+      value: nutrientState.value,
+      showWarning: nutrientState.isEstimated,
+    });
+
+    return items;
+  }, []);
   const isEditAndAddEnabled = typeof onEditAndAdd === "function";
   const handleEditAndAddClick = () => {
     onEditAndAdd?.();

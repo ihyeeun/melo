@@ -15,6 +15,7 @@ import { navigateToChatCameraIfSupported } from "@/features/camera/utils/chatCam
 import { AssistantMessageText } from "@/features/chat/components/AssistantMessageText";
 import { AssistantPendingMessage } from "@/features/chat/components/AssistantPendingMessage";
 import type { ChatMealRecordMenu } from "@/features/chat/components/ChatMealRecordBottomSheet";
+import { CHAT_MEAL_RECORD_MODE_ONBOARDING_STORAGE_KEY } from "@/features/chat/constants/mealRecordModeOnboarding";
 import {
   useParseMenusFromTextMutation,
   useSendMessageMutation,
@@ -110,7 +111,8 @@ import {
 import { formatNumberWithMaxOneDecimal } from "@/shared/utils/numberFormat";
 import { formatBaseServingUnit, SERVING_UNIT_PERSON } from "@/shared/utils/servingUnit";
 
-const QUICK_CHIP_LIST = [{ id: "meal-record", label: "식사 기록 모드" }];
+const MEAL_RECORD_MODE_CHIP_ID = "meal-record";
+const QUICK_CHIP_LIST = [{ id: MEAL_RECORD_MODE_CHIP_ID, label: "식사 기록 모드" }];
 const FEEDBACK_GAUGE_VIEWBOX_WIDTH = 220;
 const FEEDBACK_GAUGE_VIEWBOX_HEIGHT = 100;
 const FEEDBACK_GAUGE_CENTER_X = 110;
@@ -128,12 +130,16 @@ const ASSISTANT_BUBBLE_GAP_MS = 1000;
 const ASSISTANT_RESULT_REVEAL_DELAY_MS = 1000;
 const ASSISTANT_RESULT_CARD_GAP_MS = 460;
 const MEAL_RECORD_LOOKBACK_DAYS = 7;
+const MEAL_RECORD_MODE_HINT_MESSAGE =
+  "식사 기록 모드란?\n채팅으로 식사를 입력하면\n자동으로 기록해주는 기능이에요.";
 
 type RecordedMenuSummary = {
   menu_id: number;
   menu_name: string;
   recordedCalories: number;
 };
+
+type RecordedMealRecordItem = { type: "menu" } & RecordedMenuSummary;
 
 type MealRecordParseRegisterTarget = {
   dateKey: string;
@@ -161,6 +167,7 @@ type MealRecordViewModel = {
   updatedAt?: string;
   menus: ChatMealRecordMenu[];
   recordedMenus: RecordedMenuSummary[];
+  recordedItems: RecordedMealRecordItem[];
   previousMealRecord: MealRecordSnapshot;
 };
 
@@ -449,6 +456,7 @@ export default function ChatPage() {
   const timelineScrollRequestIdRef = useRef(0);
   const assistantPlaybackRunIdRef = useRef(0);
   const assistantPlaybackChatItemIdsRef = useRef(new Set<number>());
+  const autoRegisteredFoodFeedbackChatItemIdsRef = useRef(new Set<number>());
   const knownHistoryChatItemIdsRef = useRef<Set<number> | null>(null);
   const pendingMealRecordScrollKeyRef = useRef<string | null>(null);
   const shouldFollowBottomRef = useRef(true);
@@ -472,10 +480,20 @@ export default function ChatPage() {
   const [timelineScrollTarget, setTimelineScrollTarget] = useState<TimelineScrollTarget | null>(
     null,
   );
+  const [deferredMealRecordTimelineItemKeys, setDeferredMealRecordTimelineItemKeys] = useState<
+    string[]
+  >([]);
+  const [animatedMealRecordTimelineItemKeys, setAnimatedMealRecordTimelineItemKeys] = useState<
+    string[]
+  >([]);
   const [extraMealRecordDateKeys, setExtraMealRecordDateKeys] = useState<string[]>([]);
   const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null);
   const [selectedChipId, setSelectedChipId] = useState<string | null>(null);
-  const isMealRecordTextMode = selectedChipId === "meal-record";
+  const [isMealRecordModeOnboardingDone, setIsMealRecordModeOnboardingDone] = useState(
+    getIsMealRecordModeOnboardingDone,
+  );
+  const [isMealRecordModeGuideVisible, setIsMealRecordModeGuideVisible] = useState(false);
+  const isMealRecordTextMode = selectedChipId === MEAL_RECORD_MODE_CHIP_ID;
   const clientOsName = useClientOsName();
   const isSoftKeyboardVisible = useSoftKeyboardVisible(isInputFocused, clientOsName);
 
@@ -493,29 +511,32 @@ export default function ChatPage() {
 
   const isMealRecordEditPending = isDiaryMealRegisterPending || isDiaryMealDeletePending;
 
-  const buildMealRecordDraftRequest = ({
-    dateKey,
-    dayMeals,
-    image,
-    mealTime,
-    menus,
-  }: {
-    dateKey: string;
-    dayMeals: DayMealSummary;
-    image?: string;
-    mealTime: MealTime;
-    menus: MenuDraftType[];
-  }) => {
-    const mealType = getMealTypeFromChatMealTime(mealTime);
-
-    return prepareRegisterRequest({
+  const buildMealRecordDraftRequest = useCallback(
+    ({
       dateKey,
-      mealType,
-      menus,
+      dayMeals,
       image,
-      mealTime: dayMeals.mealRecordMealTimesByTime[mealTime],
-    });
-  };
+      mealTime,
+      menus,
+    }: {
+      dateKey: string;
+      dayMeals: DayMealSummary;
+      image?: string;
+      mealTime: MealTime;
+      menus: MenuDraftType[];
+    }) => {
+      const mealType = getMealTypeFromChatMealTime(mealTime);
+
+      return prepareRegisterRequest({
+        dateKey,
+        mealType,
+        menus,
+        image,
+        mealTime: dayMeals.mealRecordMealTimesByTime[mealTime],
+      });
+    },
+    [prepareRegisterRequest],
+  );
 
   const chatList = useMemo(() => {
     const rawList = data?.chat_list ?? [];
@@ -565,6 +586,14 @@ export default function ChatPage() {
     () => buildChatTimelineItems(displayChatList, timelineMealRecords),
     [displayChatList, timelineMealRecords],
   );
+  const deferredMealRecordTimelineItemKeySet = useMemo(
+    () => new Set(deferredMealRecordTimelineItemKeys),
+    [deferredMealRecordTimelineItemKeys],
+  );
+  const animatedMealRecordTimelineItemKeySet = useMemo(
+    () => new Set(animatedMealRecordTimelineItemKeys),
+    [animatedMealRecordTimelineItemKeys],
+  );
   const timelineSignature = useMemo(
     () => timelineItems.map((item) => `${item.key}:${item.sortTime ?? "unknown"}`).join("|"),
     [timelineItems],
@@ -586,10 +615,14 @@ export default function ChatPage() {
     pendingMealRecordInput !== null;
   const isAwaitingChatResponse =
     pendingInput !== null || pendingMealRecordInput !== null || isAssistantPlaybackActive;
-  const hasTimelineContent = timelineItems.length > 0 || isAwaitingChatResponse;
+  const shouldRenderMealRecordModeGuide = isMealRecordModeGuideVisible;
+  const hasTimelineContent =
+    timelineItems.length > 0 || isAwaitingChatResponse || shouldRenderMealRecordModeGuide;
   const isTypingPending = isAwaitingChatResponse && isSendPending;
   const isInputEmpty = inputValue.trim().length === 0;
   const isQuickActionVisible = isInputEmpty && !isSoftKeyboardVisible && !isAwaitingChatResponse;
+  const shouldShowMealRecordModeHint =
+    isQuickActionVisible && !isMealRecordModeOnboardingDone && !isMealRecordTextMode;
   const shouldDeferTimelineRender = pendingInput === null && isTimelineDataPending;
   const shouldRenderTimeline = hasTimelineContent && !shouldDeferTimelineRender;
   const shouldShowTimelineSkeleton = shouldDeferTimelineRender;
@@ -1053,70 +1086,6 @@ export default function ChatPage() {
     [],
   );
 
-  useLayoutEffect(() => {
-    if (
-      isHistoryPending ||
-      !isTop ||
-      pendingInput !== null ||
-      pendingMealRecordInput !== null ||
-      assistantPlayback !== null
-    ) {
-      return;
-    }
-
-    const currentChatItemIds = new Set(chatList.map((chatItem) => chatItem.id));
-    const playbackBaselineChatIds = consumeChatHistoryPlaybackBaselineIds(queryClient);
-    const shouldForceBottomBeforePlayback = playbackBaselineChatIds !== null;
-
-    if (playbackBaselineChatIds !== null) {
-      knownHistoryChatItemIdsRef.current = new Set(playbackBaselineChatIds);
-    }
-
-    if (knownHistoryChatItemIdsRef.current === null) {
-      knownHistoryChatItemIdsRef.current = currentChatItemIds;
-      return;
-    }
-
-    const knownChatItemIds = knownHistoryChatItemIdsRef.current;
-
-    currentChatItemIds.forEach((chatItemId) => {
-      if (assistantPlaybackChatItemIdsRef.current.has(chatItemId)) {
-        knownChatItemIds.add(chatItemId);
-      }
-    });
-
-    const newChatItems = chatList
-      .filter(
-        (chatItem) =>
-          !knownChatItemIds.has(chatItem.id) &&
-          !assistantPlaybackChatItemIdsRef.current.has(chatItem.id),
-      )
-      .sort(compareChatHistoryItems);
-
-    if (newChatItems.length === 0) {
-      return;
-    }
-
-    const nextChatItem = newChatItems[0];
-    knownChatItemIds.add(nextChatItem.id);
-
-    if (shouldForceBottomBeforePlayback) {
-      forceScrollToBottom("instant");
-    }
-
-    void playAssistantResponse(nextChatItem);
-  }, [
-    assistantPlayback,
-    chatList,
-    forceScrollToBottom,
-    isHistoryPending,
-    isTop,
-    pendingInput,
-    pendingMealRecordInput,
-    queryClient,
-    playAssistantResponse,
-  ]);
-
   const sendChatMessage = async (rawInput: string) => {
     const text = rawInput.trim();
     if (!text || isChatSendDisabled) return;
@@ -1165,113 +1134,152 @@ export default function ChatPage() {
     }
   };
 
-  const fetchTargetDayMeals = async ({
-    dateKey,
-    dayMeals,
-    staleTime = Infinity,
-  }: {
-    dateKey: string;
-    dayMeals?: DayMealSummary;
-    staleTime?: number;
-  }) => {
-    let targetDayMeals: DayMealSummary;
-
-    if (dayMeals) {
-      targetDayMeals = dayMeals;
-    } else {
-      targetDayMeals = await queryClient.fetchQuery({
-        queryKey: homeQueryKeys.dayMeals.byDate(dateKey),
-        queryFn: () => getTodayMealRecordMenus(dateKey),
-        staleTime,
-      });
-    }
-
-    return targetDayMeals;
-  };
-
-  const registerMealRecordDraftMenus = async ({
-    dateKey,
-    dayMeals,
-    image,
-    mealTime,
-    menus,
-    previousMealRecord,
-    staleTime,
-    trackingMenusById,
-    trackMenuSave = trackChatMenuSave,
-  }: {
-    dateKey: string;
-    dayMeals?: DayMealSummary;
-    image?: string;
-    mealTime: MealTime;
-    menus: MenuDraftType[];
-    previousMealRecord?: MealRecordSnapshot;
-    staleTime?: number;
-    trackingMenusById?: Map<number, MealRecordDraftTrackingMenu>;
-    trackMenuSave?: (menus: MealRecordDraftTrackingMenu[]) => void;
-  }): Promise<MealRecordDraftRegisterResult> => {
-    let targetDayMeals: DayMealSummary;
-
-    try {
-      targetDayMeals = await fetchTargetDayMeals({ dateKey, dayMeals, staleTime });
-    } catch {
-      toast.warning("식사 기록을 등록할 수 없어요.");
-      return "failed";
-    }
-
-    const baseMenus = getMealRecordDraftMenus(targetDayMeals, mealTime);
-    const candidateMenuIds = menus.map((menu) => menu.id);
-    const nextMenus = mergeMenuDraftMenus({
-      baseMenus,
-      overrideMenus: menus,
-      candidateIds: candidateMenuIds,
-    });
-    const previousMenus = previousMealRecord?.menus ?? baseMenus;
-    const previousMenuById = new Map(previousMenus.map((menu) => [menu.id, menu]));
-    const changedMenus = menus.filter((menu) =>
-      isSelectedDiaryMealRecordMenuChanged(menu, previousMenuById.get(menu.id)),
-    );
-
-    if (changedMenus.length === 0) {
-      toast.warning("이미 식사 기록에 추가된 메뉴예요.");
-      return "unchanged";
-    }
-
-    if (nextMenus.length > MAX_MEAL_RECORD_MENUS) {
-      toast.warning(MEAL_RECORD_MENU_LIMIT_MESSAGE);
-      return "failed";
-    }
-
-    const hadMealRecord = baseMenus.length > 0;
-    const scrollTargetKey = prepareMealRecordScroll(dateKey, mealTime);
-    const request = buildMealRecordDraftRequest({
+  const fetchTargetDayMeals = useCallback(
+    async ({
       dateKey,
-      dayMeals: targetDayMeals,
-      mealTime,
-      menus: nextMenus,
-      image: image ?? getMealRecordImage(targetDayMeals, mealTime),
-    });
+      dayMeals,
+      staleTime = Infinity,
+    }: {
+      dateKey: string;
+      dayMeals?: DayMealSummary;
+      staleTime?: number;
+    }) => {
+      let targetDayMeals: DayMealSummary;
 
-    try {
-      await registerDiaryMealRecordMutate(request, {
-        onSuccess: () => {
-          trackMenuSave(
-            changedMenus.map((menu) => trackingMenusById?.get(menu.id) ?? { menu_id: menu.id }),
-          );
-        },
+      if (dayMeals) {
+        targetDayMeals = dayMeals;
+      } else {
+        targetDayMeals = await queryClient.fetchQuery({
+          queryKey: homeQueryKeys.dayMeals.byDate(dateKey),
+          queryFn: () => getTodayMealRecordMenus(dateKey),
+          staleTime,
+        });
+      }
+
+      return targetDayMeals;
+    },
+    [queryClient],
+  );
+
+  const registerMealRecordDraftMenus = useCallback(
+    async ({
+      dateKey,
+      dayMeals,
+      image,
+      mealTime,
+      menus,
+      previousMealRecord,
+      staleTime,
+      shouldPreserveExistingImage = false,
+      shouldScrollToMealRecord = true,
+      shouldShowToast = true,
+      trackingMenusById,
+      trackMenuSave = trackChatMenuSave,
+    }: {
+      dateKey: string;
+      dayMeals?: DayMealSummary;
+      image?: string;
+      mealTime: MealTime;
+      menus: MenuDraftType[];
+      previousMealRecord?: MealRecordSnapshot;
+      staleTime?: number;
+      shouldPreserveExistingImage?: boolean;
+      shouldScrollToMealRecord?: boolean;
+      shouldShowToast?: boolean;
+      trackingMenusById?: Map<number, MealRecordDraftTrackingMenu>;
+      trackMenuSave?: (menus: MealRecordDraftTrackingMenu[]) => void;
+    }): Promise<MealRecordDraftRegisterResult> => {
+      let targetDayMeals: DayMealSummary;
+
+      try {
+        targetDayMeals = await fetchTargetDayMeals({ dateKey, dayMeals, staleTime });
+      } catch {
+        if (shouldShowToast) {
+          toast.warning("식사 기록을 등록할 수 없어요.");
+        }
+        return "failed";
+      }
+
+      const baseMenus = getMealRecordDraftMenus(targetDayMeals, mealTime);
+      const candidateMenus = menus;
+      const candidateMenuIds = candidateMenus.map((menu) => menu.id);
+      const nextMenus = mergeMenuDraftMenus({
+        baseMenus,
+        overrideMenus: candidateMenus,
+        candidateIds: candidateMenuIds,
+      });
+      const previousMenus = previousMealRecord?.menus ?? baseMenus;
+      const previousMenuById = new Map(previousMenus.map((menu) => [menu.id, menu]));
+      const changedMenus = candidateMenus.filter((menu) =>
+        isSelectedDiaryMealRecordMenuChanged(menu, previousMenuById.get(menu.id)),
+      );
+
+      if (changedMenus.length === 0) {
+        if (shouldShowToast) {
+          toast.warning("이미 식사 기록에 추가된 메뉴예요.");
+        }
+        return "unchanged";
+      }
+
+      if (nextMenus.length > MAX_MEAL_RECORD_MENUS) {
+        if (shouldShowToast) {
+          toast.warning(MEAL_RECORD_MENU_LIMIT_MESSAGE);
+        }
+        return "failed";
+      }
+
+      const hadMealRecord = baseMenus.length > 0;
+      const scrollTargetKey = shouldScrollToMealRecord
+        ? prepareMealRecordScroll(dateKey, mealTime)
+        : null;
+      const existingImage = getMealRecordImage(targetDayMeals, mealTime);
+      const request = buildMealRecordDraftRequest({
+        dateKey,
+        dayMeals: targetDayMeals,
+        mealTime,
+        menus: nextMenus,
+        image: shouldPreserveExistingImage ? (existingImage ?? image) : (image ?? existingImage),
       });
 
-      toast.success(hadMealRecord ? "식사 기록에 메뉴를 추가했어요." : "식사 기록이 등록되었어요.");
-      commitMealRecordScroll(scrollTargetKey);
-      return "registered";
-    } catch (error) {
-      cancelMealRecordScroll(scrollTargetKey);
-      toast.warning(
-        resolveErrorMessage(error, "식사 기록 저장에 실패했어요. 잠시 후 다시 시도해주세요."),
-      );
-      return "failed";
-    }
-  };
+      try {
+        await registerDiaryMealRecordMutate(request, {
+          onSuccess: () => {
+            trackMenuSave(
+              changedMenus.map((menu) => trackingMenusById?.get(menu.id) ?? { menu_id: menu.id }),
+            );
+          },
+        });
+
+        if (shouldShowToast) {
+          toast.success(
+            hadMealRecord ? "식사 기록에 메뉴를 추가했어요." : "식사 기록이 등록되었어요.",
+          );
+        }
+        if (scrollTargetKey) {
+          commitMealRecordScroll(scrollTargetKey);
+        }
+        return "registered";
+      } catch (error) {
+        if (scrollTargetKey) {
+          cancelMealRecordScroll(scrollTargetKey);
+        }
+        if (shouldShowToast) {
+          toast.warning(
+            resolveErrorMessage(error, "식사 기록 저장에 실패했어요. 잠시 후 다시 시도해주세요."),
+          );
+        }
+        return "failed";
+      }
+    },
+    [
+      buildMealRecordDraftRequest,
+      cancelMealRecordScroll,
+      commitMealRecordScroll,
+      fetchTargetDayMeals,
+      prepareMealRecordScroll,
+      registerDiaryMealRecordMutate,
+    ],
+  );
 
   const registerMealRecordParseResponse = async (parseResponse: ChatMealRecordParseResponseDto) => {
     const parsedMenus = getMealRecordParseDraftMenus(parseResponse);
@@ -1396,6 +1404,32 @@ export default function ChatPage() {
     setIsInputFocused(isFocused);
   };
 
+  const handleQuickChipToggle = (chipId: string, isSelected: boolean) => {
+    const shouldSelect = !isSelected;
+    const shouldShowMealRecordModeGuideOnSelect =
+      chipId === MEAL_RECORD_MODE_CHIP_ID && !isMealRecordModeOnboardingDone;
+
+    setSelectedChipId(shouldSelect ? chipId : null);
+
+    if (!shouldSelect) {
+      return;
+    }
+
+    shouldFollowBottomRef.current = true;
+
+    if (!shouldShowMealRecordModeGuideOnSelect) {
+      textInputRef.current?.focus();
+      forceScrollToBottom("instant");
+      return;
+    }
+
+    textInputRef.current?.blur();
+    saveMealRecordModeOnboardingDone();
+    setIsMealRecordModeOnboardingDone(true);
+    setIsMealRecordModeGuideVisible(true);
+    forceScrollToBottom("instant");
+  };
+
   const handleScrollToBottom = () => {
     shouldFollowBottomRef.current = true;
     keepBottomIfFollowing("smooth");
@@ -1457,6 +1491,173 @@ export default function ChatPage() {
       trackingMenusById,
     });
   };
+
+  const registerFoodImageFeedbackMealRecordBeforePlayback = useCallback(
+    async (chatItem: ChatHistoryItemResponseDto) => {
+      if (
+        !isAutoRegisterableFoodFeedbackChatItem(chatItem) ||
+        autoRegisteredFoodFeedbackChatItemIdsRef.current.has(chatItem.id)
+      ) {
+        return null;
+      }
+
+      autoRegisteredFoodFeedbackChatItemIdsRef.current.add(chatItem.id);
+
+      const dateKey = getChatDateKey(chatItem) ?? todayDateKey;
+      const candidateMenus = getUniqueMealRecordMenus(getChatMealRecordMenus(chatItem));
+
+      if (candidateMenus.length === 0) {
+        return null;
+      }
+
+      const mealRecordTimelineItemKey = getMealRecordTimelineItemKey(dateKey, currentMealTime);
+
+      setDeferredMealRecordTimelineItemKeys((previous) =>
+        previous.includes(mealRecordTimelineItemKey)
+          ? previous
+          : [...previous, mealRecordTimelineItemKey],
+      );
+      setAnimatedMealRecordTimelineItemKeys((previous) =>
+        previous.filter((key) => key !== mealRecordTimelineItemKey),
+      );
+
+      const trackingMenusById = new Map(
+        candidateMenus.map((menu) => [
+          menu.menu_id,
+          { menu_id: menu.menu_id, menu_name: menu.menu_name },
+        ]),
+      );
+
+      if (!mealRecordDateKeys.includes(dateKey)) {
+        setExtraMealRecordDateKeys((previous) =>
+          previous.includes(dateKey) ? previous : [...previous, dateKey],
+        );
+      }
+
+      await registerMealRecordDraftMenus({
+        dateKey,
+        image: getChatItemImageUrl(chatItem),
+        mealTime: currentMealTime,
+        menus: candidateMenus.map(toMenuDraftFromChatMealRecordMenu),
+        staleTime: 0,
+        shouldPreserveExistingImage: true,
+        shouldScrollToMealRecord: false,
+        shouldShowToast: false,
+        trackingMenusById,
+      });
+
+      return mealRecordTimelineItemKey;
+    },
+    [currentMealTime, mealRecordDateKeys, registerMealRecordDraftMenus, todayDateKey],
+  );
+
+  const revealDeferredMealRecordTimelineItem = useCallback(
+    (timelineItemKey: string) => {
+      setDeferredMealRecordTimelineItemKeys((previous) =>
+        previous.filter((key) => key !== timelineItemKey),
+      );
+      setAnimatedMealRecordTimelineItemKeys((previous) =>
+        previous.includes(timelineItemKey) ? previous : [...previous, timelineItemKey],
+      );
+
+      if (!shouldFollowBottomRef.current || typeof window === "undefined") {
+        return;
+      }
+
+      window.requestAnimationFrame(() => {
+        forceScrollToBottom("smooth");
+      });
+    },
+    [forceScrollToBottom],
+  );
+
+  useLayoutEffect(() => {
+    if (
+      isHistoryPending ||
+      !isTop ||
+      pendingInput !== null ||
+      pendingMealRecordInput !== null ||
+      assistantPlayback !== null
+    ) {
+      return;
+    }
+
+    const currentChatItemIds = new Set(chatList.map((chatItem) => chatItem.id));
+    const playbackBaselineChatIds = consumeChatHistoryPlaybackBaselineIds(queryClient);
+    const shouldForceBottomBeforePlayback = playbackBaselineChatIds !== null;
+
+    if (playbackBaselineChatIds !== null) {
+      knownHistoryChatItemIdsRef.current = new Set(playbackBaselineChatIds);
+    }
+
+    if (knownHistoryChatItemIdsRef.current === null) {
+      knownHistoryChatItemIdsRef.current = currentChatItemIds;
+      return;
+    }
+
+    const knownChatItemIds = knownHistoryChatItemIdsRef.current;
+
+    currentChatItemIds.forEach((chatItemId) => {
+      if (assistantPlaybackChatItemIdsRef.current.has(chatItemId)) {
+        knownChatItemIds.add(chatItemId);
+      }
+    });
+
+    const newChatItems = chatList
+      .filter(
+        (chatItem) =>
+          !knownChatItemIds.has(chatItem.id) &&
+          !assistantPlaybackChatItemIdsRef.current.has(chatItem.id),
+      )
+      .sort(compareChatHistoryItems);
+
+    if (newChatItems.length === 0) {
+      return;
+    }
+
+    const nextChatItem = newChatItems[0];
+    knownChatItemIds.add(nextChatItem.id);
+    const shouldPreventAutoScrollToRegisteredMeal =
+      isAutoRegisterableFoodFeedbackChatItem(nextChatItem) &&
+      !autoRegisteredFoodFeedbackChatItemIdsRef.current.has(nextChatItem.id);
+
+    const playNextChatItem = async () => {
+      if (shouldForceBottomBeforePlayback) {
+        forceScrollToBottom("instant");
+      }
+
+      if (shouldPreventAutoScrollToRegisteredMeal) {
+        skipNextAutoBottomScrollRef.current = true;
+      }
+
+      let deferredMealRecordTimelineItemKey: string | null = null;
+
+      try {
+        deferredMealRecordTimelineItemKey =
+          await registerFoodImageFeedbackMealRecordBeforePlayback(nextChatItem);
+      } finally {
+        await playAssistantResponse(nextChatItem);
+
+        if (deferredMealRecordTimelineItemKey) {
+          revealDeferredMealRecordTimelineItem(deferredMealRecordTimelineItemKey);
+        }
+      }
+    };
+
+    void playNextChatItem();
+  }, [
+    assistantPlayback,
+    chatList,
+    forceScrollToBottom,
+    isHistoryPending,
+    isTop,
+    pendingInput,
+    pendingMealRecordInput,
+    queryClient,
+    playAssistantResponse,
+    registerFoodImageFeedbackMealRecordBeforePlayback,
+    revealDeferredMealRecordTimelineItem,
+  ]);
 
   const handleMealRecordEditClick = (mealRecord: MealRecordViewModel) => {
     const mealType = getMealTypeFromChatMealTime(mealRecord.time);
@@ -1633,6 +1834,10 @@ export default function ChatPage() {
               if (timelineItem.type === "mealRecord") {
                 const { mealRecord } = timelineItem;
 
+                if (deferredMealRecordTimelineItemKeySet.has(timelineItem.key)) {
+                  return null;
+                }
+
                 return (
                   <section
                     key={timelineItem.key}
@@ -1649,7 +1854,8 @@ export default function ChatPage() {
 
                     <div className={styles.assistantMessageRow}>
                       <MealRecordCard
-                        menus={mealRecord.recordedMenus}
+                        animate={animatedMealRecordTimelineItemKeySet.has(timelineItem.key)}
+                        items={mealRecord.recordedItems}
                         mealRecordTime={mealRecord.time}
                         dateKey={mealRecord.dateKey}
                         timeText={formatTimeText(getMealRecordUpdatedAt(mealRecord))}
@@ -1856,6 +2062,16 @@ export default function ChatPage() {
               );
             })}
 
+            {shouldRenderMealRecordModeGuide ? (
+              <section className={styles.conversationSection} aria-live="polite">
+                <div className={styles.assistantMessageRow}>
+                  <div className={styles.assistantMessageContent}>
+                    <MealRecordModeGuide />
+                  </div>
+                </div>
+              </section>
+            ) : null}
+
             {pendingMealRecordInput !== null ? (
               <section className={styles.conversationSection} aria-live="polite">
                 <div className={styles.userMessageGroup}>
@@ -1885,26 +2101,32 @@ export default function ChatPage() {
             <section className={`${styles.chipSection}`}>
               {QUICK_CHIP_LIST.map((chip) => {
                 const isSelected = selectedChipId === chip.id;
+                const shouldShowHint =
+                  shouldShowMealRecordModeHint && chip.id === MEAL_RECORD_MODE_CHIP_ID;
 
                 return (
-                  <div
-                    key={chip.id}
-                    role="button"
-                    className={`${styles.chipContainer} ${isSelected ? styles.selectedChip : ""}`}
-                    onTouchStart={(event) => {
-                      event.preventDefault();
-                      setSelectedChipId(isSelected ? null : chip.id);
-                      if (!isSelected) {
-                        textInputRef.current?.focus();
-                      }
-                    }}
-                    onTouchEnd={(event) => {
-                      event.preventDefault();
-                    }}
-                    aria-pressed={isSelected}
-                  >
-                    <p className="typo-body2">{chip.label}</p>
-                    {isSelected && <SystemIcon name="close" size={18} />}
+                  <div key={chip.id} className={styles.quickChipWrapper}>
+                    {shouldShowHint ? (
+                      <p className={`${styles.mealRecordModeHintBubble} typo-body3`}>
+                        {MEAL_RECORD_MODE_HINT_MESSAGE}
+                      </p>
+                    ) : null}
+                    <button
+                      type="button"
+                      className={`${styles.chipContainer} ${isSelected ? styles.selectedChip : ""}`}
+                      onTouchStart={(event) => {
+                        event.preventDefault();
+                        handleQuickChipToggle(chip.id, isSelected);
+                      }}
+                      onTouchEnd={(event) => {
+                        event.preventDefault();
+                      }}
+                      onClick={() => handleQuickChipToggle(chip.id, isSelected)}
+                      aria-pressed={isSelected}
+                    >
+                      <span className="typo-body2">{chip.label}</span>
+                      {isSelected && <SystemIcon name="close" size={18} />}
+                    </button>
                   </div>
                 );
               })}
@@ -1986,6 +2208,30 @@ function delayAssistantPlayback(delayMs: number) {
   return new Promise<void>((resolve) => {
     globalThis.setTimeout(resolve, delayMs);
   });
+}
+
+function getIsMealRecordModeOnboardingDone() {
+  if (typeof window === "undefined") {
+    return true;
+  }
+
+  try {
+    return window.localStorage.getItem(CHAT_MEAL_RECORD_MODE_ONBOARDING_STORAGE_KEY) === "done";
+  } catch {
+    return false;
+  }
+}
+
+function saveMealRecordModeOnboardingDone() {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  try {
+    window.localStorage.setItem(CHAT_MEAL_RECORD_MODE_ONBOARDING_STORAGE_KEY, "done");
+  } catch {
+    // Storage failure should not block meal record mode.
+  }
 }
 
 function getRecentDateKeys(baseDateKey: string, dayCount: number) {
@@ -2333,6 +2579,90 @@ function ChatHistorySkeleton() {
         </div>
       </section>
     </SkeletonStatus>
+  );
+}
+
+function MealRecordModeGuide() {
+  return (
+    <>
+      <article className={`${styles.feedbackCard} ${styles.assistantResultCardAnimated}`}>
+        <p className={`textNormal typo-title4`}>식사 기록 모드 사용 방법 📌</p>
+
+        <ol className={styles.mealRecordModeGuideList}>
+          <li className={styles.mealRecordModeGuideItem}>
+            <span className={`${styles.mealRecordModeGuideNumber} typo-caption4`}>1</span>
+            <div className={styles.mealRecordModeGuideText}>
+              <p className={`${styles.textNormal} typo-body3`}>
+                자연스럽게 식사 내용을 입력해 주세요.
+              </p>
+              <p className={`${styles.textAssistive} typo-body3`}>
+                예) 아침에 사과 1개와 그릭요거트 먹었어
+              </p>
+            </div>
+          </li>
+
+          <li className={styles.mealRecordModeGuideItem}>
+            <span className={`${styles.mealRecordModeGuideNumber} typo-caption4`}>2</span>
+            <div className={styles.mealRecordModeGuideText}>
+              <p className={`${styles.textNormal} typo-body3`}>
+                멜로가 내용을 인식해서
+                <br />
+                칼로리와 식단을 자동으로 기록해요. 🤖
+              </p>
+            </div>
+          </li>
+
+          <li className={styles.mealRecordModeGuideItem}>
+            <span className={`${styles.mealRecordModeGuideNumber} typo-caption4`}>3</span>
+            <div className={styles.mealRecordModeGuideText}>
+              <p className={`${styles.textNormal} typo-body3`}>
+                기록이 완료되면 이렇게 확인할 수 있어요. 👀
+              </p>
+            </div>
+          </li>
+        </ol>
+
+        <div className={styles.mealRecordModeExampleCard} aria-hidden="true">
+          <p className={`${styles.textPrimary} typo-body3`}>아침 기록 완료!</p>
+          <div className={styles.mealRecordModeExampleSummary}>
+            <p className={`${styles.mealRecordModeExampleName} ${styles.textNormal} typo-body3`}>
+              사과 외 1개
+            </p>
+            <span
+              className={`${styles.mealRecordModeExampleCalories} ${styles.textNormal} textNoWrap typo-body3`}
+            >
+              231kcal
+            </span>
+            <SystemIcon name="chevron-down-thin" size={18} />
+          </div>
+          <div className={styles.mealRecordModeExampleAction}>
+            <span className={`${styles.mealRecordModeExampleButton} typo-label4`}>기록 취소</span>
+            <span
+              className={`${styles.mealRecordModeExampleButton} ${styles.mealRecordModeExampleButtonPrimary} typo-label4`}
+            >
+              수정하기
+            </span>
+          </div>
+        </div>
+      </article>
+
+      <p className={`${styles.assistantBubble} ${styles.assistantBubbleAnimated} typo-body3`}>
+        편하게 채팅하듯 입력하면
+        <br />
+        멜로가 알아서 기록해줄게요! ✨
+      </p>
+
+      <aside className={`${styles.mealRecordModeTipCard}`}>
+        <div>
+          <p className={`${styles.mealRecordModeTipTitle} typo-title4`}>💡 TIP</p>
+          <p className={`${styles.textNormal} typo-body3`}>
+            모드를 끄고 싶을 때는
+            <br />
+            다시 '식사 기록 모드' 버튼을 눌러주세요!
+          </p>
+        </div>
+      </aside>
+    </>
   );
 }
 
@@ -2751,14 +3081,16 @@ function ChatInput({
 }
 
 function MealRecordCard({
-  menus,
+  animate = false,
+  items,
   mealRecordTime,
   dateKey,
   timeText,
   onCancelClick,
   onEditClick,
 }: {
-  menus: RecordedMenuSummary[];
+  animate?: boolean;
+  items: RecordedMealRecordItem[];
   mealRecordTime: MealTime;
   dateKey: string;
   timeText: string;
@@ -2766,23 +3098,22 @@ function MealRecordCard({
   onEditClick: () => void;
 }) {
   const [isOpen, setIsOpen] = useState(false);
-  const primaryMenu = menus[0];
-  const hasMultipleMenus = menus.length > 1;
-  const totalCalories = menus.reduce((sum, menu) => sum + menu.recordedCalories, 0);
+  const primaryItem = items[0];
+  const hasMultipleItems = items.length > 1;
+  const totalCalories = items.reduce((sum, item) => sum + item.recordedCalories, 0);
 
   const mealType = getMealTypeFromChatMealTime(mealRecordTime);
   const mealTimeLabel =
     MEAL_TYPE_OPTIONS.find((option) => option.key === mealType)?.label ?? "식사";
 
-  if (!primaryMenu) return null;
+  if (!primaryItem) return null;
   const handleCancelClick = () => {
     setIsOpen(false);
     onCancelClick();
   };
-
   return (
     <section
-      className={`${styles.mealRecordCard} ${styles.mealRecordCardWithTime}`}
+      className={`${styles.mealRecordCard} ${styles.mealRecordCardWithTime} ${animate ? styles.mealRecordCardAnimated : ""}`}
       data-time={timeText}
     >
       <p className={`${styles.textAssistive} ${styles.datelabel}  typo-caption4`}>
@@ -2794,25 +3125,25 @@ function MealRecordCard({
         type="button"
         className={styles.mealRecordSummary}
         onClick={() => {
-          if (hasMultipleMenus) {
+          if (hasMultipleItems) {
             setIsOpen((prev) => !prev);
           } else {
             onEditClick();
           }
         }}
-        aria-expanded={hasMultipleMenus ? isOpen : undefined}
+        aria-expanded={hasMultipleItems ? isOpen : undefined}
       >
         <p className={`${styles.mealRecordSummaryName} ${styles.textNormal} typo-title4`}>
-          {hasMultipleMenus
-            ? `${primaryMenu.menu_name} 외 ${menus.length - 1}개`
-            : primaryMenu.menu_name}
+          {hasMultipleItems
+            ? `${primaryItem.menu_name} 외 ${items.length - 1}개`
+            : primaryItem.menu_name}
         </p>
         <span
           className={`${styles.mealRecordSummaryCalories} ${styles.recommendCalories} textNoWrap typo-title3`}
         >
           {formatNumberWithMaxOneDecimal(totalCalories)}kcal
         </span>
-        {hasMultipleMenus ? (
+        {hasMultipleItems ? (
           <SystemIcon
             name="chevron-up-normal"
             size={24}
@@ -2821,17 +3152,19 @@ function MealRecordCard({
         ) : null}
       </button>
 
-      {hasMultipleMenus && isOpen ? (
+      {hasMultipleItems && isOpen ? (
         <button type="button" onClick={onEditClick} className={styles.mealRecordMenuList}>
-          {menus.map((menu) => (
-            <div key={menu.menu_id} className={styles.mealRecordMenuItem}>
-              <p className={`${styles.mealRecordMenuName} ${styles.textNormal} typo-body3`}>
-                {menu.menu_name}
-              </p>
+          {items.map((item) => (
+            <div key={item.menu_id} className={styles.mealRecordMenuItem}>
+              <div className={styles.mealRecordMenuText}>
+                <p className={`${styles.mealRecordMenuName} ${styles.textNormal} typo-body3`}>
+                  {item.menu_name}
+                </p>
+              </div>
               <span
                 className={`${styles.mealRecordMenuCalories} ${styles.textAlternative} textNoWrap typo-body3`}
               >
-                {formatNumberWithMaxOneDecimal(menu.recordedCalories)}kcal
+                {formatNumberWithMaxOneDecimal(item.recordedCalories)}kcal
               </span>
             </div>
           ))}
@@ -3191,7 +3524,7 @@ function FeedbackSection({
             <br />
             직접 추가할 수 있어요
           </span>
-          <SystemIcon name="chevron-right-normal" size={20} />
+          <SystemIcon name="chevron-right-thin" size={20} />
         </button>
       )}
     </div>
@@ -3458,6 +3791,22 @@ function getFeedbackGaugePoint(angle: number) {
   };
 }
 
+function getChatItemImageUrl(chatItem: ChatHistoryItemResponseDto) {
+  const imageUrl = chatItem.image_url ?? chatItem.response_payload.image_url;
+
+  return typeof imageUrl === "string" && imageUrl.trim().length > 0 ? imageUrl : undefined;
+}
+
+function isAutoRegisterableFoodFeedbackChatItem(chatItem: ChatHistoryItemResponseDto) {
+  const responsePayload = chatItem.response_payload;
+
+  return (
+    getChatItemImageUrl(chatItem) !== undefined &&
+    responsePayload.chat_category === "feedback" &&
+    Boolean(responsePayload.feedback?.menus.length)
+  );
+}
+
 function getChatMealRecordMenus(chatItem: ChatHistoryItemResponseDto): ChatMealRecordMenu[] {
   if (
     chatItem.response_payload.chat_category === "recommendation" &&
@@ -3578,6 +3927,7 @@ function buildMealRecordViewModel(
     updatedAt: dayMeals.mealRecordTimestampsByTime?.[mealTime]?.updatedAt,
     menus: menus.map(toChatMealRecordMenu),
     recordedMenus: menus.map(toRecordedMenuSummary),
+    recordedItems: menus.map((menu) => ({ type: "menu" as const, ...toRecordedMenuSummary(menu) })),
     previousMealRecord: {
       time: mealTime,
       menus: selectedMenus,

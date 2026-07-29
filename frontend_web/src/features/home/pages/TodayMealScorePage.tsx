@@ -35,7 +35,7 @@ type NutrientItem = {
 };
 
 const NET_CARBS_NOTICE_MESSAGE = [
-  "탄수화물에서 식이섬유를 뺀 순탄수를 기준으로 탄수화물 정보를 제공하고 있어요",
+  "탄수화물에서 대체당과 식이섬유를 뺀 순탄수를 기준으로 탄수화물 정보를 제공하고 있어요.",
 ] as const;
 
 const progressStatusClassName: Record<NutrientStatus, string> = {

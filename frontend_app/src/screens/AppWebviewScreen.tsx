@@ -282,10 +282,10 @@ function createTabPathSyncScript(
   `;
 }
 
-function createNativeBackRequestScript() {
+function createNativeBackRequestScript(fallbackPath = DEFAULT_TAB_BACK_FALLBACK_PATH) {
   return createWebNavigationCommandScript({
     type: "BACK",
-    fallbackPath: DEFAULT_TAB_BACK_FALLBACK_PATH,
+    fallbackPath,
     animate: true,
   });
 }
@@ -366,6 +366,8 @@ export default function AppWebViewScreen({
   const targetUrl = isTabWebView
     ? (initialTabUrlRef.current ?? buildWebAppUrl(normalizedTabPath))
     : buildWebAppUrl(path);
+  const androidHardwareBackFallbackPath =
+    currentTab === "chat" ? DEFAULT_TAB_BACK_FALLBACK_PATH : normalizedTabPath;
 
   const webViewSource = useMemo(() => ({ uri: targetUrl }), [targetUrl]);
   const safeAreaSyncScript = useMemo(
@@ -618,6 +620,13 @@ export default function AppWebViewScreen({
     const backSubscription = BackHandler.addEventListener("hardwareBackPress", () => {
       if (!canGoBackRef.current) return false;
 
+      if (isTabWebView) {
+        webViewRef.current?.injectJavaScript(
+          createNativeBackRequestScript(androidHardwareBackFallbackPath),
+        );
+        return true;
+      }
+
       webViewRef.current?.goBack();
       return true;
     });
@@ -625,7 +634,7 @@ export default function AppWebViewScreen({
     return () => {
       backSubscription.remove();
     };
-  }, []);
+  }, [androidHardwareBackFallbackPath, isTabWebView]);
 
   useEffect(() => {
     webViewRef.current?.injectJavaScript(`${safeAreaSyncScript}true;`);

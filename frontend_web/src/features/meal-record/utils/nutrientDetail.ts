@@ -105,16 +105,24 @@ export function resolveMainNutrientStates(
         return acc;
       }
 
-      const childValues = CHILD_NUTRIENT_KEYS_BY_PARENT[key]
-        .map((childKey) => toNullableNumber(nutrientValues[childKey]))
-        .filter((value): value is number => value !== null);
-      if (childValues.length === 0) {
+      let childValueSum = 0;
+      let hasChildValue = false;
+
+      for (const childKey of CHILD_NUTRIENT_KEYS_BY_PARENT[key]) {
+        const childValue = toNullableNumber(nutrientValues[childKey]);
+        if (childValue !== null) {
+          childValueSum += childValue;
+          hasChildValue = true;
+        }
+      }
+
+      if (!hasChildValue) {
         acc[key] = { value: null, isEstimated: false };
         return acc;
       }
 
       acc[key] = {
-        value: roundDecimal(childValues.reduce((sum, value) => sum + value, 0)),
+        value: roundDecimal(childValueSum),
         isEstimated: true,
       };
       return acc;
@@ -157,8 +165,15 @@ export function buildDetailRows({
 }
 
 export function buildDetailGroups(rows: DetailRow[]): DetailGroupSection[] {
-  return DETAIL_GROUP_ORDER.map((group) => ({
-    group,
-    rows: rows.filter((row) => row.group === group && row.value !== null),
-  })).filter((section) => section.rows.length > 0);
+  return DETAIL_GROUP_ORDER.reduce<DetailGroupSection[]>((sections, group) => {
+    const groupRows = rows.filter((row) => row.group === group && row.value !== null);
+    if (groupRows.length > 0) {
+      sections.push({
+        group,
+        rows: groupRows,
+      });
+    }
+
+    return sections;
+  }, []);
 }

@@ -8,6 +8,7 @@ import {
   shouldEnableTabBackGesture,
 } from "@/src/shared/navigation/appTabNavigation";
 import { useEdgeSwipeBack } from "@/src/shared/navigation/useEdgeSwipeBack";
+import { triggerNativeHaptic } from "@/src/shared/native/haptics";
 import { typography } from "@/src/shared/styles/tokens";
 import { router, Slot, useSegments } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
@@ -125,7 +126,10 @@ export default function TabsLayout() {
               <Pressable
                 key={tab}
                 style={styles.tabButton}
-                onPress={() => navigateToTab(tab, currentTab)}
+                onPress={() => {
+                  triggerNativeHaptic("selection");
+                  navigateToTab(tab, currentTab);
+                }}
               >
                 <RenderIcon width={24} height={24} />
                 <Text

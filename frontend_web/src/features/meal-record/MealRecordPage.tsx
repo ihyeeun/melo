@@ -141,8 +141,8 @@ export default function MealRecordPage() {
   const [isExitConfirmOpen, setIsExitConfirmOpen] = useState(false);
   const [isTimeSheetOpen, setIsTimeSheetOpen] = useState(false);
   const initialMealRecordTime = useMemo(() => getCurrentMealRecordTime(), []);
-  const [draftMealRecordTime, setDraftMealRecordTime] = useState<MealRecordTimeValue>(
-    () => toMealRecordTimeValue(initialMealRecordTime),
+  const [draftMealRecordTime, setDraftMealRecordTime] = useState<MealRecordTimeValue>(() =>
+    toMealRecordTimeValue(initialMealRecordTime),
   );
   const hasAppliedTransferRef = useRef(false);
 

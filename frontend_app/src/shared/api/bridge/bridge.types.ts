@@ -1,4 +1,5 @@
 import type { HealthStepsRequestPayload } from "@/features/health/types/healthSteps.types";
+import type { NativeHapticType } from "@/src/shared/native/haptics";
 
 export type BridgeHttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 export type BridgeTabName = "home" | "chat" | "diary" | "profile";
@@ -32,6 +33,17 @@ export type BridgeTabSyncMessage = {
 export type BridgeNavigationBackMessage = {
   id: string;
   type: "NAVIGATION_BACK";
+  context?: BridgeMessageContext;
+};
+
+export type BridgeHapticTriggerRequestPayload = {
+  type?: NativeHapticType;
+};
+
+export type BridgeHapticTriggerRequestMessage = {
+  id: string;
+  type: "HAPTIC_TRIGGER_REQUEST";
+  payload?: BridgeHapticTriggerRequestPayload;
   context?: BridgeMessageContext;
 };
 
@@ -128,6 +140,7 @@ export type WebToAppMessage =
   | BridgeApiRequestMessage
   | BridgeTabSyncMessage
   | BridgeNavigationBackMessage
+  | BridgeHapticTriggerRequestMessage
   | BridgeAppDeviceInfoRequestMessage
   | BridgeCameraCaptureRequestMessage
   | BridgeGalleryPickRequestMessage

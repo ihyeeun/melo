@@ -7,10 +7,7 @@ import {
   getCurrentMealRecordTime,
   normalizeMealRecordTime,
 } from "@/features/meal-record/utils/mealRecordTime";
-import {
-  buildMenuDraftSignature,
-  toMenuDraftSeed,
-} from "@/features/meal-record/utils/menuDraftSync";
+import { buildMenuDraftSignature, toMenuDraftSeed } from "@/features/meal-record/utils/menuDraftSync";
 import {
   type MealServingInputMode,
   type MealTime,

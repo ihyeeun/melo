@@ -1,6 +1,8 @@
 import { useEnterDoneEffect } from "@stackflow/react";
 import { useRef, useState } from "react";
 
+import { useRemoveMenuSelectionFlowOnExit } from "@/features/menu-selection-flow/hooks/useRemoveMenuSelectionFlowOnExit";
+import { getMenuSelectionFlowIdFromSearchParams } from "@/features/menu-selection-flow/utils/menuSelectionFlowRoutes";
 import { useGetBrandSearchQuery } from "@/features/search/brand/hooks/queries/useBrandSearchQuery";
 import { useSetBrandSearchSelection } from "@/features/search/brand/stores/brandSearchSelection.store";
 import styles from "@/features/search/styles/BrandSearch.module.css";
@@ -8,8 +10,13 @@ import { PATH } from "@/router/path";
 import type { RegisterMenuRequestDto } from "@/shared/api/types/api.dto";
 import { Button } from "@/shared/commons/button/Button";
 import { SearchInputHeader } from "@/shared/commons/header/SearchInputHeader";
+import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import { LoadingIndicator } from "@/shared/commons/loading/Loading";
-import { navigateBack, useLocation } from "@/shared/navigation/stackflowNavigation";
+import {
+  navigateBack,
+  useLocation,
+  useSearchParams,
+} from "@/shared/navigation/stackflowNavigation";
 
 type BrandSearchResult = {
   id: string;
@@ -22,23 +29,26 @@ type BrandSearchLocationState = Partial<RegisterMenuRequestDto> & {
 };
 
 function mapBrandList(brandList: string[]): BrandSearchResult[] {
-  return brandList
-    .map((brandName, index) => {
-      const normalizedName = brandName.trim();
-      if (!normalizedName) {
-        return null;
-      }
+  return brandList.reduce<BrandSearchResult[]>((results, brandName, index) => {
+    const normalizedName = brandName.trim();
+    if (!normalizedName) {
+      return results;
+    }
 
-      return {
-        id: `${normalizedName}-${index}`,
-        name: normalizedName,
-      };
-    })
-    .filter((brand): brand is BrandSearchResult => brand !== null);
+    results.push({
+      id: `${normalizedName}-${index}`,
+      name: normalizedName,
+    });
+
+    return results;
+  }, []);
 }
 
 export default function BrandSearch() {
   const location = useLocation();
+  const [searchParams] = useSearchParams();
+  const menuSelectionFlowId = getMenuSelectionFlowIdFromSearchParams(searchParams);
+  useRemoveMenuSelectionFlowOnExit(menuSelectionFlowId);
   const formState = (location.state ?? {}) as BrandSearchLocationState;
   const returnPath = formState.returnPath?.trim() || PATH.NUTRIENT_ADD_REGISTER;
   const setBrandSearchSelection = useSetBrandSearchSelection();
@@ -170,6 +180,7 @@ export default function BrandSearch() {
                       disabled={isDirectRegisterDisabled}
                     >
                       브랜드 직접 등록
+                      <SystemIcon name="chevron-right-thin" size={18} />
                     </Button>
                   </>
                 )}
@@ -194,6 +205,7 @@ export default function BrandSearch() {
                 disabled={isDirectRegisterDisabled}
               >
                 브랜드 직접 입력
+                <SystemIcon name="chevron-right-thin" size={18} />
               </Button>
             </section>
           )}

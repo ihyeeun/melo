@@ -481,18 +481,16 @@ export function ChatMealRecordBottomSheet({
                 );
               })}
 
-              <section className={styles.additionalAction}>
-                <p className={`${styles.secondaryText} typo-body3`}>다른 메뉴도 드셨나요?</p>
-                <Button
-                  variant="text"
-                  interaction="normal"
-                  size="small"
-                  color="normal"
-                  onClick={handleAddMore}
-                >
-                  추가하러 가기
-                </Button>
-              </section>
+              <Button
+                variant="outlined"
+                interaction="normal"
+                color="normal"
+                onClick={handleAddMore}
+                fullWidth
+              >
+                <SystemIcon name="plus" size={16} />
+                음식 추가
+              </Button>
             </div>
           </section>
         </ScrollFogArea>

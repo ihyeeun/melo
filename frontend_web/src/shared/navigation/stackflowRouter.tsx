@@ -117,6 +117,12 @@ const BrandSearch = createLazyActivity(() => import("@/features/search/brand/Bra
 const MealSearchPage = createLazyActivity(
   () => import("@/features/search/menu-record/MealSearchPage"),
 );
+const CreateFolderPage = createLazyActivity(
+  () => import("@/features/personal-menu/folder/pages/CreateFolderPage"),
+);
+const FolderDetailPage = createLazyActivity(
+  () => import("@/features/personal-menu/folder/pages/FolderDetailPage"),
+);
 const SettingsFeedbackPage = createLazyActivity(
   () => import("@/features/settings/SettingsFeedbackPage"),
 );
@@ -196,6 +202,8 @@ const ACTIVITIES = {
   MealRecord: MealRecordPage,
   MealRecordAddSearch: MealSearchPage,
   MealDetail: MealDetailPage,
+  CreateFolder: CreateFolderPage,
+  FolderDetail: FolderDetailPage,
   MenuBoardCamera: MenuBoardCameraPage,
   FoodCamera: FoodCameraPage,
   NutrientAdd: NutrientAddPage,
@@ -236,6 +244,8 @@ const ACTIVITY_ROUTES: Record<keyof typeof ACTIVITIES, RoutePath> = {
   MealRecord: PATH.MEAL_RECORD,
   MealRecordAddSearch: PATH.MEAL_RECORD_ADD_SEARCH,
   MealDetail: PATH.MEAL_DETAIL,
+  CreateFolder: PATH.CREATE_FOLDER,
+  FolderDetail: PATH.FOLDER_DETAIL,
   MenuBoardCamera: PATH.MENU_BOARD_CAMERA,
   FoodCamera: PATH.FOOD_CAMERA,
   NutrientAdd: PATH.NUTRIENT_ADD,
@@ -550,8 +560,9 @@ function getClickableElementAtPoint(x: number, y: number) {
 }
 
 function forwardTapThroughEdgeSwipeZone(
-  event: ReactPointerEvent<HTMLElement>,
   pointerDownTarget: EventTarget | null,
+  clientX: number,
+  clientY: number,
 ) {
   if (!isEdgeSwipeZone(pointerDownTarget)) return;
 
@@ -559,7 +570,7 @@ function forwardTapThroughEdgeSwipeZone(
   const previousPointerEvents = edgeSwipeZone.style.pointerEvents;
   edgeSwipeZone.style.pointerEvents = "none";
 
-  const target = getClickableElementAtPoint(event.clientX, event.clientY);
+  const target = getClickableElementAtPoint(clientX, clientY);
   edgeSwipeZone.style.pointerEvents = previousPointerEvents;
 
   target?.click();
@@ -826,8 +837,15 @@ function StackActivityFrame({
       }
 
       if (!swipe.dragging) {
-        forwardTapThroughEdgeSwipeZone(event, swipe.pointerDownTarget);
+        const { pointerDownTarget } = swipe;
+        const { clientX, clientY } = event;
         clearSwipe();
+        // The forwarded click can call navigateBack(), which also uses this frame's
+        // swipe transition requester. Forward after the pointer event settles so the
+        // pending tap state does not force that navigation into the fallback path.
+        window.setTimeout(() => {
+          forwardTapThroughEdgeSwipeZone(pointerDownTarget, clientX, clientY);
+        }, 0);
         return;
       }
 

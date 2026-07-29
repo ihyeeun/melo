@@ -88,7 +88,17 @@ function getSingleValuePadding(value: number) {
 }
 
 function getDynamicYTicks(data: WeeklyRecordChartData[], domainMode: "fit" | "zero") {
-  const values = data.flatMap((point) => [point.value, point.target]).filter(isFiniteNumber);
+  const values: number[] = [];
+
+  for (const point of data) {
+    if (isFiniteNumber(point.value)) {
+      values.push(point.value);
+    }
+
+    if (isFiniteNumber(point.target)) {
+      values.push(point.target);
+    }
+  }
 
   if (values.length === 0) {
     return DEFAULT_Y_TICKS;
