@@ -33,14 +33,7 @@ export function useModifyNutrientMutation(callbacks?: UseMutationCallback) {
     mutationFn: modifyNutrient,
     onSuccess: async (_response, variables) => {
       await queryClient.cancelQueries({ queryKey: menuQueryKeys.detail(variables.id) });
-      patchMenuDetailCache(queryClient, {
-        id: variables.id,
-        name: variables.name,
-        brand: variables.brand,
-        unit: variables.unit,
-        weight: variables.weight,
-        calories: variables.calories,
-      });
+      patchMenuDetailCache(queryClient, variables);
       await queryClient.invalidateQueries({
         queryKey: menuQueryKeys.detail(variables.id),
         refetchType: "active",

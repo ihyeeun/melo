@@ -2,6 +2,7 @@ import { type QueryClient, useQueries } from "@tanstack/react-query";
 import { useMemo } from "react";
 
 import { getMealDetail } from "@/features/meal-record/api/mealDetail";
+import type { MenuNutrientFieldKey } from "@/shared/api/types/api.dto";
 import type {
   MenuListResponseDto,
   MenuResponseDto,
@@ -47,7 +48,10 @@ const MENU_DETAIL_NULL_FIELDS = Object.fromEntries(
   [K in (typeof MENU_DETAIL_ONLY_FIELD_KEYS)[number]]: null;
 };
 
-type MenuDetailCachePatch = Partial<MenuDetailCacheResponseDto> &
+type MenuDetailNutrientCachePatch = Partial<Record<MenuNutrientFieldKey, number | null>>;
+
+type MenuDetailCachePatch = Partial<Omit<MenuDetailCacheResponseDto, MenuNutrientFieldKey>> &
+  MenuDetailNutrientCachePatch &
   Pick<MenuDetailCacheResponseDto, "id">;
 
 function isValidMenuId(menuId: unknown): menuId is number {
@@ -111,7 +115,7 @@ export function patchMenuDetailCache(queryClient: QueryClient, patch: MenuDetail
       {
         ...previous,
         ...patch,
-      },
+      } as MenuDetailCacheResponseDto,
       previous,
     );
   });
