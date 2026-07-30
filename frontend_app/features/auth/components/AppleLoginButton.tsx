@@ -1,7 +1,7 @@
 import React from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
-import { typography } from "@/src/shared/styles/tokens";
+import { Pressable, StyleSheet, View } from "react-native";
 import AppleLogo from "../../../assets/images/Icon/apple-logo.svg";
+import { Typo } from "@/src/shared/ui";
 
 type AppleLoginButtonProps = {
   onPress: () => void;
@@ -17,9 +17,9 @@ export function AppleLoginButton({ onPress }: AppleLoginButtonProps) {
     >
       <View style={styles.content}>
         <AppleLogo width={20} height={20} />
-        <Text allowFontScaling={false} style={styles.label}>
+        <Typo size="body-s-regular" color="primary" style={styles.label}>
           Apple{"\u00A0"}로그인
-        </Text>
+        </Typo>
       </View>
     </Pressable>
   );
@@ -27,13 +27,12 @@ export function AppleLoginButton({ onPress }: AppleLoginButtonProps) {
 
 const styles = StyleSheet.create({
   button: {
-    alignSelf: "center",
-    width: 300,
+    width: "100%",
     height: 45,
-    borderRadius: 4,
+    borderRadius: 12,
     backgroundColor: "#0a0a0a",
     justifyContent: "center",
-    paddingHorizontal: 14,
+    alignSelf: "center",
   },
   pressed: {
     opacity: 0.7,
@@ -42,10 +41,11 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: 8,
+    gap: 10,
   },
   label: {
-    ...typography["typo-label3"],
-    color: "#ffffff",
+    color: "#fff",
+    includeFontPadding: false,
+    flexShrink: 0,
   },
 });

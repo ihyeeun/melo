@@ -44,10 +44,10 @@ export const colors = {
 
 export const semantic = {
   background: {
-    default: colors.coral[400],
-    selected: colors.gray[200],
-    gray1: colors.gray[50],
-    gray2: colors.gray[100],
+    default: "#fff",
+    selected: colors.coral[50],
+    gray_1: colors.gray[50],
+    gray_2: colors.gray[100],
     dark: colors.gray[950],
   },
 
@@ -71,5 +71,10 @@ export const semantic = {
 
   dimmer: {
     default: "rgba(0, 0, 0, 0.6)",
+  },
+
+  btn: {
+    default: colors.coral[400],
+    disabled: colors.gray[200],
   },
 } as const;

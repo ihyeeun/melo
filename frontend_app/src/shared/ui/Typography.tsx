@@ -5,13 +5,13 @@ import { semantic, typography, type TypoName } from "@/src/shared/styles";
 type TypographyColor = keyof typeof semantic.text;
 
 type TypographyProps = Omit<TextProps, "style"> & {
-  variant: TypoName;
+  size?: TypoName;
   color?: TypographyColor;
   style?: StyleProp<TextStyle>;
 };
 
-export function Typography({
-  variant,
+export function Typo({
+  size = "body-s-regular",
   color = "primary",
   allowFontScaling = false,
   style,
@@ -22,7 +22,7 @@ export function Typography({
     <Text
       {...props}
       allowFontScaling={allowFontScaling}
-      style={[typography[variant], { color: semantic.text[color] }, style]}
+      style={[typography[size], { color: semantic.text[color] }, style]}
     >
       {children}
     </Text>
