@@ -46,3 +46,34 @@ export interface UpsertFolderRequestDto {
   menu_quantities: number[];
   menu_input_modes: Array<0 | 1>; //0: 단위, 1: 중량
 }
+
+/* ======
+ * 운동
+ * ====== */
+export interface DeleteWorkoutRecordRequestDto {
+  date: string;
+  workout_id?: number; //null인 경우에 해당 날짜 전체 운동 기록 취소
+}
+
+export interface SearchWorkoutRequestDto {
+  input: string;
+  body_parts?: string;
+  equipments?: string;
+  limit: number;
+  cursor?: number;
+}
+
+export interface UpsertWorkoutRecordRequestDto {
+  workout_id: number;
+  workout_duration: number;
+  burned_calories: number;
+  workout_type: "cardio" | "weight";
+  intensity?: 0 | 1 | 2;
+  set_list?: WorkoutSetRequestDto[];
+}
+
+export interface WorkoutSetRequestDto {
+  set_order: number;
+  weight: number;
+  reps: number;
+}

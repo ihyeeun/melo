@@ -349,3 +349,52 @@ export interface ProfileResponseDto {
   job_type?: number;
   lunch_location?: number | null;
 }
+
+/* ======
+ * 운동
+ * ====== */
+export interface WorkoutRecordResponseDto {
+  workout_list: WorkoutRecordItemResponseDto[];
+}
+
+export interface WorkoutRecordItemResponseDto {
+  workout_id: number; //운동 id
+  workout_name: string;
+  workout_image?: string;
+  workout_duration: number; //운동시간(분)
+  burned_calories: number; //소모 칼로리
+  workout_type: "cardio" | "weight"; //운동 유형
+  intensity?: 0 | 1 | 2; //낮음, 보통, 높음
+  set_list?: WorkoutRecordSetResponseDto[];
+}
+
+export interface WorkoutRecordSetResponseDto {
+  set_order: number; //세트 순서
+  weight: number; //중량
+  reps: number; //반복 횟수
+}
+
+export interface WorkoutSearchResponseDto {
+  workout_list: WorkoutSearchItemResponseDto[];
+  next_cursor?: number;
+}
+
+export interface WorkoutSearchItemResponseDto {
+  workout_id: number;
+  workout_name: string;
+  workout_image?: string;
+  workout_type: "cardio" | "weight";
+}
+
+export interface WorkoutDetailResponseDto {
+  workout_id: number;
+  workout_name: string;
+  workout_gif?: string;
+  workout_type: "cardio" | "weight";
+  equiopment?: string; //운동 장비
+  body_parts: string[];
+}
+
+export interface WorkoutIdResponseDto {
+  workout_id: number;
+}
