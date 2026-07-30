@@ -4,6 +4,7 @@ export const fontFamilies = {
   pretendardRegular: "Pretendard-Regular",
   pretendardMedium: "Pretendard-Medium",
   pretendardSemiBold: "Pretendard-SemiBold",
+  pretendardBold: "Pretendard-Bold",
 } as const;
 
 export const pretendardFonts = {
@@ -11,4 +12,5 @@ export const pretendardFonts = {
   [fontFamilies.pretendardRegular]: require("pretendard/dist/public/static/Pretendard-Regular.otf"),
   [fontFamilies.pretendardMedium]: require("pretendard/dist/public/static/Pretendard-Medium.otf"),
   [fontFamilies.pretendardSemiBold]: require("pretendard/dist/public/static/Pretendard-SemiBold.otf"),
+  [fontFamilies.pretendardBold]: require("pretendard/dist/public/static/Pretendard-Bold.otf"),
 };
