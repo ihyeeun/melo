@@ -2025,7 +2025,6 @@ export default function ChatPage() {
                               )
                             }
                             isMealRecorded={isMealRecorded}
-                            onDirectMealRecordClick={handleNavigateDirectMenuRecord}
                           />
                         )}
 
@@ -3355,7 +3354,6 @@ function FeedbackSection({
   onMealRecordClick,
   onMealRecordCancelClick,
   isMealRecorded,
-  onDirectMealRecordClick,
 }: {
   animate?: boolean;
   chatId: number;
@@ -3365,7 +3363,6 @@ function FeedbackSection({
   onMealRecordClick: () => void;
   onMealRecordCancelClick: () => void;
   isMealRecorded: boolean;
-  onDirectMealRecordClick: () => void;
 }) {
   const [isMenuListOpen, setIsMenuListOpen] = useState(false);
   const primaryMenu = feedback.menus[0];
@@ -3516,17 +3513,6 @@ function FeedbackSection({
           </div>
         </div>
       </article>
-
-      {hasImage && (
-        <button className={styles.actionCard} onClick={onDirectMealRecordClick} type="button">
-          <span className="typo-body2 textNormal">
-            인식한 메뉴가 다르다면
-            <br />
-            직접 추가할 수 있어요
-          </span>
-          <SystemIcon name="chevron-right-thin" size={20} />
-        </button>
-      )}
     </div>
   );
 }
