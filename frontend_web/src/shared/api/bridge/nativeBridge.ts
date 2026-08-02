@@ -135,7 +135,7 @@ function sendRequestToApp<T>(
 ) {
   return new Promise<T>((resolve, reject) => {
     const id = generateRequestId();
-    const timeoutMs = options?.timeoutMs ?? 10000;
+    const timeoutMs = options?.timeoutMs ?? 1 * 60 * 1000;
 
     const timeoutId =
       timeoutMs > 0
