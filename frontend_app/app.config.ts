@@ -10,9 +10,9 @@ const config: ExpoConfig = {
       projectId: "507c0e33-8576-4aba-84f4-00d6b74a7338",
     },
   },
-  version: "1.1.1",
+  version: "1.2.0",
   orientation: "portrait",
-  icon: "./assets/logo/melo-logo.png",
+  icon: "./assets/design-update/logo/melo-logo.png",
   scheme: "melo",
   userInterfaceStyle: "automatic",
   newArchEnabled: true,
@@ -29,9 +29,8 @@ const config: ExpoConfig = {
   android: {
     adaptiveIcon: {
       backgroundColor: "#ff8e00",
-      foregroundImage: "./assets/logo/android-icon-foreground.png",
-      backgroundImage: "./assets/logo/android-icon-background.png",
-      monochromeImage: "./assets/logo/android-icon-foreground.png",
+      foregroundImage: "./assets/design-update/logo/melo-logo-fg.png",
+      backgroundImage: "./assets/design-update/logo/melo-logo-bg.png",
     },
     edgeToEdgeEnabled: true,
     predictiveBackGestureEnabled: false,
@@ -55,7 +54,7 @@ const config: ExpoConfig = {
   },
   web: {
     output: "static",
-    favicon: "./assets/logo/melo-logo.svg",
+    favicon: "./assets/design-update/logo/melo-logo.png",
   },
   locales: {
     en: "./locales/en.json",
@@ -81,10 +80,10 @@ const config: ExpoConfig = {
     [
       "expo-splash-screen",
       {
-        image: "./assets/images/splash.png",
-        backgroundColor: "#FF8E00",
+        image: "./assets/design-update/melo-logo-white.png",
+        backgroundColor: "#FF8465",
         resizeMode: "contain",
-        imageWidth: 190,
+        imageWidth: 180,
       },
     ],
     [
