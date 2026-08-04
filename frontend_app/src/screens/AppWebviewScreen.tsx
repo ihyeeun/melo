@@ -17,6 +17,7 @@ import { router } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
+  AppState,
   BackHandler,
   Linking,
   Platform,
@@ -32,6 +33,8 @@ import WebView, {
   type WebViewNavigation,
   type WebViewProps,
 } from "react-native-webview";
+
+const APP_FOREGROUND_EVENT_NAME = "MELO_APP_FOREGROUND";
 
 const devWebUrl =
   Platform.select({
@@ -288,6 +291,30 @@ function createNativeBackRequestScript() {
   });
 }
 
+function createAppForegroundEventScript() {
+  const serializedEventName = JSON.stringify(APP_FOREGROUND_EVENT_NAME);
+  const serializedDetail = JSON.stringify({
+    foregroundedAt: Date.now(),
+  });
+
+  return `
+    (function () {
+      var eventName = ${serializedEventName};
+      var detail = ${serializedDetail};
+
+      try {
+        window.dispatchEvent(new CustomEvent(eventName, { detail: detail }));
+      } catch {
+        var event = document.createEvent("Event");
+        event.initEvent(eventName, true, true);
+        event.detail = detail;
+        window.dispatchEvent(event);
+      }
+    })();
+    true;
+  `;
+}
+
 function normalizeInset(inset: number) {
   return Math.max(0, Math.round(inset * 100) / 100);
 }
@@ -339,6 +366,7 @@ export default function AppWebViewScreen({
   onFeatureGuardEnabledChange,
 }: AppWebViewScreenProps) {
   const webViewRef = useRef<WebView>(null);
+  const appStateRef = useRef(AppState.currentState);
   const initialTabUrlRef = useRef<string | null>(null);
   const canGoBackRef = useRef(false);
   const didLoadOnceRef = useRef(false);
@@ -485,6 +513,13 @@ export default function AppWebViewScreen({
     return didLoadOnceRef.current && pendingTabPathRef.current === null;
   }, []);
 
+  const dispatchAppForegroundToWeb = useCallback(() => {
+    if (!didLoadOnceRef.current) return;
+    if (hasWebViewLoadErrorRef.current) return;
+
+    webViewRef.current?.injectJavaScript(createAppForegroundEventScript());
+  }, []);
+
   const flushPendingTabPathSync = useCallback(() => {
     if (!isTabWebView) return;
     if (!didLoadOnceRef.current) return;
@@ -513,6 +548,22 @@ export default function AppWebViewScreen({
   useEffect(() => {
     previousTabRef.current = currentTab;
   }, [currentTab]);
+
+  useEffect(() => {
+    const subscription = AppState.addEventListener("change", (nextState) => {
+      const previousState = appStateRef.current;
+      appStateRef.current = nextState;
+
+      const didEnterForeground = previousState !== "active" && nextState === "active";
+      if (!didEnterForeground) return;
+
+      dispatchAppForegroundToWeb();
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, [dispatchAppForegroundToWeb]);
 
   useEffect(() => {
     if (!isTabWebView || currentTab !== "chat") {
