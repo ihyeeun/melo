@@ -1,0 +1,197 @@
+.page {
+  background-color: var(--bg-normal);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 100dvh;
+  width: 100%;
+}
+
+.main {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  overflow-y: auto;
+  width: 100%;
+}
+
+.footer {
+  padding: 0 20px;
+  padding-bottom: var(--safe-area-bottom);
+}
+
+.filterSection {
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+}
+
+.filterGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.filterScroller {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding: 8px 20px 0;
+  scrollbar-width: none;
+}
+
+.filterScroller::-webkit-scrollbar {
+  display: none;
+}
+
+.filterChip {
+  align-items: center;
+  background-color: var(--bg-white);
+  border: 1px solid var(--border-neutral);
+  border-radius: 100px;
+  color: var(--label-normal);
+  display: inline-flex;
+  flex: 0 0 auto;
+  justify-content: center;
+  min-height: 32px;
+  padding: 6px 14px;
+  white-space: nowrap;
+}
+
+.filterChipSelected {
+  background-color: var(--primary-normal);
+  border-color: var(--primary-normal);
+  color: var(--static-white);
+}
+
+.bgWhite {
+  background-color: var(--bg-white);
+}
+
+.filterTab {
+  align-items: center;
+  color: var(--label-normal);
+  display: inline-flex;
+  flex: 0 0 auto;
+  justify-content: center;
+  min-height: 32px;
+  padding: 6px 14px;
+  white-space: nowrap;
+}
+
+.tabSelected {
+  border-bottom: 2px solid var(--primary-normal);
+  color: var(--primary-normal);
+}
+
+.resultSection {
+  flex: 1;
+  min-height: 0;
+  padding: 10px 20px;
+}
+
+.resultList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.resultCard {
+  align-items: center;
+  background-color: var(--bg-white);
+  border: 1px solid var(--border-neutral);
+  border-radius: 8px;
+  color: var(--label-normal);
+  display: flex;
+  gap: 12px;
+  padding: 8px;
+  width: 100%;
+  min-height: 40px;
+}
+
+.resultMainButton {
+  align-items: center;
+  color: inherit;
+  display: flex;
+  flex: 1;
+  gap: 12px;
+  min-width: 0;
+  text-align: left;
+}
+
+.resultMainButton:focus-visible {
+  border-radius: 8px;
+  outline: 2px solid var(--primary-normal);
+  outline-offset: 2px;
+}
+
+.thumbnail {
+  align-items: center;
+  background-color: var(--interaction-primary);
+  border-radius: 8px;
+  color: var(--primary-normal);
+  display: inline-flex;
+  justify-content: center;
+  overflow: hidden;
+  aspect-ratio: 4/3;
+  width: 75px;
+  height: 100%;
+}
+
+.thumbnailImage {
+  height: 100%;
+  object-fit: cover;
+  width: 100%;
+}
+
+.resultContent {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.resultTitle {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.addButton {
+  align-items: center;
+  color: var(--primary-normal);
+  display: inline-flex;
+  flex: 0 0 32px;
+  height: 32px;
+  justify-content: center;
+  width: 32px;
+}
+
+.loadingContainer,
+.emptyState {
+  align-items: center;
+  background-color: var(--bg-white);
+  border: 1px solid var(--border-neutral);
+  border-radius: 8px;
+  color: var(--label-normal);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  justify-content: center;
+  min-height: 180px;
+  padding: 24px 20px;
+  text-align: center;
+}
+
+.loadMoreState {
+  align-items: center;
+  display: flex;
+  justify-content: center;
+  min-height: 40px;
+  padding: 8px 0;
+}

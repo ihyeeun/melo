@@ -393,6 +393,7 @@ export interface WorkoutDetailResponseDto {
   workout_type: "cardio" | "weight";
   equiopment?: string; //운동 장비
   body_parts: string[];
+  met?: number;
 }
 
 export interface WorkoutIdResponseDto {

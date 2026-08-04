@@ -32,18 +32,38 @@ export function getFolderDetailPath(dateKey: string, mealType: MealType, folderI
   return `${PATH.FOLDER_DETAIL}?${params.toString()}`;
 }
 
-export function getMealDetailPath(
-  dateKey: string,
-  mealType: MealType,
-  menuId: number,
-) {
+export function getMealDetailPath(dateKey: string, mealType: MealType, menuId: number) {
   return `${PATH.MEAL_DETAIL}?${buildPathQuery(dateKey, mealType, menuId)}`;
 }
 
-export function getPathWithMeal(
-  path: string,
-  dateKey: string,
-  mealType: MealType,
-) {
+export function getPathWithMeal(path: string, dateKey: string, mealType: MealType) {
   return `${path}?${buildPathQuery(dateKey, mealType)}`;
+}
+
+function buildWorkoutPathQuery(dateKey: string, workoutId?: number) {
+  const params = new URLSearchParams({
+    date: dateKey,
+  });
+
+  if (workoutId !== undefined) {
+    params.set("workoutId", String(workoutId));
+  }
+
+  return params.toString();
+}
+
+export function getWorkoutRecordPath(dateKey: string) {
+  return `${PATH.WORKOUT_RECORD}?${buildWorkoutPathQuery(dateKey)}`;
+}
+
+export function getWorkoutSearchPath(dateKey: string) {
+  return `${PATH.WORKOUT_RECORD_SEARCH}?${buildWorkoutPathQuery(dateKey)}`;
+}
+
+export function getWorkoutDetailSheetPath(dateKey: string, workoutId: number) {
+  return `${PATH.WORKOUT_DETAIL_SHEET}?${buildWorkoutPathQuery(dateKey, workoutId)}`;
+}
+
+export function getWorkoutUpsertPath(dateKey: string, workoutId: number) {
+  return `${PATH.WORKOUT_UPSERT}?${buildWorkoutPathQuery(dateKey, workoutId)}`;
 }

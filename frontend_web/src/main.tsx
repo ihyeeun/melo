@@ -14,14 +14,30 @@ import { appToastManager } from "@/shared/commons/toast/toastManager";
 
 import App from "./App.tsx";
 
-createRoot(document.getElementById("root")!).render(
-  <QueryClientProvider client={queryClient}>
-    <Toast.Provider toastManager={appToastManager} timeout={2600} limit={2}>
-      <AppErrorBoundary>
-        <App />
-        <AppToastViewport />
-      </AppErrorBoundary>
-    </Toast.Provider>
-    <ReactQueryDevtools />
-  </QueryClientProvider>,
-);
+async function enableMocking() {
+  if (!import.meta.env.DEV || import.meta.env.VITE_MSW_ENABLED !== "true") {
+    return;
+  }
+
+  const { worker } = await import("@/mocks/browser");
+
+  await worker.start({
+    onUnhandledRequest: "bypass",
+  });
+}
+
+function renderApp() {
+  createRoot(document.getElementById("root")!).render(
+    <QueryClientProvider client={queryClient}>
+      <Toast.Provider toastManager={appToastManager} timeout={2600} limit={2}>
+        <AppErrorBoundary>
+          <App />
+          <AppToastViewport />
+        </AppErrorBoundary>
+      </Toast.Provider>
+      <ReactQueryDevtools />
+    </QueryClientProvider>,
+  );
+}
+
+void enableMocking().then(renderApp);

@@ -64,6 +64,7 @@ export interface SearchWorkoutRequestDto {
 }
 
 export interface UpsertWorkoutRecordRequestDto {
+  date: string;
   workout_id: number;
   workout_duration: number;
   burned_calories: number;

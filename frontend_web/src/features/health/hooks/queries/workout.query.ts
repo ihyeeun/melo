@@ -44,10 +44,18 @@ export function useGetWorkoutRecordQuery(date: string) {
   });
 }
 
-export function useGetWorkoutDetailQuery(workoutId: number) {
+export function useGetWorkoutDetailQuery(
+  workoutId: number,
+  options?: {
+    enabled?: boolean;
+  },
+) {
+  const isValidWorkoutId = Number.isFinite(workoutId) && workoutId > 0;
+
   return useQuery({
     queryKey: workoutKeys.catalog.details.byId(workoutId),
     queryFn: () => getWorkoutDetail(workoutId),
+    enabled: isValidWorkoutId && (options?.enabled ?? true),
     staleTime: Infinity,
   });
 }

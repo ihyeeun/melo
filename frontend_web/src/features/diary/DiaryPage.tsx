@@ -132,7 +132,7 @@ export default function DiaryPage() {
 
   return (
     <div className={styles.page}>
-      <Calendar initialDate={selectedDate} onSelectDate={setSelectedDate} />
+      <Calendar selectedDate={selectedDate} onSelectDate={setSelectedDate} />
       <main className={styles.main}>
         <div className={styles.content}>
           {isPending ? (

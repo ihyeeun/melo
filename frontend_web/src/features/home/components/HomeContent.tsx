@@ -26,7 +26,7 @@ export default function HomeContent({
 }: HomeContentProps) {
   return (
     <div className={style.page}>
-      <Calendar initialDate={selectedDate} onSelectDate={onSelectDate} />
+      <Calendar selectedDate={selectedDate} onSelectDate={onSelectDate} />
       <main className={style.main}>
         {scoreSection ?? <PreviewTodayScoreSection selectedDate={selectedDateKey} />}
         {menuActionSection ?? (

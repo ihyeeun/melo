@@ -249,6 +249,25 @@ export async function appApiData<T>(options: RequestOptions): Promise<T> {
   return resolveApiData(response);
 }
 
+function isMswApiEnabled() {
+  return import.meta.env.DEV && import.meta.env.VITE_MSW_ENABLED === "true";
+}
+
+export function mswApi<T>(
+  options: RequestOptions,
+  webOptions?: WebRequestOptions,
+): Promise<ApiResponse<T>> {
+  return isMswApiEnabled() ? webApi<T>(options, webOptions) : appApi<T>(options);
+}
+
+export async function mswApiData<T>(
+  options: RequestOptions,
+  webOptions?: WebRequestOptions,
+): Promise<T> {
+  const response = await mswApi<T>(options, webOptions);
+  return resolveApiData(response);
+}
+
 export async function webApiData<T>(
   options: RequestOptions,
   webOptions?: WebRequestOptions,
