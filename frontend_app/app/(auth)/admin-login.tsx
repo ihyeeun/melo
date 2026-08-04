@@ -1,21 +1,20 @@
 import { signInAdmin } from "@/features/auth/api/authTokenApi";
 import { postHasUserInfo } from "@/features/auth/api/onboardingStatusApi";
 import { saveTokens } from "@/features/auth/store/tokenStore";
-import { typography } from "@/src/shared/styles/tokens";
+import { LoadingOverlay, Typo } from "@/src/shared/ui";
 import { isAxiosError } from "axios";
 import { router } from "expo-router";
 import React from "react";
 import {
-  ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
   Pressable,
   StyleSheet,
-  Text,
   TextInput,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { semantic } from "@/src/shared/styles/color";
 
 export default function AdminLoginPage() {
   const [adminId, setAdminId] = React.useState("");
@@ -85,16 +84,16 @@ export default function AdminLoginPage() {
       >
         <View style={styles.content}>
           <View style={styles.header}>
-            <Text allowFontScaling={false} style={styles.title}>
+            <Typo allowFontScaling={false} style={styles.title}>
               관리자 계정 로그인
-            </Text>
+            </Typo>
           </View>
 
           <View style={styles.form}>
             <View style={styles.field}>
-              <Text allowFontScaling={false} style={styles.label}>
+              <Typo allowFontScaling={false} style={styles.label}>
                 이메일
-              </Text>
+              </Typo>
               <TextInput
                 allowFontScaling={false}
                 value={email}
@@ -111,9 +110,9 @@ export default function AdminLoginPage() {
             </View>
 
             <View style={styles.field}>
-              <Text allowFontScaling={false} style={styles.label}>
+              <Typo allowFontScaling={false} style={styles.label}>
                 비밀번호
-              </Text>
+              </Typo>
               <TextInput
                 allowFontScaling={false}
                 value={adminId}
@@ -129,9 +128,9 @@ export default function AdminLoginPage() {
             </View>
 
             {errorMessage ? (
-              <Text allowFontScaling={false} style={styles.errorMessage}>
+              <Typo allowFontScaling={false} style={styles.errorMessage}>
                 {errorMessage}
-              </Text>
+              </Typo>
             ) : null}
 
             <Pressable
@@ -143,11 +142,11 @@ export default function AdminLoginPage() {
               ]}
             >
               {isSubmitting ? (
-                <ActivityIndicator size="small" color="#ffffff" />
+                <LoadingOverlay />
               ) : (
-                <Text allowFontScaling={false} style={styles.submitButtonText}>
+                <Typo allowFontScaling={false} style={styles.submitButtonText}>
                   로그인
-                </Text>
+                </Typo>
               )}
             </Pressable>
           </View>
@@ -176,7 +175,6 @@ const styles = StyleSheet.create({
     marginBottom: 100,
   },
   title: {
-    ...typography["typo-h2"],
     color: "#111111",
   },
   form: {
@@ -186,7 +184,6 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   label: {
-    ...typography["typo-label4"],
     color: "#333333",
   },
   input: {
@@ -196,12 +193,10 @@ const styles = StyleSheet.create({
     borderColor: "#dddddd",
     borderRadius: 8,
     paddingHorizontal: 14,
-    ...typography["typo-body3"],
     color: "#111111",
     backgroundColor: "#fafafa",
   },
   errorMessage: {
-    ...typography["typo-label6"],
     color: "#d93025",
   },
   submitButton: {
@@ -209,7 +204,7 @@ const styles = StyleSheet.create({
     width: "100%",
     height: 52,
     borderRadius: 8,
-    backgroundColor: "#ff7a00",
+    backgroundColor: semantic.btn.default,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -217,15 +212,13 @@ const styles = StyleSheet.create({
     opacity: 0.8,
   },
   submitButtonText: {
-    ...typography["typo-label2"],
-    color: "#ffffff",
+    color: semantic.text.accent,
   },
   linkButton: {
     alignSelf: "center",
     paddingVertical: 6,
   },
   linkButtonText: {
-    ...typography["typo-body3"],
     color: "#666666",
     textDecorationLine: "underline",
   },

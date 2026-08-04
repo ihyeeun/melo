@@ -16,14 +16,12 @@ import {
 import { router } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-  ActivityIndicator,
   AppState,
   BackHandler,
   Linking,
   Platform,
   Pressable,
   StyleSheet,
-  Text,
   View,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
@@ -33,19 +31,28 @@ import WebView, {
   type WebViewNavigation,
   type WebViewProps,
 } from "react-native-webview";
+import { LoadingOverlay, Typo } from "@/src/shared/ui";
+import { semantic } from "@/src/shared/styles/color";
 
 const APP_FOREGROUND_EVENT_NAME = "MELO_APP_FOREGROUND";
 
-const devWebUrl =
-  Platform.select({
-    ios: "http://localhost:5173",
-    android: "http://10.0.2.2:5173",
-    default: "http://localhost:5173",
-  }) ?? "http://localhost:5173";
-const productionWebUrl = "https://melo-diet.vercel.app";
-const defaultWebUrl = __DEV__ ? devWebUrl : productionWebUrl;
-const webAppUrl = process.env.EXPO_PUBLIC_WEB_APP_URL?.trim() || defaultWebUrl;
-const LOCAL_DEV_HOSTNAMES = new Set(["localhost", "127.0.0.1", "10.0.2.2"]);
+const webAppUrl = (() => {
+  const url = process.env.EXPO_PUBLIC_WEB_APP_URL?.trim();
+  if (!url) {
+    throw new Error("EXPO_PUBLIC_WEB_APP_URL 환경 변수가 설정되어 있지 않습니다.");
+  }
+
+  try {
+    const parsedUrl = new URL(url);
+    if (parsedUrl.protocol !== "http:" && parsedUrl.protocol !== "https:") {
+      throw new Error("invalid protocol");
+    }
+  } catch {
+    throw new Error("EXPO_PUBLIC_WEB_APP_URL은 http(s) 절대 URL이어야 합니다.");
+  }
+
+  return url;
+})();
 
 type AppWebViewScreenProps = {
   path?: string;
@@ -93,37 +100,12 @@ function getWebAppOrigin() {
   }
 }
 
-function resolveUrlPort(url: URL) {
-  if (url.port) return url.port;
-  return url.protocol === "https:" ? "443" : "80";
-}
-
-function isEquivalentLocalOrigin(requestOrigin: string, webAppOrigin: string) {
-  if (requestOrigin === webAppOrigin) return true;
-
-  try {
-    const requestUrl = new URL(requestOrigin);
-    const webUrl = new URL(webAppOrigin);
-
-    const isBothLocalDevHost =
-      LOCAL_DEV_HOSTNAMES.has(requestUrl.hostname) && LOCAL_DEV_HOSTNAMES.has(webUrl.hostname);
-    if (!isBothLocalDevHost) return false;
-
-    return (
-      requestUrl.protocol === webUrl.protocol &&
-      resolveUrlPort(requestUrl) === resolveUrlPort(webUrl)
-    );
-  } catch {
-    return false;
-  }
-}
-
 function resolveWebPath(requestUrl: string, webAppOrigin: string | null) {
   if (!webAppOrigin) return null;
 
   try {
     const parsed = new URL(requestUrl);
-    if (!isEquivalentLocalOrigin(parsed.origin, webAppOrigin)) return null;
+    if (parsed.origin !== webAppOrigin) return null;
 
     const canonicalUrl = new URL(`${parsed.pathname}${parsed.search}${parsed.hash}`, webAppOrigin);
     return canonicalUrl.toString();
@@ -779,12 +761,15 @@ export default function AppWebViewScreen({
     [openExternalUrl],
   );
 
-  const onOpenWindow = useCallback(async (event: WebViewOpenWindowEvent) => {
-    const targetUrl = event.nativeEvent.targetUrl?.trim();
-    if (!targetUrl) return;
+  const onOpenWindow = useCallback(
+    async (event: WebViewOpenWindowEvent) => {
+      const targetUrl = event.nativeEvent.targetUrl?.trim();
+      if (!targetUrl) return;
 
-    await openExternalUrl(targetUrl);
-  }, [openExternalUrl]);
+      await openExternalUrl(targetUrl);
+    },
+    [openExternalUrl],
+  );
 
   return (
     <SafeAreaView style={styles.container} edges={["left", "right"]}>
@@ -814,22 +799,22 @@ export default function AppWebViewScreen({
       />
       {isInitialWebViewLoading && !webViewLoadError ? (
         <View pointerEvents="none" style={styles.loadingOverlay}>
-          <ActivityIndicator size="small" color="#ff8000" />
+          <LoadingOverlay />
         </View>
       ) : null}
       {webViewLoadError ? (
         <View style={styles.errorOverlay}>
           <View style={styles.errorContent}>
-            <Text allowFontScaling={false} style={styles.errorTitle}>
+            <Typo size="title-s-semi" allowFontScaling={false} style={styles.errorTitle}>
               {webViewLoadError.title}
-            </Text>
-            <Text allowFontScaling={false} style={styles.errorDescription}>
+            </Typo>
+            <Typo allowFontScaling={false} style={styles.errorDescription}>
               {webViewLoadError.description}
-            </Text>
+            </Typo>
             {__DEV__ && webViewLoadError.detail ? (
-              <Text allowFontScaling={false} style={styles.errorDetail}>
+              <Typo allowFontScaling={false} style={styles.errorDetail}>
                 {webViewLoadError.detail}
-              </Text>
+              </Typo>
             ) : null}
             <Pressable
               onPress={retryWebViewLoad}
@@ -838,9 +823,9 @@ export default function AppWebViewScreen({
                 pressed ? styles.retryButtonPressed : null,
               ]}
             >
-              <Text allowFontScaling={false} style={styles.retryButtonText}>
+              <Typo allowFontScaling={false} style={styles.retryButtonText}>
                 다시 시도
-              </Text>
+              </Typo>
             </Pressable>
           </View>
         </View>
@@ -868,12 +853,6 @@ const styles = StyleSheet.create({
     right: 0,
     top: 0,
   },
-  loadingText: {
-    color: "#595959",
-    fontSize: 14,
-    fontWeight: "500",
-    lineHeight: 20,
-  },
   errorOverlay: {
     alignItems: "center",
     backgroundColor: "#ffffff",
@@ -887,48 +866,36 @@ const styles = StyleSheet.create({
   },
   errorContent: {
     alignItems: "center",
-    maxWidth: 360,
     width: "100%",
   },
   errorTitle: {
-    color: "#1f1f1f",
-    fontSize: 20,
-    fontWeight: "600",
-    lineHeight: 29,
     textAlign: "center",
+    color: semantic.text.accent,
   },
   errorDescription: {
-    color: "#595959",
-    fontSize: 15,
-    fontWeight: "400",
-    lineHeight: 22,
+    color: semantic.text.secondary,
     marginTop: 8,
     textAlign: "center",
   },
   errorDetail: {
-    color: "#8c8c8c",
-    fontSize: 12,
-    fontWeight: "400",
-    lineHeight: 17,
+    color: semantic.text.secondary,
     marginTop: 10,
     textAlign: "center",
   },
   retryButton: {
     alignItems: "center",
-    backgroundColor: "#ff8000",
+    backgroundColor: semantic.btn.default,
     borderRadius: 8,
     justifyContent: "center",
     marginTop: 24,
     minHeight: 48,
+    width: "100%",
     paddingHorizontal: 22,
   },
   retryButtonPressed: {
-    opacity: 0.82,
+    opacity: 0.8,
   },
   retryButtonText: {
-    color: "#ffffff",
-    fontSize: 16,
-    fontWeight: "600",
-    lineHeight: 22,
+    color: semantic.text.accent,
   },
 });
