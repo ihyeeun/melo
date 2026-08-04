@@ -1,6 +1,6 @@
 import React from "react";
 import { Pressable, StyleSheet, View } from "react-native";
-import KakaoLogo from "../../../assets/images/Icon/kakao-logo.svg";
+import KakaoLogo from "../../../assets/design-update/social-icons/kakao-logo.svg";
 import { Typo } from "@/src/shared/ui/Typography";
 
 type KakaoLoginButtonProps = {

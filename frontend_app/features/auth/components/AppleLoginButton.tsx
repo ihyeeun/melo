@@ -1,6 +1,6 @@
 import React from "react";
 import { Pressable, StyleSheet, View } from "react-native";
-import AppleLogo from "../../../assets/images/Icon/apple-logo.svg";
+import AppleLogo from "../../../assets/design-update/social-icons/apple-logo.svg";
 import { Typo } from "@/src/shared/ui";
 
 type AppleLoginButtonProps = {
