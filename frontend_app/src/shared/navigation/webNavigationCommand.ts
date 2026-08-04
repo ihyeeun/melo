@@ -1,7 +1,6 @@
 import type { WebTabStackAction } from "./appTabNavigation";
 
 export const WEB_NAVIGATION_COMMAND_EVENT = "MELO_WEB_NAVIGATION_COMMAND";
-export const DEFAULT_TAB_BACK_FALLBACK_PATH = "/home";
 
 export type WebNavigationCommand =
   | {
@@ -13,7 +12,6 @@ export type WebNavigationCommand =
     }
   | {
       type: "BACK";
-      fallbackPath: string;
       animate: boolean;
     };
 

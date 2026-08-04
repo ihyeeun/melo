@@ -12,7 +12,6 @@ import {
 import {
   createWebNavigationCommandDispatchSource,
   createWebNavigationCommandScript,
-  DEFAULT_TAB_BACK_FALLBACK_PATH,
 } from "@/src/shared/navigation/webNavigationCommand";
 import { router } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -282,10 +281,9 @@ function createTabPathSyncScript(
   `;
 }
 
-function createNativeBackRequestScript(fallbackPath = DEFAULT_TAB_BACK_FALLBACK_PATH) {
+function createNativeBackRequestScript() {
   return createWebNavigationCommandScript({
     type: "BACK",
-    fallbackPath,
     animate: true,
   });
 }
@@ -366,8 +364,6 @@ export default function AppWebViewScreen({
   const targetUrl = isTabWebView
     ? (initialTabUrlRef.current ?? buildWebAppUrl(normalizedTabPath))
     : buildWebAppUrl(path);
-  const androidHardwareBackFallbackPath =
-    currentTab === "chat" ? DEFAULT_TAB_BACK_FALLBACK_PATH : normalizedTabPath;
 
   const webViewSource = useMemo(() => ({ uri: targetUrl }), [targetUrl]);
   const safeAreaSyncScript = useMemo(
@@ -618,14 +614,14 @@ export default function AppWebViewScreen({
     if (Platform.OS !== "android") return;
 
     const backSubscription = BackHandler.addEventListener("hardwareBackPress", () => {
-      if (!canGoBackRef.current) return false;
-
       if (isTabWebView) {
-        webViewRef.current?.injectJavaScript(
-          createNativeBackRequestScript(androidHardwareBackFallbackPath),
-        );
+        if (!didLoadOnceRef.current) return false;
+
+        webViewRef.current?.injectJavaScript(createNativeBackRequestScript());
         return true;
       }
+
+      if (!canGoBackRef.current) return false;
 
       webViewRef.current?.goBack();
       return true;
@@ -634,7 +630,7 @@ export default function AppWebViewScreen({
     return () => {
       backSubscription.remove();
     };
-  }, [androidHardwareBackFallbackPath, isTabWebView]);
+  }, [isTabWebView]);
 
   useEffect(() => {
     webViewRef.current?.injectJavaScript(`${safeAreaSyncScript}true;`);
