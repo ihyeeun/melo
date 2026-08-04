@@ -36,6 +36,10 @@ import { semantic } from "@/src/shared/styles/color";
 
 const APP_FOREGROUND_EVENT_NAME = "MELO_APP_FOREGROUND";
 
+function isAllowedWebProtocol(protocol: string) {
+  return protocol === "https:" || (__DEV__ && protocol === "http:");
+}
+
 const webAppUrl = (() => {
   const url = process.env.EXPO_PUBLIC_WEB_APP_URL?.trim();
   if (!url) {
@@ -44,11 +48,13 @@ const webAppUrl = (() => {
 
   try {
     const parsedUrl = new URL(url);
-    if (parsedUrl.protocol !== "http:" && parsedUrl.protocol !== "https:") {
+    if (!isAllowedWebProtocol(parsedUrl.protocol)) {
       throw new Error("invalid protocol");
     }
   } catch {
-    throw new Error("EXPO_PUBLIC_WEB_APP_URL은 http(s) 절대 URL이어야 합니다.");
+    throw new Error(
+      "EXPO_PUBLIC_WEB_APP_URL은 HTTPS 절대 URL이어야 합니다. HTTP는 개발 모드에서만 사용할 수 있습니다.",
+    );
   }
 
   return url;
@@ -105,6 +111,7 @@ function resolveWebPath(requestUrl: string, webAppOrigin: string | null) {
 
   try {
     const parsed = new URL(requestUrl);
+    if (!isAllowedWebProtocol(parsed.protocol)) return null;
     if (parsed.origin !== webAppOrigin) return null;
 
     const canonicalUrl = new URL(`${parsed.pathname}${parsed.search}${parsed.hash}`, webAppOrigin);
@@ -134,6 +141,17 @@ function resolveTabFromUrl(requestUrl: string, webAppOrigin: string | null): App
 
 function shouldOpenWithNativeLinking(protocol: string) {
   return protocol === "melo:" || protocol === "intent:" || protocol === "market:";
+}
+
+function isTrustedWebViewUrl(requestUrl: string, webAppOrigin: string | null) {
+  if (!webAppOrigin) return false;
+
+  try {
+    const parsed = new URL(requestUrl);
+    return isAllowedWebProtocol(parsed.protocol) && parsed.origin === webAppOrigin;
+  } catch {
+    return false;
+  }
 }
 
 function shouldHideTabBar(requestUrl: string, webAppOrigin: string | null) {
@@ -575,6 +593,12 @@ export default function AppWebViewScreen({
 
   const onMessage = useCallback(
     (event: WebViewMessageEvent) => {
+      const messageUrl = event.nativeEvent.url?.trim();
+      if (!messageUrl || !isTrustedWebViewUrl(messageUrl, webAppOrigin)) {
+        console.warn("[WebView] blocked message from untrusted URL", messageUrl);
+        return;
+      }
+
       try {
         const rawData = JSON.parse(event.nativeEvent.data) as {
           type?: string;
@@ -628,6 +652,7 @@ export default function AppWebViewScreen({
       rememberTabWebHref,
       syncTabBarVisibility,
       syncTabStateFromUrl,
+      webAppOrigin,
     ],
   );
 
@@ -748,19 +773,26 @@ export default function AppWebViewScreen({
     (request: WebViewShouldStartLoadEvent) => {
       const targetUrl = request.url?.trim();
       if (!targetUrl) return true;
+      if (!request.isTopFrame) return true;
 
       try {
         const parsed = new URL(targetUrl);
-        if (parsed.protocol === "http:" || parsed.protocol === "https:") return true;
-        if (!shouldOpenWithNativeLinking(parsed.protocol)) return true;
+        if (parsed.protocol === "http:" || parsed.protocol === "https:") {
+          if (isTrustedWebViewUrl(targetUrl, webAppOrigin)) return true;
+
+          void openExternalUrl(targetUrl);
+          return false;
+        }
+
+        if (!shouldOpenWithNativeLinking(parsed.protocol)) return false;
 
         void openExternalUrl(targetUrl);
         return false;
       } catch {
-        return true;
+        return false;
       }
     },
-    [openExternalUrl],
+    [openExternalUrl, webAppOrigin],
   );
 
   const onOpenWindow = useCallback(
