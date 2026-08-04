@@ -28,7 +28,7 @@ const config: ExpoConfig = {
   },
   android: {
     adaptiveIcon: {
-      backgroundColor: "#ff8e00",
+      backgroundColor: "#FF8465",
       foregroundImage: "./assets/design-update/logo/melo-logo-fg.png",
       backgroundImage: "./assets/design-update/logo/melo-logo-bg.png",
     },

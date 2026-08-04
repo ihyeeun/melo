@@ -9,6 +9,7 @@ import {
   BackHandler,
   ImageSourcePropType,
   Linking,
+  Platform,
   Pressable,
   StyleSheet,
   View,
@@ -741,7 +742,7 @@ export default function CameraCaptureScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={["bottom"]}>
+    <View style={styles.container}>
       <Camera
         ref={cameraRef}
         style={StyleSheet.absoluteFill}
@@ -824,33 +825,35 @@ export default function CameraCaptureScreen() {
           </View>
         ) : null}
 
-        <View style={styles.cameraBottomBar}>
-          <View style={styles.cameraCaptureControls}>
-            <Pressable
-              style={[styles.galleryButton, isGalleryDisabled && styles.disabledControl]}
-              onPress={handleGalleryPress}
-              disabled={isGalleryDisabled}
-              accessibilityRole="button"
-              accessibilityLabel="갤러리에서 사진 선택"
-            >
-              <Image
-                source={SYSTEM_ICON_IMAGES.gallery}
-                style={styles.galleryIcon}
-                resizeMode="contain"
-              />
-            </Pressable>
-            <Pressable
-              style={[styles.cameraShutterButton, isCaptureDisabled && styles.disabledControl]}
-              onPress={handleCapturePress}
-              disabled={isCaptureDisabled}
-              accessibilityRole="button"
-              accessibilityLabel="사진 촬영"
-            >
-              <View style={styles.cameraShutterGlow} pointerEvents="none" />
-              <View style={styles.cameraShutterFace} pointerEvents="none" />
-            </Pressable>
+        <SafeAreaView style={styles.cameraBottomSafeArea} edges={["bottom"]}>
+          <View style={styles.cameraBottomBar}>
+            <View style={styles.cameraCaptureControls}>
+              <Pressable
+                style={[styles.galleryButton, isGalleryDisabled && styles.disabledControl]}
+                onPress={handleGalleryPress}
+                disabled={isGalleryDisabled}
+                accessibilityRole="button"
+                accessibilityLabel="갤러리에서 사진 선택"
+              >
+                <Image
+                  source={SYSTEM_ICON_IMAGES.gallery}
+                  style={styles.galleryIcon}
+                  resizeMode="contain"
+                />
+              </Pressable>
+              <Pressable
+                style={[styles.cameraShutterButton, isCaptureDisabled && styles.disabledControl]}
+                onPress={handleCapturePress}
+                disabled={isCaptureDisabled}
+                accessibilityRole="button"
+                accessibilityLabel="사진 촬영"
+              >
+                <View style={styles.cameraShutterGlow} pointerEvents="none" />
+                <View style={styles.cameraShutterFace} pointerEvents="none" />
+              </Pressable>
+            </View>
           </View>
-        </View>
+        </SafeAreaView>
       </View>
 
       {isCameraOnboardingVisible && cameraOnboardingConfig ? (
@@ -862,13 +865,14 @@ export default function CameraCaptureScreen() {
       ) : null}
 
       {isProcessing ? <LoadingOverlay message={processingMessage} /> : null}
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: semantic.background.dark,
   },
   permissionScreen: {
     flex: 1,
@@ -951,6 +955,9 @@ const styles = StyleSheet.create({
     borderRightWidth: 2,
     borderBottomRightRadius: 8,
   },
+  cameraBottomSafeArea: {
+    backgroundColor: semantic.background.dark,
+  },
   cameraBottomBar: {
     backgroundColor: semantic.background.dark,
     alignItems: "center",
@@ -1018,14 +1025,36 @@ const styles = StyleSheet.create({
     borderRadius: 100,
     alignItems: "center",
     justifyContent: "center",
+    position: "relative",
   },
   cameraShutterGlow: {
     position: "absolute",
-    width: 70,
-    height: 70,
     borderRadius: 100,
-    backgroundColor: "rgba(255, 132, 101, 0.3)",
-    filter: [{ blur: 4 }],
+    ...Platform.select({
+      ios: {
+        top: 6,
+        left: 6,
+        width: 58,
+        height: 58,
+        boxShadow: [
+          {
+            offsetX: 0,
+            offsetY: 0,
+            blurRadius: 4,
+            spreadDistance: 4,
+            color: "rgba(255, 132, 101, 0.3)",
+          },
+        ],
+      },
+      android: {
+        top: 0,
+        left: 0,
+        width: 70,
+        height: 70,
+        backgroundColor: "rgba(255, 132, 101, 0.3)",
+        filter: [{ blur: 4 }],
+      },
+    }),
   },
   cameraShutterFace: {
     width: 58,
