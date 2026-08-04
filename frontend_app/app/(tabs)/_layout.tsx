@@ -122,7 +122,7 @@ export default function TabsLayout() {
                 key={tab}
                 style={styles.tabButton}
                 onPress={() => {
-                  triggerNativeHaptic("selection");
+                  triggerNativeHaptic("tap");
                   navigateToTab(tab, currentTab);
                 }}
               >

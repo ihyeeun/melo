@@ -244,7 +244,7 @@ export function requestAppBack() {
   });
 }
 
-export function triggerNativeHaptic(type: HapticType = "selection") {
+export function triggerNativeHaptic(type: HapticType = "tap") {
   if (!isNativeApp()) return;
 
   postMessageToApp({
@@ -276,7 +276,7 @@ export function initNativeClickHaptics() {
     if (event.button !== 0) return;
     if (!resolveClickHapticTarget(event.target)) return;
 
-    triggerNativeHaptic("selection");
+    triggerNativeHaptic("tap");
   };
 
   document.addEventListener("click", handleClick, true);
