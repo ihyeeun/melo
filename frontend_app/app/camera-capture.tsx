@@ -6,6 +6,7 @@ import * as SecureStore from "expo-secure-store";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Alert,
+  BackHandler,
   ImageSourcePropType,
   Linking,
   Pressable,
@@ -304,6 +305,7 @@ export default function CameraCaptureScreen() {
   const isFocused = useIsFocused();
   const cameraRef = useRef<Camera>(null);
   const isProcessingRef = useRef(false);
+  const didRequestCloseRef = useRef(false);
   const [isPreparing, setIsPreparing] = useState(true);
   const [cameraPermissionStatus, setCameraPermissionStatus] =
     useState<CameraPermissionStatus | null>(null);
@@ -351,11 +353,38 @@ export default function CameraCaptureScreen() {
   }, []);
 
   const closeWithCancellation = useCallback(() => {
+    if (didRequestCloseRef.current) return;
+
+    didRequestCloseRef.current = true;
     rejectCameraCaptureSession(
       new BridgeHandledError("촬영이 취소되었어요.", 499, "CAMERA_CAPTURE_CANCELLED"),
     );
-    router.back();
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace("/(tabs)/home");
+    }
   }, []);
+
+  useEffect(() => {
+    if (!isFocused) return;
+
+    const backSubscription = BackHandler.addEventListener("hardwareBackPress", () => {
+      if (isProcessingRef.current) return true;
+
+      if (isCameraOnboardingVisible) {
+        setIsCameraOnboardingVisible(false);
+        return true;
+      }
+
+      closeWithCancellation();
+      return true;
+    });
+
+    return () => {
+      backSubscription.remove();
+    };
+  }, [closeWithCancellation, isCameraOnboardingVisible, isFocused]);
 
   useEffect(() => {
     let isMounted = true;

@@ -647,6 +647,8 @@ export default function AppWebViewScreen({
     if (Platform.OS !== "android") return;
 
     const backSubscription = BackHandler.addEventListener("hardwareBackPress", () => {
+      if (!navigation.isFocused()) return false;
+
       if (isTabWebView) {
         if (!didLoadOnceRef.current) return false;
 
@@ -663,7 +665,7 @@ export default function AppWebViewScreen({
     return () => {
       backSubscription.remove();
     };
-  }, [isTabWebView]);
+  }, [isTabWebView, navigation]);
 
   useEffect(() => {
     webViewRef.current?.injectJavaScript(`${safeAreaSyncScript}true;`);
