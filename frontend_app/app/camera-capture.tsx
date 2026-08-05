@@ -3,21 +3,20 @@ import { router } from "expo-router";
 import { manipulateAsync, SaveFormat } from "expo-image-manipulator";
 import * as ImagePicker from "expo-image-picker";
 import * as SecureStore from "expo-secure-store";
-import { StatusBar } from "expo-status-bar";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-  ActivityIndicator,
   Alert,
+  BackHandler,
   ImageSourcePropType,
   Linking,
+  Platform,
   Pressable,
   StyleSheet,
-  Text,
   View,
   Image,
 } from "react-native";
 import { Camera, useCameraDevice } from "react-native-vision-camera";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { BridgeHandledError } from "@/src/shared/api/bridge/bridgeError";
 import {
   getPendingCameraCapturePayload,
@@ -29,7 +28,8 @@ import type {
   BridgeCameraCaptureMode,
   BridgeCameraCaptureRequestPayload,
 } from "@/src/shared/api/bridge/bridge.types";
-import { typography } from "@/src/shared/styles/tokens";
+import { semantic } from "@/src/shared/styles";
+import { LoadingOverlay, Typo } from "@/src/shared/ui";
 
 type CameraCaptureMode = BridgeCameraCaptureMode;
 type CameraPermissionStatus = Awaited<ReturnType<typeof Camera.getCameraPermissionStatus>>;
@@ -41,7 +41,6 @@ const PREVIEW_THUMBNAIL_QUALITY = 0.82;
 const PREVIEW_THUMBNAIL_PRIMARY_FORMAT = SaveFormat.WEBP;
 const PREVIEW_THUMBNAIL_FALLBACK_FORMAT = SaveFormat.JPEG;
 const CAMERA_TOP_BAR_CONTENT_HEIGHT = 58;
-const CAMERA_BOTTOM_BAR_CONTENT_HEIGHT = 76;
 const CAMERA_CAPTURE_MODES: CameraCaptureMode[] = [
   "NUTRITION_LABEL",
   "MENU_BOARD",
@@ -56,11 +55,8 @@ type PreviewThumbnail = {
 };
 
 const SYSTEM_ICON_IMAGES = {
-  close: require("@/assets/images/system-icons/close.png"),
-  menuboard: require("@/assets/images/system-icons/menuboard.png"),
-  food: require("@/assets/images/system-icons/food.png"),
-  nutritionlabel: require("@/assets/images/system-icons/nutritionlabel.png"),
-  gallery: require("@/assets/images/system-icons/gallery.png"),
+  close: require("@/assets/design-update/system-icons/exit.png"),
+  gallery: require("@/assets/design-update/system-icons/gallery.png"),
 } satisfies Record<string, ImageSourcePropType>;
 
 type CameraOnboardingConfig = {
@@ -73,17 +69,17 @@ const CAMERA_ONBOARDING_CONFIG: Partial<Record<CameraCaptureMode, CameraOnboardi
   NUTRITION_LABEL: {
     title: "영양성분표 사진을 촬영해주세요",
     description: "최대한 정보가 잘 읽히도록\n빛 반사나 왜곡 없이 올려주세요",
-    image: require("@/assets/images/Icon/camera-onboarding-nutrient.png"),
+    image: require("@/assets/design-update/camera-label.png"),
   },
   MENU_BOARD: {
     title: "메뉴판이 잘 보이도록 촬영해주세요",
     description: "최대한 정보가 잘 읽히도록\n빛 반사나 왜곡 없이 올려주세요",
-    image: require("@/assets/images/Icon/camera-onboarding-menu.png"),
+    image: require("@/assets/design-update/camera-board.png"),
   },
   FOOD: {
     title: "음식이 잘 보이도록 촬영해주세요",
     description: "화면 프레임 안에 음식이\n들어갈 수 있도록 촬영해주세요",
-    image: require("@/assets/images/Icon/camera-onboarding-food.png"),
+    image: require("@/assets/design-update/camera-food.png"),
   },
 };
 
@@ -91,20 +87,16 @@ const CAMERA_MODE_SELECTOR_CONFIG: Record<
   CameraCaptureMode,
   {
     label: string;
-    iconSource?: ImageSourcePropType;
   }
 > = {
   FOOD: {
     label: "음식",
-    iconSource: SYSTEM_ICON_IMAGES.food,
   },
   MENU_BOARD: {
     label: "메뉴판",
-    iconSource: SYSTEM_ICON_IMAGES.menuboard,
   },
   NUTRITION_LABEL: {
     label: "영양성분표",
-    iconSource: SYSTEM_ICON_IMAGES.nutritionlabel,
   },
   GENERAL: {
     label: "일반",
@@ -248,33 +240,6 @@ async function markCameraOnboardingDone(mode: CameraCaptureMode) {
   }
 }
 
-function LoadingView() {
-  return (
-    <View style={styles.loadingContainer}>
-      <ActivityIndicator size="large" color="#ff8a00" />
-    </View>
-  );
-}
-
-function CameraProcessingOverlay({ message }: { message: string }) {
-  return (
-    <View
-      style={styles.processingOverlay}
-      accessible
-      accessibilityRole="progressbar"
-      accessibilityLabel={message}
-    >
-      <ActivityIndicator size="large" color="#ff8a00" />
-      <Text allowFontScaling={false} style={styles.processingTitle}>
-        {message}
-      </Text>
-      <Text allowFontScaling={false} style={styles.processingDescription}>
-        조금만 기다려주세요
-      </Text>
-    </View>
-  );
-}
-
 function CameraOnboardingOverlay({
   config,
   onClose,
@@ -288,64 +253,48 @@ function CameraOnboardingOverlay({
     <View style={styles.cameraOnboardingOverlay} pointerEvents="box-none">
       <View style={styles.cameraOnboardingBackdrop} pointerEvents="none" />
 
-      <View style={styles.cameraOnboardingCenter}>
-        <View style={styles.cameraOnboardingCard}>
-          <View style={styles.cameraOnboardingContent}>
-            <View style={styles.cameraOnboardingVisual}>
-              <Image
-                source={config.image}
-                style={styles.cameraOnboardingImage}
-                resizeMode="cover"
-              />
-              <View style={styles.cameraOnboardingVisualFrame} pointerEvents="none">
-                <View style={[styles.cameraOnboardingVisualCorner, styles.visualCornerTopLeft]} />
-                <View style={[styles.cameraOnboardingVisualCorner, styles.visualCornerTopRight]} />
-                <View
-                  style={[styles.cameraOnboardingVisualCorner, styles.visualCornerBottomLeft]}
-                />
-                <View
-                  style={[styles.cameraOnboardingVisualCorner, styles.visualCornerBottomRight]}
-                />
-              </View>
-            </View>
+      <View style={styles.cameraOnboardingCard}>
+        <View style={styles.cameraOnboardingContent}>
+          <Typo size="title-s-semi" color="primary" style={styles.textCenter}>
+            {config.title}
+          </Typo>
+          <Typo size="body-m-regular" color="secondary" style={styles.textCenter}>
+            {config.description}
+          </Typo>
+        </View>
 
-            <Text allowFontScaling={false} style={styles.cameraOnboardingTitle}>
-              {config.title}
-            </Text>
-            <Text allowFontScaling={false} style={styles.cameraOnboardingDescription}>
-              {config.description}
-            </Text>
-          </View>
+        <Image source={config.image} style={styles.cameraOnboardingImage} resizeMode="cover" />
 
-          <View style={styles.cameraOnboardingActions}>
-            <Pressable
-              style={({ pressed }) => [
-                styles.cameraOnboardingPrimaryButton,
-                pressed && styles.pressedButton,
-              ]}
-              onPress={onClose}
-              accessibilityRole="button"
-              accessibilityLabel="카메라 안내 닫기"
-            >
-              <Text allowFontScaling={false} style={styles.cameraOnboardingPrimaryButtonText}>
-                닫기
-              </Text>
-            </Pressable>
+        <View style={styles.cameraOnboardingActions}>
+          <Pressable
+            style={({ pressed }) => [
+              styles.actionButton,
+              styles.cameraOnboardingPrimaryButton,
+              pressed && styles.pressedButton,
+            ]}
+            onPress={onClose}
+            accessibilityRole="button"
+            accessibilityLabel="카메라 안내 닫기"
+          >
+            <Typo size="body-m-medium" color="accent">
+              닫기
+            </Typo>
+          </Pressable>
 
-            <Pressable
-              style={({ pressed }) => [
-                styles.cameraOnboardingSkipButton,
-                pressed && styles.pressedButton,
-              ]}
-              onPress={onSkip}
-              accessibilityRole="button"
-              accessibilityLabel="카메라 안내 다시 보지 않기"
-            >
-              <Text allowFontScaling={false} style={styles.cameraOnboardingSkipButtonText}>
-                다시 보지 않기
-              </Text>
-            </Pressable>
-          </View>
+          <Pressable
+            style={({ pressed }) => [
+              styles.actionButton,
+              styles.cameraOnboardingSkipButton,
+              pressed && styles.pressedButton,
+            ]}
+            onPress={onSkip}
+            accessibilityRole="button"
+            accessibilityLabel="카메라 안내 다시 보지 않기"
+          >
+            <Typo size="body-m-medium" color="tertiary">
+              다시 보지 않기
+            </Typo>
+          </Pressable>
         </View>
       </View>
     </View>
@@ -357,6 +306,7 @@ export default function CameraCaptureScreen() {
   const isFocused = useIsFocused();
   const cameraRef = useRef<Camera>(null);
   const isProcessingRef = useRef(false);
+  const didRequestCloseRef = useRef(false);
   const [isPreparing, setIsPreparing] = useState(true);
   const [cameraPermissionStatus, setCameraPermissionStatus] =
     useState<CameraPermissionStatus | null>(null);
@@ -404,11 +354,38 @@ export default function CameraCaptureScreen() {
   }, []);
 
   const closeWithCancellation = useCallback(() => {
+    if (didRequestCloseRef.current) return;
+
+    didRequestCloseRef.current = true;
     rejectCameraCaptureSession(
       new BridgeHandledError("촬영이 취소되었어요.", 499, "CAMERA_CAPTURE_CANCELLED"),
     );
-    router.back();
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace("/(tabs)/home");
+    }
   }, []);
+
+  useEffect(() => {
+    if (!isFocused) return;
+
+    const backSubscription = BackHandler.addEventListener("hardwareBackPress", () => {
+      if (isProcessingRef.current) return true;
+
+      if (isCameraOnboardingVisible) {
+        setIsCameraOnboardingVisible(false);
+        return true;
+      }
+
+      closeWithCancellation();
+      return true;
+    });
+
+    return () => {
+      backSubscription.remove();
+    };
+  }, [closeWithCancellation, isCameraOnboardingVisible, isFocused]);
 
   useEffect(() => {
     let isMounted = true;
@@ -712,17 +689,14 @@ export default function CameraCaptureScreen() {
   const shouldShowGuideFrame =
     captureMode !== "GENERAL" && !isCameraOnboardingVisible && !isCameraOnboardingPending;
   const cameraTopBarHeight = insets.top + CAMERA_TOP_BAR_CONTENT_HEIGHT;
-  const bottomInset = Math.max(insets.bottom, 18);
-  const cameraBottomBarMinHeight = CAMERA_BOTTOM_BAR_CONTENT_HEIGHT + bottomInset;
 
   if (isPreparing) {
-    return <LoadingView />;
+    return <LoadingOverlay message="카메라 준비 중..." />;
   }
 
   if (cameraPermissionStatus !== "granted") {
     return (
-      <View style={styles.permissionScreen}>
-        <StatusBar style="light" />
+      <SafeAreaView style={styles.permissionScreen} edges={["bottom"]}>
         <View
           style={[styles.permissionTopBar, { height: cameraTopBarHeight, paddingTop: insets.top }]}
         >
@@ -740,41 +714,35 @@ export default function CameraCaptureScreen() {
           </Pressable>
         </View>
 
-        <View style={styles.permissionCard}>
-          <Image
-            source={SYSTEM_ICON_IMAGES.gallery}
-            style={styles.permissionIcon}
-            resizeMode="contain"
-          />
-          <Text allowFontScaling={false} style={styles.permissionTitle}>
+        <View style={styles.cameraOnboardingCard}>
+          <Typo size="title-s-semi" color="primary">
             카메라 권한이 꺼져 있어요.
-          </Text>
-          <Text allowFontScaling={false} style={styles.permissionDescription}>
+          </Typo>
+          <Typo size="body-m-regular" color="secondary" style={styles.textCenter}>
             기기 설정에서 카메라 접근을 허용한 뒤{"\n"} 다시 시도해주세요.
-          </Text>
+          </Typo>
 
           <Pressable
-            style={styles.permissionPrimaryButton}
+            style={[styles.actionButton, styles.cameraOnboardingPrimaryButton]}
             onPress={handleOpenSettingsPress}
             accessibilityRole="button"
             accessibilityLabel="설정으로 이동"
           >
-            <Text allowFontScaling={false} style={styles.permissionPrimaryButtonText}>
+            <Typo size="body-m-semi" color="accent">
               설정으로 이동
-            </Text>
+            </Typo>
           </Pressable>
         </View>
-      </View>
+      </SafeAreaView>
     );
   }
 
   if (!device) {
-    return <LoadingView />;
+    return <LoadingOverlay message="연결 가능한 카메라 찾는 중.." />;
   }
 
   return (
     <View style={styles.container}>
-      <StatusBar style="light" />
       <Camera
         ref={cameraRef}
         style={StyleSheet.absoluteFill}
@@ -842,22 +810,14 @@ export default function CameraCaptureScreen() {
                       disabled: isModeSelectorDisabled,
                     }}
                   >
-                    {selectorConfig.iconSource ? (
-                      <Image
-                        source={selectorConfig.iconSource}
-                        style={styles.cameraModeIcon}
-                        resizeMode="contain"
-                      />
-                    ) : null}
-                    <Text
+                    <Typo
                       allowFontScaling={false}
-                      style={[
-                        styles.cameraModeButtonText,
-                        isSelected && styles.cameraModeButtonTextSelected,
-                      ]}
+                      color="primary"
+                      style={[styles.cameraModeButtonText, !isSelected && styles.colorWhite]}
+                      size="body-s-medium"
                     >
                       {selectorConfig.label}
-                    </Text>
+                    </Typo>
                   </Pressable>
                 );
               })}
@@ -865,45 +825,35 @@ export default function CameraCaptureScreen() {
           </View>
         ) : null}
 
-        <View
-          style={[
-            styles.cameraBottomBar,
-            {
-              minHeight: cameraBottomBarMinHeight,
-              paddingBottom: bottomInset,
-            },
-          ]}
-        >
-          <View style={styles.cameraCaptureControls}>
-            <Pressable
-              style={[
-                styles.cameraControlSideSlot,
-                styles.galleryButton,
-                isGalleryDisabled && styles.disabledControl,
-              ]}
-              onPress={handleGalleryPress}
-              disabled={isGalleryDisabled}
-              accessibilityRole="button"
-              accessibilityLabel="갤러리에서 사진 선택"
-            >
-              <Image
-                source={SYSTEM_ICON_IMAGES.gallery}
-                style={styles.galleryIcon}
-                resizeMode="contain"
-              />
-            </Pressable>
-            <Pressable
-              style={[styles.cameraShutterButton, isCaptureDisabled && styles.disabledControl]}
-              onPress={handleCapturePress}
-              disabled={isCaptureDisabled}
-              accessibilityRole="button"
-              accessibilityLabel="사진 촬영"
-            >
-              <View style={styles.cameraShutterButtonInner} />
-            </Pressable>
-            <View style={styles.cameraControlSideSlot} />
+        <SafeAreaView style={styles.cameraBottomSafeArea} edges={["bottom"]}>
+          <View style={styles.cameraBottomBar}>
+            <View style={styles.cameraCaptureControls}>
+              <Pressable
+                style={[styles.galleryButton, isGalleryDisabled && styles.disabledControl]}
+                onPress={handleGalleryPress}
+                disabled={isGalleryDisabled}
+                accessibilityRole="button"
+                accessibilityLabel="갤러리에서 사진 선택"
+              >
+                <Image
+                  source={SYSTEM_ICON_IMAGES.gallery}
+                  style={styles.galleryIcon}
+                  resizeMode="contain"
+                />
+              </Pressable>
+              <Pressable
+                style={[styles.cameraShutterButton, isCaptureDisabled && styles.disabledControl]}
+                onPress={handleCapturePress}
+                disabled={isCaptureDisabled}
+                accessibilityRole="button"
+                accessibilityLabel="사진 촬영"
+              >
+                <View style={styles.cameraShutterGlow} pointerEvents="none" />
+                <View style={styles.cameraShutterFace} pointerEvents="none" />
+              </Pressable>
+            </View>
           </View>
-        </View>
+        </SafeAreaView>
       </View>
 
       {isCameraOnboardingVisible && cameraOnboardingConfig ? (
@@ -914,7 +864,7 @@ export default function CameraCaptureScreen() {
         />
       ) : null}
 
-      {isProcessing ? <CameraProcessingOverlay message={processingMessage} /> : null}
+      {isProcessing ? <LoadingOverlay message={processingMessage} /> : null}
     </View>
   );
 }
@@ -922,93 +872,28 @@ export default function CameraCaptureScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#000000",
+    backgroundColor: semantic.background.dark,
   },
   permissionScreen: {
     flex: 1,
-    backgroundColor: "#111111",
-    justifyContent: "center",
-    paddingHorizontal: 20,
+    backgroundColor: semantic.background.dark,
+    justifyContent: "flex-end",
+    paddingBottom: 34,
+    paddingHorizontal: 16,
   },
   permissionTopBar: {
     position: "absolute",
     top: 0,
-    left: 0,
     right: 0,
-    paddingHorizontal: 20,
-    backgroundColor: "#000000",
+    backgroundColor: semantic.background.dark,
     zIndex: 30,
-  },
-  permissionCard: {
-    borderRadius: 16,
-    backgroundColor: "#ffffff",
-    paddingHorizontal: 24,
-    paddingVertical: 28,
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 10,
-  },
-  permissionTitle: {
-    ...typography["typo-title2"],
-    marginTop: 4,
-    color: "#141414",
-    textAlign: "center",
-  },
-  permissionDescription: {
-    ...typography["typo-body3"],
-    color: "#5f5f5f",
-    lineHeight: 20,
-    textAlign: "center",
-  },
-  permissionPrimaryButton: {
-    minHeight: 54,
-    borderRadius: 8,
-    backgroundColor: "#ff8a00",
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: 20,
-    alignSelf: "stretch",
-  },
-  permissionPrimaryButtonText: {
-    ...typography["typo-label2"],
-    color: "#ffffff",
-  },
-  permissionIcon: {
-    width: 36,
-    height: 36,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#000000",
-  },
-  processingOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.78)",
-    paddingHorizontal: 24,
-    zIndex: 60,
-  },
-  processingTitle: {
-    ...typography["typo-title4"],
-    color: "#ffffff",
-    marginTop: 18,
-    textAlign: "center",
-  },
-  processingDescription: {
-    ...typography["typo-body3"],
-    color: "rgba(255, 255, 255, 0.72)",
-    marginTop: 6,
-    textAlign: "center",
   },
   cameraOverlay: {
     flex: 1,
   },
   cameraTopBar: {
-    paddingHorizontal: 20,
-    backgroundColor: "#000000",
+    height: 52,
+    backgroundColor: semantic.background.dark,
   },
   cameraCloseButton: {
     width: CAMERA_TOP_BAR_CONTENT_HEIGHT,
@@ -1020,13 +905,16 @@ const styles = StyleSheet.create({
   cameraCloseIcon: {
     width: 24,
     height: 24,
+    position: "absolute",
+    right: 16,
+    bottom: 12,
   },
   cameraGuideArea: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    paddingHorizontal: 24,
-    paddingVertical: 30,
+    paddingHorizontal: 16,
+    paddingVertical: 16,
   },
   cameraGuideFrame: {
     width: "100%",
@@ -1035,123 +923,146 @@ const styles = StyleSheet.create({
   },
   cameraGuideCorner: {
     position: "absolute",
-    width: 52,
-    height: 65,
-    borderColor: "#ffffff",
+    width: 40,
+    height: 40,
+    borderColor: semantic.background.default,
   },
   guideCornerTopLeft: {
     top: 0,
     left: 0,
-    borderTopWidth: 3,
-    borderLeftWidth: 3,
-    borderTopLeftRadius: 20,
+    borderTopWidth: 2,
+    borderLeftWidth: 2,
+    borderTopLeftRadius: 8,
   },
   guideCornerTopRight: {
     top: 0,
     right: 0,
-    borderTopWidth: 3,
-    borderRightWidth: 3,
-    borderTopRightRadius: 20,
+    borderTopWidth: 2,
+    borderRightWidth: 2,
+    borderTopRightRadius: 8,
   },
   guideCornerBottomLeft: {
     bottom: 0,
     left: 0,
-    borderBottomWidth: 3,
-    borderLeftWidth: 3,
-    borderBottomLeftRadius: 20,
+    borderBottomWidth: 2,
+    borderLeftWidth: 2,
+    borderBottomLeftRadius: 8,
   },
   guideCornerBottomRight: {
     bottom: 0,
     right: 0,
-    borderBottomWidth: 3,
-    borderRightWidth: 3,
-    borderBottomRightRadius: 20,
+    borderBottomWidth: 2,
+    borderRightWidth: 2,
+    borderBottomRightRadius: 8,
+  },
+  cameraBottomSafeArea: {
+    backgroundColor: semantic.background.dark,
   },
   cameraBottomBar: {
+    backgroundColor: semantic.background.dark,
     alignItems: "center",
-    backgroundColor: "#000000",
-    paddingHorizontal: 27,
-    paddingTop: 16,
+    justifyContent: "center",
+    height: 118,
   },
   cameraModeSection: {
     alignItems: "center",
-    paddingHorizontal: 20,
+    paddingTop: 4,
     paddingBottom: 16,
   },
   cameraModeList: {
-    alignSelf: "stretch",
     flexDirection: "row",
-    gap: 8,
-    width: "100%",
+    gap: 4,
+    width: 261,
+    backgroundColor: semantic.dimmer.default,
+    borderRadius: 16,
+    paddingVertical: 6,
+    paddingHorizontal: 8,
   },
   cameraModeButton: {
     alignItems: "center",
-    backgroundColor: "#000000",
-    borderRadius: 8,
     flex: 1,
-    gap: 6,
     justifyContent: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    opacity: 0.3,
+    paddingHorizontal: 6,
+    paddingVertical: 10,
+    borderRadius: 12,
   },
   cameraModeButtonSelected: {
-    backgroundColor: "#ffffff",
-    borderColor: "#bfbfbf",
-    borderWidth: 1,
-    opacity: 1,
+    backgroundColor: semantic.btn.default,
   },
   cameraModeIcon: {
     width: 26,
     height: 26,
   },
   cameraModeButtonText: {
-    ...typography["typo-body3"],
-    color: "#ffffff",
     textAlign: "center",
   },
-  cameraModeButtonTextSelected: {
-    color: "#1f1f1f",
+  colorWhite: {
+    color: "#fff",
   },
   cameraCaptureControls: {
     alignItems: "center",
-    flexDirection: "row",
-    justifyContent: "space-between",
-    width: "100%",
-  },
-  cameraControlSideSlot: {
-    width: 44,
-    height: 44,
-    alignItems: "center",
     justifyContent: "center",
+    flexDirection: "row",
+    width: "100%",
   },
   galleryButton: {
     borderRadius: 100,
-    backgroundColor: "rgba(255, 255, 255, 0.18)",
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
     alignItems: "center",
     justifyContent: "center",
-    width: 44,
-    height: 44,
+    width: 50,
+    height: 50,
+    position: "absolute",
+    left: 56,
   },
   galleryIcon: {
-    width: 24,
-    height: 24,
+    width: 28,
+    height: 28,
   },
   cameraShutterButton: {
-    width: 60,
-    height: 60,
+    width: 70,
+    height: 70,
     borderRadius: 100,
-    borderWidth: 7,
-    borderColor: "#ff8a00",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#ffffff",
+    position: "relative",
   },
-  cameraShutterButtonInner: {
-    width: 46,
-    height: 46,
+  cameraShutterGlow: {
+    position: "absolute",
     borderRadius: 100,
-    backgroundColor: "#ffffff",
+    ...Platform.select({
+      ios: {
+        top: 6,
+        left: 6,
+        width: 58,
+        height: 58,
+        boxShadow: [
+          {
+            offsetX: 0,
+            offsetY: 0,
+            blurRadius: 4,
+            spreadDistance: 4,
+            color: "rgba(255, 132, 101, 0.3)",
+          },
+        ],
+      },
+      android: {
+        top: 0,
+        left: 0,
+        width: 70,
+        height: 70,
+        backgroundColor: "rgba(255, 132, 101, 0.3)",
+        filter: [{ blur: 4 }],
+      },
+    }),
+  },
+  cameraShutterFace: {
+    width: 58,
+    height: 58,
+    borderRadius: 100,
+    borderWidth: 3,
+    borderColor: semantic.btn.default,
+    backgroundColor: semantic.background.default,
   },
   disabledControl: {
     opacity: 0.6,
@@ -1160,121 +1071,58 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: 24,
-    paddingTop: 88,
-    paddingBottom: 136,
+    paddingHorizontal: 16,
     zIndex: 40,
   },
   cameraOnboardingBackdrop: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(0, 0, 0, 0.58)",
-  },
-  cameraOnboardingCenter: {
-    width: "100%",
-    alignItems: "center",
-    justifyContent: "center",
+    backgroundColor: semantic.dimmer.default,
   },
   cameraOnboardingCard: {
     width: "100%",
-    borderRadius: 20,
-    backgroundColor: "#ffffff",
-    overflow: "hidden",
-  },
-  cameraOnboardingContent: {
-    backgroundColor: "#f5f5f5",
-    alignItems: "center",
-    paddingHorizontal: 28,
-    paddingTop: 40,
-    paddingBottom: 30,
-  },
-  cameraOnboardingVisual: {
-    width: 250,
-    height: 250,
     alignItems: "center",
     justifyContent: "center",
-    position: "relative",
-    overflow: "hidden",
+    backgroundColor: semantic.background.default,
+    borderRadius: 16,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    gap: 24,
+  },
+  cameraOnboardingContent: {
+    gap: 8,
+  },
+  textCenter: {
+    textAlign: "center",
   },
   cameraOnboardingImage: {
-    width: "100%",
-    height: "100%",
-    borderRadius: 30,
+    width: 220,
+    height: 220,
+    borderRadius: 12,
   },
   cameraOnboardingVisualFrame: {
     ...StyleSheet.absoluteFillObject,
   },
-  cameraOnboardingVisualCorner: {
-    position: "absolute",
-    width: 68,
-    height: 68,
-    borderColor: "#ff8000",
-  },
-  visualCornerTopLeft: {
-    top: 0,
-    left: 0,
-    borderTopWidth: 6,
-    borderLeftWidth: 6,
-    borderTopLeftRadius: 30,
-  },
-  visualCornerTopRight: {
-    top: 0,
-    right: 0,
-    borderTopWidth: 6,
-    borderRightWidth: 6,
-    borderTopRightRadius: 30,
-  },
-  visualCornerBottomLeft: {
-    bottom: 0,
-    left: 0,
-    borderBottomWidth: 6,
-    borderLeftWidth: 6,
-    borderBottomLeftRadius: 30,
-  },
-  visualCornerBottomRight: {
-    right: 0,
-    bottom: 0,
-    borderRightWidth: 6,
-    borderBottomWidth: 6,
-    borderBottomRightRadius: 30,
-  },
-  cameraOnboardingTitle: {
-    ...typography["typo-title2"],
-    color: "#1f1f1f",
-    textAlign: "center",
-    marginTop: 28,
-  },
-  cameraOnboardingDescription: {
-    ...typography["typo-body2"],
-    color: "#1f1f1f",
-    textAlign: "center",
-    marginTop: 8,
-  },
   cameraOnboardingActions: {
     alignItems: "center",
-    backgroundColor: "#ffffff",
-    paddingHorizontal: 30,
-    paddingVertical: 24,
+    gap: 8,
+    width: "100%",
   },
-  cameraOnboardingPrimaryButton: {
+  actionButton: {
+    width: "100%",
+    height: 44,
+    gap: 10,
+    paddingHorizontal: 16,
+    borderRadius: 12,
     alignItems: "center",
-    alignSelf: "stretch",
-    backgroundColor: "#ff8a00",
-    borderRadius: 6,
-    height: 42,
     justifyContent: "center",
   },
-  cameraOnboardingPrimaryButtonText: {
-    ...typography["typo-label1"],
-    color: "#ffffff",
+  cameraOnboardingPrimaryButton: {
+    backgroundColor: semantic.btn.default,
   },
   cameraOnboardingSkipButton: {
-    marginTop: 12,
-  },
-  cameraOnboardingSkipButtonText: {
-    ...typography["typo-label3"],
-    color: "#8d8d8d",
+    backgroundColor: semantic.background.default,
   },
   pressedButton: {
-    opacity: 0.78,
+    opacity: 0.7,
   },
 });

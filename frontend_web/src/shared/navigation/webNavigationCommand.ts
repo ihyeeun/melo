@@ -12,7 +12,6 @@ export type WebNavigationCommand =
     }
   | {
       type: "BACK";
-      fallbackPath: string;
       animate: boolean;
     };
 
@@ -44,12 +43,10 @@ export function getWebNavigationCommand(event: Event): WebNavigationCommand | nu
   }
 
   if (detail.type === "BACK") {
-    if (typeof detail.fallbackPath !== "string") return null;
     if (typeof detail.animate !== "boolean") return null;
 
     return {
       type: "BACK",
-      fallbackPath: detail.fallbackPath,
       animate: detail.animate,
     };
   }
