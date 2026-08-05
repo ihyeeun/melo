@@ -9,31 +9,27 @@ import {
 } from "@/src/shared/navigation/appTabNavigation";
 import { useEdgeSwipeBack } from "@/src/shared/navigation/useEdgeSwipeBack";
 import { triggerNativeHaptic } from "@/src/shared/native/haptics";
-import { typography } from "@/src/shared/styles/tokens";
 import { router, Slot, useSegments } from "expo-router";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import HomeIcon from "../../assets/images/Icon/home-outline.svg";
-import HomeFillIcon from "../../assets/images/Icon/home-fill.svg";
-import ChatIcon from "../../assets/images/Icon/chat-outline.svg";
-import ChatFillIcon from "../../assets/images/Icon/chat-fill.svg";
-import DiaryIcon from "../../assets/images/Icon/diary-outline.svg";
-import DiaryFillIcon from "../../assets/images/Icon/diary-fill.svg";
-import UserIcon from "../../assets/images/Icon/user-outline.svg";
-import UserFillIcon from "../../assets/images/Icon/user-fill.svg";
+import HomeIcon from "../../assets/design-update/tab-icons/home.svg";
+import ChatIcon from "../../assets/design-update/tab-icons/chat.svg";
+import DiaryIcon from "../../assets/design-update/tab-icons/diary.svg";
+import UserIcon from "../../assets/design-update/tab-icons/user.svg";
+import { Typo } from "@/src/shared/ui";
+import { semantic, colors } from "@/src/shared/styles";
 
-const TAB_ITEMS: {
-  tab: AppTabName;
-  label: string;
-  Icon: typeof HomeIcon;
-  FocusedIcon: typeof HomeFillIcon;
-}[] = [
-  { tab: "home", label: "홈", Icon: HomeIcon, FocusedIcon: HomeFillIcon },
-  { tab: "chat", label: "AI 코치", Icon: ChatIcon, FocusedIcon: ChatFillIcon },
-  { tab: "diary", label: "다이어리", Icon: DiaryIcon, FocusedIcon: DiaryFillIcon },
-  { tab: "profile", label: "프로필", Icon: UserIcon, FocusedIcon: UserFillIcon },
-];
+const TAB_ITEMS = [
+  { tab: "home", label: "홈", Icon: HomeIcon },
+  { tab: "chat", label: "AI 코치", Icon: ChatIcon },
+  { tab: "diary", label: "다이어리", Icon: DiaryIcon },
+  { tab: "profile", label: "프로필", Icon: UserIcon },
+] as const;
+
+const ACTIVE_TAB_COLOR = colors.coral[500];
+const INACTIVE_TAB_COLOR = semantic.text.tertiary;
+
 const FREE_USER_GUARD_ENABLED = true;
 
 let lastResolvedTab: AppTabName = "home";
@@ -72,7 +68,7 @@ export default function TabsLayout() {
   const [chatBackRequestKey, setChatBackRequestKey] = useState(0);
   const [isFreeUserGuardEnabled, setIsFreeUserGuardEnabled] = useState(FREE_USER_GUARD_ENABLED);
   const insets = useSafeAreaInsets();
-  const tabBarBottomPadding = Math.max(insets.bottom, 8);
+  const tabBarBottomPadding = Math.max(insets.bottom, 4);
   const visibleTabItems = useMemo(
     () => (isFreeUserGuardEnabled ? TAB_ITEMS.filter((item) => item.tab !== "chat") : TAB_ITEMS),
     [isFreeUserGuardEnabled],
@@ -118,29 +114,32 @@ export default function TabsLayout() {
 
       {!shouldHideTabBar ? (
         <View style={[styles.tabBar, { paddingBottom: tabBarBottomPadding }]}>
-          {visibleTabItems.map(({ tab, label, Icon, FocusedIcon }) => {
+          {visibleTabItems.map(({ tab, label, Icon }) => {
             const isFocused = currentTab === tab;
-            const RenderIcon = isFocused ? FocusedIcon : Icon;
 
             return (
               <Pressable
                 key={tab}
                 style={styles.tabButton}
                 onPress={() => {
-                  triggerNativeHaptic("selection");
+                  triggerNativeHaptic("tap");
                   navigateToTab(tab, currentTab);
                 }}
               >
-                <RenderIcon width={24} height={24} />
-                <Text
-                  allowFontScaling={false}
+                <Icon
+                  width={24}
+                  height={24}
+                  color={isFocused ? ACTIVE_TAB_COLOR : INACTIVE_TAB_COLOR}
+                />
+                <Typo
+                  size={isFocused ? "body-s-semi" : "body-s-regular"}
                   style={[
                     styles.tabLabel,
                     isFocused ? styles.tabLabelFocused : styles.tabLabelBlurred,
                   ]}
                 >
                   {label}
-                </Text>
+                </Typo>
               </Pressable>
             );
           })}
@@ -172,8 +171,8 @@ const styles = StyleSheet.create({
   },
   tabBar: {
     backgroundColor: "#ffffff",
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: "#e4e4e4",
+    borderTopWidth: 1,
+    borderTopColor: semantic.border.default,
     flexDirection: "row",
     paddingTop: 8,
   },
@@ -183,14 +182,12 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   tabLabel: {
-    marginTop: 4,
+    marginTop: 2,
   },
   tabLabelFocused: {
-    ...typography["typo-label5"],
-    color: "#ff8000",
+    color: ACTIVE_TAB_COLOR,
   },
   tabLabelBlurred: {
-    ...typography["typo-label6"],
-    color: "#d9d9d9",
+    color: INACTIVE_TAB_COLOR,
   },
 });

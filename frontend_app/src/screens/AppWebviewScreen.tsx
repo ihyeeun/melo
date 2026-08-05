@@ -12,18 +12,16 @@ import {
 import {
   createWebNavigationCommandDispatchSource,
   createWebNavigationCommandScript,
-  DEFAULT_TAB_BACK_FALLBACK_PATH,
 } from "@/src/shared/navigation/webNavigationCommand";
 import { router } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-  ActivityIndicator,
+  AppState,
   BackHandler,
   Linking,
   Platform,
   Pressable,
   StyleSheet,
-  Text,
   View,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
@@ -33,17 +31,34 @@ import WebView, {
   type WebViewNavigation,
   type WebViewProps,
 } from "react-native-webview";
+import { LoadingOverlay, Typo } from "@/src/shared/ui";
+import { semantic } from "@/src/shared/styles/color";
 
-const devWebUrl =
-  Platform.select({
-    ios: "http://localhost:5173",
-    android: "http://10.0.2.2:5173",
-    default: "http://localhost:5173",
-  }) ?? "http://localhost:5173";
-const productionWebUrl = "https://melo-diet.vercel.app";
-const defaultWebUrl = __DEV__ ? devWebUrl : productionWebUrl;
-const webAppUrl = process.env.EXPO_PUBLIC_WEB_APP_URL?.trim() || defaultWebUrl;
-const LOCAL_DEV_HOSTNAMES = new Set(["localhost", "127.0.0.1", "10.0.2.2"]);
+const APP_FOREGROUND_EVENT_NAME = "MELO_APP_FOREGROUND";
+
+function isAllowedWebProtocol(protocol: string) {
+  return protocol === "https:" || (__DEV__ && protocol === "http:");
+}
+
+const webAppUrl = (() => {
+  const url = process.env.EXPO_PUBLIC_WEB_APP_URL?.trim();
+  if (!url) {
+    throw new Error("EXPO_PUBLIC_WEB_APP_URL 환경 변수가 설정되어 있지 않습니다.");
+  }
+
+  try {
+    const parsedUrl = new URL(url);
+    if (!isAllowedWebProtocol(parsedUrl.protocol)) {
+      throw new Error("invalid protocol");
+    }
+  } catch {
+    throw new Error(
+      "EXPO_PUBLIC_WEB_APP_URL은 HTTPS 절대 URL이어야 합니다. HTTP는 개발 모드에서만 사용할 수 있습니다.",
+    );
+  }
+
+  return url;
+})();
 
 type AppWebViewScreenProps = {
   path?: string;
@@ -91,37 +106,13 @@ function getWebAppOrigin() {
   }
 }
 
-function resolveUrlPort(url: URL) {
-  if (url.port) return url.port;
-  return url.protocol === "https:" ? "443" : "80";
-}
-
-function isEquivalentLocalOrigin(requestOrigin: string, webAppOrigin: string) {
-  if (requestOrigin === webAppOrigin) return true;
-
-  try {
-    const requestUrl = new URL(requestOrigin);
-    const webUrl = new URL(webAppOrigin);
-
-    const isBothLocalDevHost =
-      LOCAL_DEV_HOSTNAMES.has(requestUrl.hostname) && LOCAL_DEV_HOSTNAMES.has(webUrl.hostname);
-    if (!isBothLocalDevHost) return false;
-
-    return (
-      requestUrl.protocol === webUrl.protocol &&
-      resolveUrlPort(requestUrl) === resolveUrlPort(webUrl)
-    );
-  } catch {
-    return false;
-  }
-}
-
 function resolveWebPath(requestUrl: string, webAppOrigin: string | null) {
   if (!webAppOrigin) return null;
 
   try {
     const parsed = new URL(requestUrl);
-    if (!isEquivalentLocalOrigin(parsed.origin, webAppOrigin)) return null;
+    if (!isAllowedWebProtocol(parsed.protocol)) return null;
+    if (parsed.origin !== webAppOrigin) return null;
 
     const canonicalUrl = new URL(`${parsed.pathname}${parsed.search}${parsed.hash}`, webAppOrigin);
     return canonicalUrl.toString();
@@ -150,6 +141,17 @@ function resolveTabFromUrl(requestUrl: string, webAppOrigin: string | null): App
 
 function shouldOpenWithNativeLinking(protocol: string) {
   return protocol === "melo:" || protocol === "intent:" || protocol === "market:";
+}
+
+function isTrustedWebViewUrl(requestUrl: string, webAppOrigin: string | null) {
+  if (!webAppOrigin) return false;
+
+  try {
+    const parsed = new URL(requestUrl);
+    return isAllowedWebProtocol(parsed.protocol) && parsed.origin === webAppOrigin;
+  } catch {
+    return false;
+  }
 }
 
 function shouldHideTabBar(requestUrl: string, webAppOrigin: string | null) {
@@ -282,12 +284,35 @@ function createTabPathSyncScript(
   `;
 }
 
-function createNativeBackRequestScript(fallbackPath = DEFAULT_TAB_BACK_FALLBACK_PATH) {
+function createNativeBackRequestScript() {
   return createWebNavigationCommandScript({
     type: "BACK",
-    fallbackPath,
     animate: true,
   });
+}
+
+function createAppForegroundEventScript() {
+  const serializedEventName = JSON.stringify(APP_FOREGROUND_EVENT_NAME);
+  const serializedDetail = JSON.stringify({
+    foregroundedAt: Date.now(),
+  });
+
+  return `
+    (function () {
+      var eventName = ${serializedEventName};
+      var detail = ${serializedDetail};
+
+      try {
+        window.dispatchEvent(new CustomEvent(eventName, { detail: detail }));
+      } catch {
+        var event = document.createEvent("Event");
+        event.initEvent(eventName, true, true);
+        event.detail = detail;
+        window.dispatchEvent(event);
+      }
+    })();
+    true;
+  `;
 }
 
 function normalizeInset(inset: number) {
@@ -341,6 +366,7 @@ export default function AppWebViewScreen({
   onFeatureGuardEnabledChange,
 }: AppWebViewScreenProps) {
   const webViewRef = useRef<WebView>(null);
+  const appStateRef = useRef(AppState.currentState);
   const initialTabUrlRef = useRef<string | null>(null);
   const canGoBackRef = useRef(false);
   const didLoadOnceRef = useRef(false);
@@ -366,8 +392,6 @@ export default function AppWebViewScreen({
   const targetUrl = isTabWebView
     ? (initialTabUrlRef.current ?? buildWebAppUrl(normalizedTabPath))
     : buildWebAppUrl(path);
-  const androidHardwareBackFallbackPath =
-    currentTab === "chat" ? DEFAULT_TAB_BACK_FALLBACK_PATH : normalizedTabPath;
 
   const webViewSource = useMemo(() => ({ uri: targetUrl }), [targetUrl]);
   const safeAreaSyncScript = useMemo(
@@ -489,6 +513,13 @@ export default function AppWebViewScreen({
     return didLoadOnceRef.current && pendingTabPathRef.current === null;
   }, []);
 
+  const dispatchAppForegroundToWeb = useCallback(() => {
+    if (!didLoadOnceRef.current) return;
+    if (hasWebViewLoadErrorRef.current) return;
+
+    webViewRef.current?.injectJavaScript(createAppForegroundEventScript());
+  }, []);
+
   const flushPendingTabPathSync = useCallback(() => {
     if (!isTabWebView) return;
     if (!didLoadOnceRef.current) return;
@@ -519,6 +550,22 @@ export default function AppWebViewScreen({
   }, [currentTab]);
 
   useEffect(() => {
+    const subscription = AppState.addEventListener("change", (nextState) => {
+      const previousState = appStateRef.current;
+      appStateRef.current = nextState;
+
+      const didEnterForeground = previousState !== "active" && nextState === "active";
+      if (!didEnterForeground) return;
+
+      dispatchAppForegroundToWeb();
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, [dispatchAppForegroundToWeb]);
+
+  useEffect(() => {
     if (!isTabWebView || currentTab !== "chat") {
       previousChatBackRequestKeyRef.current = chatBackRequestKey;
       return;
@@ -546,6 +593,12 @@ export default function AppWebViewScreen({
 
   const onMessage = useCallback(
     (event: WebViewMessageEvent) => {
+      const messageUrl = event.nativeEvent.url?.trim();
+      if (!messageUrl || !isTrustedWebViewUrl(messageUrl, webAppOrigin)) {
+        console.warn("[WebView] blocked message from untrusted URL", messageUrl);
+        return;
+      }
+
       try {
         const rawData = JSON.parse(event.nativeEvent.data) as {
           type?: string;
@@ -599,6 +652,7 @@ export default function AppWebViewScreen({
       rememberTabWebHref,
       syncTabBarVisibility,
       syncTabStateFromUrl,
+      webAppOrigin,
     ],
   );
 
@@ -618,14 +672,16 @@ export default function AppWebViewScreen({
     if (Platform.OS !== "android") return;
 
     const backSubscription = BackHandler.addEventListener("hardwareBackPress", () => {
-      if (!canGoBackRef.current) return false;
+      if (!navigation.isFocused()) return false;
 
       if (isTabWebView) {
-        webViewRef.current?.injectJavaScript(
-          createNativeBackRequestScript(androidHardwareBackFallbackPath),
-        );
+        if (!didLoadOnceRef.current) return false;
+
+        webViewRef.current?.injectJavaScript(createNativeBackRequestScript());
         return true;
       }
+
+      if (!canGoBackRef.current) return false;
 
       webViewRef.current?.goBack();
       return true;
@@ -634,7 +690,7 @@ export default function AppWebViewScreen({
     return () => {
       backSubscription.remove();
     };
-  }, [androidHardwareBackFallbackPath, isTabWebView]);
+  }, [isTabWebView, navigation]);
 
   useEffect(() => {
     webViewRef.current?.injectJavaScript(`${safeAreaSyncScript}true;`);
@@ -717,27 +773,37 @@ export default function AppWebViewScreen({
     (request: WebViewShouldStartLoadEvent) => {
       const targetUrl = request.url?.trim();
       if (!targetUrl) return true;
+      if (!request.isTopFrame) return true;
 
       try {
         const parsed = new URL(targetUrl);
-        if (parsed.protocol === "http:" || parsed.protocol === "https:") return true;
-        if (!shouldOpenWithNativeLinking(parsed.protocol)) return true;
+        if (parsed.protocol === "http:" || parsed.protocol === "https:") {
+          if (isTrustedWebViewUrl(targetUrl, webAppOrigin)) return true;
+
+          void openExternalUrl(targetUrl);
+          return false;
+        }
+
+        if (!shouldOpenWithNativeLinking(parsed.protocol)) return false;
 
         void openExternalUrl(targetUrl);
         return false;
       } catch {
-        return true;
+        return false;
       }
+    },
+    [openExternalUrl, webAppOrigin],
+  );
+
+  const onOpenWindow = useCallback(
+    async (event: WebViewOpenWindowEvent) => {
+      const targetUrl = event.nativeEvent.targetUrl?.trim();
+      if (!targetUrl) return;
+
+      await openExternalUrl(targetUrl);
     },
     [openExternalUrl],
   );
-
-  const onOpenWindow = useCallback(async (event: WebViewOpenWindowEvent) => {
-    const targetUrl = event.nativeEvent.targetUrl?.trim();
-    if (!targetUrl) return;
-
-    await openExternalUrl(targetUrl);
-  }, [openExternalUrl]);
 
   return (
     <SafeAreaView style={styles.container} edges={["left", "right"]}>
@@ -767,22 +833,22 @@ export default function AppWebViewScreen({
       />
       {isInitialWebViewLoading && !webViewLoadError ? (
         <View pointerEvents="none" style={styles.loadingOverlay}>
-          <ActivityIndicator size="small" color="#ff8000" />
+          <LoadingOverlay />
         </View>
       ) : null}
       {webViewLoadError ? (
         <View style={styles.errorOverlay}>
           <View style={styles.errorContent}>
-            <Text allowFontScaling={false} style={styles.errorTitle}>
+            <Typo size="title-s-semi" allowFontScaling={false} style={styles.errorTitle}>
               {webViewLoadError.title}
-            </Text>
-            <Text allowFontScaling={false} style={styles.errorDescription}>
+            </Typo>
+            <Typo allowFontScaling={false} style={styles.errorDescription}>
               {webViewLoadError.description}
-            </Text>
+            </Typo>
             {__DEV__ && webViewLoadError.detail ? (
-              <Text allowFontScaling={false} style={styles.errorDetail}>
+              <Typo allowFontScaling={false} style={styles.errorDetail}>
                 {webViewLoadError.detail}
-              </Text>
+              </Typo>
             ) : null}
             <Pressable
               onPress={retryWebViewLoad}
@@ -791,9 +857,9 @@ export default function AppWebViewScreen({
                 pressed ? styles.retryButtonPressed : null,
               ]}
             >
-              <Text allowFontScaling={false} style={styles.retryButtonText}>
+              <Typo allowFontScaling={false} style={styles.retryButtonText}>
                 다시 시도
-              </Text>
+              </Typo>
             </Pressable>
           </View>
         </View>
@@ -821,12 +887,6 @@ const styles = StyleSheet.create({
     right: 0,
     top: 0,
   },
-  loadingText: {
-    color: "#595959",
-    fontSize: 14,
-    fontWeight: "500",
-    lineHeight: 20,
-  },
   errorOverlay: {
     alignItems: "center",
     backgroundColor: "#ffffff",
@@ -840,48 +900,36 @@ const styles = StyleSheet.create({
   },
   errorContent: {
     alignItems: "center",
-    maxWidth: 360,
     width: "100%",
   },
   errorTitle: {
-    color: "#1f1f1f",
-    fontSize: 20,
-    fontWeight: "600",
-    lineHeight: 29,
     textAlign: "center",
+    color: semantic.text.accent,
   },
   errorDescription: {
-    color: "#595959",
-    fontSize: 15,
-    fontWeight: "400",
-    lineHeight: 22,
+    color: semantic.text.secondary,
     marginTop: 8,
     textAlign: "center",
   },
   errorDetail: {
-    color: "#8c8c8c",
-    fontSize: 12,
-    fontWeight: "400",
-    lineHeight: 17,
+    color: semantic.text.secondary,
     marginTop: 10,
     textAlign: "center",
   },
   retryButton: {
     alignItems: "center",
-    backgroundColor: "#ff8000",
+    backgroundColor: semantic.btn.default,
     borderRadius: 8,
     justifyContent: "center",
     marginTop: 24,
     minHeight: 48,
+    width: "100%",
     paddingHorizontal: 22,
   },
   retryButtonPressed: {
-    opacity: 0.82,
+    opacity: 0.8,
   },
   retryButtonText: {
-    color: "#ffffff",
-    fontSize: 16,
-    fontWeight: "600",
-    lineHeight: 22,
+    color: semantic.text.accent,
   },
 });

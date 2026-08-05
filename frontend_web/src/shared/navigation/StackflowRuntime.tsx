@@ -55,7 +55,7 @@ export function StackflowRuntime() {
 
       window.setTimeout(() => {
         if (command.type === "BACK") {
-          navigateBack({ fallbackTo: command.fallbackPath, animate: command.animate });
+          navigateBack({ animate: command.animate });
           return;
         }
 

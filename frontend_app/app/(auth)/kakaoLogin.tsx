@@ -1,13 +1,14 @@
 import { exchangeKakaoCodeForToken } from "@/features/auth/api/authTokenApi";
 import { postHasUserInfo } from "@/features/auth/api/onboardingStatusApi";
 import { parseKakaoRedirectUrl } from "@/features/auth/hooks/parseKakaoCode";
-import { typography } from "@/src/shared/styles/tokens";
+import { LoadingOverlay, Typo } from "@/src/shared/ui";
 import { isAxiosError } from "axios";
 import { router } from "expo-router";
 import { useCallback, useRef, useState } from "react";
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import WebView, { WebViewNavigation } from "react-native-webview";
+import { semantic } from "@/src/shared/styles/color";
 
 const restApiKey = process.env.EXPO_PUBLIC_KAKAO_REST_API_KEY;
 const redirectUri = process.env.EXPO_PUBLIC_KAKAO_REDIRECT_URI;
@@ -169,23 +170,18 @@ export default function KakaoLogin() {
       ) : null}
 
       {(isPageLoading || isCallbackProcessing) && !errorMessage ? (
-        <View style={styles.overlay}>
-          <ActivityIndicator size="small" color="#444444" />
-          <Text allowFontScaling={false} style={styles.loadingText}>
-            로그인 처리 중...
-          </Text>
-        </View>
+        <LoadingOverlay message="로그인 준비 중.." />
       ) : null}
 
       {errorMessage ? (
         <View style={styles.overlay}>
           <View style={styles.errorContent}>
-            <Text allowFontScaling={false} style={styles.errorTitle}>
+            <Typo allowFontScaling={false} style={styles.errorTitle}>
               카카오 로그인 실패
-            </Text>
-            <Text allowFontScaling={false} style={styles.errorMessage}>
+            </Typo>
+            <Typo allowFontScaling={false} style={styles.errorMessage}>
               {errorMessage}
-            </Text>
+            </Typo>
             <View style={styles.errorActions}>
               {kakaoAuthorizeUrl ? (
                 <Pressable
@@ -195,9 +191,9 @@ export default function KakaoLogin() {
                     pressed && styles.primaryButtonPressed,
                   ]}
                 >
-                  <Text allowFontScaling={false} style={styles.primaryButtonText}>
+                  <Typo allowFontScaling={false} style={styles.primaryButtonText}>
                     다시 시도
-                  </Text>
+                  </Typo>
                 </Pressable>
               ) : null}
               <Pressable
@@ -207,9 +203,9 @@ export default function KakaoLogin() {
                   pressed && styles.secondaryButtonPressed,
                 ]}
               >
-                <Text allowFontScaling={false} style={styles.secondaryButtonText}>
+                <Typo allowFontScaling={false} style={styles.secondaryButtonText}>
                   로그인으로 돌아가기
-                </Text>
+                </Typo>
               </Pressable>
             </View>
           </View>
@@ -231,23 +227,16 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 24,
   },
-  loadingText: {
-    ...typography["typo-label3"],
-    marginTop: 8,
-    color: "#666666",
-  },
   errorContent: {
     width: "100%",
     maxWidth: 320,
     alignItems: "center",
   },
   errorTitle: {
-    ...typography["typo-title3"],
     color: "#222222",
     textAlign: "center",
   },
   errorMessage: {
-    ...typography["typo-body3"],
     marginTop: 10,
     color: "#666666",
     textAlign: "center",
@@ -260,7 +249,7 @@ const styles = StyleSheet.create({
   primaryButton: {
     minHeight: 48,
     borderRadius: 8,
-    backgroundColor: "#222222",
+    backgroundColor: semantic.btn.default,
     justifyContent: "center",
     alignItems: "center",
   },
@@ -268,8 +257,7 @@ const styles = StyleSheet.create({
     opacity: 0.8,
   },
   primaryButtonText: {
-    ...typography["typo-label2"],
-    color: "#ffffff",
+    color: semantic.text.accent,
   },
   secondaryButton: {
     minHeight: 48,
@@ -284,7 +272,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#f5f5f5",
   },
   secondaryButtonText: {
-    ...typography["typo-label2"],
     color: "#333333",
   },
 });

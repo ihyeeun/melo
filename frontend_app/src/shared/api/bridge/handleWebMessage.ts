@@ -7,7 +7,7 @@ import * as FileSystem from "expo-file-system/legacy";
 import { manipulateAsync, SaveFormat } from "expo-image-manipulator";
 import * as ImagePicker from "expo-image-picker";
 import * as WebBrowser from "expo-web-browser";
-import { Platform } from "react-native";
+import { BackHandler, Platform } from "react-native";
 import { clearTokens } from "@/features/auth/store/tokenStore";
 import { apiClient } from "@/src/shared/api/apiClient";
 import { emitAuthExpired } from "@/src/shared/auth/authSessionEvents";
@@ -688,6 +688,8 @@ export async function handleWebMessage(
     if (message.type === "NAVIGATION_BACK") {
       if (router.canGoBack()) {
         router.back();
+      } else if (Platform.OS === "android") {
+        BackHandler.exitApp();
       }
       return;
     }

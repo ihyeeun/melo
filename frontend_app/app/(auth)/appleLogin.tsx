@@ -1,9 +1,9 @@
 import { postHasUserInfo } from "@/features/auth/api/onboardingStatusApi";
 import { saveTokens } from "@/features/auth/store/tokenStore";
-import { typography } from "@/src/shared/styles/tokens";
+import { LoadingOverlay } from "@/src/shared/ui";
 import { router } from "expo-router";
 import { useCallback, useRef, useState } from "react";
-import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
+import { StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import WebView, { WebViewMessageEvent, WebViewNavigation } from "react-native-webview";
 
@@ -119,14 +119,7 @@ export default function AppleLogin() {
         `}
       />
 
-      {(isPageLoading || isCallbackProcessing) && (
-        <View style={styles.loadingOverlay}>
-          <ActivityIndicator size="small" color="#444" />
-          <Text allowFontScaling={false} style={styles.loadingText}>
-            로그인 준비 중...
-          </Text>
-        </View>
-      )}
+      {(isPageLoading || isCallbackProcessing) && <LoadingOverlay message="로그인 준비 중.." />}
     </SafeAreaView>
   );
 }
@@ -135,16 +128,5 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#ffffff",
-  },
-  loadingOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: "#ffffff",
-    justifyContent: "center",
-    alignItems: "center",
-    gap: 8,
-  },
-  loadingText: {
-    ...typography["typo-label3"],
-    color: "#666666",
   },
 });

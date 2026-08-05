@@ -36,6 +36,7 @@ export type WebToAppNavigationBackMessage = {
 };
 
 export type HapticType =
+  | "tap"
   | "selection"
   | "light"
   | "medium"
