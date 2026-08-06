@@ -16,6 +16,8 @@ import {
   getWorkoutRecordPath,
   getWorkoutUpsertPath,
 } from "@/router/pathHelpers";
+import { track } from "@/shared/analytics/analytics";
+import { EVENT_NAME } from "@/shared/analytics/analytics.constants";
 import type { WorkoutSearchItemResponseDto } from "@/shared/api/types/api.response.dto";
 import { Button } from "@/shared/commons/button/Button";
 import { SearchInputHeader } from "@/shared/commons/header/SearchInputHeader";
@@ -43,6 +45,12 @@ function isWorkoutEditMode(rawMode: string | null) {
   return rawMode === "edit";
 }
 
+function trackWorkoutRecordCompleted() {
+  track(EVENT_NAME.WORKOUT_RECORD_COMPLETED, {
+    source: "workout_add",
+  });
+}
+
 export default function WorkoutSearchPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -55,6 +63,7 @@ export default function WorkoutSearchPage() {
   const workoutRecordQuery = useGetWorkoutRecordQuery(dateKey);
   const inputRef = useRef<HTMLInputElement>(null);
   const loadMoreRef = useRef<HTMLDivElement>(null);
+  const initialWorkoutIdSetRef = useRef<Set<number> | null>(null);
   const [inputValue, setInputValue] = useState("");
   const [searchKeyword, setSearchKeyword] = useState("");
   const [bodyPart, setBodyPart] = useState<string | null>(null);
@@ -103,6 +112,16 @@ export default function WorkoutSearchPage() {
   }, [dateKey, editDate, editRecords, isEditMode, workoutRecordQuery.data?.workout_list]);
 
   useEffect(() => {
+    if (isEditMode || !workoutRecordQuery.data || initialWorkoutIdSetRef.current !== null) {
+      return;
+    }
+
+    initialWorkoutIdSetRef.current = new Set(
+      workoutRecordQuery.data.workout_list.map((record) => record.workout_id),
+    );
+  }, [isEditMode, workoutRecordQuery.data]);
+
+  useEffect(() => {
     const target = loadMoreRef.current;
     if (!target || !hasNextPage) {
       return;
@@ -132,6 +151,25 @@ export default function WorkoutSearchPage() {
     navigateBack({
       fallbackTo: isEditMode ? getWorkoutRecordEditPath(dateKey) : getWorkoutRecordPath(dateKey),
     });
+  };
+
+  const hasAddedWorkoutRecord = () => {
+    const initialWorkoutIdSet = initialWorkoutIdSetRef.current;
+    if (isEditMode || initialWorkoutIdSet === null) return false;
+
+    return (
+      workoutRecordQuery.data?.workout_list.some(
+        (record) => !initialWorkoutIdSet.has(record.workout_id),
+      ) ?? false
+    );
+  };
+
+  const handleComplete = () => {
+    if (hasAddedWorkoutRecord()) {
+      trackWorkoutRecordCompleted();
+    }
+
+    handleBack();
   };
 
   const handleClearKeyword = () => {
@@ -248,7 +286,7 @@ export default function WorkoutSearchPage() {
       </main>
 
       <footer className={styles.footer}>
-        <Button fullWidth size="large" onClick={handleBack}>
+        <Button fullWidth size="large" onClick={handleComplete}>
           추가 완료
         </Button>
       </footer>

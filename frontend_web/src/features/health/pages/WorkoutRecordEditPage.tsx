@@ -24,6 +24,8 @@ import {
   getWorkoutSearchPath,
   getWorkoutUpsertPath,
 } from "@/router/pathHelpers";
+import { track } from "@/shared/analytics/analytics";
+import { EVENT_NAME } from "@/shared/analytics/analytics.constants";
 import type { UpsertWorkoutRecordRequestDto } from "@/shared/api/types/api.request.dto";
 import type {
   WorkoutRecordItemResponseDto,
@@ -168,6 +170,20 @@ function getWorkoutRecordSavePlan({
   };
 }
 
+function hasWorkoutRecordSaveChanges(savePlan: ReturnType<typeof getWorkoutRecordSavePlan>) {
+  return (
+    savePlan.shouldResetBeforeUpsert ||
+    savePlan.deleteWorkoutIds.length > 0 ||
+    savePlan.upsertRequests.length > 0
+  );
+}
+
+function trackWorkoutRecordEditCompleted() {
+  track(EVENT_NAME.WORKOUT_RECORD_COMPLETED, {
+    source: "workout_edit",
+  });
+}
+
 export default function WorkoutRecordEditPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -248,6 +264,9 @@ export default function WorkoutRecordEditPage() {
       queryClient.setQueryData<WorkoutRecordResponseDto>(workoutKeys.records.byDate(dateKey), {
         workout_list: draftRecords.map(cloneWorkoutRecord),
       });
+      if (hasWorkoutRecordSaveChanges(savePlan)) {
+        trackWorkoutRecordEditCompleted();
+      }
       leaveEditMode();
       toast.success("운동 기록이 저장되었어요");
     } catch {
@@ -517,6 +536,8 @@ function WorkoutEditCard({
 
         <div className={styles.recordContent}>
           <p className={`typo-title4`}>{workout.workout_name}</p>
+
+          {/* 여기 한 줄만 나오게 ? */}
           <p className="typo-caption4">
             {workout.workout_type === "cardio"
               ? `${formatWorkoutDuration(workout.workout_duration)}`

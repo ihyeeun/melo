@@ -37,6 +37,7 @@ import { Button } from "@/shared/commons/button/Button";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import { LoadingIndicator } from "@/shared/commons/loading/Loading";
+import { toast } from "@/shared/commons/toast/toast";
 import {
   navigateBack,
   useLocation,
@@ -176,13 +177,6 @@ export default function WorkoutUpsertPage() {
   });
   const workoutRecordQuery = useGetWorkoutRecordQuery(date);
   const { data: profile } = useGetProfileQuery();
-  const { mutate: upsertWorkoutRecord, isPending: isUpsertPending } =
-    useUpsertWorkoutRecordMutation({
-      onSuccess: () => {
-        navigateBack({ fallbackTo: getWorkoutRecordPath(date) });
-      },
-    });
-
   const workoutRecordFromState =
     workoutId !== null && location.state?.workoutRecord?.workout_id === workoutId
       ? location.state.workoutRecord
@@ -287,6 +281,13 @@ export default function WorkoutUpsertPage() {
     workout,
     workoutId,
   ]);
+  const { mutate: upsertWorkoutRecord, isPending: isUpsertPending } =
+    useUpsertWorkoutRecordMutation({
+      onSuccess: () => {
+        toast.success("운동 기록이 등록되었어요.");
+        navigateBack({ fallbackTo: getWorkoutRecordPath(date) });
+      },
+    });
 
   const handleBack = () => {
     navigateBack({
