@@ -535,9 +535,7 @@ function WorkoutEditCard({
         </div>
 
         <div className={styles.recordContent}>
-          <p className={`typo-title4`}>{workout.workout_name}</p>
-
-          {/* 여기 한 줄만 나오게 ? */}
+          <p className={`ellipsis typo-title4`}>{workout.workout_name}</p>
           <p className="typo-caption4">
             {workout.workout_type === "cardio"
               ? `${formatWorkoutDuration(workout.workout_duration)}`

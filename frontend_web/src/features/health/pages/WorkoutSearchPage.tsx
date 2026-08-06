@@ -395,7 +395,7 @@ function WorkoutSearchResultCard({
         </div>
 
         <div className={styles.resultContent}>
-          <h2 className={`${styles.resultTitle} typo-label1`}>{workout.workout_name}</h2>
+          <h2 className={`ellipsis typo-title4`}>{workout.workout_name}</h2>
         </div>
       </button>
 

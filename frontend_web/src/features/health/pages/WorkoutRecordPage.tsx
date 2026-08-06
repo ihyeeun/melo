@@ -198,7 +198,7 @@ function WorkoutRecordCard({
       </div>
 
       <div className={styles.recordContent}>
-        <p className={`typo-label1`}>{workout.workout_name}</p>
+        <p className={`ellipsis typo-title4`}>{workout.workout_name}</p>
 
         <p className="typo-caption4">
           {workout.workout_type === "cardio"
