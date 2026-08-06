@@ -7,7 +7,7 @@ import TodayBodyLogSection from "@/features/home/components/TodayBodyLogSection"
 import type { HomeOnboardingTarget } from "@/features/home/constants/homeOnboarding";
 import style from "@/features/home/styles/MenuActionSection.module.css";
 import { PATH } from "@/router/path";
-import { getWorkoutRecordPath } from "@/router/pathHelpers";
+// import { getWorkoutRecordPath } from "@/router/pathHelpers";
 import { isNativeApp, syncAppTab } from "@/shared/api/bridge/nativeBridge";
 import { useNavigate } from "@/shared/navigation/stackflowNavigation";
 
@@ -82,11 +82,11 @@ export default function MenuActionSection({
             />
           </OnboardingTargetFrame>
         ) : null}
-        <MenuCard
+        {/* <MenuCard
           title="운동 기록"
           iconSrc="/icons/system-icons/fire.svg"
           onClick={disableInteractions ? undefined : () => navigate(getWorkoutRecordPath(selectedDate))}
-        />
+        /> */}
       </div>
 
       {bodyLogSection ?? <TodayBodyLogSection date={selectedDate} />}
