@@ -4,7 +4,6 @@ import { useGetWorkoutDetailQuery } from "@/features/health/hooks/queries/workou
 import { getWorkoutSearchPath, getWorkoutUpsertPath } from "@/router/pathHelpers";
 import BottomSheet from "@/shared/commons/bottomSheet/BottomSheet";
 import { Button } from "@/shared/commons/button/Button";
-import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import { LoadingIndicator } from "@/shared/commons/loading/Loading";
 import { useNavigate } from "@/shared/navigation/stackflowNavigation";
 import { navigateBack } from "@/shared/navigation/stackflowNavigationController";
@@ -87,10 +86,7 @@ export default function WorkoutDetailSheetPage() {
           {imageUrl ? (
             <img src={imageUrl} alt="" className={styles.thumbnailImage} />
           ) : (
-            <SystemIcon
-              name={detailWorkout.workout_type === "cardio" ? "walking" : "fire"}
-              size={40}
-            />
+            <p className={`typo-title4 textAssistive`}>이미지 준비 중이에요</p>
           )}
         </div>
         <section className={styles.infoGroup}>
