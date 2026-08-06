@@ -11,18 +11,20 @@ import {
   getRecognitionErrorFeedback,
   isCameraCaptureCancelled,
 } from "@/features/camera/utils/cameraCapture";
-import { getMealType, getSafeDateKey } from "@/features/meal-record/utils/mealRecord.queryParams";
-import { useRemoveMenuSelectionFlowOnExit } from "@/features/menu-selection-flow/hooks/useRemoveMenuSelectionFlowOnExit";
 import {
-  useMenuSelectionFlowById,
-} from "@/features/menu-selection-flow/stores/menuSelectionFlow.store";
+  getMealType,
+  getSafeDateKey,
+} from "@/features/meal-record/utils/mealRecord.queryParams";
 import {
-  getMenuSelectionFlowIdFromSearchParams,
-  getMenuSelectionFlowPath,
-} from "@/features/menu-selection-flow/utils/menuSelectionFlowRoutes";
+  buildMenuSelectionPathContext,
+  getMenuSelectionPath,
+  getMenuSelectionRouteContextFromSearchParams,
+  type MenuSelectionPathParams,
+} from "@/features/menu-selection/utils/menuSelectionRoutes";
 import { PATH } from "@/router/path";
 import { getPathWithMeal } from "@/router/pathHelpers";
 import { requestNativeCameraCapture } from "@/shared/api/bridge/nativeBridge";
+import type { MealType } from "@/shared/api/types/api.dto";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
 import { CheckButtonModal } from "@/shared/commons/modals/CheckButtonModal";
 import { toast } from "@/shared/commons/toast/toast";
@@ -35,6 +37,8 @@ import {
 
 type NutritionLabelCreateLocationState = {
   brand?: string;
+  dateKey?: string;
+  mealType?: MealType;
   name?: string;
 };
 
@@ -52,24 +56,35 @@ export default function NutrientCameraPage() {
     () => (location.state ?? {}) as NutritionLabelCreateLocationState,
     [location.state],
   );
-  const menuSelectionFlowId = getMenuSelectionFlowIdFromSearchParams(searchParams);
-  useRemoveMenuSelectionFlowOnExit(menuSelectionFlowId);
-  const menuSelectionFlow = useMenuSelectionFlowById(menuSelectionFlowId);
-  const dateKey = getSafeDateKey(
-    searchParams.get("date") ?? menuSelectionFlow?.relatedMealRecordDateKey ?? null,
+  const menuSelectionRouteContext = useMemo(
+    () => getMenuSelectionRouteContextFromSearchParams(searchParams),
+    [searchParams],
   );
-  const mealType = getMealType(
-    searchParams.get("mealType") ?? menuSelectionFlow?.relatedMealRecordMealType ?? null,
+  const dateKey = getSafeDateKey(
+    searchParams.get("date") ?? locationState.dateKey ?? null,
+  );
+  const mealType = getMealType(searchParams.get("mealType") ?? locationState.mealType ?? null);
+  const menuSelectionContext = useMemo<MenuSelectionPathParams | null>(
+    () =>
+      menuSelectionRouteContext.target
+        ? buildMenuSelectionPathContext({
+            dateKey,
+            mealType,
+            routeContext: menuSelectionRouteContext,
+            target: menuSelectionRouteContext.target,
+          })
+        : null,
+    [dateKey, mealType, menuSelectionRouteContext],
   );
   const foodName = searchParams.get("name") ?? locationState.name ?? "";
   const brandName = searchParams.get("brand") ?? locationState.brand ?? "";
   const autoTriggeredRef = useRef(false);
 
   const returnFromCameraPage = useCallback(() => {
-    const nutrientAddFallbackPath = menuSelectionFlowId
-      ? getMenuSelectionFlowPath({
+    const nutrientAddFallbackPath = menuSelectionContext?.target
+      ? getMenuSelectionPath({
           path: PATH.NUTRIENT_ADD,
-          menuSelectionFlowId,
+          ...menuSelectionContext,
           extraSearchParams: {
             name: foodName,
             brand: brandName,
@@ -91,7 +106,7 @@ export default function NutrientCameraPage() {
     dateKey,
     foodName,
     mealType,
-    menuSelectionFlowId,
+    menuSelectionContext,
   ]);
 
   const handleCameraActions = useCallback(async () => {
@@ -121,10 +136,10 @@ export default function NutrientCameraPage() {
       setCapturedPreviewSrc(getCapturedImagePreviewSrc(capturedImage));
       setIsUploading(true);
       const imageData = await uploadImage(capturedImage);
-      const registerPath = menuSelectionFlowId
-        ? getMenuSelectionFlowPath({
+      const registerPath = menuSelectionContext?.target
+        ? getMenuSelectionPath({
             path: PATH.NUTRIENT_ADD_REGISTER,
-            menuSelectionFlowId,
+            ...menuSelectionContext,
           })
         : getPathWithMeal(PATH.NUTRIENT_ADD_REGISTER, dateKey, mealType);
       navigation(registerPath, {
@@ -153,7 +168,7 @@ export default function NutrientCameraPage() {
     brandName,
     isUploading,
     mealType,
-    menuSelectionFlowId,
+    menuSelectionContext,
     navigation,
     returnFromCameraPage,
     uploadImage,

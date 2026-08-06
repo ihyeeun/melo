@@ -19,14 +19,14 @@ import {
   useSyncMenuDraftWithDayMeals,
 } from "@/features/meal-record/stores/menuDraft.store";
 import { getMealType, getSafeDateKey } from "@/features/meal-record/utils/mealRecord.queryParams";
-import { useMenuSelectionFlowAdapter } from "@/features/menu-selection-flow/hooks/useMenuSelectionFlowAdapter";
-import { useRemoveMenuSelectionFlowOnExit } from "@/features/menu-selection-flow/hooks/useRemoveMenuSelectionFlowOnExit";
-import { MENU_SELECTION_FLOW_TARGET } from "@/features/menu-selection-flow/stores/menuSelectionFlow.store";
+import { useMenuSelectionAdapter } from "@/features/menu-selection/hooks/useMenuSelectionAdapter";
 import {
-  getMenuSelectionFlowIdFromSearchParams,
-  getMenuSelectionFlowMenuDetailPath,
-  getMenuSelectionFlowPath,
-} from "@/features/menu-selection-flow/utils/menuSelectionFlowRoutes";
+  buildMenuSelectionPathContext,
+  getMenuSelectionMenuDetailPath,
+  getMenuSelectionPath,
+  getMenuSelectionRouteContextFromSearchParams,
+  MENU_SELECTION_TARGET,
+} from "@/features/menu-selection/utils/menuSelectionRoutes";
 import { getFolderItems } from "@/features/personal-menu/folder/api/folder.api";
 import { folderQueryKeys } from "@/features/personal-menu/folder/hooks/queries/folder.queryKey";
 import RegisterBottomSheet from "@/features/search/components/RegisterBottomSheet";
@@ -103,8 +103,10 @@ export default function MealSearchPage() {
 
   const dateKey = getSafeDateKey(searchParams.get("date"));
   const mealType = getMealType(searchParams.get("mealType"));
-  const menuSelectionFlowId = getMenuSelectionFlowIdFromSearchParams(searchParams);
-  useRemoveMenuSelectionFlowOnExit(menuSelectionFlowId);
+  const menuSelectionRouteContext = getMenuSelectionRouteContextFromSearchParams(searchParams);
+  const menuSelectionTarget =
+    menuSelectionRouteContext.target ?? MENU_SELECTION_TARGET.MEAL_RECORD;
+  const hasMenuSelectionRouteContext = menuSelectionRouteContext.target !== null;
   const [submittedKeyword, setSubmittedKeyword] = useState("");
   const [searchKeyword, setSearchKeyword] = useState("");
   const [activePersonalMenuTab, setActivePersonalMenuTab] = useState<PersonalMenuTab>(
@@ -114,14 +116,12 @@ export default function MealSearchPage() {
   const loadMoreRef = useRef<HTMLDivElement>(null);
   const draftKey = formatMenuDraftKey(dateKey, mealType);
   const hasSearchKeyword = searchKeyword.trim().length > 0;
-  const menuSelectionFlowAdapter = useMenuSelectionFlowAdapter({
-    fallbackMealRecordDateKey: dateKey,
-    fallbackMealRecordMealType: mealType,
-    fallbackMenuSelectionFlowTarget: MENU_SELECTION_FLOW_TARGET.MEAL_RECORD,
-    menuSelectionFlowId,
+  const menuSelectionAdapter = useMenuSelectionAdapter({
+    mealRecordDateKey: dateKey,
+    mealRecordMealType: mealType,
+    target: menuSelectionTarget,
   });
-  const isFolderSearchMode =
-    menuSelectionFlowAdapter.menuSelectionFlowTarget === MENU_SELECTION_FLOW_TARGET.FOLDER;
+  const isFolderSearchMode = menuSelectionAdapter.selectionTarget === MENU_SELECTION_TARGET.FOLDER;
   const isPersonalMenuEditSearchMode = isFolderSearchMode;
   const visiblePersonalMenuTab =
     isPersonalMenuEditSearchMode && activePersonalMenuTab === PERSONAL_MENU_TAB.FOLDER
@@ -137,13 +137,19 @@ export default function MealSearchPage() {
   } = useDayMealsQuery(dateKey, { enabled: !isPersonalMenuEditSearchMode });
   const draft = useMenuDraftStore((store) => store.drafts[draftKey]);
   const hasDraft = Boolean(draft);
-  const selectedCount = menuSelectionFlowAdapter.selectedCount;
-  const selectedMenuIdSet = menuSelectionFlowAdapter.selectedMenuIdSet;
+  const selectedCount = menuSelectionAdapter.selectedCount;
+  const selectedMenuIdSet = menuSelectionAdapter.selectedMenuIdSet;
   const isFoodCameraBlocked = useIsFeatureBlocked(FEATURE_GUARD.FOOD_CAMERA);
   const showFoodCameraButton = !isPersonalMenuEditSearchMode && !isFoodCameraBlocked;
   const personalMenuEditFallbackPath =
-    menuSelectionFlowAdapter.menuSelectionCompletionReturnPath ??
+    menuSelectionRouteContext.returnPath ??
     (isFolderSearchMode ? PATH.CREATE_FOLDER : null);
+  const menuSelectionPathContext = buildMenuSelectionPathContext({
+    dateKey,
+    mealType,
+    routeContext: menuSelectionRouteContext,
+    target: menuSelectionAdapter.selectionTarget,
+  });
 
   const {
     data: frequentlyRecordedMenus,
@@ -223,26 +229,26 @@ export default function MealSearchPage() {
     const menuId = menu.id;
 
     if (selectedMenuIdSet.has(menuId)) {
-      menuSelectionFlowAdapter.removeSelectedMenu(menuId);
+      menuSelectionAdapter.removeSelectedMenu(menuId);
       return;
     }
 
-    if (selectedCount >= menuSelectionFlowAdapter.maxSelectableMenuCount) {
-      toast.warning(menuSelectionFlowAdapter.menuCountLimitMessage);
+    if (selectedCount >= menuSelectionAdapter.maxSelectableMenuCount) {
+      toast.warning(menuSelectionAdapter.menuCountLimitMessage);
       return;
     }
 
-    menuSelectionFlowAdapter.upsertSelectedMenu({
+    menuSelectionAdapter.upsertSelectedMenu({
       viewMenu: menu,
       menuQuantity: getDefaultConsumedWeight(menu.weight),
     });
   };
 
   const handleMenuDetailPageOpen = (menuId: number) => {
-    if (menuSelectionFlowId) {
+    if (hasMenuSelectionRouteContext) {
       navigate(
-        getMenuSelectionFlowMenuDetailPath({
-          menuSelectionFlowId,
+        getMenuSelectionMenuDetailPath({
+          ...menuSelectionPathContext,
           menuId,
         }),
       );
@@ -283,11 +289,11 @@ export default function MealSearchPage() {
   const handleNavigateNutrientAdd = () => {
     setIsDirectInputSheetOpen(false);
 
-    if (menuSelectionFlowId) {
+    if (hasMenuSelectionRouteContext) {
       navigate(
-        getMenuSelectionFlowPath({
+        getMenuSelectionPath({
           path: PATH.NUTRIENT_ADD_REGISTER,
-          menuSelectionFlowId,
+          ...menuSelectionPathContext,
         }),
       );
       return;
@@ -299,11 +305,11 @@ export default function MealSearchPage() {
   const handleNavigateNutrientCamera = () => {
     setIsDirectInputSheetOpen(false);
 
-    if (menuSelectionFlowId) {
+    if (hasMenuSelectionRouteContext) {
       navigate(
-        getMenuSelectionFlowPath({
+        getMenuSelectionPath({
           path: PATH.NUTRIENT_ADD,
-          menuSelectionFlowId,
+          ...menuSelectionPathContext,
         }),
       );
       return;
@@ -682,7 +688,6 @@ export default function MealSearchPage() {
                 isActive={visiblePersonalMenuTab === PERSONAL_MENU_TAB.FOLDER}
                 dateKey={dateKey}
                 mealType={mealType}
-                menuSelectionFlowId={menuSelectionFlowId}
               />
             </Tabs.Panel>
           ) : null}
@@ -835,20 +840,17 @@ function FolderPanel({
   dateKey,
   isActive,
   mealType,
-  menuSelectionFlowId,
 }: {
   dateKey: string;
   isActive: boolean;
   mealType: MealType;
-  menuSelectionFlowId?: string | null;
 }) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const menuSelectionFlowAdapter = useMenuSelectionFlowAdapter({
-    fallbackMealRecordDateKey: dateKey,
-    fallbackMealRecordMealType: mealType,
-    fallbackMenuSelectionFlowTarget: MENU_SELECTION_FLOW_TARGET.MEAL_RECORD,
-    menuSelectionFlowId,
+  const menuSelectionAdapter = useMenuSelectionAdapter({
+    mealRecordDateKey: dateKey,
+    mealRecordMealType: mealType,
+    target: MENU_SELECTION_TARGET.MEAL_RECORD,
   });
   const [pendingFolderId, setPendingFolderId] = useState<number | null>(null);
   const {
@@ -861,7 +863,7 @@ function FolderPanel({
     limit: MENU_SEARCH_PAGE_LIMIT,
   });
   const folderList = folders?.pages.flatMap((page) => page.folder_list) ?? [];
-  const selectedMenuIdSet = menuSelectionFlowAdapter.selectedMenuIdSet;
+  const selectedMenuIdSet = menuSelectionAdapter.selectedMenuIdSet;
 
   const getCachedFolderDetail = (folderId: number) =>
     queryClient.getQueryData<FolderDetailResponseDto>(folderQueryKeys.detail(folderId));
@@ -894,12 +896,12 @@ function FolderPanel({
       nextSelectedMenuIdSet.add(menu.id);
     });
 
-    return nextSelectedMenuIdSet.size <= menuSelectionFlowAdapter.maxSelectableMenuCount;
+    return nextSelectedMenuIdSet.size <= menuSelectionAdapter.maxSelectableMenuCount;
   };
 
   const applyFolderMenus = (folderDetail: FolderDetailResponseDto) => {
     folderDetail.menu_list.forEach((menu, index) => {
-      menuSelectionFlowAdapter.upsertSelectedMenu({
+      menuSelectionAdapter.upsertSelectedMenu({
         viewMenu: menu,
         menuQuantity: getSafeFolderQuantity(menu, folderDetail.menu_quantities[index]),
         menuInputMode: getSafeFolderInputMode(folderDetail.menu_input_modes[index]),
@@ -909,7 +911,7 @@ function FolderPanel({
 
   const removeFolderMenus = (folderDetail: FolderDetailResponseDto) => {
     folderDetail.menu_list.forEach((menu) => {
-      menuSelectionFlowAdapter.removeSelectedMenu(menu.id);
+      menuSelectionAdapter.removeSelectedMenu(menu.id);
     });
   };
 
@@ -932,7 +934,7 @@ function FolderPanel({
 
     if (cachedFolderDetail && !isCachedFolderSelected) {
       if (!canApplyFolderMenus(cachedFolderDetail)) {
-        toast.warning(menuSelectionFlowAdapter.menuCountLimitMessage);
+        toast.warning(menuSelectionAdapter.menuCountLimitMessage);
         return;
       }
     }
@@ -953,7 +955,7 @@ function FolderPanel({
       }
 
       if (!canApplyFolderMenus(folderDetail)) {
-        toast.warning(menuSelectionFlowAdapter.menuCountLimitMessage);
+        toast.warning(menuSelectionAdapter.menuCountLimitMessage);
         return;
       }
 

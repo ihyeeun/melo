@@ -7,23 +7,17 @@ import {
 import { MealMenuNutrientDetailSkeleton } from "@/features/meal-record/components/MealMenuNutrientDetailSkeleton";
 import { useMealDeleteMutation } from "@/features/meal-record/hooks/mutations/useMealDetailMutation";
 import { useMealDetailQuery } from "@/features/meal-record/hooks/queries/useMealDetailQuery";
-import {
-  formatMenuDraftKey,
-  useMenuDraftUpsertPreviews,
-} from "@/features/meal-record/stores/menuDraft.store";
+import { useMenuDraftUpsertPreviews } from "@/features/meal-record/stores/menuDraft.store";
 import styles from "@/features/meal-record/styles/MealDetailPage.module.css";
-import { useMenuSelectionFlowAdapter } from "@/features/menu-selection-flow/hooks/useMenuSelectionFlowAdapter";
-import { useRemoveMenuSelectionFlowOnExit } from "@/features/menu-selection-flow/hooks/useRemoveMenuSelectionFlowOnExit";
+import { useMenuSelectionAdapter } from "@/features/menu-selection/hooks/useMenuSelectionAdapter";
 import {
-  MENU_SELECTION_FLOW_TARGET,
-  useMenuSelectionFlowCreateFlow,
-  useMenuSelectionFlowSetPendingReplacementSourceMenuId,
-} from "@/features/menu-selection-flow/stores/menuSelectionFlow.store";
-import {
-  getMenuSelectionFlowIdFromSearchParams,
-  getMenuSelectionFlowPath,
-  getMenuSelectionFlowSearchPath,
-} from "@/features/menu-selection-flow/utils/menuSelectionFlowRoutes";
+  buildMenuSelectionPathContext,
+  getMenuSelectionPath,
+  getMenuSelectionRouteContextFromSearchParams,
+  getMenuSelectionSearchPath,
+  MENU_SELECTION_TARGET,
+  type MenuSelectionPathParams,
+} from "@/features/menu-selection/utils/menuSelectionRoutes";
 import type { NutrientModifyLocationState } from "@/features/nutrient-entry/types/nutrientEntry.state";
 import { PATH } from "@/router/path";
 import { getMealRecordPath } from "@/router/pathHelpers";
@@ -56,8 +50,13 @@ export default function MealDetailPage() {
 
   const dateKey = getSafeDateKey(searchParams.get("date"));
   const mealType = getMealType(searchParams.get("mealType"));
-  const menuSelectionFlowId = getMenuSelectionFlowIdFromSearchParams(searchParams);
-  useRemoveMenuSelectionFlowOnExit(menuSelectionFlowId);
+  const menuSelectionRouteContext = getMenuSelectionRouteContextFromSearchParams(searchParams);
+  const menuSelectionTarget =
+    menuSelectionRouteContext.target ?? MENU_SELECTION_TARGET.MEAL_RECORD;
+  const hasMenuSelectionRouteContext =
+    menuSelectionRouteContext.target !== null ||
+    menuSelectionRouteContext.returnPath !== null ||
+    menuSelectionRouteContext.sourceMenuId !== null;
 
   const rawMenuId = searchParams.get("menuId");
   const parsedMenuId = rawMenuId ? Number(rawMenuId) : null;
@@ -67,27 +66,38 @@ export default function MealDetailPage() {
       : null;
 
   const upsertPreviews = useMenuDraftUpsertPreviews();
-  const createMenuSelectionFlow = useMenuSelectionFlowCreateFlow();
-  const setPendingReplacementSourceMenuId = useMenuSelectionFlowSetPendingReplacementSourceMenuId();
-  const menuSelectionFlowAdapter = useMenuSelectionFlowAdapter({
-    fallbackMealRecordDateKey: dateKey,
-    fallbackMealRecordMealType: mealType,
-    fallbackMenuSelectionFlowTarget: MENU_SELECTION_FLOW_TARGET.MEAL_RECORD,
-    menuSelectionFlowId,
+  const initialServingByMenuId =
+    menuId !== null && menuSelectionRouteContext.initialServing
+      ? { [menuId]: menuSelectionRouteContext.initialServing }
+      : undefined;
+  const menuSelectionAdapter = useMenuSelectionAdapter({
+    mealRecordDateKey: dateKey,
+    mealRecordMealType: mealType,
+    initialServingByMenuId,
+    sourceMenuId: menuSelectionRouteContext.sourceMenuId,
+    target: menuSelectionTarget,
   });
   const isPersonalMenuEditMode =
-    menuSelectionFlowAdapter.menuSelectionFlowTarget === MENU_SELECTION_FLOW_TARGET.FOLDER;
-  const draftKey =
-    menuSelectionFlowAdapter.relatedMealRecordDraftKey ?? formatMenuDraftKey(dateKey, mealType);
+    menuSelectionAdapter.selectionTarget === MENU_SELECTION_TARGET.FOLDER;
+  const menuSelectionPathContext = buildMenuSelectionPathContext({
+    dateKey,
+    mealType,
+    routeContext: menuSelectionRouteContext,
+    target: menuSelectionAdapter.selectionTarget,
+  });
+  const activeMenuSelectionPathContext = hasMenuSelectionRouteContext
+    ? menuSelectionPathContext
+    : null;
 
   const { data: meal, isPending, isError } = useMealDetailQuery(menuId);
 
   const getBackFallbackPath = () => {
-    if (menuSelectionFlowId) {
-      return (
-        menuSelectionFlowAdapter.menuSelectionCompletionReturnPath ??
-        getMenuSelectionFlowSearchPath(menuSelectionFlowId)
-      );
+    if (menuSelectionRouteContext.returnPath) {
+      return menuSelectionRouteContext.returnPath;
+    }
+
+    if (activeMenuSelectionPathContext) {
+      return getMenuSelectionSearchPath(activeMenuSelectionPathContext);
     }
 
     return getMealRecordPath(dateKey, mealType);
@@ -128,15 +138,15 @@ export default function MealDetailPage() {
       return null;
     }
 
-    return menuSelectionFlowAdapter.getMenuDetailServing(menuId);
-  }, [menuId, menuSelectionFlowAdapter]);
+    return menuSelectionAdapter.getMenuDetailServing(menuId);
+  }, [menuId, menuSelectionAdapter]);
   const isAlreadyQueued = useMemo(() => {
     if (menuId === null) {
       return false;
     }
 
-    return menuSelectionFlowAdapter.selectedMenuIdSet.has(menuId);
-  }, [menuId, menuSelectionFlowAdapter.selectedMenuIdSet]);
+    return menuSelectionAdapter.selectedMenuIdSet.has(menuId);
+  }, [menuId, menuSelectionAdapter.selectedMenuIdSet]);
 
   useEffect(() => {
     // 이미 draft에 담긴 메뉴를 수정한 경우, "담기"를 다시 누르지 않아도 preview를 최신 데이터로 동기화한다.
@@ -145,7 +155,7 @@ export default function MealDetailPage() {
     }
 
     upsertPreviews({
-      key: draftKey,
+      key: menuSelectionAdapter.mealRecordDraftKey,
       previews: [
         {
           id: meal.id,
@@ -159,7 +169,14 @@ export default function MealDetailPage() {
         },
       ],
     });
-  }, [draftKey, existingSelection, isPersonalMenuEditMode, meal, menuId, upsertPreviews]);
+  }, [
+    existingSelection,
+    isPersonalMenuEditMode,
+    meal,
+    menuId,
+    menuSelectionAdapter.mealRecordDraftKey,
+    upsertPreviews,
+  ]);
 
   const handleAddMenu = () => {
     if (!meal || !selection) {
@@ -168,8 +185,7 @@ export default function MealDetailPage() {
     }
 
     const nextMenuId = selection.menu.id;
-    const replacementSourceMenuIdCandidate =
-      menuSelectionFlowAdapter.pendingReplacementSourceMenuId;
+    const replacementSourceMenuIdCandidate = menuSelectionAdapter.sourceMenuId;
     const replacementSourceMenuId =
       typeof replacementSourceMenuIdCandidate === "number" &&
       Number.isInteger(replacementSourceMenuIdCandidate) &&
@@ -180,28 +196,28 @@ export default function MealDetailPage() {
     const shouldReplaceMenu =
       replacementSourceMenuId !== null &&
       replacementSourceMenuId !== nextMenuId &&
-      menuSelectionFlowAdapter.selectedMenuIdSet.has(replacementSourceMenuId);
+      menuSelectionAdapter.selectedMenuIdSet.has(replacementSourceMenuId);
 
-    const nextSelectedMenuIds = new Set(menuSelectionFlowAdapter.selectedMenuIdSet);
+    const nextSelectedMenuIds = new Set(menuSelectionAdapter.selectedMenuIdSet);
     if (shouldReplaceMenu) {
       nextSelectedMenuIds.delete(replacementSourceMenuId);
     }
     nextSelectedMenuIds.add(nextMenuId);
 
-    if (nextSelectedMenuIds.size > menuSelectionFlowAdapter.maxSelectableMenuCount) {
-      toast.warning(menuSelectionFlowAdapter.menuCountLimitMessage);
+    if (nextSelectedMenuIds.size > menuSelectionAdapter.maxSelectableMenuCount) {
+      toast.warning(menuSelectionAdapter.menuCountLimitMessage);
       return;
     }
 
     if (shouldReplaceMenu) {
-      menuSelectionFlowAdapter.replaceSelectedMenu({
+      menuSelectionAdapter.replaceSelectedMenu({
         previousMenuId: replacementSourceMenuId,
         viewMenu: selection.menu,
         menuQuantity: selection.quantity,
         menuInputMode: selection.mode,
       });
     } else {
-      menuSelectionFlowAdapter.upsertSelectedMenu({
+      menuSelectionAdapter.upsertSelectedMenu({
         viewMenu: selection.menu,
         menuQuantity: selection.quantity,
         menuInputMode: selection.mode,
@@ -238,7 +254,7 @@ export default function MealDetailPage() {
   const isPersonalMenuData = meal.data_source === MENU_DATA_SOURCE.PERSONAL;
   const mealIsDeleted = getMenuIsDeleted(meal);
   const showEditSection =
-    !menuSelectionFlowAdapter.menuSelectionFlow?.hideMenuDetailEditSection &&
+    !menuSelectionRouteContext.hideMenuDetailEditSection &&
     (meal.data_source === MENU_DATA_SOURCE.PUBLIC || mealIsDeleted === 0);
   const addButtonLabel = isPersonalMenuEditMode ? "추가하기" : "담기";
   const footerButtonLabel = isAlreadyQueued
@@ -249,12 +265,12 @@ export default function MealDetailPage() {
 
   const getNutrientModifyPath = (
     targetMenuId: number,
-    targetMenuSelectionFlowId = menuSelectionFlowId,
+    targetMenuSelectionContext = activeMenuSelectionPathContext,
   ) => {
-    if (targetMenuSelectionFlowId) {
-      return getMenuSelectionFlowPath({
+    if (targetMenuSelectionContext?.target) {
+      return getMenuSelectionPath({
         path: PATH.NUTRIENT_ADD_MODIFY,
-        menuSelectionFlowId: targetMenuSelectionFlowId,
+        ...targetMenuSelectionContext,
         menuId: targetMenuId,
       });
     }
@@ -278,32 +294,32 @@ export default function MealDetailPage() {
       return;
     }
 
-    const replacementMenuSelectionFlowId =
-      menuSelectionFlowId ??
-      createMenuSelectionFlow({
-        menuSelectionFlowTarget: MENU_SELECTION_FLOW_TARGET.MEAL_RECORD,
-        menuSelectionCompletionReturnPath: getMealRecordPath(dateKey, mealType),
-        relatedMealRecordDateKey: dateKey,
-        relatedMealRecordMealType: mealType,
-      });
+    const replacementMenuSelectionContext: MenuSelectionPathParams =
+      activeMenuSelectionPathContext ?? {
+        target: MENU_SELECTION_TARGET.MEAL_RECORD,
+        returnPath: getMealRecordPath(dateKey, mealType),
+        dateKey,
+        mealType,
+      };
 
-    setPendingReplacementSourceMenuId({
-      menuSelectionFlowId: replacementMenuSelectionFlowId,
-      pendingReplacementSourceMenuId: menuId,
-    });
-
-    moveToNutrientModify(selection?.menu ?? meal, replacementMenuSelectionFlowId);
+    moveToNutrientModify(
+      selection?.menu ?? meal,
+      {
+        ...replacementMenuSelectionContext,
+        sourceMenuId: menuId,
+      },
+    );
   };
 
   const moveToNutrientModify = (
     menuToModify: MealMenuItem,
-    targetMenuSelectionFlowId = menuSelectionFlowId,
+    targetMenuSelectionContext = activeMenuSelectionPathContext,
   ) => {
     const state: NutrientModifyLocationState = {
       menu: menuToModify,
     };
 
-    navigate(getNutrientModifyPath(menuToModify.id, targetMenuSelectionFlowId), { state });
+    navigate(getNutrientModifyPath(menuToModify.id, targetMenuSelectionContext), { state });
   };
 
   const handleDelete = () => {

@@ -11,11 +11,10 @@ import {
   useMenuDraftUpsertPreviews,
 } from "@/features/meal-record/stores/menuDraft.store";
 import {
-  MENU_SELECTION_FLOW_TARGET,
-  type MenuSelectionFlowTarget,
-  useMenuSelectionFlowById,
-  useMenuSelectionFlowClearPendingReplacementSourceMenuId,
-} from "@/features/menu-selection-flow/stores/menuSelectionFlow.store";
+  MENU_SELECTION_TARGET,
+  type MenuSelectionInitialServing,
+  type MenuSelectionTarget,
+} from "@/features/menu-selection/utils/menuSelectionRoutes";
 import {
   FOLDER_MENU_LIMIT_MESSAGE,
   MAX_FOLDER_MENUS,
@@ -29,35 +28,34 @@ import type { MealMenuItem, MealServingInputMode, MealType } from "@/shared/api/
 import type { MenuSimpleResponseDto } from "@/shared/api/types/api.response.dto";
 import type { MealRecordTransferPreview } from "@/shared/types/mealRecordTransfer";
 
-export type MenuSelectionFlowViewMenu = MenuSimpleResponseDto | MealMenuItem;
+export type MenuSelectionViewMenu = MenuSimpleResponseDto | MealMenuItem;
 
-export type MenuSelectionFlowSelectedMenu = {
+export type MenuSelectionSelectedMenu = {
   menuId: number;
   menuQuantity: number;
   menuInputMode?: MealServingInputMode;
-  viewMenu?: MenuSelectionFlowViewMenu;
+  viewMenu?: MenuSelectionViewMenu;
 };
 
-type UseMenuSelectionFlowAdapterParams = {
-  fallbackMealRecordDateKey: string;
-  fallbackMealRecordMealType: MealType;
-  fallbackMenuSelectionFlowTarget: MenuSelectionFlowTarget;
-  menuSelectionFlowId?: string | null;
+type UseMenuSelectionAdapterParams = {
+  mealRecordDateKey: string;
+  mealRecordMealType: MealType;
+  initialServingByMenuId?: Record<number, MenuSelectionInitialServing | undefined>;
+  sourceMenuId?: number | null;
+  target?: MenuSelectionTarget | null;
 };
 
-type UpsertMenuSelectionFlowMenuParams = {
-  viewMenu: MenuSelectionFlowViewMenu;
+type UpsertMenuSelectionMenuParams = {
+  viewMenu: MenuSelectionViewMenu;
   menuQuantity: number;
   menuInputMode?: MealServingInputMode;
 };
 
-type ReplaceMenuSelectionFlowMenuParams = UpsertMenuSelectionFlowMenuParams & {
+type ReplaceMenuSelectionMenuParams = UpsertMenuSelectionMenuParams & {
   previousMenuId: number;
 };
 
-function toMealRecordTransferPreview(
-  viewMenu: MenuSelectionFlowViewMenu,
-): MealRecordTransferPreview {
+function toMealRecordTransferPreview(viewMenu: MenuSelectionViewMenu): MealRecordTransferPreview {
   return {
     id: viewMenu.id,
     name: viewMenu.name,
@@ -76,31 +74,20 @@ function normalizeMenuQuantity(menuQuantity: number) {
     : 1;
 }
 
-export function useMenuSelectionFlowAdapter({
-  fallbackMealRecordDateKey,
-  fallbackMealRecordMealType,
-  fallbackMenuSelectionFlowTarget,
-  menuSelectionFlowId,
-}: UseMenuSelectionFlowAdapterParams) {
-  const menuSelectionFlow = useMenuSelectionFlowById(menuSelectionFlowId);
-  const menuSelectionFlowTarget =
-    menuSelectionFlow?.menuSelectionFlowTarget ?? fallbackMenuSelectionFlowTarget;
-  const relatedMealRecordDateKey =
-    menuSelectionFlow?.relatedMealRecordDateKey ?? fallbackMealRecordDateKey;
-  const relatedMealRecordMealType =
-    menuSelectionFlow?.relatedMealRecordMealType ?? fallbackMealRecordMealType;
-  const relatedMealRecordDraftKey = formatMenuDraftKey(
-    relatedMealRecordDateKey,
-    relatedMealRecordMealType,
-  );
+export function useMenuSelectionAdapter({
+  initialServingByMenuId,
+  mealRecordDateKey,
+  mealRecordMealType,
+  sourceMenuId,
+  target,
+}: UseMenuSelectionAdapterParams) {
+  const selectionTarget = target ?? MENU_SELECTION_TARGET.MEAL_RECORD;
+  const mealRecordDraftKey = formatMenuDraftKey(mealRecordDateKey, mealRecordMealType);
 
-  const mealRecordSelectedMenus = useMenuDraftMenus(
-    relatedMealRecordDateKey,
-    relatedMealRecordMealType,
-  );
+  const mealRecordSelectedMenus = useMenuDraftMenus(mealRecordDateKey, mealRecordMealType);
   const mealRecordSelectedCount = useMenuDraftSelectedCount(
-    relatedMealRecordDateKey,
-    relatedMealRecordMealType,
+    mealRecordDateKey,
+    mealRecordMealType,
   );
   const upsertMealRecordSelectedMenu = useMenuDraftUpsert();
   const removeMealRecordSelectedMenu = useMenuDraftRemove();
@@ -110,11 +97,8 @@ export function useMenuSelectionFlowAdapter({
   const upsertFolderSelectedMenu = useFolderDraftUpsertSelectedMenu();
   const removeFolderSelectedMenu = useFolderDraftRemoveSelectedMenu();
 
-  const clearPendingReplacementSourceMenuId =
-    useMenuSelectionFlowClearPendingReplacementSourceMenuId();
-
-  const selectedMenus: MenuSelectionFlowSelectedMenu[] =
-    menuSelectionFlowTarget === MENU_SELECTION_FLOW_TARGET.FOLDER
+  const selectedMenus: MenuSelectionSelectedMenu[] =
+    selectionTarget === MENU_SELECTION_TARGET.FOLDER
       ? folderSelectedMenus.map(({ requestMenu, viewMenu }) => ({
           menuId: requestMenu.menuId,
           menuQuantity: requestMenu.menuQuantity,
@@ -128,15 +112,13 @@ export function useMenuSelectionFlowAdapter({
         }));
   const selectedMenuIdSet = new Set(selectedMenus.map((menu) => menu.menuId));
   const selectedCount =
-    menuSelectionFlowTarget === MENU_SELECTION_FLOW_TARGET.MEAL_RECORD
+    selectionTarget === MENU_SELECTION_TARGET.MEAL_RECORD
       ? mealRecordSelectedCount
       : selectedMenus.length;
   const maxSelectableMenuCount =
-    menuSelectionFlowTarget === MENU_SELECTION_FLOW_TARGET.FOLDER
-      ? MAX_FOLDER_MENUS
-      : MAX_MEAL_RECORD_MENUS;
+    selectionTarget === MENU_SELECTION_TARGET.FOLDER ? MAX_FOLDER_MENUS : MAX_MEAL_RECORD_MENUS;
   const menuCountLimitMessage =
-    menuSelectionFlowTarget === MENU_SELECTION_FLOW_TARGET.FOLDER
+    selectionTarget === MENU_SELECTION_TARGET.FOLDER
       ? FOLDER_MENU_LIMIT_MESSAGE
       : MEAL_RECORD_MENU_LIMIT_MESSAGE;
 
@@ -153,14 +135,14 @@ export function useMenuSelectionFlowAdapter({
   };
 
   const getInitialMenuServing = (menuId: number) => {
-    const initialMenuServing = menuSelectionFlow?.initialMenuServingByMenuId?.[menuId];
-    if (!initialMenuServing) {
+    const initialServing = initialServingByMenuId?.[menuId];
+    if (!initialServing) {
       return null;
     }
 
     return {
-      quantity: initialMenuServing.menuQuantity,
-      mode: initialMenuServing.menuInputMode,
+      quantity: initialServing.quantity,
+      mode: initialServing.mode,
     };
   };
 
@@ -168,13 +150,13 @@ export function useMenuSelectionFlowAdapter({
     getSelectedMenuServing(menuId) ?? getInitialMenuServing(menuId);
 
   const removeSelectedMenu = (menuId: number) => {
-    if (menuSelectionFlowTarget === MENU_SELECTION_FLOW_TARGET.FOLDER) {
+    if (selectionTarget === MENU_SELECTION_TARGET.FOLDER) {
       removeFolderSelectedMenu(menuId);
       return;
     }
 
     removeMealRecordSelectedMenu({
-      key: relatedMealRecordDraftKey,
+      key: mealRecordDraftKey,
       id: menuId,
     });
   };
@@ -183,10 +165,10 @@ export function useMenuSelectionFlowAdapter({
     menuInputMode,
     menuQuantity,
     viewMenu,
-  }: UpsertMenuSelectionFlowMenuParams) => {
+  }: UpsertMenuSelectionMenuParams) => {
     const normalizedMenuQuantity = normalizeMenuQuantity(menuQuantity);
 
-    if (menuSelectionFlowTarget === MENU_SELECTION_FLOW_TARGET.FOLDER) {
+    if (selectionTarget === MENU_SELECTION_TARGET.FOLDER) {
       upsertFolderSelectedMenu({
         viewMenu,
         menuQuantity: normalizedMenuQuantity,
@@ -196,13 +178,13 @@ export function useMenuSelectionFlowAdapter({
     }
 
     upsertMealRecordSelectedMenu({
-      key: relatedMealRecordDraftKey,
+      key: mealRecordDraftKey,
       id: viewMenu.id,
       quantity: normalizedMenuQuantity,
       mode: menuInputMode,
     });
     upsertMealRecordMenuPreviews({
-      key: relatedMealRecordDraftKey,
+      key: mealRecordDraftKey,
       previews: [toMealRecordTransferPreview(viewMenu)],
     });
   };
@@ -212,7 +194,7 @@ export function useMenuSelectionFlowAdapter({
     menuQuantity,
     previousMenuId,
     viewMenu,
-  }: ReplaceMenuSelectionFlowMenuParams) => {
+  }: ReplaceMenuSelectionMenuParams) => {
     if (previousMenuId !== viewMenu.id && selectedMenuIdSet.has(previousMenuId)) {
       removeSelectedMenu(previousMenuId);
     }
@@ -222,10 +204,6 @@ export function useMenuSelectionFlowAdapter({
       menuQuantity,
       menuInputMode,
     });
-
-    if (menuSelectionFlowId) {
-      clearPendingReplacementSourceMenuId({ menuSelectionFlowId });
-    }
   };
 
   return {
@@ -234,19 +212,14 @@ export function useMenuSelectionFlowAdapter({
     getSelectedMenuServing,
     maxSelectableMenuCount,
     menuCountLimitMessage,
-    menuSelectionCompletionReturnPath: menuSelectionFlow?.menuSelectionCompletionReturnPath,
-    menuSelectionFlow,
-    menuSelectionFlowId,
-    menuSelectionFlowTarget,
-    pendingReplacementSourceMenuId: menuSelectionFlow?.pendingReplacementSourceMenuId,
-    relatedMealRecordDateKey,
-    relatedMealRecordDraftKey,
-    relatedMealRecordMealType,
+    mealRecordDraftKey,
     removeSelectedMenu,
     replaceSelectedMenu,
     selectedCount,
     selectedMenuIdSet,
     selectedMenus,
+    selectionTarget,
+    sourceMenuId,
     upsertSelectedMenu,
   };
 }

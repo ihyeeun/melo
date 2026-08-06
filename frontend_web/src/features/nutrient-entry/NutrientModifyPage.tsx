@@ -6,15 +6,13 @@ import {
   getSafeDateKey,
   getSafeMenuId,
 } from "@/features/meal-record/utils/mealRecord.queryParams";
-import { useRemoveMenuSelectionFlowOnExit } from "@/features/menu-selection-flow/hooks/useRemoveMenuSelectionFlowOnExit";
 import {
-  useMenuSelectionFlowById,
-} from "@/features/menu-selection-flow/stores/menuSelectionFlow.store";
-import {
-  getMenuSelectionFlowIdFromSearchParams,
-  getMenuSelectionFlowMenuDetailPath,
-  getMenuSelectionFlowSearchPath,
-} from "@/features/menu-selection-flow/utils/menuSelectionFlowRoutes";
+  buildMenuSelectionPathContext,
+  getMenuSelectionMenuDetailPath,
+  getMenuSelectionRouteContextFromSearchParams,
+  getMenuSelectionSearchPath,
+  type MenuSelectionPathParams,
+} from "@/features/menu-selection/utils/menuSelectionRoutes";
 import { type RegisterManualMenuPayload } from "@/features/nutrient-entry/api/nutrient";
 import { NutrientDetailForm } from "@/features/nutrient-entry/components/NutrientDetailForm";
 import {
@@ -78,15 +76,17 @@ export default function NutrientModifyPage() {
   const locationState = (location.state ?? {}) as NutrientModifyLocationState;
   const menuInState = locationState.menu;
   const menuId = getSafeMenuId(searchParams.get("menuId"));
-  const menuSelectionFlowId = getMenuSelectionFlowIdFromSearchParams(searchParams);
-  useRemoveMenuSelectionFlowOnExit(menuSelectionFlowId);
-  const menuSelectionFlow = useMenuSelectionFlowById(menuSelectionFlowId);
-  const dateKey = getSafeDateKey(
-    searchParams.get("date") ?? menuSelectionFlow?.relatedMealRecordDateKey ?? null,
-  );
-  const mealType = getMealType(
-    searchParams.get("mealType") ?? menuSelectionFlow?.relatedMealRecordMealType ?? null,
-  );
+  const menuSelectionRouteContext = getMenuSelectionRouteContextFromSearchParams(searchParams);
+  const dateKey = getSafeDateKey(searchParams.get("date"));
+  const mealType = getMealType(searchParams.get("mealType"));
+  const menuSelectionContext: MenuSelectionPathParams | null = menuSelectionRouteContext.target
+    ? buildMenuSelectionPathContext({
+        dateKey,
+        mealType,
+        routeContext: menuSelectionRouteContext,
+        target: menuSelectionRouteContext.target,
+      })
+    : null;
 
   const {
     data: fetchedMenu,
@@ -188,17 +188,17 @@ export default function NutrientModifyPage() {
       return getMenuDetailPathByMode(menuId);
     }
 
-    if (menuSelectionFlowId) {
-      return getMenuSelectionFlowSearchPath(menuSelectionFlowId);
+    if (menuSelectionContext?.target) {
+      return getMenuSelectionSearchPath(menuSelectionContext);
     }
 
     return getMealRecordPath(dateKey, mealType);
   };
 
   const getMenuDetailPathByMode = (targetMenuId: number) => {
-    if (menuSelectionFlowId) {
-      return getMenuSelectionFlowMenuDetailPath({
-        menuSelectionFlowId,
+    if (menuSelectionContext?.target) {
+      return getMenuSelectionMenuDetailPath({
+        ...menuSelectionContext,
         menuId: targetMenuId,
       });
     }
