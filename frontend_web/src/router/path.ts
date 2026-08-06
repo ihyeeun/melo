@@ -7,6 +7,7 @@ export const PATH = {
   KAKAO_WEB_CALLBACK: "/auth/kakao/callback",
   TODAY_MEAL_SCORE: "/home/date-meal-score",
   WORKOUT_RECORD: "/workout-record",
+  WORKOUT_RECORD_EDIT: "/workout-record/edit",
   WORKOUT_DETAIL_SHEET: "/workout-record/detail",
   WORKOUT_UPSERT: "/workout-record/register",
   WORKOUT_RECORD_SEARCH: "/workout-record/search",

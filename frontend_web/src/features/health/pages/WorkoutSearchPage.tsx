@@ -2,11 +2,17 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import {
+  useGetWorkoutRecordQuery,
   useWorkoutSearchInfiniteQuery,
   workoutKeys,
 } from "@/features/health/hooks/queries/workout.query";
 import {
+  useWorkoutRecordEditDate,
+  useWorkoutRecordEditRecords,
+} from "@/features/health/stores/workoutRecordEdit.store";
+import {
   getWorkoutDetailSheetPath,
+  getWorkoutRecordEditPath,
   getWorkoutRecordPath,
   getWorkoutUpsertPath,
 } from "@/router/pathHelpers";
@@ -15,6 +21,7 @@ import { Button } from "@/shared/commons/button/Button";
 import { SearchInputHeader } from "@/shared/commons/header/SearchInputHeader";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import { LoadingIndicator } from "@/shared/commons/loading/Loading";
+import { ScrollFogArea } from "@/shared/commons/scrollFog";
 import {
   navigateBack,
   useNavigate,
@@ -32,11 +39,20 @@ function getSafeWorkoutDateKey(rawDate: string | null) {
   return rawDate && isValidDateKey(rawDate) ? rawDate : getTodayFormatDateKey();
 }
 
+function isWorkoutEditMode(rawMode: string | null) {
+  return rawMode === "edit";
+}
+
 export default function WorkoutSearchPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const dateKey = getSafeWorkoutDateKey(searchParams.get("date"));
+  const isEditMode = isWorkoutEditMode(searchParams.get("mode"));
+  const workoutPathOptions = isEditMode ? ({ mode: "edit" } as const) : undefined;
+  const editDate = useWorkoutRecordEditDate();
+  const editRecords = useWorkoutRecordEditRecords();
+  const workoutRecordQuery = useGetWorkoutRecordQuery(dateKey);
   const inputRef = useRef<HTMLInputElement>(null);
   const loadMoreRef = useRef<HTMLDivElement>(null);
   const [inputValue, setInputValue] = useState("");
@@ -78,6 +94,13 @@ export default function WorkoutSearchPage() {
       }),
     [queryClient, workoutIds],
   );
+  const selectedWorkoutIdSet = useMemo(() => {
+    if (isEditMode && editDate === dateKey) {
+      return new Set(editRecords.map((record) => record.workout_id));
+    }
+
+    return new Set(workoutRecordQuery.data?.workout_list.map((record) => record.workout_id) ?? []);
+  }, [dateKey, editDate, editRecords, isEditMode, workoutRecordQuery.data?.workout_list]);
 
   useEffect(() => {
     const target = loadMoreRef.current;
@@ -107,7 +130,7 @@ export default function WorkoutSearchPage() {
 
   const handleBack = () => {
     navigateBack({
-      fallbackTo: getWorkoutRecordPath(dateKey),
+      fallbackTo: isEditMode ? getWorkoutRecordEditPath(dateKey) : getWorkoutRecordPath(dateKey),
     });
   };
 
@@ -126,22 +149,16 @@ export default function WorkoutSearchPage() {
   };
 
   const handleAddWorkout = (workoutId: number) => {
-    navigate(getWorkoutUpsertPath(dateKey, workoutId));
+    navigate(getWorkoutUpsertPath(dateKey, workoutId, workoutPathOptions), {
+      state: isEditMode ? { returnDepth: 2 } : undefined,
+    });
   };
 
   const handleWorkoutDetail = (workoutId: number) => {
-    navigate(getWorkoutDetailSheetPath(dateKey, workoutId));
+    navigate(getWorkoutDetailSheetPath(dateKey, workoutId, workoutPathOptions));
   };
 
   const renderSearchState = () => {
-    if (!hasSearchCondition) {
-      return (
-        <section className={styles.emptyState}>
-          <p className="typo-body2">운동명이나 필터로 검색해보세요</p>
-        </section>
-      );
-    }
-
     if (isPending) {
       return (
         <section className={styles.loadingContainer}>
@@ -171,7 +188,9 @@ export default function WorkoutSearchPage() {
     if (workouts.length === 0) {
       return (
         <section className={styles.emptyState}>
-          <p className="typo-body2">검색 결과가 없어요</p>
+          <p className="typo-body2">
+            {hasSearchCondition ? "검색 결과가 없어요" : "표시할 운동이 없어요"}
+          </p>
         </section>
       );
     }
@@ -182,6 +201,7 @@ export default function WorkoutSearchPage() {
           <WorkoutSearchResultCard
             key={workout.workout_id}
             workout={workout}
+            isSelected={selectedWorkoutIdSet.has(workout.workout_id)}
             onAdd={() => handleAddWorkout(workout.workout_id)}
             onDetail={() => handleWorkoutDetail(workout.workout_id)}
           />
@@ -222,11 +242,15 @@ export default function WorkoutSearchPage() {
           />
         </section>
 
-        <section className={styles.resultSection}>{renderSearchState()}</section>
+        <ScrollFogArea className={styles.resultSection} sizes={{ top: 10, bottom: 20 }}>
+          {renderSearchState()}
+        </ScrollFogArea>
       </main>
 
       <footer className={styles.footer}>
-        <Button fullWidth>추가 완료</Button>
+        <Button fullWidth size="large" onClick={handleBack}>
+          추가 완료
+        </Button>
       </footer>
     </section>
   );
@@ -306,16 +330,18 @@ function FilterTabGroup({
 }
 
 function WorkoutSearchResultCard({
+  isSelected,
   onAdd,
   onDetail,
   workout,
 }: {
+  isSelected: boolean;
   onAdd: () => void;
   onDetail: () => void;
   workout: WorkoutSearchItemResponseDto;
 }) {
   return (
-    <article className={styles.resultCard}>
+    <article className={`${styles.resultCard} ${isSelected ? styles.resultCardSelected : ""}`}>
       <button
         type="button"
         className={styles.resultMainButton}
@@ -337,11 +363,19 @@ function WorkoutSearchResultCard({
 
       <button
         type="button"
-        className={styles.addButton}
-        aria-label={`${workout.workout_name} 추가하기`}
+        className={`${styles.addButton} ${isSelected ? styles.addButtonSelected : ""}`}
+        aria-label={
+          isSelected ? `${workout.workout_name} 선택됨` : `${workout.workout_name} 추가하기`
+        }
+        aria-pressed={isSelected}
+        disabled={isSelected}
         onClick={onAdd}
       >
-        <SystemIcon name="plus" size={18} />
+        <SystemIcon
+          name={isSelected ? "circle-check-selected" : "circle-plus"}
+          mode="image"
+          size={24}
+        />
       </button>
     </article>
   );

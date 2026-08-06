@@ -12,7 +12,6 @@
   flex: 1;
   flex-direction: column;
   min-height: 0;
-  overflow-y: auto;
   width: 100%;
 }
 
@@ -25,6 +24,7 @@
   display: flex;
   flex: 0 0 auto;
   flex-direction: column;
+  padding-bottom: 8px;
 }
 
 .filterGroup {
@@ -87,9 +87,11 @@
 }
 
 .resultSection {
+  height: 100%;
   flex: 1;
   min-height: 0;
-  padding: 10px 20px;
+  padding: 0 20px;
+  overflow-y: auto;
 }
 
 .resultList {
@@ -112,6 +114,11 @@
   min-height: 40px;
 }
 
+.resultCardSelected {
+  background-color: var(--interaction-primary);
+  border-color: var(--border-primary);
+}
+
 .resultMainButton {
   align-items: center;
   color: inherit;
@@ -130,15 +137,13 @@
 
 .thumbnail {
   align-items: center;
-  background-color: var(--interaction-primary);
   border-radius: 8px;
   color: var(--primary-normal);
   display: inline-flex;
   justify-content: center;
   overflow: hidden;
-  aspect-ratio: 4/3;
-  width: 75px;
-  height: 100%;
+  aspect-ratio: 1;
+  width: 70px;
 }
 
 .thumbnailImage {
@@ -164,12 +169,21 @@
 
 .addButton {
   align-items: center;
-  color: var(--primary-normal);
+  color: var(--interaction-normal);
   display: inline-flex;
   flex: 0 0 32px;
   height: 32px;
   justify-content: center;
   width: 32px;
+}
+
+.addButton:disabled {
+  cursor: default;
+  pointer-events: none;
+}
+
+.addButtonSelected {
+  color: var(--primary-normal);
 }
 
 .loadingContainer,

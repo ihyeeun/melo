@@ -101,6 +101,9 @@ const TodayMealScorePage = createLazyActivity(
 const WorkoutRecordPage = createLazyActivity(
   () => import("@/features/health/pages/WorkoutRecordPage"),
 );
+const WorkoutRecordEditPage = createLazyActivity(
+  () => import("@/features/health/pages/WorkoutRecordEditPage"),
+);
 const WorkoutSearchPage = createLazyActivity(
   () => import("@/features/health/pages/WorkoutSearchPage"),
 );
@@ -204,6 +207,7 @@ const ACTIVITIES = {
   HomeStepsLogSheet,
   TodayMealScore: TodayMealScorePage,
   WorkoutRecord: WorkoutRecordPage,
+  WorkoutRecordEdit: WorkoutRecordEditPage,
   WorkoutSearch: WorkoutSearchPage,
   WorkoutDetailSheet: WorkoutDetailSheetPage,
   WorkoutUpsert: WorkoutUpsertPage,
@@ -250,6 +254,7 @@ const ACTIVITY_ROUTES: Record<keyof typeof ACTIVITIES, RoutePath> = {
   HomeStepsLogSheet: PATH.HOME_STEPS_LOG_SHEET,
   TodayMealScore: PATH.TODAY_MEAL_SCORE,
   WorkoutRecord: PATH.WORKOUT_RECORD,
+  WorkoutRecordEdit: PATH.WORKOUT_RECORD_EDIT,
   WorkoutSearch: PATH.WORKOUT_RECORD_SEARCH,
   WorkoutDetailSheet: PATH.WORKOUT_DETAIL_SHEET,
   WorkoutUpsert: PATH.WORKOUT_UPSERT,

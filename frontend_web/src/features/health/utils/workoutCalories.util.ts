@@ -41,7 +41,9 @@ export function calculateWeightWorkoutDuration(sets: WorkoutSetRequestDto[]) {
   const totalReps = sets.reduce((acc, set) => acc + set.reps, 0);
   if (totalReps === 0) return undefined;
 
-  return (totalReps * 3 + (sets.length - 1) * 90) / 60;
+  const durationMinutes = (totalReps * 3 + (sets.length - 1) * 90) / 60;
+
+  return Math.max(1, Math.round(durationMinutes));
 }
 
 export function calculateCaloriesBurned({

@@ -23,11 +23,17 @@ function getSafeWorkoutId(rawWorkoutId: string | undefined) {
   return Number.isInteger(workoutId) && workoutId > 0 ? workoutId : null;
 }
 
+function isWorkoutEditMode(rawMode: string | undefined) {
+  return rawMode === "edit";
+}
+
 export default function WorkoutDetailSheetPage() {
   const activity = useActivity();
   const navigate = useNavigate();
   const date = getSafeDateKey(activity.params.date);
   const workoutId = getSafeWorkoutId(activity.params.workoutId);
+  const isEditMode = isWorkoutEditMode(activity.params.mode);
+  const workoutPathOptions = isEditMode ? ({ mode: "edit" } as const) : undefined;
   const workoutDetailQuery = useGetWorkoutDetailQuery(workoutId ?? 0, {
     enabled: workoutId !== null,
   });
@@ -37,12 +43,15 @@ export default function WorkoutDetailSheetPage() {
 
   const closeSheet = () => {
     if (!activity.isActive) return;
-    navigateBack({ fallbackTo: getWorkoutSearchPath(date) });
+    navigateBack({ fallbackTo: getWorkoutSearchPath(date, workoutPathOptions) });
   };
 
   const handleRegister = () => {
     if (workoutId === null) return;
-    navigate(getWorkoutUpsertPath(date, workoutId), { replace: true });
+    navigate(getWorkoutUpsertPath(date, workoutId, workoutPathOptions), {
+      replace: true,
+      state: isEditMode ? { returnDepth: 2 } : undefined,
+    });
   };
 
   const renderContent = () => {
@@ -68,7 +77,7 @@ export default function WorkoutDetailSheetPage() {
 
     const imageUrl = detailWorkout.workout_gif;
     const bodyParts = detailWorkout.body_parts;
-    const equipment = detailWorkout.equiopment?.trim();
+    const equipment = detailWorkout.equipments;
 
     return (
       <div className={styles.sheetContainer}>
@@ -96,7 +105,7 @@ export default function WorkoutDetailSheetPage() {
           </section>
         ) : null}
 
-        <Button variant="filled" color="primary" size="large" fullWidth onClick={handleRegister}>
+        <Button variant="filled" color="primary" fullWidth onClick={handleRegister}>
           운동 추가하기
         </Button>
       </div>

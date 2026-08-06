@@ -45,7 +45,7 @@ const workoutDetailItems: WorkoutDetailResponseDto[] = [
     workout_id: 1001,
     workout_name: "벤치프레스",
     workout_type: "weight",
-    equiopment: "바벨",
+    equipments: "바벨",
     body_parts: [
       "가슴",
       "삼두",
@@ -64,14 +64,14 @@ const workoutDetailItems: WorkoutDetailResponseDto[] = [
     workout_id: 1002,
     workout_name: "덤벨 플라이",
     workout_type: "weight",
-    equiopment: "덤벨",
+    equipments: "덤벨",
     body_parts: ["가슴", "어깨"],
   },
   {
     workout_id: 1003,
     workout_name: "러닝",
     workout_type: "cardio",
-    equiopment: "실외",
+    equipments: "실외",
     body_parts: ["전신", "하체"],
   },
 ];

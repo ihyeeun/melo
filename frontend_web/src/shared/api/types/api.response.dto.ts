@@ -364,6 +364,7 @@ export interface WorkoutRecordItemResponseDto {
   workout_duration: number; //운동시간(분)
   burned_calories: number; //소모 칼로리
   workout_type: "cardio" | "weight"; //운동 유형
+  met?: number; //운동 MET 값
   intensity?: 0 | 1 | 2; //낮음, 보통, 높음
   set_list?: WorkoutRecordSetResponseDto[];
 }
@@ -384,6 +385,7 @@ export interface WorkoutSearchItemResponseDto {
   workout_name: string;
   workout_image?: string;
   workout_type: "cardio" | "weight";
+  met?: number;
 }
 
 export interface WorkoutDetailResponseDto {
@@ -391,9 +393,9 @@ export interface WorkoutDetailResponseDto {
   workout_name: string;
   workout_gif?: string;
   workout_type: "cardio" | "weight";
-  equiopment?: string; //운동 장비
-  body_parts: string[];
   met?: number;
+  equipments?: string; //운동 장비
+  body_parts: string[];
 }
 
 export interface WorkoutIdResponseDto {

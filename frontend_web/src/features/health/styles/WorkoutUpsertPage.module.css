@@ -164,8 +164,8 @@
   background-color: var(--bg-normal);
   display: flex;
   gap: 8px;
-  padding: 12px 20px;
-  padding-bottom: calc(var(--safe-area-bottom) + 12px);
+  padding: 0 20px;
+  padding-bottom: var(--safe-area-bottom);
 }
 
 .textRight {

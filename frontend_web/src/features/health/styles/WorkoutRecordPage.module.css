@@ -19,7 +19,6 @@
   display: grid;
   gap: 8px;
   grid-template-columns: 48px minmax(0, 1fr) 48px;
-  height: 56px;
   padding: var(--safe-area-top) 20px 0;
 }
 
@@ -125,9 +124,20 @@
   color: var(--label-normal);
   display: flex;
   gap: 8px;
-  min-height: 96px;
   padding: 8px;
+  transition:
+    border-color 120ms ease,
+    box-shadow 120ms ease,
+    opacity 120ms ease,
+    transform 120ms ease;
   width: 100%;
+}
+
+.editRecordCardDragging {
+  border-color: var(--primary-normal);
+  box-shadow: var(--shadow-strong);
+  opacity: 0.92;
+  transform: scale(0.99);
 }
 
 .dragHandle {
@@ -135,23 +145,17 @@
   cursor: grab;
   display: inline-flex;
   flex: 0 0 auto;
-  height: 44px;
   justify-content: center;
   touch-action: none;
-  width: 28px;
+  user-select: none;
+  -webkit-user-select: none;
+  width: 34px;
+  color: var(--interaction-alternative);
+  height: 70px;
 }
 
 .dragHandle:active {
   cursor: grabbing;
-}
-
-.dragDots {
-  background-image: radial-gradient(circle, var(--label-assistive) 1.5px, transparent 1.5px);
-  background-size: 8px 8px;
-  display: block;
-  height: 28px;
-  opacity: 0.9;
-  width: 16px;
 }
 
 .editRecordMain {
@@ -166,9 +170,8 @@
 
 .deleteButton {
   align-items: center;
-  background-color: var(--interaction-primary);
   border-radius: 8px;
-  color: var(--primary-normal);
+  color: var(--interaction-alternative);
   display: inline-flex;
   flex: 0 0 auto;
   height: 44px;
@@ -182,14 +185,13 @@
 
 .thumbnail {
   align-items: center;
-  background-color: var(--interaction-primary);
   border-radius: 8px;
   color: var(--primary-normal);
   display: inline-flex;
   justify-content: center;
   overflow: hidden;
-  aspect-ratio: 4/3;
-  width: 75px;
+  aspect-ratio: 1;
+  width: 70px;
   height: 100%;
 }
 

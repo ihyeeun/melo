@@ -40,13 +40,21 @@ export function getPathWithMeal(path: string, dateKey: string, mealType: MealTyp
   return `${path}?${buildPathQuery(dateKey, mealType)}`;
 }
 
-function buildWorkoutPathQuery(dateKey: string, workoutId?: number) {
+type WorkoutPathOptions = {
+  mode?: "edit";
+};
+
+function buildWorkoutPathQuery(dateKey: string, workoutId?: number, options?: WorkoutPathOptions) {
   const params = new URLSearchParams({
     date: dateKey,
   });
 
   if (workoutId !== undefined) {
     params.set("workoutId", String(workoutId));
+  }
+
+  if (options?.mode) {
+    params.set("mode", options.mode);
   }
 
   return params.toString();
@@ -56,14 +64,26 @@ export function getWorkoutRecordPath(dateKey: string) {
   return `${PATH.WORKOUT_RECORD}?${buildWorkoutPathQuery(dateKey)}`;
 }
 
-export function getWorkoutSearchPath(dateKey: string) {
-  return `${PATH.WORKOUT_RECORD_SEARCH}?${buildWorkoutPathQuery(dateKey)}`;
+export function getWorkoutRecordEditPath(dateKey: string) {
+  return `${PATH.WORKOUT_RECORD_EDIT}?${buildWorkoutPathQuery(dateKey)}`;
 }
 
-export function getWorkoutDetailSheetPath(dateKey: string, workoutId: number) {
-  return `${PATH.WORKOUT_DETAIL_SHEET}?${buildWorkoutPathQuery(dateKey, workoutId)}`;
+export function getWorkoutSearchPath(dateKey: string, options?: WorkoutPathOptions) {
+  return `${PATH.WORKOUT_RECORD_SEARCH}?${buildWorkoutPathQuery(dateKey, undefined, options)}`;
 }
 
-export function getWorkoutUpsertPath(dateKey: string, workoutId: number) {
-  return `${PATH.WORKOUT_UPSERT}?${buildWorkoutPathQuery(dateKey, workoutId)}`;
+export function getWorkoutDetailSheetPath(
+  dateKey: string,
+  workoutId: number,
+  options?: WorkoutPathOptions,
+) {
+  return `${PATH.WORKOUT_DETAIL_SHEET}?${buildWorkoutPathQuery(dateKey, workoutId, options)}`;
+}
+
+export function getWorkoutUpsertPath(
+  dateKey: string,
+  workoutId: number,
+  options?: WorkoutPathOptions,
+) {
+  return `${PATH.WORKOUT_UPSERT}?${buildWorkoutPathQuery(dateKey, workoutId, options)}`;
 }

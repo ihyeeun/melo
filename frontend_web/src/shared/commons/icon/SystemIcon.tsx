@@ -37,6 +37,7 @@ const SYSTEM_ICON_SRC = {
   fire: "/icons/system-icons/fire.svg",
   walking: "/icons/system-icons/walking.svg",
   kebab: "/icons/system-icons/kebab.svg",
+  grip: "/icons/system-icons/grip-vertical.svg",
 } as const;
 
 export type SystemIconName = keyof typeof SYSTEM_ICON_SRC;

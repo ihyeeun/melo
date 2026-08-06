@@ -1,3 +1,4 @@
+import { useQueryClient } from "@tanstack/react-query";
 import type { FormEvent, ReactNode } from "react";
 import { useMemo, useState } from "react";
 
@@ -5,7 +6,12 @@ import { useUpsertWorkoutRecordMutation } from "@/features/health/hooks/mutation
 import {
   useGetWorkoutDetailQuery,
   useGetWorkoutRecordQuery,
+  workoutKeys,
 } from "@/features/health/hooks/queries/workout.query";
+import {
+  useReplaceWorkoutRecordEditRecord,
+  useWorkoutRecordEditDate,
+} from "@/features/health/stores/workoutRecordEdit.store";
 import {
   calculateCaloriesBurned,
   calculateWeightWorkoutDuration,
@@ -13,12 +19,20 @@ import {
 } from "@/features/health/utils/workoutCalories.util";
 import { NutrientWarningPopover } from "@/features/meal-record/components/NutrientWarningPopover";
 import { useGetProfileQuery } from "@/features/profile/hooks/queries/useProfileQuery";
-import { getWorkoutRecordPath, getWorkoutSearchPath } from "@/router/pathHelpers";
+import {
+  getWorkoutRecordEditPath,
+  getWorkoutRecordPath,
+  getWorkoutSearchPath,
+} from "@/router/pathHelpers";
 import type {
   UpsertWorkoutRecordRequestDto,
   WorkoutSetRequestDto,
 } from "@/shared/api/types/api.request.dto";
-import type { WorkoutRecordItemResponseDto } from "@/shared/api/types/api.response.dto";
+import type {
+  WorkoutDetailResponseDto,
+  WorkoutRecordItemResponseDto,
+  WorkoutSearchItemResponseDto,
+} from "@/shared/api/types/api.response.dto";
 import { Button } from "@/shared/commons/button/Button";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
@@ -78,6 +92,10 @@ function getDraftKey(date: string, workoutId: number) {
   return `${date}:${workoutId}`;
 }
 
+function isWorkoutEditMode(rawMode: string | null) {
+  return rawMode === "edit";
+}
+
 function toInputNumber(value: string) {
   if (value.trim() === "") return undefined;
 
@@ -105,11 +123,50 @@ function createDraftFromWorkoutRecord(record: WorkoutRecordItemResponseDto): Wor
   };
 }
 
+function createWorkoutRecordFromRequest(
+  body: UpsertWorkoutRecordRequestDto,
+  workout: WorkoutDetailResponseDto,
+  workoutImage?: string,
+): WorkoutRecordItemResponseDto {
+  const imageFields = workoutImage ? { workout_image: workoutImage } : {};
+
+  if (body.workout_type === "cardio") {
+    return {
+      burned_calories: body.burned_calories,
+      intensity: body.intensity,
+      ...imageFields,
+      workout_duration: body.workout_duration,
+      workout_id: body.workout_id,
+      workout_name: workout.workout_name,
+      workout_type: "cardio",
+    };
+  }
+
+  return {
+    burned_calories: body.burned_calories,
+    set_list: body.set_list ?? [],
+    ...imageFields,
+    workout_duration: body.workout_duration,
+    workout_id: body.workout_id,
+    workout_name: workout.workout_name,
+    workout_type: "weight",
+  };
+}
+
 export default function WorkoutUpsertPage() {
   const [searchParams] = useSearchParams();
-  const location = useLocation<{ workoutRecord?: WorkoutRecordItemResponseDto }>();
+  const queryClient = useQueryClient();
+  const location = useLocation<{
+    returnDepth?: number;
+    workoutRecord?: WorkoutRecordItemResponseDto;
+  }>();
   const date = getSafeDateKey(searchParams.get("date"));
   const workoutId = getSafeWorkoutId(searchParams.get("workoutId"));
+  const isEditMode = isWorkoutEditMode(searchParams.get("mode"));
+  const workoutPathOptions = isEditMode ? ({ mode: "edit" } as const) : undefined;
+  const editDate = useWorkoutRecordEditDate();
+  const replaceEditRecord = useReplaceWorkoutRecordEditRecord();
+  const isEditSession = isEditMode && editDate === date;
   const {
     data: workout,
     isPending: workoutQueryPending,
@@ -133,15 +190,21 @@ export default function WorkoutUpsertPage() {
   const workoutRecordFromQuery = useMemo(() => {
     if (workoutId === null) return undefined;
 
-    return workoutRecordQuery.data?.workout_list.find(
-      (record) => record.workout_id === workoutId,
-    );
+    return workoutRecordQuery.data?.workout_list.find((record) => record.workout_id === workoutId);
   }, [workoutId, workoutRecordQuery.data?.workout_list]);
   const targetWorkoutRecord = workoutRecordFromState ?? workoutRecordFromQuery;
+  const workoutPreview = useMemo(() => {
+    if (workoutId === null) return undefined;
+
+    return queryClient.getQueryData<WorkoutSearchItemResponseDto>(
+      workoutKeys.catalog.previews.byId(workoutId),
+    );
+  }, [queryClient, workoutId]);
+  const workoutImage =
+    targetWorkoutRecord?.workout_image ?? workoutPreview?.workout_image ?? workout?.workout_gif;
   const draftKey = workoutId !== null ? getDraftKey(date, workoutId) : null;
   const baselineDraft = useMemo(
-    () =>
-      targetWorkoutRecord ? createDraftFromWorkoutRecord(targetWorkoutRecord) : INITIAL_DRAFT,
+    () => (targetWorkoutRecord ? createDraftFromWorkoutRecord(targetWorkoutRecord) : INITIAL_DRAFT),
     [targetWorkoutRecord],
   );
   const [draftState, setDraftState] = useState<WorkoutDraftState | null>(null);
@@ -226,7 +289,11 @@ export default function WorkoutUpsertPage() {
   ]);
 
   const handleBack = () => {
-    navigateBack({ fallbackTo: getWorkoutSearchPath(date) });
+    navigateBack({
+      fallbackTo: isEditMode
+        ? getWorkoutRecordEditPath(date)
+        : getWorkoutSearchPath(date, workoutPathOptions),
+    });
   };
 
   const updateDraft = (field: "burned_calories" | "workout_duration", value?: number) => {
@@ -281,6 +348,15 @@ export default function WorkoutUpsertPage() {
     event.preventDefault();
 
     if (!requestBody || isUpsertPending) return;
+
+    if (isEditSession && workout) {
+      replaceEditRecord(createWorkoutRecordFromRequest(requestBody, workout, workoutImage));
+      navigateBack({
+        count: location.state?.returnDepth ?? 1,
+        fallbackTo: getWorkoutRecordEditPath(date),
+      });
+      return;
+    }
 
     upsertWorkoutRecord({
       body: requestBody,
@@ -465,13 +541,14 @@ export default function WorkoutUpsertPage() {
       <main className={styles.main}>{renderContent()}</main>
 
       <footer className={styles.footer}>
-        <Button variant="outlined" color="normal" onClick={handleBack}>
+        <Button variant="outlined" color="normal" size="large" onClick={handleBack}>
           취소
         </Button>
         <Button
           type="submit"
           variant="filled"
           color="primary"
+          size="large"
           fullWidth
           disabled={!requestBody || isUpsertPending}
         >

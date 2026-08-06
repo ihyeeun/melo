@@ -7,8 +7,9 @@ import TodayBodyLogSection from "@/features/home/components/TodayBodyLogSection"
 import type { HomeOnboardingTarget } from "@/features/home/constants/homeOnboarding";
 import style from "@/features/home/styles/MenuActionSection.module.css";
 import { PATH } from "@/router/path";
-// import { getWorkoutRecordPath } from "@/router/pathHelpers";
+import { getWorkoutRecordPath } from "@/router/pathHelpers";
 import { isNativeApp, syncAppTab } from "@/shared/api/bridge/nativeBridge";
+import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import { useNavigate } from "@/shared/navigation/stackflowNavigation";
 
 export default function MenuActionSection({
@@ -82,12 +83,17 @@ export default function MenuActionSection({
             />
           </OnboardingTargetFrame>
         ) : null}
-        {/* <MenuCard
-          title="운동 기록"
-          iconSrc="/icons/system-icons/fire.svg"
-          onClick={disableInteractions ? undefined : () => navigate(getWorkoutRecordPath(selectedDate))}
-        /> */}
       </div>
+      <ActionCard
+        className={style.workoutCard}
+        onClick={
+          disableInteractions ? undefined : () => navigate(getWorkoutRecordPath(selectedDate))
+        }
+      >
+        <SystemIcon name="fire" size={28} mode="image" />
+        <p className="typo-title4">운동 기록</p>
+        <SystemIcon name="chevron-right-thin" size={24} className={style.marginLeft} />
+      </ActionCard>
 
       {bodyLogSection ?? <TodayBodyLogSection date={selectedDate} />}
 

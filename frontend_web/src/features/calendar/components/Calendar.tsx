@@ -19,6 +19,7 @@ type Props = {
   recordedDates?: string[];
   onSelectDate?: (date: Date) => void;
   selectedDate?: Date;
+  showRecordedDots?: boolean;
   variant?: CalendarVariant;
 };
 
@@ -29,6 +30,7 @@ export default function Calendar({
   recordedDates: fallbackRecordedDates = EMPTY_RECORDED_DATES,
   onSelectDate,
   selectedDate: controlledSelectedDate,
+  showRecordedDots = true,
   variant = "primary",
 }: Props) {
   const {
@@ -45,7 +47,7 @@ export default function Calendar({
   } = useCalendar({
     initialDate,
     initialViewMode: "week",
-    recordedDates: fallbackRecordedDates,
+    recordedDates: showRecordedDots ? fallbackRecordedDates : EMPTY_RECORDED_DATES,
     selectedDate: controlledSelectedDate,
   });
 
@@ -60,12 +62,13 @@ export default function Calendar({
   }, [viewDate]);
 
   const { recordedDates } = useCalendarRecordedDatesQuery({
-    enabled: viewMode === "month",
+    enabled: showRecordedDots && viewMode === "month",
     startDate: monthDateRange.startDate,
     endDate: monthDateRange.endDate,
   });
 
   const displayedMonthDays = useMemo(() => {
+    if (!showRecordedDots) return monthDays;
     if (recordedDates.length === 0) return monthDays;
 
     return buildMonthCalendarDays({
@@ -74,7 +77,7 @@ export default function Calendar({
       recordedDates,
       weekStartsOn: 1,
     });
-  }, [monthDays, recordedDates, selectedDate, viewDate]);
+  }, [monthDays, recordedDates, selectedDate, showRecordedDots, viewDate]);
 
   const handleSelectDateInWeek = (date: Date) => {
     selectDate(date);
