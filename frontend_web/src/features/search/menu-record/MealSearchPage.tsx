@@ -2,7 +2,7 @@ import { Tabs } from "@base-ui/react";
 import { PullToRefresh } from "@seed-design/react";
 import { useActivity } from "@stackflow/react";
 import { useQueryClient } from "@tanstack/react-query";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 
 import { useDayMealsQuery } from "@/features/home/hooks/queries/useTodayRecordQuery";
 import {
@@ -114,6 +114,7 @@ export default function MealSearchPage() {
   );
   const searchInputRef = useRef<HTMLInputElement>(null);
   const loadMoreRef = useRef<HTMLDivElement>(null);
+  const personalMenuScrollRef = useRef<HTMLDivElement>(null);
   const draftKey = formatMenuDraftKey(dateKey, mealType);
   const hasSearchKeyword = searchKeyword.trim().length > 0;
   const menuSelectionAdapter = useMenuSelectionAdapter({
@@ -200,6 +201,20 @@ export default function MealSearchPage() {
     dayMeals,
     enabled: isTop && !isPersonalMenuEditSearchMode,
   });
+
+  useLayoutEffect(() => {
+    if (hasSearchKeyword) {
+      return;
+    }
+
+    const scrollElement = personalMenuScrollRef.current;
+    if (!scrollElement) {
+      return;
+    }
+
+    scrollElement.scrollTop = 0;
+    scrollElement.scrollLeft = 0;
+  }, [hasSearchKeyword, visiblePersonalMenuTab]);
 
   useEffect(() => {
     if (
@@ -654,6 +669,7 @@ export default function MealSearchPage() {
       </Tabs.List>
 
       <PullToRefresh.Root
+        ref={personalMenuScrollRef}
         className={styles.personalMenuRefreshRoot}
         onPtrRefresh={handleRefreshPersonalMenus}
         threshold={72}
