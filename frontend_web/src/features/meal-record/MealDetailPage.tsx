@@ -240,6 +240,12 @@ export default function MealDetailPage() {
   const showEditSection =
     !menuSelectionFlowAdapter.menuSelectionFlow?.hideMenuDetailEditSection &&
     (meal.data_source === MENU_DATA_SOURCE.PUBLIC || mealIsDeleted === 0);
+  const addButtonLabel = isPersonalMenuEditMode ? "추가하기" : "담기";
+  const footerButtonLabel = isAlreadyQueued
+    ? "수정하기"
+    : mealIsDeleted
+      ? "삭제된 메뉴라 담을 수 없어요"
+      : addButtonLabel;
 
   const getNutrientModifyPath = (
     targetMenuId: number,
@@ -348,7 +354,7 @@ export default function MealDetailPage() {
           interaction={selection ? "normal" : "disable"}
           disabled={!selection || mealIsDeleted !== 0}
         >
-          {isAlreadyQueued ? "수정하기" : mealIsDeleted ? "삭제된 메뉴라 담을 수 없어요" : "담기"}
+          {footerButtonLabel}
         </Button>
       </footer>
 
