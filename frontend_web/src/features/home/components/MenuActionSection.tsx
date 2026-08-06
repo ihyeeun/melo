@@ -6,6 +6,7 @@ import ActionCard from "@/features/home/components/cards/ActionCard";
 import TodayBodyLogSection from "@/features/home/components/TodayBodyLogSection";
 import type { HomeOnboardingTarget } from "@/features/home/constants/homeOnboarding";
 import style from "@/features/home/styles/MenuActionSection.module.css";
+import { useGetProfileQuery } from "@/features/profile/hooks/queries/useProfileQuery";
 import { PATH } from "@/router/path";
 import { getWorkoutRecordPath } from "@/router/pathHelpers";
 import { isNativeApp, syncAppTab } from "@/shared/api/bridge/nativeBridge";
@@ -30,6 +31,8 @@ export default function MenuActionSection({
   showMenuBoardCameraCard: boolean;
 }) {
   const navigate = useNavigate();
+  const { data: profile } = useGetProfileQuery();
+  const canAccessWorkoutRecord = profile?.role === "ADMIN";
   const [chatCameraUpdateUrl, setChatCameraUpdateUrl] = useState<string | null>(null);
   const [isChatCameraUpdateModalOpen, setIsChatCameraUpdateModalOpen] = useState(false);
 
@@ -84,16 +87,18 @@ export default function MenuActionSection({
           </OnboardingTargetFrame>
         ) : null}
       </div>
-      <ActionCard
-        className={style.workoutCard}
-        onClick={
-          disableInteractions ? undefined : () => navigate(getWorkoutRecordPath(selectedDate))
-        }
-      >
-        <SystemIcon name="fire" size={28} mode="image" />
-        <p className="typo-title4">운동 기록</p>
-        <SystemIcon name="chevron-right-thin" size={24} className={style.marginLeft} />
-      </ActionCard>
+      {canAccessWorkoutRecord ? (
+        <ActionCard
+          className={style.workoutCard}
+          onClick={
+            disableInteractions ? undefined : () => navigate(getWorkoutRecordPath(selectedDate))
+          }
+        >
+          <SystemIcon name="fire" size={28} mode="image" />
+          <p className="typo-title4">운동 기록</p>
+          <SystemIcon name="chevron-right-thin" size={24} className={style.marginLeft} />
+        </ActionCard>
+      ) : null}
 
       {bodyLogSection ?? <TodayBodyLogSection date={selectedDate} />}
 
