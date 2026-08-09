@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
+import mellowLogoLoadingAnimationUrl from "@/features/chat/assets/mellow_logo_loading.json?url";
 import styles from "@/features/chat/styles/AssistantPendingMessage.module.css";
 
 const LONG_WAIT_DELAY_MS = 5000;
@@ -62,18 +63,64 @@ export function AssistantPendingMessage() {
 
       {isLongWaitVisible ? (
         <div className={styles.longWaitStatus} role="status" aria-live="polite">
-          <div className={styles.longWaitMarker} aria-hidden="true">
-            <span className={styles.longWaitDot} />
-            <span className={styles.longWaitDot} />
-            <span className={styles.longWaitDot} />
-            <span className={styles.longWaitDot} />
-          </div>
+          <ChatLoadingLogo className={styles.longWaitLogo} />
           <p key={messageIndex} className={`${styles.longWaitText} typo-body3`}>
             {getPendingStatusMessage(messageIndex)}
           </p>
         </div>
       ) : null}
     </div>
+  );
+}
+
+function ChatLoadingLogo({ className, label }: { className?: string; label?: string }) {
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    let destroyAnimation: (() => void) | undefined;
+    const shouldReduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    void import("lottie-web/build/player/lottie_light").then(({ default: lottie }) => {
+      if (!isMounted || !containerRef.current) {
+        return;
+      }
+
+      const animation = lottie.loadAnimation({
+        autoplay: !shouldReduceMotion,
+        container: containerRef.current,
+        loop: true,
+        path: mellowLogoLoadingAnimationUrl,
+        renderer: "svg",
+        rendererSettings: {
+          preserveAspectRatio: "xMidYMid meet",
+        },
+      });
+      animation.setSpeed(1.25);
+
+      if (shouldReduceMotion) {
+        animation.goToAndStop(0, true);
+      }
+
+      destroyAnimation = () => {
+        animation.destroy();
+      };
+    });
+
+    return () => {
+      isMounted = false;
+      destroyAnimation?.();
+    };
+  }, []);
+
+  return (
+    <div
+      aria-hidden={label ? undefined : true}
+      aria-label={label}
+      className={`${styles.loadingLogo} ${className ?? ""}`}
+      ref={containerRef}
+      role={label ? "status" : undefined}
+    />
   );
 }
 
