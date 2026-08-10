@@ -7,7 +7,7 @@ import { defineConfig, globalIgnores } from "eslint/config";
 import simpleImportSort from "eslint-plugin-simple-import-sort";
 
 export default defineConfig([
-  globalIgnores(["dist", "public/mockServiceWorker.js"]),
+  globalIgnores(["dist"]),
   {
     files: ["**/*.{ts,tsx}"],
     extends: [

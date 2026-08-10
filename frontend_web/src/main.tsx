@@ -14,18 +14,6 @@ import { appToastManager } from "@/shared/commons/toast/toastManager";
 
 import App from "./App.tsx";
 
-async function enableMocking() {
-  if (!import.meta.env.DEV || import.meta.env.VITE_MSW_ENABLED !== "true") {
-    return;
-  }
-
-  const { worker } = await import("@/mocks/browser");
-
-  await worker.start({
-    onUnhandledRequest: "bypass",
-  });
-}
-
 function renderApp() {
   createRoot(document.getElementById("root")!).render(
     <QueryClientProvider client={queryClient}>
@@ -40,4 +28,4 @@ function renderApp() {
   );
 }
 
-void enableMocking().then(renderApp);
+renderApp();

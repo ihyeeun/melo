@@ -16,6 +16,7 @@ import {
   calculateCaloriesBurned,
   calculateWeightWorkoutDuration,
   getWorkoutSetListFromDraft,
+  isBodyweightWorkout,
 } from "@/features/health/utils/workoutCalories.util";
 import { NutrientWarningPopover } from "@/features/meal-record/components/NutrientWarningPopover";
 import { useGetProfileQuery } from "@/features/profile/hooks/queries/useProfileQuery";
@@ -49,7 +50,10 @@ import styles from "../styles/WorkoutUpsertPage.module.css";
 
 type Intensity = NonNullable<UpsertWorkoutRecordRequestDto["intensity"]>;
 
-type WorkoutDraft = Partial<Omit<UpsertWorkoutRecordRequestDto, "date" | "set_list">> & {
+type WorkoutDraft = Partial<
+  Omit<UpsertWorkoutRecordRequestDto, "burned_calories" | "date" | "set_list">
+> & {
+  burned_calories?: number | null;
   set_list: Array<Partial<WorkoutSetRequestDto>>;
 };
 
@@ -218,8 +222,12 @@ export default function WorkoutUpsertPage() {
   };
 
   const setList = useMemo(
-    () => getWorkoutSetListFromDraft({ set_list: draft.set_list }),
-    [draft.set_list],
+    () =>
+      getWorkoutSetListFromDraft(
+        { set_list: draft.set_list },
+        { defaultWeight: isBodyweightWorkout(workout) ? 0 : undefined },
+      ),
+    [draft.set_list, workout],
   );
   const calculatedWorkoutDuration = useMemo(
     () => (setList ? calculateWeightWorkoutDuration(setList) : undefined),
@@ -236,7 +244,10 @@ export default function WorkoutUpsertPage() {
 
     return burnedCalories ? Math.round(burnedCalories) : undefined;
   }, [draft, profile, workout]);
-  const burnedCaloriesValue = draft.burned_calories ?? calculatedBurnedCalories;
+  const burnedCaloriesValue =
+    draft.burned_calories === undefined
+      ? calculatedBurnedCalories
+      : (draft.burned_calories ?? undefined);
 
   const requestBody = useMemo<UpsertWorkoutRecordRequestDto | null>(() => {
     if (!workout || workoutId === null) return null;
@@ -284,7 +295,7 @@ export default function WorkoutUpsertPage() {
   const { mutate: upsertWorkoutRecord, isPending: isUpsertPending } =
     useUpsertWorkoutRecordMutation({
       onSuccess: () => {
-        toast.success("운동 기록이 등록되었어요.");
+        toast.success("추가되었어요");
         navigateBack({ fallbackTo: getWorkoutRecordPath(date) });
       },
     });
@@ -300,8 +311,16 @@ export default function WorkoutUpsertPage() {
   const updateDraft = (field: "burned_calories" | "workout_duration", value?: number) => {
     updateCurrentDraft((current) => ({
       ...current,
-      [field]: value,
+      [field]: field === "burned_calories" && value === undefined ? null : value,
       ...(field === "workout_duration" ? { burned_calories: undefined } : {}),
+    }));
+  };
+
+  const updateIntensity = (intensity: Intensity) => {
+    updateCurrentDraft((current) => ({
+      ...current,
+      intensity,
+      ...(current.intensity === intensity ? {} : { burned_calories: undefined }),
     }));
   };
 
@@ -392,10 +411,7 @@ export default function WorkoutUpsertPage() {
                     className={`${styles.segmentButton} ${isActive ? styles.segmentButtonActive : ""} typo-body3`}
                     aria-pressed={isActive}
                     onClick={() => {
-                      updateCurrentDraft((current) => ({
-                        ...current,
-                        intensity: option.value,
-                      }));
+                      updateIntensity(option.value);
                     }}
                   >
                     {option.label}
@@ -423,27 +439,37 @@ export default function WorkoutUpsertPage() {
       );
     }
 
+    const shouldShowWeightInput = !isBodyweightWorkout(workout);
+
     return (
       <>
         <Field label="세트" required>
           <div className={styles.setList}>
-            <div className={`${styles.setHeader} typo-body3`} aria-hidden="true">
+            <div
+              className={`${styles.setHeader} ${shouldShowWeightInput ? "" : styles.setHeaderBodyweight} typo-body3`}
+              aria-hidden="true"
+            >
               <span>세트</span>
-              <span>무게</span>
+              {shouldShowWeightInput ? <span>무게</span> : null}
               <span>횟수</span>
               <span />
             </div>
 
             {draft.set_list.map((set, index) => (
-              <div key={set.set_order} className={styles.setRow}>
+              <div
+                key={set.set_order}
+                className={`${styles.setRow} ${shouldShowWeightInput ? "" : styles.setRowBodyweight}`}
+              >
                 <span className={`${styles.setOrder} typo-label4`}>{index + 1}세트</span>
-                <NumberInput
-                  value={set.weight}
-                  onChange={(value) => updateSet(set.set_order, "weight", value)}
-                  placeholder="0"
-                  unit="kg"
-                  ariaLabel={`${index + 1}세트 무게`}
-                />
+                {shouldShowWeightInput ? (
+                  <NumberInput
+                    value={set.weight}
+                    onChange={(value) => updateSet(set.set_order, "weight", value)}
+                    placeholder="0"
+                    unit="kg"
+                    ariaLabel={`${index + 1}세트 무게`}
+                  />
+                ) : null}
                 <NumberInput
                   value={set.reps}
                   onChange={(value) => updateSet(set.set_order, "reps", value)}
@@ -618,7 +644,7 @@ function NumberField({
 
 function NumberInput({
   ariaLabel,
-  inputMode = "decimal",
+  inputMode = "numeric",
   onChange,
   placeholder,
   readOnly = false,
@@ -644,7 +670,10 @@ function NumberInput({
         value={value ?? ""}
         onChange={(event) => {
           if (readOnly) return;
-          onChange?.(toInputNumber(event.target.value));
+
+          const raw = event.target.value;
+
+          onChange?.(toInputNumber(raw));
         }}
         placeholder={placeholder}
         aria-label={ariaLabel}

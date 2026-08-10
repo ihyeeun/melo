@@ -7,28 +7,47 @@ import type {
   WorkoutDetailResponseDto,
 } from "@/shared/api/types/api.response.dto";
 
-type WorkoutRecordDraft = Partial<Omit<UpsertWorkoutRecordRequestDto, "date" | "set_list">> & {
+type WorkoutRecordDraft = Partial<
+  Omit<UpsertWorkoutRecordRequestDto, "burned_calories" | "date" | "set_list">
+> & {
+  burned_calories?: number | null;
   set_list?: Array<Partial<WorkoutSetRequestDto>>;
 };
+
+const BODYWEIGHT_EQUIPMENT_CATEGORY = "맨몸";
 
 function isValidNumber(value: number | undefined): value is number {
   return typeof value === "number" && Number.isFinite(value) && value >= 0;
 }
 
+export function isBodyweightWorkout(
+  workout: Pick<WorkoutDetailResponseDto, "equipment_category" | "workout_type"> | undefined,
+) {
+  return (
+    workout?.workout_type === "weight" &&
+    workout.equipment_category === BODYWEIGHT_EQUIPMENT_CATEGORY
+  );
+}
+
 export function getWorkoutSetListFromDraft(
   draft: Pick<WorkoutRecordDraft, "set_list">,
+  options?: {
+    defaultWeight?: number;
+  },
 ): WorkoutSetRequestDto[] | null {
   if (!draft.set_list) return null;
 
   return draft.set_list.reduce<WorkoutSetRequestDto[] | null>((sets, set, index) => {
     if (sets === null) return null;
 
-    if (!isValidNumber(set.weight) || !isValidNumber(set.reps)) return null;
+    const weight = options?.defaultWeight ?? set.weight;
+
+    if (!isValidNumber(weight) || !isValidNumber(set.reps)) return null;
 
     sets.push({
       reps: set.reps,
       set_order: index + 1,
-      weight: set.weight,
+      weight,
     });
 
     return sets;
@@ -70,7 +89,9 @@ export function calculateCaloriesBurned({
   }
 
   if (workout.workout_type === "weight") {
-    const sets = getWorkoutSetListFromDraft(draft);
+    const sets = getWorkoutSetListFromDraft(draft, {
+      defaultWeight: isBodyweightWorkout(workout) ? 0 : undefined,
+    });
 
     // 무산소인 경우에는 운동시간이 필요없음
     if (!sets || sets.length === 0) return;

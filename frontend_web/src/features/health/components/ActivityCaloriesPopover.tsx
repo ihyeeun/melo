@@ -24,13 +24,12 @@ export default function ActivityCaloriesPopover({
     return null;
   }
 
-  const { calories, stepCalories, stepCount, workoutCalories } = summary;
+  const { calories, stepCalories, stepCount } = summary;
   if (calories <= 0) {
     return null;
   }
 
   const hasStepCalories = stepCount > 0 && stepCalories > 0;
-  const hasWorkoutCalories = workoutCalories > 0;
   const mainIconName = hasStepCalories ? "walking" : "fire";
 
   return (
@@ -59,16 +58,6 @@ export default function ActivityCaloriesPopover({
             <Popover.Arrow className={styles.arrow} data-variant={variant} />
             <SystemIcon name={mainIconName} mode="image" size={40} />
             <div>
-              {hasStepCalories ? (
-                <p className={`${styles.activityText} typo-title3`}>
-                  {hasWorkoutCalories ? (
-                    <p className={`${styles.activityText} typo-title3`}>
-                      운동 {workoutCalories.toLocaleString("ko-KR")}kcal
-                    </p>
-                  ) : null}
-                  + {stepCount.toLocaleString("ko-KR")}걸음
-                </p>
-              ) : null}
               <div className={styles.badge} data-variant={variant}>
                 <SystemIcon name="fire" mode="image" size={20} />
                 <p className="typo-label4 textAlternative">

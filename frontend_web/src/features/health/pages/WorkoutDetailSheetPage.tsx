@@ -75,8 +75,13 @@ export default function WorkoutDetailSheetPage() {
     }
 
     const imageUrl = detailWorkout.workout_gif;
-    const bodyParts = detailWorkout.body_parts;
-    const equipment = detailWorkout.equipments;
+    const bodyParts = [
+      detailWorkout.body_part_major,
+      ...(detailWorkout.body_part_minor ?? []),
+    ].filter((bodyPart): bodyPart is string => Boolean(bodyPart));
+    const equipment = [detailWorkout.equipment_category, detailWorkout.equipment_detail]
+      .filter(Boolean)
+      .join(", ");
 
     return (
       <div className={styles.sheetContainer}>

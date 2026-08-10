@@ -34,8 +34,19 @@ import { getTodayFormatDateKey, isValidDateKey } from "@/shared/utils/dateFormat
 import styles from "../styles/WorkoutSearchPage.module.css";
 
 const WORKOUT_SEARCH_PAGE_LIMIT = 20;
-const BODY_PART_OPTIONS = ["가슴", "등", "하체", "어깨", "삼두", "이두", "코어"] as const;
-const EQUIPMENT_OPTIONS = ["기구", "바벨", "덤벨", "케틀벨", "밴드", "머신", "스미스"] as const;
+const BODY_PART_OPTIONS = ["유산소", "가슴", "등", "하체", "어깨", "팔"] as const;
+const EQUIPMENT_OPTIONS = [
+  "바벨",
+  "덤벨",
+  "케틀벨",
+  "밴드",
+  "폼롤러",
+  "머신",
+  "스미스 머신",
+  "맨몸",
+  "케이블 머신",
+  "기타",
+] as const;
 
 function getSafeWorkoutDateKey(rawDate: string | null) {
   return rawDate && isValidDateKey(rawDate) ? rawDate : getTodayFormatDateKey();
@@ -73,8 +84,8 @@ export default function WorkoutSearchPage() {
   const searchParamsDto = useMemo(
     () => ({
       input: searchKeyword,
-      body_parts: bodyPart ?? undefined,
-      equipments: equipment ?? undefined,
+      body_part_major: bodyPart ?? undefined,
+      equipment_category: equipment ?? undefined,
       limit: WORKOUT_SEARCH_PAGE_LIMIT,
     }),
     [bodyPart, equipment, searchKeyword],
@@ -306,14 +317,14 @@ function FilterChipGroup({
   return (
     <div className={styles.filterGroup}>
       <div className={styles.filterScroller}>
-        {/* <button
+        <button
           type="button"
           className={`${styles.filterChip} ${value === null ? styles.filterChipSelected : ""} typo-label3`}
           aria-pressed={value === null}
           onClick={() => onChange(null)}
         >
-          전체
-        </button> */}
+          기구
+        </button>
         {options.map((option) => (
           <button
             key={option}
@@ -342,14 +353,14 @@ function FilterTabGroup({
   return (
     <div className={`${styles.filterGroup} ${styles.bgWhite}`}>
       <div className={styles.filterScroller} role="tablist">
-        {/* <button
+        <button
           type="button"
           className={`${styles.filterTab} ${value === null ? styles.tabSelected : ""} typo-label3`}
           aria-pressed={value === null}
           onClick={() => onChange(null)}
         >
           부위
-        </button> */}
+        </button>
         {options.map((option) => (
           <button
             key={option}
