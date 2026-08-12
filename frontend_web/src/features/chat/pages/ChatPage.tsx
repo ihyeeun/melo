@@ -1367,6 +1367,8 @@ export default function ChatPage() {
     const text = rawInput.trim();
     if (!text || isChatSendDisabled) return;
 
+    setIsMealRecordModeGuideVisible(false);
+
     if (!isCameraHintDismissed) {
       setIsCameraHintDismissed(true);
       saveCameraHintDismissedInSession();
@@ -1536,13 +1538,14 @@ export default function ChatPage() {
       autoRegisteredFoodFeedbackChatItemIdsRef.current.add(chatItem.id);
 
       const dateKey = getChatDateKey(chatItem) ?? todayDateKey;
+      const mealTime = getCurrentMealTime();
       const candidateMenus = getUniqueMealRecordMenus(getChatMealRecordMenus(chatItem));
 
       if (candidateMenus.length === 0) {
         return null;
       }
 
-      const mealRecordTimelineItemKey = getMealRecordTimelineItemKey(dateKey, currentMealTime);
+      const mealRecordTimelineItemKey = getMealRecordTimelineItemKey(dateKey, mealTime);
 
       setDeferredMealRecordTimelineItemKeys((previous) =>
         previous.includes(mealRecordTimelineItemKey)
@@ -1569,7 +1572,7 @@ export default function ChatPage() {
       await registerMealRecordDraftMenus({
         dateKey,
         image: getChatItemImageUrl(chatItem),
-        mealTime: currentMealTime,
+        mealTime,
         menus: candidateMenus.map(toMenuDraftFromChatMealRecordMenu),
         staleTime: 0,
         shouldPreserveExistingImage: true,
@@ -1580,7 +1583,7 @@ export default function ChatPage() {
 
       return mealRecordTimelineItemKey;
     },
-    [currentMealTime, mealRecordDateKeys, registerMealRecordDraftMenus, todayDateKey],
+    [mealRecordDateKeys, registerMealRecordDraftMenus, todayDateKey],
   );
 
   const revealDeferredMealRecordTimelineItem = useCallback(
