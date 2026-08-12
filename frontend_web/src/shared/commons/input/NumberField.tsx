@@ -221,7 +221,7 @@ export default function NumberField({
     <BaseNumberField.Root
       id={id}
       className={classNames?.root}
-      value={value}
+      value={value ?? null}
       min={min}
       max={max}
       step={step}
