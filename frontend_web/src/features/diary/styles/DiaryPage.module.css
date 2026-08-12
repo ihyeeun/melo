@@ -22,13 +22,12 @@
 }
 
 .copyActions {
-  /* 식단 기록 복사 임시 */
-  display: none;
-  justify-content: flex-end;
+  display: flex;
 }
 
 .copyButton {
   gap: 4px;
+  margin-left: auto;
 }
 
 .summaryCard {

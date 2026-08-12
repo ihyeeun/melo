@@ -192,23 +192,24 @@ export default function DiaryPage() {
             </ActionCard>
           )}
 
-          <div className="divider" />
-
           <div className={styles.copyActions}>
-            <Button
-              variant="text"
-              color="primary"
-              size="small"
-              className={styles.copyButton}
-              disabled={!canCopyDayMeals}
-              onClick={() => {
-                void handleCopyDayMeals();
-              }}
-              aria-label="선택한 날짜의 식단 전체 복사"
-            >
-              <SystemIcon name="copy" size={20} />
-              <span>식단 복사</span>
-            </Button>
+            <p className="typo-title3">식단 기록</p>
+            {canCopyDayMeals && (
+              <Button
+                variant="text"
+                color="normal"
+                size="small"
+                className={styles.copyButton}
+                disabled={!canCopyDayMeals}
+                onClick={() => {
+                  void handleCopyDayMeals();
+                }}
+                aria-label="선택한 날짜의 식단 전체 복사"
+              >
+                <SystemIcon name="copy" size={20} />
+                <span>식단 복사</span>
+              </Button>
+            )}
           </div>
 
           <section className={styles.actionCardList}>

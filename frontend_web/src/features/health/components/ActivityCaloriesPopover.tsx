@@ -53,7 +53,7 @@ export default function ActivityCaloriesPopover({
             finalFocus={false}
           >
             <Popover.Arrow className={styles.arrow} data-variant={variant} />
-            <SystemIcon name="fire" mode="image" size={40} />
+            <SystemIcon name="walking" mode="image" size={40} />
             <div>
               <div className={styles.badge} data-variant={variant}>
                 <SystemIcon name="fire" mode="image" size={20} />
