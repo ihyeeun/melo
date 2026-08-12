@@ -21,6 +21,15 @@
   padding: 20px;
 }
 
+.copyActions {
+  display: flex;
+}
+
+.copyButton {
+  gap: 4px;
+  margin-left: auto;
+}
+
 .summaryCard {
   display: flex;
   flex-direction: column;

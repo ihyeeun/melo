@@ -2,15 +2,13 @@ import {
   getMealType,
   getSafeDateKey,
 } from "@/features/meal-record/utils/mealRecord.queryParams";
-import { useRemoveMenuSelectionFlowOnExit } from "@/features/menu-selection-flow/hooks/useRemoveMenuSelectionFlowOnExit";
 import {
-  useMenuSelectionFlowById,
-} from "@/features/menu-selection-flow/stores/menuSelectionFlow.store";
-import {
-  getMenuSelectionFlowIdFromSearchParams,
-  getMenuSelectionFlowMenuDetailPath,
-  getMenuSelectionFlowSearchPath,
-} from "@/features/menu-selection-flow/utils/menuSelectionFlowRoutes";
+  buildMenuSelectionPathContext,
+  getMenuSelectionMenuDetailPath,
+  getMenuSelectionRouteContextFromSearchParams,
+  getMenuSelectionSearchPath,
+  type MenuSelectionPathParams,
+} from "@/features/menu-selection/utils/menuSelectionRoutes";
 import {
   NutrientRegisterFormPage,
   type NutrientRegisterFormState,
@@ -29,30 +27,28 @@ export default function NutrientRegisterPage() {
   const location = useLocation();
   const [searchParams] = useSearchParams();
   const locationState = (location.state ?? {}) as NutrientRegisterFormState;
-  const menuSelectionFlowId = getMenuSelectionFlowIdFromSearchParams(searchParams);
-  useRemoveMenuSelectionFlowOnExit(menuSelectionFlowId);
-  const menuSelectionFlow = useMenuSelectionFlowById(menuSelectionFlowId);
-  const dateKey = getSafeDateKey(
-    searchParams.get("date") ??
-      locationState.dateKey ??
-      menuSelectionFlow?.relatedMealRecordDateKey ??
-      null,
-  );
+  const menuSelectionRouteContext = getMenuSelectionRouteContextFromSearchParams(searchParams);
+  const dateKey = getSafeDateKey(searchParams.get("date") ?? locationState.dateKey ?? null);
   const mealType = getMealType(
-    searchParams.get("mealType") ??
-      locationState.mealType ??
-      menuSelectionFlow?.relatedMealRecordMealType ??
-      null,
+    searchParams.get("mealType") ?? locationState.mealType ?? null,
   );
-  const backFallbackPath = menuSelectionFlowId
-    ? getMenuSelectionFlowSearchPath(menuSelectionFlowId)
+  const menuSelectionContext: MenuSelectionPathParams | null = menuSelectionRouteContext.target
+    ? buildMenuSelectionPathContext({
+        dateKey,
+        mealType,
+        routeContext: menuSelectionRouteContext,
+        target: menuSelectionRouteContext.target,
+      })
+    : null;
+  const backFallbackPath = menuSelectionContext?.target
+    ? getMenuSelectionSearchPath(menuSelectionContext)
     : getPathWithMeal(PATH.MEAL_RECORD_ADD_SEARCH, dateKey, mealType);
   const shouldRemoveCameraEntryScreens = locationState.entrySource === "camera";
 
   const getRegisteredMenuDetailPath = (savedMenuId: number) => {
-    if (menuSelectionFlowId) {
-      return getMenuSelectionFlowMenuDetailPath({
-        menuSelectionFlowId,
+    if (menuSelectionContext?.target) {
+      return getMenuSelectionMenuDetailPath({
+        ...menuSelectionContext,
         menuId: savedMenuId,
       });
     }
@@ -66,7 +62,7 @@ export default function NutrientRegisterPage() {
       brandSearchReturnPath={PATH.NUTRIENT_ADD_REGISTER}
       dateKey={dateKey}
       initialState={locationState}
-      menuSelectionFlowId={menuSelectionFlowId}
+      menuSelectionContext={menuSelectionContext}
       mealType={mealType}
       onRegisteredMenu={(savedMenuId) => {
         const registeredMenuDetailPath = getRegisteredMenuDetailPath(savedMenuId);

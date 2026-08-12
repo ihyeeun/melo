@@ -24,8 +24,8 @@ export default function ActivityCaloriesPopover({
     return null;
   }
 
-  const { calories, stepCount } = summary;
-  if (stepCount <= 0 || calories <= 0) {
+  const { calories } = summary;
+  if (calories <= 0) {
     return null;
   }
 
@@ -55,7 +55,6 @@ export default function ActivityCaloriesPopover({
             <Popover.Arrow className={styles.arrow} data-variant={variant} />
             <SystemIcon name="walking" mode="image" size={40} />
             <div>
-              <p className={`${styles.step} typo-title3`}>+ {stepCount}걸음</p>
               <div className={styles.badge} data-variant={variant}>
                 <SystemIcon name="fire" mode="image" size={20} />
                 <p className="typo-label4 textAlternative">

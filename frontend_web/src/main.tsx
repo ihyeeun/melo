@@ -14,14 +14,18 @@ import { appToastManager } from "@/shared/commons/toast/toastManager";
 
 import App from "./App.tsx";
 
-createRoot(document.getElementById("root")!).render(
-  <QueryClientProvider client={queryClient}>
-    <Toast.Provider toastManager={appToastManager} timeout={2600} limit={2}>
-      <AppErrorBoundary>
-        <App />
-        <AppToastViewport />
-      </AppErrorBoundary>
-    </Toast.Provider>
-    <ReactQueryDevtools />
-  </QueryClientProvider>,
-);
+function renderApp() {
+  createRoot(document.getElementById("root")!).render(
+    <QueryClientProvider client={queryClient}>
+      <Toast.Provider toastManager={appToastManager} timeout={2600} limit={2}>
+        <AppErrorBoundary>
+          <App />
+          <AppToastViewport />
+        </AppErrorBoundary>
+      </Toast.Provider>
+      <ReactQueryDevtools />
+    </QueryClientProvider>,
+  );
+}
+
+renderApp();

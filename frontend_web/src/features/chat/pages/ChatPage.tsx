@@ -463,6 +463,7 @@ export default function ChatPage() {
   const skipNextAutoBottomScrollRef = useRef(false);
   const hiddenScrollTopSnapshotRef = useRef<number | null>(null);
   const previousIsTopRef = useRef(isTop);
+  const mealRecordModeHintTargetRef = useRef<HTMLDivElement | null>(null);
 
   const [inputValue, setInputValue] = useState("");
   const [isInputFocused, setIsInputFocused] = useState(false);
@@ -493,6 +494,8 @@ export default function ChatPage() {
     getIsMealRecordModeOnboardingDone,
   );
   const [isMealRecordModeGuideVisible, setIsMealRecordModeGuideVisible] = useState(false);
+  // 말풍선 닫힘은 온보딩 완료 여부와 분리한다.
+  const [isMealRecordModeHintDismissed, setIsMealRecordModeHintDismissed] = useState(false);
   const isMealRecordTextMode = selectedChipId === MEAL_RECORD_MODE_CHIP_ID;
   const clientOsName = useClientOsName();
   const isSoftKeyboardVisible = useSoftKeyboardVisible(isInputFocused, clientOsName);
@@ -622,7 +625,10 @@ export default function ChatPage() {
   const isInputEmpty = inputValue.trim().length === 0;
   const isQuickActionVisible = isInputEmpty && !isSoftKeyboardVisible && !isAwaitingChatResponse;
   const shouldShowMealRecordModeHint =
-    isQuickActionVisible && !isMealRecordModeOnboardingDone && !isMealRecordTextMode;
+    isQuickActionVisible &&
+    !isMealRecordModeOnboardingDone &&
+    !isMealRecordTextMode &&
+    !isMealRecordModeHintDismissed;
   const shouldDeferTimelineRender = pendingInput === null && isTimelineDataPending;
   const shouldRenderTimeline = hasTimelineContent && !shouldDeferTimelineRender;
   const shouldShowTimelineSkeleton = shouldDeferTimelineRender;
@@ -636,6 +642,32 @@ export default function ChatPage() {
     !isScrollToBottomButtonVisible &&
     !isCameraHintDismissed;
   const currentMealTime = getCurrentMealTime();
+
+  useEffect(() => {
+    if (!shouldShowMealRecordModeHint) {
+      return;
+    }
+
+    const handlePointerDownOutsideMealRecordModeHint = (event: globalThis.PointerEvent) => {
+      const { target } = event;
+
+      if (!(target instanceof Node)) {
+        return;
+      }
+
+      if (mealRecordModeHintTargetRef.current?.contains(target)) {
+        return;
+      }
+
+      setIsMealRecordModeHintDismissed(true);
+    };
+
+    document.addEventListener("pointerdown", handlePointerDownOutsideMealRecordModeHint, true);
+
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDownOutsideMealRecordModeHint, true);
+    };
+  }, [shouldShowMealRecordModeHint]);
 
   const scrollToBottom = useCallback((behavior: ScrollBehavior = "instant") => {
     const main = mainRef.current;
@@ -1335,6 +1367,8 @@ export default function ChatPage() {
     const text = rawInput.trim();
     if (!text || isChatSendDisabled) return;
 
+    setIsMealRecordModeGuideVisible(false);
+
     if (!isCameraHintDismissed) {
       setIsCameraHintDismissed(true);
       saveCameraHintDismissedInSession();
@@ -1504,13 +1538,14 @@ export default function ChatPage() {
       autoRegisteredFoodFeedbackChatItemIdsRef.current.add(chatItem.id);
 
       const dateKey = getChatDateKey(chatItem) ?? todayDateKey;
+      const mealTime = getCurrentMealTime();
       const candidateMenus = getUniqueMealRecordMenus(getChatMealRecordMenus(chatItem));
 
       if (candidateMenus.length === 0) {
         return null;
       }
 
-      const mealRecordTimelineItemKey = getMealRecordTimelineItemKey(dateKey, currentMealTime);
+      const mealRecordTimelineItemKey = getMealRecordTimelineItemKey(dateKey, mealTime);
 
       setDeferredMealRecordTimelineItemKeys((previous) =>
         previous.includes(mealRecordTimelineItemKey)
@@ -1537,7 +1572,7 @@ export default function ChatPage() {
       await registerMealRecordDraftMenus({
         dateKey,
         image: getChatItemImageUrl(chatItem),
-        mealTime: currentMealTime,
+        mealTime,
         menus: candidateMenus.map(toMenuDraftFromChatMealRecordMenu),
         staleTime: 0,
         shouldPreserveExistingImage: true,
@@ -1548,7 +1583,7 @@ export default function ChatPage() {
 
       return mealRecordTimelineItemKey;
     },
-    [currentMealTime, mealRecordDateKeys, registerMealRecordDraftMenus, todayDateKey],
+    [mealRecordDateKeys, registerMealRecordDraftMenus, todayDateKey],
   );
 
   const revealDeferredMealRecordTimelineItem = useCallback(
@@ -2025,7 +2060,6 @@ export default function ChatPage() {
                               )
                             }
                             isMealRecorded={isMealRecorded}
-                            onDirectMealRecordClick={handleNavigateDirectMenuRecord}
                           />
                         )}
 
@@ -2105,7 +2139,11 @@ export default function ChatPage() {
                   shouldShowMealRecordModeHint && chip.id === MEAL_RECORD_MODE_CHIP_ID;
 
                 return (
-                  <div key={chip.id} className={styles.quickChipWrapper}>
+                  <div
+                    key={chip.id}
+                    ref={chip.id === MEAL_RECORD_MODE_CHIP_ID ? mealRecordModeHintTargetRef : null}
+                    className={styles.quickChipWrapper}
+                  >
                     {shouldShowHint ? (
                       <p className={`${styles.mealRecordModeHintBubble} typo-body3`}>
                         {MEAL_RECORD_MODE_HINT_MESSAGE}
@@ -3355,7 +3393,6 @@ function FeedbackSection({
   onMealRecordClick,
   onMealRecordCancelClick,
   isMealRecorded,
-  onDirectMealRecordClick,
 }: {
   animate?: boolean;
   chatId: number;
@@ -3365,7 +3402,6 @@ function FeedbackSection({
   onMealRecordClick: () => void;
   onMealRecordCancelClick: () => void;
   isMealRecorded: boolean;
-  onDirectMealRecordClick: () => void;
 }) {
   const [isMenuListOpen, setIsMenuListOpen] = useState(false);
   const primaryMenu = feedback.menus[0];
@@ -3516,17 +3552,6 @@ function FeedbackSection({
           </div>
         </div>
       </article>
-
-      {hasImage && (
-        <button className={styles.actionCard} onClick={onDirectMealRecordClick} type="button">
-          <span className="typo-body2 textNormal">
-            인식한 메뉴가 다르다면
-            <br />
-            직접 추가할 수 있어요
-          </span>
-          <SystemIcon name="chevron-right-thin" size={20} />
-        </button>
-      )}
     </div>
   );
 }

@@ -12,10 +12,15 @@ import { useCalendarRecordedDatesQuery } from "../hooks/queries/useCalendarRecor
 import { useCalendar } from "../hooks/useCalendar";
 import { buildMonthCalendarDays } from "../utils/calendar";
 
+export type CalendarVariant = "primary" | "normal";
+
 type Props = {
   initialDate?: Date;
   recordedDates?: string[];
   onSelectDate?: (date: Date) => void;
+  selectedDate?: Date;
+  showRecordedDots?: boolean;
+  variant?: CalendarVariant;
 };
 
 const EMPTY_RECORDED_DATES: string[] = [];
@@ -24,6 +29,9 @@ export default function Calendar({
   initialDate,
   recordedDates: fallbackRecordedDates = EMPTY_RECORDED_DATES,
   onSelectDate,
+  selectedDate: controlledSelectedDate,
+  showRecordedDots = true,
+  variant = "primary",
 }: Props) {
   const {
     viewMode,
@@ -39,7 +47,8 @@ export default function Calendar({
   } = useCalendar({
     initialDate,
     initialViewMode: "week",
-    recordedDates: fallbackRecordedDates,
+    recordedDates: showRecordedDots ? fallbackRecordedDates : EMPTY_RECORDED_DATES,
+    selectedDate: controlledSelectedDate,
   });
 
   const monthDateRange = useMemo(() => {
@@ -53,12 +62,13 @@ export default function Calendar({
   }, [viewDate]);
 
   const { recordedDates } = useCalendarRecordedDatesQuery({
-    enabled: viewMode === "month",
+    enabled: showRecordedDots && viewMode === "month",
     startDate: monthDateRange.startDate,
     endDate: monthDateRange.endDate,
   });
 
   const displayedMonthDays = useMemo(() => {
+    if (!showRecordedDots) return monthDays;
     if (recordedDates.length === 0) return monthDays;
 
     return buildMonthCalendarDays({
@@ -67,7 +77,7 @@ export default function Calendar({
       recordedDates,
       weekStartsOn: 1,
     });
-  }, [monthDays, recordedDates, selectedDate, viewDate]);
+  }, [monthDays, recordedDates, selectedDate, showRecordedDots, viewDate]);
 
   const handleSelectDateInWeek = (date: Date) => {
     selectDate(date);
@@ -85,7 +95,7 @@ export default function Calendar({
   };
 
   return (
-    <section className="calendar-root">
+    <section className={`calendar-root calendar-root--${variant}`}>
       <CalendarHeader
         viewMode={viewMode}
         viewDate={viewDate}
