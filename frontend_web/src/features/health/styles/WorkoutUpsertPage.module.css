@@ -59,6 +59,10 @@
   gap: 4px;
 }
 
+.inputWrap:focus-within {
+  border-color: var(--primary-normal);
+}
+
 .input {
   background: transparent;
   border: 0;
