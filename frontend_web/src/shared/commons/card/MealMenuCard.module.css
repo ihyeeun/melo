@@ -1,75 +1,17 @@
-.card {
-  background-color: var(--bg-white);
-  border: 1px solid var(--border-neutral);
-  border-radius: 8px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  justify-content: space-between;
-  padding: 16px 20px;
-  width: 100%;
-}
-
-.card.clickable {
-  cursor: pointer;
-}
-
-.card.selected {
-  background-color: var(--interaction-primary);
-  border-color: var(--border-primary);
-}
-
 .content {
   display: flex;
   flex-direction: column;
-  min-width: 0;
+  gap: 4px;
+  margin: 20px;
 }
 
 .header {
   display: flex;
-  flex-direction: column;
   gap: 6px;
 }
 
-.rankBadge {
-  align-items: center;
-  background-color: var(--primary-strong);
-  border-radius: 4px;
-  color: var(--static-white);
-  display: inline-flex;
-  padding: 2px 6px;
-  width: fit-content;
-}
-
-.titleSection {
-  display: flex;
-  gap: 16px;
-  justify-content: space-between;
+.title {
   min-width: 0;
-}
-
-.description {
-  color: var(--label-assistive);
-  flex: 1;
-}
-
-.chipList {
-  align-items: center;
-  display: inline-flex;
-  flex-wrap: wrap;
-  gap: 4px;
-}
-
-.chip {
-  align-items: center;
-  border-radius: 4px;
-  display: inline-flex;
-  padding: 2px 6px;
-}
-
-.personalChipLabel {
-  background-color: var(--bg-normal);
-  color: var(--label-assistive);
 }
 
 .iconButton {
@@ -80,20 +22,15 @@
   height: 24px;
   justify-content: center;
   width: 24px;
+  margin-left: auto;
 }
 
-.iconButton:disabled {
-  cursor: default;
-  pointer-events: none;
+.description {
+  flex: 1;
 }
 
 .selected .iconButton {
   color: var(--primary-strong);
-}
-
-.title {
-  color: var(--label-normal);
-  min-width: 0;
 }
 
 .meta {
@@ -109,34 +46,9 @@
   justify-content: flex-end;
 }
 
-.prouductInfo {
-  align-items: baseline;
+.menuInfoGroup {
+  align-items: center;
   display: flex;
-  flex: 1 1 0;
-  flex-wrap: wrap;
-  gap: 4px;
-  min-width: 0;
-}
-
-.calories {
-  color: var(--label-normal);
-  margin-left: auto;
-}
-
-.brand {
-  color: var(--label-assistive);
-  display: -webkit-box;
-  max-width: 100%;
-  overflow: hidden;
-  overflow-wrap: anywhere;
-  word-break: normal;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 1;
-  line-clamp: 1;
-}
-
-.unitAmount {
-  color: var(--label-alternative);
-  flex-shrink: 0;
-  white-space: nowrap;
+  gap: 6px;
+  flex: 1;
 }

@@ -1,5 +1,6 @@
 import "@seed-design/css/base.css";
 import "./shared/styles/tokens.css";
+import "./shared/styles/color.css";
 import "./index.css";
 
 import { Toast } from "@base-ui/react/toast";

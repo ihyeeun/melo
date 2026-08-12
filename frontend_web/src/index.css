@@ -45,16 +45,10 @@ body {
 
 body {
   font-family: var(--font-family-base);
-  letter-spacing: var(--letter-spacing-body);
-  line-height: var(--line-height-130);
   position: relative;
 }
 
 p {
-  font-size: var(--fs-16);
-  font-weight: var(--fw-medium);
-  letter-spacing: var(--letter-spacing-body);
-  line-height: var(--line-height-130);
   margin: 0;
   min-width: 0;
   overflow-wrap: anywhere;
@@ -67,34 +61,6 @@ h2,
 h3,
 h4 {
   margin: 0;
-}
-
-h1 {
-  font-size: var(--fs-40);
-  font-weight: var(--fw-medium);
-  letter-spacing: var(--letter-spacing-tight);
-  line-height: var(--line-height-120);
-}
-
-h2 {
-  font-size: var(--fs-26);
-  font-weight: var(--fw-semibold);
-  letter-spacing: var(--letter-spacing-tight);
-  line-height: var(--line-height-120);
-}
-
-h3 {
-  font-size: var(--fs-26);
-  font-weight: var(--fw-semibold);
-  letter-spacing: var(--letter-spacing-tight);
-  line-height: var(--line-height-120);
-}
-
-h4 {
-  font-size: var(--fs-24);
-  font-weight: var(--fw-semibold);
-  letter-spacing: var(--letter-spacing-tight);
-  line-height: var(--line-height-145);
 }
 
 button {
@@ -111,7 +77,7 @@ button,
 input,
 textarea,
 select {
-  color: var(--label-normal);
+  color: var(--text-primary);
   font-family: var(--font-family-base);
   caret-color: var(--primary-normal);
 }
@@ -138,14 +104,14 @@ textarea {
   -webkit-appearance: none;
   appearance: none;
   -webkit-tap-highlight-color: transparent;
-  background-color: var(--bg-white);
-  color: var(--label-normal);
+  background-color: var(--background-default);
+  color: var(--text-primary);
 }
 
 input:focus,
 textarea:focus,
 select:focus {
-  outline: 1px solid var(--border-primary);
+  outline: 1px solid var(--border-strong);
 }
 
 button,
@@ -157,7 +123,7 @@ a,
 }
 
 button:active {
-  transform: scale(0.98);
+  transform: scale(0.9);
 }
 
 /* Keep scrolling behavior, but hide visible scrollbars globally. */

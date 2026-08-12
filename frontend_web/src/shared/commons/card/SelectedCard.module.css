@@ -1,0 +1,11 @@
+.card {
+  background-color: transparent;
+  border: 1px solid var(--border-default);
+  border-radius: 16px;
+  width: 100%;
+}
+
+.card[data-selected="true"] {
+  background-color: var(--background-selected);
+  border-color: var(--border-strong);
+}
