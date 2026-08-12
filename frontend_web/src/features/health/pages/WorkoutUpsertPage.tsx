@@ -37,6 +37,7 @@ import type {
 import { Button } from "@/shared/commons/button/Button";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
+import NumberField from "@/shared/commons/input/NumberField";
 import { LoadingIndicator } from "@/shared/commons/loading/Loading";
 import { toast } from "@/shared/commons/toast/toast";
 import {
@@ -67,6 +68,16 @@ const INTENSITY_OPTIONS: Array<{ label: string; value: Intensity }> = [
   { label: "적당히", value: 1 },
   { label: "격하게", value: 2 },
 ];
+const WORKOUT_NUMBER_FORMAT = {
+  useGrouping: false,
+} satisfies Intl.NumberFormatOptions;
+const WORKOUT_NUMBER_FIELD_CLASS_NAMES = {
+  root: styles["number-field-root"],
+  group: styles["number-field-group"],
+  inputWrapper: styles.inputWrap,
+  input: `${styles.input} typo-body3`,
+  unit: `${styles.unit} typo-label4`,
+};
 const CARDIO_CALORIE_INFO_MESSAGES = [
   "MET(대사당량) 지수를 기반으로, 체중과 운동 강도를 반영해 계산한 추정치입니다. 개인의 근육량이나 실제 심박수 등에 따라 소모량은 조금 다를 수 있어요.",
 ] as const;
@@ -99,13 +110,6 @@ function getDraftKey(date: string, workoutId: number) {
 
 function isWorkoutEditMode(rawMode: string | null) {
   return rawMode === "edit";
-}
-
-function toInputNumber(value: string) {
-  if (value.trim() === "") return undefined;
-
-  const numberValue = Number(value);
-  return Number.isFinite(numberValue) && numberValue >= 0 ? numberValue : undefined;
 }
 
 function isValidNumber(value: number | undefined): value is number {
@@ -390,7 +394,7 @@ export default function WorkoutUpsertPage() {
     if (workout.workout_type === "cardio") {
       return (
         <>
-          <NumberField
+          <LabeledNumberField
             label="운동 시간"
             value={draft.workout_duration}
             onChange={(value) => updateDraft("workout_duration", value)}
@@ -421,7 +425,7 @@ export default function WorkoutUpsertPage() {
             </div>
           </Field>
 
-          <NumberField
+          <LabeledNumberField
             label="소모 칼로리"
             value={burnedCaloriesValue}
             onChange={(value) => updateDraft("burned_calories", value)}
@@ -462,21 +466,38 @@ export default function WorkoutUpsertPage() {
               >
                 <span className={`${styles.setOrder} typo-label4`}>{index + 1}세트</span>
                 {shouldShowWeightInput ? (
-                  <NumberInput
+                  <NumberField
                     value={set.weight}
                     onChange={(value) => updateSet(set.set_order, "weight", value)}
-                    placeholder="0"
+                    min={0}
+                    step={0.1}
+                    fractionDigits={1}
                     unit="kg"
-                    ariaLabel={`${index + 1}세트 무게`}
+                    showControls={false}
+                    unstyled
+                    format={WORKOUT_NUMBER_FORMAT}
+                    classNames={WORKOUT_NUMBER_FIELD_CLASS_NAMES}
+                    inputProps={{
+                      placeholder: "0",
+                      "aria-label": `${index + 1}세트 무게`,
+                    }}
                   />
                 ) : null}
-                <NumberInput
+                <NumberField
                   value={set.reps}
                   onChange={(value) => updateSet(set.set_order, "reps", value)}
-                  placeholder="0"
+                  min={0}
+                  step={1}
+                  fractionDigits={0}
                   unit="회"
-                  ariaLabel={`${index + 1}세트 횟수`}
-                  inputMode="numeric"
+                  showControls={false}
+                  unstyled
+                  format={WORKOUT_NUMBER_FORMAT}
+                  classNames={WORKOUT_NUMBER_FIELD_CLASS_NAMES}
+                  inputProps={{
+                    placeholder: "0",
+                    "aria-label": `${index + 1}세트 횟수`,
+                  }}
                 />
                 <button
                   type="button"
@@ -510,7 +531,7 @@ export default function WorkoutUpsertPage() {
           </div>
         </section>
 
-        <NumberField
+        <LabeledNumberField
           label="소모 칼로리"
           value={burnedCaloriesValue}
           onChange={(value) => updateDraft("burned_calories", value)}
@@ -609,20 +630,18 @@ function Field({
   );
 }
 
-function NumberField({
+function LabeledNumberField({
   label,
   onChange,
   placeholder,
-  readOnly = false,
   required = false,
   rightSlot,
   unit,
   value,
 }: {
   label: string;
-  onChange?: (value?: number) => void;
+  onChange: (value?: number) => void;
   placeholder: string;
-  readOnly?: boolean;
   required?: boolean;
   rightSlot?: ReactNode;
   unit: string;
@@ -630,56 +649,23 @@ function NumberField({
 }) {
   return (
     <Field label={label} required={required} rightSlot={rightSlot}>
-      <NumberInput
+      <NumberField
         value={value}
         onChange={onChange}
-        placeholder={placeholder}
-        readOnly={readOnly}
+        min={0}
+        step={1}
+        fractionDigits={0}
         unit={unit}
-        ariaLabel={label}
+        showControls={false}
+        unstyled
+        format={WORKOUT_NUMBER_FORMAT}
+        classNames={WORKOUT_NUMBER_FIELD_CLASS_NAMES}
+        inputProps={{
+          placeholder,
+          "aria-label": label,
+        }}
       />
     </Field>
-  );
-}
-
-function NumberInput({
-  ariaLabel,
-  inputMode = "numeric",
-  onChange,
-  placeholder,
-  readOnly = false,
-  unit,
-  value,
-}: {
-  ariaLabel: string;
-  inputMode?: "decimal" | "numeric";
-  onChange?: (value?: number) => void;
-  placeholder: string;
-  readOnly?: boolean;
-  unit: string;
-  value?: number;
-}) {
-  return (
-    <label className={styles.inputWrap}>
-      <input
-        className={`${styles.input} typo-body3`}
-        type="number"
-        inputMode={inputMode}
-        min="0"
-        readOnly={readOnly}
-        value={value ?? ""}
-        onChange={(event) => {
-          if (readOnly) return;
-
-          const raw = event.target.value;
-
-          onChange?.(toInputNumber(raw));
-        }}
-        placeholder={placeholder}
-        aria-label={ariaLabel}
-      />
-      <span className={`${styles.unit} typo-label4`}>{unit}</span>
-    </label>
   );
 }
 

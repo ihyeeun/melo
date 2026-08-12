@@ -15,6 +15,11 @@ type Props = {
   snapOnStep?: boolean;
   smallStep?: number;
   largeStep?: number;
+  /**
+   * Maximum decimal places.
+   * Extra typed or pasted digits are rejected, while numeric changes are rounded to this precision.
+   */
+  fractionDigits?: number;
   format?: Intl.NumberFormatOptions;
   allowOutOfRange?: boolean;
   unit?: React.ReactNode;
@@ -55,6 +60,64 @@ const NON_CHARACTER_KEYS = new Set([
   "Enter",
   "Escape",
 ]);
+const DIGITS_PATTERN = /^\d*$/;
+const REDUNDANT_LEADING_ZEROS_PATTERN = /^(-?)0+(?=\d)/;
+const MAX_FRACTION_DIGITS = 20;
+
+function getSafeFractionDigits(fractionDigits?: number) {
+  if (fractionDigits === undefined) return undefined;
+  if (!Number.isFinite(fractionDigits)) return 0;
+
+  return Math.min(MAX_FRACTION_DIGITS, Math.max(0, Math.trunc(fractionDigits)));
+}
+
+function roundToFractionDigits(value: number, fractionDigits: number) {
+  const factor = 10 ** fractionDigits;
+  return Math.round(value * factor) / factor;
+}
+
+function removeRedundantLeadingZeros(inputValue: string) {
+  return inputValue.replace(REDUNDANT_LEADING_ZEROS_PATTERN, "$1");
+}
+
+function replaceInputValuePreservingCaret(input: HTMLInputElement, nextValue: string) {
+  const removedCharacterCount = input.value.length - nextValue.length;
+  const selectionStart = input.selectionStart;
+  const selectionEnd = input.selectionEnd;
+
+  input.value = nextValue;
+
+  if (selectionStart === null || selectionEnd === null) return;
+
+  const nextSelectionStart = Math.max(0, selectionStart - removedCharacterCount);
+  const nextSelectionEnd = Math.max(0, selectionEnd - removedCharacterCount);
+  input.setSelectionRange(nextSelectionStart, nextSelectionEnd);
+}
+
+function isNumericInputTextAllowed(
+  inputValue: string,
+  fractionDigits: number | undefined,
+  allowsNegativeInput: boolean,
+) {
+  let unsignedValue = inputValue;
+
+  if (unsignedValue.startsWith("-")) {
+    if (!allowsNegativeInput) return false;
+    unsignedValue = unsignedValue.slice(1);
+  }
+
+  if (unsignedValue.includes("-")) return false;
+
+  const decimalParts = unsignedValue.split(".");
+  if (decimalParts.length > 2) return false;
+  if (!decimalParts.every((part) => DIGITS_PATTERN.test(part))) return false;
+  if (fractionDigits === undefined) return true;
+
+  const decimalPart = decimalParts[1];
+  if (decimalPart === undefined) return true;
+
+  return fractionDigits > 0 && decimalPart.length <= fractionDigits;
+}
 
 function getNextInputValue(
   currentValue: string,
@@ -85,6 +148,7 @@ export default function NumberField({
   snapOnStep,
   smallStep,
   largeStep,
+  fractionDigits,
   format,
   allowOutOfRange = false,
   unit,
@@ -97,16 +161,55 @@ export default function NumberField({
   incrementAriaLabel = "값 증가",
   decrementIcon,
   incrementIcon,
-  normalizeValue = toOneDecimalPlace,
+  normalizeValue,
   isInputTextAllowed,
   inputRef,
   inputProps,
   classNames,
 }: Props) {
   const id = React.useId();
+  const safeFractionDigits = getSafeFractionDigits(fractionDigits);
+  const shouldUseFractionDigitsPolicy = fractionDigits !== undefined;
+  const allowsNegativeInput = min === undefined || min < 0;
+  const inputTextValidator =
+    shouldUseFractionDigitsPolicy || isInputTextAllowed
+      ? (nextInputValue: string) => {
+          const isAllowedByFractionDigitsPolicy =
+            !shouldUseFractionDigitsPolicy ||
+            isNumericInputTextAllowed(
+              nextInputValue,
+              safeFractionDigits,
+              allowsNegativeInput,
+            );
+
+          return (
+            isAllowedByFractionDigitsPolicy && (isInputTextAllowed?.(nextInputValue) ?? true)
+          );
+        }
+      : undefined;
+  const resolvedFormat =
+    safeFractionDigits === undefined
+      ? format
+      : {
+          ...format,
+          maximumFractionDigits: safeFractionDigits,
+          ...(format?.minimumFractionDigits !== undefined
+            ? { minimumFractionDigits: Math.min(format.minimumFractionDigits, safeFractionDigits) }
+            : {}),
+        };
+  const normalizeNumericValue = (nextValue: number) => {
+    const normalizedValue = normalizeValue
+      ? normalizeValue(nextValue)
+      : safeFractionDigits === undefined
+        ? toOneDecimalPlace(nextValue)
+        : roundToFractionDigits(nextValue, safeFractionDigits);
+
+    return allowOutOfRange ? normalizedValue : clampValue(normalizedValue, min, max);
+  };
   const {
     className: inputClassName,
     inputMode,
+    onBeforeInput: onInputBeforeInput,
     onKeyDown: onInputKeyDown,
     onPaste: onInputPaste,
     ...restInputProps
@@ -125,7 +228,7 @@ export default function NumberField({
       snapOnStep={snapOnStep}
       smallStep={smallStep}
       largeStep={largeStep}
-      format={format}
+      format={resolvedFormat}
       allowOutOfRange={allowOutOfRange}
       onValueChange={(nextValue, eventDetails) => {
         if (nextValue == null) {
@@ -133,10 +236,7 @@ export default function NumberField({
           return;
         }
 
-        const normalizedValue = normalizeValue(nextValue);
-        const nextNormalizedValue = allowOutOfRange
-          ? normalizedValue
-          : clampValue(normalizedValue, min, max);
+        const nextNormalizedValue = normalizeNumericValue(nextValue);
         const isDirectInputReason =
           eventDetails.reason === "input-change" ||
           eventDetails.reason === "input-paste" ||
@@ -144,8 +244,8 @@ export default function NumberField({
 
         if (
           isDirectInputReason &&
-          isInputTextAllowed &&
-          !isInputTextAllowed(String(nextNormalizedValue))
+          inputTextValidator &&
+          !inputTextValidator(String(nextNormalizedValue))
         ) {
           return;
         }
@@ -173,12 +273,38 @@ export default function NumberField({
           <BaseNumberField.Input
             ref={inputRef}
             className={cx(unstyled ? undefined : styles.input, classNames?.input, inputClassName)}
-            inputMode={inputMode ?? "decimal"}
+            inputMode={inputMode ?? (safeFractionDigits === 0 ? "numeric" : "decimal")}
             {...restInputProps}
+            onBeforeInput={(event) => {
+              onInputBeforeInput?.(event);
+              if (event.defaultPrevented) return;
+              if (!inputTextValidator) return;
+
+              const nativeEvent = event.nativeEvent as InputEvent;
+              if (nativeEvent.isComposing) return;
+              if (nativeEvent.data === null) return;
+
+              const nextInputValue = getNextInputValue(
+                event.currentTarget.value,
+                nativeEvent.data,
+                event.currentTarget.selectionStart,
+                event.currentTarget.selectionEnd,
+              );
+
+              if (inputTextValidator(nextInputValue)) return;
+              event.preventDefault();
+            }}
+            onChange={(event) => {
+              // Base UI reads the current target after this handler, so normalize the raw text first.
+              const normalizedInputValue = removeRedundantLeadingZeros(event.currentTarget.value);
+              if (normalizedInputValue === event.currentTarget.value) return;
+
+              replaceInputValuePreservingCaret(event.currentTarget, normalizedInputValue);
+            }}
             onKeyDown={(event) => {
               onInputKeyDown?.(event);
               if (event.defaultPrevented) return;
-              if (!isInputTextAllowed) return;
+              if (!inputTextValidator) return;
               if (event.nativeEvent.isComposing) return;
               if (event.ctrlKey || event.metaKey || event.altKey) return;
               if (NON_CHARACTER_KEYS.has(event.key)) return;
@@ -191,13 +317,12 @@ export default function NumberField({
                 event.currentTarget.selectionEnd,
               );
 
-              if (isInputTextAllowed(nextInputValue)) return;
+              if (inputTextValidator(nextInputValue)) return;
               event.preventDefault();
             }}
             onPaste={(event) => {
               onInputPaste?.(event);
               if (event.defaultPrevented) return;
-              if (!isInputTextAllowed) return;
 
               const pastedText = event.clipboardData.getData("text");
               const nextInputValue = getNextInputValue(
@@ -207,8 +332,19 @@ export default function NumberField({
                 event.currentTarget.selectionEnd,
               );
 
-              if (isInputTextAllowed(nextInputValue)) return;
+              if (inputTextValidator && !inputTextValidator(nextInputValue)) {
+                event.preventDefault();
+                return;
+              }
+
+              const normalizedInputValue = removeRedundantLeadingZeros(nextInputValue);
+              if (normalizedInputValue === nextInputValue) return;
+
+              const parsedValue = Number(normalizedInputValue);
+              if (!Number.isFinite(parsedValue)) return;
+
               event.preventDefault();
+              onChange(normalizeNumericValue(parsedValue));
             }}
           />
           {unit && <span className={cx(unstyled ? undefined : styles.unit, classNames?.unit)}>{unit}</span>}
