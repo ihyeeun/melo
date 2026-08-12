@@ -51,8 +51,7 @@ export default function MealDetailPage() {
   const dateKey = getSafeDateKey(searchParams.get("date"));
   const mealType = getMealType(searchParams.get("mealType"));
   const menuSelectionRouteContext = getMenuSelectionRouteContextFromSearchParams(searchParams);
-  const menuSelectionTarget =
-    menuSelectionRouteContext.target ?? MENU_SELECTION_TARGET.MEAL_RECORD;
+  const menuSelectionTarget = menuSelectionRouteContext.target ?? MENU_SELECTION_TARGET.MEAL_RECORD;
   const hasMenuSelectionRouteContext =
     menuSelectionRouteContext.target !== null ||
     menuSelectionRouteContext.returnPath !== null ||
@@ -257,10 +256,10 @@ export default function MealDetailPage() {
     !menuSelectionRouteContext.hideMenuDetailEditSection &&
     (meal.data_source === MENU_DATA_SOURCE.PUBLIC || mealIsDeleted === 0);
   const addButtonLabel = isPersonalMenuEditMode ? "추가하기" : "담기";
-  const footerButtonLabel = isAlreadyQueued
-    ? "수정하기"
-    : mealIsDeleted
-      ? "삭제된 메뉴라 담을 수 없어요"
+  const footerButtonLabel = mealIsDeleted
+    ? "삭제된 메뉴라 담을 수 없어요"
+    : isAlreadyQueued
+      ? "수정하기"
       : addButtonLabel;
 
   const getNutrientModifyPath = (
@@ -302,13 +301,10 @@ export default function MealDetailPage() {
         mealType,
       };
 
-    moveToNutrientModify(
-      selection?.menu ?? meal,
-      {
-        ...replacementMenuSelectionContext,
-        sourceMenuId: menuId,
-      },
-    );
+    moveToNutrientModify(selection?.menu ?? meal, {
+      ...replacementMenuSelectionContext,
+      sourceMenuId: menuId,
+    });
   };
 
   const moveToNutrientModify = (
