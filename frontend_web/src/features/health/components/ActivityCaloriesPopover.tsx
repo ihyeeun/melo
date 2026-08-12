@@ -24,13 +24,10 @@ export default function ActivityCaloriesPopover({
     return null;
   }
 
-  const { calories, stepCalories, stepCount } = summary;
+  const { calories } = summary;
   if (calories <= 0) {
     return null;
   }
-
-  const hasStepCalories = stepCount > 0 && stepCalories > 0;
-  const mainIconName = hasStepCalories ? "walking" : "fire";
 
   return (
     <Popover.Root>
@@ -56,7 +53,7 @@ export default function ActivityCaloriesPopover({
             finalFocus={false}
           >
             <Popover.Arrow className={styles.arrow} data-variant={variant} />
-            <SystemIcon name={mainIconName} mode="image" size={40} />
+            <SystemIcon name="fire" mode="image" size={40} />
             <div>
               <div className={styles.badge} data-variant={variant}>
                 <SystemIcon name="fire" mode="image" size={20} />
