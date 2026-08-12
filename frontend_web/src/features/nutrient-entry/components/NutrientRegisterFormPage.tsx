@@ -1,6 +1,9 @@
 import { type ChangeEvent, useEffect, useState } from "react";
 
-import { getMenuSelectionFlowPath } from "@/features/menu-selection-flow/utils/menuSelectionFlowRoutes";
+import {
+  getMenuSelectionPath,
+  type MenuSelectionPathParams,
+} from "@/features/menu-selection/utils/menuSelectionRoutes";
 import { type RegisterManualMenuPayload } from "@/features/nutrient-entry/api/nutrient";
 import { NutrientDetailForm } from "@/features/nutrient-entry/components/NutrientDetailForm";
 import { useRegisterMenuMutation } from "@/features/nutrient-entry/hooks/mutations/useNutrientMutation";
@@ -48,7 +51,7 @@ type NutrientRegisterFormPageProps = {
   initialState: NutrientRegisterFormState;
   isSubmitPending?: boolean;
   mealType: MealType;
-  menuSelectionFlowId?: string | null;
+  menuSelectionContext?: MenuSelectionPathParams | null;
   onRegisteredMenu?: (savedMenuId: number) => void;
   onSubmit?: (payload: NutrientRegisterSubmitPayload) => void | Promise<void>;
   submitLabel?: string;
@@ -69,7 +72,7 @@ export function NutrientRegisterFormPage({
   initialState,
   isSubmitPending = false,
   mealType,
-  menuSelectionFlowId = null,
+  menuSelectionContext = null,
   onRegisteredMenu,
   onSubmit,
   submitLabel = "등록하기",
@@ -116,16 +119,16 @@ export function NutrientRegisterFormPage({
   };
 
   const handleOpenBrandSearch = () => {
-    const brandSearchPath = menuSelectionFlowId
-      ? getMenuSelectionFlowPath({
+    const brandSearchPath = menuSelectionContext?.target
+      ? getMenuSelectionPath({
           path: PATH.BRAND_SEARCH,
-          menuSelectionFlowId,
+          ...menuSelectionContext,
         })
       : PATH.BRAND_SEARCH;
-    const returnPath = menuSelectionFlowId
-      ? getMenuSelectionFlowPath({
+    const returnPath = menuSelectionContext?.target
+      ? getMenuSelectionPath({
           path: brandSearchReturnPath,
-          menuSelectionFlowId,
+          ...menuSelectionContext,
         })
       : appendMealQueryToBrandSearchReturn
         ? getPathWithMeal(brandSearchReturnPath, dateKey, mealType)

@@ -1,0 +1,69 @@
+.sheetContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 0 20px;
+}
+
+.thumbnail {
+  align-items: center;
+  color: var(--primary-normal);
+  display: inline-flex;
+  aspect-ratio: 1;
+  justify-content: center;
+  height: 180px;
+}
+
+.thumbnailImage {
+  aspect-ratio: 1;
+  height: 180px;
+  width: 180px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.title {
+  color: var(--label-normal);
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.infoGroup {
+  display: flex;
+  gap: 8px;
+  min-width: 0;
+}
+
+.sectionTitle {
+  color: var(--label-primary);
+  margin: 0;
+  flex: 0 0 auto;
+}
+
+.chipList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.statusContainer {
+  align-items: center;
+  color: var(--label-normal);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  justify-content: center;
+  min-height: 220px;
+  text-align: center;
+}
+
+@media (max-width: 360px) {
+  .sheetContainer {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .thumbnail {
+    flex-basis: 88px;
+  }
+}

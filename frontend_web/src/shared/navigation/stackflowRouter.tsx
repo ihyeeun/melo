@@ -98,6 +98,21 @@ const HomePage = createLazyActivity(() => import("@/features/home/pages/HomePage
 const TodayMealScorePage = createLazyActivity(
   () => import("@/features/home/pages/TodayMealScorePage"),
 );
+const WorkoutRecordPage = createLazyActivity(
+  () => import("@/features/health/pages/WorkoutRecordPage"),
+);
+const WorkoutRecordEditPage = createLazyActivity(
+  () => import("@/features/health/pages/WorkoutRecordEditPage"),
+);
+const WorkoutSearchPage = createLazyActivity(
+  () => import("@/features/health/pages/WorkoutSearchPage"),
+);
+const WorkoutDetailSheetPage = createLazyActivity(
+  () => import("@/features/health/pages/WorkoutDetailSheetPage"),
+);
+const WorkoutUpsertPage = createLazyActivity(
+  () => import("@/features/health/pages/WorkoutUpsertPage"),
+);
 const MealDetailPage = createLazyActivity(() => import("@/features/meal-record/MealDetailPage"));
 const MealRecordPage = createLazyActivity(() => import("@/features/meal-record/MealRecordPage"));
 const NutrientAddPage = createLazyActivity(
@@ -191,6 +206,11 @@ const ACTIVITIES = {
   HomeWeightLogSheet,
   HomeStepsLogSheet,
   TodayMealScore: TodayMealScorePage,
+  WorkoutRecord: WorkoutRecordPage,
+  WorkoutRecordEdit: WorkoutRecordEditPage,
+  WorkoutSearch: WorkoutSearchPage,
+  WorkoutDetailSheet: WorkoutDetailSheetPage,
+  WorkoutUpsert: WorkoutUpsertPage,
   AppOpenSettingsFeedback: AppOpenSettingsFeedbackPage,
   Onboarding: OnboardingPage,
   Profile: ProfilePage,
@@ -233,6 +253,11 @@ const ACTIVITY_ROUTES: Record<keyof typeof ACTIVITIES, RoutePath> = {
   HomeWeightLogSheet: PATH.HOME_WEIGHT_LOG_SHEET,
   HomeStepsLogSheet: PATH.HOME_STEPS_LOG_SHEET,
   TodayMealScore: PATH.TODAY_MEAL_SCORE,
+  WorkoutRecord: PATH.WORKOUT_RECORD,
+  WorkoutRecordEdit: PATH.WORKOUT_RECORD_EDIT,
+  WorkoutSearch: PATH.WORKOUT_RECORD_SEARCH,
+  WorkoutDetailSheet: PATH.WORKOUT_DETAIL_SHEET,
+  WorkoutUpsert: PATH.WORKOUT_UPSERT,
   AppOpenSettingsFeedback: PATH.APP_OPEN_SETTINGS_FEEDBACK,
   Onboarding: PATH.ONBOARDING,
   Profile: PATH.PROFILE,
@@ -276,6 +301,7 @@ const BOTTOM_SHEET_ACTIVITY_NAMES = new Set<ActivityName>([
   "HomeStepsLogSheet",
   "ProfileNicknameSheet",
   "ChatMealRecordSheet",
+  "WorkoutDetailSheet",
 ]);
 
 const STACK_TRANSITION_DURATION = 270;

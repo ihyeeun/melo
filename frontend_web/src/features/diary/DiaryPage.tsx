@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 
 import Calendar from "@/features/calendar/components/Calendar";
 import styles from "@/features/diary/styles/DiaryPage.module.css";
+import { buildDayMealClipboardText } from "@/features/diary/utils/dayMealClipboard";
 import ActivityCaloriesPopover from "@/features/health/components/ActivityCaloriesPopover";
 import { useActivityCalories } from "@/features/health/hooks/useActivityCalories";
 import ActionCard from "@/features/home/components/cards/ActionCard";
@@ -22,6 +23,7 @@ import {
 import { PATH } from "@/router/path";
 import { getMealRecordPath, getMealSearchPath } from "@/router/pathHelpers";
 import type { MealTime, MealType } from "@/shared/api/types/api.dto";
+import { Button } from "@/shared/commons/button/Button";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import { LoadingOverlay } from "@/shared/commons/loading/Loading";
 import ScoreProgress from "@/shared/commons/progress/Progress";
@@ -30,6 +32,7 @@ import { toast } from "@/shared/commons/toast/toast";
 import { useNavigate } from "@/shared/navigation/stackflowNavigation";
 import { useSelectedDateKey, useSetSelectedDate } from "@/shared/stores/selectedDate.store";
 import { useTargetsState } from "@/shared/stores/targetNutrient.store";
+import { copyTextToClipboard } from "@/shared/utils/clipboard";
 import { formatDateKey, parseDateKey } from "@/shared/utils/dateFormat";
 import { formatNumberWithMaxOneDecimal } from "@/shared/utils/numberFormat";
 import { calculateDailyNutritionMetricsForDisplay } from "@/shared/utils/nutrientScore";
@@ -100,6 +103,11 @@ export default function DiaryPage() {
   });
   const isCalorieExceeded = totalCalories > roundedTargetCalories;
   const mealScore = nutritionMetrics?.score.totalScore ?? 0;
+  const dayMealClipboardText = useMemo(
+    () => (dayMeals ? buildDayMealClipboardText(dayMeals) : ""),
+    [dayMeals],
+  );
+  const canCopyDayMeals = !isPending && dayMealClipboardText.length > 0;
 
   const calorieMessage = calorieSummary.message;
   const handleMoveMealRecord = (mealType: MealType) => {
@@ -130,9 +138,23 @@ export default function DiaryPage() {
     });
   };
 
+  const handleCopyDayMeals = async () => {
+    if (!canCopyDayMeals) {
+      toast.warning("복사할 식단 기록이 없어요");
+      return;
+    }
+
+    try {
+      await copyTextToClipboard(dayMealClipboardText);
+      toast.success("하루 식단을 복사했어요");
+    } catch {
+      toast.error("식단을 복사하지 못했어요", "잠시 후 다시 시도해 주세요");
+    }
+  };
+
   return (
     <div className={styles.page}>
-      <Calendar initialDate={selectedDate} onSelectDate={setSelectedDate} />
+      <Calendar selectedDate={selectedDate} onSelectDate={setSelectedDate} />
       <main className={styles.main}>
         <div className={styles.content}>
           {isPending ? (
@@ -170,7 +192,25 @@ export default function DiaryPage() {
             </ActionCard>
           )}
 
-          <div className="divider" />
+          <div className={styles.copyActions}>
+            <p className="typo-title3">식단 기록</p>
+            {canCopyDayMeals && (
+              <Button
+                variant="text"
+                color="normal"
+                size="small"
+                className={styles.copyButton}
+                disabled={!canCopyDayMeals}
+                onClick={() => {
+                  void handleCopyDayMeals();
+                }}
+                aria-label="선택한 날짜의 식단 전체 복사"
+              >
+                <SystemIcon name="copy" size={20} />
+                <span>식단 복사</span>
+              </Button>
+            )}
+          </div>
 
           <section className={styles.actionCardList}>
             {isPending

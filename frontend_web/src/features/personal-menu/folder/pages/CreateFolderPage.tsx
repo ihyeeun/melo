@@ -1,14 +1,11 @@
 import { useCallback, useEffect } from "react";
 
 import {
-  MENU_SELECTION_FLOW_TARGET,
-  useMenuSelectionFlowCreateFlow,
-} from "@/features/menu-selection-flow/stores/menuSelectionFlow.store";
-import {
-  getMenuSelectionFlowMenuDetailPath,
-  getMenuSelectionFlowSearchPath,
+  getMenuSelectionMenuDetailPath,
+  getMenuSelectionSearchPath,
   isDraftEditingMenuSelectionNavigationPath,
-} from "@/features/menu-selection-flow/utils/menuSelectionFlowRoutes";
+  MENU_SELECTION_TARGET,
+} from "@/features/menu-selection/utils/menuSelectionRoutes";
 import { useUpsertFolderMutation } from "@/features/personal-menu/folder/hooks/mutations/folder.mutation";
 import {
   useFolderDraftBuildUpsertRequest,
@@ -34,7 +31,6 @@ import {
 
 export default function CreateFolderPage() {
   const navigate = useNavigate();
-  const createMenuSelectionFlow = useMenuSelectionFlowCreateFlow();
   const folderId = useFolderDraftFolderId();
   const folderName = useFolderDraftName();
   const selectedMenus = useFolderDraftSelectedMenus();
@@ -80,22 +76,19 @@ export default function CreateFolderPage() {
     };
   }, [clearDraft]);
 
-  const createFolderMenuSelectionFlow = () =>
-    createMenuSelectionFlow({
-      menuSelectionFlowTarget: MENU_SELECTION_FLOW_TARGET.FOLDER,
-      menuSelectionCompletionReturnPath: PATH.CREATE_FOLDER,
-    });
+  const folderMenuSelectionContext = {
+    target: MENU_SELECTION_TARGET.FOLDER,
+    returnPath: PATH.CREATE_FOLDER,
+  };
 
   const handleAddMenu = () => {
-    const menuSelectionFlowId = createFolderMenuSelectionFlow();
-    navigate(getMenuSelectionFlowSearchPath(menuSelectionFlowId));
+    navigate(getMenuSelectionSearchPath(folderMenuSelectionContext));
   };
 
   const handleMenuDetailOpen = (menuId: number) => {
-    const menuSelectionFlowId = createFolderMenuSelectionFlow();
     navigate(
-      getMenuSelectionFlowMenuDetailPath({
-        menuSelectionFlowId,
+      getMenuSelectionMenuDetailPath({
+        ...folderMenuSelectionContext,
         menuId,
       }),
     );

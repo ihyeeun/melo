@@ -1,10 +1,45 @@
 .calendar-root {
-  background-color: var(--bg-primary-1);
+  --calendar-bg: var(--bg-primary-1);
+  --calendar-fg: var(--static-white);
+  --calendar-muted-fg: rgb(255 255 255 / 40%);
+  --calendar-week-selected-bg: rgb(255 255 255 / 50%);
+  --calendar-week-selected-fg: var(--label-primary);
+  --calendar-week-today-bg: var(--bg-white);
+  --calendar-week-today-fg: var(--label-primary);
+  --calendar-month-selected-bg: var(--bg-white);
+  --calendar-month-selected-fg: var(--label-primary);
+  --calendar-month-today-bg: var(--interaction-white-2);
+  --calendar-month-today-fg: var(--label-primary);
+  --calendar-dot-bg: var(--static-white);
+  --calendar-selected-dot-bg: var(--label-primary);
+  --calendar-today-dot-bg: var(--label-primary);
+
+  background-color: var(--calendar-bg);
   display: flex;
   flex-direction: column;
-  padding-top: var(--safe-area-top);
   user-select: none;
   width: 100%;
+}
+
+.calendar-root--primary {
+  padding-top: var(--safe-area-top);
+}
+
+.calendar-root--normal {
+  --calendar-bg: var(--bg-normal);
+  --calendar-fg: var(--label-normal);
+  --calendar-muted-fg: var(--label-assistive);
+  --calendar-week-selected-bg: var(--bg-primary-2);
+  --calendar-week-selected-fg: var(--label-primary);
+  --calendar-week-today-bg: var(--bg-white);
+  --calendar-week-today-fg: var(--label-primary);
+  --calendar-month-selected-bg: var(--bg-primary-1);
+  --calendar-month-selected-fg: var(--static-white);
+  --calendar-month-today-bg: var(--bg-white);
+  --calendar-month-today-fg: var(--label-primary);
+  --calendar-dot-bg: var(--label-primary);
+  --calendar-selected-dot-bg: var(--static-white);
+  --calendar-today-dot-bg: var(--label-primary);
 }
 
 .calendar-header {
@@ -43,7 +78,7 @@
 }
 
 .calendar-title-icon {
-  color: var(--static-white);
+  color: var(--calendar-fg);
   transition: transform 0.2s ease;
 }
 
@@ -54,11 +89,17 @@
 .calendar-nav-button {
   align-items: center;
   background: transparent;
-  color: var(--static-white);
+  color: var(--calendar-fg);
   display: flex;
   height: 24px;
   justify-content: center;
   width: 24px;
+}
+
+.calendar-title-text,
+.calendar-today-button,
+.calendar-month-title-text {
+  color: var(--calendar-fg);
 }
 
 .calendar-body {
@@ -96,7 +137,7 @@
 
 .monthly-calendar-weekday {
   align-items: center;
-  color: var(--static-white);
+  color: var(--calendar-fg);
   display: flex;
   height: 48px;
   justify-content: center;
@@ -113,7 +154,7 @@
 .calendar-day-cell {
   align-items: center;
   border-radius: 100px;
-  color: var(--static-white);
+  color: var(--calendar-fg);
   cursor: pointer;
   display: flex;
   flex-direction: column;
@@ -137,41 +178,41 @@
 }
 
 .calendar-day-cell.is-outside {
-  color: rgb(255 255 255 / 40%);
+  color: var(--calendar-muted-fg);
 }
 
 .calendar-day-cell--week.is-selected {
-  background: rgb(255 255 255 / 50%);
+  background: var(--calendar-week-selected-bg);
 }
 
 .calendar-day-cell--month.is-today .calendar-day-number-container {
-  background-color: var(--interaction-white-2);
+  background-color: var(--calendar-month-today-bg);
 }
 
 .calendar-day-cell--month.is-today .calendar-day-number {
-  color: var(--label-primary);
+  color: var(--calendar-month-today-fg);
 }
 
 .calendar-day-cell--month.is-selected .calendar-day-number-container {
-  background-color: var(--bg-white);
+  background-color: var(--calendar-month-selected-bg);
   padding: 0 5px;
 }
 
 .calendar-day-cell--month.is-selected .calendar-day-number {
-  color: var(--label-primary);
+  color: var(--calendar-month-selected-fg);
 }
 
 .calendar-day-cell--week.is-selected .calendar-day-weekday,
 .calendar-day-cell--week.is-selected .calendar-day-number {
-  color: var(--label-primary);
+  color: var(--calendar-week-selected-fg);
 }
 
 .calendar-day-cell.is-today .calendar-day-weekday-container {
-  background-color: var(--bg-white);
+  background-color: var(--calendar-week-today-bg);
 }
 
 .calendar-day-cell.is-today .calendar-day-weekday {
-  color: var(--label-primary);
+  color: var(--calendar-week-today-fg);
 }
 
 .calendar-day-cell--week .calendar-day-weekday-container {
@@ -211,16 +252,19 @@
 }
 
 .calendar-dot {
-  background: var(--static-white);
+  background: var(--calendar-dot-bg);
   border-radius: 50%;
   display: block;
   height: 4px;
   width: 4px;
 }
 
-.calendar-day-cell--month.is-selected .calendar-dot,
 .calendar-day-cell--month.is-today .calendar-dot {
-  background: var(--label-primary);
+  background: var(--calendar-today-dot-bg);
+}
+
+.calendar-day-cell--month.is-selected .calendar-dot {
+  background: var(--calendar-selected-dot-bg);
 }
 
 .calendar-day-cell--month.is-outside .calendar-dot {

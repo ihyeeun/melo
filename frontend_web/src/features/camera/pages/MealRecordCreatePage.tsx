@@ -178,19 +178,18 @@ export default function MealRecordCreatePage() {
           return;
         }
 
-        await mealRegisterAsync(
-          prepareRegisterRequest({
-            dateKey,
-            mealType,
-            menus: nextMenus,
-            image: imageData.image_url,
-          }),
-          {
-            onSuccess: () => {
-              void trackDiaryMenuSaveByMenuIds(imageData.menu_ids);
-            },
+        const registerRequest = prepareRegisterRequest({
+          dateKey,
+          mealType,
+          menus: nextMenus,
+          image: imageData.image_url,
+        });
+
+        await mealRegisterAsync(registerRequest, {
+          onSuccess: () => {
+            void trackDiaryMenuSaveByMenuIds(registerRequest.menu_ids ?? []);
           },
-        );
+        });
 
         toast.success("촬영한 사진의 메뉴가 기록되었어요.");
         navigate(getMealRecordPath(dateKey, mealType), { replace: true });

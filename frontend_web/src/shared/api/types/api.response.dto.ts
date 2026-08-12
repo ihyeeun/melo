@@ -349,3 +349,57 @@ export interface ProfileResponseDto {
   job_type?: number;
   lunch_location?: number | null;
 }
+
+/* ======
+ * 운동
+ * ====== */
+export interface WorkoutRecordResponseDto {
+  workout_list: WorkoutRecordItemResponseDto[];
+}
+
+export interface WorkoutRecordItemResponseDto {
+  workout_id: number; //운동 id
+  workout_name: string;
+  workout_image?: string;
+  workout_duration: number; //운동시간(분)
+  burned_calories: number; //소모 칼로리
+  workout_type: "cardio" | "weight"; //운동 유형
+  met?: number; //운동 MET 값
+  intensity?: 0 | 1 | 2; //낮음, 보통, 높음
+  set_list?: WorkoutRecordSetResponseDto[];
+}
+
+export interface WorkoutRecordSetResponseDto {
+  set_order: number; //세트 순서
+  weight: number; //중량
+  reps: number; //반복 횟수
+}
+
+export interface WorkoutSearchResponseDto {
+  workout_list: WorkoutSearchItemResponseDto[];
+  next_cursor?: number;
+}
+
+export interface WorkoutSearchItemResponseDto {
+  workout_id: number;
+  workout_name: string;
+  workout_image?: string;
+  workout_type: "cardio" | "weight";
+  met?: number;
+}
+
+export interface WorkoutDetailResponseDto {
+  workout_id: number;
+  workout_name: string;
+  workout_gif?: string;
+  workout_type: "cardio" | "weight";
+  met?: number;
+  body_part_major?: string; //운동 부위 대분류 필터. [유산소, 가슴, 등, 하체, 어깨, 팔, 코어] 중 하나
+  body_part_minor?: string[]; //운동 부위 소분류 필터. [허벅지, 종아리, 상완, 전완, 복부, 허리, 목] 등
+  equipment_category?: string; //운동 기구 대분류. [바벨, 덤벨, 케틀벨, 밴드, 머신, 스미스 머신, 맨몸, 폼롤러, 케이블 머신, 기타]
+  equipment_detail?: string; //기구 상세 분류. 머신 또는 기타 기구의 세부 이름
+}
+
+export interface WorkoutIdResponseDto {
+  workout_id: number;
+}

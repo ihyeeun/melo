@@ -33,6 +33,8 @@ export const EVENT_NAME = {
   CLICK_FEEDBACK_BUTTON: "click_feedback_button",
 
   BODY_WEIGHT_RECORDED: "body_weight_recorded",
+
+  WORKOUT_RECORD_COMPLETED: "workout_record_completed",
 } as const;
 
 export type AnalyticsEventName = (typeof EVENT_NAME)[keyof typeof EVENT_NAME];

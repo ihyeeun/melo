@@ -4,13 +4,13 @@ import {
   getMealType,
   getSafeDateKey,
 } from "@/features/meal-record/utils/mealRecord.queryParams";
-import { useRemoveMenuSelectionFlowOnExit } from "@/features/menu-selection-flow/hooks/useRemoveMenuSelectionFlowOnExit";
-import { useMenuSelectionFlowById } from "@/features/menu-selection-flow/stores/menuSelectionFlow.store";
 import {
-  getMenuSelectionFlowIdFromSearchParams,
-  getMenuSelectionFlowPath,
-  getMenuSelectionFlowSearchPath,
-} from "@/features/menu-selection-flow/utils/menuSelectionFlowRoutes";
+  buildMenuSelectionPathContext,
+  getMenuSelectionPath,
+  getMenuSelectionRouteContextFromSearchParams,
+  getMenuSelectionSearchPath,
+  type MenuSelectionPathParams,
+} from "@/features/menu-selection/utils/menuSelectionRoutes";
 import {
   createBrandSearchSelectionKey,
   useBrandSearchSelectedBrand,
@@ -53,7 +53,7 @@ type NutrientAddFormPageProps = {
   initialState: NutrientAddLocationState;
   isSubmitPending?: boolean;
   mealType: MealType;
-  menuSelectionFlowId?: string | null;
+  menuSelectionContext?: MenuSelectionPathParams | null;
   nextLabel?: string;
   onNext: (payload: NutrientAddSubmitPayload) => void;
   title?: string;
@@ -64,22 +64,19 @@ export default function NutrientAddPage() {
   const location = useLocation();
   const [searchParams] = useSearchParams();
   const locationState = (location.state ?? {}) as NutrientAddLocationState;
-  const menuSelectionFlowId = getMenuSelectionFlowIdFromSearchParams(searchParams);
-  useRemoveMenuSelectionFlowOnExit(menuSelectionFlowId);
-  const menuSelectionFlow = useMenuSelectionFlowById(menuSelectionFlowId);
-
-  const dateKey = getSafeDateKey(
-    searchParams.get("date") ??
-      locationState.dateKey ??
-      menuSelectionFlow?.relatedMealRecordDateKey ??
-      null,
-  );
+  const menuSelectionRouteContext = getMenuSelectionRouteContextFromSearchParams(searchParams);
+  const dateKey = getSafeDateKey(searchParams.get("date") ?? locationState.dateKey ?? null);
   const mealType = getMealType(
-    searchParams.get("mealType") ??
-      locationState.mealType ??
-      menuSelectionFlow?.relatedMealRecordMealType ??
-      null,
+    searchParams.get("mealType") ?? locationState.mealType ?? null,
   );
+  const menuSelectionContext: MenuSelectionPathParams | null = menuSelectionRouteContext.target
+    ? buildMenuSelectionPathContext({
+        dateKey,
+        mealType,
+        routeContext: menuSelectionRouteContext,
+        target: menuSelectionRouteContext.target,
+      })
+    : null;
 
   const handleNext = ({ brand, name }: NutrientAddSubmitPayload) => {
     const params = new URLSearchParams({
@@ -92,10 +89,10 @@ export default function NutrientAddPage() {
       params.set("brand", brand.trim());
     }
 
-    const nutrientCameraPath = menuSelectionFlowId
-      ? getMenuSelectionFlowPath({
+    const nutrientCameraPath = menuSelectionContext?.target
+      ? getMenuSelectionPath({
           path: PATH.NUTRIENT_CAMERA,
-          menuSelectionFlowId,
+          ...menuSelectionContext,
           extraSearchParams: {
             name,
             brand: brand.trim() || undefined,
@@ -116,15 +113,15 @@ export default function NutrientAddPage() {
   return (
     <NutrientAddFormPage
       backFallbackPath={
-        menuSelectionFlowId
-          ? getMenuSelectionFlowSearchPath(menuSelectionFlowId)
+        menuSelectionContext?.target
+          ? getMenuSelectionSearchPath(menuSelectionContext)
           : getPathWithMeal(PATH.MEAL_RECORD_ADD_SEARCH, dateKey, mealType)
       }
       brandSearchReturnPath={PATH.NUTRIENT_ADD}
       dateKey={dateKey}
       initialState={locationState}
       mealType={mealType}
-      menuSelectionFlowId={menuSelectionFlowId}
+      menuSelectionContext={menuSelectionContext}
       onNext={handleNext}
     />
   );
@@ -138,7 +135,7 @@ export function NutrientAddFormPage({
   initialState,
   isSubmitPending = false,
   mealType,
-  menuSelectionFlowId = null,
+  menuSelectionContext = null,
   nextLabel = "다음",
   onNext,
   title = "영양성분 등록",
@@ -168,16 +165,16 @@ export function NutrientAddFormPage({
   };
 
   const handleOpenBrandSearch = () => {
-    const brandSearchPath = menuSelectionFlowId
-      ? getMenuSelectionFlowPath({
+    const brandSearchPath = menuSelectionContext?.target
+      ? getMenuSelectionPath({
           path: PATH.BRAND_SEARCH,
-          menuSelectionFlowId,
+          ...menuSelectionContext,
         })
       : PATH.BRAND_SEARCH;
-    const returnPath = menuSelectionFlowId
-      ? getMenuSelectionFlowPath({
+    const returnPath = menuSelectionContext?.target
+      ? getMenuSelectionPath({
           path: brandSearchReturnPath,
-          menuSelectionFlowId,
+          ...menuSelectionContext,
         })
       : appendMealQueryToBrandSearchReturn
         ? getPathWithMeal(brandSearchReturnPath, dateKey, mealType)

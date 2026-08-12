@@ -1,5 +1,5 @@
 import { startOfWeek, subWeeks } from "date-fns";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import {
   buildMonthCalendarDays,
@@ -7,6 +7,7 @@ import {
   moveNext,
   movePrev,
 } from "@/features/calendar/utils/calendar";
+import { formatDateKey, parseDateKey } from "@/shared/utils/dateFormat";
 
 import type { ViewMode } from "../types/calendar.types";
 
@@ -14,6 +15,7 @@ type UseCalendarParams = {
   initialDate?: Date;
   initialViewMode?: ViewMode;
   recordedDates?: string[];
+  selectedDate?: Date;
 };
 
 type SelectDateOptions = {
@@ -24,11 +26,25 @@ export function useCalendar({
   initialDate = new Date(),
   initialViewMode = "week",
   recordedDates = [],
+  selectedDate: controlledSelectedDate,
 }: UseCalendarParams = {}) {
   const weekStartsOn = 1 as const;
+  const initialSelectedDate = controlledSelectedDate ?? initialDate;
+  const controlledSelectedDateKey = controlledSelectedDate
+    ? formatDateKey(controlledSelectedDate)
+    : null;
   const [viewMode, setViewMode] = useState<ViewMode>(initialViewMode);
-  const [selectedDate, setSelectedDate] = useState(initialDate);
-  const [viewDate, setViewDate] = useState(initialDate);
+  const [internalSelectedDate, setInternalSelectedDate] = useState(initialSelectedDate);
+  const [viewDate, setViewDate] = useState(initialSelectedDate);
+  const selectedDate = controlledSelectedDate ?? internalSelectedDate;
+
+  useEffect(() => {
+    if (!controlledSelectedDateKey) {
+      return;
+    }
+
+    setViewDate(parseDateKey(controlledSelectedDateKey));
+  }, [controlledSelectedDateKey]);
 
   const weekDays = useMemo(() => {
     return buildWeekCalendarDays({
@@ -54,7 +70,10 @@ export function useCalendar({
   };
 
   const selectDate = (date: Date, { switchToWeek = false }: SelectDateOptions = {}) => {
-    setSelectedDate(date);
+    if (!controlledSelectedDate) {
+      setInternalSelectedDate(date);
+    }
+
     setViewDate(date);
 
     if (switchToWeek) {
@@ -100,7 +119,11 @@ export function useCalendar({
 
   const goToday = () => {
     const today = new Date();
-    setSelectedDate(today);
+
+    if (!controlledSelectedDate) {
+      setInternalSelectedDate(today);
+    }
+
     setViewDate(today);
     return today;
   };

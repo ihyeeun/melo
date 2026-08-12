@@ -4,12 +4,13 @@ import { useDayMealsQuery } from "@/features/home/hooks/queries/useTodayRecordQu
 import { useMenuCacheItems } from "@/features/meal-record/hooks/queries/menuCache";
 import { useSyncMenuDraftWithDayMeals } from "@/features/meal-record/stores/menuDraft.store";
 import { getMealType, getSafeDateKey } from "@/features/meal-record/utils/mealRecord.queryParams";
-import { useMenuSelectionFlowAdapter } from "@/features/menu-selection-flow/hooks/useMenuSelectionFlowAdapter";
 import {
-  MENU_SELECTION_FLOW_TARGET,
-  useMenuSelectionFlowCreateFlow,
-} from "@/features/menu-selection-flow/stores/menuSelectionFlow.store";
-import { getMenuSelectionFlowMenuDetailPath } from "@/features/menu-selection-flow/utils/menuSelectionFlowRoutes";
+  useMenuSelectionAdapter,
+} from "@/features/menu-selection/hooks/useMenuSelectionAdapter";
+import {
+  getMenuSelectionMenuDetailPath,
+  MENU_SELECTION_TARGET,
+} from "@/features/menu-selection/utils/menuSelectionRoutes";
 import { DetailActionSelect } from "@/features/personal-menu/components/DetailActionSelect";
 import { useDeleteFolderMutation } from "@/features/personal-menu/folder/hooks/mutations/folder.mutation";
 import {
@@ -79,7 +80,6 @@ function scaleCaloriesByQuantity(menu: MenuSimpleResponseDto, quantity: number) 
 
 export default function FolderDetailPage() {
   const navigate = useNavigate();
-  const createMenuSelectionFlow = useMenuSelectionFlowCreateFlow();
   const [searchParams] = useSearchParams();
   const dateKey = getSafeDateKey(searchParams.get("date"));
   const mealType = getMealType(searchParams.get("mealType"));
@@ -105,10 +105,10 @@ export default function FolderDetailPage() {
     selectedMenuIdSet,
     selectedMenus,
     upsertSelectedMenu,
-  } = useMenuSelectionFlowAdapter({
-    fallbackMealRecordDateKey: dateKey,
-    fallbackMealRecordMealType: mealType,
-    fallbackMenuSelectionFlowTarget: MENU_SELECTION_FLOW_TARGET.MEAL_RECORD,
+  } = useMenuSelectionAdapter({
+    mealRecordDateKey: dateKey,
+    mealRecordMealType: mealType,
+    target: MENU_SELECTION_TARGET.MEAL_RECORD,
   });
   const setFolderDraft = useFolderDraftSetDraft();
   const clearFolderDraft = useFolderDraftClearDraft();
@@ -215,23 +215,17 @@ export default function FolderDetailPage() {
   };
 
   const handleMenuDetailOpen = (folderMenu: FolderDetailMenu) => {
-    const menuSelectionFlowId = createMenuSelectionFlow({
-      menuSelectionFlowTarget: MENU_SELECTION_FLOW_TARGET.MEAL_RECORD,
-      menuSelectionCompletionReturnPath: folderDetailPath,
-      relatedMealRecordDateKey: dateKey,
-      relatedMealRecordMealType: mealType,
-      hideMenuDetailEditSection: true,
-      initialMenuServingByMenuId: {
-        [folderMenu.menu.id]: {
-          menuQuantity: folderMenu.quantity,
-          menuInputMode: folderMenu.inputMode,
-        },
-      },
-    });
-
     navigate(
-      getMenuSelectionFlowMenuDetailPath({
-        menuSelectionFlowId,
+      getMenuSelectionMenuDetailPath({
+        target: MENU_SELECTION_TARGET.MEAL_RECORD,
+        dateKey,
+        mealType,
+        returnPath: folderDetailPath,
+        hideMenuDetailEditSection: true,
+        initialServing: {
+          quantity: folderMenu.quantity,
+          mode: folderMenu.inputMode,
+        },
         menuId: folderMenu.menu.id,
       }),
     );
