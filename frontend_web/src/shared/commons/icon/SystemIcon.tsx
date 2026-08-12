@@ -25,6 +25,7 @@ const SYSTEM_ICON_SRC = {
   "circle-plus-fill": "/icons/system-icons/circle-plus-fill.svg",
   "close-large": "/icons/system-icons/close-large.svg",
   close: "/icons/system-icons/close.svg",
+  copy: "/icons/system-icons/copy.svg",
   "info-icon": "/icons/system-icons/info-icon.svg",
   pencil: "/icons/system-icons/pencil.svg",
   "pencil-fill": "/icons/system-icons/pencil-fill.svg",
