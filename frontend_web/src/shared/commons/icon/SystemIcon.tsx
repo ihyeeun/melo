@@ -24,6 +24,8 @@ const SYSTEM_ICON_SRC = {
   notification: "/icons/system-icons/notification.svg",
   "plus-circle": "/icons/system-icons/plus-circle.svg",
   plus: "/icons/system-icons/plus.svg",
+  "arrow-filled-right": "/icons/system-icons/arrow-filled-right.svg",
+  "arrow-filled-left": "/icons/system-icons/arrow-filled-left.svg",
 } as const;
 
 export type SystemIconName = keyof typeof SYSTEM_ICON_SRC;

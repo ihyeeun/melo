@@ -129,8 +129,8 @@ export default function WorkoutRecordPage() {
       <Calendar
         selectedDate={selectedDate}
         onSelectDate={setSelectedDate}
+        safeAreaTop={false}
         showRecordedDots={false}
-        variant="normal"
       />
 
       <main className={styles.content}>

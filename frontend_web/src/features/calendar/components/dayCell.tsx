@@ -36,12 +36,10 @@ export default function DayCell({ day, weekdayLabel, onSelect, variant = "week" 
       })}${day.isToday ? ", 오늘" : ""}${!day.isCurrentMonth ? ", 이번 달 아님" : ""}`}
     >
       {variant === "week" && weekdayLabel && (
-        <div className="calendar-day-weekday-container">
-          <span className="calendar-day-weekday typo-title4">{weekdayLabel}</span>
-        </div>
+        <span className="calendar-day-weekday caption-m-regular">{weekdayLabel}</span>
       )}
       <div className="calendar-day-number-container">
-        <span className="calendar-day-number typo-title4">{formatDayNumber(day.date)}</span>
+        <span className="calendar-day-number body-l-regular">{formatDayNumber(day.date)}</span>
         {variant === "month" ? <EventDot visible={day.hasRecord} /> : null}
       </div>
     </button>
