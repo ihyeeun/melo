@@ -21,7 +21,7 @@ export const workoutKeys = {
     lists: {
       all: () => [...workoutKeys.catalog.all(), "lists"] as const,
       search: (params: Omit<SearchWorkoutRequestDto, "cursor">) =>
-        [...workoutKeys.catalog.all(), "search", params] as const,
+        [...workoutKeys.catalog.lists.all(), "search", params] as const,
     },
 
     previews: {
