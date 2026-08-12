@@ -1,7 +1,6 @@
 import { Tabs } from "@base-ui/react";
 import { PullToRefresh } from "@seed-design/react";
 import { useActivity } from "@stackflow/react";
-import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 
 import { useDayMealsQuery } from "@/features/home/hooks/queries/useTodayRecordQuery";
@@ -9,10 +8,7 @@ import {
   MAX_MEAL_RECORD_MENUS,
   MEAL_RECORD_MENU_LIMIT_MESSAGE,
 } from "@/features/meal-record/constants/menu.constants";
-import {
-  useMenuCacheItems,
-  writeMenuSimpleCache,
-} from "@/features/meal-record/hooks/queries/menuCache";
+import { useMenuCacheItems } from "@/features/meal-record/hooks/queries/menuCache";
 import {
   formatMenuDraftKey,
   useMenuDraftStore,
@@ -27,8 +23,6 @@ import {
   getMenuSelectionRouteContextFromSearchParams,
   MENU_SELECTION_TARGET,
 } from "@/features/menu-selection/utils/menuSelectionRoutes";
-import { getFolderItems } from "@/features/personal-menu/folder/api/folder.api";
-import { folderQueryKeys } from "@/features/personal-menu/folder/hooks/queries/folder.queryKey";
 import RegisterBottomSheet from "@/features/search/components/RegisterBottomSheet";
 import {
   useFolderListInfiniteQuery,
@@ -45,16 +39,8 @@ import {
   getMealRecordPath,
   getPathWithMeal,
 } from "@/router/pathHelpers";
-import {
-  type MealServingInputMode,
-  type MealType,
-  MENU_INPUT_MODE,
-} from "@/shared/api/types/api.dto";
-import type {
-  FolderDetailResponseDto,
-  FolderListItemResponseDto,
-  MenuSimpleResponseDto,
-} from "@/shared/api/types/api.response.dto";
+import type { MealType } from "@/shared/api/types/api.dto";
+import type { MenuSimpleResponseDto } from "@/shared/api/types/api.response.dto";
 import { Button } from "@/shared/commons/button/Button";
 import { FloatingCameraButton } from "@/shared/commons/button/FloatingCameraButton";
 import { MealMenuCard } from "@/shared/commons/card/MealMenuCard";
@@ -84,16 +70,6 @@ type PersonalMenuTab = (typeof PERSONAL_MENU_TAB)[keyof typeof PERSONAL_MENU_TAB
 
 function getDefaultConsumedWeight(weight: number) {
   return typeof weight === "number" && Number.isFinite(weight) && weight > 0 ? weight : 1;
-}
-
-function getSafeFolderQuantity(menu: MenuSimpleResponseDto, quantity: number | undefined) {
-  return typeof quantity === "number" && Number.isFinite(quantity) && quantity > 0
-    ? quantity
-    : getDefaultConsumedWeight(menu.weight);
-}
-
-function getSafeFolderInputMode(inputMode: 0 | 1 | undefined): MealServingInputMode {
-  return inputMode === MENU_INPUT_MODE.UNIT ? "unit" : "weight";
 }
 
 export default function MealSearchPage() {
@@ -862,13 +838,6 @@ function FolderPanel({
   mealType: MealType;
 }) {
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
-  const menuSelectionAdapter = useMenuSelectionAdapter({
-    mealRecordDateKey: dateKey,
-    mealRecordMealType: mealType,
-    target: MENU_SELECTION_TARGET.MEAL_RECORD,
-  });
-  const [pendingFolderId, setPendingFolderId] = useState<number | null>(null);
   const {
     data: folders,
     isPending: isFolderPending,
@@ -879,118 +848,6 @@ function FolderPanel({
     limit: MENU_SEARCH_PAGE_LIMIT,
   });
   const folderList = folders?.pages.flatMap((page) => page.folder_list) ?? [];
-  const selectedMenuIdSet = menuSelectionAdapter.selectedMenuIdSet;
-
-  const getCachedFolderDetail = (folderId: number) =>
-    queryClient.getQueryData<FolderDetailResponseDto>(folderQueryKeys.detail(folderId));
-
-  const fetchFolderDetail = (folderId: number) =>
-    queryClient.fetchQuery({
-      queryKey: folderQueryKeys.detail(folderId),
-      queryFn: async () => {
-        const response = await getFolderItems({ folder_id: folderId });
-
-        response.menu_list.forEach((menu) => writeMenuSimpleCache(queryClient, menu));
-
-        return response;
-      },
-      staleTime: Infinity,
-    });
-
-  const getAreFolderMenusSelected = (folderDetail: FolderDetailResponseDto) => {
-    if (folderDetail.menu_list.length === 0) {
-      return false;
-    }
-
-    return folderDetail.menu_list.every((menu) => selectedMenuIdSet.has(menu.id));
-  };
-
-  const canApplyFolderMenus = (folderDetail: FolderDetailResponseDto) => {
-    const nextSelectedMenuIdSet = new Set(selectedMenuIdSet);
-
-    folderDetail.menu_list.forEach((menu) => {
-      nextSelectedMenuIdSet.add(menu.id);
-    });
-
-    return nextSelectedMenuIdSet.size <= menuSelectionAdapter.maxSelectableMenuCount;
-  };
-
-  const applyFolderMenus = (folderDetail: FolderDetailResponseDto) => {
-    folderDetail.menu_list.forEach((menu, index) => {
-      menuSelectionAdapter.upsertSelectedMenu({
-        viewMenu: menu,
-        menuQuantity: getSafeFolderQuantity(menu, folderDetail.menu_quantities[index]),
-        menuInputMode: getSafeFolderInputMode(folderDetail.menu_input_modes[index]),
-      });
-    });
-  };
-
-  const removeFolderMenus = (folderDetail: FolderDetailResponseDto) => {
-    folderDetail.menu_list.forEach((menu) => {
-      menuSelectionAdapter.removeSelectedMenu(menu.id);
-    });
-  };
-
-  const handleToggleFolderMenus = async (folder: FolderListItemResponseDto) => {
-    if (pendingFolderId !== null) {
-      return;
-    }
-
-    const cachedFolderDetail = getCachedFolderDetail(folder.folder_id);
-    const isCachedFolderSelected =
-      cachedFolderDetail !== undefined && getAreFolderMenusSelected(cachedFolderDetail);
-
-    if (
-      cachedFolderDetail?.menu_list.length === 0 ||
-      (!cachedFolderDetail && folder.menu_names.length === 0)
-    ) {
-      toast.warning("폴더에 담긴 음식이 없어요");
-      return;
-    }
-
-    if (cachedFolderDetail && !isCachedFolderSelected) {
-      if (!canApplyFolderMenus(cachedFolderDetail)) {
-        toast.warning(menuSelectionAdapter.menuCountLimitMessage);
-        return;
-      }
-    }
-
-    setPendingFolderId(folder.folder_id);
-
-    try {
-      const folderDetail = await fetchFolderDetail(folder.folder_id);
-
-      if (folderDetail.menu_list.length === 0) {
-        toast.warning("폴더에 담긴 음식이 없어요");
-        return;
-      }
-
-      if (getAreFolderMenusSelected(folderDetail)) {
-        removeFolderMenus(folderDetail);
-        return;
-      }
-
-      if (!canApplyFolderMenus(folderDetail)) {
-        toast.warning(menuSelectionAdapter.menuCountLimitMessage);
-        return;
-      }
-
-      applyFolderMenus(folderDetail);
-    } catch {
-      toast.warning("폴더를 불러오지 못했어요", "잠시 후 다시 시도해주세요.");
-    } finally {
-      setPendingFolderId(null);
-    }
-  };
-
-  const getIsFolderSelected = (folder: FolderListItemResponseDto) => {
-    const folderDetail = getCachedFolderDetail(folder.folder_id);
-    if (!folderDetail) {
-      return false;
-    }
-
-    return getAreFolderMenusSelected(folderDetail);
-  };
 
   return (
     <div className={styles.searchContent}>
@@ -1028,22 +885,14 @@ function FolderPanel({
             <span>새 폴더 만들기</span>
             <SystemIcon name="chevron-right-thin" size={16} />
           </Button>
-          {folderList.map((folder) => {
-            const isFolderSelected = getIsFolderSelected(folder);
-            const isFolderPending = pendingFolderId === folder.folder_id;
-
-            return (
-              <article
-                key={folder.folder_id}
-                className={`${styles.folderItem} ${
-                  isFolderSelected ? styles.folderItemSelected : ""
-                }`}
+          {folderList.map((folder) => (
+            <article key={folder.folder_id} className={styles.folderItem}>
+              <button
+                type="button"
+                className={styles.folderContentButton}
+                onClick={() => navigate(getFolderDetailPath(dateKey, mealType, folder.folder_id))}
               >
-                <button
-                  type="button"
-                  className={styles.folderContentButton}
-                  onClick={() => navigate(getFolderDetailPath(dateKey, mealType, folder.folder_id))}
-                >
+                <div className={styles.folderContent}>
                   <div className={styles.folderName}>
                     <span className={`typo-title3 textNormal ${styles.folderTitle}`}>
                       {folder.folder_name}
@@ -1052,32 +901,11 @@ function FolderPanel({
                   <span className={`typo-body3 ${styles.folderMenuNames}`}>
                     {folder.menu_names.join(", ")}
                   </span>
-                </button>
-
-                <button
-                  type="button"
-                  className={styles.folderIconButton}
-                  disabled={isFolderPending}
-                  aria-label={
-                    isFolderSelected
-                      ? `${folder.folder_name} 폴더 음식 제거`
-                      : `${folder.folder_name} 폴더 음식 추가`
-                  }
-                  onClick={() => {
-                    void handleToggleFolderMenus(folder);
-                  }}
-                >
-                  {isFolderPending ? (
-                    <LoadingIndicator iconSize={8} label="폴더 음식을 변경하는 중입니다." />
-                  ) : isFolderSelected ? (
-                    <SystemIcon name="circle-check-selected" mode="image" size={24} />
-                  ) : (
-                    <SystemIcon name="circle-plus" mode="image" size={24} />
-                  )}
-                </button>
-              </article>
-            );
-          })}
+                </div>
+                <SystemIcon name="chevron-right-thin" size={24} />
+              </button>
+            </article>
+          ))}
         </div>
       ) : (
         <div className={styles.emptyResultContainer}>
