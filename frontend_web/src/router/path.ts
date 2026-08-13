@@ -5,7 +5,6 @@ export const PATH = {
   HOME_STEPS_LOG_SHEET: "/home/body-log/steps",
   KAKAO_WEB_LOGIN: "/auth/kakao/login",
   KAKAO_WEB_CALLBACK: "/auth/kakao/callback",
-  TODAY_MEAL_SCORE: "/home/date-meal-score",
   WORKOUT_RECORD: "/workout-record",
   WORKOUT_RECORD_EDIT: "/workout-record/edit",
   WORKOUT_DETAIL_SHEET: "/workout-record/detail",

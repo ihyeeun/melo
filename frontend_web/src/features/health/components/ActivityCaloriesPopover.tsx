@@ -1,31 +1,31 @@
 import { Popover } from "@base-ui/react/popover";
 
-import { useActivityCalories } from "@/features/health/hooks/useActivityCalories";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 
 import styles from "./ActivityCaloriesPopover.module.css";
 
 type ActivityCaloriesBadgeVariant = "white" | "primary";
 
-type ActivityCaloriesBadgeProps = {
+type ActivityCaloriesPopoverProps = {
+  activityCalories: number | null | undefined;
+  baseTargetCalories: number | null | undefined;
   className?: string;
   variant?: ActivityCaloriesBadgeVariant;
-  date?: string;
 };
 
 export default function ActivityCaloriesPopover({
+  activityCalories,
   className = "",
   variant = "white",
-  date,
-}: ActivityCaloriesBadgeProps) {
-  const { summary } = useActivityCalories(date);
+}: ActivityCaloriesPopoverProps) {
+  const calories =
+    typeof activityCalories === "number" &&
+    Number.isFinite(activityCalories) &&
+    activityCalories > 0
+      ? Math.round(activityCalories)
+      : 0;
 
-  if (!summary) {
-    return null;
-  }
-
-  const { calories } = summary;
-  if (calories <= 0) {
+  if (calories === 0) {
     return null;
   }
 
@@ -34,9 +34,10 @@ export default function ActivityCaloriesPopover({
       <Popover.Trigger
         type="button"
         className={`${styles.trigger} ${className ?? ""}`}
+        aria-label="운동 칼로리 안내"
         onClick={(event) => event.stopPropagation()}
       >
-        <SystemIcon name="circle-info" size={20} className={styles.infoIcon} />
+        <SystemIcon name="info" size={18} className={styles.infoIcon} />
       </Popover.Trigger>
 
       <Popover.Portal>
@@ -47,21 +48,13 @@ export default function ActivityCaloriesPopover({
           sideOffset={8}
         >
           <Popover.Popup
-            className={`${styles.popup} typo-body3`}
+            className={`${styles.popup} body-l-medium text-accent`}
             data-variant={variant}
             initialFocus={false}
             finalFocus={false}
           >
             <Popover.Arrow className={styles.arrow} data-variant={variant} />
-            <SystemIcon name="walking" mode="image" size={40} />
-            <div>
-              <div className={styles.badge} data-variant={variant}>
-                <SystemIcon name="fire" mode="image" size={20} />
-                <p className="typo-label4 textAlternative">
-                  {calories.toLocaleString("ko-KR")}kcal 소모
-                </p>
-              </div>
-            </div>
+            <p className="textCenter">운동으로 {calories.toLocaleString("ko-KR")}kcal 소모</p>
           </Popover.Popup>
         </Popover.Positioner>
       </Popover.Portal>

@@ -95,9 +95,6 @@ type SwipeBackTransitionOptions = {
 type SwipeBackTransitionRequester = (options: SwipeBackTransitionOptions) => boolean;
 
 const HomePage = createLazyActivity(() => import("@/features/home/pages/HomePage"));
-const TodayMealScorePage = createLazyActivity(
-  () => import("@/features/home/pages/TodayMealScorePage"),
-);
 const WorkoutRecordPage = createLazyActivity(
   () => import("@/features/health/pages/WorkoutRecordPage"),
 );
@@ -205,7 +202,6 @@ const ACTIVITIES = {
   Home: HomePage,
   HomeWeightLogSheet,
   HomeStepsLogSheet,
-  TodayMealScore: TodayMealScorePage,
   WorkoutRecord: WorkoutRecordPage,
   WorkoutRecordEdit: WorkoutRecordEditPage,
   WorkoutSearch: WorkoutSearchPage,
@@ -252,7 +248,6 @@ const ACTIVITY_ROUTES: Record<keyof typeof ACTIVITIES, RoutePath> = {
   Home: [PATH.HOME, PATH.ROOT],
   HomeWeightLogSheet: PATH.HOME_WEIGHT_LOG_SHEET,
   HomeStepsLogSheet: PATH.HOME_STEPS_LOG_SHEET,
-  TodayMealScore: PATH.TODAY_MEAL_SCORE,
   WorkoutRecord: PATH.WORKOUT_RECORD,
   WorkoutRecordEdit: PATH.WORKOUT_RECORD_EDIT,
   WorkoutSearch: PATH.WORKOUT_RECORD_SEARCH,

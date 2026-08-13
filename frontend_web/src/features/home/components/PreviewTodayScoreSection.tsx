@@ -1,15 +1,17 @@
+import ActivityCaloriesPopover from "@/features/health/components/ActivityCaloriesPopover";
+import { useActivityCalories } from "@/features/health/hooks/useActivityCalories";
+import Tile from "@/features/home/components/cards/Tile";
 import { useDayMealsQuery } from "@/features/home/hooks/queries/useTodayRecordQuery";
 import styles from "@/features/home/styles/PreviewTodayScoreSection.module.css";
-import type { DayMealSummary } from "@/features/home/utils/dayMealSummary";
+import { getDayNutritionSummary } from "@/features/home/utils/dayMealSummary";
+import {
+  NET_CARBS_NOTICE_MESSAGE,
+  NutrientWarningPopover,
+} from "@/features/meal-record/components/NutrientWarningPopover";
 import { useGetProfileQuery } from "@/features/profile/hooks/queries/useProfileQuery";
-import type { ProfileResponseDto } from "@/shared/api/types/api.response.dto";
+import ScoreProgress from "@/shared/commons/progress/Progress";
 import { Skeleton, SkeletonStatus } from "@/shared/commons/skeleton/Skeleton";
 import { useSelectedDateKey } from "@/shared/stores/selectedDate.store";
-import {
-  calculateDayMealNutrition,
-  type DailyNutritionMetrics,
-  hasValidDailyNutritionTarget,
-} from "@/shared/utils/nutrientScore";
 
 const SCORE_CHARACTER_SOURCES = [
   { maxScore: 20, src: "/icons/characters/score-0.png" },
@@ -24,6 +26,10 @@ const DEFAULT_CHARACTER_SRC = SCORE_CHARACTER_SOURCES[0].src;
 export default function PreviewTodayScoreSection() {
   const selectedDateKey = useSelectedDateKey();
   const {
+    isWorkoutRecordPending,
+    summary: activitySummary,
+  } = useActivityCalories(selectedDateKey);
+  const {
     data: dayMeal,
     isError: isSummaryError,
     isPending: isSummaryPending,
@@ -34,69 +40,122 @@ export default function PreviewTodayScoreSection() {
     isPending: isProfilePending,
   } = useGetProfileQuery();
 
-  if (isSummaryPending || isProfilePending) {
+  if (isSummaryPending || isProfilePending || isWorkoutRecordPending) {
     return <PreviewTodayScoreSkeleton />;
   }
 
-  const nutritionMetrics = calculateDayMealNutrition(dayMeal, profile);
-  const nutrition = resolveNutritionCardContent({
+  const nutritionSummary = getDayNutritionSummary(
     dayMeal,
-    isProfileError,
-    isSummaryError,
-    nutritionMetrics,
     profile,
-  });
+    activitySummary?.calories,
+  );
+  const nutrition = isProfileError
+    ? { message: "목표 정보를 불러오지 못했어요", score: null }
+    : isSummaryError
+      ? { message: "식사 정보를 불러오지 못했어요", score: null }
+      : nutritionSummary;
+  const characterSrc = getScoreCharacterSrc(nutrition.score ?? 0);
 
   return (
-    <PreviewTodayScoreCard
-      characterSrc={getScoreCharacterSrc(nutrition.score ?? 0)}
-      message={nutrition.message}
-      score={nutrition.score}
-    />
+    <div className={styles.root}>
+      <article className={styles.nutritionBalanceCard}>
+        <div className={styles.summaryArea}>
+          <div className={styles.titleArea}>
+            <p className="text-primary title-s-semi">오늘의 영양 밸런스</p>
+            <p className={`${styles.message} text-tertiary body-s-regular`}>{nutrition.message}</p>
+          </div>
+
+          <p className={`text-primary title-xl-medium ${styles.score}`}>
+            {nutrition.score ?? "--"}
+            <span className="text-tertiary body-l-regular"> 점</span>
+          </p>
+        </div>
+
+        <img
+          className={styles.character}
+          src={characterSrc}
+          width={154}
+          height={154}
+          alt=""
+          aria-hidden="true"
+        />
+      </article>
+
+      <section className={styles.nutritionSection}>
+        <Tile className={styles.calorieGroup}>
+          <p className={`body-l-medium text-primary`}>칼로리</p>
+          <div className={styles.calorieValue}>
+            <p>
+              <span className={`title-l-semi text-primary ${styles.currentCalorie}`}>
+                {nutritionSummary.calories.current.toLocaleString("ko-KR")}
+              </span>{" "}
+              <span className={`body-l-regular text-tertiary`}>
+                / {nutritionSummary.calories.target.toLocaleString("ko-KR")} kcal
+              </span>
+            </p>
+            <ActivityCaloriesPopover
+              activityCalories={nutritionSummary.calories.activity}
+              baseTargetCalories={nutritionSummary.calories.baseTarget}
+            />
+          </div>
+          <ScoreProgress variant="primary" value={nutritionSummary.calories.progressPercent} />
+        </Tile>
+
+        <Tile className={styles.macrosGroup}>
+          <div className={styles.macrosItem}>
+            <div className={styles.macroTitle}>
+              <p className="body-s-medium text-primary">탄수화물</p>
+              {nutritionSummary.notices.carbsEstimatedFromSubNutrients && (
+                <NutrientWarningPopover
+                  ariaLabel="순탄수 기준 안내"
+                  messages={NET_CARBS_NOTICE_MESSAGE}
+                />
+              )}
+            </div>
+            <p>
+              <span className="body-s-medium text-primary">
+                {nutritionSummary.nutrients.carbs.current.toLocaleString("ko-KR")}
+              </span>{" "}
+              <span className="caption-m-regular text-tertiary">
+                / {nutritionSummary.nutrients.carbs.target.toLocaleString("ko-KR")}g
+              </span>
+            </p>
+            <ScoreProgress
+              variant="navy"
+              value={nutritionSummary.nutrients.carbs.progressPercent}
+            />
+          </div>
+          <div className={styles.macrosItem}>
+            <p className="body-s-medium text-primary">단백질</p>
+            <p>
+              <span className="body-s-medium text-primary">
+                {nutritionSummary.nutrients.protein.current.toLocaleString("ko-KR")}
+              </span>{" "}
+              <span className="caption-m-regular text-tertiary">
+                / {nutritionSummary.nutrients.protein.target.toLocaleString("ko-KR")}g
+              </span>
+            </p>
+            <ScoreProgress
+              variant="navy"
+              value={nutritionSummary.nutrients.protein.progressPercent}
+            />
+          </div>
+          <div className={styles.macrosItem}>
+            <p className="body-s-medium text-primary">지방</p>
+            <p>
+              <span className="body-s-medium text-primary">
+                {nutritionSummary.nutrients.fat.current.toLocaleString("ko-KR")}
+              </span>{" "}
+              <span className="caption-m-regular text-tertiary">
+                / {nutritionSummary.nutrients.fat.target.toLocaleString("ko-KR")}g
+              </span>
+            </p>
+            <ScoreProgress variant="navy" value={nutritionSummary.nutrients.fat.progressPercent} />
+          </div>
+        </Tile>
+      </section>
+    </div>
   );
-}
-
-function resolveNutritionCardContent({
-  dayMeal,
-  isProfileError,
-  isSummaryError,
-  nutritionMetrics,
-  profile,
-}: {
-  dayMeal: DayMealSummary | undefined;
-  isProfileError: boolean;
-  isSummaryError: boolean;
-  nutritionMetrics: DailyNutritionMetrics | null;
-  profile: ProfileResponseDto | undefined;
-}) {
-  if (isProfileError) {
-    return { message: "목표 정보를 불러오지 못했어요", score: null };
-  }
-
-  if (isSummaryError) {
-    return { message: "식사 정보를 불러오지 못했어요", score: null };
-  }
-
-  if (!hasValidDailyNutritionTarget(profile)) {
-    return { message: "목표를 먼저 설정해 주세요", score: null };
-  }
-
-  if (!dayMeal) {
-    return { message: "식사 정보를 확인할 수 없어요", score: null };
-  }
-
-  if (dayMeal.totalCalories <= 0) {
-    return { message: "아직 식단 기록을 하지 않았어요", score: 0 };
-  }
-
-  if (!nutritionMetrics) {
-    return { message: "영양 정보를 확인할 수 없어요", score: null };
-  }
-
-  return {
-    message: nutritionMetrics.score.overallMessage,
-    score: nutritionMetrics.score.totalScore,
-  };
 }
 
 function getScoreCharacterSrc(score: number) {
@@ -108,65 +167,18 @@ function getScoreCharacterSrc(score: number) {
   );
 }
 
-export function PreviewTodayScorePreview() {
-  const score = 78;
-
-  return (
-    <PreviewTodayScoreCard
-      characterSrc={getScoreCharacterSrc(score)}
-      message="칼로리와 영양 밸런스가 좋아요!"
-      score={score}
-    />
-  );
-}
-
-function PreviewTodayScoreCard({
-  characterSrc,
-  message,
-  score,
-}: {
-  characterSrc: string;
-  message: string;
-  score: number | null;
-}) {
-  return (
-    <article className={styles.root}>
-      <div className={styles.summaryArea}>
-        <div className={styles.titleArea}>
-          <p className="text-primary title-s-semi">오늘의 영양 밸런스</p>
-          <p className={`${styles.message} text-tertiary body-s-regular`}>{message}</p>
-        </div>
-
-        <p className={`text-primary title-xl-medium ${styles.score}`}>
-          {score ?? "--"}
-          <span className="text-tertiary body-l-regular"> 점</span>
-        </p>
-      </div>
-
-      <img
-        className={styles.character}
-        src={characterSrc}
-        width={154}
-        height={154}
-        alt=""
-        aria-hidden="true"
-      />
-    </article>
-  );
-}
-
 function PreviewTodayScoreSkeleton() {
   return (
     <SkeletonStatus className={styles.root} label="오늘 식사 점수를 불러오는 중입니다.">
       <div className={styles.summaryArea}>
         <div className={styles.skeletonTitleArea}>
-          <Skeleton width={136} height={25} radius={999} />
-          <Skeleton width={154} height={20} radius={999} />
+          <Skeleton width={136} height={25} radius={12} />
+          <Skeleton width={154} height={20} radius={12} />
         </div>
-        <Skeleton width={72} height={45} radius={999} />
+        <Skeleton className={styles.score} width={72} height={45} radius={12} />
       </div>
 
-      <Skeleton className={styles.characterSkeleton} width={154} height={154} radius={20} />
+      <Skeleton className={styles.skeletonCharacter} width={100} height={100} radius={100} />
     </SkeletonStatus>
   );
 }

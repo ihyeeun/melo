@@ -42,16 +42,6 @@ export type DailyNutritionMetricsInput = {
   targetMacroRatios: MacroRatios;
 };
 
-export type DayMealNutritionSource = {
-  totalCalories: number;
-  totalNutrients: MacroGrams;
-};
-
-export type DailyNutritionTargetSource = {
-  target_calories: number;
-  target_ratio: readonly number[];
-};
-
 export type DailyNutritionMetrics = {
   roundedActualCalories: number;
   roundedTargetCalories: number;
@@ -300,48 +290,6 @@ export function calculateDailyNutritionMetricsForDisplay(
   }
 
   return calculateDailyNutritionMetrics(input);
-}
-
-export function hasValidDailyNutritionTarget(
-  target: DailyNutritionTargetSource | null | undefined,
-): target is DailyNutritionTargetSource {
-  if (
-    !target ||
-    !Number.isFinite(target.target_calories) ||
-    target.target_calories <= 0 ||
-    !Array.isArray(target.target_ratio) ||
-    target.target_ratio.length < 3
-  ) {
-    return false;
-  }
-
-  const targetRatios = target.target_ratio.slice(0, 3);
-
-  return targetRatios.every(Number.isFinite) && targetRatios.some((ratio) => ratio > 0);
-}
-
-/**
- * 하루 식사 집계와 사용자 목표를 기존 점수 계산 입력으로 변환한다.
- * 화면에서는 개별 칼로리·탄단지 필드를 다시 조립하지 않고 이 함수를 사용한다.
- */
-export function calculateDayMealNutrition(
-  dayMeal: DayMealNutritionSource | null | undefined,
-  target: DailyNutritionTargetSource | null | undefined,
-) {
-  if (!dayMeal || !hasValidDailyNutritionTarget(target)) {
-    return null;
-  }
-
-  return calculateDailyNutritionMetricsForDisplay({
-    actualCalories: dayMeal.totalCalories,
-    targetCalories: target.target_calories,
-    actualMacrosInGram: dayMeal.totalNutrients,
-    targetMacroRatios: {
-      carbs: target.target_ratio[0],
-      protein: target.target_ratio[1],
-      fat: target.target_ratio[2],
-    },
-  });
 }
 
 export function calculateMacroPercentToGram({

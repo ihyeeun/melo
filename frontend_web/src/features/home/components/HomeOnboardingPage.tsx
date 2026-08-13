@@ -5,7 +5,7 @@ import HomeOnboardingOverlay, {
   HomeOnboardingBubble,
 } from "@/features/home/components/HomeOnboardingOverlay";
 import MenuActionSection from "@/features/home/components/MenuActionSection";
-import { PreviewTodayScorePreview } from "@/features/home/components/PreviewTodayScoreSection";
+import PreviewTodayScoreSection from "@/features/home/components/PreviewTodayScoreSection";
 import { TodayBodyLogPreviewSection } from "@/features/home/components/TodayBodyLogSection";
 import { resolveHomeOnboardingSteps } from "@/features/home/constants/homeOnboarding";
 
@@ -52,7 +52,7 @@ export default function HomeOnboardingPage({
         onSelectDate={onSelectDate}
         showMenuBoardCameraCard={showMenuBoardCameraCard}
         showChatCard={showChatCard}
-        scoreSection={<PreviewTodayScorePreview />}
+        scoreSection={<PreviewTodayScoreSection />}
         menuActionSection={
           <MenuActionSection
             selectedDate={selectedDateKey}

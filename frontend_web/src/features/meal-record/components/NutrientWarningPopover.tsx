@@ -10,6 +10,10 @@ export const DETAIL_WARNING_MESSAGE = [
   "판매사에서 정확한 정보를 제공하고 있지 않아요.",
 ] as const;
 
+export const NET_CARBS_NOTICE_MESSAGE = [
+  "탄수화물에서 대체당과 식이섬유를 뺀 순탄수를 기준으로 탄수화물 정보를 제공하고 있어요.",
+] as const;
+
 type NutrientWarningPopoverProps = {
   ariaLabel?: string;
   className?: string;
@@ -28,7 +32,7 @@ export function NutrientWarningPopover({
         className={`${styles.warningButton} ${className ?? ""}`}
         aria-label={ariaLabel}
       >
-        <SystemIcon name="circle-info" size={19} />
+        <SystemIcon name="info" size={19} />
       </Popover.Trigger>
 
       <Popover.Portal>
@@ -36,11 +40,11 @@ export function NutrientWarningPopover({
           className={styles.warningPositioner}
           side="left"
           align="center"
-          sideOffset={12}
+          sideOffset={4}
           collisionPadding={50}
         >
           <Popover.Popup
-            className={`${styles.warningTooltip} typo-body3`}
+            className={`${styles.warningTooltip} body-l-medium text-accent`}
             initialFocus={false}
             finalFocus={false}
           >

@@ -6,14 +6,12 @@
 
 .popup[data-variant="white"],
 .arrow[data-variant="white"] {
-  background-color: var(--bg-white);
-  color: var(--label-normal);
+  background-color: var(--background-gray-2);
 }
 
 .popup[data-variant="primary"],
 .arrow[data-variant="primary"] {
-  background-color: var(--bg-primary-1);
-  color: var(--label-white);
+  background-color: var(--background-gray-2);
 }
 
 .positioner {
@@ -23,23 +21,22 @@
 .arrow {
   border-radius: 2px;
   height: 12px;
-  width: 12px;
   rotate: 45deg;
-  z-index: 0;
   top: -4px;
+  width: 12px;
+  z-index: 0;
 }
 
 .popup {
+  align-items: center;
+  border-radius: 12px;
+  box-shadow: var(--shadow-outer);
   display: flex;
-  box-shadow: var(--shadow-strong);
-  border-radius: 4px;
-  background-color: var(--bg-white);
-  padding: 10px 16px;
   gap: 8px;
   justify-content: center;
-  align-items: center;
-
+  max-width: min(340px, calc(100vw - 32px));
   opacity: 1;
+  padding: 12px 16px;
   transform: translateY(0) scale(1);
   transform-origin: top center;
   transition:
@@ -53,28 +50,6 @@
   transform: translateY(-4px) scale(0.4);
 }
 
-.activityText {
-  text-align: center;
-}
-
-.badge {
-  display: flex;
-  padding: 2px 8px 2px 6px;
-  border-radius: 100px;
-  gap: 2px;
-  margin-top: 4px;
-  align-items: center;
-  justify-content: center;
-}
-
-.badge[data-variant="white"] {
-  background-color: var(--bg-primary-2);
-}
-
-.badge[data-variant="primary"] {
-  background-color: var(--bg-white);
-}
-
 .infoIcon {
-  color: var(--label-assistive);
+  color: var(--text-tertiary);
 }

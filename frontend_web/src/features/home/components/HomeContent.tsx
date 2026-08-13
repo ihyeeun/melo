@@ -27,7 +27,7 @@ export default function HomeContent({
   return (
     <div className={`page ${styles.pageColor}`}>
       <Calendar selectedDate={selectedDate} onSelectDate={onSelectDate} />
-      <main className="main">
+      <main className={`main ${styles.content}`}>
         {scoreSection ?? <PreviewTodayScoreSection />}
         {menuActionSection ?? (
           <MenuActionSection

@@ -1,6 +1,6 @@
 import type { KeyboardEvent, ReactNode } from "react";
 
-import style from "@/features/home/styles/card.module.css";
+import styles from "@/features/home/styles/card.module.css";
 
 type ActionCardProps = {
   children: ReactNode;
@@ -22,7 +22,7 @@ export default function ActionCard({ children, className = "", onClick }: Action
 
   return (
     <div
-      className={`${style.cardContainer} ${className ?? ""}`}
+      className={`${styles.root} ${className ?? ""}`}
       onClick={onClick}
       onKeyDown={handleKeyDown}
       role={onClick ? "button" : undefined}

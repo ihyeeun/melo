@@ -2,7 +2,7 @@
   align-items: center;
   border: 0;
   border-radius: 50%;
-  color: var(--label-assistive);
+  color: var(--text-tertiary);
   cursor: pointer;
   display: inline-flex;
   flex: 0 0 auto;
@@ -18,11 +18,29 @@
 }
 
 .warningTooltip {
-  background: var(--primary-normal);
-  border-radius: 6px;
-  color: var(--static-white);
+  background: var(--background-gray-2);
+  border-radius: 12px;
+  box-shadow: var(--shadow-outer);
   max-width: min(360px, calc(100vw - 96px));
+  opacity: 1;
   padding: 10px 14px;
+  scale: 1;
+  transform-origin: var(--transform-origin);
+  transition:
+    opacity 160ms ease-out,
+    scale 160ms cubic-bezier(0.2, 0.8, 0.2, 1);
   white-space: normal;
   width: max-content;
+}
+
+.warningTooltip[data-starting-style],
+.warningTooltip[data-ending-style] {
+  opacity: 0;
+  scale: 0.5;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .warningTooltip {
+    transition: none;
+  }
 }

@@ -1,4 +1,10 @@
 .root {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.nutritionBalanceCard {
   background-color: var(--background-default);
   border-radius: 20px;
   box-shadow: var(--shadow-outer);
@@ -12,8 +18,8 @@
   display: flex;
   flex: 1;
   flex-direction: column;
-  padding: 20px 0 12px 20px;
   gap: 8px;
+  padding: 20px 0 12px 20px;
 }
 
 .titleArea,
@@ -38,14 +44,54 @@
 .character {
   align-self: center;
   flex: 0 0 154px;
-  width: 154px;
   height: 154px;
   object-fit: contain;
   scale: 1.4;
-  translate: 0px 4px;
+  translate: 0 4px;
+  width: 154px;
 }
 
-.characterSkeleton {
+.skeletonCharacter {
   align-self: center;
-  flex: 0 0 154px;
+  margin-right: 20px;
+}
+
+.nutritionSection {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.calorieGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.currentCalorie {
+  font-weight: var(--fw-medium);
+}
+
+.calorieValue {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+}
+
+.macrosGroup {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.macrosItem {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.macroTitle {
+  align-items: center;
+  display: flex;
+  gap: 2px;
 }

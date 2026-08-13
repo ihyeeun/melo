@@ -9,18 +9,15 @@ import { useActivityCalories } from "@/features/health/hooks/useActivityCalories
 import ActionCard from "@/features/home/components/cards/ActionCard";
 import TodayBodyLogSection from "@/features/home/components/TodayBodyLogSection";
 import { useDayMealsQuery } from "@/features/home/hooks/queries/useTodayRecordQuery";
-import type { MenuWithQuantity } from "@/features/home/utils/dayMealSummary";
 import {
   getActivityAdjustedTargetCalories,
-  getActivityCalorieProgressDash,
-  getCalorieSummary,
-  hasValidTargets,
-} from "@/features/home/utils/todayMealFeedback";
+  getDayNutritionSummary,
+  type MenuWithQuantity,
+} from "@/features/home/utils/dayMealSummary";
 import {
   useTodayMealRecordDeleteMutation,
   useTodayMealRecordRegisterMutation,
 } from "@/features/meal-record/hooks/mutations/useTodayMealRecordMutation";
-import { PATH } from "@/router/path";
 import { getMealRecordPath, getMealSearchPath } from "@/router/pathHelpers";
 import type { MealTime, MealType } from "@/shared/api/types/api.dto";
 import { Button } from "@/shared/commons/button/Button";
@@ -35,7 +32,6 @@ import { useTargetsState } from "@/shared/stores/targetNutrient.store";
 import { copyTextToClipboard } from "@/shared/utils/clipboard";
 import { formatDateKey, parseDateKey } from "@/shared/utils/dateFormat";
 import { formatNumberWithMaxOneDecimal } from "@/shared/utils/numberFormat";
-import { calculateDayMealNutrition } from "@/shared/utils/nutrientScore";
 
 type DiaryMeal = {
   type: MealType;
@@ -68,35 +64,32 @@ export default function DiaryPage() {
   const { data: dayMeals, isPending } = useDayMealsQuery(selectedDateKey);
   const { summary: activitySummary } = useActivityCalories(selectedDateKey);
 
-  const nutritionMetrics = useMemo(() => {
+  const nutritionSummary = useMemo(() => {
     if (isPending) {
       return null;
     }
 
-    return calculateDayMealNutrition(dayMeals, targets);
-  }, [dayMeals, isPending, targets]);
+    return getDayNutritionSummary(dayMeals, targets, activitySummary?.calories);
+  }, [activitySummary?.calories, dayMeals, isPending, targets]);
 
   const targetCalories = targets?.target_calories ?? 2100;
   const adjustedTargetCalories = getActivityAdjustedTargetCalories(
     targetCalories,
     activitySummary?.calories,
   );
-  const totalCalories = isPending ? 0 : (dayMeals?.totalCalories ?? 0);
-  const calorieSummary = getCalorieSummary(totalCalories, adjustedTargetCalories);
-  const roundedTargetCalories = calorieSummary.roundedTargetCalories ?? Math.round(targetCalories);
-  const progressDash = getActivityCalorieProgressDash({
-    targetCalories,
-    adjustedTargetCalories,
-  });
-  const isCalorieExceeded = totalCalories > roundedTargetCalories;
-  const mealScore = nutritionMetrics?.score.totalScore ?? 0;
+  const roundedCurrentCalories =
+    nutritionSummary?.calories.current ?? Math.round(dayMeals?.totalCalories ?? 0);
+  const roundedTargetCalories =
+    nutritionSummary && nutritionSummary.calories.target > 0
+      ? nutritionSummary.calories.target
+      : (adjustedTargetCalories ?? Math.round(targetCalories));
+  const mealScore = nutritionSummary?.score ?? 0;
   const dayMealClipboardText = useMemo(
     () => (dayMeals ? buildDayMealClipboardText(dayMeals) : ""),
     [dayMeals],
   );
   const canCopyDayMeals = !isPending && dayMealClipboardText.length > 0;
 
-  const calorieMessage = calorieSummary.message;
   const handleMoveMealRecord = (mealType: MealType) => {
     const hasRecord =
       (dayMeals?.menusByTime[mealType]?.length ?? 0) > 0 ||
@@ -108,21 +101,6 @@ export default function DiaryPage() {
     }
 
     navigate(getMealSearchPath(selectedDateKey, mealType));
-  };
-
-  const handleTodayMealScoreClick = () => {
-    if (!hasValidTargets(targets)) {
-      toast.warning("목표 칼로리 설정 후 이용할 수 있어요");
-      return;
-    }
-
-    navigate(PATH.TODAY_MEAL_SCORE, {
-      state: {
-        score: mealScore,
-        targets: targets,
-        currents: dayMeals,
-      },
-    });
   };
 
   const handleCopyDayMeals = async () => {
@@ -149,32 +127,30 @@ export default function DiaryPage() {
               <DiarySummarySkeleton />
             </ActionCard>
           ) : (
-            <ActionCard onClick={handleTodayMealScoreClick} className={styles.summaryCard}>
+            <ActionCard className={styles.summaryCard}>
               <div className={styles.scoreCard}>
                 <div className={styles.scoreText}>
                   <p className={styles.calorieText}>
                     <span className={`${styles.scoreCurrent} typo-h2`}>
-                      {calorieSummary.roundedCurrentCalories.toLocaleString("ko-KR")}
+                      {roundedCurrentCalories.toLocaleString("ko-KR")}
                     </span>
                     <span className="textNoWrap typo-title2">
                       / {roundedTargetCalories.toLocaleString("ko-KR")} kcal
                     </span>
-                    <ActivityCaloriesPopover variant="primary" />
+                    <ActivityCaloriesPopover
+                      activityCalories={activitySummary?.calories}
+                      baseTargetCalories={targetCalories}
+                      variant="primary"
+                    />
                   </p>
                   <span className={styles.scoreDivider} aria-hidden="true" />
                   <span className={`${styles.score} typo-title2`}>{mealScore}점</span>
-
-                  <SystemIcon name="chevron-right-normal" size={24} className={styles.icon} />
                 </div>
-                <div className={styles.scoreContainer}>
-                  <ScoreProgress
-                    value={calorieSummary.roundedCurrentCalories}
-                    max={roundedTargetCalories}
-                    dash={progressDash}
-                    variant={isCalorieExceeded ? "danger-white" : "primary-gray"}
-                  />
-                  <p className={`${styles.calorieMessage} typo-body3`}>{calorieMessage}</p>
-                </div>
+                <ScoreProgress
+                  value={roundedCurrentCalories}
+                  max={roundedTargetCalories}
+                  variant="primary"
+                />
               </div>
             </ActionCard>
           )}
@@ -244,14 +220,8 @@ function DiarySummarySkeleton() {
         <Skeleton width={168} height={36} radius={999} />
         <span className={styles.scoreDivider} aria-hidden="true" />
         <Skeleton width={52} height={28} radius={999} />
-        <Skeleton className={styles.icon} width={24} height={24} variant="circle" />
       </div>
-      <div className={styles.scoreContainer}>
-        <Skeleton width="100%" height={8} radius={999} />
-        <div className={styles.calorieMessage}>
-          <Skeleton width={156} height={18} radius={999} />
-        </div>
-      </div>
+      <Skeleton width="100%" height={8} radius={999} />
     </SkeletonStatus>
   );
 }

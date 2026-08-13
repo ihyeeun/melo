@@ -19,3 +19,11 @@
 .cardContainer[role="button"]:active {
   transform: scale(0.98);
 }
+
+.root {
+  background-color: var(--background-default);
+  border-radius: 20px;
+  border: 1px solid var(--border-subtie);
+  width: 100%;
+  padding: 16px 20px;
+}
