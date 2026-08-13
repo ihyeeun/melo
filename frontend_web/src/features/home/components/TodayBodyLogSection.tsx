@@ -43,8 +43,8 @@ export default function TodayBodyLogSection({ date }: { date: string }) {
   return (
     <>
       <div className={style.todayContainer}>
-        <TodayMetricCard title="체중" value={displayWeight} unit="kg" onClick={openWeightEditor} />
         <TodayMetricCard title="걸음 수" value={displaySteps} unit="보" onClick={openStepsEditor} />
+        <TodayMetricCard title="체중" value={displayWeight} unit="kg" onClick={openWeightEditor} />
       </div>
     </>
   );

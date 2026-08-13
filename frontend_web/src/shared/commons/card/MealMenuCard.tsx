@@ -157,7 +157,7 @@ export function MealMenuCard({
             )}
 
             {shouldShowCalories ? (
-              <span className={`textNoWrap title-s-regular text-primary marginLaftAuto`}>
+              <span className={`textNoWrap title-s-regular text-primary marginLeft`}>
                 {formatNumberWithMaxOneDecimal(displayedCalories)}kcal
               </span>
             ) : null}

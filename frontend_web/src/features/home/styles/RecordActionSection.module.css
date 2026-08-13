@@ -1,107 +1,87 @@
-.content {
+.root {
   display: flex;
-  flex: 1;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.recordGroup {
+  display: flex;
   flex-direction: column;
   gap: 8px;
-  height: 100%;
-  width: 100%;
 }
 
-.menuContainer {
-  display: grid;
-  gap: 10px;
-  grid-template-columns: repeat(2, 1fr);
+.mealsArea {
+  background-color: var(--background-default);
+  border: 1px solid var(--border-subtie);
+  border-radius: 20px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
 }
 
-.menuCardContainer {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  width: 100%;
-  justify-content: center;
-  align-items: center;
-}
-
-.description {
-  color: var(--label-alternative);
-  white-space: pre-line;
-}
-
-.recordContainer {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.recordTitleContainer {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.mealCardList {
-  display: grid;
-  gap: 5px;
-  grid-template-columns: repeat(4, 1fr);
-}
-
-.mealCard {
-  align-items: center;
+.mealButton {
+  background: none;
   border: 0;
+  color: inherit;
   cursor: pointer;
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  padding: 0;
-}
-
-.mealInner {
-  align-items: center;
-  aspect-ratio: 1 / 1;
-  background-color: var(--bg-white);
-  border: 1px solid var(--border-neutral);
-  border-radius: 8px;
-  display: flex;
-  justify-content: center;
+  gap: 8px;
+  padding: 16px 20px;
+  text-align: left;
   width: 100%;
+  transition: background-color 120ms ease;
 }
 
-.mealSelected .mealInner {
-  background-color: var(--interaction-primary);
-  border: 1px solid var(--border-primary);
+.mealButton:active {
+  background-color: var(--background-gray-1);
+  transform: scale(0.995);
 }
 
-.mealValue {
-  color: var(--label-primary);
+.mealTitleArea {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+}
+
+.mealItem + .mealItem {
+  border-top: 1px solid var(--border-subtie);
 }
 
 .mealIcon {
-  height: 48px;
-  object-fit: contain;
-  width: 48px;
-}
-
-.mealLabel {
-  color: var(--label-alternative);
-  text-align: center;
-}
-
-.bgPrimary {
-  background-color: var(--primary-normal);
-  border-color: var(--border-primary);
-}
-
-.textWhite {
-  color: var(--static-white);
-}
-
-.workoutCard {
-  display: flex;
-  flex-direction: row;
-  gap: 10px;
   align-items: center;
+  background-color: var(--background-gray-1);
+  border-radius: 100px;
+  color: var(--text-disabled);
+  display: flex;
+  height: 30px;
+  justify-content: center;
+  width: 30px;
 }
 
-.marginLeft {
-  margin-left: auto;
+.mealIcon[data-selected="true"] {
+  background-color: var(--background-selected);
+  color: var(--btn-default);
+}
+
+.mealInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0 24px 0 38px;
+}
+
+.mealSummary {
+  min-width: 0;
+  overflow: hidden;
+  position: relative;
+  white-space: nowrap;
+}
+
+.mealSummaryMeasure {
+  pointer-events: none;
+  position: absolute;
+  visibility: hidden;
+  white-space: nowrap;
 }

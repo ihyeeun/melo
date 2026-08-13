@@ -15,10 +15,10 @@ import {
   type NutrientGrade,
 } from "@/shared/utils/nutrientScore";
 
-type MealTimeKey = 0 | 1 | 2 | 3 | 4;
+export type DayMealTimeKey = 0 | 1 | 2 | 3 | 4;
 type OptionalNutrientValue = number | null | undefined;
 
-function isMealTimeKey(value: number): value is MealTimeKey {
+function isMealTimeKey(value: number): value is DayMealTimeKey {
   return value === 0 || value === 1 || value === 2 || value === 3 || value === 4;
 }
 
@@ -102,86 +102,25 @@ export type MenuWithQuantity = MenuSimpleResponseDto & {
 
 export type MealRecordTimestamp = Pick<MealResponseDto, "createdAt" | "updatedAt">;
 export type MealRecordMealTime = string;
+export type DayMealNutrients = {
+  carbs: number;
+  protein: number;
+  fat: number;
+};
 
 export type DayMealSummary = {
   totalCalories: number;
-  totalNutrients: {
-    carbs: number;
-    protein: number;
-    fat: number;
-  };
+  totalNutrients: DayMealNutrients;
   nutrientNotices: {
     carbsEstimatedFromSubNutrients: boolean;
   };
-  caloriesByTime: {
-    breakfast: number;
-    lunch: number;
-    dinner: number;
-    snack: number;
-    lateNight: number;
-  };
-  nutrientsByTime: {
-    breakfast: {
-      carbs: number;
-      protein: number;
-      fat: number;
-    };
-    lunch: {
-      carbs: number;
-      protein: number;
-      fat: number;
-    };
-    dinner: {
-      carbs: number;
-      protein: number;
-      fat: number;
-    };
-    snack: {
-      carbs: number;
-      protein: number;
-      fat: number;
-    };
-    lateNight: {
-      carbs: number;
-      protein: number;
-      fat: number;
-    };
-  };
-  menusByTime: {
-    0: MenuWithQuantity[];
-    1: MenuWithQuantity[];
-    2: MenuWithQuantity[];
-    3: MenuWithQuantity[];
-    4: MenuWithQuantity[];
-  };
-  imagesByTime: {
-    0: string;
-    1: string;
-    2: string;
-    3: string;
-    4: string;
-  };
-  mealRecordTimestampsByTime: {
-    0: MealRecordTimestamp | null;
-    1: MealRecordTimestamp | null;
-    2: MealRecordTimestamp | null;
-    3: MealRecordTimestamp | null;
-    4: MealRecordTimestamp | null;
-  };
-  mealRecordMealTimesByTime: {
-    0: MealRecordMealTime | null;
-    1: MealRecordMealTime | null;
-    2: MealRecordMealTime | null;
-    3: MealRecordMealTime | null;
-    4: MealRecordMealTime | null;
-  };
-  didNotEatByTime: {
-    0: boolean;
-    1: boolean;
-    2: boolean;
-    3: boolean;
-    4: boolean;
-  };
+  caloriesByTime: Record<DayMealTimeKey, number>;
+  nutrientsByTime: Record<DayMealTimeKey, DayMealNutrients>;
+  menusByTime: Record<DayMealTimeKey, MenuWithQuantity[]>;
+  imagesByTime: Record<DayMealTimeKey, string>;
+  mealRecordTimestampsByTime: Record<DayMealTimeKey, MealRecordTimestamp | null>;
+  mealRecordMealTimesByTime: Record<DayMealTimeKey, MealRecordMealTime | null>;
+  didNotEatByTime: Record<DayMealTimeKey, boolean>;
 };
 
 export type DayNutritionStatus = "ready" | "empty" | "missingTarget" | "unavailable";
@@ -461,49 +400,49 @@ export function dayMealSummary(meals: MealRecordResponseDto): DayMealSummary {
     protein: 0,
     fat: 0,
   };
-  const caloriesByTime = {
-    breakfast: 0,
-    lunch: 0,
-    dinner: 0,
-    snack: 0,
-    lateNight: 0,
+  const caloriesByTime: Record<DayMealTimeKey, number> = {
+    0: 0,
+    1: 0,
+    2: 0,
+    3: 0,
+    4: 0,
   };
-  const nutrientsByTime = {
-    breakfast: { carbs: 0, protein: 0, fat: 0 },
-    lunch: { carbs: 0, protein: 0, fat: 0 },
-    dinner: { carbs: 0, protein: 0, fat: 0 },
-    snack: { carbs: 0, protein: 0, fat: 0 },
-    lateNight: { carbs: 0, protein: 0, fat: 0 },
+  const nutrientsByTime: Record<DayMealTimeKey, DayMealNutrients> = {
+    0: { carbs: 0, protein: 0, fat: 0 },
+    1: { carbs: 0, protein: 0, fat: 0 },
+    2: { carbs: 0, protein: 0, fat: 0 },
+    3: { carbs: 0, protein: 0, fat: 0 },
+    4: { carbs: 0, protein: 0, fat: 0 },
   };
-  const menusByTime: Record<MealTimeKey, MenuWithQuantity[]> = {
+  const menusByTime: Record<DayMealTimeKey, MenuWithQuantity[]> = {
     0: [],
     1: [],
     2: [],
     3: [],
     4: [],
   };
-  const imagesByTime: Record<MealTimeKey, string> = {
+  const imagesByTime: Record<DayMealTimeKey, string> = {
     0: "",
     1: "",
     2: "",
     3: "",
     4: "",
   };
-  const mealRecordTimestampsByTime: Record<MealTimeKey, MealRecordTimestamp | null> = {
+  const mealRecordTimestampsByTime: Record<DayMealTimeKey, MealRecordTimestamp | null> = {
     0: null,
     1: null,
     2: null,
     3: null,
     4: null,
   };
-  const mealRecordMealTimesByTime: Record<MealTimeKey, MealRecordMealTime | null> = {
+  const mealRecordMealTimesByTime: Record<DayMealTimeKey, MealRecordMealTime | null> = {
     0: null,
     1: null,
     2: null,
     3: null,
     4: null,
   };
-  const recordCountByTime: Record<MealTimeKey, number> = {
+  const recordCountByTime: Record<DayMealTimeKey, number> = {
     0: 0,
     1: 0,
     2: 0,
@@ -549,7 +488,7 @@ export function dayMealSummary(meals: MealRecordResponseDto): DayMealSummary {
 
   const mealList = [...meals.meal_list].sort(compareMealRecordSavedAt);
   const applyMenuNutrients = (
-    mealTime: MealTimeKey,
+    mealTime: DayMealTimeKey,
     menu: Pick<MenuWithQuantity, "calories" | "carbs" | "protein" | "fat">,
     multiplier: 1 | -1,
   ) => {
@@ -558,46 +497,10 @@ export function dayMealSummary(meals: MealRecordResponseDto): DayMealSummary {
     totalNutrients.protein += menu.protein * multiplier;
     totalNutrients.fat += menu.fat * multiplier;
 
-    switch (mealTime) {
-      case 0: {
-        caloriesByTime.breakfast += menu.calories * multiplier;
-        nutrientsByTime.breakfast.carbs += menu.carbs * multiplier;
-        nutrientsByTime.breakfast.protein += menu.protein * multiplier;
-        nutrientsByTime.breakfast.fat += menu.fat * multiplier;
-        break;
-      }
-      case 1: {
-        caloriesByTime.lunch += menu.calories * multiplier;
-        nutrientsByTime.lunch.carbs += menu.carbs * multiplier;
-        nutrientsByTime.lunch.protein += menu.protein * multiplier;
-        nutrientsByTime.lunch.fat += menu.fat * multiplier;
-        break;
-      }
-      case 2: {
-        caloriesByTime.dinner += menu.calories * multiplier;
-        nutrientsByTime.dinner.carbs += menu.carbs * multiplier;
-        nutrientsByTime.dinner.protein += menu.protein * multiplier;
-        nutrientsByTime.dinner.fat += menu.fat * multiplier;
-        break;
-      }
-      case 3: {
-        caloriesByTime.snack += menu.calories * multiplier;
-        nutrientsByTime.snack.carbs += menu.carbs * multiplier;
-        nutrientsByTime.snack.protein += menu.protein * multiplier;
-        nutrientsByTime.snack.fat += menu.fat * multiplier;
-        break;
-      }
-      case 4: {
-        caloriesByTime.lateNight += menu.calories * multiplier;
-        nutrientsByTime.lateNight.carbs += menu.carbs * multiplier;
-        nutrientsByTime.lateNight.protein += menu.protein * multiplier;
-        nutrientsByTime.lateNight.fat += menu.fat * multiplier;
-        break;
-      }
-      default: {
-        break;
-      }
-    }
+    caloriesByTime[mealTime] += menu.calories * multiplier;
+    nutrientsByTime[mealTime].carbs += menu.carbs * multiplier;
+    nutrientsByTime[mealTime].protein += menu.protein * multiplier;
+    nutrientsByTime[mealTime].fat += menu.fat * multiplier;
   };
 
   mealList.forEach((meal) => {
