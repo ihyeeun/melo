@@ -1,14 +1,11 @@
-import type { ReactNode } from "react";
-
 import Calendar from "@/features/calendar/components/Calendar";
-import MenuActionSection from "@/features/home/components/MenuActionSection";
 import PreviewTodayScoreSection from "@/features/home/components/PreviewTodayScoreSection";
+import RecordActionSection from "@/features/home/components/RecordActionSection";
 import styles from "@/features/home/styles/HomePage.module.css";
+import { ScrollFogArea } from "@/shared/commons/scrollFog";
 
 type HomeContentProps = {
-  menuActionSection?: ReactNode;
   onSelectDate: (date: Date) => void;
-  scoreSection?: ReactNode;
   selectedDate: Date;
   selectedDateKey: string;
   showChatCard: boolean;
@@ -16,9 +13,7 @@ type HomeContentProps = {
 };
 
 export default function HomeContent({
-  menuActionSection,
   onSelectDate,
-  scoreSection,
   selectedDate,
   selectedDateKey,
   showChatCard,
@@ -27,16 +22,14 @@ export default function HomeContent({
   return (
     <div className={`page ${styles.pageColor}`}>
       <Calendar selectedDate={selectedDate} onSelectDate={onSelectDate} />
-      <main className={`main ${styles.content}`}>
-        {scoreSection ?? <PreviewTodayScoreSection />}
-        {menuActionSection ?? (
-          <MenuActionSection
-            selectedDate={selectedDateKey}
-            showMenuBoardCameraCard={showMenuBoardCameraCard}
-            showChatCard={showChatCard}
-          />
-        )}
-      </main>
+      <ScrollFogArea role="main" className={`main ${styles.content}`}>
+        <PreviewTodayScoreSection />
+        <RecordActionSection
+          selectedDate={selectedDateKey}
+          showMenuBoardCameraCard={showMenuBoardCameraCard}
+          showChatCard={showChatCard}
+        />
+      </ScrollFogArea>
     </div>
   );
 }
