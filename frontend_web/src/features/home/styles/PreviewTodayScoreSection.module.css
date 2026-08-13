@@ -1,56 +1,51 @@
-.content {
+.root {
+  background-color: var(--background-default);
+  border-radius: 20px;
+  box-shadow: var(--shadow-outer);
   display: flex;
+  min-height: 154px;
+  overflow: hidden;
+  width: 100%;
+}
+
+.summaryArea {
+  display: flex;
+  flex: 1;
   flex-direction: column;
-  background-color: var(--bg-primary-2);
-  gap: 16px;
-  padding: 24px 20px;
-  border: none;
-}
-
-.scoreContainer {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  background-color: var(--bg-white);
-  border-radius: 8px;
-  padding: 12px 24px;
-  align-items: center;
-}
-
-.scoreText {
-  align-items: center;
-  display: flex;
-  gap: 16px;
-}
-
-.score {
-  color: var(--label-primary);
-}
-
-.caloriesContainer {
-  display: flex;
-  flex-direction: column;
+  padding: 20px 0 12px 20px;
   gap: 8px;
 }
 
-.calorieText {
-  color: var(--label-normal);
-  align-items: center;
+.titleArea,
+.skeletonTitleArea {
   display: flex;
+  flex-direction: column;
   gap: 4px;
 }
 
-.skeletonContent {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
+.message {
+  -webkit-box-orient: vertical;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
 }
 
-.icon {
-  margin-left: auto;
-  color: var(--interaction-normal);
+.score {
+  margin-top: auto;
 }
 
-.textAssistive {
-  color: var(--label-assistive);
+.character {
+  align-self: center;
+  flex: 0 0 154px;
+  width: 154px;
+  height: 154px;
+  object-fit: contain;
+  scale: 1.4;
+  translate: 0px 4px;
+}
+
+.characterSkeleton {
+  align-self: center;
+  flex: 0 0 154px;
 }

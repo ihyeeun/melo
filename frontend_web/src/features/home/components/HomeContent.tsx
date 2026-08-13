@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import Calendar from "@/features/calendar/components/Calendar";
 import MenuActionSection from "@/features/home/components/MenuActionSection";
 import PreviewTodayScoreSection from "@/features/home/components/PreviewTodayScoreSection";
-import style from "@/features/home/styles/HomePage.module.css";
+import styles from "@/features/home/styles/HomePage.module.css";
 
 type HomeContentProps = {
   menuActionSection?: ReactNode;
@@ -25,10 +25,10 @@ export default function HomeContent({
   showMenuBoardCameraCard,
 }: HomeContentProps) {
   return (
-    <div className={style.page}>
+    <div className={`page ${styles.pageColor}`}>
       <Calendar selectedDate={selectedDate} onSelectDate={onSelectDate} />
-      <main className={style.main}>
-        {scoreSection ?? <PreviewTodayScoreSection selectedDate={selectedDateKey} />}
+      <main className="main">
+        {scoreSection ?? <PreviewTodayScoreSection />}
         {menuActionSection ?? (
           <MenuActionSection
             selectedDate={selectedDateKey}

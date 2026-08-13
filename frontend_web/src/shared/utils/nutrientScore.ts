@@ -42,6 +42,16 @@ export type DailyNutritionMetricsInput = {
   targetMacroRatios: MacroRatios;
 };
 
+export type DayMealNutritionSource = {
+  totalCalories: number;
+  totalNutrients: MacroGrams;
+};
+
+export type DailyNutritionTargetSource = {
+  target_calories: number;
+  target_ratio: readonly number[];
+};
+
 export type DailyNutritionMetrics = {
   roundedActualCalories: number;
   roundedTargetCalories: number;
@@ -117,16 +127,21 @@ function getCalorieScoreByDiff(calorieDiffPercent: number) {
 }
 
 function getNutrientGuideMessageByScore(score: number) {
-  if (score >= 85) {
-    return "아주 좋아요! 섭취량과 균형이 모두 잘 맞고 있어요 👏";
+  if (score >= 81) {
+    return "오늘 식사, 정말 완벽해요!";
   }
-  if (score >= 70) {
-    return "조금만 조정하면 더 좋아요. 섭취량이나 일부 영양소가 살짝 어긋났어요.";
+  if (score >= 61) {
+    return "칼로리와 영양 밸런스가 좋아요!";
   }
-  if (score >= 50) {
-    return "오늘 식단이 조금 흔들렸어요. 칼로리나 영양 균형을 한 번 점검해보세요.";
+  if (score >= 41) {
+    return "조금만 더 신경 쓰면 최고예요!";
   }
-  return "오늘은 식단 균형이 많이 어긋났어요. 다음 식사에서 천천히 맞춰가면 돼요.";
+
+  if (score >= 21) {
+    return "탄단지 밸런스를 조금 더 맞춰봐요";
+  }
+
+  return "칼로리와 영양 균형을 맞춰봐요";
 }
 
 function getNutrientGradeByScore(score: number): NutrientGrade {
@@ -285,6 +300,48 @@ export function calculateDailyNutritionMetricsForDisplay(
   }
 
   return calculateDailyNutritionMetrics(input);
+}
+
+export function hasValidDailyNutritionTarget(
+  target: DailyNutritionTargetSource | null | undefined,
+): target is DailyNutritionTargetSource {
+  if (
+    !target ||
+    !Number.isFinite(target.target_calories) ||
+    target.target_calories <= 0 ||
+    !Array.isArray(target.target_ratio) ||
+    target.target_ratio.length < 3
+  ) {
+    return false;
+  }
+
+  const targetRatios = target.target_ratio.slice(0, 3);
+
+  return targetRatios.every(Number.isFinite) && targetRatios.some((ratio) => ratio > 0);
+}
+
+/**
+ * 하루 식사 집계와 사용자 목표를 기존 점수 계산 입력으로 변환한다.
+ * 화면에서는 개별 칼로리·탄단지 필드를 다시 조립하지 않고 이 함수를 사용한다.
+ */
+export function calculateDayMealNutrition(
+  dayMeal: DayMealNutritionSource | null | undefined,
+  target: DailyNutritionTargetSource | null | undefined,
+) {
+  if (!dayMeal || !hasValidDailyNutritionTarget(target)) {
+    return null;
+  }
+
+  return calculateDailyNutritionMetricsForDisplay({
+    actualCalories: dayMeal.totalCalories,
+    targetCalories: target.target_calories,
+    actualMacrosInGram: dayMeal.totalNutrients,
+    targetMacroRatios: {
+      carbs: target.target_ratio[0],
+      protein: target.target_ratio[1],
+      fat: target.target_ratio[2],
+    },
+  });
 }
 
 export function calculateMacroPercentToGram({

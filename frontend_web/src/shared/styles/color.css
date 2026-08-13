@@ -73,4 +73,6 @@
     var(--color-coral-200) 100%
   );
   --gradient-secondary: linear-gradient(to bottom, #ff8083 0%, var(--coral-400) 100%);
+
+  --shadow-outer: 0 4px 12px 0 hsla(12, 44%, 25%, 0.059);
 }

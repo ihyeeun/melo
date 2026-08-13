@@ -35,7 +35,7 @@ import { useTargetsState } from "@/shared/stores/targetNutrient.store";
 import { copyTextToClipboard } from "@/shared/utils/clipboard";
 import { formatDateKey, parseDateKey } from "@/shared/utils/dateFormat";
 import { formatNumberWithMaxOneDecimal } from "@/shared/utils/numberFormat";
-import { calculateDailyNutritionMetricsForDisplay } from "@/shared/utils/nutrientScore";
+import { calculateDayMealNutrition } from "@/shared/utils/nutrientScore";
 
 type DiaryMeal = {
   type: MealType;
@@ -69,24 +69,11 @@ export default function DiaryPage() {
   const { summary: activitySummary } = useActivityCalories(selectedDateKey);
 
   const nutritionMetrics = useMemo(() => {
-    if (isPending || !dayMeals || !targets) {
+    if (isPending) {
       return null;
     }
 
-    return calculateDailyNutritionMetricsForDisplay({
-      actualCalories: dayMeals.totalCalories,
-      targetCalories: targets.target_calories,
-      actualMacrosInGram: {
-        carbs: dayMeals.totalNutrients.carbs,
-        protein: dayMeals.totalNutrients.protein,
-        fat: dayMeals.totalNutrients.fat,
-      },
-      targetMacroRatios: {
-        carbs: targets.target_ratio[0],
-        protein: targets.target_ratio[1],
-        fat: targets.target_ratio[2],
-      },
-    });
+    return calculateDayMealNutrition(dayMeals, targets);
   }, [dayMeals, isPending, targets]);
 
   const targetCalories = targets?.target_calories ?? 2100;
