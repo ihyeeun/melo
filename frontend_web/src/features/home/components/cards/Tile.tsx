@@ -2,13 +2,13 @@ import type { KeyboardEvent, ReactNode } from "react";
 
 import styles from "@/features/home/styles/card.module.css";
 
-type ActionCardProps = {
+type TileProps = {
   children: ReactNode;
   className?: string;
   onClick?: () => void;
 };
 
-export default function ActionCard({ children, className = "", onClick }: ActionCardProps) {
+export default function Tile({ children, className = "", onClick }: TileProps) {
   const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     if (!onClick || event.currentTarget !== event.target) {
       return;

@@ -1,440 +1,314 @@
-import type { MouseEvent } from "react";
-import { useMemo, useState } from "react";
-
 import Calendar from "@/features/calendar/components/Calendar";
 import styles from "@/features/diary/styles/DiaryPage.module.css";
-import { buildDayMealClipboardText } from "@/features/diary/utils/dayMealClipboard";
-import ActivityCaloriesPopover from "@/features/health/components/ActivityCaloriesPopover";
+import { useGetWorkoutRecordQuery } from "@/features/health/hooks/queries/workout.query";
 import { useActivityCalories } from "@/features/health/hooks/useActivityCalories";
-import ActionCard from "@/features/home/components/cards/ActionCard";
-import TodayBodyLogSection from "@/features/home/components/TodayBodyLogSection";
-import { useDayMealsQuery } from "@/features/home/hooks/queries/useTodayRecordQuery";
-import {
-  getActivityAdjustedTargetCalories,
-  getDayNutritionSummary,
-  type MenuWithQuantity,
-} from "@/features/home/utils/dayMealSummary";
-import {
-  useTodayMealRecordDeleteMutation,
-  useTodayMealRecordRegisterMutation,
-} from "@/features/meal-record/hooks/mutations/useTodayMealRecordMutation";
-import { getMealRecordPath, getMealSearchPath } from "@/router/pathHelpers";
-import type { MealTime, MealType } from "@/shared/api/types/api.dto";
-import { Button } from "@/shared/commons/button/Button";
+import { useSyncNativeStepCount } from "@/features/health/hooks/useSyncNativeStepCount";
+import Tile from "@/features/home/components/cards/Tile";
+import { useDayMealsQuery, useGetBodyLog } from "@/features/home/hooks/queries/useTodayRecordQuery";
+import { getDayNutritionSummary } from "@/features/home/utils/dayMealSummary";
+import { useGetProfileQuery } from "@/features/profile/hooks/queries/useProfileQuery";
+import { PATH } from "@/router/path";
+import { getMealRecordPath, getMealSearchPath, getWorkoutRecordPath } from "@/router/pathHelpers";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
-import { LoadingOverlay } from "@/shared/commons/loading/Loading";
-import ScoreProgress from "@/shared/commons/progress/Progress";
-import { Skeleton, SkeletonStatus } from "@/shared/commons/skeleton/Skeleton";
-import { toast } from "@/shared/commons/toast/toast";
+import { ScrollFogArea } from "@/shared/commons/scrollFog";
 import { useNavigate } from "@/shared/navigation/stackflowNavigation";
 import { useSelectedDateKey, useSetSelectedDate } from "@/shared/stores/selectedDate.store";
-import { useTargetsState } from "@/shared/stores/targetNutrient.store";
-import { copyTextToClipboard } from "@/shared/utils/clipboard";
-import { formatDateKey, parseDateKey } from "@/shared/utils/dateFormat";
-import { formatNumberWithMaxOneDecimal } from "@/shared/utils/numberFormat";
+import { getTodayFormatDateKey, isFutureDateKey, parseDateKey } from "@/shared/utils/dateFormat";
 
-type DiaryMeal = {
-  type: MealType;
-  label: string;
-  iconSrc: string;
-  emptyStatusText?: string;
-};
-
-const DIARY_MEALS: readonly DiaryMeal[] = [
-  {
-    type: "0",
-    label: "아침",
-    iconSrc: "/icons/breakfast.svg",
-    emptyStatusText: "안 먹었어요",
-  },
-  { type: "1", label: "점심", iconSrc: "/icons/lunch.svg", emptyStatusText: "안 먹었어요" },
-  { type: "2", label: "저녁", iconSrc: "/icons/dinner.svg", emptyStatusText: "안 먹었어요" },
-  { type: "3", label: "간식", iconSrc: "/icons/snack.svg" },
-  { type: "4", label: "야식", iconSrc: "/icons/pizza-icon.svg" },
-];
+const MEAL_TYPES = [
+  { time: "0", label: "아침", icon: "breakfast" },
+  { time: "1", label: "점심", icon: "lunch" },
+  { time: "2", label: "저녁", icon: "dinner" },
+  { time: "3", label: "간식", icon: "snack" },
+] as const;
 
 export default function DiaryPage() {
   const selectedDateKey = useSelectedDateKey();
   const setSelectedDate = useSetSelectedDate();
   const selectedDate = parseDateKey(selectedDateKey);
-  const [expandedMealType, setExpandedMealType] = useState<MealType | null>(null);
   const navigate = useNavigate();
-  const targets = useTargetsState();
 
-  const { data: dayMeals, isPending } = useDayMealsQuery(selectedDateKey);
-  const { summary: activitySummary } = useActivityCalories(selectedDateKey);
+  const {
+    data: dayMeal,
+    isError: isSummaryError,
+    isPending: isSummaryPending,
+  } = useDayMealsQuery(selectedDateKey);
+  const {
+    data: profile,
+    isError: isProfileError,
+    isPending: isProfilePending,
+  } = useGetProfileQuery();
+  const { data: bodyLog } = useGetBodyLog(selectedDateKey);
+  const isToday = selectedDateKey === getTodayFormatDateKey();
+  const isFutureDate = isFutureDateKey(selectedDateKey);
+  const isBodyLogLoaded = bodyLog !== undefined;
+  const displayWeight = bodyLog?.weight ?? (isToday ? (profile?.weight ?? 0) : 0);
+  const displaySteps = bodyLog?.steps ?? 0;
+  const { nativeStepConnectionStatus } = useSyncNativeStepCount(selectedDateKey, {
+    enabled: isBodyLogLoaded && !isFutureDate,
+    savedSteps: bodyLog?.steps,
+  });
+  const {
+    isStepCaloriesPending,
+    isWorkoutRecordPending,
+    summary: activitySummary,
+  } = useActivityCalories(selectedDateKey);
+  const workoutRecordQuery = useGetWorkoutRecordQuery(selectedDateKey);
+  const workouts = workoutRecordQuery.data?.workout_list ?? [];
+  const hasWorkoutRecords = workouts.length > 0;
 
-  const nutritionSummary = useMemo(() => {
-    if (isPending) {
-      return null;
-    }
+  const nutrition = getDayNutritionSummary(dayMeal, profile, activitySummary?.calories);
+  const currentCalorie = nutrition.calories.current;
+  const targetCalorie = nutrition.calories.target;
+  const calorieDiff = targetCalorie - currentCalorie;
+  const calorieStatusText =
+    calorieDiff < 0 ? "초과했어요" : calorieDiff === 0 ? "완벽해요!" : "더 먹을 수 있어요";
 
-    return getDayNutritionSummary(dayMeals, targets, activitySummary?.calories);
-  }, [activitySummary?.calories, dayMeals, isPending, targets]);
+  const nutritionSummary = isProfileError
+    ? { message: "목표 정보를 불러오지 못했어요", score: null }
+    : isSummaryError
+      ? { message: "식사 정보를 불러오지 못했어요", score: null }
+      : nutrition;
 
-  const targetCalories = targets?.target_calories ?? 2100;
-  const adjustedTargetCalories = getActivityAdjustedTargetCalories(
-    targetCalories,
-    activitySummary?.calories,
-  );
-  const roundedCurrentCalories =
-    nutritionSummary?.calories.current ?? Math.round(dayMeals?.totalCalories ?? 0);
-  const roundedTargetCalories =
-    nutritionSummary && nutritionSummary.calories.target > 0
-      ? nutritionSummary.calories.target
-      : (adjustedTargetCalories ?? Math.round(targetCalories));
-  const mealScore = nutritionSummary?.score ?? 0;
-  const dayMealClipboardText = useMemo(
-    () => (dayMeals ? buildDayMealClipboardText(dayMeals) : ""),
-    [dayMeals],
-  );
-  const canCopyDayMeals = !isPending && dayMealClipboardText.length > 0;
+  if (isSummaryPending || isProfilePending || isStepCaloriesPending || isWorkoutRecordPending) {
+    return;
+  }
 
-  const handleMoveMealRecord = (mealType: MealType) => {
-    const hasRecord =
-      (dayMeals?.menusByTime[mealType]?.length ?? 0) > 0 ||
-      Boolean(dayMeals?.didNotEatByTime[mealType]);
-
-    if (hasRecord) {
-      navigate(getMealRecordPath(selectedDateKey, mealType));
-      return;
-    }
-
-    navigate(getMealSearchPath(selectedDateKey, mealType));
+  const handleMoveMealRecord = (
+    mealType: (typeof MEAL_TYPES)[number]["time"],
+    hasMenus: boolean,
+  ) => {
+    navigate(
+      hasMenus
+        ? getMealRecordPath(selectedDateKey, mealType)
+        : getMealSearchPath(selectedDateKey, mealType),
+    );
   };
 
-  const handleCopyDayMeals = async () => {
-    if (!canCopyDayMeals) {
-      toast.warning("복사할 식단 기록이 없어요");
-      return;
-    }
+  const handleMoveWorkoutRecord = () => {
+    navigate(getWorkoutRecordPath(selectedDateKey));
+  };
 
-    try {
-      await copyTextToClipboard(dayMealClipboardText);
-      toast.success("하루 식단을 복사했어요");
-    } catch {
-      toast.error("식단을 복사하지 못했어요", "잠시 후 다시 시도해 주세요");
-    }
+  const getBodyLogSheetPath = (pathname: string, params?: Record<string, string>) => {
+    const searchParams = new URLSearchParams({ date: selectedDateKey, ...params });
+
+    return `${pathname}?${searchParams.toString()}`;
+  };
+
+  const openWeightEditor = () => {
+    navigate(getBodyLogSheetPath(PATH.HOME_WEIGHT_LOG_SHEET));
+  };
+
+  const openStepsEditor = () => {
+    navigate(
+      getBodyLogSheetPath(PATH.HOME_STEPS_LOG_SHEET, {
+        nativeStepConnectionStatus,
+      }),
+    );
   };
 
   return (
-    <div className={styles.page}>
+    <div className={`${styles.root} page`}>
       <Calendar selectedDate={selectedDate} onSelectDate={setSelectedDate} />
-      <main className={styles.main}>
-        <div className={styles.content}>
-          {isPending ? (
-            <ActionCard className={styles.summaryCard}>
-              <DiarySummarySkeleton />
-            </ActionCard>
-          ) : (
-            <ActionCard className={styles.summaryCard}>
-              <div className={styles.scoreCard}>
-                <div className={styles.scoreText}>
-                  <p className={styles.calorieText}>
-                    <span className={`${styles.scoreCurrent} typo-h2`}>
-                      {roundedCurrentCalories.toLocaleString("ko-KR")}
-                    </span>
-                    <span className="textNoWrap typo-title2">
-                      / {roundedTargetCalories.toLocaleString("ko-KR")} kcal
-                    </span>
-                    <ActivityCaloriesPopover
-                      activityCalories={activitySummary?.calories}
-                      baseTargetCalories={targetCalories}
-                      variant="primary"
-                    />
-                  </p>
-                  <span className={styles.scoreDivider} aria-hidden="true" />
-                  <span className={`${styles.score} typo-title2`}>{mealScore}점</span>
-                </div>
-                <ScoreProgress
-                  value={roundedCurrentCalories}
-                  max={roundedTargetCalories}
-                  variant="primary"
-                />
+      <ScrollFogArea role="main" className={`main ${styles.content}`}>
+        <section className={styles.mealSummaryCard}>
+          <div>
+            <p className="title-l-semi text-primary textCenter">
+              {nutrition.calories.current}{" "}
+              <span className="body-l-regular text-tertiary">
+                / {nutrition.calories.target} kcal
+              </span>
+            </p>
+
+            <div className={styles.macroArea}>
+              <span className={`body-s-regular ${styles.macroName}`}>
+                탄 {profile?.target_ratio[0]}%
+              </span>
+              <span className={`body-s-regular ${styles.macroName}`}>
+                단 {profile?.target_ratio[1]}%
+              </span>
+              <span className={`body-s-regular ${styles.macroName}`}>
+                지 {profile?.target_ratio[2]}%
+              </span>
+            </div>
+          </div>
+
+          <div className={styles.caloriesArea}>
+            <div className={styles.calorieItem}>
+              <p className="caption-m-medium text-tertiary">섭취 칼로리</p>
+              <p className="body-l-medium text-primary">
+                {currentCalorie.toLocaleString()}
+                <span className="caption-m-medium">kcal</span>
+              </p>
+            </div>
+            <div className={styles.calorieItem}>
+              <p className="caption-m-medium text-tertiary">목표 칼로리</p>
+              <p className="body-l-medium text-primary">
+                {targetCalorie.toLocaleString()}
+                <span className="caption-m-medium">kcal</span>
+              </p>
+            </div>
+            <div className={styles.calorieItem}>
+              <p className="caption-m-medium text-tertiary">{calorieStatusText}</p>
+              <p className="body-l-medium text-primary">
+                {Math.abs(calorieDiff).toLocaleString()}
+                <span className="caption-m-medium">kcal</span>
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <Tile>
+          <div className={styles.burnedCalorieTitle}>
+            <h2 className="title-s-semi text-primary">총 소모 칼로리</h2>
+            <p className="body-l-medium text-primary marginLeft">
+              <span className="title-l-semi text-primary">
+                {activitySummary?.totalCalories.toLocaleString() ?? 0}
+              </span>{" "}
+              kcal
+            </p>
+          </div>
+
+          <div className={styles.burnedCalorieList}>
+            <div className={styles.burnedCalorieItem}>
+              <span className="caption-m-medium text-tertiary">운동으로 소모</span>
+              <span className="caption-m-medium text-secondary marginLeft">
+                {activitySummary?.workoutCalories.toLocaleString() ?? 0} kcal
+              </span>
+            </div>
+            <div className={styles.burnedCalorieItem}>
+              <span className="caption-m-medium text-tertiary">걸음으로 소모</span>
+              <span className="caption-m-medium text-secondary marginLeft">
+                {activitySummary?.stepCalories.toLocaleString() ?? 0} kcal
+              </span>
+            </div>
+          </div>
+        </Tile>
+
+        <section className={styles.fieldGroup}>
+          <h2 className="title-s-semi text-primary">건강 기록</h2>
+
+          <div className={styles.bodyLogGroup}>
+            <Tile onClick={openStepsEditor} className={styles.bodyLogButton}>
+              <div className={styles.bodyLogTitle}>
+                <p className="body-l-medium text-primary">걸음 수</p>
+                <SystemIcon name="plus-circle" size={18} className="text-secondary marginLeft" />
               </div>
-            </ActionCard>
-          )}
 
-          <div className={styles.copyActions}>
-            <p className="typo-title3">식단 기록</p>
-            {canCopyDayMeals && (
-              <Button
-                variant="text"
-                color="normal"
-                size="small"
-                className={styles.copyButton}
-                disabled={!canCopyDayMeals}
-                onClick={() => {
-                  void handleCopyDayMeals();
-                }}
-                aria-label="선택한 날짜의 식단 전체 복사"
-              >
-                <SystemIcon name="copy" size={20} />
-                <span>식단 복사</span>
-              </Button>
-            )}
+              <div className={styles.bodyLogValue}>
+                <span className={`title-l-semi amp-mask ${styles.bodyLogValueWeight}`}>
+                  {displaySteps.toLocaleString()}
+                </span>
+                <span className="body-l-regular text-tertiary">보</span>
+              </div>
+            </Tile>
+
+            <Tile onClick={openWeightEditor} className={styles.bodyLogButton}>
+              <div className={styles.bodyLogTitle}>
+                <p className="body-l-medium text-primary">체중</p>
+                <SystemIcon name="plus-circle" size={18} className="text-secondary marginLeft" />
+              </div>
+
+              <div>
+                <p className="caption-m-medium text-disabled">목표 {profile?.target_weight}kg</p>
+                <div className={styles.bodyLogValue}>
+                  <span className={`title-l-semi amp-mask ${styles.bodyLogValueWeight}`}>
+                    {displayWeight.toLocaleString()}
+                  </span>
+                  <span className="body-l-regular text-tertiary">kg</span>
+                </div>
+              </div>
+            </Tile>
           </div>
+        </section>
 
-          <section className={styles.actionCardList}>
-            {isPending
-              ? DIARY_MEALS.map((meal) => <MealRecordCardSkeleton key={meal.type} />)
-              : DIARY_MEALS.map((meal) => {
-                  const mealMenus = dayMeals?.menusByTime[meal.type] ?? [];
-                  const mealCalories = getTotalMealCalories(mealMenus);
-                  const didNotEat = Boolean(dayMeals?.didNotEatByTime[meal.type]);
+        <div className={styles.fieldGroup}>
+          <h2 className="title-s-semi text-primary">식단 기록</h2>
 
-                  return (
-                    <MealRecordCard
-                      key={meal.type}
-                      title={meal.label}
-                      iconSrc={meal.iconSrc}
-                      menus={mealMenus}
-                      calories={mealCalories}
-                      emptyStatusText={meal.emptyStatusText}
-                      didNotEat={didNotEat}
-                      isExpanded={expandedMealType === meal.type}
-                      onNavigate={() => handleMoveMealRecord(meal.type)}
-                      onToggleExpand={() => {
-                        setExpandedMealType((prev) => (prev === meal.type ? null : meal.type));
-                      }}
-                      mealType={meal.type}
-                      selectedDate={selectedDate}
-                    />
-                  );
-                })}
-          </section>
+          <ul className={styles.mealRecordGroup}>
+            {MEAL_TYPES.map(({ time, label, icon }) => {
+              const calories = dayMeal?.caloriesByTime[time] ?? 0;
+              const hasImage = Boolean(dayMeal?.imagesByTime[time]);
 
-          <div className={styles.bodyCardList}>
-            <TodayBodyLogSection date={selectedDateKey} />
-          </div>
+              return (
+                <li key={time}>
+                  <button
+                    type="button"
+                    className={styles.mealRecordButton}
+                    onClick={() => handleMoveMealRecord(time, hasImage)}
+                  >
+                    <div className={styles.mealImageBox}>
+                      {hasImage ? (
+                        <img
+                          src={dayMeal?.imagesByTime[time]}
+                          className={styles.mealImage}
+                          alt={label}
+                        />
+                      ) : (
+                        <SystemIcon name={icon} size={24} className={styles.mealIcon} />
+                      )}
+                    </div>
+
+                    <div className={styles.mealInfo}>
+                      <span className="caption-m-medium text-tertiary">{label}</span>
+                      <span className="caption-m-medium text-secondary marginLeft">
+                        {calories.toLocaleString()}kcal
+                      </span>
+                    </div>
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
         </div>
-      </main>
+
+        <Tile className={styles.fieldGroup}>
+          <div className={styles.workoutRecordTitle}>
+            <h2 className="title-s-semi text-primary">운동 기록</h2>
+            <SystemIcon
+              name="chevron-right"
+              size={18}
+              className="marginLeft text-secondary"
+              onClick={handleMoveWorkoutRecord}
+            />
+          </div>
+
+          {hasWorkoutRecords ? (
+            <ul className={styles.workoutRecordGroup}>
+              {workouts.map((item) => {
+                const setCount = item.set_list?.length ?? 0;
+
+                return (
+                  <li key={item.workout_id} className={styles.workoutRecordItem}>
+                    <button
+                      type="button"
+                      className={styles.workoutRecordButton}
+                      onClick={handleMoveWorkoutRecord}
+                    >
+                      <div className={styles.workoutImageBox}>
+                        {item.workout_image ? (
+                          <img src={item.workout_image} className={styles.workoutImage} alt="" />
+                        ) : (
+                          <SystemIcon name="more-horiz" size={24} />
+                        )}
+                      </div>
+                      <div className={styles.workoutInfo}>
+                        <p className="body-s-regular text-secondary">{item.workout_name}</p>
+                        <p className="body-s-regular text-disabled">
+                          {setCount > 0 && `${setCount}세트`} {item.workout_duration}분{" "}
+                          {item.burned_calories.toLocaleString()}kcal
+                        </p>
+                      </div>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          ) : (
+            <p className="body-s-regular text-tertiary">아직 오늘의 운동 기록이 없어요</p>
+          )}
+        </Tile>
+      </ScrollFogArea>
     </div>
   );
-}
-
-function DiarySummarySkeleton() {
-  return (
-    <SkeletonStatus className={styles.scoreCard} label="식사 데이터를 불러오는 중입니다.">
-      <div className={styles.scoreText}>
-        <Skeleton width={168} height={36} radius={999} />
-        <span className={styles.scoreDivider} aria-hidden="true" />
-        <Skeleton width={52} height={28} radius={999} />
-      </div>
-      <Skeleton width="100%" height={8} radius={999} />
-    </SkeletonStatus>
-  );
-}
-
-function MealRecordCardSkeleton() {
-  return (
-    <ActionCard className={styles.mealCard}>
-      <SkeletonStatus
-        className={styles.mealCardSkeletonContent}
-        label="식사 카드 정보를 불러오는 중입니다."
-      >
-        <div className={styles.mealHeader}>
-          <div className={styles.mealTitleContainer}>
-            <Skeleton width={32} height={32} variant="circle" />
-            <Skeleton width={52} height={22} radius={999} />
-          </div>
-          <Skeleton width={24} height={24} variant="circle" />
-        </div>
-
-        <div className={styles.mealSummaryCard}>
-          <div className={styles.mealSummaryButton}>
-            <Skeleton width="58%" height={18} radius={999} />
-            <Skeleton width="28%" height={18} radius={999} />
-          </div>
-          <Skeleton width="72%" height={16} radius={999} />
-        </div>
-      </SkeletonStatus>
-    </ActionCard>
-  );
-}
-
-function MealRecordCard({
-  title,
-  iconSrc,
-  menus,
-  calories,
-  emptyStatusText,
-  didNotEat,
-  isExpanded,
-  onNavigate,
-  onToggleExpand,
-  mealType,
-  selectedDate,
-}: {
-  title: string;
-  iconSrc: string;
-  menus: MenuWithQuantity[];
-  calories: number;
-  emptyStatusText?: string;
-  didNotEat: boolean;
-  isExpanded: boolean;
-  onNavigate: () => void;
-  onToggleExpand: () => void;
-  mealType: MealType;
-  selectedDate: Date;
-}) {
-  const hasMenus = menus.length > 0;
-  const { mutate: registerDidNotEatMutate, isPending: isRegisterDidNotEatPending } =
-    useTodayMealRecordRegisterMutation();
-  const { mutate: deleteDidNotEatMutate, isPending: isDeleteDidNotEatPending } =
-    useTodayMealRecordDeleteMutation();
-  const isDidNotEatPending = isRegisterDidNotEatPending || isDeleteDidNotEatPending;
-
-  const handleDidNotEatToggle = () => {
-    if (hasMenus || isDidNotEatPending) {
-      return;
-    }
-
-    const dateKey = formatDateKey(selectedDate);
-    const deleteRequest = {
-      date: dateKey,
-      time: Number(mealType) as MealTime,
-    };
-
-    if (didNotEat) {
-      deleteDidNotEatMutate(deleteRequest);
-      return;
-    }
-
-    registerDidNotEatMutate(deleteRequest);
-  };
-
-  const handleNavigateButtonClick = (event: MouseEvent<HTMLButtonElement>) => {
-    event.stopPropagation();
-    onNavigate();
-  };
-
-  const handleDidNotEatButtonClick = (event: MouseEvent<HTMLButtonElement>) => {
-    event.stopPropagation();
-    handleDidNotEatToggle();
-  };
-
-  const handleMealSummaryButtonClick = (event: MouseEvent<HTMLButtonElement>) => {
-    event.stopPropagation();
-    onToggleExpand();
-  };
-
-  return (
-    <ActionCard
-      className={`${styles.mealCard} ${hasMenus || didNotEat ? "" : styles.mealCardEmpty}`}
-      onClick={onNavigate}
-    >
-      <div className={styles.mealHeader}>
-        <button
-          type="button"
-          onClick={handleNavigateButtonClick}
-          className={styles.mealTitleContainer}
-        >
-          <img src={iconSrc} alt="" aria-hidden="true" className={styles.mealIcon} />
-          <p className="typo-title3">{title}</p>
-        </button>
-
-        {hasMenus ? (
-          <button
-            type="button"
-            onClick={handleNavigateButtonClick}
-            className={styles.navigateButton}
-            aria-label={`${title} 기록으로 이동`}
-          >
-            <SystemIcon name="chevron-right-normal" size={24} />
-          </button>
-        ) : didNotEat && emptyStatusText ? (
-          <button
-            type="button"
-            onClick={handleDidNotEatButtonClick}
-            className={styles.emptyStatusButton}
-            aria-pressed
-            disabled={isDidNotEatPending}
-          >
-            <SystemIcon name="circle-check-selected" mode="image" size={24} />
-            <span className={`${styles.textPrimary} typo-label2`}>{emptyStatusText}</span>
-          </button>
-        ) : (
-          <div className={styles.emptyMeta} aria-label={`${title} 기록하기`}>
-            {emptyStatusText && (
-              <button
-                type="button"
-                onClick={handleDidNotEatButtonClick}
-                className={styles.emptyStatusButton}
-                aria-pressed={false}
-                disabled={isDidNotEatPending}
-              >
-                <SystemIcon name="circle-check" mode="image" size={24} />
-                <span className={`${styles.emptyStatusText} typo-label2`}>{emptyStatusText}</span>
-              </button>
-            )}
-
-            <button type="button" onClick={handleNavigateButtonClick}>
-              <SystemIcon name="circle-plus" mode="image" size={24} />
-            </button>
-          </div>
-        )}
-      </div>
-
-      {hasMenus ? (
-        <div className={styles.mealSummaryCard}>
-          <button
-            type="button"
-            className={styles.mealSummaryButton}
-            onClick={handleMealSummaryButtonClick}
-            aria-expanded={isExpanded}
-            aria-label={`${title} 상세 ${isExpanded ? "접기" : "펼치기"}`}
-          >
-            <span className={`${styles.mealSummaryTitle} typo-title4`}>
-              {getMealSummaryText(menus)}
-            </span>
-
-            <span className={styles.mealSummaryMeta}>
-              <span className={`${styles.score} textNoWrap typo-title3`}>
-                {formatNumberWithMaxOneDecimal(calories)}kcal
-              </span>
-              <SystemIcon
-                name="chevron-down-normal"
-                size={24}
-                className={`${styles.mealSummaryArrow} ${isExpanded ? styles.mealSummaryArrowExpanded : ""}`}
-              />
-            </span>
-          </button>
-
-          {isExpanded ? (
-            <ul className={styles.mealDetailList}>
-              {menus.map((menu) => (
-                <li key={menu.id} className={styles.mealDetailItem}>
-                  <span className="typo-body3">{menu.name}</span>
-                  <span className={`${styles.textAlternative} textNoWrap typo-body3`}>
-                    {formatNumberWithMaxOneDecimal(menu.calories)}kcal
-                  </span>
-                </li>
-              ))}
-            </ul>
-          ) : null}
-        </div>
-      ) : null}
-
-      {isDidNotEatPending ? (
-        <LoadingOverlay label={`${title} 식사 상태를 저장하는 중입니다.`} />
-      ) : null}
-    </ActionCard>
-  );
-}
-
-function getTotalMealCalories(menus: MenuWithQuantity[]) {
-  return menus.reduce((sum, menu) => sum + menu.calories, 0);
-}
-
-function getMealSummaryText(menus: MenuWithQuantity[]) {
-  if (menus.length === 0) {
-    return "기록된 식사가 없어요";
-  }
-
-  if (menus.length === 1) {
-    return menus[0].name;
-  }
-
-  return `${menus[0].name} 외 ${menus.length - 1}개`;
 }
