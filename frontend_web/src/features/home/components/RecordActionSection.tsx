@@ -1,15 +1,18 @@
 import { useLayoutEffect, useRef, useState } from "react";
 
+import { useActivityCalories } from "@/features/health/hooks/useActivityCalories";
+import { useSyncNativeStepCount } from "@/features/health/hooks/useSyncNativeStepCount";
 import Tile from "@/features/home/components/cards/Tile";
-import TodayBodyLogSection from "@/features/home/components/TodayBodyLogSection";
-import { useDayMealsQuery } from "@/features/home/hooks/queries/useTodayRecordQuery";
+import { useDayMealsQuery, useGetBodyLog } from "@/features/home/hooks/queries/useTodayRecordQuery";
 import styles from "@/features/home/styles/RecordActionSection.module.css";
 import type { MenuWithQuantity } from "@/features/home/utils/dayMealSummary";
 import { useGetProfileQuery } from "@/features/profile/hooks/queries/useProfileQuery";
+import { PATH } from "@/router/path";
 import { getMealRecordPath, getMealSearchPath, getWorkoutRecordPath } from "@/router/pathHelpers";
 import type { MealType } from "@/shared/api/types/api.dto";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import { useNavigate } from "@/shared/navigation/stackflowNavigation";
+import { getTodayFormatDateKey, isFutureDateKey } from "@/shared/utils/dateFormat";
 import { formatNumberWithMaxOneDecimal } from "@/shared/utils/numberFormat";
 
 const MEAL_TYPES = [
@@ -24,13 +27,52 @@ export default function RecordActionSection({ selectedDate }: { selectedDate: st
   const navigate = useNavigate();
   const { data: profile } = useGetProfileQuery();
   const { data: dayMeals, isPending: isDayMealsPending } = useDayMealsQuery(selectedDate);
+  const { data: bodyLog } = useGetBodyLog(selectedDate);
   const canAccessWorkoutRecord = profile?.role === "ADMIN";
+  const isToday = selectedDate === getTodayFormatDateKey();
+  const isFutureDate = isFutureDateKey(selectedDate);
+  const isBodyLogLoaded = bodyLog !== undefined;
+  const displayWeight = bodyLog?.weight ?? (isToday ? (profile?.weight ?? 0) : 0);
+  const displaySteps = bodyLog?.steps ?? 0;
+  const { nativeStepConnectionStatus } = useSyncNativeStepCount(selectedDate, {
+    enabled: isBodyLogLoaded && !isFutureDate,
+    savedSteps: bodyLog?.steps,
+  });
+  const {
+    workoutRecords,
+    summary: activitySummary,
+    isWorkoutRecordPending,
+  } = useActivityCalories(selectedDate);
+
+  const hasWorkoutRecords = workoutRecords.length > 0;
+  const totalWorkoutDuration = workoutRecords.reduce(
+    (total, workout) => total + workout.workout_duration,
+    0,
+  );
 
   const handleMoveMealRecord = (mealType: MealType, hasMenus: boolean) => {
     navigate(
       hasMenus
         ? getMealRecordPath(selectedDate, mealType)
         : getMealSearchPath(selectedDate, mealType),
+    );
+  };
+
+  const getBodyLogSheetPath = (pathname: string, params?: Record<string, string>) => {
+    const searchParams = new URLSearchParams({ date: selectedDate, ...params });
+
+    return `${pathname}?${searchParams.toString()}`;
+  };
+
+  const openWeightEditor = () => {
+    navigate(getBodyLogSheetPath(PATH.HOME_WEIGHT_LOG_SHEET));
+  };
+
+  const openStepsEditor = () => {
+    navigate(
+      getBodyLogSheetPath(PATH.HOME_STEPS_LOG_SHEET, {
+        nativeStepConnectionStatus,
+      }),
     );
   };
 
@@ -87,17 +129,78 @@ export default function RecordActionSection({ selectedDate }: { selectedDate: st
       {canAccessWorkoutRecord ? (
         <section className={styles.recordGroup}>
           <h2 className="title-s-semi text-primary">운동 기록</h2>
-          <Tile onClick={() => navigate(getWorkoutRecordPath(selectedDate))}>
-            <p>00분 00kcal 소모</p>
+          <Tile
+            onClick={() => navigate(getWorkoutRecordPath(selectedDate))}
+            className={styles.workoutButton}
+          >
+            {isWorkoutRecordPending ? (
+              <p className="body-l-medium text-primary">운동 기록을 불러오는 중이에요</p>
+            ) : hasWorkoutRecords ? (
+              <div className={styles.workoutTitleGroup}>
+                <p className="body-l-medium text-primary">오늘 운동</p>
+                <p className="body-s-regular text-tertiary">
+                  총 {totalWorkoutDuration}분,{" "}
+                  {activitySummary?.calories.toLocaleString("ko-KR") ?? 0}
+                  kcal 소모
+                </p>
+              </div>
+            ) : (
+              <div className={styles.workoutTitleGroup}>
+                <p className="body-l-medium text-primary">아직 오늘의 운동 기록이 없어요</p>
+                <p className="body-s-regular text-tertiary">지금 바로 기록하러 갈까요?</p>
+              </div>
+            )}
+
+            <SystemIcon size={24} name="chevron-right" className="marginLeft text-secondary" />
           </Tile>
         </section>
       ) : null}
 
       <section className={styles.recordGroup}>
         <h2 className="title-s-semi text-primary">건강 기록</h2>
-        <TodayBodyLogSection date={selectedDate} />
+        <div className={styles.bodyLogGroup}>
+          <HealthMetricCard
+            title="걸음 수"
+            value={displaySteps}
+            unit="보"
+            onClick={openStepsEditor}
+          />
+          <HealthMetricCard
+            title="체중"
+            value={displayWeight}
+            unit="kg"
+            onClick={openWeightEditor}
+          />
+        </div>
       </section>
     </div>
+  );
+}
+
+function HealthMetricCard({
+  title,
+  value,
+  unit,
+  onClick,
+}: {
+  title: string;
+  value: number;
+  unit: string;
+  onClick: () => void;
+}) {
+  return (
+    <Tile onClick={onClick} className={styles.bodyLogButton}>
+      <div className={styles.bodyLogTitle}>
+        <p className="body-l-medium text-primary">{title}</p>
+        <SystemIcon name="plus-circle" size={18} className="text-secondary marginLeft" />
+      </div>
+      <div className={styles.bodyLogValue}>
+        <span className={`title-l-semi amp-mask ${styles.bodyLogValueWeight}`}>
+          {value.toLocaleString()}
+        </span>
+        <span className="body-l-regular text-tertiary">{unit}</span>
+      </div>
+    </Tile>
   );
 }
 

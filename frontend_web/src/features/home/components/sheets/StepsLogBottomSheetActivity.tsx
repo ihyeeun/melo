@@ -3,7 +3,7 @@ import { useRef, useState } from "react";
 
 import { useRegisterStepsMutation } from "@/features/home/hooks/mutations/useBodyLogMutation";
 import { useGetBodyLog } from "@/features/home/hooks/queries/useTodayRecordQuery";
-import style from "@/features/home/styles/TodayBodyLogSection.module.css";
+import styles from "@/features/home/styles/TodayBodyLogSection.module.css";
 import { PATH } from "@/router/path";
 import { isNativeApp, openNativeInAppBrowser } from "@/shared/api/bridge/nativeBridge";
 import BottomSheet from "@/shared/commons/bottomSheet/BottomSheet";
@@ -107,13 +107,13 @@ export default function StepsLogBottomSheetActivity() {
   return (
     <>
       <BottomSheet isOpen={isOpen} onClose={closeSheet}>
-        <div className={style.sheetContainer}>
-          <div className={style.titleContainer}>
-            <p className={`${style.sheetTitle} typo-title2`}>오늘의 걸음 수</p>
+        <div className={styles.sheetContainer}>
+          <div className={styles.titleContainer}>
+            <p className={`title-s-semi text-primary`}>오늘의 걸음 수</p>
           </div>
-          <div className={style.stepsFieldRow}>
+          <div className={styles.stepsFieldRow}>
             {canInputSteps ? (
-              <div className={style.stepsInputContainer}>
+              <div className={styles.stepsInputContainer}>
                 <NumberField
                   key={date}
                   value={draftSteps}
@@ -136,10 +136,10 @@ export default function StepsLogBottomSheetActivity() {
                   showControls={false}
                   unstyled
                   classNames={{
-                    root: style.stepsNumberFieldRoot,
-                    group: style.stepsNumberFieldGroup,
-                    inputWrapper: style.stepsInputWrapper,
-                    input: `typo-body3 ${style.stepsNumberInput}`,
+                    root: styles.stepsNumberFieldRoot,
+                    group: styles.stepsNumberFieldGroup,
+                    inputWrapper: styles.stepsInputWrapper,
+                    input: `body-l-medium text-primary ${styles.stepsNumberInput}`,
                   }}
                   format={{ maximumFractionDigits: 0, useGrouping: true }}
                   inputProps={{
@@ -147,22 +147,23 @@ export default function StepsLogBottomSheetActivity() {
                     placeholder: "걸음 수 입력",
                     "aria-label": "오늘의 걸음 수 입력",
                   }}
-                  suffix={<span className={`typo-caption1 ${style.stepsUnit}`}>보</span>}
+                  suffix={
+                    <span className={`title-s-regular text-tertiary ${styles.stepsUnit}`}>보</span>
+                  }
                 />
 
                 <Button
-                  variant="text"
-                  color="normal"
-                  className={style.healthAccessNoticeButton}
+                  variant="dismiss"
+                  className={styles.healthAccessNoticeButton}
                   onClick={handleOpenHealthAccessGuide}
                 >
                   걸음 수 연동하기
-                  <SystemIcon name="chevron-right-normal" size={16} />
+                  <SystemIcon name="chevron-right" size={16} />
                 </Button>
               </div>
             ) : (
               <p
-                className={`${style.syncedStepsValue} typo-body1`}
+                className={`${styles.syncedStepsValue} typo-body1`}
                 aria-label={
                   nativeSyncedSteps === null
                     ? "연동된 오늘의 걸음 수 데이터 없음"
@@ -175,9 +176,9 @@ export default function StepsLogBottomSheetActivity() {
               </p>
             )}
           </div>
-          <div className={style.sheetActions}>
+          <div className={styles.sheetActions}>
             {canInputSteps && (
-              <Button onClick={handleSubmit} fullWidth size="large" disabled={isManualStepsPending}>
+              <Button onClick={handleSubmit} fullWidth size="m" disabled={isManualStepsPending}>
                 기록하기
               </Button>
             )}

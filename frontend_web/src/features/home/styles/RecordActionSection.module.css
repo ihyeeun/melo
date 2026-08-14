@@ -16,8 +16,8 @@
   border-radius: 20px;
   list-style: none;
   margin: 0;
-  padding: 0;
   overflow: hidden;
+  padding: 0;
 }
 
 .mealButton {
@@ -30,11 +30,13 @@
   gap: 8px;
   padding: 16px 20px;
   text-align: left;
-  width: 100%;
   transition: background-color 120ms ease;
+  width: 100%;
 }
 
-.mealButton:active {
+.mealButton:active,
+.workoutButton:active,
+.bodyLogButton:active {
   background-color: var(--background-gray-1);
   transform: scale(0.995);
 }
@@ -84,4 +86,45 @@
   position: absolute;
   visibility: hidden;
   white-space: nowrap;
+}
+
+.workoutButton {
+  align-items: center;
+  display: flex;
+  padding: 20px 16px;
+}
+
+.workoutTitleGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.bodyLogGroup {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.bodyLogButton {
+  display: flex;
+  flex-direction: column;
+  gap: 33px;
+  width: 100%;
+}
+
+.bodyLogTitle {
+  align-items: center;
+  display: flex;
+  width: 100%;
+}
+
+.bodyLogValue {
+  align-items: baseline;
+  display: flex;
+  gap: 2px;
+}
+
+.bodyLogValueWeight {
+  font-weight: var(--fw-medium);
 }

@@ -66,7 +66,7 @@ function TodayMetricCard({
       <div className={style.cardContainer}>
         <div className={style.cardTitleContainer}>
           <p className="typo-title4">{title}</p>
-          {title === "체중" && <SystemIcon name="circle-plus-fill" mode="image" size={24} />}
+          <SystemIcon name="plus-circle" size={18} />
         </div>
         <div className={style.valueText}>
           <span className={`typo-h2 amp-mask ${style.highlightValue}`}>
