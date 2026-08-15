@@ -186,6 +186,20 @@
   text-align: center;
 }
 
+.divider {
+  background-color: var(--border-subtie);
+  height: 1px;
+  width: 100%;
+}
+
+.dividerMargin20 {
+  margin: 20px 0;
+}
+
+.dividerMargin16 {
+  margin: 16px 0;
+}
+
 /* Layout */
 .page {
   display: flex;

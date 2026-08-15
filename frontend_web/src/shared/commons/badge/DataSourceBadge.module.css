@@ -9,16 +9,16 @@
 }
 
 .personal {
-  background-color: var(--bg-normal);
-  color: var(--label-assistive);
+  background-color: var(--background-gray-1);
+  color: var(--text-tertiary);
 }
 
 .personal[data-active="true"] {
-  background-color: var(--bg-white);
+  background-color: var(--background-default);
 }
 
 .ai-estimated {
-  background-color: var(--interaction-primary);
-  border: 1px solid var(--border-primary);
-  color: var(--label-primary);
+  background-color: var(--background-selected);
+  border: 1px solid var(--border-strong);
+  color: var(--primary-normal);
 }

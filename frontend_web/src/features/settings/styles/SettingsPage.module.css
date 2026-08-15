@@ -1,5 +1,5 @@
 .page {
-  background-color: var(--bg-white);
+  background-color: var(--background-default);
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -38,15 +38,14 @@
   gap: 8px;
 }
 
-.img {
-  width: 30px;
-  height: 30px;
+.menuIcon {
+  color: var(--text-secondary);
 }
 
 .menuLabel {
-  color: var(--label-normal);
+  color: var(--text-primary);
 }
 
 .menuChevron {
-  color: var(--label-normal);
+  color: var(--text-primary);
 }

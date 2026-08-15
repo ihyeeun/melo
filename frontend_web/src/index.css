@@ -123,7 +123,7 @@ a,
 }
 
 button:active {
-  transform: scale(0.9);
+  transform: scale(0.995);
 }
 
 /* Keep scrolling behavior, but hide visible scrollbars globally. */

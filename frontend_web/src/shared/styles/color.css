@@ -64,13 +64,22 @@
   --btn-default: var(--coral-400);
   --btn-disabled: var(--gray-200);
 
+  /* Status colors stay semantic so feature pages do not depend on a
+   * particular primitive palette. These values are chosen to preserve
+   * contrast and meaning within the v2 coral/navy system. */
+  --status-error: var(--coral-600);
+  --status-warning: var(--coral-400);
+  --status-link: var(--navy-500);
+  --status-success: #2f9e62;
+  --status-low: var(--gray-400);
+
   /* =========================
    * color - gradient
    * ========================= */
   --gradient-primary: linear-gradient(
     to right,
-    var(--color-coral-400) 0%,
-    var(--color-coral-200) 100%
+    var(--coral-400) 0%,
+    var(--coral-200) 100%
   );
   --gradient-secondary: linear-gradient(to bottom, #ff8083 0%, var(--coral-400) 100%);
 

@@ -17,9 +17,9 @@ export default function TermsPage() {
           <Accordion.Root className={styles.accordion}>
             <Accordion.Item>
               <Accordion.Header className={styles.header}>
-                <Accordion.Trigger className={`${styles.trigger} typo-title4`}>
+                <Accordion.Trigger className={`${styles.trigger} body-l-semi`}>
                   서비스 이용약관
-                  <SystemIcon name="chevron-down-thin" size={24} className={styles.triggerIcon} />
+                  <SystemIcon name="chevron-down" size={24} className={styles.triggerIcon} />
                 </Accordion.Trigger>
               </Accordion.Header>
               <Accordion.Panel className={styles.panel}>
@@ -40,9 +40,9 @@ export default function TermsPage() {
           <Accordion.Root className={styles.accordion}>
             <Accordion.Item>
               <Accordion.Header className={styles.header}>
-                <Accordion.Trigger className={`${styles.trigger} typo-title4`}>
+                <Accordion.Trigger className={`${styles.trigger} body-l-semi`}>
                   개인정보처리방침
-                  <SystemIcon name="chevron-down-thin" size={24} className={styles.triggerIcon} />
+                  <SystemIcon name="chevron-down" size={24} className={styles.triggerIcon} />
                 </Accordion.Trigger>
               </Accordion.Header>
               <Accordion.Panel className={styles.panel}>

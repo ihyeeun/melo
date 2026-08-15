@@ -1,5 +1,5 @@
 .page {
-  background-color: var(--bg-normal);
+  background-color: var(--background-gray-1);
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -48,10 +48,10 @@
 
 .filterChip {
   align-items: center;
-  background-color: var(--bg-white);
-  border: 1px solid var(--border-neutral);
+  background-color: var(--background-default);
+  border: 1px solid var(--border-subtie);
   border-radius: 100px;
-  color: var(--label-normal);
+  color: var(--text-primary);
   display: inline-flex;
   flex: 0 0 auto;
   justify-content: center;
@@ -63,16 +63,16 @@
 .filterChipSelected {
   background-color: var(--primary-normal);
   border-color: var(--primary-normal);
-  color: var(--static-white);
+  color: var(--background-default);
 }
 
 .bgWhite {
-  background-color: var(--bg-white);
+  background-color: var(--background-default);
 }
 
 .filterTab {
   align-items: center;
-  color: var(--label-normal);
+  color: var(--text-primary);
   display: inline-flex;
   flex: 0 0 auto;
   justify-content: center;
@@ -103,10 +103,10 @@
 
 .resultCard {
   align-items: center;
-  background-color: var(--bg-white);
-  border: 1px solid var(--border-neutral);
+  background-color: var(--background-default);
+  border: 1px solid var(--border-subtie);
   border-radius: 8px;
-  color: var(--label-normal);
+  color: var(--text-primary);
   display: flex;
   gap: 12px;
   padding: 8px;
@@ -115,8 +115,8 @@
 }
 
 .resultCardSelected {
-  background-color: var(--interaction-primary);
-  border-color: var(--border-primary);
+  background-color: var(--background-selected);
+  border-color: var(--border-strong);
 }
 
 .resultMainButton {
@@ -169,7 +169,7 @@
 
 .addButton {
   align-items: center;
-  color: var(--interaction-normal);
+  color: var(--text-primary);
   display: inline-flex;
   flex: 0 0 32px;
   height: 32px;
@@ -189,10 +189,10 @@
 .loadingContainer,
 .emptyState {
   align-items: center;
-  background-color: var(--bg-white);
-  border: 1px solid var(--border-neutral);
+  background-color: var(--background-default);
+  border: 1px solid var(--border-subtie);
   border-radius: 8px;
-  color: var(--label-normal);
+  color: var(--text-primary);
   display: flex;
   flex-direction: column;
   gap: 12px;

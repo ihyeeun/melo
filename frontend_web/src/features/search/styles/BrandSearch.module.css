@@ -1,5 +1,5 @@
 .page {
-  background-color: var(--bg-normal);
+  background-color: var(--background-gray-1);
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -33,8 +33,8 @@
 
 .brandItem {
   align-items: center;
-  background-color: var(--bg-white);
-  border: 1px solid var(--border-neutral);
+  background-color: var(--background-default);
+  border: 1px solid var(--border-subtie);
   border-radius: 8px;
   display: inline-flex;
   justify-content: space-between;
@@ -45,25 +45,25 @@
 }
 
 .brandItemSelected {
-  background-color: var(--interaction-primary);
+  background-color: var(--background-selected);
   border-color: var(--primary-normal);
 }
 
 .brandName {
-  color: var(--label-normal);
+  color: var(--text-primary);
 }
 
 .brandItemChevron {
-  color: var(--static-black);
+  color: var(--gray-950);
   margin-left: auto;
 }
 
 .emptyResult {
   align-items: center;
-  background-color: var(--bg-white);
-  border: 1px solid var(--border-neutral);
+  background-color: var(--background-default);
+  border: 1px solid var(--border-subtie);
   border-radius: 8px;
-  color: var(--label-normal);
+  color: var(--text-primary);
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -72,20 +72,20 @@
 }
 
 .emptyResultSubText {
-  color: var(--label-normal);
+  color: var(--text-primary);
   margin-bottom: 10px;
 }
 
 .placeholder {
-  background-color: var(--bg-white);
-  border: 1px solid var(--border-neutral);
+  background-color: var(--background-default);
+  border: 1px solid var(--border-subtie);
   border-radius: 8px;
   padding: 30px 20px;
   text-align: center;
 }
 
 .placeholderText {
-  color: var(--label-assistive);
+  color: var(--text-tertiary);
 }
 
 .footer {

@@ -677,10 +677,10 @@ function FoodImageFeedbackPreview({
                   } 상세 보기`}
                 >
                   <span className={styles.foodMarkerBubble}>
-                    <span className={`${styles.foodMarkerName} typo-body3`}>{marker.label}</span>
+                    <span className={`${styles.foodMarkerName} body-s-medium`}>{marker.label}</span>
                     {marker.scoreText ? (
                       <span
-                        className={`typo-body2 ${styles.foodMarkerScore} ${getScoreClass(marker.score ?? 0)}`}
+                        className={`body-l-medium ${styles.foodMarkerScore} ${getScoreClass(marker.score ?? 0)}`}
                       >
                         {marker.scoreText}
                       </span>
@@ -737,7 +737,7 @@ function FoodImageFeedbackPreview({
                           isPinClusterOpen ? "닫기" : "열기"
                         }`}
                       >
-                        <span className={`${styles.foodClusterSourcePinLabel} typo-body3`}>
+                        <span className={`${styles.foodClusterSourcePinLabel} body-s-medium`}>
                           +{cluster.markers.length}
                         </span>
                       </button>
@@ -772,10 +772,10 @@ function FoodImageFeedbackPreview({
                                   marker.scoreText ? ` ${marker.scoreText}` : ""
                                 } 상세 보기`}
                               >
-                                <span className={`${styles.foodClusterPinListNumber} typo-body3`}>
+                                <span className={`${styles.foodClusterPinListNumber} body-s-medium`}>
                                   {marker.index + 1}
                                 </span>
-                                <span className={`${styles.foodClusterPinListName} typo-body3`}>
+                                <span className={`${styles.foodClusterPinListName} body-s-medium`}>
                                   {marker.label}
                                 </span>
                               </button>
@@ -839,7 +839,7 @@ function FoodImageFeedbackPreview({
                       marker.scoreText ? ` ${marker.scoreText}` : ""
                     } 말풍선 ${isSourceMarkerOpen ? "닫기" : "열기"}`}
                   >
-                    <span className={`${styles.foodClusterSourcePinLabel} typo-body3`}>
+                    <span className={`${styles.foodClusterSourcePinLabel} body-s-medium`}>
                       {markerNumber}
                     </span>
                   </button>
@@ -856,12 +856,12 @@ function FoodImageFeedbackPreview({
                       } 상세 보기`}
                     >
                       <span className={styles.foodMarkerBubble}>
-                        <span className={`${styles.foodMarkerName} typo-body3`}>
+                        <span className={`${styles.foodMarkerName} body-s-medium`}>
                           {marker.label}
                         </span>
                         {marker.scoreText ? (
                           <span
-                            className={`typo-body2 ${styles.foodMarkerScore} ${getScoreClass(marker.score ?? 0)}`}
+                            className={`body-l-medium ${styles.foodMarkerScore} ${getScoreClass(marker.score ?? 0)}`}
                           >
                             {marker.scoreText}
                           </span>
@@ -892,11 +892,11 @@ function FoodImageFeedbackPreview({
                       disabled={isDetailDisabled}
                       aria-label={`${menu.menu_name} ${Math.round(menu.score)}점 상세 보기`}
                     >
-                      <span className={`${styles.unpositionedMenuName} typo-body3`}>
+                      <span className={`${styles.unpositionedMenuName} body-s-medium`}>
                         {menu.menu_name}
                       </span>
                       <span
-                        className={`typo-body2 ${styles.unpositionedMenuScore} ${getScoreClass(menu.score)}`}
+                        className={`body-l-medium ${styles.unpositionedMenuScore} ${getScoreClass(menu.score)}`}
                       >
                         {Math.round(menu.score)}점
                       </span>
@@ -909,7 +909,7 @@ function FoodImageFeedbackPreview({
 
           <button
             type="button"
-            className={`${styles.unpositionedMenuToggle} typo-body3`}
+            className={`${styles.unpositionedMenuToggle} body-s-medium`}
             onClick={() => {
               setOpenSourceMarkerId(null);
               setOpenPinClusterId(null);

@@ -26,7 +26,7 @@
 }
 
 .highlightValue {
-  color: var(--label-primary);
+  color: var(--primary-normal);
 }
 
 .sheetContainer {
@@ -47,7 +47,7 @@
 }
 
 .sheetFieldLabel {
-  color: var(--label-normal);
+  color: var(--text-primary);
   margin: 0;
 }
 

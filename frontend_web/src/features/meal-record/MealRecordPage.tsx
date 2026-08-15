@@ -559,13 +559,13 @@ export default function MealRecordPage() {
 
       <main className={styles.content}>
         <article className={styles.summaryCard}>
-          <p className="typo-title2">섭취 칼로리</p>
+          <p className="title-m-semi">섭취 칼로리</p>
 
           <div className={`${styles.calorieRow} textNoWrap`}>
-            <span className={`${styles.textPrimary} typo-h2`}>
+            <span className={`${styles.textPrimary} title-l-semi`}>
               {totalCalories.toLocaleString("ko-KR", { maximumFractionDigits: 1 })}
             </span>
-            <span className="typo-caption1">kcal</span>
+            <span className="title-m-semi">kcal</span>
           </div>
         </article>
 
@@ -584,7 +584,7 @@ export default function MealRecordPage() {
                   onClick={() => handleChangeMealType(option.key)}
                   aria-pressed={isActive}
                 >
-                  <span className="typo-label3">{option.label}</span>
+                  <span className="body-m-regular">{option.label}</span>
                 </button>
               );
             })}
@@ -602,7 +602,7 @@ export default function MealRecordPage() {
                   onClick={handleRemoveImage}
                   aria-label="식사 사진 삭제"
                 >
-                  <SystemIcon name="close" size={28} />
+                  <SystemIcon name="exit" size={28} />
                 </button>
               </div>
 
@@ -619,7 +619,7 @@ export default function MealRecordPage() {
                 onClick={handleOpenTimeSheet}
               >
                 <span>{formattedMealRecordTime}</span>
-                <SystemIcon name="chevron-right-thin" size={20} />
+                <SystemIcon name="chevron-right" size={20} />
               </Button>
 
               {displayMenuItems.map((menu, index) => (
@@ -642,19 +642,19 @@ export default function MealRecordPage() {
           ) : showDidNotEatState ? (
             <article className={styles.didNotEatState}>
               <img
-                src="/icons/character-not-eat.svg"
+                src="/icons/characters/score-0.png"
                 alt=""
                 aria-hidden="true"
                 className={styles.didNotEatImage}
               />
-              <p className="typo-body1">안 먹었어요</p>
+              <p className="title-m-semi">안 먹었어요</p>
             </article>
           ) : (
             <button type="button" className={styles.emptyState} onClick={handleMealSearchNavigate}>
               <div className={styles.emptyStateIcon}>
-                <SystemIcon name="circle-plus-large" mode="image" size={32} />
+                <SystemIcon name="plus-circle" mode="image" size={32} />
               </div>
-              <p className="typo-body1">기록하러 가볼까요?</p>
+              <p className="title-m-semi">기록하러 가볼까요?</p>
             </button>
           )}
         </section>
@@ -705,7 +705,7 @@ export default function MealRecordPage() {
       >
         <div className={styles.timeSheetContent}>
           <div className={styles.timeSheetHeader}>
-            <h2 className="typo-title2 textNormal">식사 시간</h2>
+            <h2 className="title-m-semi text-primary">식사 시간</h2>
             <Button onClick={handleResetTime} variant="text" color="normal">
               삭제
             </Button>
@@ -715,7 +715,7 @@ export default function MealRecordPage() {
             height={290}
             itemHeight={67}
             classNames={{
-              item: `typo-title1 ${styles.timePickerItem}`,
+              item: `title-l-semi ${styles.timePickerItem}`,
               itemSelected: styles.timePickerItemSelected,
               highlight: styles.timePickerHighlight,
             }}

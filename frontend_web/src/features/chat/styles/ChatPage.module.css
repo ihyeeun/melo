@@ -1,5 +1,5 @@
 .page {
-  background-color: var(--bg-normal);
+  background-color: var(--background-gray-1);
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -18,7 +18,7 @@
 
 .footer {
   padding-bottom: var(--safe-area-bottom);
-  background-color: var(--bg-white);
+  background-color: var(--background-default);
 }
 
 .footerKeyboardOpen {
@@ -49,8 +49,8 @@
   align-items: center;
   background-color: var(--primary-normal);
   border-radius: 100px;
-  box-shadow: var(--shadow-emphasize);
-  color: var(--static-white);
+  box-shadow: var(--shadow-outer);
+  color: var(--background-default);
   display: inline-flex;
   height: 64px;
   justify-content: center;
@@ -84,7 +84,7 @@
   align-items: center;
   display: flex;
   gap: 6px;
-  color: var(--label-primary);
+  color: var(--primary-normal);
 }
 
 .skeletonUserMessageGroup {
@@ -95,7 +95,7 @@
 }
 
 .skeletonAssistantBubble {
-  background-color: var(--bg-white);
+  background-color: var(--background-default);
   border-radius: 8px;
   display: flex;
   flex-direction: column;
@@ -105,8 +105,8 @@
 }
 
 .skeletonRecommendCard {
-  background-color: var(--bg-white);
-  border: 1px solid var(--border-neutral);
+  background-color: var(--background-default);
+  border: 1px solid var(--border-subtie);
   border-radius: 8px;
   display: flex;
   flex-direction: column;
@@ -143,7 +143,7 @@
 .dateText {
   background-color: var(--gray-500);
   border-radius: 999px;
-  color: var(--static-white);
+  color: var(--background-default);
   display: inline-flex;
   padding: 4px 12px;
 }
@@ -156,7 +156,7 @@
 }
 
 .timeText {
-  color: var(--label-assistive);
+  color: var(--text-tertiary);
   flex-shrink: 0;
   white-space: nowrap;
 }
@@ -170,10 +170,10 @@
 }
 
 .userBubble {
-  background-color: var(--bg-white);
-  border: 1px solid var(--border-neutral);
+  background-color: var(--background-default);
+  border: 1px solid var(--border-subtie);
   border-radius: 8px;
-  color: var(--label-normal);
+  color: var(--text-primary);
   max-width: 100%;
   overflow-wrap: anywhere;
   padding: 8px 16px;
@@ -203,7 +203,7 @@
 
 .userImageBubbleFrame {
   aspect-ratio: 1 / 1;
-  background-color: var(--bg-white);
+  background-color: var(--background-default);
   border-radius: 12px;
   display: block;
   overflow: hidden;
@@ -231,7 +231,7 @@
 .userImagePreviewOverlay {
   align-items: center;
   animation: userImagePreviewOverlayEnter 180ms ease-out both;
-  background-color: var(--dimmer-dimmer);
+  background-color: var(--dimmer-default);
   display: flex;
   inset: 0;
   justify-content: center;
@@ -244,7 +244,7 @@
   align-items: center;
   animation: userImagePreviewControlEnter 180ms ease-out both;
   border: 0;
-  color: var(--static-white);
+  color: var(--background-default);
   display: inline-flex;
   height: 40px;
   justify-content: center;
@@ -330,8 +330,8 @@
 }
 
 .assistantBubble {
-  background-color: var(--bg-white);
-  border: 1px solid var(--border-neutral);
+  background-color: var(--background-default);
+  border: 1px solid var(--border-subtie);
   border-radius: 8px;
   line-break: auto;
   max-width: 96%;
@@ -369,7 +369,7 @@
   align-items: center;
   background-color: var(--primary-normal);
   border-radius: 100px;
-  color: var(--static-white);
+  color: var(--background-default);
   display: inline-flex;
   padding: 2px 6px;
   justify-content: center;
@@ -385,10 +385,10 @@
 }
 
 .mealRecordModeExampleCard {
-  background-color: var(--bg-white);
-  border: 1px solid var(--border-neutral);
+  background-color: var(--background-default);
+  border: 1px solid var(--border-subtie);
   border-radius: 8px;
-  box-shadow: var(--shadow-normal);
+  box-shadow: var(--shadow-outer);
   display: flex;
   flex-direction: column;
   width: 100%;
@@ -428,9 +428,9 @@
 
 .mealRecordModeExampleButton {
   align-items: center;
-  border: 1px solid var(--border-neutral);
+  border: 1px solid var(--border-subtie);
   border-radius: 6px;
-  color: var(--label-assistive);
+  color: var(--text-tertiary);
   display: inline-flex;
   justify-content: center;
   min-height: 36px;
@@ -441,14 +441,14 @@
 }
 
 .mealRecordModeExampleButtonPrimary {
-  border-color: var(--border-primary);
-  color: var(--label-primary);
+  border-color: var(--border-strong);
+  color: var(--primary-normal);
 }
 
 .mealRecordModeTipCard {
   align-items: center;
-  background-color: var(--orange-100);
-  border: 1px solid var(--orange-300);
+  background-color: var(--coral-50);
+  border: 1px solid var(--coral-200);
   border-radius: 8px;
   display: flex;
   gap: 12px;
@@ -459,7 +459,7 @@
 }
 
 .mealRecordModeTipTitle {
-  color: var(--label-primary);
+  color: var(--primary-normal);
 }
 
 .assistantBubbleWithTime,
@@ -470,15 +470,15 @@
 .assistantBubbleWithTime::after,
 .mealRecordCardWithTime::after {
   bottom: 0;
-  color: var(--label-assistive);
+  color: var(--text-tertiary);
   content: attr(data-time);
   left: calc(100% + 6px);
   position: absolute;
   white-space: nowrap;
-  font-size: var(--fs-12);
+  font-size: 12px;
   font-weight: var(--fw-medium);
-  letter-spacing: var(--letter-spacing-normal);
-  line-height: var(--line-height-130);
+  letter-spacing: 0;
+  line-height: 1.3;
 }
 
 .recommendationSection,
@@ -496,8 +496,8 @@
 
 .recommendCard,
 .feedbackCard {
-  background-color: var(--bg-white);
-  border: 1px solid var(--border-neutral);
+  background-color: var(--background-default);
+  border: 1px solid var(--border-subtie);
   border-radius: 8px;
   display: flex;
   flex-direction: column;
@@ -508,8 +508,8 @@
 }
 
 .menuNotFoundCard {
-  background-color: var(--bg-white);
-  border: 1px solid var(--border-neutral);
+  background-color: var(--background-default);
+  border: 1px solid var(--border-subtie);
   border-radius: 8px;
   display: flex;
   flex-direction: column;
@@ -533,20 +533,20 @@
 
 .recommendCard:focus-visible,
 .feedbackCard:focus-visible {
-  outline: 2px solid var(--border-primary);
+  outline: 2px solid var(--border-strong);
   outline-offset: 2px;
 }
 
 .cardSelected {
-  border-color: var(--border-primary);
-  background-color: var(--interaction-primary);
+  border-color: var(--border-strong);
+  background-color: var(--background-selected);
 }
 
 .rankBadge {
   align-items: center;
-  background-color: var(--primary-strong);
+  background-color: var(--coral-600);
   border-radius: 4px;
-  color: var(--static-white);
+  color: var(--background-default);
   display: inline-flex;
   padding: 2px 6px;
   width: fit-content;
@@ -560,17 +560,17 @@
 }
 
 .feedbackContents {
-  border-top: 1px solid var(--border-neutral);
+  border-top: 1px solid var(--border-subtie);
   padding-top: 16px;
 }
 
 .recommendMenuName {
-  color: var(--label-normal);
+  color: var(--text-primary);
   margin-bottom: 2px;
 }
 
 .recommendSummary {
-  color: var(--label-assistive);
+  color: var(--text-tertiary);
 }
 
 .recommendMetaRow {
@@ -585,7 +585,7 @@
 }
 
 .recommendBrand {
-  color: var(--label-assistive);
+  color: var(--text-tertiary);
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -593,11 +593,11 @@
 }
 
 .recommendAmount {
-  color: var(--label-alternative);
+  color: var(--text-secondary);
 }
 
 .recommendCalories {
-  color: var(--label-normal);
+  color: var(--text-primary);
   margin-left: auto;
 }
 
@@ -630,7 +630,7 @@
 }
 
 .feedbackGaugeTrack {
-  stroke: var(--bg-normal);
+  stroke: var(--background-gray-1);
 }
 
 .feedbackGaugeValue {
@@ -659,11 +659,11 @@
 }
 
 .feedbackScoreValue {
-  color: var(--label-normal);
+  color: var(--text-primary);
 }
 
 .feedbackScoreCaption {
-  color: var(--label-assistive);
+  color: var(--text-tertiary);
   margin-top: 2px;
 }
 
@@ -674,6 +674,7 @@
   position: absolute;
   transform: translate(-50%, -50%);
   width: 46px;
+  display: none;
 }
 
 .feedbackMenuSummary {
@@ -682,16 +683,16 @@
 }
 
 .feedbackMenuTitle {
-  color: var(--label-normal);
+  color: var(--text-primary);
   overflow-wrap: anywhere;
 }
 
 .feedbackMenuMeta {
-  color: var(--label-assistive);
+  color: var(--text-tertiary);
 }
 
 .feedbackCalories {
-  color: var(--label-normal);
+  color: var(--text-primary);
   white-space: nowrap;
   margin-left: auto;
   display: flex;
@@ -700,7 +701,7 @@
 
 .feedbackMenuToggle {
   align-items: end;
-  color: var(--label-normal);
+  color: var(--text-primary);
   display: inline-flex;
   flex-shrink: 0;
   gap: 4px;
@@ -717,7 +718,7 @@
 }
 
 .feedbackMenuList {
-  background-color: var(--bg-normal);
+  background-color: var(--background-gray-1);
   display: flex;
   flex-direction: column;
   list-style: none;
@@ -735,24 +736,24 @@
 }
 
 .feedbackMenuItemName {
-  color: var(--label-normal);
+  color: var(--text-primary);
 }
 
 .feedbackMenuItemAmount {
-  color: var(--label-assistive);
+  color: var(--text-tertiary);
   margin-top: 2px;
 }
 
 .feedbackMenuItemCalories {
-  color: var(--label-alternative);
+  color: var(--text-secondary);
   flex-shrink: 0;
   margin-left: auto;
 }
 
 .moreRecommendCard {
   align-items: flex-start;
-  background-color: var(--bg-white);
-  border: 1px solid var(--border-neutral);
+  background-color: var(--background-default);
+  border: 1px solid var(--border-subtie);
   border-radius: 8px;
   display: flex;
   flex-direction: column;
@@ -764,8 +765,8 @@
 .chatInputContainer {
   display: flex;
   flex-direction: column;
-  background-color: var(--bg-white);
-  border-top: 1px solid var(--border-neutral);
+  background-color: var(--background-default);
+  border-top: 1px solid var(--border-subtie);
   position: relative;
 }
 
@@ -787,9 +788,9 @@
 }
 
 .chipContainer {
-  background-color: var(--bg-white);
-  color: var(--label-primary);
-  border: 1px solid var(--border-neutral);
+  background-color: var(--background-default);
+  color: var(--primary-normal);
+  border: 1px solid var(--border-subtie);
   width: fit-content;
   padding: 8px 16px;
   border-radius: 100px;
@@ -797,15 +798,15 @@
   display: flex;
   align-items: center;
   gap: 4px;
-  box-shadow: var(--shadow-normal);
+  box-shadow: var(--shadow-outer);
 }
 
 .mealRecordModeHintBubble {
-  background-color: var(--bg-primary-1);
+  background-color: var(--coral-400);
   border-radius: 6px;
   bottom: calc(100% + 12px);
-  box-shadow: var(--shadow-strong);
-  color: var(--label-white);
+  box-shadow: var(--shadow-outer);
+  color: var(--background-default);
   left: 0;
   max-width: min(230px, calc(100vw - 40px));
   padding: 10px 12px;
@@ -818,7 +819,7 @@
 .mealRecordModeHintBubble::after {
   border-left: 8px solid transparent;
   border-right: 8px solid transparent;
-  border-top: 9px solid var(--bg-primary-1);
+  border-top: 9px solid var(--coral-400);
   content: "";
   left: 42px;
   position: absolute;
@@ -827,8 +828,8 @@
 }
 
 .selectedChip {
-  background-color: var(--interaction-primary);
-  border-color: var(--border-primary);
+  background-color: var(--background-selected);
+  border-color: var(--border-strong);
 }
 
 .textInputContainer {
@@ -859,12 +860,12 @@
 }
 
 .sendIconContainer {
-  background-color: var(--primary-strong);
+  background-color: var(--coral-600);
   border-radius: 100px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--static-white);
+  color: var(--background-default);
   flex-shrink: 0;
 }
 
@@ -873,17 +874,17 @@
 }
 
 .textInput {
-  --chat-input-line-height: calc(var(--fs-16) * var(--line-height-145));
+  --chat-input-line-height: calc(16px * 1.45);
 
-  background-color: var(--bg-white);
+  background-color: var(--background-default);
   flex: 1 1 auto;
   max-height: calc(var(--chat-input-line-height) * 5);
   min-width: 0;
   width: 100%;
   padding: 10px 16px;
   border-radius: 100px;
-  border: 1px solid var(--border-neutral);
-  color: var(--label-normal);
+  border: 1px solid var(--border-subtie);
+  color: var(--text-primary);
   resize: none;
   overflow-y: auto;
 }
@@ -893,7 +894,7 @@
 }
 
 .textInput::placeholder {
-  color: var(--label-assistive);
+  color: var(--text-tertiary);
   opacity: 1;
 }
 
@@ -931,9 +932,9 @@
 
 .addActionItemButton {
   align-items: center;
-  background-color: var(--bg-normal);
+  background-color: var(--background-gray-1);
   border-radius: 8px;
-  color: var(--label-normal);
+  color: var(--text-primary);
   display: inline-flex;
   gap: 8px;
   justify-content: flex-start;
@@ -950,10 +951,10 @@
   margin: 0;
   list-style: none;
   position: absolute;
-  background-color: var(--bg-white);
-  border: 1px solid var(--border-neutral);
+  background-color: var(--background-default);
+  border: 1px solid var(--border-subtie);
   border-radius: 20px;
-  box-shadow: var(--shadow-normal);
+  box-shadow: var(--shadow-outer);
   left: 60px;
   right: 60px;
   bottom: calc(100% + 4px);
@@ -975,14 +976,14 @@
 }
 
 .searchMenuItem {
-  border-bottom: 1px solid var(--border-neutral);
+  border-bottom: 1px solid var(--border-subtie);
   cursor: pointer;
   outline: none;
   padding: 10px 6px;
 }
 
 .searchMenuItem:focus-visible {
-  background-color: var(--bg-normal);
+  background-color: var(--background-gray-1);
   border-radius: 8px;
 }
 
@@ -1035,8 +1036,8 @@
   transform: translateX(-50%);
   padding: 6px 10px;
   border-radius: 6px;
-  background: var(--bg-white);
-  box-shadow: var(--shadow-strong);
+  background: var(--background-default);
+  box-shadow: var(--shadow-outer);
   white-space: nowrap;
 }
 
@@ -1048,7 +1049,7 @@
   transform: translateX(-50%);
   border-left: 8px solid transparent;
   border-right: 8px solid transparent;
-  border-top: 9px solid var(--bg-white);
+  border-top: 9px solid var(--background-default);
 }
 
 .recommendAction,
@@ -1073,22 +1074,22 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: var(--label-assistive);
+  color: var(--text-tertiary);
 }
 
 .textNormal {
-  color: var(--label-normal);
+  color: var(--text-primary);
 }
 
 .textAlternative {
-  color: var(--label-alternative);
+  color: var(--text-secondary);
 }
 .textAssistive {
-  color: var(--label-assistive);
+  color: var(--text-tertiary);
 }
 
 .textPrimary {
-  color: var(--label-primary);
+  color: var(--primary-normal);
 }
 
 .mealRecordAction {
@@ -1104,7 +1105,7 @@
   gap: 4px;
   background: none;
   border: 0;
-  color: var(--label-normal);
+  color: var(--text-primary);
   padding: 0;
   text-align: left;
   width: 100%;
@@ -1133,7 +1134,7 @@
 }
 
 .mealRecordChevron {
-  color: var(--label-normal);
+  color: var(--text-primary);
   flex-shrink: 0;
   transform: rotate(180deg);
   transition: transform 180ms ease;
@@ -1144,7 +1145,7 @@
 }
 
 .mealRecordMenuList {
-  background-color: var(--bg-normal);
+  background-color: var(--background-gray-1);
   border-radius: 8px;
   display: flex;
   flex-direction: column;
@@ -1186,8 +1187,8 @@
 }
 
 .mealRecordCard {
-  background-color: var(--bg-white);
-  border: 1px solid var(--border-neutral);
+  background-color: var(--background-default);
+  border: 1px solid var(--border-subtie);
   border-radius: 8px;
   display: flex;
   flex-direction: column;
@@ -1200,8 +1201,8 @@
 }
 
 .actionCard {
-  background-color: var(--bg-white);
-  border: 1px solid var(--border-neutral);
+  background-color: var(--background-default);
+  border: 1px solid var(--border-subtie);
   border-radius: 8px;
   display: flex;
   padding: 16px;

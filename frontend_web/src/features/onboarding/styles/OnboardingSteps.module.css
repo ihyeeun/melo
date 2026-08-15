@@ -15,8 +15,8 @@
 }
 
 .onboardingOptionCard {
-  background: var(--bg-white);
-  border: 1px solid var(--border-neutral);
+  background: var(--background-default);
+  border: 1px solid var(--border-subtie);
   border-radius: 8px;
   cursor: pointer;
   padding: 16px 20px;
@@ -25,8 +25,8 @@
 }
 
 .onboardingOptionCardActive {
-  background: var(--interaction-primary);
-  border-color: var(--border-primary);
+  background: var(--background-selected);
+  border-color: var(--border-strong);
 }
 
 .onboardingOptionCardContent {
@@ -54,10 +54,10 @@
 }
 
 .onboardingGenderCard {
-  background: var(--bg-white);
-  border: 1px solid var(--border-neutral);
+  background: var(--background-default);
+  border: 1px solid var(--border-subtie);
   border-radius: 8px;
-  color: var(--gray-1100);
+  color: var(--gray-950);
   cursor: pointer;
   height: 134px;
   padding: 16px 20px;
@@ -66,14 +66,14 @@
 }
 
 .onboardingGenderCardActive {
-  background: var(--interaction-primary);
-  border-color: var(--border-primary);
+  background: var(--background-selected);
+  border-color: var(--border-strong);
 }
 
 .onboardingGenderLabel {
   font-size: 17px;
   font-weight: var(--fw-semibold);
-  line-height: var(--line-height-145);
+  line-height: 1.45;
 }
 
 .onboardingBirthYearSection {
@@ -112,13 +112,13 @@
 }
 
 .onboardingGoalKcalValue {
-  color: var(--label-normal);
+  color: var(--text-primary);
   text-decoration: underline;
   text-underline-offset: 6px;
 }
 
 .onboardingGoalKcalHelper {
-  color: var(--label-normal);
+  color: var(--text-primary);
   text-align: center;
 }
 
@@ -135,8 +135,8 @@
 }
 
 .onboardingGoalWeightCard {
-  background: var(--bg-white);
-  border: 1px solid var(--border-neutral);
+  background: var(--background-default);
+  border: 1px solid var(--border-subtie);
   border-radius: 8px;
   display: flex;
   flex-direction: column;
@@ -144,7 +144,7 @@
 }
 
 .onboardingNutrientContent {
-  color: var(--orange-950);
+  color: var(--coral-900);
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -161,8 +161,8 @@
 }
 
 .onboardingNutrientCard {
-  background: var(--bg-white);
-  border: 1px solid var(--border-neutral);
+  background: var(--background-default);
+  border: 1px solid var(--border-subtie);
   border-radius: 8px;
   display: flex;
   flex-direction: column;
@@ -184,7 +184,7 @@
 }
 
 .onboardingSubscribeInput {
-  border: 1px solid var(--border-neutral);
+  border: 1px solid var(--border-subtie);
   border-radius: 8px;
   font-size: 40px;
   padding: 16px 20px;
@@ -205,10 +205,10 @@
 
 .weightAdjustButton {
   align-items: center;
-  background: var(--interaction-alternative);
+  background: var(--gray-300);
   border: none;
   border-radius: 100px;
-  color: var(--static-white);
+  color: var(--background-default);
   cursor: pointer;
   display: inline-flex;
   height: 32px;
@@ -222,7 +222,7 @@
 }
 
 .onboardingStepReadable {
-  color: var(--label-normal);
+  color: var(--text-primary);
   gap: 0;
 }
 
@@ -231,11 +231,11 @@
 }
 
 .onboardingStepReadable .onboardingTitle h2 {
-  color: var(--label-normal);
+  color: var(--text-primary);
 }
 
 .onboardingStepReadable .onboardingSubtitle {
-  color: var(--label-alternative);
+  color: var(--text-secondary);
 }
 
 .onboardingGenderGroup,
@@ -254,10 +254,10 @@
 
 .onboardingGenderChoiceButton {
   align-items: center;
-  background: var(--onboarding-card-bg, var(--bg-white));
-  border: 1px solid var(--onboarding-muted-border, var(--border-neutral));
+  background: var(--onboarding-card-bg, var(--background-default));
+  border: 1px solid var(--onboarding-muted-border, var(--border-subtie));
   border-radius: 100px;
-  color: var(--label-normal);
+  color: var(--text-primary);
   cursor: pointer;
   display: flex;
   justify-content: center;
@@ -267,14 +267,14 @@
 }
 
 .onboardingGenderChoiceButtonActive {
-  background: var(--interaction-primary);
-  border-color: var(--border-primary);
+  background: var(--background-selected);
+  border-color: var(--border-strong);
 }
 
 .onboardingBirthYearTrigger {
   align-items: center;
-  background: var(--onboarding-card-bg, var(--bg-white));
-  border: 1px solid var(--onboarding-muted-border, var(--border-neutral));
+  background: var(--onboarding-card-bg, var(--background-default));
+  border: 1px solid var(--onboarding-muted-border, var(--border-subtie));
   border-radius: 8px;
   display: flex;
   justify-content: flex-end;
@@ -294,7 +294,7 @@
 }
 
 .onboardingBirthYearPickerItem {
-  color: var(--label-assistive);
+  color: var(--text-tertiary);
 }
 
 .onboardingBirthYearPickerItem[data-distance="1"] {
@@ -310,12 +310,12 @@
 }
 
 .onboardingBirthYearPickerItemSelected {
-  color: var(--label-normal);
+  color: var(--text-primary);
 }
 
 .onboardingBirthYearPickerHighlight {
-  background: var(--interaction-primary);
-  border: 1px solid var(--border-primary);
+  background: var(--background-selected);
+  border: 1px solid var(--border-strong);
   border-radius: 8px;
   left: 12.5px;
   right: 12.5px;
@@ -329,17 +329,17 @@
 }
 
 .onboardingChoiceChip {
-  background: var(--onboarding-card-bg, var(--bg-white));
-  border: 1px solid var(--onboarding-muted-border, var(--border-neutral));
+  background: var(--onboarding-card-bg, var(--background-default));
+  border: 1px solid var(--onboarding-muted-border, var(--border-subtie));
   border-radius: 100px;
-  color: var(--label-normal);
+  color: var(--text-primary);
   cursor: pointer;
   padding: 8px 16px;
 }
 
 .onboardingChoiceChipActive {
-  background: var(--interaction-primary);
-  border-color: var(--border-primary);
+  background: var(--background-selected);
+  border-color: var(--border-strong);
 }
 
 .onboardingStepReadable .onboardingBodyList {
@@ -351,8 +351,8 @@
 }
 
 .onboardingInputCardInput {
-  background: var(--onboarding-card-bg, var(--bg-white));
-  border: 1px solid var(--onboarding-muted-border, var(--border-neutral));
+  background: var(--onboarding-card-bg, var(--background-default));
+  border: 1px solid var(--onboarding-muted-border, var(--border-subtie));
   padding: 16px 20px;
   border-radius: 8px;
 }
@@ -363,10 +363,10 @@
 
 .onboardingNutrientAdjustButton {
   align-items: center;
-  background: var(--interaction-alternative);
+  background: var(--gray-300);
   border: 0;
   border-radius: 100px;
-  color: var(--static-white);
+  color: var(--background-default);
   cursor: pointer;
   display: inline-flex;
   height: 24px;
@@ -403,21 +403,21 @@
 
 .onboardingNutrientUnit,
 .onboardingNutrientInput {
-  color: var(--label-normal);
+  color: var(--text-primary);
 }
 
 .textPrimary {
-  color: var(--label-primary);
+  color: var(--primary-normal);
 }
 
 .textNormal {
-  color: var(--label-normal);
+  color: var(--text-primary);
 }
 
 .textAlternative {
-  color: var(--label-alternative);
+  color: var(--text-secondary);
 }
 
 .textAssistive {
-  color: var(--label-assistive);
+  color: var(--text-tertiary);
 }

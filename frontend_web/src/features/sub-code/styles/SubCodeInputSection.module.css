@@ -1,5 +1,5 @@
 .content {
-  color: var(--label-normal);
+  color: var(--text-primary);
   display: flex;
   flex-direction: column;
   gap: 0;
@@ -12,7 +12,7 @@
 }
 
 .titleHeading {
-  color: var(--label-normal);
+  color: var(--text-primary);
 }
 
 .field {
@@ -20,8 +20,8 @@
 }
 
 .input {
-  border: 1px solid var(--border-neutral);
-  background-color: var(--bg-white);
+  border: 1px solid var(--border-subtie);
+  background-color: var(--background-default);
   border-radius: 8px;
   padding: 16px 20px;
   text-align: right;

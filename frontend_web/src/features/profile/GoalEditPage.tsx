@@ -338,8 +338,8 @@ export default function GoalEditPage() {
               highlightHeight={72}
               itemHeight={80}
               classNames={{
-                item: `typo-h1 ${styles.birthYearPickerItem}`,
-                itemSelected: `typo-h1 ${styles.birthYearPickerItemSelected}`,
+                item: `title-xxl-semi ${styles.birthYearPickerItem}`,
+                itemSelected: `title-xxl-semi ${styles.birthYearPickerItemSelected}`,
                 highlight: styles.birthYearPickerHighlight,
               }}
               columns={[
@@ -421,8 +421,8 @@ export default function GoalEditPage() {
                   applyInstantSelection({ activity: index as OnboardingData["activity"] })
                 }
               >
-                <p className={`${styles.optionTitle} typo-title3`}>{activity.title}</p>
-                <p className={`${styles.optionDescription} typo-body3`}>{activity.description}</p>
+                <p className={`${styles.optionTitle} title-s-semi`}>{activity.title}</p>
+                <p className={`${styles.optionDescription} body-s-medium`}>{activity.description}</p>
               </button>
             ))}
           </div>
@@ -443,8 +443,8 @@ export default function GoalEditPage() {
                 aria-pressed={sheetData.goal === index}
                 onClick={() => applyInstantSelection({ goal: index as OnboardingData["goal"] })}
               >
-                <p className={`${styles.optionTitle} typo-title3`}>{goal.title}</p>
-                <p className={`${styles.optionDescription} typo-body3`}>{goal.description}</p>
+                <p className={`${styles.optionTitle} title-s-semi`}>{goal.title}</p>
+                <p className={`${styles.optionDescription} body-s-medium`}>{goal.description}</p>
               </button>
             ))}
           </div>
@@ -496,13 +496,13 @@ export default function GoalEditPage() {
                 className={styles.summaryItem}
                 onClick={() => openEditor(field.id)}
               >
-                <span className={`${styles.summaryLabel} typo-title4`}>{field.label}</span>
+                <span className={`${styles.summaryLabel} body-l-semi`}>{field.label}</span>
                 <div className={styles.summaryValueRow}>
-                  <span className={`${styles.summaryValue} typo-body2`}>
+                  <span className={`${styles.summaryValue} body-l-medium`}>
                     {getSummaryValue(field.id, visibleDraft)}
                   </span>
                   <SystemIcon
-                    name="chevron-right-thin"
+                    name="chevron-right"
                     className={styles.summaryChevron}
                     size={24}
                   />

@@ -7,7 +7,7 @@ export default function StepActivity({ data, update }: StepComponentProps) {
   return (
     <section className={`${styles.content} ${styles.onboardingStepReadable}`}>
       <div className={styles.onboardingTitle}>
-        <h2 className="typo-title1">평소에 얼마나 움직이시나요?</h2>
+        <h2 className="title-l-semi">평소에 얼마나 움직이시나요?</h2>
       </div>
 
       <div className={`${styles.onboardingOptionList} ${styles.onboardingOptionListPadded}`}>

@@ -74,17 +74,17 @@ export default function GoalEditNutrientStep({ data, update }: Props) {
   return (
     <section className={styles.content}>
       <div className={`${styles.title} ${styles.titleGroup} ${styles.titleGroupCompact}`}>
-        <h2 className="typo-title1">추천하는 탄단지 비율이에요</h2>
+        <h2 className="title-l-semi">추천하는 탄단지 비율이에요</h2>
         {isPending ? (
           <div className={styles.loadingRow}>
-            <p className={`${styles.subtitle} typo-body2`}>추천 비율을 계산하고 있어요</p>
+            <p className={`${styles.subtitle} body-l-medium`}>추천 비율을 계산하고 있어요</p>
           </div>
         ) : (
-          <p className={`${styles.subtitle} typo-body2`}>비율을 수정할 수 있어요</p>
+          <p className={`${styles.subtitle} body-l-medium`}>비율을 수정할 수 있어요</p>
         )}
       </div>
       <div className={styles.nutrientContent}>
-        <p className={`${styles.nutrientGoal} textNoWrap typo-title1`}>
+        <p className={`${styles.nutrientGoal} textNoWrap title-l-semi`}>
           목표 칼로리 {data.target_calories ?? "--"}kcal
         </p>
         <div className={styles.nutrientList}>
@@ -134,7 +134,7 @@ function NutrientCard({ label, nutrientType, targetCalories, value, onChange }: 
 
   return (
     <div className={styles.nutrientCard}>
-      <label className={`${styles.nutrientLabel} typo-title3`}>{label}</label>
+      <label className={`${styles.nutrientLabel} title-s-semi`}>{label}</label>
       <NumberField
         value={value}
         onChange={onChange}
@@ -153,8 +153,8 @@ function NutrientCard({ label, nutrientType, targetCalories, value, onChange }: 
       <div className={styles.nutrientDivider} />
 
       <div className={styles.nutrientMeta}>
-        <span className="typo-body1">{formatRoundedValue(targetGram)}g</span>
-        <span className="textNoWrap typo-body1">{formatRoundedValue(targetKcal)}kcal</span>
+        <span className="title-m-semi">{formatRoundedValue(targetGram)}g</span>
+        <span className="textNoWrap title-m-semi">{formatRoundedValue(targetKcal)}kcal</span>
       </div>
     </div>
   );

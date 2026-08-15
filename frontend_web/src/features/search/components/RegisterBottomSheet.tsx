@@ -24,7 +24,7 @@ export default function DirectInputBottomSheet({
   return (
     <BottomSheet isOpen={isOpen} onClose={onClose}>
       <div className={styles.sheetContainer}>
-        <h2 className={`${styles.sheetTitle} typo-title2`}>{title}</h2>
+        <h2 className={`${styles.sheetTitle} title-m-semi`}>{title}</h2>
         <div className={styles.sheetActions}>
           <Button
             variant="text"
@@ -34,7 +34,7 @@ export default function DirectInputBottomSheet({
             fullWidth
             onClick={onSelectNumberInput}
           >
-            <span className={`typo-label2 ${styles.sheetButtonText}`}>{numberInputLabel}</span>
+            <span className={`body-l-semi ${styles.sheetButtonText}`}>{numberInputLabel}</span>
           </Button>
 
           <div className="divider dividerMargin16" />
@@ -47,7 +47,7 @@ export default function DirectInputBottomSheet({
             fullWidth
             onClick={onSelectCameraInput}
           >
-            <span className={`typo-label2 ${styles.sheetButtonText}`}>{cameraInputLabel}</span>
+            <span className={`body-l-semi ${styles.sheetButtonText}`}>{cameraInputLabel}</span>
           </Button>
         </div>
       </div>

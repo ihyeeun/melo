@@ -204,7 +204,7 @@
 }
 
 .calendar-day-cell--month.is-selected .calendar-dot {
-  background: var(--primary-default);
+  background: var(--primary-normal);
 }
 
 .calendar-day-cell--week.is-selected,

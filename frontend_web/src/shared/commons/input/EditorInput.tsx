@@ -40,7 +40,7 @@ export function EditorInput({
       <Input
         {...props}
         ref={inputRef}
-        className={`typo-body3 ${styles.input}`}
+        className={`body-s-medium ${styles.input}`}
         value={value ?? ""}
         min={min}
         max={max}
@@ -78,7 +78,7 @@ export function EditorInput({
           }
         }}
       />
-      {unit && <span className={`typo-caption1 ${styles.unit}`}>{unit}</span>}
+      {unit && <span className={`title-m-semi ${styles.unit}`}>{unit}</span>}
     </div>
   );
 }

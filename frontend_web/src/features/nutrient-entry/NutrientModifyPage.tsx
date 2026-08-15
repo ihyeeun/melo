@@ -295,15 +295,15 @@ export default function NutrientModifyPage() {
       <main className={styles.main}>
         <div className={styles.content}>
           <section className={styles.topSection}>
-            <p className={`typo-title1 ${styles.textNormal}`}>
+            <p className={`title-l-semi ${styles.textNormal}`}>
               {foodName || "메뉴 정보를 확인해주세요"}
             </p>
-            {brandName && <p className={`typo-label4 textAssistive`}>{brandName}</p>}
+            {brandName && <p className={`body-s-medium text-tertiary`}>{brandName}</p>}
           </section>
 
           <section className={styles.nutrientSection}>
             <div className={styles.nutrientHeader}>
-              <p className={`typo-title3 ${styles.textNormal}`}>영양정보</p>
+              <p className={`title-s-semi ${styles.textNormal}`}>영양정보</p>
               <Button
                 variant="text"
                 interaction="normal"

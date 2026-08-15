@@ -5,6 +5,16 @@
   margin: 20px;
 }
 
+.rankBadge {
+  align-items: center;
+  align-self: flex-start;
+  background-color: var(--coral-600);
+  border-radius: 6px;
+  color: var(--background-default);
+  display: inline-flex;
+  padding: 3px 7px;
+}
+
 .header {
   display: flex;
   gap: 6px;
@@ -30,7 +40,7 @@
 }
 
 .selected .iconButton {
-  color: var(--primary-strong);
+  color: var(--coral-600);
 }
 
 .meta {

@@ -21,9 +21,9 @@
 
 .app-toast {
   align-items: center;
-  background: var(--dimmer-dimmer);
+  background: var(--dimmer-default);
   border-radius: 100px;
-  color: var(--label-white);
+  color: var(--background-default);
   display: flex;
   max-width: 100%;
   min-height: 56px;
@@ -44,7 +44,7 @@
   align-items: center;
   background: var(--status-link);
   border-radius: 50%;
-  color: var(--static-white);
+  color: var(--background-default);
   display: inline-flex;
   flex-shrink: 0;
   height: 20px;
@@ -59,15 +59,15 @@
 
 .app-toast-status-mark {
   display: block;
-  font-size: var(--fs-14);
+  font-size: 14px;
   font-weight: var(--fw-bold);
-  letter-spacing: var(--letter-spacing-normal);
+  letter-spacing: 0;
   line-height: 1;
 }
 
 .app-toast-title,
 .app-toast-description {
-  color: var(--label-white);
+  color: var(--background-default);
   margin: 0;
   overflow-wrap: anywhere;
   word-break: keep-all;
@@ -80,11 +80,11 @@
 
 .app-toast-action {
   border-radius: 999px;
-  color: var(--label-white);
-  font-size: var(--fs-13);
+  color: var(--background-default);
+  font-size: 13px;
   font-weight: var(--fw-bold);
-  letter-spacing: var(--letter-spacing-normal);
-  line-height: var(--line-height-140);
+  letter-spacing: 0;
+  line-height: 1.4;
   margin-top: 2px;
   padding: 4px 10px;
 }
@@ -92,7 +92,7 @@
 .app-toast-close {
   align-items: center;
   border-radius: 50%;
-  color: var(--label-white);
+  color: var(--background-default);
   display: inline-flex;
   flex-shrink: 0;
   height: 20px;

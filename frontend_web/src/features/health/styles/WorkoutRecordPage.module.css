@@ -1,5 +1,5 @@
 .page {
-  background-color: var(--bg-normal);
+  background-color: var(--background-gray-1);
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -24,7 +24,7 @@
 
 .editCloseButton {
   align-items: center;
-  color: var(--label-normal);
+  color: var(--text-primary);
   display: inline-flex;
   height: 44px;
   justify-content: flex-start;
@@ -32,7 +32,7 @@
 }
 
 .editHeaderTitle {
-  color: var(--label-normal);
+  color: var(--text-primary);
   margin: 0;
   overflow: hidden;
   text-align: center;
@@ -57,8 +57,8 @@
 }
 
 .summaryCard {
-  background-color: var(--bg-white);
-  border: 1px solid var(--border-neutral);
+  background-color: var(--background-default);
+  border: 1px solid var(--border-subtie);
   border-radius: 8px;
   display: flex;
   flex-direction: column;
@@ -68,12 +68,12 @@
 }
 
 .summaryTitle {
-  color: var(--label-assistive);
+  color: var(--text-tertiary);
 }
 
 .summaryValueRow {
   align-items: baseline;
-  color: var(--label-normal);
+  color: var(--text-primary);
   display: flex;
   gap: 4px;
   min-width: 0;
@@ -86,7 +86,7 @@
 
 .sectionHeader {
   align-items: center;
-  color: var(--label-normal);
+  color: var(--text-primary);
   display: flex;
   justify-content: space-between;
   padding: 22px 0 10px;
@@ -102,10 +102,10 @@
 .recordCard {
   align-items: center;
   appearance: none;
-  background-color: var(--bg-white);
-  border: 1px solid var(--border-neutral);
+  background-color: var(--background-default);
+  border: 1px solid var(--border-subtie);
   border-radius: 8px;
-  color: var(--label-normal);
+  color: var(--text-primary);
   cursor: pointer;
   display: flex;
   font: inherit;
@@ -118,10 +118,10 @@
 
 .editRecordCard {
   align-items: center;
-  background-color: var(--bg-white);
-  border: 1px solid var(--border-neutral);
+  background-color: var(--background-default);
+  border: 1px solid var(--border-subtie);
   border-radius: 8px;
-  color: var(--label-normal);
+  color: var(--text-primary);
   display: flex;
   gap: 8px;
   padding: 8px;
@@ -135,7 +135,7 @@
 
 .editRecordCardDragging {
   border-color: var(--primary-normal);
-  box-shadow: var(--shadow-strong);
+  box-shadow: var(--shadow-outer);
   opacity: 0.92;
   transform: scale(0.99);
 }
@@ -150,7 +150,7 @@
   user-select: none;
   -webkit-user-select: none;
   width: 34px;
-  color: var(--interaction-alternative);
+  color: var(--gray-300);
   height: 70px;
 }
 
@@ -171,7 +171,7 @@
 .deleteButton {
   align-items: center;
   border-radius: 8px;
-  color: var(--interaction-alternative);
+  color: var(--gray-300);
   display: inline-flex;
   flex: 0 0 auto;
   height: 44px;
@@ -215,17 +215,17 @@
 }
 
 .chevronIcon {
-  color: var(--label-assistive);
+  color: var(--text-tertiary);
   flex: 0 0 auto;
 }
 
 .statusContainer,
 .emptyState {
   align-items: center;
-  background-color: var(--bg-white);
-  border: 1px solid var(--border-neutral);
+  background-color: var(--background-default);
+  border: 1px solid var(--border-subtie);
   border-radius: 8px;
-  color: var(--label-normal);
+  color: var(--text-primary);
   display: flex;
   flex-direction: column;
   gap: 12px;

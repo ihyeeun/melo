@@ -13,7 +13,7 @@ function ToastStatusIcon({ type }: { type?: string }) {
     case "warning":
       return <span className="app-toast-status-mark">!</span>;
     case "error":
-      return <SystemIcon name="close" size={14} />;
+      return <SystemIcon name="exit" size={14} />;
     default:
       return <span className="app-toast-status-mark">i</span>;
   }
@@ -37,14 +37,14 @@ export function AppToastViewport() {
               <ToastStatusIcon type={item.type} />
             </span>
             <Toast.Content className="app-toast-content">
-              {item.title ? <Toast.Title className="app-toast-title typo-body2" /> : null}
+              {item.title ? <Toast.Title className="app-toast-title body-l-medium" /> : null}
               {item.description ? (
-                <Toast.Description className="app-toast-description typo-body3" />
+                <Toast.Description className="app-toast-description body-s-medium" />
               ) : null}
             </Toast.Content>
             {item.actionProps ? <Toast.Action className="app-toast-action" /> : null}
             <Toast.Close className="app-toast-close" aria-label="알림 닫기">
-              <SystemIcon name="close" size={20} />
+              <SystemIcon name="exit" size={20} />
             </Toast.Close>
           </Toast.Root>
         ))}

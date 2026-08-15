@@ -75,7 +75,7 @@
 .longWaitStatus {
   align-items: center;
   animation: long-wait-status-enter 320ms ease-out both;
-  color: var(--label-normal);
+  color: var(--text-primary);
   display: inline-flex;
   gap: 8px;
   min-height: 44px;

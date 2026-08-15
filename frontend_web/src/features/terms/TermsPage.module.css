@@ -1,5 +1,5 @@
 .page {
-  background-color: var(--bg-white);
+  background-color: var(--background-default);
   min-height: 100dvh;
   width: 100%;
 }
@@ -12,13 +12,13 @@
 }
 
 .accordionContainer {
-  background: var(--bg-normal);
+  background: var(--background-gray-1);
   border-radius: 8px;
 }
 
 .accordion {
   box-sizing: border-box;
-  color: var(--label-normal);
+  color: var(--text-primary);
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -32,7 +32,7 @@
 .trigger {
   border: none;
   box-sizing: border-box;
-  color: var(--label-normal);
+  color: var(--text-primary);
   display: flex;
   outline: none;
   padding: 16px 20px;
@@ -40,7 +40,7 @@
   width: 100%;
 
   &:focus-visible {
-    outline: 2px solid var(--primary-strong);
+    outline: 2px solid var(--coral-600);
     z-index: 1;
   }
 }
@@ -57,7 +57,7 @@
 
 .panel {
   box-sizing: border-box;
-  color: var(--label-alternative);
+  color: var(--text-secondary);
   height: var(--accordion-panel-height);
   overflow: hidden;
   transition: height 150ms ease-out;
@@ -80,7 +80,7 @@
 }
 
 .link {
-  color: var(--label-alternative);
+  color: var(--text-secondary);
   text-decoration: underline;
   text-underline-offset: 2px;
   word-break: break-all;

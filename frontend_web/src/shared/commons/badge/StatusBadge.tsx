@@ -33,7 +33,7 @@ export function StatusBadge({ status, percent, label, className }: StatusBadgePr
   return (
     <span className={classes}>
       <span className={`${styles.dot} ${DOT_CLASS[resolvedStatus]}`} aria-hidden="true" />
-      <span className={`${styles.label} typo-label4`}>{label ?? STATUS_LABEL[resolvedStatus]}</span>
+      <span className={`${styles.label} body-s-medium`}>{label ?? STATUS_LABEL[resolvedStatus]}</span>
     </span>
   );
 }

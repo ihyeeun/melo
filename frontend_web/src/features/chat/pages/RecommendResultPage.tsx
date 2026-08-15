@@ -286,13 +286,18 @@ function RecommendResultContent({
 
       <section className={styles.titleSection}>
         <div className={styles.intro}>
-          <p className={`${styles.introMessage} typo-title2`}>
+          <p className={`${styles.introMessage} title-m-semi`}>
             <span className={styles.textPrimary}>{profileNickname}</span>님을 위한
             <br />
             메뉴를 추천해드려요!
           </p>
 
-          <img src="/icons/character-love.svg" className={styles.characterImage} />
+          <img
+            src="/icons/characters/score-81.png"
+            className={styles.characterImage}
+            alt=""
+            aria-hidden="true"
+          />
         </div>
         <div className={styles.filterList} aria-label="추천 결과 필터">
           {RECOMMEND_FILTER_OPTIONS.map((option) => {
@@ -302,7 +307,7 @@ function RecommendResultContent({
               <button
                 key={option.key}
                 type="button"
-                className={`${styles.filterBadge} ${isSelected ? styles.filterBadgeSelected : ""} typo-label4`}
+                className={`${styles.filterBadge} ${isSelected ? styles.filterBadgeSelected : ""} body-s-medium`}
                 aria-pressed={isSelected}
                 onClick={() => setSelectedFilter(option.key)}
               >
@@ -340,7 +345,7 @@ function RecommendResultContent({
             })}
           </ul>
         ) : (
-          <p className={`${styles.emptyStatus} typo-label4`}>해당하는 추천 메뉴가 없어요.</p>
+          <p className={`${styles.emptyStatus} body-s-medium`}>해당하는 추천 메뉴가 없어요.</p>
         )}
       </main>
 

@@ -75,8 +75,8 @@ const WORKOUT_NUMBER_FIELD_CLASS_NAMES = {
   root: styles["number-field-root"],
   group: styles["number-field-group"],
   inputWrapper: styles.inputWrap,
-  input: `${styles.input} typo-body3`,
-  unit: `${styles.unit} typo-label4`,
+  input: `${styles.input} body-s-medium`,
+  unit: `${styles.unit} body-s-medium`,
 };
 const CARDIO_CALORIE_INFO_MESSAGES = [
   "MET(대사당량) 지수를 기반으로, 체중과 운동 강도를 반영해 계산한 추정치입니다. 개인의 근육량이나 실제 심박수 등에 따라 소모량은 조금 다를 수 있어요.",
@@ -412,7 +412,7 @@ export default function WorkoutUpsertPage() {
                   <button
                     key={option.value}
                     type="button"
-                    className={`${styles.segmentButton} ${isActive ? styles.segmentButtonActive : ""} typo-body3`}
+                    className={`${styles.segmentButton} ${isActive ? styles.segmentButtonActive : ""} body-s-medium`}
                     aria-pressed={isActive}
                     onClick={() => {
                       updateIntensity(option.value);
@@ -450,7 +450,7 @@ export default function WorkoutUpsertPage() {
         <Field label="세트" required>
           <div className={styles.setList}>
             <div
-              className={`${styles.setHeader} ${shouldShowWeightInput ? "" : styles.setHeaderBodyweight} typo-body3`}
+              className={`${styles.setHeader} ${shouldShowWeightInput ? "" : styles.setHeaderBodyweight} body-s-medium`}
               aria-hidden="true"
             >
               <span>세트</span>
@@ -464,7 +464,7 @@ export default function WorkoutUpsertPage() {
                 key={set.set_order}
                 className={`${styles.setRow} ${shouldShowWeightInput ? "" : styles.setRowBodyweight}`}
               >
-                <span className={`${styles.setOrder} typo-label4`}>{index + 1}세트</span>
+                <span className={`${styles.setOrder} body-s-medium`}>{index + 1}세트</span>
                 {shouldShowWeightInput ? (
                   <NumberField
                     value={set.weight}
@@ -506,7 +506,7 @@ export default function WorkoutUpsertPage() {
                   onClick={() => removeSet(set.set_order)}
                   aria-label={`${index + 1}세트 삭제`}
                 >
-                  <SystemIcon name="trash" size={18} />
+                  <SystemIcon name="delete" size={18} />
                 </button>
               </div>
             ))}
@@ -519,13 +519,13 @@ export default function WorkoutUpsertPage() {
 
         <section className={styles.field}>
           <div className={styles.labelRow}>
-            <p className={`${styles.label} typo-title3`}>운동 시간</p>
-            <p className={`${styles.required} typo-caption4`}>*필수</p>
+            <p className={`${styles.label} title-s-semi`}>운동 시간</p>
+            <p className={`${styles.required} caption-m-medium`}>*필수</p>
             <NutrientWarningPopover
               ariaLabel="운동 시간 계산 안내"
               messages={WEIGHT_DURATION_INFO_MESSAGES}
             />
-            <p className={`${styles.unit} typo-label4 ${styles.textRight} ${styles.readOnlyTime}`}>
+            <p className={`${styles.unit} body-s-medium ${styles.textRight} ${styles.readOnlyTime}`}>
               {calculatedWorkoutDuration ?? "--"} 분
             </p>
           </div>
@@ -573,8 +573,8 @@ export default function WorkoutUpsertPage() {
     return (
       <div className={styles.content}>
         <div className={styles.field}>
-          <p className={`textAssistive typo-body3`}>운동명</p>
-          <p className={`typo-title3`}>{workout.workout_name}</p>
+          <p className={`text-tertiary body-s-medium`}>운동명</p>
+          <p className={`title-s-semi`}>{workout.workout_name}</p>
         </div>
 
         {renderWorkoutFields()}
@@ -621,8 +621,8 @@ function Field({
   return (
     <section className={styles.field}>
       <div className={styles.labelRow}>
-        <p className={`${styles.label} typo-title3`}>{label}</p>
-        {required ? <p className={`${styles.required} typo-caption4`}>*필수</p> : null}
+        <p className={`${styles.label} title-s-semi`}>{label}</p>
+        {required ? <p className={`${styles.required} caption-m-medium`}>*필수</p> : null}
         {rightSlot}
       </div>
       {children}
@@ -672,7 +672,7 @@ function LabeledNumberField({
 function StatusMessage({ message }: { message: string }) {
   return (
     <section className={styles.statusContainer}>
-      <p className="typo-body2">{message}</p>
+      <p className="body-l-medium">{message}</p>
     </section>
   );
 }

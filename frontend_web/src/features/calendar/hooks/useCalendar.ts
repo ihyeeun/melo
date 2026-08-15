@@ -1,5 +1,5 @@
 import { startOfWeek, subWeeks } from "date-fns";
-import { useEffect, useMemo, useState } from "react";
+import { type SetStateAction, useMemo, useState } from "react";
 
 import {
   buildMonthCalendarDays,
@@ -35,16 +35,32 @@ export function useCalendar({
     : null;
   const [viewMode, setViewMode] = useState<ViewMode>(initialViewMode);
   const [internalSelectedDate, setInternalSelectedDate] = useState(initialSelectedDate);
-  const [viewDate, setViewDate] = useState(initialSelectedDate);
+  const [viewDateState, setViewDateState] = useState({
+    date: initialSelectedDate,
+    controlledSelectedDateKey,
+  });
   const selectedDate = controlledSelectedDate ?? internalSelectedDate;
+  const hasControlledDateChanged =
+    controlledSelectedDateKey !== null &&
+    controlledSelectedDateKey !== viewDateState.controlledSelectedDateKey;
+  const viewDate = hasControlledDateChanged
+    ? parseDateKey(controlledSelectedDateKey)
+    : viewDateState.date;
 
-  useEffect(() => {
-    if (!controlledSelectedDateKey) {
-      return;
-    }
+  const setViewDate = (nextDate: SetStateAction<Date>) => {
+    setViewDateState((previousState) => {
+      const currentDate =
+        controlledSelectedDateKey !== null &&
+        controlledSelectedDateKey !== previousState.controlledSelectedDateKey
+          ? parseDateKey(controlledSelectedDateKey)
+          : previousState.date;
 
-    setViewDate(parseDateKey(controlledSelectedDateKey));
-  }, [controlledSelectedDateKey]);
+      return {
+        date: typeof nextDate === "function" ? nextDate(currentDate) : nextDate,
+        controlledSelectedDateKey,
+      };
+    });
+  };
 
   const weekDays = useMemo(() => {
     return buildWeekCalendarDays({

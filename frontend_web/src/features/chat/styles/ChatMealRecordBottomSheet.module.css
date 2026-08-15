@@ -32,8 +32,8 @@
 
 .mealTypeButton {
   align-items: center;
-  background-color: var(--bg-white);
-  border: 1px solid var(--border-neutral);
+  background-color: var(--background-default);
+  border: 1px solid var(--border-subtie);
   border-radius: 8px;
   display: flex;
   flex-direction: column;
@@ -44,9 +44,9 @@
 }
 
 .mealTypeButtonActive {
-  background-color: var(--interaction-primary);
-  border-color: var(--border-primary);
-  color: var(--label-primary);
+  background-color: var(--background-selected);
+  border-color: var(--border-strong);
+  color: var(--primary-normal);
 }
 
 .menuSection {
@@ -79,8 +79,8 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
-  background-color: var(--bg-normal);
-  border: 1px solid var(--border-neutral);
+  background-color: var(--background-gray-1);
+  border: 1px solid var(--border-subtie);
   border-radius: 8px;
   padding: 16px;
   text-align: left;
@@ -100,7 +100,7 @@
 
 .menuRemoveButton {
   align-items: center;
-  color: var(--interaction-normal);
+  color: var(--text-primary);
   display: inline-flex;
   flex-shrink: 0;
   justify-content: center;
@@ -115,8 +115,8 @@
 
 .quantityStepper {
   align-items: center;
-  background-color: var(--bg-white);
-  border: 1px solid var(--border-neutral);
+  background-color: var(--background-default);
+  border: 1px solid var(--border-subtie);
   border-radius: 8px;
   display: flex;
   flex: 1;
@@ -136,7 +136,7 @@
   align-items: center;
   background: transparent;
   border: 0;
-  color: var(--label-normal);
+  color: var(--text-primary);
   cursor: pointer;
   display: inline-flex;
   height: 24px;
@@ -154,7 +154,7 @@
 .quantityNumberFieldInput {
   background-color: transparent;
   border: 0;
-  color: var(--label-normal);
+  color: var(--text-primary);
   text-align: center;
   width: 100%;
 }
@@ -165,10 +165,10 @@
 
 .unitSelectTrigger {
   align-items: center;
-  background-color: var(--bg-white);
-  border: 1px solid var(--border-neutral);
+  background-color: var(--background-default);
+  border: 1px solid var(--border-subtie);
   border-radius: 8px;
-  color: var(--label-normal);
+  color: var(--text-primary);
   display: inline-flex;
   gap: 8px;
   justify-content: space-between;
@@ -181,7 +181,7 @@
 }
 
 .selectIcon {
-  color: var(--interaction-normal);
+  color: var(--text-primary);
   display: inline-flex;
 }
 
@@ -192,10 +192,10 @@
 }
 
 .selectPopup {
-  background-color: var(--bg-white);
-  border: 1px solid var(--border-neutral);
+  background-color: var(--background-default);
+  border: 1px solid var(--border-subtie);
   border-radius: 10px;
-  box-shadow: var(--shadow-emphasize);
+  box-shadow: var(--shadow-outer);
   overflow: hidden;
   width: var(--anchor-width);
   padding: 8px;
@@ -219,20 +219,20 @@
 }
 
 .selectItem {
-  color: var(--label-normal);
+  color: var(--text-primary);
   padding: 10px 6px;
 }
 
 .selectItem[data-highlighted] {
-  background-color: var(--bg-normal);
+  background-color: var(--background-gray-1);
 }
 
 .primaryText {
-  color: var(--label-primary);
+  color: var(--primary-normal);
 }
 
 .secondaryText {
-  color: var(--label-alternative);
+  color: var(--text-secondary);
 }
 
 .actionBar {

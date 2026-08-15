@@ -14,6 +14,7 @@ export type MealMenuCardState = "default" | "select";
 
 type MealMenuCardProps = {
   name: string;
+  rank?: number;
   description?: string;
   calories?: number;
   unit_quantity?: string;
@@ -26,7 +27,7 @@ type MealMenuCardProps = {
   state?: MealMenuCardState;
   hideServingInfo?: boolean;
   className?: string;
-  onClick: () => void;
+  onClick?: () => void;
   onIconClick?: () => void;
 };
 
@@ -64,13 +65,14 @@ function getActionAriaLabel(icon: MealMenuCardIcon) {
 }
 
 function ActionIcon({ icon }: { icon: MealMenuCardIcon }) {
-  if (icon === "add") return <SystemIcon name="circle-plus" mode="image" size={24} />;
-  if (icon === "check") return <SystemIcon name="circle-check-selected" mode="image" size={24} />;
-  return <SystemIcon name="close" size={24} />;
+  if (icon === "add") return <SystemIcon name="plus-circle" mode="image" size={24} />;
+  if (icon === "check") return <SystemIcon name="circle-check" mode="image" size={24} />;
+  return <SystemIcon name="exit" size={24} />;
 }
 
 export function MealMenuCard({
   name,
+  rank,
   description,
   calories,
   unit_quantity,
@@ -82,6 +84,7 @@ export function MealMenuCard({
   icon = "delete",
   state = "default",
   hideServingInfo = false,
+  className,
   onClick,
   onIconClick,
 }: MealMenuCardProps) {
@@ -115,8 +118,16 @@ export function MealMenuCard({
     .join(" ");
 
   return (
-    <SelectedCard isSelected={isSelected} setSelectedChange={onClick}>
+    <SelectedCard
+      isSelected={isSelected}
+      setSelectedChange={onClick ? () => onClick() : undefined}
+      className={className}
+    >
       <div className={styles.content}>
+        {typeof rank === "number" && Number.isFinite(rank) ? (
+          <span className={`${styles.rankBadge} caption-m-medium`}>{rank}위</span>
+        ) : null}
+
         <section className={styles.header}>
           <p className={`${styles.title} body-l-medium text-primary ellipsis`}>{name}</p>
 

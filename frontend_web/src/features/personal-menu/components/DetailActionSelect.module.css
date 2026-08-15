@@ -2,7 +2,7 @@
   align-items: center;
   background: transparent;
   border: 0;
-  color: var(--label-assistive);
+  color: var(--text-tertiary);
   cursor: pointer;
   display: inline-flex;
   gap: 2px;
@@ -12,12 +12,12 @@
 }
 
 .trigger:focus-visible {
-  outline: 2px solid var(--primary-strong);
+  outline: 2px solid var(--coral-600);
   outline-offset: 2px;
 }
 
 .trigger[data-disabled] {
-  color: var(--label-disable);
+  color: var(--text-disabled);
   cursor: not-allowed;
 }
 
@@ -33,10 +33,10 @@
 }
 
 .popup {
-  background-color: var(--bg-white);
-  border: 1px solid var(--border-neutral);
+  background-color: var(--background-default);
+  border: 1px solid var(--border-subtie);
   border-radius: 8px;
-  box-shadow: var(--shadow-emphasize);
+  box-shadow: var(--shadow-outer);
   min-width: 112px;
   overflow: hidden;
   padding: 6px;
@@ -50,7 +50,7 @@
 .item {
   align-items: center;
   border-radius: 6px;
-  color: var(--label-normal);
+  color: var(--text-primary);
   cursor: pointer;
   display: flex;
   justify-content: flex-start;
@@ -60,7 +60,7 @@
 }
 
 .item[data-highlighted] {
-  background-color: var(--bg-normal);
+  background-color: var(--background-gray-1);
 }
 
 .dangerItem {

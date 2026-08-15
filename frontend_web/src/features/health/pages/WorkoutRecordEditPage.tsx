@@ -348,7 +348,7 @@ export default function WorkoutRecordEditPage() {
     if (workoutRecordQuery.isError) {
       return (
         <section className={styles.emptyState}>
-          <p className="typo-body2">{errorMessage}</p>
+          <p className="body-l-medium">{errorMessage}</p>
           <Button
             variant="text"
             color="normal"
@@ -366,7 +366,7 @@ export default function WorkoutRecordEditPage() {
     if (targetRecords.length === 0) {
       return (
         <section className={styles.emptyState}>
-          <p className="typo-body2">{emptyMessage}</p>
+          <p className="body-l-medium">{emptyMessage}</p>
         </section>
       );
     }
@@ -407,9 +407,9 @@ export default function WorkoutRecordEditPage() {
           onClick={closeEditMode}
           aria-label="운동 수정 닫기"
         >
-          <SystemIcon name="close" size={24} />
+          <SystemIcon name="exit" size={24} />
         </button>
-        <h1 className={`${styles.editHeaderTitle} typo-title3`}>운동 수정</h1>
+        <h1 className={`${styles.editHeaderTitle} title-s-semi`}>운동 수정</h1>
         <div aria-hidden="true" className={styles.editHeaderSpacer} />
       </header>
 
@@ -417,27 +417,27 @@ export default function WorkoutRecordEditPage() {
         <section className={styles.cardContainer}>
           <div className={styles.summaryGrid} aria-label="운동 수정 요약">
             <article className={styles.summaryCard}>
-              <span className={`${styles.summaryTitle} typo-caption3`}>총 운동 시간</span>
+              <span className={`${styles.summaryTitle} body-m-regular`}>총 운동 시간</span>
               <div className={styles.summaryValueRow}>
-                <span className={`${styles.summaryValue} typo-title2`}>
+                <span className={`${styles.summaryValue} title-m-semi`}>
                   {formatWorkoutDuration(editSummary.duration)}
                 </span>
               </div>
             </article>
             <article className={styles.summaryCard}>
-              <span className={`${styles.summaryTitle} typo-caption3`}>총 소모 칼로리</span>
+              <span className={`${styles.summaryTitle} body-m-regular`}>총 소모 칼로리</span>
               <div className={styles.summaryValueRow}>
-                <span className={`${styles.summaryValue} typo-title2`}>
+                <span className={`${styles.summaryValue} title-m-semi`}>
                   {editSummary.burnedCalories.toLocaleString("ko-KR")}
                 </span>
-                <span className="typo-caption3">kcal</span>
+                <span className="body-m-regular">kcal</span>
               </div>
             </article>
           </div>
         </section>
 
         <div className={styles.sectionHeader}>
-          <p className="typo-title3">오늘 한 운동</p>
+          <p className="title-s-semi">오늘 한 운동</p>
         </div>
 
         {renderEditContent()}
@@ -522,7 +522,7 @@ function WorkoutEditCard({
         }}
         aria-label={`${workout.workout_name} 순서 변경`}
       >
-        <SystemIcon name="grip" size={24} />
+        <SystemIcon name="drag" size={24} />
       </button>
 
       <button type="button" className={styles.editRecordMain} onClick={onClick}>
@@ -530,20 +530,20 @@ function WorkoutEditCard({
           {workout.workout_image ? (
             <img src={workout.workout_image} alt="" className={styles.thumbnailImage} />
           ) : (
-            <SystemIcon name={workout.workout_type === "cardio" ? "walking" : "fire"} size={28} />
+            <SystemIcon name={workout.workout_type === "cardio" ? "walking" : "fitness"} size={28} />
           )}
         </div>
 
         <div className={styles.recordContent}>
-          <p className={`ellipsis typo-title4`}>{workout.workout_name}</p>
-          <p className="typo-caption4">
+          <p className={`ellipsis body-l-semi`}>{workout.workout_name}</p>
+          <p className="caption-m-medium">
             {workout.workout_type === "cardio"
               ? `${formatWorkoutDuration(workout.workout_duration)}`
               : `${workout.set_list?.length ?? 0}세트`}
           </p>
         </div>
 
-        <span className={`${styles.calorieText} typo-label3`}>
+        <span className={`${styles.calorieText} body-m-regular`}>
           {workout.burned_calories.toLocaleString("ko-KR")}kcal
         </span>
       </button>
@@ -554,7 +554,7 @@ function WorkoutEditCard({
         onClick={onDelete}
         aria-label={`${workout.workout_name} 삭제`}
       >
-        <SystemIcon name="trash" size={18} />
+        <SystemIcon name="delete" size={18} />
       </button>
     </article>
   );

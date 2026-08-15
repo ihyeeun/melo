@@ -18,7 +18,7 @@ export default function OnboardingHeader({ stepIndex, total, onPrev }: Props) {
           disabled={stepIndex === 0}
           aria-label="이전"
         >
-          <SystemIcon name="chevron-left-normal" size={24} />
+          <SystemIcon name="chevron-left" size={24} />
         </button>
       </div>
 

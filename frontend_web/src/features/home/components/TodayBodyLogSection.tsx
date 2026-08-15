@@ -65,14 +65,14 @@ function TodayMetricCard({
     <ActionCard onClick={onClick}>
       <div className={style.cardContainer}>
         <div className={style.cardTitleContainer}>
-          <p className="typo-title4">{title}</p>
+          <p className="body-l-semi">{title}</p>
           <SystemIcon name="plus-circle" size={18} />
         </div>
         <div className={style.valueText}>
-          <span className={`typo-h2 amp-mask ${style.highlightValue}`}>
+          <span className={`title-l-semi amp-mask ${style.highlightValue}`}>
             {value.toLocaleString()}
           </span>
-          <span className="typo-caption3">{unit}</span>
+          <span className="body-m-regular">{unit}</span>
         </div>
       </div>
     </ActionCard>

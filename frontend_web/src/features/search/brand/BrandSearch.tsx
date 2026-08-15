@@ -148,7 +148,7 @@ export default function BrandSearch() {
                         onClick={() => handleBrandRegister(brand.name)}
                         aria-pressed={isSelected}
                       >
-                        <span className={`typo-title2 ${styles.brandName}`}>{brand.name}</span>
+                        <span className={`title-m-semi ${styles.brandName}`}>{brand.name}</span>
                       </button>
                     </li>
                   );
@@ -160,7 +160,7 @@ export default function BrandSearch() {
                   <LoadingIndicator label="브랜드를 검색하는 중입니다." />
                 ) : (
                   <>
-                    <p className={`typo-label4 ${styles.emptyResultSubText}`}>
+                    <p className={`body-s-medium ${styles.emptyResultSubText}`}>
                       일치하는 브랜드가 없어요
                       <br />
                       브랜드를 직접 등록할 수 있어요
@@ -174,7 +174,7 @@ export default function BrandSearch() {
                       disabled={isDirectRegisterDisabled}
                     >
                       브랜드 직접 등록
-                      <SystemIcon name="chevron-right-thin" size={18} />
+                      <SystemIcon name="chevron-right" size={18} />
                     </Button>
                   </>
                 )}
@@ -182,7 +182,7 @@ export default function BrandSearch() {
             )
           ) : (
             <div className={styles.placeholder}>
-              <p className={`typo-label4 ${styles.placeholderText}`}>
+              <p className={`body-s-medium ${styles.placeholderText}`}>
                 찾으시는 브랜드를 검색해 주세요
               </p>
             </div>
@@ -199,7 +199,7 @@ export default function BrandSearch() {
                 disabled={isDirectRegisterDisabled}
               >
                 브랜드 직접 입력
-                <SystemIcon name="chevron-right-thin" size={18} />
+                <SystemIcon name="chevron-right" size={18} />
               </Button>
             </section>
           )}

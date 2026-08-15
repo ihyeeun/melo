@@ -43,11 +43,11 @@ export default function StepGender({ data, update }: StepComponentProps) {
   return (
     <section className={`${styles.content} ${styles.onboardingStepReadable}`}>
       <div className={styles.onboardingTitle}>
-        <h2 className="typo-title1">성별 / 출생 연도를 알려주세요</h2>
+        <h2 className="title-l-semi">성별 / 출생 연도를 알려주세요</h2>
       </div>
 
       <div className={styles.onboardingGenderGroup}>
-        <p className={`${styles.textNormal} typo-title3`}>성별</p>
+        <p className={`${styles.textNormal} title-s-semi`}>성별</p>
         <div className={styles.onboardingGenderGrid}>
           <GenderCard
             label="남성"
@@ -63,14 +63,14 @@ export default function StepGender({ data, update }: StepComponentProps) {
       </div>
 
       <div className={styles.onboardingBirthYearGroup}>
-        <p className={`${styles.textNormal} typo-title3`}>출생 연도</p>
+        <p className={`${styles.textNormal} title-s-semi`}>출생 연도</p>
         <button
           type="button"
           className={styles.onboardingBirthYearTrigger}
           onClick={openBirthYearSheet}
         >
           <span
-            className={`${hasSelectedBirthYear ? styles.textNormal : styles.textAssistive} typo-h1`}
+            className={`${hasSelectedBirthYear ? styles.textNormal : styles.textAssistive} title-xxl-semi`}
           >
             {visibleBirthYear} 년
           </span>{" "}
@@ -83,15 +83,15 @@ export default function StepGender({ data, update }: StepComponentProps) {
         disableContentDrag
       >
         <div className={styles.onboardingBirthYearSheet}>
-          <h3 className="typo-title2">출생 연도</h3>
+          <h3 className="title-m-semi">출생 연도</h3>
           <div className={styles.onboardingBirthYearPicker}>
             <ScrollWheelPicker
               height={400}
               highlightHeight={72}
               itemHeight={80}
               classNames={{
-                item: `typo-h1 ${styles.onboardingBirthYearPickerItem}`,
-                itemSelected: `typo-h1 ${styles.onboardingBirthYearPickerItemSelected}`,
+                item: `title-xxl-semi ${styles.onboardingBirthYearPickerItem}`,
+                itemSelected: `title-xxl-semi ${styles.onboardingBirthYearPickerItemSelected}`,
                 highlight: styles.onboardingBirthYearPickerHighlight,
               }}
               columns={[
@@ -136,7 +136,7 @@ function GenderCard({
         .filter(Boolean)
         .join(" ")}
     >
-      <p className="typo-label2">{label}</p>
+      <p className="body-l-semi">{label}</p>
     </button>
   );
 }

@@ -1,5 +1,5 @@
 .page {
-  background-color: var(--bg-normal);
+  background-color: var(--background-gray-1);
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -25,25 +25,25 @@
 }
 
 .textPrimary {
-  color: var(--label-primary);
+  color: var(--primary-normal);
 }
 
 .textAlternative {
-  color: var(--label-alternative);
+  color: var(--text-secondary);
 }
 
 .textAssistive {
-  color: var(--label-assistive);
+  color: var(--text-tertiary);
 }
 
 .textNormal {
-  color: var(--label-normal);
+  color: var(--text-primary);
 }
 
 .titleSection {
   position: sticky;
   top: 0;
-  background-color: var(--bg-normal);
+  background-color: var(--background-gray-1);
   padding: 0 20px;
 }
 
@@ -55,7 +55,7 @@
 }
 
 .introMessage {
-  color: var(--label-normal);
+  color: var(--text-primary);
   white-space: pre-wrap;
 }
 
@@ -81,10 +81,10 @@
 
 .filterBadge {
   align-items: center;
-  background-color: var(--bg-white);
-  border: 1px solid var(--border-neutral);
+  background-color: var(--background-default);
+  border: 1px solid var(--border-subtie);
   border-radius: 100px;
-  color: var(--label-normal);
+  color: var(--text-primary);
   display: inline-flex;
   justify-content: center;
   padding: 6px 14px;
@@ -94,7 +94,7 @@
 .filterBadgeSelected {
   background-color: var(--primary-normal);
   border-color: transparent;
-  color: var(--label-white);
+  color: var(--background-default);
 }
 
 .imageFeedbackSection {
@@ -132,7 +132,7 @@
 .foodMarker {
   background: transparent;
   border: 0;
-  color: var(--label-normal);
+  color: var(--text-primary);
   cursor: pointer;
   max-width: min(220px, calc(100% - 24px));
   padding: 0;
@@ -168,7 +168,7 @@
 
 .foodMarkerBubble {
   align-items: center;
-  background-color: var(--bg-white);
+  background-color: var(--background-default);
   border-radius: 4px;
   display: grid;
   gap: 8px;
@@ -191,12 +191,12 @@
 }
 
 .foodMarkerAbove .foodMarkerBubble::after {
-  border-top: 10px solid var(--bg-white);
+  border-top: 10px solid var(--background-default);
   bottom: -9px;
 }
 
 .foodMarkerBelow .foodMarkerBubble::after {
-  border-bottom: 10px solid var(--bg-white);
+  border-bottom: 10px solid var(--background-default);
   top: -9px;
 }
 
@@ -212,7 +212,7 @@
 }
 
 .foodMarkerName {
-  color: var(--label-normal);
+  color: var(--text-primary);
   min-width: 0;
   overflow-wrap: anywhere;
   white-space: normal;
@@ -237,7 +237,7 @@
 }
 
 .foodMarkerScoreError {
-  color: var(--label-disable);
+  color: var(--text-disabled);
 }
 
 .foodClusterSourceMarker {
@@ -253,7 +253,7 @@
 .foodClusterSourceBubble {
   background: transparent;
   border: 0;
-  color: var(--label-normal);
+  color: var(--text-primary);
   cursor: pointer;
   max-width: min(220px, calc(100vw - 48px));
   padding: 0;
@@ -292,10 +292,10 @@
 .foodClusterSourcePin {
   align-items: center;
   background-color: var(--primary-normal);
-  border: 2px solid var(--static-white);
+  border: 2px solid var(--background-default);
   border-radius: 999px;
-  box-shadow: var(--shadow-strong);
-  color: var(--static-white);
+  box-shadow: var(--shadow-outer);
+  color: var(--background-default);
   cursor: pointer;
   display: inline-flex;
   height: 28px;
@@ -309,17 +309,17 @@
 }
 
 .foodClusterSourcePinLabel {
-  color: var(--static-white);
+  color: var(--background-default);
   font-weight: 700;
   line-height: 1;
   white-space: nowrap;
 }
 
 .foodClusterPinListPopover {
-  background-color: var(--bg-white);
-  border: 1px solid var(--border-neutral);
+  background-color: var(--background-default);
+  border: 1px solid var(--border-subtie);
   border-radius: 8px;
-  box-shadow: var(--shadow-strong);
+  box-shadow: var(--shadow-outer);
   max-height: 180px;
   overflow: hidden;
   position: absolute;
@@ -345,7 +345,7 @@
   align-items: center;
   background-color: var(--primary-normal);
   border-radius: 100px;
-  color: var(--static-white);
+  color: var(--background-default);
   display: inline-flex;
   font-weight: 700;
   height: 20px;
@@ -355,7 +355,7 @@
 }
 
 .foodClusterPinListName {
-  color: var(--label-normal);
+  color: var(--text-primary);
   justify-self: start;
   min-width: 0;
   overflow-wrap: anywhere;
@@ -378,8 +378,8 @@
 .unpositionedMenuToggle {
   background-color: var(--primary-normal);
   border-radius: 8px;
-  box-shadow: var(--shadow-strong);
-  color: var(--label-white);
+  box-shadow: var(--shadow-outer);
+  color: var(--background-default);
   cursor: pointer;
   max-width: 100%;
   overflow-wrap: anywhere;
@@ -393,10 +393,10 @@
 }
 
 .unpositionedMenuScrollArea {
-  background-color: var(--bg-white);
-  border: 1px solid var(--border-neutral);
+  background-color: var(--background-default);
+  border: 1px solid var(--border-subtie);
   border-radius: 8px;
-  box-shadow: var(--shadow-strong);
+  box-shadow: var(--shadow-outer);
   flex: 0 1 auto;
   max-height: 300px;
   overflow: hidden;
@@ -416,14 +416,14 @@
 }
 
 .unpositionedMenuList > li:not(:last-child) {
-  border-bottom: 1px solid var(--border-neutral);
+  border-bottom: 1px solid var(--border-subtie);
 }
 
 .unpositionedMenuItem {
   align-items: center;
   background: transparent;
   border: 0;
-  color: var(--label-normal);
+  color: var(--text-primary);
   cursor: pointer;
   display: grid;
   gap: 8px;
@@ -438,7 +438,7 @@
 }
 
 .unpositionedMenuItem:not(:disabled):active {
-  background-color: var(--bg-normal);
+  background-color: var(--background-gray-1);
 }
 
 .unpositionedMenuName {
@@ -462,10 +462,10 @@
 
 .resultCard {
   align-items: stretch;
-  background-color: var(--bg-white);
-  border: 1px solid var(--border-neutral);
+  background-color: var(--background-default);
+  border: 1px solid var(--border-subtie);
   border-radius: 8px;
-  color: var(--label-normal);
+  color: var(--text-primary);
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -477,7 +477,7 @@
   align-items: center;
   background-color: var(--primary-normal);
   border-radius: 4px;
-  color: var(--static-white);
+  color: var(--background-default);
   display: inline-flex;
   padding: 2px 6px;
   width: fit-content;
@@ -504,12 +504,12 @@
 }
 
 .calories {
-  color: var(--label-normal);
+  color: var(--text-primary);
   margin-left: auto;
 }
 
 .emptyStatus {
-  color: var(--label-assistive);
+  color: var(--text-tertiary);
   padding: 24px 0;
   text-align: center;
 }

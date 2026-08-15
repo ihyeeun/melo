@@ -10,7 +10,7 @@
 }
 
 .groupDivider {
-  background-color: var(--border-neutral);
+  background-color: var(--border-subtie);
   height: 1px;
   margin: 12px 0;
   width: 100%;
@@ -23,7 +23,7 @@
 
 .detailRow {
   align-items: center;
-  color: var(--label-normal);
+  color: var(--text-primary);
   display: flex;
   gap: 8px;
   justify-content: space-between;
@@ -31,7 +31,7 @@
 }
 
 .detailLabelSub {
-  color: var(--label-alternative);
+  color: var(--text-secondary);
   padding-left: 4px;
 }
 
@@ -43,5 +43,5 @@
 }
 
 .textNormal {
-  color: var(--label-normal);
+  color: var(--text-primary);
 }

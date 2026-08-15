@@ -203,13 +203,13 @@ export default function GoalEditTargetCaloriesStep({ data, update }: Props) {
   return (
     <section className={styles.content}>
       <div className={`${styles.title} ${styles.titleGroup}`}>
-        <h2 className="typo-title1">목표 칼로리를 선택해주세요</h2>
+        <h2 className="title-l-semi">목표 칼로리를 선택해주세요</h2>
         {isPending ? (
           <div className={styles.loadingRow}>
-            <p className={`${styles.subtitle} typo-body2`}>추천 목표 칼로리를 계산하고 있어요</p>
+            <p className={`${styles.subtitle} body-l-medium`}>추천 목표 칼로리를 계산하고 있어요</p>
           </div>
         ) : (
-          <p className={`${styles.subtitle} typo-body2`}>
+          <p className={`${styles.subtitle} body-l-medium`}>
             추천하는 목표 칼로리는{" "}
             <span className="textNoWrap">
               {formatTargetCalories(displayRecommendedCalories)}kcal
@@ -221,17 +221,17 @@ export default function GoalEditTargetCaloriesStep({ data, update }: Props) {
 
       <div className={styles.goalCalorieContainer}>
         <button className={styles.goalKcalTrigger} type="button" onClick={openEditor}>
-          <p className={`${styles.goalKcalValue} textNoWrap typo-h1`}>
+          <p className={`${styles.goalKcalValue} textNoWrap title-xxl-semi`}>
             {formatTargetCalories(visibleTargetCalories)} kcal
           </p>
-          <SystemIcon name="pencil-fill" size={24} />
+          <SystemIcon name="edit" size={24} />
         </button>
 
-        <p className={`${styles.goalKcalHelper} typo-body1`}>{goalWeekMessage}</p>
+        <p className={`${styles.goalKcalHelper} title-m-semi`}>{goalWeekMessage}</p>
       </div>
       <BottomSheet isOpen={open} onClose={() => setOpen(false)}>
         <div className={styles.goalKcalSheet}>
-          <h3 className="typo-title2">목표 칼로리</h3>
+          <h3 className="title-m-semi">목표 칼로리</h3>
           <EditorInput
             type="number"
             inputMode="numeric"

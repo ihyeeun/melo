@@ -163,7 +163,7 @@ export default function StepsLogBottomSheetActivity() {
               </div>
             ) : (
               <p
-                className={`${styles.syncedStepsValue} typo-body1`}
+                className={`${styles.syncedStepsValue} title-m-semi`}
                 aria-label={
                   nativeSyncedSteps === null
                     ? "연동된 오늘의 걸음 수 데이터 없음"

@@ -319,7 +319,7 @@ export default function FolderDetailPage() {
     if (isFolderError || !folderDetail) {
       return (
         <section className={styles.stateContainer}>
-          <p className="typo-body2">폴더를 불러오지 못했어요</p>
+          <p className="body-l-medium">폴더를 불러오지 못했어요</p>
           <Button
             variant="text"
             interaction="normal"
@@ -338,7 +338,7 @@ export default function FolderDetailPage() {
     if (folderMenus.length === 0) {
       return (
         <section className={styles.stateContainer}>
-          <p className="typo-body2">폴더에 담긴 음식이 없어요</p>
+          <p className="body-l-medium">폴더에 담긴 음식이 없어요</p>
         </section>
       );
     }
@@ -347,7 +347,7 @@ export default function FolderDetailPage() {
       <section className={styles.menuSection}>
         <div className={styles.menuSectionHeader}>
           <div className={styles.menuTitleGroup}>
-            <span className={`typo-label4 ${styles.menuCount}`}>{folderMenus.length}개</span>
+            <span className={`body-s-medium ${styles.menuCount}`}>{folderMenus.length}개</span>
           </div>
 
           <Button

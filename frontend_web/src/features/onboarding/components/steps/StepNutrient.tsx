@@ -70,18 +70,18 @@ export default function StepNutrient({ data, update }: StepComponentProps) {
       <div
         className={`${styles.onboardingTitle} ${styles.onboardingTitleGroup} ${styles.onboardingTitleGroupCompact}`}
       >
-        <h2 className="typo-title1">추천하는 탄단지 비율이에요</h2>
+        <h2 className="title-l-semi">추천하는 탄단지 비율이에요</h2>
         {isPending ? (
           <div className={styles.onboardingLoadingRow}>
-            <p className={`${styles.textAlternative} typo-body2`}>추천 비율을 계산하고 있어요</p>
+            <p className={`${styles.textAlternative} body-l-medium`}>추천 비율을 계산하고 있어요</p>
           </div>
         ) : (
-          <p className={`${styles.textAlternative} typo-body2`}>비율을 수정할 수 있어요</p>
+          <p className={`${styles.textAlternative} body-l-medium`}>비율을 수정할 수 있어요</p>
         )}
       </div>
       <div className={styles.onboardingNutrientContent}>
         <p
-          className={`${styles.onboardingNutrientGoal} ${styles.textPrimary} textNoWrap typo-title1`}
+          className={`${styles.onboardingNutrientGoal} ${styles.textPrimary} textNoWrap title-l-semi`}
         >
           목표 칼로리 {data.target_calories ?? "--"}kcal
         </p>
@@ -132,7 +132,7 @@ function NutrientCard({ label, nutrientType, targetCalories, value, onChange }: 
 
   return (
     <div className={`${styles.onboardingNutrientCard}`}>
-      <label className={`${styles.textNormal} typo-title3`}>{label}</label>
+      <label className={`${styles.textNormal} title-s-semi`}>{label}</label>
       <NumberField
         value={value}
         onChange={onChange}
@@ -155,8 +155,8 @@ function NutrientCard({ label, nutrientType, targetCalories, value, onChange }: 
       <div className={styles.onboardingNutrientDivider} />
 
       <div className={styles.onboardingNutrientMeta}>
-        <span className="typo-body1">{formatRoundedValue(targetGram)}g</span>
-        <span className="textNoWrap typo-body1">{formatRoundedValue(targetKcal)}kcal</span>
+        <span className="title-m-semi">{formatRoundedValue(targetGram)}g</span>
+        <span className="textNoWrap title-m-semi">{formatRoundedValue(targetKcal)}kcal</span>
       </div>
     </div>
   );

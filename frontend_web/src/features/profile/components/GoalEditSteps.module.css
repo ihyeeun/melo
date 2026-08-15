@@ -19,7 +19,7 @@
 }
 
 .subtitle {
-  color: var(--label-alternative);
+  color: var(--text-secondary);
 }
 
 .loadingRow {
@@ -44,13 +44,13 @@
 }
 
 .goalKcalValue {
-  color: var(--label-normal);
+  color: var(--text-primary);
   text-decoration: underline;
   text-underline-offset: 6px;
 }
 
 .goalKcalHelper {
-  color: var(--label-normal);
+  color: var(--text-primary);
   text-align: center;
 }
 
@@ -66,14 +66,14 @@
 }
 
 .nutrientContent {
-  color: var(--label-primary);
+  color: var(--primary-normal);
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
 
 .nutrientGoal {
-  color: var(--label-primary);
+  color: var(--primary-normal);
   text-align: center;
 }
 
@@ -84,10 +84,10 @@
 }
 
 .nutrientCard {
-  background: var(--bg-white);
-  border: 1px solid var(--border-neutral);
+  background: var(--background-default);
+  border: 1px solid var(--border-subtie);
   border-radius: 8px;
-  color: var(--gray-1100);
+  color: var(--gray-950);
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -96,7 +96,7 @@
 }
 
 .nutrientLabel {
-  color: var(--label-normal);
+  color: var(--text-primary);
 }
 
 .nutrientDivider {
@@ -113,10 +113,10 @@
 
 .weightAdjustButton {
   align-items: center;
-  background: var(--interaction-alternative);
+  background: var(--gray-300);
   border: none;
   border-radius: 100px;
-  color: var(--static-white);
+  color: var(--background-default);
   cursor: pointer;
   display: inline-flex;
   height: 24px;

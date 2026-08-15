@@ -30,12 +30,10 @@ export default function DiaryPage() {
 
   const {
     data: dayMeal,
-    isError: isSummaryError,
     isPending: isSummaryPending,
   } = useDayMealsQuery(selectedDateKey);
   const {
     data: profile,
-    isError: isProfileError,
     isPending: isProfilePending,
   } = useGetProfileQuery();
   const { data: bodyLog } = useGetBodyLog(selectedDateKey);
@@ -63,12 +61,6 @@ export default function DiaryPage() {
   const calorieDiff = targetCalorie - currentCalorie;
   const calorieStatusText =
     calorieDiff < 0 ? "초과했어요" : calorieDiff === 0 ? "완벽해요!" : "더 먹을 수 있어요";
-
-  const nutritionSummary = isProfileError
-    ? { message: "목표 정보를 불러오지 못했어요", score: null }
-    : isSummaryError
-      ? { message: "식사 정보를 불러오지 못했어요", score: null }
-      : nutrition;
 
   if (isSummaryPending || isProfilePending || isStepCaloriesPending || isWorkoutRecordPending) {
     return;

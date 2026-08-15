@@ -142,12 +142,12 @@ export function NutrientDetailForm({
     <section className={styles.formSection}>
       <div className={styles.topFieldSection}>
         <div className={styles.titleRow}>
-          <p className={`typo-title4 ${styles.titleText}`}>총 용량</p>
-          <p className={`typo-body3 ${styles.requiredText}`}>* 필수로 작성해주세요</p>
+          <p className={`body-l-semi ${styles.titleText}`}>총 용량</p>
+          <p className={`body-s-medium ${styles.requiredText}`}>* 필수로 작성해주세요</p>
         </div>
         <div className={styles.weightRow}>
           <SingleDecimalInput
-            className={`typo-body3 ${styles.valueInput}`}
+            className={`body-s-medium ${styles.valueInput}`}
             placeholder="0"
             aria-label="총 용량 입력"
             value={totalWeight}
@@ -165,12 +165,12 @@ export function NutrientDetailForm({
             }}
           >
             <Select.Trigger
-              className={`typo-body2 ${styles.valueInput} ${styles.selectTrigger}`}
+              className={`body-l-medium ${styles.valueInput} ${styles.selectTrigger}`}
               aria-label="중량 단위 선택"
             >
               <Select.Value>{selectedWeightUnitLabel}</Select.Value>
               <Select.Icon className={styles.selectIcon} aria-hidden>
-                <SystemIcon name="chevron-down-normal" size={20} />
+                <SystemIcon name="chevron-down" size={20} />
               </Select.Icon>
             </Select.Trigger>
 
@@ -182,7 +182,7 @@ export function NutrientDetailForm({
                       <Select.Item
                         key={option.value}
                         value={option.value}
-                        className={`typo-body2 ${styles.selectItem}`}
+                        className={`body-l-medium ${styles.selectItem}`}
                       >
                         <Select.ItemText>{option.label}</Select.ItemText>
                       </Select.Item>
@@ -197,13 +197,13 @@ export function NutrientDetailForm({
 
       <div className={styles.topFieldSection}>
         <div className={styles.titleRow}>
-          <p className={`typo-title4 ${styles.titleText}`}>
-            총 칼로리 <span className={`typo-caption3 ${styles.titleUnit} textNoWrap`}>(kcal)</span>
+          <p className={`body-l-semi ${styles.titleText}`}>
+            총 칼로리 <span className={`body-m-regular ${styles.titleUnit} textNoWrap`}>(kcal)</span>
           </p>
-          <p className={`typo-body3 ${styles.requiredText}`}>* 필수로 작성해주세요</p>
+          <p className={`body-s-medium ${styles.requiredText}`}>* 필수로 작성해주세요</p>
         </div>
         <SingleDecimalInput
-          className={`typo-body3 ${styles.valueInput}`}
+          className={`body-s-medium ${styles.valueInput}`}
           placeholder="0"
           aria-label="총 칼로리 입력"
           value={totalCalories}
@@ -232,16 +232,16 @@ export function NutrientDetailForm({
               >
                 <p
                   className={cx(
-                    isMainField ? "typo-title4" : "typo-body3",
+                    isMainField ? "body-l-semi" : "body-s-medium",
                     styles.fieldLabel,
                     isMainField ? styles.fieldLabelMain : styles.fieldLabelSub,
                   )}
                 >
                   {field.label}
-                  <span className={`typo-label3 ${styles.unitText}`}> ({field.unit})</span>
+                  <span className={`body-m-regular ${styles.unitText}`}> ({field.unit})</span>
                 </p>
                 <SingleDecimalInput
-                  className={`typo-body3 ${styles.nutrientInput}`}
+                  className={`body-s-medium ${styles.nutrientInput}`}
                   value={fieldValue}
                   onValueChange={(nextValue) => {
                     onFieldChange(field.key, nextValue === undefined ? "" : String(nextValue));

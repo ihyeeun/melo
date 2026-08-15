@@ -219,7 +219,7 @@ export default function WorkoutSearchPage() {
     if (isError) {
       return (
         <section className={styles.emptyState}>
-          <p className="typo-body2">운동을 검색하지 못했어요</p>
+          <p className="body-l-medium">운동을 검색하지 못했어요</p>
           <Button
             variant="text"
             color="normal"
@@ -237,7 +237,7 @@ export default function WorkoutSearchPage() {
     if (workouts.length === 0) {
       return (
         <section className={styles.emptyState}>
-          <p className="typo-body2">
+          <p className="body-l-medium">
             {hasSearchCondition ? "검색 결과가 없어요" : "표시할 운동이 없어요"}
           </p>
         </section>
@@ -319,7 +319,7 @@ function FilterChipGroup({
       <div className={styles.filterScroller}>
         <button
           type="button"
-          className={`${styles.filterChip} ${value === null ? styles.filterChipSelected : ""} typo-label3`}
+          className={`${styles.filterChip} ${value === null ? styles.filterChipSelected : ""} body-m-regular`}
           aria-pressed={value === null}
           onClick={() => onChange(null)}
         >
@@ -329,7 +329,7 @@ function FilterChipGroup({
           <button
             key={option}
             type="button"
-            className={`${styles.filterChip} ${value === option ? styles.filterChipSelected : ""} typo-label3`}
+            className={`${styles.filterChip} ${value === option ? styles.filterChipSelected : ""} body-m-regular`}
             aria-pressed={value === option}
             onClick={() => onChange(option)}
           >
@@ -355,7 +355,7 @@ function FilterTabGroup({
       <div className={styles.filterScroller} role="tablist">
         <button
           type="button"
-          className={`${styles.filterTab} ${value === null ? styles.tabSelected : ""} typo-label3`}
+          className={`${styles.filterTab} ${value === null ? styles.tabSelected : ""} body-m-regular`}
           aria-pressed={value === null}
           onClick={() => onChange(null)}
         >
@@ -367,7 +367,7 @@ function FilterTabGroup({
             type="button"
             role="tab"
             aria-selected={value === option}
-            className={`${styles.filterTab} ${value === option ? styles.tabSelected : ""} typo-label3`}
+            className={`${styles.filterTab} ${value === option ? styles.tabSelected : ""} body-m-regular`}
             onClick={() => onChange(value === option ? null : option)}
           >
             {option}
@@ -401,12 +401,12 @@ function WorkoutSearchResultCard({
           {workout.workout_image ? (
             <img src={workout.workout_image} alt="" className={styles.thumbnailImage} />
           ) : (
-            <SystemIcon name={workout.workout_type === "cardio" ? "walking" : "fire"} size={28} />
+            <SystemIcon name={workout.workout_type === "cardio" ? "walking" : "fitness"} size={28} />
           )}
         </div>
 
         <div className={styles.resultContent}>
-          <h2 className={`ellipsis typo-title4`}>{workout.workout_name}</h2>
+          <h2 className={`ellipsis body-l-semi`}>{workout.workout_name}</h2>
         </div>
       </button>
 
@@ -421,7 +421,7 @@ function WorkoutSearchResultCard({
         onClick={onAdd}
       >
         <SystemIcon
-          name={isSelected ? "circle-check-selected" : "circle-plus"}
+          name={isSelected ? "circle-check" : "plus-circle"}
           mode="image"
           size={24}
         />

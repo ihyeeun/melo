@@ -45,13 +45,13 @@ export function NutrientDetailList({
   return (
     <div id={detailListId} className={`${styles.detailList} ${className ?? ""}`}>
       <div className={styles.detailRow}>
-        <p className="typo-title4">
+        <p className="body-l-semi">
           총 용량 {formatNutrientValue(weight)}
           {weightUnit}
         </p>
 
         <div className={styles.detailValue}>
-          <span className={`${styles.textNormal} textNoWrap typo-body1`}>
+          <span className={`${styles.textNormal} textNoWrap title-m-semi`}>
             {formatNutrientValue(calories)} kcal
           </span>
         </div>
@@ -69,7 +69,7 @@ export function NutrientDetailList({
 
                   <article className={styles.detailRow}>
                     <p
-                      className={`${row.variant === "sub" ? "typo-body3" : "typo-title4"} ${
+                      className={`${row.variant === "sub" ? "body-s-medium" : "body-l-semi"} ${
                         row.variant === "sub" ? styles.detailLabelSub : styles.textNormal
                       }`}
                     >
@@ -79,7 +79,7 @@ export function NutrientDetailList({
                     <div className={styles.detailValue}>
                       {row.showWarning && row.key !== "totalWeight" && <NutrientWarningPopover />}
 
-                      <span className={row.variant === "sub" ? "typo-body3" : "typo-body1"}>
+                      <span className={row.variant === "sub" ? "body-s-medium" : "title-m-semi"}>
                         {formatNutrientValue(row.value)} {row.unit}
                       </span>
                     </div>

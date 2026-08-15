@@ -1,12 +1,7 @@
 import type { CSSProperties, HTMLAttributes } from "react";
 
 import styles from "./Loading.module.css";
-
-const LOADING_ICONS = [
-  "/icons/loading-1.svg",
-  "/icons/loading-2.svg",
-  "/icons/loading-3.svg",
-] as const;
+import { LottieLoadingLogo } from "./LottieLoadingLogo";
 
 type LoadingStyle = CSSProperties & {
   "--loading-icon-size"?: string;
@@ -60,11 +55,7 @@ export function LoadingIndicator({
       }
     >
       <span className={styles.visuallyHidden}>{label}</span>
-      <div aria-hidden="true" className={styles.iconGroup}>
-        {LOADING_ICONS.map((src) => (
-          <img key={src} alt="" className={styles.icon} src={src} />
-        ))}
-      </div>
+      <LottieLoadingLogo className={styles.icon} />
     </div>
   );
 }

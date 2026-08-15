@@ -387,12 +387,12 @@ export function MealMenuNutrientDetail({
     <>
       <section className={styles.summarySection}>
         <div className={styles.summaryContent}>
-          <p className={`typo-title2 ${styles.textNormal}`}>{previewMenu.name}</p>
+          <p className={`title-m-semi ${styles.textNormal}`}>{previewMenu.name}</p>
           <div className={styles.summarySecond}>
             {previewMenu.brand && (
-              <p className={`typo-label4 ${styles.textAlternative}`}>{previewMenu.brand}</p>
+              <p className={`body-s-medium ${styles.textAlternative}`}>{previewMenu.brand}</p>
             )}
-            <p className={`${styles.textNormal} ${styles.calories} textNoWrap typo-title1`}>
+            <p className={`${styles.textNormal} ${styles.calories} textNoWrap title-l-semi`}>
               {formatNutrientValue(previewMenu.calories)} kcal
             </p>
           </div>
@@ -406,10 +406,10 @@ export function MealMenuNutrientDetail({
               {summaryMacroItems.map((macro) => (
                 <article key={macro.key} className={styles.macroItem}>
                   <div className={styles.macroLabelRow}>
-                    <p className={`typo-body2 ${styles.textAlternative}`}>{macro.label}</p>
+                    <p className={`body-l-medium ${styles.textAlternative}`}>{macro.label}</p>
                     {macro.showWarning && <NutrientWarningPopover />}
                   </div>
-                  <p className={`typo-title3 ${styles.macroValue}`}>
+                  <p className={`title-s-semi ${styles.macroValue}`}>
                     <span className={styles.macroNumber}>{formatNutrientValue(macro.value)}</span>
                     <span className={`${styles.macroUnit}`}>g</span>
                   </p>
@@ -431,14 +431,14 @@ export function MealMenuNutrientDetail({
           <Tabs.List className={styles.TabsList}>
             <Tabs.Tab
               value="unit"
-              className={`${styles.TabsTab} ${inputMode === "unit" ? "typo-label1" : "typo-label2"}`}
+              className={`${styles.TabsTab} ${inputMode === "unit" ? "body-l-semi" : "body-l-semi"}`}
             >
               {formatBaseServingUnit(menu.unit_quantity)} ({menu.weight}
               {menu.unit === MENU_UNIT.GRAM ? "g" : "ml"})
             </Tabs.Tab>
             <Tabs.Tab
               value="weight"
-              className={`${styles.TabsTab} ${inputMode === "weight" ? "typo-label1" : "typo-label2"}`}
+              className={`${styles.TabsTab} ${inputMode === "weight" ? "body-l-semi" : "body-l-semi"}`}
             >
               {menu.unit === MENU_UNIT.GRAM ? "g" : "ml"}
             </Tabs.Tab>
@@ -468,7 +468,7 @@ export function MealMenuNutrientDetail({
                 classNames={{
                   group: styles.FieldInputGroup,
                   inputWrapper: styles.FieldInputWrapper,
-                  input: `typo-body1 ${styles.FieldInput}`,
+                  input: `title-m-semi ${styles.FieldInput}`,
                 }}
                 format={{
                   minimumFractionDigits: 0,
@@ -516,7 +516,7 @@ export function MealMenuNutrientDetail({
                 classNames={{
                   group: styles.FieldInputGroup,
                   inputWrapper: styles.FieldInputWrapper,
-                  input: `typo-body1 ${styles.FieldInput}`,
+                  input: `title-m-semi ${styles.FieldInput}`,
                 }}
                 format={{
                   minimumFractionDigits: 0,
@@ -550,9 +550,9 @@ export function MealMenuNutrientDetail({
           aria-expanded={isDetailOpen}
           aria-controls={detailListId}
         >
-          <span className="typo-title3">상세 영양성분 보기</span>
+          <span className="title-s-semi">상세 영양성분 보기</span>
           <SystemIcon
-            name="chevron-down-normal"
+            name="chevron-down"
             size={24}
             className={`${styles.arrowIcon} ${isDetailOpen ? styles.arrowIconExpanded : ""}`}
           />
@@ -564,7 +564,7 @@ export function MealMenuNutrientDetail({
 
             {showEditSection ? (
               <section className={styles.editSection}>
-                <p className={`typo-body3 ${styles.textNormal}`}>영양성분이 잘못되었나요?</p>
+                <p className={`body-s-medium ${styles.textNormal}`}>영양성분이 잘못되었나요?</p>
                 <Button
                   variant="text"
                   interaction={isEditAndAddEnabled ? "normal" : "disable"}

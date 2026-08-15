@@ -411,9 +411,9 @@ export default function MealSearchPage() {
           setIsDirectInputSheetOpen(true);
         }}
       >
-        <span className={`${styles.bottomText} typo-body3`}>찾으시는 메뉴가 없나요?</span>
+        <span className={`${styles.bottomText} body-s-medium`}>찾으시는 메뉴가 없나요?</span>
         직접 등록하기
-        <SystemIcon name="chevron-right-thin" size={16} />
+        <SystemIcon name="chevron-right" size={16} />
       </Button>
     </div>
   );
@@ -453,17 +453,17 @@ export default function MealSearchPage() {
         setIsDirectInputSheetOpen(true);
       }}
     >
-      <span className={`typo-body3`}>찾으시는 메뉴가 없나요?</span>
-      <span className={`typo-label3 ${styles.directRegisterPromptAction}`}>
+      <span className={`body-s-medium`}>찾으시는 메뉴가 없나요?</span>
+      <span className={`body-m-regular ${styles.directRegisterPromptAction}`}>
         영양 성분 직접 등록
-        <SystemIcon name="chevron-right-thin" size={18} />
+        <SystemIcon name="chevron-right" size={18} />
       </span>
     </button>
   );
 
   const renderSearchErrorState = () => (
     <section className={styles.emptyResult}>
-      <p className="typo-body2">메뉴를 검색하지 못했어요</p>
+      <p className="body-l-medium">메뉴를 검색하지 못했어요</p>
       <div className={styles.buttonContainer}>
         <Button
           variant="text"
@@ -482,7 +482,7 @@ export default function MealSearchPage() {
 
   const renderPersonalMenuEmptyState = (message: string) => (
     <section className={styles.emptyResult}>
-      <p className="typo-body2">{message}</p>
+      <p className="body-l-medium">{message}</p>
       <div className={styles.emptyActionButton}>
         <Button
           onClick={() => {
@@ -494,7 +494,7 @@ export default function MealSearchPage() {
           color="normal"
         >
           영양 성분 직접 등록
-          <SystemIcon name="chevron-right-thin" size={18} />
+          <SystemIcon name="chevron-right" size={18} />
         </Button>
       </div>
     </section>
@@ -533,7 +533,7 @@ export default function MealSearchPage() {
               color="normal"
             >
               영양 성분 직접 등록
-              <SystemIcon name="chevron-right-thin" size={18} />
+              <SystemIcon name="chevron-right" size={18} />
             </Button>
           </div>
           {registeredMenuList.map(renderMenuCard)}
@@ -543,7 +543,7 @@ export default function MealSearchPage() {
 
     return (
       <section className={`${styles.emptyResult} ${styles.marginTop}`}>
-        <p className="typo-body2">{emptyText}</p>
+        <p className="body-l-medium">{emptyText}</p>
         <Button
           onClick={() => {
             setIsDirectInputSheetOpen(true);
@@ -554,7 +554,7 @@ export default function MealSearchPage() {
           color="normal"
         >
           영양 성분 직접 등록
-          <SystemIcon name="chevron-right-thin" size={18} />
+          <SystemIcon name="chevron-right" size={18} />
         </Button>
       </section>
     );
@@ -617,8 +617,8 @@ export default function MealSearchPage() {
           value={PERSONAL_MENU_TAB.FREQUENTLY_RECORDED}
           className={`${styles.personalMenuTabsTab} ${
             visiblePersonalMenuTab === PERSONAL_MENU_TAB.FREQUENTLY_RECORDED
-              ? "typo-label1"
-              : "typo-label2"
+              ? "body-l-semi"
+              : "body-l-semi"
           }`}
         >
           자주 먹었어요
@@ -627,7 +627,7 @@ export default function MealSearchPage() {
           <Tabs.Tab
             value={PERSONAL_MENU_TAB.FOLDER}
             className={`${styles.personalMenuTabsTab} ${
-              visiblePersonalMenuTab === PERSONAL_MENU_TAB.FOLDER ? "typo-label1" : "typo-label2"
+              visiblePersonalMenuTab === PERSONAL_MENU_TAB.FOLDER ? "body-l-semi" : "body-l-semi"
             }`}
           >
             내 폴더
@@ -636,7 +636,7 @@ export default function MealSearchPage() {
         <Tabs.Tab
           value={PERSONAL_MENU_TAB.REGISTERED}
           className={`${styles.personalMenuTabsTab} ${
-            visiblePersonalMenuTab === PERSONAL_MENU_TAB.REGISTERED ? "typo-label1" : "typo-label2"
+            visiblePersonalMenuTab === PERSONAL_MENU_TAB.REGISTERED ? "body-l-semi" : "body-l-semi"
           }`}
         >
           직접 등록
@@ -718,7 +718,7 @@ export default function MealSearchPage() {
       <div className={styles.emptyResultContainer}>
         {searchMenuList.length === 0 && (
           <section className={styles.emptyResult}>
-            <p className="typo-body2">검색 결과가 없어요</p>
+            <p className="body-l-medium">검색 결과가 없어요</p>
             <div className={styles.buttonContainer}>
               <Button
                 variant="text"
@@ -858,7 +858,7 @@ function FolderPanel({
       ) : isFolderError ? (
         <div className={styles.emptyResultContainer}>
           <section className={`${styles.emptyResult} ${styles.folderEmptyResult}`}>
-            <p className="typo-body2">폴더를 불러오지 못했어요</p>
+            <p className="body-l-medium">폴더를 불러오지 못했어요</p>
             <Button
               variant="text"
               interaction="normal"
@@ -883,7 +883,7 @@ function FolderPanel({
             onClick={() => navigate(PATH.CREATE_FOLDER)}
           >
             <span>새 폴더 만들기</span>
-            <SystemIcon name="chevron-right-thin" size={16} />
+            <SystemIcon name="chevron-right" size={16} />
           </Button>
           {folderList.map((folder) => (
             <article key={folder.folder_id} className={styles.folderItem}>
@@ -894,15 +894,15 @@ function FolderPanel({
               >
                 <div className={styles.folderContent}>
                   <div className={styles.folderName}>
-                    <span className={`typo-title3 textNormal ${styles.folderTitle}`}>
+                    <span className={`title-s-semi text-primary ${styles.folderTitle}`}>
                       {folder.folder_name}
                     </span>
                   </div>
-                  <span className={`typo-body3 ${styles.folderMenuNames}`}>
+                  <span className={`body-s-medium ${styles.folderMenuNames}`}>
                     {folder.menu_names.join(", ")}
                   </span>
                 </div>
-                <SystemIcon name="chevron-right-thin" size={24} />
+                <SystemIcon name="chevron-right" size={24} />
               </button>
             </article>
           ))}
@@ -910,7 +910,7 @@ function FolderPanel({
       ) : (
         <div className={styles.emptyResultContainer}>
           <section className={`${styles.emptyResult} ${styles.folderEmptyResult}`}>
-            <p className="typo-body2">
+            <p className="body-l-medium">
               자주 먹는 음식을
               <br />
               폴더로 모아두고

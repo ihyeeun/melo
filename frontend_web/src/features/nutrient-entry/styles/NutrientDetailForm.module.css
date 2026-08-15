@@ -20,11 +20,11 @@
 }
 
 .titleText {
-  color: var(--label-normal);
+  color: var(--text-primary);
 }
 
 .titleUnit {
-  color: var(--label-assistive);
+  color: var(--text-tertiary);
 }
 
 .requiredText {
@@ -38,21 +38,21 @@
 }
 
 .valueInput {
-  background-color: var(--bg-white);
-  border: 1px solid var(--border-neutral);
+  background-color: var(--background-default);
+  border: 1px solid var(--border-subtie);
   border-radius: 8px;
-  color: var(--label-normal);
+  color: var(--text-primary);
   padding: 10px 14px;
   text-align: right;
   width: 100%;
 }
 
 .valueInput::placeholder {
-  color: var(--label-assistive);
+  color: var(--text-tertiary);
 }
 
 .valueInput:focus {
-  /* border-color: var(--border-primary); */
+  /* border-color: var(--border-strong); */
   outline: none;
 }
 
@@ -79,10 +79,10 @@
 }
 
 .selectPopup {
-  background-color: var(--bg-white);
-  border: 1px solid var(--border-neutral);
+  background-color: var(--background-default);
+  border: 1px solid var(--border-subtie);
   border-radius: 10px;
-  box-shadow: var(--shadow-emphasize);
+  box-shadow: var(--shadow-outer);
   min-width: var(--anchor-width);
   overflow: hidden;
   padding: 8px;
@@ -94,22 +94,22 @@
 }
 
 .selectItem {
-  color: var(--label-normal);
+  color: var(--text-primary);
   cursor: pointer;
   padding: 10px 6px;
 }
 
 .selectItem[data-highlighted] {
-  background-color: var(--bg-normal);
+  background-color: var(--background-gray-1);
   outline: none;
 }
 
 .selectItem[data-selected] {
-  color: var(--label-normal);
+  color: var(--text-primary);
 }
 
 .selectIcon {
-  color: var(--label-normal);
+  color: var(--text-primary);
   align-items: center;
   display: flex;
   justify-content: center;
@@ -136,27 +136,27 @@
 }
 
 .fieldLabel {
-  color: var(--label-normal);
+  color: var(--text-primary);
   min-width: 0;
 }
 
 .fieldLabelMain {
-  color: var(--label-normal);
+  color: var(--text-primary);
 }
 
 .fieldLabelSub {
-  color: var(--label-alternative);
+  color: var(--text-secondary);
 }
 
 .unitText {
-  color: var(--label-assistive);
+  color: var(--text-tertiary);
 }
 
 .nutrientInput {
-  background-color: var(--bg-white);
-  border: 1px solid var(--border-neutral);
+  background-color: var(--background-default);
+  border: 1px solid var(--border-subtie);
   border-radius: 8px;
-  color: var(--label-normal);
+  color: var(--text-primary);
   flex-shrink: 0;
   max-width: 190px;
   min-width: 164px;
@@ -166,11 +166,11 @@
 }
 
 .nutrientInput::placeholder {
-  color: var(--label-assistive);
+  color: var(--text-tertiary);
 }
 
 .nutrientInput:focus {
-  /* border-color: var(--border-primary); */
+  /* border-color: var(--border-strong); */
   outline: none;
 }
 

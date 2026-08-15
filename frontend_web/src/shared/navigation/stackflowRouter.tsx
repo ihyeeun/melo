@@ -321,7 +321,7 @@ function createLazyActivity(loader: () => Promise<{ default: ComponentType }>) {
   return function LazyActivity() {
     return (
       // 페이지 이동마다 생기는 로딩. 각 탭 페이지의 chunk가 로드되면 보여지지 않음
-      <Suspense fallback={<LoadingScreen background="var(--bg-normal)" />}>
+      <Suspense fallback={<LoadingScreen background="var(--background-gray-1)" />}>
         <LazyPage />
       </Suspense>
     );

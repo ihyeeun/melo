@@ -117,13 +117,13 @@ export function SearchInputHeader({
           disabled={!onBack}
           aria-label={backButtonAriaLabel}
         >
-          <SystemIcon name="chevron-left-normal" size={24} />
+          <SystemIcon name="chevron-left" size={24} />
         </button>
 
         <div className={styles.fieldWrap}>
           <input
             ref={inputRef}
-            className={`${styles.input} ${value ? styles.clearPadding : ""} typo-body2`}
+            className={`${styles.input} ${value ? styles.clearPadding : ""} body-l-medium`}
             type="search"
             value={value}
             onChange={handleChange}
@@ -143,7 +143,7 @@ export function SearchInputHeader({
               onClick={handleClear}
               aria-label="검색어 지우기"
             >
-              <SystemIcon name="circle-close" mode="image" size={20} />
+              <SystemIcon name="exit" mode="image" size={20} />
             </button>
           )}
         </div>

@@ -210,17 +210,17 @@ export function NutrientRegisterFormPage({
         <div className={styles.content}>
           <section className={styles.topSection}>
             {isCameraEntry ? (
-              <p className={`typo-title3 ${styles.recognizedInfoText}`}>사진에서 인식한 영양정보</p>
+              <p className={`title-s-semi ${styles.recognizedInfoText}`}>사진에서 인식한 영양정보</p>
             ) : (
               <>
                 <div className={styles.fieldWrap}>
                   <div className={styles.labelRow}>
-                    <p className={`typo-title3 ${styles.labelText}`}>음식명</p>
-                    <p className={`typo-body3 ${styles.requiredText}`}>* 필수로 작성해주세요</p>
+                    <p className={`title-s-semi ${styles.labelText}`}>음식명</p>
+                    <p className={`body-s-medium ${styles.requiredText}`}>* 필수로 작성해주세요</p>
                   </div>
 
                   <input
-                    className={`typo-body3 ${styles.textInput}`}
+                    className={`body-s-medium ${styles.textInput}`}
                     type="text"
                     value={formState.name ?? ""}
                     onChange={handleFoodNameChange}
@@ -230,7 +230,7 @@ export function NutrientRegisterFormPage({
                 </div>
 
                 <div className={styles.fieldWrap}>
-                  <p className={`typo-title3 ${styles.labelText}`}>브랜드명</p>
+                  <p className={`title-s-semi ${styles.labelText}`}>브랜드명</p>
                   <button
                     type="button"
                     className={styles.brandButton}
@@ -238,7 +238,7 @@ export function NutrientRegisterFormPage({
                     aria-label="브랜드명 검색 열기"
                   >
                     <span
-                      className={`typo-body3 ${brandName ? styles.brandValue : styles.brandPlaceholder}`}
+                      className={`body-s-medium ${brandName ? styles.brandValue : styles.brandPlaceholder}`}
                     >
                       {brandName || "브랜드명 입력"}
                     </span>
@@ -247,7 +247,7 @@ export function NutrientRegisterFormPage({
                 </div>
 
                 <div className={styles.nutrientHeader}>
-                  <p className={`typo-title3 ${styles.labelText}`}>영양정보</p>
+                  <p className={`title-s-semi ${styles.labelText}`}>영양정보</p>
                 </div>
               </>
             )}
