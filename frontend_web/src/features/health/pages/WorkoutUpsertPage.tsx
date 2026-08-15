@@ -13,8 +13,8 @@ import {
   useWorkoutRecordEditDate,
 } from "@/features/health/stores/workoutRecordEdit.store";
 import {
-  calculateCaloriesBurned,
   calculateWeightWorkoutDuration,
+  calculateWorkoutCalories,
   getWorkoutSetListFromDraft,
   isBodyweightWorkout,
 } from "@/features/health/utils/workoutCalories.util";
@@ -240,7 +240,7 @@ export default function WorkoutUpsertPage() {
   const calculatedBurnedCalories = useMemo(() => {
     if (!workout || !profile) return undefined;
 
-    const burnedCalories = calculateCaloriesBurned({
+    const burnedCalories = calculateWorkoutCalories({
       draft,
       workout,
       profile,
@@ -525,7 +525,9 @@ export default function WorkoutUpsertPage() {
               ariaLabel="운동 시간 계산 안내"
               messages={WEIGHT_DURATION_INFO_MESSAGES}
             />
-            <p className={`${styles.unit} body-s-medium ${styles.textRight} ${styles.readOnlyTime}`}>
+            <p
+              className={`${styles.unit} body-s-medium ${styles.textRight} ${styles.readOnlyTime}`}
+            >
               {calculatedWorkoutDuration ?? "--"} 분
             </p>
           </div>
