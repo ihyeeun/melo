@@ -408,7 +408,7 @@ function WorkoutSearchResultCard({
         </div>
 
         <div className={styles.resultContent}>
-          <h2 className={`ellipsis body-l-semi`}>{workout.workout_name}</h2>
+          <p className={`ellipsis body-l-medium`}>{workout.workout_name}</p>
         </div>
       </button>
 
@@ -422,7 +422,7 @@ function WorkoutSearchResultCard({
         disabled={isSelected}
         onClick={onAdd}
       >
-        <SystemIcon name={isSelected ? "check" : "plus-circle"} mode="image" size={24} />
+        <SystemIcon name={isSelected ? "check" : "plus-circle"} size={24} />
       </button>
     </article>
   );

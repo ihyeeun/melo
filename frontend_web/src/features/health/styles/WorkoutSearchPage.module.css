@@ -183,7 +183,7 @@
 }
 
 .addButtonSelected {
-  color: var(--primary-normal);
+  color: var(--btn-default);
 }
 
 .loadingContainer,

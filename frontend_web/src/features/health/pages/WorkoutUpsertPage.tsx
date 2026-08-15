@@ -344,10 +344,7 @@ export default function WorkoutUpsertPage() {
     }));
   };
 
-  const focusPendingSetInput = (
-    setOrder: number | undefined,
-    input: HTMLInputElement | null,
-  ) => {
+  const focusPendingSetInput = (setOrder: number | undefined, input: HTMLInputElement | null) => {
     if (!input || setOrder === undefined || pendingSetFocusOrderRef.current !== setOrder) return;
 
     pendingSetFocusOrderRef.current = null;
@@ -538,12 +535,9 @@ export default function WorkoutUpsertPage() {
 
         <section className={styles.field}>
           <div className={styles.labelRow}>
-            <p className={`${styles.label} title-s-semi`}>운동 시간</p>
+            <p className={`${styles.label} body-l-medium`}>운동 시간</p>
             <p className={`${styles.required} caption-m-medium`}>*필수</p>
-            <InfoPopover
-              ariaLabel="운동 시간 계산 안내"
-              messages={WEIGHT_DURATION_INFO_MESSAGES}
-            />
+            <InfoPopover ariaLabel="운동 시간 계산 안내" messages={WEIGHT_DURATION_INFO_MESSAGES} />
             <p
               className={`${styles.unit} body-s-medium ${styles.textRight} ${styles.readOnlyTime}`}
             >
@@ -595,7 +589,7 @@ export default function WorkoutUpsertPage() {
       <div className={styles.content}>
         <div className={styles.field}>
           <p className={`text-tertiary body-s-medium`}>운동명</p>
-          <p className={`title-s-semi`}>{workout.workout_name}</p>
+          <p className={`body-l-medium`}>{workout.workout_name}</p>
         </div>
 
         {renderWorkoutFields()}
@@ -641,7 +635,7 @@ function Field({
   return (
     <section className={styles.field}>
       <div className={styles.labelRow}>
-        <p className={`${styles.label} title-s-semi`}>{label}</p>
+        <p className={`${styles.label} body-l-medium`}>{label}</p>
         {required ? <p className={`${styles.required} caption-m-medium`}>*필수</p> : null}
         {rightSlot}
       </div>

@@ -408,7 +408,7 @@ export default function WorkoutRecordEditPage() {
         >
           <SystemIcon name="exit" size={24} />
         </button>
-        <h1 className={`${styles.editHeaderTitle} title-s-semi`}>운동 수정</h1>
+        <h1 className={`${styles.editHeaderTitle} body-l-medium`}>운동 수정</h1>
         <div aria-hidden="true" className={styles.editHeaderSpacer} />
       </header>
 
@@ -418,7 +418,7 @@ export default function WorkoutRecordEditPage() {
             <article className={styles.summaryCard}>
               <span className={`${styles.summaryTitle} body-m-regular`}>총 운동 시간</span>
               <div className={styles.summaryValueRow}>
-                <span className={`${styles.summaryValue} title-m-semi`}>
+                <span className={`${styles.summaryValue} body-l-medium`}>
                   {formatWorkoutDuration(editSummary.duration)}
                 </span>
               </div>
@@ -426,7 +426,7 @@ export default function WorkoutRecordEditPage() {
             <article className={styles.summaryCard}>
               <span className={`${styles.summaryTitle} body-m-regular`}>총 소모 칼로리</span>
               <div className={styles.summaryValueRow}>
-                <span className={`${styles.summaryValue} title-m-semi`}>
+                <span className={`${styles.summaryValue} body-l-medium`}>
                   {editSummary.burnedCalories.toLocaleString("ko-KR")}
                 </span>
                 <span className="body-m-regular">kcal</span>
@@ -436,7 +436,7 @@ export default function WorkoutRecordEditPage() {
         </section>
 
         <div className={styles.sectionHeader}>
-          <p className="title-s-semi">오늘 한 운동</p>
+          <p className="body-l-medium">오늘 한 운동</p>
         </div>
 
         {renderEditContent()}
@@ -444,15 +444,17 @@ export default function WorkoutRecordEditPage() {
 
       <footer className={styles.editFooter}>
         <Button
+          size="xs"
           fullWidth
           variant="outlined"
           disabled={workoutRecordQuery.isPending || workoutRecordQuery.isError || isSavePending}
           onClick={handleSearchWorkout}
         >
-          <SystemIcon name="plus" size={18} />
+          <SystemIcon name="plus" size={14} />
           운동 추가하기
         </Button>
         <Button
+          size="xs"
           fullWidth
           disabled={workoutRecordQuery.isPending || workoutRecordQuery.isError || isSavePending}
           onClick={completeEditMode}
@@ -528,12 +530,15 @@ function WorkoutEditCard({
           {workout.workout_image ? (
             <img src={workout.workout_image} alt="" className={styles.thumbnailImage} />
           ) : (
-            <SystemIcon name={workout.workout_type === "cardio" ? "walking" : "fitness"} size={28} />
+            <SystemIcon
+              name={workout.workout_type === "cardio" ? "walking" : "fitness"}
+              size={28}
+            />
           )}
         </div>
 
         <div className={styles.recordContent}>
-          <p className={`ellipsis body-l-semi`}>{workout.workout_name}</p>
+          <p className={`ellipsis body-l-medium`}>{workout.workout_name}</p>
           <p className="caption-m-medium">
             {workout.workout_type === "cardio"
               ? `${formatWorkoutDuration(workout.workout_duration)}`
@@ -541,7 +546,7 @@ function WorkoutEditCard({
           </p>
         </div>
 
-        <span className={`${styles.calorieText} body-m-regular`}>
+        <span className={`body-m-regular text-secondary`}>
           {workout.burned_calories.toLocaleString("ko-KR")}kcal
         </span>
       </button>

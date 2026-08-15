@@ -135,12 +135,12 @@ export default function WorkoutRecordPage() {
 
       <main className={styles.content}>
         <section className={styles.cardContainer}>
-          <p className="title-s-semi">오늘 운동 요약</p>
+          <p className="title-s-medium">오늘 운동 요약</p>
           <div className={styles.summaryGrid} aria-label="운동 요약">
             <article className={styles.summaryCard}>
               <span className={`${styles.summaryTitle} body-m-regular`}>총 운동 시간</span>
               <div className={styles.summaryValueRow}>
-                <span className={`${styles.summaryValue} title-m-semi`}>
+                <span className={`${styles.summaryValue} title-m-medium`}>
                   {formatWorkoutDuration(summary.duration)}
                 </span>
               </div>
@@ -148,7 +148,7 @@ export default function WorkoutRecordPage() {
             <article className={styles.summaryCard}>
               <span className={`${styles.summaryTitle} body-m-regular`}>총 소모 칼로리</span>
               <div className={styles.summaryValueRow}>
-                <span className={`${styles.summaryValue} title-m-semi`}>
+                <span className={`${styles.summaryValue} title-m-medium`}>
                   {summary.burnedCalories.toLocaleString("ko-KR")}
                 </span>
                 <span className="body-m-regular">kcal</span>
@@ -158,11 +158,11 @@ export default function WorkoutRecordPage() {
         </section>
 
         <div className={styles.sectionHeader}>
-          <p className="title-s-semi">오늘 한 운동</p>
+          <p className="title-s-medium">오늘 한 운동</p>
           {workouts.length > 0 && (
             <Button variant="text" size="xs" onClick={handleEditWorkoutRecords}>
               수정
-              <SystemIcon name="chevron-right" size={18} />
+              <SystemIcon name="chevron-right" size={14} />
             </Button>
           )}
         </div>
@@ -198,7 +198,7 @@ function WorkoutRecordCard({
       </div>
 
       <div className={styles.recordContent}>
-        <p className={`ellipsis body-l-semi`}>{workout.workout_name}</p>
+        <p className={`ellipsis body-l-medium`}>{workout.workout_name}</p>
 
         <p className="caption-m-medium">
           {workout.workout_type === "cardio"
@@ -207,7 +207,7 @@ function WorkoutRecordCard({
         </p>
       </div>
 
-      <span className={`${styles.calorieText} body-m-regular`}>
+      <span className={`body-m-regular text-secondary`}>
         {workout.burned_calories.toLocaleString("ko-KR")}kcal
       </span>
       <SystemIcon name="chevron-right" size={18} className={styles.chevronIcon} />
