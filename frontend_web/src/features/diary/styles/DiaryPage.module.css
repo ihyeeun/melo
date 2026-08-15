@@ -132,6 +132,12 @@
   gap: 10px;
 }
 
+.mealRecordTitle {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+}
+
 .mealRecordButton {
   border-radius: 12px;
   width: 100%;

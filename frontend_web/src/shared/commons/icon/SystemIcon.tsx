@@ -10,6 +10,7 @@ const SYSTEM_ICON_SRC = {
   "chevron-left": "/icons/system-icons/chevron-left.svg",
   "chevron-right": "/icons/system-icons/chevron-right.svg",
   "chevron-up": "/icons/system-icons/chevron-up.svg",
+  copy: "/icons/system-icons/copy.svg",
   edit: "/icons/system-icons/edit.svg",
   delete: "/icons/system-icons/delete.svg",
   drag: "/icons/system-icons/drag.svg",

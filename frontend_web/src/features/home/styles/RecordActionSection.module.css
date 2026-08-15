@@ -10,6 +10,12 @@
   gap: 8px;
 }
 
+.mealRecordTitle {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+}
+
 .mealsArea {
   background-color: var(--background-default);
   border: 1px solid var(--border-subtle);

@@ -6,6 +6,7 @@ import { useSyncNativeStepCount } from "@/features/health/hooks/useSyncNativeSte
 import Tile from "@/features/home/components/cards/Tile";
 import { useDayMealsQuery, useGetBodyLog } from "@/features/home/hooks/queries/useTodayRecordQuery";
 import { getDayNutritionSummary } from "@/features/home/utils/dayMealSummary";
+import { DayMealCopyButton } from "@/features/meal-record/components/DayMealCopyButton";
 import { useGetProfileQuery } from "@/features/profile/hooks/queries/useProfileQuery";
 import { PATH } from "@/router/path";
 import { getMealRecordPath, getMealSearchPath, getWorkoutRecordPath } from "@/router/pathHelpers";
@@ -217,7 +218,10 @@ export default function DiaryPage() {
         </section>
 
         <div className={styles.fieldGroup}>
-          <h2 className="title-s-semi text-primary">식단 기록</h2>
+          <div className={styles.mealRecordTitle}>
+            <h2 className="title-s-semi text-primary">식단 기록</h2>
+            <DayMealCopyButton dayMeals={dayMeal} />
+          </div>
 
           <ul className={styles.mealRecordGroup}>
             {MEAL_TYPES.map(({ time, label, icon }) => {

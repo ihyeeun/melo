@@ -5,7 +5,7 @@ import type {
 import { MEAL_TYPE_OPTIONS, MENU_UNIT } from "@/shared/api/types/api.dto";
 import { formatNumberWithMaxOneDecimal } from "@/shared/utils/numberFormat";
 
-type ClipboardDayMeals = Pick<DayMealSummary, "didNotEatByTime" | "menusByTime">;
+export type ClipboardDayMeals = Pick<DayMealSummary, "menusByTime">;
 
 function formatMenuForClipboard(menu: MenuWithQuantity) {
   const amountUnit = menu.unit === MENU_UNIT.MILLILITER ? "ml" : "g";
@@ -21,10 +21,6 @@ export function buildDayMealClipboardText(dayMeals: ClipboardDayMeals) {
 
     if (menus.length > 0) {
       return `${label}: ${menus.map(formatMenuForClipboard).join(", ")}`;
-    }
-
-    if (dayMeals.didNotEatByTime[key]) {
-      return `${label}: 안 먹었어요`;
     }
 
     return [];
