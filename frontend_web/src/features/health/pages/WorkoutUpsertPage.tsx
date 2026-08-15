@@ -1,6 +1,6 @@
 import { useQueryClient } from "@tanstack/react-query";
 import type { FormEvent, ReactNode } from "react";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 
 import { useUpsertWorkoutRecordMutation } from "@/features/health/hooks/mutations/workout.mutation";
 import {
@@ -210,6 +210,7 @@ export default function WorkoutUpsertPage() {
     [targetWorkoutRecord],
   );
   const [draftState, setDraftState] = useState<WorkoutDraftState | null>(null);
+  const pendingSetFocusOrderRef = useRef<number | null>(null);
   const draft = draftState && draftState.key === draftKey ? draftState.draft : baselineDraft;
 
   const updateCurrentDraft = (updater: (current: WorkoutDraft) => WorkoutDraft) => {
@@ -343,10 +344,22 @@ export default function WorkoutUpsertPage() {
     }));
   };
 
+  const focusPendingSetInput = (
+    setOrder: number | undefined,
+    input: HTMLInputElement | null,
+  ) => {
+    if (!input || setOrder === undefined || pendingSetFocusOrderRef.current !== setOrder) return;
+
+    pendingSetFocusOrderRef.current = null;
+    input.focus();
+  };
+
   const addSet = () => {
     updateCurrentDraft((current) => {
       const nextSetOrder =
         current.set_list.reduce((maxOrder, set) => Math.max(maxOrder, set.set_order ?? 0), 0) + 1;
+
+      pendingSetFocusOrderRef.current = nextSetOrder;
 
       return {
         ...current,
@@ -469,6 +482,7 @@ export default function WorkoutUpsertPage() {
                   <NumberField
                     value={set.weight}
                     onChange={(value) => updateSet(set.set_order, "weight", value)}
+                    inputRef={(input) => focusPendingSetInput(set.set_order, input)}
                     min={0}
                     step={0.1}
                     fractionDigits={1}
@@ -486,6 +500,11 @@ export default function WorkoutUpsertPage() {
                 <NumberField
                   value={set.reps}
                   onChange={(value) => updateSet(set.set_order, "reps", value)}
+                  inputRef={
+                    shouldShowWeightInput
+                      ? undefined
+                      : (input) => focusPendingSetInput(set.set_order, input)
+                  }
                   min={0}
                   step={1}
                   fractionDigits={0}
