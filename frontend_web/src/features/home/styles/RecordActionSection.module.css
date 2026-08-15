@@ -34,6 +34,15 @@
   width: 100%;
 }
 
+.mealSkeletonButton {
+  cursor: default;
+  pointer-events: none;
+}
+
+.mealSkeletonAction {
+  margin-left: auto;
+}
+
 .mealButton:active,
 .workoutButton:active,
 .bodyLogButton:active {
@@ -98,6 +107,12 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
+}
+
+.workoutSkeleton {
+  align-items: center;
+  display: flex;
+  width: 100%;
 }
 
 .bodyLogGroup {

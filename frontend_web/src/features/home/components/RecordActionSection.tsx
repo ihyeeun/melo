@@ -11,6 +11,7 @@ import { PATH } from "@/router/path";
 import { getMealRecordPath, getMealSearchPath, getWorkoutRecordPath } from "@/router/pathHelpers";
 import type { MealType } from "@/shared/api/types/api.dto";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
+import { Skeleton, SkeletonStatus } from "@/shared/commons/skeleton/Skeleton";
 import { useNavigate } from "@/shared/navigation/stackflowNavigation";
 import { getTodayFormatDateKey, isFutureDateKey } from "@/shared/utils/dateFormat";
 import { formatNumberWithMaxOneDecimal } from "@/shared/utils/numberFormat";
@@ -27,7 +28,7 @@ export default function RecordActionSection({ selectedDate }: { selectedDate: st
   const navigate = useNavigate();
   const { data: profile } = useGetProfileQuery();
   const { data: dayMeals, isPending: isDayMealsPending } = useDayMealsQuery(selectedDate);
-  const { data: bodyLog } = useGetBodyLog(selectedDate);
+  const { data: bodyLog, isPending: isBodyLogPending } = useGetBodyLog(selectedDate);
   const canAccessWorkoutRecord = profile?.role === "ADMIN";
   const isToday = selectedDate === getTodayFormatDateKey();
   const isFutureDate = isFutureDateKey(selectedDate);
@@ -82,7 +83,7 @@ export default function RecordActionSection({ selectedDate }: { selectedDate: st
         <h2 className="title-s-semi text-primary">식단 기록</h2>
 
         {isDayMealsPending ? (
-          <p role="status">식단 기록을 불러오는 중이에요</p>
+          <MealRecordSkeleton />
         ) : (
           <ul className={styles.mealsArea}>
             {MEAL_TYPES.map(({ type, label, icon }) => {
@@ -130,11 +131,15 @@ export default function RecordActionSection({ selectedDate }: { selectedDate: st
         <section className={styles.recordGroup}>
           <h2 className="title-s-semi text-primary">운동 기록</h2>
           <Tile
-            onClick={() => navigate(getWorkoutRecordPath(selectedDate))}
+            onClick={
+              isWorkoutRecordPending
+                ? undefined
+                : () => navigate(getWorkoutRecordPath(selectedDate))
+            }
             className={styles.workoutButton}
           >
             {isWorkoutRecordPending ? (
-              <p className="body-l-medium text-primary">운동 기록을 불러오는 중이에요</p>
+              <WorkoutRecordSkeleton />
             ) : hasWorkoutRecords ? (
               <div className={styles.workoutTitleGroup}>
                 <p className="body-l-medium text-primary">오늘 운동</p>
@@ -151,7 +156,9 @@ export default function RecordActionSection({ selectedDate }: { selectedDate: st
               </div>
             )}
 
-            <SystemIcon size={24} name="chevron-right" className="marginLeft text-secondary" />
+            {!isWorkoutRecordPending ? (
+              <SystemIcon size={24} name="chevron-right" className="marginLeft text-secondary" />
+            ) : null}
           </Tile>
         </section>
       ) : null}
@@ -164,12 +171,14 @@ export default function RecordActionSection({ selectedDate }: { selectedDate: st
             value={displaySteps}
             unit="보"
             onClick={openStepsEditor}
+            isPending={isBodyLogPending}
           />
           <HealthMetricCard
             title="체중"
             value={displayWeight}
             unit="kg"
             onClick={openWeightEditor}
+            isPending={isBodyLogPending}
           />
         </div>
       </section>
@@ -182,25 +191,74 @@ function HealthMetricCard({
   value,
   unit,
   onClick,
+  isPending = false,
 }: {
   title: string;
   value: number;
   unit: string;
   onClick: () => void;
+  isPending?: boolean;
 }) {
   return (
-    <Tile onClick={onClick} className={styles.bodyLogButton}>
+    <Tile onClick={isPending ? undefined : onClick} className={styles.bodyLogButton}>
       <div className={styles.bodyLogTitle}>
         <p className="body-l-medium text-primary">{title}</p>
         <SystemIcon name="plus-circle" size={18} className="text-secondary marginLeft" />
       </div>
-      <div className={styles.bodyLogValue}>
-        <span className={`title-l-semi amp-mask ${styles.bodyLogValueWeight}`}>
-          {value.toLocaleString()}
-        </span>
-        <span className="body-l-regular text-tertiary">{unit}</span>
-      </div>
+      {isPending ? (
+        <SkeletonStatus
+          className={styles.bodyLogValue}
+          label={`${title} 정보를 불러오는 중입니다.`}
+        >
+          <Skeleton width={unit === "보" ? 72 : 52} height={32} radius={12} />
+          <span className="body-l-regular text-tertiary">{unit}</span>
+        </SkeletonStatus>
+      ) : (
+        <div className={styles.bodyLogValue}>
+          <span className={`title-l-semi amp-mask ${styles.bodyLogValueWeight}`}>
+            {value.toLocaleString()}
+          </span>
+          <span className="body-l-regular text-tertiary">{unit}</span>
+        </div>
+      )}
     </Tile>
+  );
+}
+
+function MealRecordSkeleton() {
+  return (
+    <SkeletonStatus label="식단 기록을 불러오는 중입니다.">
+      <ul className={styles.mealsArea}>
+        {MEAL_TYPES.map(({ type }) => (
+          <li key={type} className={styles.mealItem}>
+            <div className={`${styles.mealButton} ${styles.mealSkeletonButton}`}>
+              <div className={styles.mealTitleArea}>
+                <Skeleton width={30} height={30} radius={999} />
+                <Skeleton width={40} height={24} radius={12} />
+                <Skeleton
+                  className={styles.mealSkeletonAction}
+                  width={24}
+                  height={24}
+                  radius={999}
+                />
+              </div>
+            </div>
+          </li>
+        ))}
+      </ul>
+    </SkeletonStatus>
+  );
+}
+
+function WorkoutRecordSkeleton() {
+  return (
+    <SkeletonStatus className={styles.workoutSkeleton} label="운동 기록을 불러오는 중입니다.">
+      <div className={styles.workoutTitleGroup}>
+        <Skeleton width={132} height={25} radius={12} />
+        <Skeleton width={176} height={20} radius={12} />
+      </div>
+      <Skeleton className="marginLeft" width={24} height={24} radius={999} />
+    </SkeletonStatus>
   );
 }
 

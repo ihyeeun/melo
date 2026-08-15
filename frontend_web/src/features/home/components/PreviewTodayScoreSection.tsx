@@ -166,15 +166,36 @@ function getScoreCharacterSrc(score: number) {
 function PreviewTodayScoreSkeleton() {
   return (
     <SkeletonStatus className={styles.root} label="오늘 식사 점수를 불러오는 중입니다.">
-      <div className={styles.summaryArea}>
-        <div className={styles.skeletonTitleArea}>
-          <Skeleton width={136} height={25} radius={12} />
-          <Skeleton width={154} height={20} radius={12} />
+      <div className={styles.nutritionBalanceCard}>
+        <div className={styles.summaryArea}>
+          <div className={styles.skeletonTitleArea}>
+            <Skeleton width={136} height={25} radius={12} />
+            <Skeleton width={154} height={20} radius={12} />
+          </div>
+
+          <Skeleton className={styles.score} width={72} height={45} radius={12} />
         </div>
-        <Skeleton className={styles.score} width={72} height={45} radius={12} />
+
+        <Skeleton className={styles.skeletonCharacter} width={100} height={100} radius={100} />
       </div>
 
-      <Skeleton className={styles.skeletonCharacter} width={100} height={100} radius={100} />
+      <section className={styles.nutritionSection}>
+        <Tile className={styles.calorieGroup}>
+          <Skeleton width={52} height={25} radius={12} />
+          <Skeleton width={190} height={32} radius={12} />
+          <Skeleton width="100%" height={8} radius={12} />
+        </Tile>
+
+        <Tile className={styles.macrosGroup}>
+          {Array.from({ length: 3 }).map((_, index) => (
+            <div key={index} className={styles.macrosItem}>
+              <Skeleton width={52} height={20} radius={12} />
+              <Skeleton width={72} height={20} radius={12} />
+              <Skeleton width="100%" height={8} radius={12} />
+            </div>
+          ))}
+        </Tile>
+      </section>
     </SkeletonStatus>
   );
 }
