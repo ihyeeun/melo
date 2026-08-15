@@ -29,7 +29,6 @@ export default function RecordActionSection({ selectedDate }: { selectedDate: st
   const { data: profile } = useGetProfileQuery();
   const { data: dayMeals, isPending: isDayMealsPending } = useDayMealsQuery(selectedDate);
   const { data: bodyLog, isPending: isBodyLogPending } = useGetBodyLog(selectedDate);
-  const canAccessWorkoutRecord = profile?.role === "ADMIN";
   const isToday = selectedDate === getTodayFormatDateKey();
   const isFutureDate = isFutureDateKey(selectedDate);
   const isBodyLogLoaded = bodyLog !== undefined;
@@ -127,41 +126,37 @@ export default function RecordActionSection({ selectedDate }: { selectedDate: st
         )}
       </section>
 
-      {canAccessWorkoutRecord ? (
-        <section className={styles.recordGroup}>
-          <h2 className="title-s-semi text-primary">운동 기록</h2>
-          <Tile
-            onClick={
-              isWorkoutRecordPending
-                ? undefined
-                : () => navigate(getWorkoutRecordPath(selectedDate))
-            }
-            className={styles.workoutButton}
-          >
-            {isWorkoutRecordPending ? (
-              <WorkoutRecordSkeleton />
-            ) : hasWorkoutRecords ? (
-              <div className={styles.workoutTitleGroup}>
-                <p className="body-l-medium text-primary">오늘 운동</p>
-                <p className="body-s-regular text-tertiary">
-                  총 {totalWorkoutDuration}분,{" "}
-                  {activitySummary?.calories.toLocaleString("ko-KR") ?? 0}
-                  kcal 소모
-                </p>
-              </div>
-            ) : (
-              <div className={styles.workoutTitleGroup}>
-                <p className="body-l-medium text-primary">아직 오늘의 운동 기록이 없어요</p>
-                <p className="body-s-regular text-tertiary">지금 바로 기록하러 갈까요?</p>
-              </div>
-            )}
+      <section className={styles.recordGroup}>
+        <h2 className="title-s-semi text-primary">운동 기록</h2>
+        <Tile
+          onClick={
+            isWorkoutRecordPending ? undefined : () => navigate(getWorkoutRecordPath(selectedDate))
+          }
+          className={styles.workoutButton}
+        >
+          {isWorkoutRecordPending ? (
+            <WorkoutRecordSkeleton />
+          ) : hasWorkoutRecords ? (
+            <div className={styles.workoutTitleGroup}>
+              <p className="body-l-medium text-primary">오늘 운동</p>
+              <p className="body-s-regular text-tertiary">
+                총 {totalWorkoutDuration}분,{" "}
+                {activitySummary?.calories.toLocaleString("ko-KR") ?? 0}
+                kcal 소모
+              </p>
+            </div>
+          ) : (
+            <div className={styles.workoutTitleGroup}>
+              <p className="body-l-medium text-primary">아직 오늘의 운동 기록이 없어요</p>
+              <p className="body-s-regular text-tertiary">지금 바로 기록하러 갈까요?</p>
+            </div>
+          )}
 
-            {!isWorkoutRecordPending ? (
-              <SystemIcon size={24} name="chevron-right" className="marginLeft text-secondary" />
-            ) : null}
-          </Tile>
-        </section>
-      ) : null}
+          {!isWorkoutRecordPending ? (
+            <SystemIcon size={24} name="chevron-right" className="marginLeft text-secondary" />
+          ) : null}
+        </Tile>
+      </section>
 
       <section className={styles.recordGroup}>
         <h2 className="title-s-semi text-primary">건강 기록</h2>
