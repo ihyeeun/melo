@@ -65,7 +65,7 @@ export function calculateWorkoutCalories({
     const times = calculateWeightWorkoutTimes(sets);
 
     const activeMet = workout.met;
-    if (!activeMet || !times?.activeTime || !times.restTime) return 0;
+    if (!activeMet || !times?.activeTime) return 0;
 
     activeValue = (activeMet - 1) * times.activeTime;
 
