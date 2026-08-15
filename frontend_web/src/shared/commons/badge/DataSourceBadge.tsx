@@ -33,7 +33,7 @@ export function DataSourceBadge({
     .join(" ");
 
   return (
-    <span className={classes} data-active={active ? "true" : undefined}>
+    <span className={classes} data-active={active}>
       {label ?? BADGE_LABEL[variant]}
     </span>
   );

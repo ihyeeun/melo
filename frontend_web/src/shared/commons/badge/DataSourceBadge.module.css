@@ -9,7 +9,3 @@
 .personal {
   color: var(--text-disabled);
 }
-
-.personal[data-active="true"] {
-  background-color: var(--background-default);
-}
