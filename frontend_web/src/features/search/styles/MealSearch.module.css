@@ -62,7 +62,7 @@
 
 .searchInput {
   background-color: var(--background-default);
-  border: 1px solid var(--border-subtie);
+  border: 1px solid var(--border-subtle);
   border-radius: 8px;
   color: var(--text-primary);
   padding: 10px 20px;
@@ -95,7 +95,7 @@
 .categoryChip {
   align-items: center;
   background-color: var(--background-default);
-  border: 1px solid var(--border-subtie);
+  border: 1px solid var(--border-subtle);
   border-radius: 100px;
   color: var(--text-primary);
   display: inline-flex;
@@ -133,7 +133,7 @@
 
 .personalMenuTabsList {
   background-color: var(--background-default);
-  border-bottom: 1px solid var(--border-subtie);
+  border-bottom: 1px solid var(--border-subtle);
   display: grid;
   flex: 0 0 auto;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -202,7 +202,7 @@
 .directRegisterPrompt {
   align-items: center;
   background-color: var(--background-default);
-  border: 1px solid var(--border-subtie);
+  border: 1px solid var(--border-subtle);
   border-radius: 8px;
   color: var(--text-primary);
   display: flex;
@@ -254,7 +254,7 @@
 .emptyResult {
   align-items: center;
   background-color: var(--background-default);
-  border: 1px solid var(--border-subtie);
+  border: 1px solid var(--border-subtle);
   border-radius: 8px;
   color: var(--text-primary);
   display: flex;
@@ -342,7 +342,7 @@
 .folderItem {
   align-items: stretch;
   background-color: var(--background-default);
-  border: 1px solid var(--border-subtie);
+  border: 1px solid var(--border-subtle);
   border-radius: 8px;
   color: var(--text-primary);
   display: flex;

@@ -1,6 +1,6 @@
 .page {
   --onboarding-card-bg: var(--background-default);
-  --onboarding-muted-border: var(--border-subtie);
+  --onboarding-muted-border: var(--border-subtle);
 
   background-color: var(--background-default);
   display: flex;

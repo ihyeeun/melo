@@ -1,24 +1,15 @@
 .badge {
   align-items: center;
-  border-radius: 4px;
   display: inline-flex;
   flex-shrink: 0;
-  padding: 2px 6px;
   white-space: nowrap;
   width: fit-content;
 }
 
 .personal {
-  background-color: var(--background-gray-1);
-  color: var(--text-tertiary);
+  color: var(--text-disabled);
 }
 
 .personal[data-active="true"] {
   background-color: var(--background-default);
-}
-
-.ai-estimated {
-  background-color: var(--background-selected);
-  border: 1px solid var(--border-strong);
-  color: var(--primary-normal);
 }

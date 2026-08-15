@@ -1,14 +1,10 @@
-import ActivityCaloriesPopover from "@/features/health/components/ActivityCaloriesPopover";
 import { useActivityCalories } from "@/features/health/hooks/useActivityCalories";
 import Tile from "@/features/home/components/cards/Tile";
 import { useDayMealsQuery } from "@/features/home/hooks/queries/useTodayRecordQuery";
 import styles from "@/features/home/styles/PreviewTodayScoreSection.module.css";
 import { getDayNutritionSummary } from "@/features/home/utils/dayMealSummary";
-import {
-  NET_CARBS_NOTICE_MESSAGE,
-  NutrientWarningPopover,
-} from "@/features/meal-record/components/NutrientWarningPopover";
 import { useGetProfileQuery } from "@/features/profile/hooks/queries/useProfileQuery";
+import { InfoPopover } from "@/shared/commons/popover/InfoPopover";
 import ScoreProgress from "@/shared/commons/progress/Progress";
 import { Skeleton, SkeletonStatus } from "@/shared/commons/skeleton/Skeleton";
 import { useSelectedDateKey } from "@/shared/stores/selectedDate.store";
@@ -25,10 +21,7 @@ const DEFAULT_CHARACTER_SRC = SCORE_CHARACTER_SOURCES[0].src;
 
 export default function PreviewTodayScoreSection() {
   const selectedDateKey = useSelectedDateKey();
-  const {
-    isWorkoutRecordPending,
-    summary: activitySummary,
-  } = useActivityCalories(selectedDateKey);
+  const { isWorkoutRecordPending, summary: activitySummary } = useActivityCalories(selectedDateKey);
   const {
     data: dayMeal,
     isError: isSummaryError,
@@ -44,17 +37,19 @@ export default function PreviewTodayScoreSection() {
     return <PreviewTodayScoreSkeleton />;
   }
 
-  const nutritionSummary = getDayNutritionSummary(
-    dayMeal,
-    profile,
-    activitySummary?.calories,
-  );
+  const nutritionSummary = getDayNutritionSummary(dayMeal, profile, activitySummary?.calories);
   const nutrition = isProfileError
     ? { message: "목표 정보를 불러오지 못했어요", score: null }
     : isSummaryError
       ? { message: "식사 정보를 불러오지 못했어요", score: null }
       : nutritionSummary;
   const characterSrc = getScoreCharacterSrc(nutrition.score ?? 0);
+  const activityCalories =
+    typeof nutritionSummary.calories.activity === "number" &&
+    Number.isFinite(nutritionSummary.calories.activity) &&
+    nutritionSummary.calories.activity > 0
+      ? Math.round(nutritionSummary.calories.activity)
+      : 0;
 
   return (
     <div className={styles.root}>
@@ -93,10 +88,11 @@ export default function PreviewTodayScoreSection() {
                 / {nutritionSummary.calories.target.toLocaleString("ko-KR")} kcal
               </span>
             </p>
-            <ActivityCaloriesPopover
-              activityCalories={nutritionSummary.calories.activity}
-              baseTargetCalories={nutritionSummary.calories.baseTarget}
-            />
+            {activityCalories > 0 && (
+              <InfoPopover ariaLabel="운동 칼로리 안내" side="bottom">
+                운동으로 {activityCalories.toLocaleString("ko-KR")}kcal 소모
+              </InfoPopover>
+            )}
           </div>
           <ScoreProgress variant="primary" value={nutritionSummary.calories.progressPercent} />
         </Tile>
@@ -106,10 +102,10 @@ export default function PreviewTodayScoreSection() {
             <div className={styles.macroTitle}>
               <p className="body-s-medium text-primary">탄수화물</p>
               {nutritionSummary.notices.carbsEstimatedFromSubNutrients && (
-                <NutrientWarningPopover
-                  ariaLabel="순탄수 기준 안내"
-                  messages={NET_CARBS_NOTICE_MESSAGE}
-                />
+                <InfoPopover ariaLabel="순탄수 기준 안내">
+                  탄수화물에서 대체당과 식이섬유를 뺀 순탄수를 기준으로 탄수화물 정보를 제공하고
+                  있어요
+                </InfoPopover>
               )}
             </div>
             <p>

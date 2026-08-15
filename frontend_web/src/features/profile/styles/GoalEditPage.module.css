@@ -40,6 +40,21 @@
   border-bottom: none;
 }
 
+.birthYearSummaryItem {
+  cursor: pointer;
+  position: relative;
+}
+
+.birthYearSummarySelect {
+  appearance: none;
+  cursor: pointer;
+  height: 100%;
+  inset: 0;
+  opacity: 0;
+  position: absolute;
+  width: 100%;
+}
+
 .summaryLabel {
   color: var(--text-primary);
 }
@@ -71,10 +86,6 @@
   flex-direction: column;
   gap: 16px;
   padding: 0 20px;
-}
-
-.sheetContent[data-editor-field="birthYear"] {
-  min-height: 460px;
 }
 
 .sheetBody {
@@ -113,7 +124,7 @@
 
 .selectableCard {
   background: var(--background-default);
-  border: 1px solid var(--border-subtie);
+  border: 1px solid var(--border-subtle);
   border-radius: 8px;
   color: var(--text-primary);
   cursor: pointer;
@@ -171,52 +182,9 @@
   color: var(--text-secondary);
 }
 
-.birthYearPicker {
-  flex: 1;
-  height: 320px;
-  min-height: 320px;
-}
-
-.birthYearPickerItem {
-  color: var(--text-tertiary);
-}
-
-.birthYearPickerItem[data-distance="1"] {
-  color: var(--gray-600);
-}
-
-.birthYearPickerItem[data-distance="2"] {
-  color: var(--gray-600);
-}
-
-.birthYearPickerItem[data-distance="3"] {
-  color: var(--gray-500);
-}
-
-.birthYearPickerItemSelected {
-  color: var(--text-primary);
-}
-
-.birthYearPickerHighlight {
-  background: var(--background-selected);
-  border: 1px solid var(--border-strong);
-  border-radius: 8px;
-  left: 12.5px;
-  right: 12.5px;
-}
-
 @media (max-height: 700px) {
-  .sheetContent[data-editor-field="birthYear"] {
-    min-height: 420px;
-  }
-
   .sheetContent[data-editor-field="activity"],
   .sheetContent[data-editor-field="goal"] {
     min-height: 460px;
-  }
-
-  .birthYearPicker {
-    height: 290px;
-    min-height: 290px;
   }
 }

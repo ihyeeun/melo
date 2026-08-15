@@ -16,6 +16,7 @@
     transform 0.14s ease;
   user-select: none;
   width: 60px;
+  margin-bottom: var(--safe-area-bottom);
 }
 
 .primary {

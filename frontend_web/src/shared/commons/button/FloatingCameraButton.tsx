@@ -13,7 +13,7 @@ export function FloatingCameraButton({
   onClick,
   ariaLabel,
   tone = "primary",
-  bottomOffset = 70,
+  bottomOffset = 60,
   type,
   className,
   style,

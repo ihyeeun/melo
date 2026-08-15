@@ -2,7 +2,7 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
-  margin: 20px;
+  padding: 20px;
 }
 
 .rankBadge {
@@ -33,14 +33,15 @@
   justify-content: center;
   width: 24px;
   margin-left: auto;
+  color: var(--text-tertiary);
 }
 
 .description {
   flex: 1;
 }
 
-.selected .iconButton {
-  color: var(--coral-600);
+.selected {
+  color: var(--btn-default);
 }
 
 .meta {

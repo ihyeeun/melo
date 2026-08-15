@@ -80,8 +80,7 @@ export default function WorkoutRecordPage() {
           <p className="body-l-medium">{errorMessage}</p>
           <Button
             variant="text"
-            color="normal"
-            size="small"
+            size="xs"
             onClick={() => {
               void workoutRecordQuery.refetch();
             }}
@@ -130,6 +129,7 @@ export default function WorkoutRecordPage() {
         selectedDate={selectedDate}
         onSelectDate={setSelectedDate}
         safeAreaTop={false}
+        showMonthBackground={false}
         showRecordedDots={false}
       />
 
@@ -160,7 +160,7 @@ export default function WorkoutRecordPage() {
         <div className={styles.sectionHeader}>
           <p className="title-s-semi">오늘 한 운동</p>
           {workouts.length > 0 && (
-            <Button variant="text" color="normal" size="small" onClick={handleEditWorkoutRecords}>
+            <Button variant="text" size="xs" onClick={handleEditWorkoutRecords}>
               수정
               <SystemIcon name="chevron-right" size={18} />
             </Button>
@@ -171,7 +171,7 @@ export default function WorkoutRecordPage() {
       </main>
 
       <footer className={styles.footer}>
-        <Button fullWidth size="large" onClick={handleSearchWorkout}>
+        <Button fullWidth size="m" onClick={handleSearchWorkout}>
           <SystemIcon name="plus" size={18} />
           운동 추가하기
         </Button>

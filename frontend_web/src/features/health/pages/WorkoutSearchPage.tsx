@@ -222,8 +222,7 @@ export default function WorkoutSearchPage() {
           <p className="body-l-medium">운동을 검색하지 못했어요</p>
           <Button
             variant="text"
-            color="normal"
-            size="small"
+            size="xs"
             onClick={() => {
               void refetch();
             }}
@@ -297,7 +296,7 @@ export default function WorkoutSearchPage() {
       </main>
 
       <footer className={styles.footer}>
-        <Button fullWidth size="large" onClick={handleComplete}>
+        <Button fullWidth size="m" onClick={handleComplete}>
           추가 완료
         </Button>
       </footer>
@@ -401,7 +400,10 @@ function WorkoutSearchResultCard({
           {workout.workout_image ? (
             <img src={workout.workout_image} alt="" className={styles.thumbnailImage} />
           ) : (
-            <SystemIcon name={workout.workout_type === "cardio" ? "walking" : "fitness"} size={28} />
+            <SystemIcon
+              name={workout.workout_type === "cardio" ? "walking" : "fitness"}
+              size={28}
+            />
           )}
         </div>
 
@@ -420,11 +422,7 @@ function WorkoutSearchResultCard({
         disabled={isSelected}
         onClick={onAdd}
       >
-        <SystemIcon
-          name={isSelected ? "circle-check" : "plus-circle"}
-          mode="image"
-          size={24}
-        />
+        <SystemIcon name={isSelected ? "check" : "plus-circle"} mode="image" size={24} />
       </button>
     </article>
   );

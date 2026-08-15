@@ -18,6 +18,7 @@ type Props = {
   onSelectDate?: (date: Date) => void;
   safeAreaTop?: boolean;
   selectedDate?: Date;
+  showMonthBackground?: boolean;
   showRecordedDots?: boolean;
 };
 
@@ -29,6 +30,7 @@ export default function Calendar({
   onSelectDate,
   safeAreaTop = true,
   selectedDate: controlledSelectedDate,
+  showMonthBackground = true,
   showRecordedDots = true,
 }: Props) {
   const {
@@ -94,7 +96,7 @@ export default function Calendar({
 
   return (
     <section
-      className={`calendar-root is-${viewMode}${safeAreaTop ? " has-safe-area-top" : ""}`}
+      className={`calendar-root is-${viewMode}${safeAreaTop ? " has-safe-area-top" : ""}${showMonthBackground ? " has-month-background" : ""}`}
     >
       <CalendarHeader
         viewMode={viewMode}

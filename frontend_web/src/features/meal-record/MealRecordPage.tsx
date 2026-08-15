@@ -614,7 +614,7 @@ export default function MealRecordPage() {
             <div className={styles.menuList}>
               <Button
                 variant="text"
-                color="normal"
+                size="xs"
                 className={styles.marginLeftAuto}
                 onClick={handleOpenTimeSheet}
               >
@@ -664,9 +664,7 @@ export default function MealRecordPage() {
         <Button
           onClick={handleMealSearchNavigate}
           variant="outlined"
-          interaction="normal"
-          size="large"
-          color="primary"
+          size="m"
           fullWidth
         >
           추가하기
@@ -676,10 +674,8 @@ export default function MealRecordPage() {
           onClick={() => {
             void handleComplete();
           }}
-          variant="filled"
-          interaction="normal"
-          size="large"
-          color="primary"
+          variant="default"
+          size="m"
           fullWidth
           disabled={isSavePending}
         >
@@ -706,7 +702,7 @@ export default function MealRecordPage() {
         <div className={styles.timeSheetContent}>
           <div className={styles.timeSheetHeader}>
             <h2 className="title-m-semi text-primary">식사 시간</h2>
-            <Button onClick={handleResetTime} variant="text" color="normal">
+            <Button onClick={handleResetTime} variant="text" size="xs">
               삭제
             </Button>
           </div>
@@ -748,7 +744,7 @@ export default function MealRecordPage() {
             }}
           />
 
-          <Button size="large" fullWidth onClick={handleConfirmTime}>
+          <Button size="m" fullWidth onClick={handleConfirmTime}>
             확인
           </Button>
         </div>

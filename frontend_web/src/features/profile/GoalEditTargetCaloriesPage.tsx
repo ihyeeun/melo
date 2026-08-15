@@ -81,9 +81,8 @@ export default function GoalEditTargetCaloriesPage() {
           onClick={handleGoNutrient}
           disabled={!visibleDraft}
           fullWidth
-          variant="filled"
-          size="large"
-          interaction={visibleDraft ? "normal" : "disable"}
+          variant="default"
+          size="m"
         >
           다음
         </Button>

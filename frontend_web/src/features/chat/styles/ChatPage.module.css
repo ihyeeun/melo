@@ -47,7 +47,7 @@
 
 .cameraButton {
   align-items: center;
-  background-color: var(--primary-normal);
+  background-color: var(--btn-default);
   border-radius: 100px;
   box-shadow: var(--shadow-outer);
   color: var(--background-default);
@@ -106,7 +106,7 @@
 
 .skeletonRecommendCard {
   background-color: var(--background-default);
-  border: 1px solid var(--border-subtie);
+  border: 1px solid var(--border-subtle);
   border-radius: 8px;
   display: flex;
   flex-direction: column;
@@ -141,7 +141,7 @@
 }
 
 .dateText {
-  background-color: var(--gray-500);
+  background-color: var(--text-disabled);
   border-radius: 999px;
   color: var(--background-default);
   display: inline-flex;
@@ -171,7 +171,7 @@
 
 .userBubble {
   background-color: var(--background-default);
-  border: 1px solid var(--border-subtie);
+  border: 1px solid var(--border-subtle);
   border-radius: 8px;
   color: var(--text-primary);
   max-width: 100%;
@@ -331,7 +331,7 @@
 
 .assistantBubble {
   background-color: var(--background-default);
-  border: 1px solid var(--border-subtie);
+  border: 1px solid var(--border-subtle);
   border-radius: 8px;
   line-break: auto;
   max-width: 96%;
@@ -386,7 +386,7 @@
 
 .mealRecordModeExampleCard {
   background-color: var(--background-default);
-  border: 1px solid var(--border-subtie);
+  border: 1px solid var(--border-subtle);
   border-radius: 8px;
   box-shadow: var(--shadow-outer);
   display: flex;
@@ -428,7 +428,7 @@
 
 .mealRecordModeExampleButton {
   align-items: center;
-  border: 1px solid var(--border-subtie);
+  border: 1px solid var(--border-subtle);
   border-radius: 6px;
   color: var(--text-tertiary);
   display: inline-flex;
@@ -497,7 +497,7 @@
 .recommendCard,
 .feedbackCard {
   background-color: var(--background-default);
-  border: 1px solid var(--border-subtie);
+  border: 1px solid var(--border-subtle);
   border-radius: 8px;
   display: flex;
   flex-direction: column;
@@ -509,7 +509,7 @@
 
 .menuNotFoundCard {
   background-color: var(--background-default);
-  border: 1px solid var(--border-subtie);
+  border: 1px solid var(--border-subtle);
   border-radius: 8px;
   display: flex;
   flex-direction: column;
@@ -560,7 +560,7 @@
 }
 
 .feedbackContents {
-  border-top: 1px solid var(--border-subtie);
+  border-top: 1px solid var(--border-subtle);
   padding-top: 16px;
 }
 
@@ -723,10 +723,10 @@
   flex-direction: column;
   list-style: none;
   margin: 0;
-  padding: 8px 12px;
-  border-radius: 8px;
-  margin-top: 4px;
-  gap: 4px;
+  padding: 16px;
+  border-radius: 12px;
+  margin-top: 8px;
+  gap: 12px;
 }
 
 .feedbackMenuItem {
@@ -753,7 +753,7 @@
 .moreRecommendCard {
   align-items: flex-start;
   background-color: var(--background-default);
-  border: 1px solid var(--border-subtie);
+  border: 1px solid var(--border-subtle);
   border-radius: 8px;
   display: flex;
   flex-direction: column;
@@ -766,7 +766,7 @@
   display: flex;
   flex-direction: column;
   background-color: var(--background-default);
-  border-top: 1px solid var(--border-subtie);
+  border-top: 1px solid var(--border-subtle);
   position: relative;
 }
 
@@ -790,7 +790,7 @@
 .chipContainer {
   background-color: var(--background-default);
   color: var(--primary-normal);
-  border: 1px solid var(--border-subtie);
+  border: 1px solid var(--border-subtle);
   width: fit-content;
   padding: 8px 16px;
   border-radius: 100px;
@@ -883,7 +883,7 @@
   width: 100%;
   padding: 10px 16px;
   border-radius: 100px;
-  border: 1px solid var(--border-subtie);
+  border: 1px solid var(--border-subtle);
   color: var(--text-primary);
   resize: none;
   overflow-y: auto;
@@ -952,7 +952,7 @@
   list-style: none;
   position: absolute;
   background-color: var(--background-default);
-  border: 1px solid var(--border-subtie);
+  border: 1px solid var(--border-subtle);
   border-radius: 20px;
   box-shadow: var(--shadow-outer);
   left: 60px;
@@ -976,7 +976,7 @@
 }
 
 .searchMenuItem {
-  border-bottom: 1px solid var(--border-subtie);
+  border-bottom: 1px solid var(--border-subtle);
   cursor: pointer;
   outline: none;
   padding: 10px 6px;
@@ -1188,7 +1188,7 @@
 
 .mealRecordCard {
   background-color: var(--background-default);
-  border: 1px solid var(--border-subtie);
+  border: 1px solid var(--border-subtle);
   border-radius: 8px;
   display: flex;
   flex-direction: column;
@@ -1202,7 +1202,7 @@
 
 .actionCard {
   background-color: var(--background-default);
-  border: 1px solid var(--border-subtie);
+  border: 1px solid var(--border-subtle);
   border-radius: 8px;
   display: flex;
   padding: 16px;

@@ -253,9 +253,8 @@ export default function GoalEditTargetCaloriesStep({ data, update }: Props) {
             <Button
               onClick={handleConfirmTargetCalories}
               fullWidth
-              interaction={draftTargetCalories ? "normal" : "disable"}
               disabled={draftTargetCalories === undefined || draftTargetCalories === 0}
-              size="large"
+              size="m"
             >
               수정하기
             </Button>

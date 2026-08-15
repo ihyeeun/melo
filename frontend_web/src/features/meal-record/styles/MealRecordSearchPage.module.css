@@ -31,7 +31,7 @@
 .brandItem {
   align-items: center;
   background-color: var(--background-default);
-  border: 1px solid var(--border-subtie);
+  border: 1px solid var(--border-subtle);
   border-radius: 8px;
   display: inline-flex;
   justify-content: space-between;
@@ -52,7 +52,7 @@
 .emptyResult {
   align-items: center;
   background-color: var(--background-default);
-  border: 1px solid var(--border-subtie);
+  border: 1px solid var(--border-subtle);
   border-radius: 12px;
   color: var(--text-primary);
   display: flex;
@@ -70,7 +70,7 @@
 
 .placeholder {
   background-color: var(--background-default);
-  border: 1px solid var(--border-subtie);
+  border: 1px solid var(--border-subtle);
   border-radius: 12px;
   padding: 30px 20px;
   text-align: center;
@@ -111,7 +111,7 @@
 
 .brandRequestInput {
   background-color: var(--background-default);
-  border: 1px solid var(--border-subtie);
+  border: 1px solid var(--border-subtle);
   border-radius: 6px;
   color: var(--text-primary);
   padding: 14px 12px;

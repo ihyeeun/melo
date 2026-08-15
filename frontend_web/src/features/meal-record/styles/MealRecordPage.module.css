@@ -42,7 +42,7 @@
 
 .mealTypeButton {
   background-color: var(--background-default);
-  border: 1px solid var(--border-subtie);
+  border: 1px solid var(--border-subtle);
   border-radius: 100px;
   color: var(--text-primary);
   padding: 6px 14px;
@@ -70,7 +70,7 @@
 
 .menuCardSkeleton {
   background-color: var(--background-default);
-  border: 1px solid var(--border-subtie);
+  border: 1px solid var(--border-subtle);
   border-radius: 8px;
   display: flex;
   flex-direction: column;
@@ -122,7 +122,7 @@
 
 .emptyState {
   background-color: var(--background-default);
-  border: 1px dashed var(--border-subtie);
+  border: 1px dashed var(--border-subtle);
   border-radius: 8px;
   color: var(--text-secondary);
   padding: 20px;

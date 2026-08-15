@@ -167,9 +167,7 @@ export default function BrandSearch() {
                     </p>
                     <Button
                       variant="text"
-                      interaction={isDirectRegisterDisabled ? "disable" : "normal"}
-                      size="small"
-                      color="normal"
+                      size="xs"
                       onClick={() => handleBrandRegister()}
                       disabled={isDirectRegisterDisabled}
                     >
@@ -192,9 +190,7 @@ export default function BrandSearch() {
             <section className={styles.brandAddSection}>
               <Button
                 variant="text"
-                interaction={isDirectRegisterDisabled ? "disable" : "normal"}
-                size="small"
-                color="normal"
+                size="xs"
                 onClick={() => handleBrandRegister()}
                 disabled={isDirectRegisterDisabled}
               >

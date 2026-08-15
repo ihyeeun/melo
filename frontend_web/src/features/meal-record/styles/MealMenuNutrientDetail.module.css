@@ -1,7 +1,7 @@
 .summarySection {
   background-color: var(--background-default);
   border-radius: 8px;
-  border: 1px solid var(--border-subtie);
+  border: 1px solid var(--border-subtle);
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -49,9 +49,10 @@
 }
 
 .macroValue {
-  color: var(--primary-normal);
-  text-align: right;
   flex: 1;
+  gap: 2px;
+  display: flex;
+  align-items: center;
 }
 
 .macroNumber {
@@ -86,7 +87,7 @@
 
 .TabsList {
   background-color: var(--background-default);
-  border: 1px solid var(--border-subtie);
+  border: 1px solid var(--border-subtle);
   border-radius: 8px;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -116,7 +117,7 @@
 
 .FieldGroup {
   background-color: var(--background-default);
-  border: 1px solid var(--border-subtie);
+  border: 1px solid var(--border-subtle);
   border-radius: 8px;
   display: flex;
   gap: 10px;
@@ -205,7 +206,7 @@
 }
 
 .groupDivider {
-  background-color: var(--border-subtie);
+  background-color: var(--border-subtle);
   height: 1px;
   margin: 12px 0;
   width: 100%;
@@ -226,7 +227,6 @@
 }
 
 .detailLabelSub {
-  color: var(--text-secondary);
   padding-left: 4px;
 }
 

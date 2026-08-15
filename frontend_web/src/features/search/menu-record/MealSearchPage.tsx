@@ -80,8 +80,7 @@ export default function MealSearchPage() {
   const dateKey = getSafeDateKey(searchParams.get("date"));
   const mealType = getMealType(searchParams.get("mealType"));
   const menuSelectionRouteContext = getMenuSelectionRouteContextFromSearchParams(searchParams);
-  const menuSelectionTarget =
-    menuSelectionRouteContext.target ?? MENU_SELECTION_TARGET.MEAL_RECORD;
+  const menuSelectionTarget = menuSelectionRouteContext.target ?? MENU_SELECTION_TARGET.MEAL_RECORD;
   const hasMenuSelectionRouteContext = menuSelectionRouteContext.target !== null;
   const [submittedKeyword, setSubmittedKeyword] = useState("");
   const [searchKeyword, setSearchKeyword] = useState("");
@@ -119,8 +118,7 @@ export default function MealSearchPage() {
   const isFoodCameraBlocked = useIsFeatureBlocked(FEATURE_GUARD.FOOD_CAMERA);
   const showFoodCameraButton = !isPersonalMenuEditSearchMode && !isFoodCameraBlocked;
   const personalMenuEditFallbackPath =
-    menuSelectionRouteContext.returnPath ??
-    (isFolderSearchMode ? PATH.CREATE_FOLDER : null);
+    menuSelectionRouteContext.returnPath ?? (isFolderSearchMode ? PATH.CREATE_FOLDER : null);
   const menuSelectionPathContext = buildMenuSelectionPathContext({
     dateKey,
     mealType,
@@ -404,9 +402,7 @@ export default function MealSearchPage() {
     <div key={key} className={styles.bottomTextContainer}>
       <Button
         variant="text"
-        interaction="normal"
-        size="small"
-        color="normal"
+        size="xs"
         onClick={() => {
           setIsDirectInputSheetOpen(true);
         }}
@@ -467,9 +463,7 @@ export default function MealSearchPage() {
       <div className={styles.buttonContainer}>
         <Button
           variant="text"
-          interaction="normal"
-          size="small"
-          color="normal"
+          size="xs"
           onClick={() => {
             void refetchSearchResults();
           }}
@@ -489,9 +483,7 @@ export default function MealSearchPage() {
             setIsDirectInputSheetOpen(true);
           }}
           variant="text"
-          interaction="normal"
-          size="small"
-          color="normal"
+          size="xs"
         >
           영양 성분 직접 등록
           <SystemIcon name="chevron-right" size={18} />
@@ -528,9 +520,7 @@ export default function MealSearchPage() {
                 setIsDirectInputSheetOpen(true);
               }}
               variant="text"
-              interaction="normal"
-              size="small"
-              color="normal"
+              size="xs"
             >
               영양 성분 직접 등록
               <SystemIcon name="chevron-right" size={18} />
@@ -549,9 +539,7 @@ export default function MealSearchPage() {
             setIsDirectInputSheetOpen(true);
           }}
           variant="text"
-          interaction="normal"
-          size="small"
-          color="normal"
+          size="xs"
         >
           영양 성분 직접 등록
           <SystemIcon name="chevron-right" size={18} />
@@ -722,9 +710,7 @@ export default function MealSearchPage() {
             <div className={styles.buttonContainer}>
               <Button
                 variant="text"
-                interaction="normal"
-                size="small"
-                color="normal"
+                size="xs"
                 onClick={() => {
                   setIsDirectInputSheetOpen(true);
                 }}
@@ -805,10 +791,8 @@ export default function MealSearchPage() {
 
         <Button
           onClick={handleApplySelectedMenus}
-          variant="filled"
-          interaction={selectedCount > 0 ? "normal" : "disable"}
-          size="large"
-          color="primary"
+          variant="default"
+          size="m"
           fullWidth
           disabled={selectedCount === 0}
         >
@@ -861,9 +845,7 @@ function FolderPanel({
             <p className="body-l-medium">폴더를 불러오지 못했어요</p>
             <Button
               variant="text"
-              interaction="normal"
-              size="small"
-              color="normal"
+              size="xs"
               onClick={() => {
                 void refetchFolderList();
               }}
@@ -876,8 +858,7 @@ function FolderPanel({
         <div className={styles.folderList}>
           <Button
             variant="text"
-            interaction="normal"
-            color="normal"
+            size="xs"
             fullWidth
             className={styles.folderAddAction}
             onClick={() => navigate(PATH.CREATE_FOLDER)}
@@ -918,7 +899,7 @@ function FolderPanel({
               빠르게 기록해보세요!
             </p>
 
-            <Button onClick={() => navigate(PATH.CREATE_FOLDER)} size="small" fullWidth>
+            <Button onClick={() => navigate(PATH.CREATE_FOLDER)} size="xs" fullWidth>
               <SystemIcon name="plus" size={16} />
               <span>폴더 만들기</span>
             </Button>

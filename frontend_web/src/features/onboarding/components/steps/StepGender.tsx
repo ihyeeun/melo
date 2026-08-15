@@ -1,10 +1,7 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 
 import { type StepComponentProps } from "@/features/onboarding/onboarding.types";
 import styles from "@/features/onboarding/styles/OnboardingSteps.module.css";
-import BottomSheet from "@/shared/commons/bottomSheet/BottomSheet";
-import { Button } from "@/shared/commons/button/Button";
-import { ScrollWheelPicker } from "@/shared/commons/picker/ScrollWheelPicker";
 import {
   getBirthYearRange,
   isValidBirthYear,
@@ -12,7 +9,6 @@ import {
 } from "@/shared/commons/picker/yearOptions";
 
 export default function StepGender({ data, update }: StepComponentProps) {
-  const [isBirthYearSheetOpen, setIsBirthYearSheetOpen] = useState(false);
   const birthYearRange = useMemo(() => getBirthYearRange(), []);
   const defaultBirthYear = useMemo(
     () => Math.min(Math.max(2000, birthYearRange.min), birthYearRange.max),
@@ -28,16 +24,11 @@ export default function StepGender({ data, update }: StepComponentProps) {
   );
   const hasSelectedBirthYear = isValidBirthYear(data.birthYear);
   const visibleBirthYear = hasSelectedBirthYear ? data.birthYear : defaultBirthYear;
-  const [draftBirthYear, setDraftBirthYear] = useState(visibleBirthYear);
 
-  const openBirthYearSheet = () => {
-    setDraftBirthYear(visibleBirthYear);
-    setIsBirthYearSheetOpen(true);
-  };
-
-  const confirmBirthYear = () => {
-    update({ birthYear: draftBirthYear });
-    setIsBirthYearSheetOpen(false);
+  const selectDefaultBirthYear = () => {
+    if (!hasSelectedBirthYear) {
+      update({ birthYear: defaultBirthYear });
+    }
   };
 
   return (
@@ -64,53 +55,29 @@ export default function StepGender({ data, update }: StepComponentProps) {
 
       <div className={styles.onboardingBirthYearGroup}>
         <p className={`${styles.textNormal} title-s-semi`}>출생 연도</p>
-        <button
-          type="button"
-          className={styles.onboardingBirthYearTrigger}
-          onClick={openBirthYearSheet}
-        >
+        <div className={styles.onboardingBirthYearTrigger}>
           <span
             className={`${hasSelectedBirthYear ? styles.textNormal : styles.textAssistive} title-xxl-semi`}
+            aria-hidden="true"
           >
             {visibleBirthYear} 년
-          </span>{" "}
-        </button>
-      </div>
-
-      <BottomSheet
-        isOpen={isBirthYearSheetOpen}
-        onClose={() => setIsBirthYearSheetOpen(false)}
-        disableContentDrag
-      >
-        <div className={styles.onboardingBirthYearSheet}>
-          <h3 className="title-m-semi">출생 연도</h3>
-          <div className={styles.onboardingBirthYearPicker}>
-            <ScrollWheelPicker
-              height={400}
-              highlightHeight={72}
-              itemHeight={80}
-              classNames={{
-                item: `title-xxl-semi ${styles.onboardingBirthYearPickerItem}`,
-                itemSelected: `title-xxl-semi ${styles.onboardingBirthYearPickerItemSelected}`,
-                highlight: styles.onboardingBirthYearPickerHighlight,
-              }}
-              columns={[
-                {
-                  key: "birthYear",
-                  value: String(draftBirthYear),
-                  options: birthYearOptions,
-                  renderOption: (value) => `${value} 년`,
-                  ariaLabel: "출생 연도 선택",
-                },
-              ]}
-              onChange={(_, value) => setDraftBirthYear(Number(value))}
-            />
-          </div>
-          <Button fullWidth size="large" onClick={confirmBirthYear}>
-            확인
-          </Button>
+          </span>
+          <select
+            className={styles.onboardingBirthYearSelect}
+            value={String(visibleBirthYear)}
+            aria-label="출생 연도 선택"
+            onFocus={selectDefaultBirthYear}
+            onPointerDown={selectDefaultBirthYear}
+            onChange={(event) => update({ birthYear: Number(event.target.value) })}
+          >
+            {birthYearOptions.map((year) => (
+              <option key={year} value={year}>
+                {year} 년
+              </option>
+            ))}
+          </select>
         </div>
-      </BottomSheet>
+      </div>
     </section>
   );
 }

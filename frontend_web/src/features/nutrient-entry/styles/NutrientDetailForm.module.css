@@ -39,7 +39,7 @@
 
 .valueInput {
   background-color: var(--background-default);
-  border: 1px solid var(--border-subtie);
+  border: 1px solid var(--border-subtle);
   border-radius: 8px;
   color: var(--text-primary);
   padding: 10px 14px;
@@ -80,7 +80,7 @@
 
 .selectPopup {
   background-color: var(--background-default);
-  border: 1px solid var(--border-subtie);
+  border: 1px solid var(--border-subtle);
   border-radius: 10px;
   box-shadow: var(--shadow-outer);
   min-width: var(--anchor-width);
@@ -154,7 +154,7 @@
 
 .nutrientInput {
   background-color: var(--background-default);
-  border: 1px solid var(--border-subtie);
+  border: 1px solid var(--border-subtle);
   border-radius: 8px;
   color: var(--text-primary);
   flex-shrink: 0;

@@ -58,7 +58,7 @@
 
 .summaryCard {
   background-color: var(--background-default);
-  border: 1px solid var(--border-subtie);
+  border: 1px solid var(--border-subtle);
   border-radius: 8px;
   display: flex;
   flex-direction: column;
@@ -103,7 +103,7 @@
   align-items: center;
   appearance: none;
   background-color: var(--background-default);
-  border: 1px solid var(--border-subtie);
+  border: 1px solid var(--border-subtle);
   border-radius: 8px;
   color: var(--text-primary);
   cursor: pointer;
@@ -119,7 +119,7 @@
 .editRecordCard {
   align-items: center;
   background-color: var(--background-default);
-  border: 1px solid var(--border-subtie);
+  border: 1px solid var(--border-subtle);
   border-radius: 8px;
   color: var(--text-primary);
   display: flex;
@@ -223,7 +223,7 @@
 .emptyState {
   align-items: center;
   background-color: var(--background-default);
-  border: 1px solid var(--border-subtie);
+  border: 1px solid var(--border-subtle);
   border-radius: 8px;
   color: var(--text-primary);
   display: flex;

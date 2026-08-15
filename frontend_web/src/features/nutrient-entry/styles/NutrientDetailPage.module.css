@@ -83,7 +83,7 @@
 
 .macroItem {
   background-color: var(--background-default);
-  border: 1px solid var(--border-subtie);
+  border: 1px solid var(--border-subtle);
   border-radius: 8px;
   display: flex;
   flex-direction: column;
@@ -157,7 +157,7 @@
 .detailInputWrap {
   align-items: baseline;
   background-color: var(--background-default);
-  border: 1px solid var(--border-subtie);
+  border: 1px solid var(--border-subtle);
   border-radius: 8px;
   display: inline-flex;
   gap: 4px;
@@ -198,7 +198,7 @@
 
 .TabsList {
   background-color: var(--background-default);
-  border: 1px solid var(--border-subtie);
+  border: 1px solid var(--border-subtle);
   border-radius: 8px;
   display: grid;
   gap: auto;
@@ -229,7 +229,7 @@
 
 .FieldGroup {
   background-color: var(--background-default);
-  border: 1px solid var(--border-subtie);
+  border: 1px solid var(--border-subtle);
   border-radius: 8px;
   display: flex;
   gap: 10px;

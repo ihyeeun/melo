@@ -174,7 +174,7 @@ export default function CreateFolderPage() {
           <Button
             className={styles.addButton}
             variant="outlined"
-            color="normal"
+            border="secondary"
             fullWidth
             onClick={handleAddMenu}
           >
@@ -187,10 +187,8 @@ export default function CreateFolderPage() {
       <footer className={styles.footer}>
         <Button
           onClick={handleSubmit}
-          variant="filled"
-          interaction={canSubmit && !isUpsertFolderPending ? "normal" : "disable"}
-          size="large"
-          color="primary"
+          variant="default"
+          size="m"
           fullWidth
           disabled={!canSubmit || isUpsertFolderPending}
         >

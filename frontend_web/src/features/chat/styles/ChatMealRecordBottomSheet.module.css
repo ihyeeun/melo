@@ -33,7 +33,7 @@
 .mealTypeButton {
   align-items: center;
   background-color: var(--background-default);
-  border: 1px solid var(--border-subtie);
+  border: 1px solid var(--border-subtle);
   border-radius: 8px;
   display: flex;
   flex-direction: column;
@@ -80,7 +80,7 @@
   flex-direction: column;
   gap: 10px;
   background-color: var(--background-gray-1);
-  border: 1px solid var(--border-subtie);
+  border: 1px solid var(--border-subtle);
   border-radius: 8px;
   padding: 16px;
   text-align: left;
@@ -116,7 +116,7 @@
 .quantityStepper {
   align-items: center;
   background-color: var(--background-default);
-  border: 1px solid var(--border-subtie);
+  border: 1px solid var(--border-subtle);
   border-radius: 8px;
   display: flex;
   flex: 1;
@@ -166,7 +166,7 @@
 .unitSelectTrigger {
   align-items: center;
   background-color: var(--background-default);
-  border: 1px solid var(--border-subtie);
+  border: 1px solid var(--border-subtle);
   border-radius: 8px;
   color: var(--text-primary);
   display: inline-flex;
@@ -193,7 +193,7 @@
 
 .selectPopup {
   background-color: var(--background-default);
-  border: 1px solid var(--border-subtie);
+  border: 1px solid var(--border-subtle);
   border-radius: 10px;
   box-shadow: var(--shadow-outer);
   overflow: hidden;

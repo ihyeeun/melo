@@ -4,7 +4,7 @@
 }
 
 .input {
-  border: var(--border-subtie) 1px solid;
+  border: var(--border-subtle) 1px solid;
   border-radius: 6px;
   flex: 1;
   outline: none;

@@ -65,8 +65,8 @@ function getActionAriaLabel(icon: MealMenuCardIcon) {
 }
 
 function ActionIcon({ icon }: { icon: MealMenuCardIcon }) {
-  if (icon === "add") return <SystemIcon name="plus-circle" mode="image" size={24} />;
-  if (icon === "check") return <SystemIcon name="circle-check" mode="image" size={24} />;
+  if (icon === "add") return <SystemIcon name="plus-circle" size={24} />;
+  if (icon === "check") return <SystemIcon name="check" size={24} className={styles.selected} />;
   return <SystemIcon name="exit" size={24} />;
 }
 
@@ -174,9 +174,9 @@ export function MealMenuCard({
             ) : null}
           </section>
         ) : null}
-      </div>
 
-      {isPersonalMenu && <DataSourceBadge variant="personal" active={isSelected} />}
+        {isPersonalMenu && <DataSourceBadge variant="personal" active={isSelected} />}
+      </div>
     </SelectedCard>
   );
 }

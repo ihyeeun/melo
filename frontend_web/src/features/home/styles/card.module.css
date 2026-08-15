@@ -1,6 +1,6 @@
 .cardContainer {
   background-color: var(--background-default);
-  border: 1px solid var(--border-subtie);
+  border: 1px solid var(--border-subtle);
   border-radius: 8px;
   box-shadow: 3px 3px 5px 0 rgb(0 0 0 / 5%);
   box-sizing: border-box;
@@ -23,7 +23,7 @@
 .root {
   background-color: var(--background-default);
   border-radius: 20px;
-  border: 1px solid var(--border-subtie);
+  border: 1px solid var(--border-subtle);
   width: 100%;
   padding: 16px 20px;
 }

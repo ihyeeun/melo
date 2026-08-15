@@ -10,6 +10,7 @@ import { useGetProfileQuery } from "@/features/profile/hooks/queries/useProfileQ
 import { PATH } from "@/router/path";
 import { getMealRecordPath, getMealSearchPath, getWorkoutRecordPath } from "@/router/pathHelpers";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
+import { InfoPopover } from "@/shared/commons/popover/InfoPopover";
 import { ScrollFogArea } from "@/shared/commons/scrollFog";
 import { useNavigate } from "@/shared/navigation/stackflowNavigation";
 import { useSelectedDateKey, useSetSelectedDate } from "@/shared/stores/selectedDate.store";
@@ -28,14 +29,8 @@ export default function DiaryPage() {
   const selectedDate = parseDateKey(selectedDateKey);
   const navigate = useNavigate();
 
-  const {
-    data: dayMeal,
-    isPending: isSummaryPending,
-  } = useDayMealsQuery(selectedDateKey);
-  const {
-    data: profile,
-    isPending: isProfilePending,
-  } = useGetProfileQuery();
+  const { data: dayMeal, isPending: isSummaryPending } = useDayMealsQuery(selectedDateKey);
+  const { data: profile, isPending: isProfilePending } = useGetProfileQuery();
   const { data: bodyLog } = useGetBodyLog(selectedDateKey);
   const isToday = selectedDateKey === getTodayFormatDateKey();
   const isFutureDate = isFutureDateKey(selectedDateKey);
@@ -163,13 +158,20 @@ export default function DiaryPage() {
 
           <div className={styles.burnedCalorieList}>
             <div className={styles.burnedCalorieItem}>
-              <span className="caption-m-medium text-tertiary">운동으로 소모</span>
+              <span className="caption-m-medium text-tertiary">운동</span>
               <span className="caption-m-medium text-secondary marginLeft">
                 {activitySummary?.workoutCalories.toLocaleString() ?? 0} kcal
               </span>
             </div>
             <div className={styles.burnedCalorieItem}>
-              <span className="caption-m-medium text-tertiary">걸음으로 소모</span>
+              <span className="caption-m-medium text-tertiary">걸음</span>
+              <InfoPopover
+                ariaLabel="걸음 소모 칼로리 안내"
+                iconSize={16}
+                className={styles.infoPopover}
+              >
+                평소 활동량을 고려해 목표 칼로리가 설정되어 있어요
+              </InfoPopover>
               <span className="caption-m-medium text-secondary marginLeft">
                 {activitySummary?.stepCalories.toLocaleString() ?? 0} kcal
               </span>
@@ -254,7 +256,10 @@ export default function DiaryPage() {
           </ul>
         </div>
 
-        <Tile className={styles.fieldGroup}>
+        <Tile
+          className={`${styles.fieldGroup} ${styles.workoutGroupButton}`}
+          onClick={handleMoveWorkoutRecord}
+        >
           <div className={styles.workoutRecordTitle}>
             <h2 className="title-s-semi text-primary">운동 기록</h2>
             <SystemIcon
@@ -272,26 +277,20 @@ export default function DiaryPage() {
 
                 return (
                   <li key={item.workout_id} className={styles.workoutRecordItem}>
-                    <button
-                      type="button"
-                      className={styles.workoutRecordButton}
-                      onClick={handleMoveWorkoutRecord}
-                    >
-                      <div className={styles.workoutImageBox}>
-                        {item.workout_image ? (
-                          <img src={item.workout_image} className={styles.workoutImage} alt="" />
-                        ) : (
-                          <SystemIcon name="more-horiz" size={24} />
-                        )}
-                      </div>
-                      <div className={styles.workoutInfo}>
-                        <p className="body-s-regular text-secondary">{item.workout_name}</p>
-                        <p className="body-s-regular text-disabled">
-                          {setCount > 0 && `${setCount}세트`} {item.workout_duration}분{" "}
-                          {item.burned_calories.toLocaleString()}kcal
-                        </p>
-                      </div>
-                    </button>
+                    <div className={styles.workoutImageBox}>
+                      {item.workout_image ? (
+                        <img src={item.workout_image} className={styles.workoutImage} alt="" />
+                      ) : (
+                        <SystemIcon name="more-horiz" size={24} />
+                      )}
+                    </div>
+                    <div className={styles.workoutInfo}>
+                      <p className="body-s-regular text-secondary">{item.workout_name}</p>
+                      <p className="body-s-regular text-disabled">
+                        {setCount > 0 && `${setCount}세트`} {item.workout_duration}분{" "}
+                        {item.burned_calories.toLocaleString()}kcal
+                      </p>
+                    </div>
                   </li>
                 );
               })}

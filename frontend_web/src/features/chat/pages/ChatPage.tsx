@@ -1964,12 +1964,12 @@ export default function ChatPage() {
 
                   {!shouldHideUserMessage ? (
                     <div className={styles.userMessageGroup}>
-                      <p className={`${styles.timeText} caption-m-medium`}>
+                      <p className={`${styles.timeText} caption-m-regular`}>
                         {formatTimeText(chatItem.createdAt)}
                       </p>
                       <div className={styles.userMessageContent}>
                         {!userImageUrl && (
-                          <p className={`${styles.userBubble} body-l-medium`}>
+                          <p className={`${styles.userBubble} body-m-regular`}>
                             {chatItem.input_text}
                           </p>
                         )}
@@ -2193,7 +2193,7 @@ export default function ChatPage() {
                 {isScrollToBottomButtonVisible ? (
                   <SystemIcon name="chevron-down" size={24} />
                 ) : (
-                  <SystemIcon name="camera" size={32} />
+                  <SystemIcon name="camera" size={28} />
                 )}
               </button>
             </div>
@@ -2829,7 +2829,7 @@ function AssistantMessageBubbles({
             key={index}
             className={`${styles.assistantBubble} ${
               timeText && isLastBubble ? `${styles.assistantBubbleWithTime}` : ""
-            } ${animate ? styles.assistantBubbleAnimated : ""} body-l-medium`}
+            } ${animate ? styles.assistantBubbleAnimated : ""} body-m-regular`}
             data-time={timeText && isLastBubble ? timeText : undefined}
           >
             <AssistantMessageText text={bubbleMessage} />
@@ -3081,7 +3081,7 @@ function ChatInput({
             ref={textInputRef}
             rows={1}
             value={value}
-            className={`${styles.textInput} body-l-medium`}
+            className={`${styles.textInput} body-s-regular`}
             // placeholder="맥도날드에 왔는데 뭐 먹을까?"
             onChange={(event) => {
               handleInputChange(event.target.value.slice(0, 500));
@@ -3163,7 +3163,7 @@ function MealRecordCard({
       <p className={`${styles.textAssistive} ${styles.datelabel}  caption-m-medium`}>
         {formatDateKeyToMonthDayWeekdayLabel(dateKey)}
       </p>
-      <p className={`${styles.textPrimary} title-m-semi`}>{mealTimeLabel} 기록 완료!</p>
+      <p className={`${styles.textPrimary} title-m-medium`}>{mealTimeLabel} 기록 완료!</p>
 
       <button
         type="button"
@@ -3177,20 +3177,20 @@ function MealRecordCard({
         }}
         aria-expanded={hasMultipleItems ? isOpen : undefined}
       >
-        <p className={`${styles.mealRecordSummaryName} ${styles.textNormal} body-l-semi`}>
+        <p className={`${styles.mealRecordSummaryName} ${styles.textNormal} body-l-medium`}>
           {hasMultipleItems
             ? `${primaryItem.menu_name} 외 ${items.length - 1}개`
             : primaryItem.menu_name}
         </p>
         <span
-          className={`${styles.mealRecordSummaryCalories} ${styles.recommendCalories} textNoWrap title-s-semi`}
+          className={`${styles.mealRecordSummaryCalories} ${styles.recommendCalories} textNoWrap body-l-medium`}
         >
           {formatNumberWithMaxOneDecimal(totalCalories)}kcal
         </span>
         {hasMultipleItems ? (
           <SystemIcon
             name="chevron-up"
-            size={24}
+            size={12}
             className={`${styles.mealRecordChevron} ${isOpen ? styles.mealRecordChevronOpen : ""}`}
           />
         ) : null}
@@ -3201,7 +3201,7 @@ function MealRecordCard({
           {items.map((item) => (
             <div key={item.menu_id} className={styles.mealRecordMenuItem}>
               <div className={styles.mealRecordMenuText}>
-                <p className={`${styles.mealRecordMenuName} ${styles.textNormal} body-s-medium`}>
+                <p className={`${styles.mealRecordMenuName} ${styles.textNormal} body-s-regular`}>
                   {item.menu_name}
                 </p>
               </div>
@@ -3216,22 +3216,10 @@ function MealRecordCard({
       ) : null}
 
       <div className={styles.mealRecordAction}>
-        <Button
-          size="small"
-          variant="outlined"
-          color="normal"
-          interaction="normal"
-          onClick={handleCancelClick}
-        >
+        <Button size="xs" variant="outlined" border="secondary" onClick={handleCancelClick}>
           기록 취소
         </Button>
-        <Button
-          size="small"
-          variant="outlined"
-          color="primary"
-          interaction="normal"
-          onClick={onEditClick}
-        >
+        <Button size="xs" variant="outlined" onClick={onEditClick}>
           수정하기
         </Button>
       </div>
@@ -3319,23 +3307,23 @@ function RecommendationSection({
           )}
 
           <div className={styles.recommendContents}>
-            <p className={`${styles.recommendMenuName} title-m-semi`}>
+            <p className={`${styles.recommendMenuName} title-m-medium`}>
               {topRecommendation.menu_name}
             </p>
             <div className={styles.recommendMetaRow}>
               <p className={styles.menuInfoRow}>
                 {topRecommendation.brand && (
-                  <span className={`${styles.recommendBrand} body-s-medium`}>
+                  <span className={`${styles.recommendBrand} body-s-regular`}>
                     {topRecommendation.brand}
                   </span>
                 )}
-                <span className={`${styles.recommendAmount} textNoWrap body-s-medium`}>
+                <span className={`${styles.recommendAmount} textNoWrap body-s-regular`}>
                   {formatBaseServingUnit(topRecommendation.unit_quantity)} (
                   {topRecommendation.weight}
                   {topRecommendation.unit === 0 ? "g" : "ml"})
                 </span>
               </p>
-              <span className={`${styles.recommendCalories} textNoWrap title-m-semi`}>
+              <span className={`${styles.recommendCalories} textNoWrap body-l-medium`}>
                 {formatNumberWithMaxOneDecimal(topRecommendation.calories)}kcal
               </span>
             </div>
@@ -3347,20 +3335,26 @@ function RecommendationSection({
 
             <div className={styles.recommendAction}>
               <Button
-                size="small"
+                size="xs"
+                variant="outlined"
+                border="primary"
                 aria-pressed={isMealRecorded}
                 onClick={handleMealRecordToggleClick}
               >
-                식사 기록
-                {isMealRecorded ? (
+                식사 기록하기
+                {/* {isMealRecorded ? (
                   <SystemIcon name="check" size={16} className={styles.recommendActionIcon} />
                 ) : (
                   <SystemIcon name="plus" size={16} className={styles.recommendActionIcon} />
-                )}
+                )} */}
               </Button>
-              <Button size="small" variant="outlined" onClick={handleRecommendationDetailClick}>
-                자세히 보기
-                <SystemIcon name="chevron-right" size={16} className={styles.recommendActionIcon} />
+              <Button
+                size="xs"
+                variant="outlined"
+                border="secondary"
+                onClick={handleRecommendationDetailClick}
+              >
+                영양성분 보기
               </Button>
             </div>
           </div>
@@ -3381,7 +3375,7 @@ function RecommendationSection({
           </p>
           <p className={`${styles.ActionIcon} body-m-regular`}>
             더보기
-            <SystemIcon name="chevron-right" size={20} />
+            <SystemIcon name="chevron-right" size={14} />
           </p>
         </button>
       ) : null}
@@ -3473,7 +3467,7 @@ function FeedbackSection({
 
         <div className={styles.feedbackContents}>
           <div className={styles.feedbackMenuSummary}>
-            <p className={`${styles.feedbackMenuTitle} title-m-semi`}>
+            <p className={`${styles.feedbackMenuTitle} title-m-medium`}>
               {hasMultipleMenus
                 ? `${primaryMenu.menu_name} 외 ${feedback.menus.length - 1}개`
                 : primaryMenu.menu_name}
@@ -3489,13 +3483,13 @@ function FeedbackSection({
                   setIsMenuListOpen((prev) => !prev);
                 }}
               >
-                <p className={`${styles.textAssistive} body-s-medium`}>총 칼로리</p>
+                <p className={`${styles.textAssistive} body-s-regular`}>총 칼로리</p>
 
-                <p className={`${styles.feedbackCalories} textNoWrap title-s-semi`}>
+                <p className={`${styles.feedbackCalories} textNoWrap body-l-medium`}>
                   {formatNumberWithMaxOneDecimal(feedback.total_calories)}kcal
                   <SystemIcon
                     name="chevron-up"
-                    size={24}
+                    size={12}
                     className={`${styles.feedbackMenuChevron} ${
                       isMenuListOpen ? styles.feedbackMenuChevronOpen : ""
                     }`}
@@ -3504,10 +3498,10 @@ function FeedbackSection({
               </button>
             ) : (
               <div className={`${styles.feedbackMenuToggle}`}>
-                <p className={`${styles.textAlternative} body-s-medium`}>
+                <p className={`${styles.textAlternative} body-s-regular`}>
                   {formatMenuServing(primaryMenu)}
                 </p>
-                <p className={`${styles.feedbackCalories} textNoWrap title-s-semi`}>
+                <p className={`${styles.feedbackCalories} textNoWrap body-l-medium`}>
                   {formatNumberWithMaxOneDecimal(primaryMenu.calories)}kcal
                 </p>
               </div>
@@ -3521,7 +3515,9 @@ function FeedbackSection({
                   key={`${menu.menu_id}-${menu.input_menu_name}-${index}`}
                   className={styles.feedbackMenuItem}
                 >
-                  <p className={`${styles.feedbackMenuItemName} body-s-medium`}>{menu.menu_name}</p>
+                  <p className={`${styles.feedbackMenuItemName} body-s-regular`}>
+                    {menu.menu_name}
+                  </p>
 
                   <span className={`${styles.feedbackMenuItemCalories} textNoWrap body-s-medium`}>
                     {formatNumberWithMaxOneDecimal(menu.calories)}kcal
@@ -3533,21 +3529,28 @@ function FeedbackSection({
 
           <div className={styles.feedbackAction}>
             <Button
-              size="small"
+              size="xs"
+              variant="outlined"
+              border="primary"
               fullWidth
               aria-pressed={isMealRecorded}
               onClick={handleMealRecordToggleClick}
             >
-              식사 기록
-              {isMealRecorded ? (
+              식사 기록하기
+              {/* {isMealRecorded ? (
                 <SystemIcon name="check" size={16} className={styles.feedbackActionIcon} />
               ) : (
                 <SystemIcon name="plus" size={16} className={styles.feedbackActionIcon} />
-              )}
+              )} */}
             </Button>
-            <Button size="small" variant="outlined" fullWidth onClick={handleFeedbackDetailClick}>
-              자세히 보기
-              <SystemIcon name="chevron-right" size={16} className={styles.feedbackActionIcon} />
+            <Button
+              size="xs"
+              variant="outlined"
+              border="secondary"
+              fullWidth
+              onClick={handleFeedbackDetailClick}
+            >
+              영양성분 보기
             </Button>
           </div>
         </div>
@@ -3587,7 +3590,13 @@ function MemuNotFoundCard({
         <br />
         어떤 브랜드의 메뉴인가요?
       </p>
-      <Button size="small" onClick={handleNutritionRegisterClick} fullWidth>
+      <Button
+        variant="outlined"
+        border="primary"
+        size="xs"
+        onClick={handleNutritionRegisterClick}
+        fullWidth
+      >
         메뉴명 입력하기
       </Button>
     </section>
@@ -3687,20 +3696,22 @@ function NutritionCardContent({
 
   return (
     <div className={styles.recommendContents}>
-      <p className={`${styles.recommendMenuName} title-m-semi`}>{meal.menu_name}</p>
+      <p className={`${styles.recommendMenuName} title-m-medium`}>{meal.menu_name}</p>
       <div className={styles.recommendMetaRow}>
-        <p className={`${styles.menuInfoRow} body-s-medium`}>
+        <p className={`${styles.menuInfoRow} body-s-regular`}>
           {meal.brand && <span className={styles.recommendBrand}>{meal.brand}</span>}
           <span className={`${styles.recommendAmount} textNoWrap`}>{formatMenuServing(meal)}</span>
         </p>
-        <span className={`${styles.recommendCalories} textNoWrap title-s-semi`}>
+        <span className={`${styles.recommendCalories} textNoWrap body-l-medium`}>
           {formatNumberWithMaxOneDecimal(meal.calories)}kcal
         </span>
       </div>
 
       <div className={styles.recommendAction}>
         <Button
-          size="small"
+          variant="outlined"
+          border="primary"
+          size="xs"
           fullWidth
           aria-pressed={isMealRecorded}
           onClick={handleMealRecordClick}

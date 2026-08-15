@@ -12,7 +12,7 @@
 
 .mealsArea {
   background-color: var(--background-default);
-  border: 1px solid var(--border-subtie);
+  border: 1px solid var(--border-subtle);
   border-radius: 20px;
   list-style: none;
   margin: 0;
@@ -48,7 +48,7 @@
 }
 
 .mealItem + .mealItem {
-  border-top: 1px solid var(--border-subtie);
+  border-top: 1px solid var(--border-subtle);
 }
 
 .mealIcon {

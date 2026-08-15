@@ -15,7 +15,7 @@
   padding-top: var(--safe-area-top);
 }
 
-.calendar-root.is-month {
+.calendar-root.is-month.has-month-background {
   background: linear-gradient(180deg, var(--coral-300) -90px, var(--background-selected) 90%);
   border-radius: 0 0 20px 20px;
   isolation: isolate;
@@ -23,8 +23,8 @@
   position: relative;
 }
 
-.calendar-root.is-month::before,
-.calendar-root.is-month::after {
+.calendar-root.is-month.has-month-background::before,
+.calendar-root.is-month.has-month-background::after {
   border-radius: 50%;
   content: "";
   height: 200px;
@@ -34,21 +34,21 @@
   z-index: 0;
 }
 
-.calendar-root.is-month::before {
+.calendar-root.is-month.has-month-background::before {
   background: radial-gradient(circle 100px at center, #ffdfd8 0%, #ffdfd800 100%);
   left: -105px;
   opacity: 0.6;
   top: 104px;
 }
 
-.calendar-root.is-month::after {
+.calendar-root.is-month.has-month-background::after {
   background: radial-gradient(circle 100px at center, #ffedd8 0%, #ffedd800 100%);
   opacity: 0.4;
   right: -71px;
   top: 56px;
 }
 
-.calendar-root.is-month > * {
+.calendar-root.is-month.has-month-background > * {
   position: relative;
   z-index: 1;
 }

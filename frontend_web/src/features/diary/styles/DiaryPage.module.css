@@ -45,7 +45,7 @@
 .caloriesArea {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  border-top: 1px solid var(--border-subtie);
+  border-top: 1px solid var(--border-subtle);
 }
 
 .calorieItem {
@@ -58,7 +58,7 @@
 }
 
 .calorieItem + .calorieItem {
-  border-left: 1px solid var(--border-subtie);
+  border-left: 1px solid var(--border-subtle);
 }
 
 .burnedCalorieTitle {
@@ -67,13 +67,19 @@
 }
 
 .burnedCalorieList {
-  border-top: 1px solid var(--border-subtie);
+  border-top: 1px solid var(--border-subtle);
   padding-top: 12px;
 }
 
 .burnedCalorieItem {
+  align-items: center;
   display: flex;
   justify-items: space-between;
+}
+
+.infoPopover {
+  margin-left: 2px;
+  padding-top: 1px;
 }
 
 .burnedCalorieItem + .burnedCalorieItem {
@@ -112,7 +118,7 @@
 
 .bodyLogButton:active,
 .mealRecordButton:active,
-.workoutRecordButton:active {
+.workoutGroupButton:active {
   background-color: var(--background-gray-1);
   transform: scale(0.995);
 }
@@ -129,7 +135,7 @@
 .mealRecordButton {
   border-radius: 12px;
   width: 100%;
-  border: 1px solid var(--border-subtie);
+  border: 1px solid var(--border-subtle);
   padding: 8px;
   background-color: var(--background-default);
 }
@@ -176,10 +182,10 @@
 }
 
 .workoutRecordItem + .workoutRecordItem {
-  border-top: 1px solid var(--border-subtie);
+  border-top: 1px solid var(--border-subtle);
 }
 
-.workoutRecordButton {
+.workoutRecordItem {
   width: 100%;
   display: flex;
   gap: 12px;

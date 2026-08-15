@@ -52,7 +52,7 @@
 
 .textInput {
   background-color: var(--background-default);
-  border: 1px solid var(--border-subtie);
+  border: 1px solid var(--border-subtle);
   border-radius: 8px;
   color: var(--text-primary);
   padding: 10px 14px;
@@ -71,7 +71,7 @@
 .brandButton {
   align-items: center;
   background-color: var(--background-default);
-  border: 1px solid var(--border-subtie);
+  border: 1px solid var(--border-subtle);
   border-radius: 8px;
   color: var(--text-primary);
   display: inline-flex;

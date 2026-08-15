@@ -34,7 +34,7 @@
 
 .input {
   background-color: var(--background-gray-1);
-  border: 1px solid var(--border-subtie);
+  border: 1px solid var(--border-subtle);
   border-radius: 8px;
   color: var(--text-primary);
   width: 100%;

@@ -34,7 +34,7 @@
 
 .popup {
   background-color: var(--background-default);
-  border: 1px solid var(--border-subtie);
+  border: 1px solid var(--border-subtle);
   border-radius: 8px;
   box-shadow: var(--shadow-outer);
   min-width: 112px;

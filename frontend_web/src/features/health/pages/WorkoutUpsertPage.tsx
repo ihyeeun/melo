@@ -18,7 +18,6 @@ import {
   getWorkoutSetListFromDraft,
   isBodyweightWorkout,
 } from "@/features/health/utils/workoutCalories.util";
-import { NutrientWarningPopover } from "@/features/meal-record/components/NutrientWarningPopover";
 import { useGetProfileQuery } from "@/features/profile/hooks/queries/useProfileQuery";
 import {
   getWorkoutRecordEditPath,
@@ -39,6 +38,7 @@ import { PageHeader } from "@/shared/commons/header/PageHeader";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import NumberField from "@/shared/commons/input/NumberField";
 import { LoadingIndicator } from "@/shared/commons/loading/Loading";
+import { InfoPopover } from "@/shared/commons/popover/InfoPopover";
 import { toast } from "@/shared/commons/toast/toast";
 import {
   navigateBack,
@@ -431,7 +431,7 @@ export default function WorkoutUpsertPage() {
             onChange={(value) => updateDraft("burned_calories", value)}
             placeholder="---"
             rightSlot={
-              <NutrientWarningPopover
+              <InfoPopover
                 ariaLabel="소모 칼로리 계산 안내"
                 messages={CARDIO_CALORIE_INFO_MESSAGES}
               />
@@ -511,7 +511,7 @@ export default function WorkoutUpsertPage() {
               </div>
             ))}
           </div>
-          <Button variant="outlined" color="normal" size="small" fullWidth onClick={addSet}>
+          <Button variant="outlined" border="secondary" size="xs" fullWidth onClick={addSet}>
             <SystemIcon name="plus" size={18} />
             세트 추가
           </Button>
@@ -521,7 +521,7 @@ export default function WorkoutUpsertPage() {
           <div className={styles.labelRow}>
             <p className={`${styles.label} title-s-semi`}>운동 시간</p>
             <p className={`${styles.required} caption-m-medium`}>*필수</p>
-            <NutrientWarningPopover
+            <InfoPopover
               ariaLabel="운동 시간 계산 안내"
               messages={WEIGHT_DURATION_INFO_MESSAGES}
             />
@@ -539,7 +539,7 @@ export default function WorkoutUpsertPage() {
           onChange={(value) => updateDraft("burned_calories", value)}
           placeholder="---"
           rightSlot={
-            <NutrientWarningPopover
+            <InfoPopover
               ariaLabel="소모 칼로리 계산 안내"
               messages={WEIGHT_CALORIE_INFO_MESSAGES}
             />
@@ -591,14 +591,13 @@ export default function WorkoutUpsertPage() {
       <main className={styles.main}>{renderContent()}</main>
 
       <footer className={styles.footer}>
-        <Button variant="outlined" color="normal" size="large" onClick={handleBack}>
+        <Button variant="outlined" border="secondary" size="m" onClick={handleBack}>
           취소
         </Button>
         <Button
           type="submit"
-          variant="filled"
-          color="primary"
-          size="large"
+          variant="default"
+          size="m"
           fullWidth
           disabled={!requestBody || isUpsertPending}
         >

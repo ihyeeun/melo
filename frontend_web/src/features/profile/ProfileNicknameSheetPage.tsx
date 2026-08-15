@@ -94,10 +94,8 @@ export default function ProfileNicknameSheetPage() {
           </section>
 
           <Button
-            variant="filled"
-            interaction={nickName.trim() === "" ? "disable" : "normal"}
-            size="large"
-            color="primary"
+            variant="default"
+            size="m"
             fullWidth
             onClick={handleUpdateNickName}
             disabled={nickName.trim() === "" || isNickNamePending}

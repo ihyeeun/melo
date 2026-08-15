@@ -41,7 +41,7 @@
 
 .folderNameInput {
   background-color: var(--background-default);
-  border: 1px solid var(--border-subtie);
+  border: 1px solid var(--border-subtle);
   border-radius: 8px;
   color: var(--text-primary);
   height: 48px;
@@ -67,7 +67,7 @@
 .emptyMenuState {
   align-items: center;
   background-color: var(--background-default);
-  border: 1px dashed var(--border-subtie);
+  border: 1px dashed var(--border-subtle);
   border-radius: 8px;
   color: var(--text-tertiary);
   display: flex;

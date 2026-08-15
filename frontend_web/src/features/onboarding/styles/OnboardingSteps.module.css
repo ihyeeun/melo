@@ -16,7 +16,7 @@
 
 .onboardingOptionCard {
   background: var(--background-default);
-  border: 1px solid var(--border-subtie);
+  border: 1px solid var(--border-subtle);
   border-radius: 8px;
   cursor: pointer;
   padding: 16px 20px;
@@ -55,7 +55,7 @@
 
 .onboardingGenderCard {
   background: var(--background-default);
-  border: 1px solid var(--border-subtie);
+  border: 1px solid var(--border-subtle);
   border-radius: 8px;
   color: var(--gray-950);
   cursor: pointer;
@@ -136,7 +136,7 @@
 
 .onboardingGoalWeightCard {
   background: var(--background-default);
-  border: 1px solid var(--border-subtie);
+  border: 1px solid var(--border-subtle);
   border-radius: 8px;
   display: flex;
   flex-direction: column;
@@ -162,7 +162,7 @@
 
 .onboardingNutrientCard {
   background: var(--background-default);
-  border: 1px solid var(--border-subtie);
+  border: 1px solid var(--border-subtle);
   border-radius: 8px;
   display: flex;
   flex-direction: column;
@@ -184,7 +184,7 @@
 }
 
 .onboardingSubscribeInput {
-  border: 1px solid var(--border-subtie);
+  border: 1px solid var(--border-subtle);
   border-radius: 8px;
   font-size: 40px;
   padding: 16px 20px;
@@ -255,7 +255,7 @@
 .onboardingGenderChoiceButton {
   align-items: center;
   background: var(--onboarding-card-bg, var(--background-default));
-  border: 1px solid var(--onboarding-muted-border, var(--border-subtie));
+  border: 1px solid var(--onboarding-muted-border, var(--border-subtle));
   border-radius: 100px;
   color: var(--text-primary);
   cursor: pointer;
@@ -274,51 +274,24 @@
 .onboardingBirthYearTrigger {
   align-items: center;
   background: var(--onboarding-card-bg, var(--background-default));
-  border: 1px solid var(--onboarding-muted-border, var(--border-subtie));
+  border: 1px solid var(--onboarding-muted-border, var(--border-subtle));
   border-radius: 8px;
+  cursor: pointer;
   display: flex;
   justify-content: flex-end;
   padding: 16px 20px;
+  position: relative;
   width: 100%;
 }
 
-.onboardingBirthYearSheet {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  padding: 0 20px;
-}
-
-.onboardingBirthYearPicker {
-  flex: 1;
-}
-
-.onboardingBirthYearPickerItem {
-  color: var(--text-tertiary);
-}
-
-.onboardingBirthYearPickerItem[data-distance="1"] {
-  color: var(--gray-600);
-}
-
-.onboardingBirthYearPickerItem[data-distance="2"] {
-  color: var(--gray-600);
-}
-
-.onboardingBirthYearPickerItem[data-distance="3"] {
-  color: var(--gray-500);
-}
-
-.onboardingBirthYearPickerItemSelected {
-  color: var(--text-primary);
-}
-
-.onboardingBirthYearPickerHighlight {
-  background: var(--background-selected);
-  border: 1px solid var(--border-strong);
-  border-radius: 8px;
-  left: 12.5px;
-  right: 12.5px;
+.onboardingBirthYearSelect {
+  appearance: none;
+  cursor: pointer;
+  height: 100%;
+  inset: 0;
+  opacity: 0;
+  position: absolute;
+  width: 100%;
 }
 
 .onboardingChipGroup {
@@ -330,7 +303,7 @@
 
 .onboardingChoiceChip {
   background: var(--onboarding-card-bg, var(--background-default));
-  border: 1px solid var(--onboarding-muted-border, var(--border-subtie));
+  border: 1px solid var(--onboarding-muted-border, var(--border-subtle));
   border-radius: 100px;
   color: var(--text-primary);
   cursor: pointer;
@@ -352,7 +325,7 @@
 
 .onboardingInputCardInput {
   background: var(--onboarding-card-bg, var(--background-default));
-  border: 1px solid var(--onboarding-muted-border, var(--border-subtie));
+  border: 1px solid var(--onboarding-muted-border, var(--border-subtle));
   padding: 16px 20px;
   border-radius: 8px;
 }

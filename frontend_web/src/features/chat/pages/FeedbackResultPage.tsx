@@ -381,9 +381,8 @@ function FeedbackResultContent({
       <footer className={styles.footer}>
         <Button
           fullWidth
-          variant="filled"
-          size="large"
-          color="primary"
+          variant="default"
+          size="m"
           disabled={selectedFeedbackCount === 0 || isMealRegisterPending || isDayMealsPending}
           onClick={handleSubmitMealRecord}
         >

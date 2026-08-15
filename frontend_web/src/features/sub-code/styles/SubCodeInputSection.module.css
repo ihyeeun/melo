@@ -20,7 +20,7 @@
 }
 
 .input {
-  border: 1px solid var(--border-subtie);
+  border: 1px solid var(--border-subtle);
   background-color: var(--background-default);
   border-radius: 8px;
   padding: 16px 20px;

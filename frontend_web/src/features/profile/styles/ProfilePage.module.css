@@ -122,7 +122,7 @@
 
 .weeklySection {
   background-color: var(--background-default);
-  border: 1px solid var(--border-subtie);
+  border: 1px solid var(--border-subtle);
   border-radius: 8px;
   display: flex;
   flex-direction: column;
@@ -212,7 +212,7 @@
 }
 
 .weeklyChartSkeletonGridLine {
-  border-top: 1px solid var(--border-subtie);
+  border-top: 1px solid var(--border-subtle);
   display: block;
   width: 100%;
 }
@@ -251,7 +251,7 @@
 
 .input {
   padding: 14px 12px;
-  border: 1px solid var(--border-subtie);
+  border: 1px solid var(--border-subtle);
   border-radius: 4px;
 }
 

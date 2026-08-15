@@ -255,12 +255,10 @@ export function NutrientAddFormPage({
 
       <footer className={styles.footer}>
         <Button
-          variant="filled"
-          size="large"
-          color="primary"
+          variant="default"
+          size="m"
           fullWidth
           onClick={handleNext}
-          interaction={isNextDisabled ? "disable" : "normal"}
           disabled={isNextDisabled}
         >
           {nextLabel}

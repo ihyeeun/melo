@@ -52,7 +52,7 @@ export default function AppOpenSettingsFeedbackPage({
         <div className={styles.actions}>
           <Button
             fullWidth
-            size="large"
+            size="m"
             onClick={() => openAppWithFallback(SETTINGS_FEEDBACK_PATH, () => setIsFallback(true))}
           >
             앱에서 열기

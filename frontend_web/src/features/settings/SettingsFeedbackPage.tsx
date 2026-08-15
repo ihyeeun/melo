@@ -137,8 +137,7 @@ function NativeSettingsFeedbackPage() {
             <Button
               onClick={() => void refetchProfile()}
               disabled={isProfileRefetching}
-              interaction={isProfileRefetching ? "disable" : "normal"}
-              size="small"
+              size="xs"
             >
               다시 시도
             </Button>

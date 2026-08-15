@@ -252,9 +252,8 @@ export default function SteptargetCalories({ data, update }: StepComponentProps)
           <Button
             onClick={handleConfirmtargetCalories}
             fullWidth
-            interaction={drafttargetCalories ? "normal" : "disable"}
             disabled={drafttargetCalories === undefined || drafttargetCalories === 0}
-            size="large"
+            size="m"
           >
             다음
           </Button>

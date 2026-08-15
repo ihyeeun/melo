@@ -6,7 +6,6 @@ const SYSTEM_ICON_SRC = {
   "arrow-insert": "/icons/system-icons/arrow-insert.svg",
   camera: "/icons/system-icons/camera.svg",
   check: "/icons/system-icons/check.svg",
-  "circle-check": "/icons/system-icons/circle-check.svg",
   "chevron-down": "/icons/system-icons/chevron-down.svg",
   "chevron-left": "/icons/system-icons/chevron-left.svg",
   "chevron-right": "/icons/system-icons/chevron-right.svg",

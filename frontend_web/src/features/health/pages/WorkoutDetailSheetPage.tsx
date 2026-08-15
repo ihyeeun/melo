@@ -106,7 +106,7 @@ export default function WorkoutDetailSheetPage() {
           </section>
         ) : null}
 
-        <Button variant="filled" color="primary" fullWidth onClick={handleRegister}>
+        <Button variant="default" fullWidth onClick={handleRegister}>
           운동 추가하기
         </Button>
       </div>
@@ -124,7 +124,7 @@ function SheetStatus({ message, onClose }: { message: string; onClose: () => voi
   return (
     <section className={styles.statusContainer}>
       <p className="body-l-medium">{message}</p>
-      <Button variant="outlined" color="normal" size="small" onClick={onClose}>
+      <Button variant="outlined" border="secondary" size="xs" onClick={onClose}>
         닫기
       </Button>
     </section>

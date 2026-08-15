@@ -483,8 +483,7 @@ export function ChatMealRecordBottomSheet({
 
               <Button
                 variant="outlined"
-                interaction="normal"
-                color="normal"
+                border="secondary"
                 onClick={handleAddMore}
                 fullWidth
               >
@@ -497,10 +496,8 @@ export function ChatMealRecordBottomSheet({
 
         <section className={styles.actionBar}>
           <Button
-            variant="filled"
-            interaction={isSubmitPending ? "disable" : "normal"}
-            size="large"
-            color="primary"
+            variant="default"
+            size="m"
             fullWidth
             disabled={isSubmitPending}
             onClick={handleSubmit}

@@ -351,8 +351,7 @@ export default function WorkoutRecordEditPage() {
           <p className="body-l-medium">{errorMessage}</p>
           <Button
             variant="text"
-            color="normal"
-            size="small"
+            size="xs"
             onClick={() => {
               void workoutRecordQuery.refetch();
             }}
@@ -447,7 +446,6 @@ export default function WorkoutRecordEditPage() {
         <Button
           fullWidth
           variant="outlined"
-          color="primary"
           disabled={workoutRecordQuery.isPending || workoutRecordQuery.isError || isSavePending}
           onClick={handleSearchWorkout}
         >

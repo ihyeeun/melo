@@ -82,7 +82,7 @@
 .filterBadge {
   align-items: center;
   background-color: var(--background-default);
-  border: 1px solid var(--border-subtie);
+  border: 1px solid var(--border-subtle);
   border-radius: 100px;
   color: var(--text-primary);
   display: inline-flex;
@@ -317,7 +317,7 @@
 
 .foodClusterPinListPopover {
   background-color: var(--background-default);
-  border: 1px solid var(--border-subtie);
+  border: 1px solid var(--border-subtle);
   border-radius: 8px;
   box-shadow: var(--shadow-outer);
   max-height: 180px;
@@ -394,7 +394,7 @@
 
 .unpositionedMenuScrollArea {
   background-color: var(--background-default);
-  border: 1px solid var(--border-subtie);
+  border: 1px solid var(--border-subtle);
   border-radius: 8px;
   box-shadow: var(--shadow-outer);
   flex: 0 1 auto;
@@ -416,7 +416,7 @@
 }
 
 .unpositionedMenuList > li:not(:last-child) {
-  border-bottom: 1px solid var(--border-subtie);
+  border-bottom: 1px solid var(--border-subtle);
 }
 
 .unpositionedMenuItem {
@@ -463,7 +463,7 @@
 .resultCard {
   align-items: stretch;
   background-color: var(--background-default);
-  border: 1px solid var(--border-subtie);
+  border: 1px solid var(--border-subtle);
   border-radius: 8px;
   color: var(--text-primary);
   display: flex;

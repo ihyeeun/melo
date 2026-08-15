@@ -292,12 +292,12 @@ function RecommendResultContent({
             메뉴를 추천해드려요!
           </p>
 
-          <img
-            src="/icons/characters/score-81.png"
+          {/* <img
+            src="/icons/characters/menu-recommendation.png"
             className={styles.characterImage}
             alt=""
             aria-hidden="true"
-          />
+          /> */}
         </div>
         <div className={styles.filterList} aria-label="추천 결과 필터">
           {RECOMMEND_FILTER_OPTIONS.map((option) => {
@@ -352,9 +352,8 @@ function RecommendResultContent({
       <footer className={styles.footer}>
         <Button
           fullWidth
-          variant="filled"
-          size="large"
-          color="primary"
+          variant="default"
+          size="m"
           disabled={selectedRecommendationCount === 0 || isMealRegisterPending || isDayMealsPending}
           onClick={handleSubmitMealRecord}
         >

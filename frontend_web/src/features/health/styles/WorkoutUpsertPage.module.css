@@ -49,7 +49,7 @@
 .inputWrap {
   align-items: center;
   background-color: var(--background-default);
-  border: 1px solid var(--border-subtie);
+  border: 1px solid var(--border-subtle);
   border-radius: 8px;
   color: var(--text-primary);
   display: flex;
@@ -101,7 +101,7 @@
 
 .segmentButton {
   background-color: var(--background-default);
-  border: 1px solid var(--border-subtie);
+  border: 1px solid var(--border-subtle);
   border-radius: 8px;
   color: var(--text-primary);
   height: 44px;
@@ -134,7 +134,7 @@
 }
 
 .setRow {
-  box-shadow: inset 2px 0 0 var(--border-subtie);
+  box-shadow: inset 2px 0 0 var(--border-subtle);
   transition: box-shadow 0.1s ease-in-out;
 }
 

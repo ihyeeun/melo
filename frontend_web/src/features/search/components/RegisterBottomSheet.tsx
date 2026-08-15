@@ -28,26 +28,22 @@ export default function DirectInputBottomSheet({
         <div className={styles.sheetActions}>
           <Button
             variant="text"
-            interaction="normal"
-            size="large"
-            color="normal"
+            size="xs"
             fullWidth
             onClick={onSelectNumberInput}
           >
-            <span className={`body-l-semi ${styles.sheetButtonText}`}>{numberInputLabel}</span>
+            <span className={styles.sheetButtonText}>{numberInputLabel}</span>
           </Button>
 
           <div className="divider dividerMargin16" />
 
           <Button
             variant="text"
-            interaction="normal"
-            size="large"
-            color="normal"
+            size="xs"
             fullWidth
             onClick={onSelectCameraInput}
           >
-            <span className={`body-l-semi ${styles.sheetButtonText}`}>{cameraInputLabel}</span>
+            <span className={styles.sheetButtonText}>{cameraInputLabel}</span>
           </Button>
         </div>
       </div>

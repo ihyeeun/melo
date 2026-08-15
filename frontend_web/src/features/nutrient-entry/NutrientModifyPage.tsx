@@ -306,9 +306,7 @@ export default function NutrientModifyPage() {
               <p className={`title-s-semi ${styles.textNormal}`}>영양정보</p>
               <Button
                 variant="text"
-                interaction="normal"
-                size="small"
-                color="normal"
+                size="xs"
                 onClick={handleResetForm}
               >
                 전체 삭제
@@ -350,12 +348,10 @@ export default function NutrientModifyPage() {
 
       <footer className={styles.footer}>
         <Button
-          variant="filled"
-          size="large"
-          color="primary"
+          variant="default"
+          size="m"
           fullWidth
           onClick={handleSubmit}
-          interaction={isSubmitDisabled ? "disable" : "normal"}
           disabled={isSubmitDisabled}
         >
           수정하기

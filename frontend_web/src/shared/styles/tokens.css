@@ -187,7 +187,7 @@
 }
 
 .divider {
-  background-color: var(--border-subtie);
+  background-color: var(--border-subtle);
   height: 1px;
   width: 100%;
 }

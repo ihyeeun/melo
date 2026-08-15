@@ -322,9 +322,7 @@ export default function FolderDetailPage() {
           <p className="body-l-medium">폴더를 불러오지 못했어요</p>
           <Button
             variant="text"
-            interaction="normal"
-            size="small"
-            color="normal"
+            size="xs"
             onClick={() => {
               void refetchFolderDetail();
             }}
@@ -353,8 +351,7 @@ export default function FolderDetailPage() {
           <Button
             className={styles.bulkActionButton}
             variant="text"
-            color={areAllFolderMenusSelected ? "normal" : "primary"}
-            size="small"
+            size="xs"
             onClick={handleToggleAllFolderMenus}
           >
             <SystemIcon name={areAllFolderMenusSelected ? "minus" : "plus"} size={14} />
@@ -412,10 +409,8 @@ export default function FolderDetailPage() {
       <footer className={styles.footer}>
         <Button
           onClick={handleApplySelectedMenus}
-          variant="filled"
-          interaction={selectedCount > 0 ? "normal" : "disable"}
-          size="large"
-          color="primary"
+          variant="default"
+          size="m"
           fullWidth
           disabled={selectedCount === 0}
         >

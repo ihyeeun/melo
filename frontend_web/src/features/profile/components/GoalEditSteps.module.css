@@ -85,7 +85,7 @@
 
 .nutrientCard {
   background: var(--background-default);
-  border: 1px solid var(--border-subtie);
+  border: 1px solid var(--border-subtle);
   border-radius: 8px;
   color: var(--gray-950);
   display: flex;

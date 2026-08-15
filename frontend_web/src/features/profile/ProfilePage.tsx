@@ -177,14 +177,9 @@ export default function ProfilePage() {
             </div>
 
             <div className={styles.textButton}>
-              <Button
-                onClick={() => navigate(PATH.GOAL_EDIT)}
-                variant="text"
-                size="small"
-                color="normal"
-              >
+              <Button onClick={() => navigate(PATH.GOAL_EDIT)} variant="text" size="xs">
                 목표 재설정
-                <SystemIcon name="chevron-right" size={20} className={styles.icon} />
+                <SystemIcon name="chevron-right" size={14} className={styles.icon} />
               </Button>
             </div>
           </section>
