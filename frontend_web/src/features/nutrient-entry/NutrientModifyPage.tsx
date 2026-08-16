@@ -28,10 +28,7 @@ import {
   toNullableFiniteNumber,
 } from "@/features/nutrient-entry/utils/nutrientFields";
 import { PATH } from "@/router/path";
-import {
-  getMealDetailPath,
-  getMealRecordPath,
-} from "@/router/pathHelpers";
+import { getMealDetailPath, getMealRecordPath } from "@/router/pathHelpers";
 import {
   type MealMenuItem,
   MENU_DATA_SOURCE,
@@ -47,7 +44,7 @@ import { LoadingOverlay } from "@/shared/commons/loading/Loading";
 import { toast } from "@/shared/commons/toast/toast";
 import {
   navigateBack,
-  navigateBackAndPush,
+  navigateBackThroughPathAndPush,
   useLocation,
   useNavigate,
   useSearchParams,
@@ -206,6 +203,24 @@ export default function NutrientModifyPage() {
     return getMealDetailPath(dateKey, mealType, targetMenuId);
   };
 
+  const navigateToSavedMenuDetail = (targetMenuId: number) => {
+    const detailPath = getMenuDetailPathByMode(targetMenuId);
+    // The modify route may add selection-only params (for example sourceMenuId) that were not on
+    // the source detail route. menuId is the stable identity needed to find that previous detail.
+    const sourceDetailPath = menuId === null ? null : `${PATH.MEAL_DETAIL}?menuId=${menuId}`;
+
+    if (sourceDetailPath === null) {
+      navigate(detailPath, { replace: true });
+      return;
+    }
+
+    navigateBackThroughPathAndPush({
+      animate: false,
+      through: sourceDetailPath,
+      to: detailPath,
+    });
+  };
+
   const handleBack = () => {
     navigateBack({ fallbackTo: getBackFallbackPath() });
   };
@@ -251,11 +266,7 @@ export default function NutrientModifyPage() {
         {
           onSuccess: () => {
             toast.success("영양 성분을 수정했어요");
-            navigateBackAndPush({
-              count: 2,
-              animate: false,
-              to: getMenuDetailPathByMode(menuId),
-            });
+            navigateToSavedMenuDetail(menuId);
           },
           onError: () => {
             toast.warning("영양 성분 수정에 실패했어요");
@@ -274,13 +285,7 @@ export default function NutrientModifyPage() {
         }
 
         toast.success("개인 메뉴로 등록했어요");
-        const detailPath = getMenuDetailPathByMode(createdMenuId);
-
-        navigateBackAndPush({
-          count: 2,
-          animate: false,
-          to: detailPath,
-        });
+        navigateToSavedMenuDetail(createdMenuId);
       },
       onError: () => {
         toast.warning("공용 데이터를 개인 데이터 등록하는데 실패했어요");
