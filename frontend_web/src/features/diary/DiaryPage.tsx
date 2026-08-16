@@ -22,6 +22,7 @@ const MEAL_TYPES = [
   { time: "1", label: "점심", icon: "lunch" },
   { time: "2", label: "저녁", icon: "dinner" },
   { time: "3", label: "간식", icon: "snack" },
+  { time: "4", label: "야식", icon: "late-snack" },
 ] as const;
 
 export default function DiaryPage() {
@@ -64,10 +65,10 @@ export default function DiaryPage() {
 
   const handleMoveMealRecord = (
     mealType: (typeof MEAL_TYPES)[number]["time"],
-    hasMenus: boolean,
+    hasMealRecord: boolean,
   ) => {
     navigate(
-      hasMenus
+      hasMealRecord
         ? getMealRecordPath(selectedDateKey, mealType)
         : getMealSearchPath(selectedDateKey, mealType),
     );
@@ -227,13 +228,16 @@ export default function DiaryPage() {
             {MEAL_TYPES.map(({ time, label, icon }) => {
               const calories = dayMeal?.caloriesByTime[time] ?? 0;
               const hasImage = Boolean(dayMeal?.imagesByTime[time]);
+              const hasMealRecord =
+                (dayMeal?.menusByTime[time].length ?? 0) > 0 ||
+                Boolean(dayMeal?.didNotEatByTime[time]);
 
               return (
                 <li key={time}>
                   <button
                     type="button"
                     className={styles.mealRecordButton}
-                    onClick={() => handleMoveMealRecord(time, hasImage)}
+                    onClick={() => handleMoveMealRecord(time, hasMealRecord)}
                   >
                     <div className={styles.mealImageBox}>
                       {hasImage ? (
@@ -243,7 +247,9 @@ export default function DiaryPage() {
                           alt={label}
                         />
                       ) : (
-                        <SystemIcon name={icon} size={24} className={styles.mealIcon} />
+                        <div className={styles.mealIcon} data-recorded={hasMealRecord}>
+                          <SystemIcon name={icon} size={18} />
+                        </div>
                       )}
                     </div>
 

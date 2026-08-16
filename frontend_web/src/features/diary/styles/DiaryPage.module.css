@@ -128,8 +128,20 @@
   padding: 0;
   list-style: none;
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 10px;
+}
+
+.mealRecordGroup > li {
+  grid-column: span 2;
+}
+
+.mealRecordGroup > li:nth-child(4) {
+  grid-column: 2 / span 2;
+}
+
+.mealRecordGroup > li:nth-child(5) {
+  grid-column: 4 / span 2;
 }
 
 .mealRecordTitle {
@@ -149,6 +161,7 @@
 .mealImageBox {
   aspect-ratio: 3/2;
   border-radius: 8px;
+  color: var(--text-disabled);
   overflow: hidden;
   display: grid;
   place-items: center;
@@ -166,12 +179,25 @@
   display: flex;
   justify-content: center;
   align-items: center;
+  background-color: var(--background-gray-1);
+  border-radius: 100%;
+  width: 30px;
+  height: 30px;
+}
+
+.mealIcon[data-recorded="true"] {
+  color: var(--btn-default);
+  background-color: var(--background-selected);
 }
 
 .mealInfo {
   display: flex;
-  justify-items: space-between;
+  justify-content: space-between;
   margin-top: 8px;
+}
+
+.mealInfo > span {
+  white-space: nowrap;
 }
 
 .workoutRecordTitle {
