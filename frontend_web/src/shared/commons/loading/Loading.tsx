@@ -1,7 +1,7 @@
 import type { CSSProperties, HTMLAttributes } from "react";
 
 import styles from "./Loading.module.css";
-import { LottieLoadingLogo } from "./LottieLoadingLogo";
+import { MeloLoading } from "./MeloLoading";
 
 type LoadingStyle = CSSProperties & {
   "--loading-icon-size"?: string;
@@ -36,7 +36,7 @@ function getClasses(...classes: Array<string | undefined>) {
 
 export function LoadingIndicator({
   className,
-  iconSize = 34,
+  iconSize = 100,
   label = "로딩 중입니다.",
   style,
   ...props
@@ -55,7 +55,7 @@ export function LoadingIndicator({
       }
     >
       <span className={styles.visuallyHidden}>{label}</span>
-      <LottieLoadingLogo className={styles.icon} />
+      <MeloLoading className={styles.icon} />
     </div>
   );
 }

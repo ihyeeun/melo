@@ -5,8 +5,8 @@
 }
 
 .icon {
-  height: var(--loading-icon-size, 34px);
-  width: var(--loading-icon-size, 34px);
+  height: var(--loading-icon-size, 100px);
+  width: var(--loading-icon-size, 100px);
 }
 
 .screen {
