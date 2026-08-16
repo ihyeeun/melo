@@ -153,8 +153,8 @@ function NutrientCard({ label, nutrientType, targetCalories, value, onChange }: 
       <div className={styles.nutrientDivider} />
 
       <div className={styles.nutrientMeta}>
-        <span className="title-m-semi">{formatRoundedValue(targetGram)}g</span>
-        <span className="textNoWrap title-m-semi">{formatRoundedValue(targetKcal)}kcal</span>
+        <span className="title-m-medium">{formatRoundedValue(targetGram)}g</span>
+        <span className="textNoWrap title-m-medium">{formatRoundedValue(targetKcal)}kcal</span>
       </div>
     </div>
   );

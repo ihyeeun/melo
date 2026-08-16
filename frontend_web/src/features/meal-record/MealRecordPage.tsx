@@ -660,7 +660,7 @@ export default function MealRecordPage() {
           ) : (
             <button type="button" className={styles.emptyState} onClick={handleMealSearchNavigate}>
               <div className={styles.emptyStateIcon}>
-                <SystemIcon name="plus-circle" mode="image" size={32} />
+                <SystemIcon name="plus-circle" size={32} />
               </div>
               <p className="title-m-semi">기록하러 가볼까요?</p>
             </button>
@@ -669,12 +669,7 @@ export default function MealRecordPage() {
       </main>
 
       <footer className={styles.footer}>
-        <Button
-          onClick={handleMealSearchNavigate}
-          variant="outlined"
-          size="m"
-          fullWidth
-        >
+        <Button onClick={handleMealSearchNavigate} variant="outlined" size="m" fullWidth>
           추가하기
         </Button>
 

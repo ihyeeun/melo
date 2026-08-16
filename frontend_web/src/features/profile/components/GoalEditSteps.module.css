@@ -113,10 +113,8 @@
 
 .weightAdjustButton {
   align-items: center;
-  background: var(--gray-300);
   border: none;
   border-radius: 100px;
-  color: var(--background-default);
   cursor: pointer;
   display: inline-flex;
   height: 24px;
