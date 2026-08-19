@@ -1,0 +1,72 @@
+.calendar {
+  display: flex;
+  flex-direction: column;
+  padding: 16px 20px;
+  width: 100%;
+  gap: 12px;
+}
+
+.header {
+  align-items: center;
+  display: grid;
+  grid-template-columns: 40px 132px 40px;
+  justify-content: center;
+  /* border: 1px solid red; */
+}
+
+.navigationButton {
+  align-items: center;
+  color: var(--text-secondary);
+  display: flex;
+  height: 40px;
+  justify-content: center;
+  width: 40px;
+}
+
+.weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  /* border: 1px solid red; */
+  padding: 8px 0;
+}
+
+.weekday {
+  color: var(--navy-950);
+}
+
+.grid {
+  /* border: 1px solid red; */
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.day {
+  align-items: center;
+  color: var(--text-secondary);
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  height: 40px;
+  /* border: 1px solid green; */
+  border-radius: 16px;
+}
+
+/* 앞뒤 달 날짜 */
+.day[data-outside="true"] {
+  color: var(--gray-300);
+}
+
+/* 오늘 */
+.day[data-today="true"] {
+  border-color: var(--primary-normal);
+}
+
+/* 선택 날짜 */
+.day[data-selected="true"] {
+  background: var(--background-gray-2);
+}
+
+.day[data-selected="true"][data-outside="true"] {
+  color: var(--text-disabled);
+}

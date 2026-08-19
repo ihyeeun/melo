@@ -1,0 +1,84 @@
+.root {
+  background-color: var(--background-default);
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+}
+
+.monthlySection {
+  border-top: 1px solid var(--border-subtle);
+  border-bottom: 2px solid var(--border-subtle);
+  padding-bottom: 20px;
+}
+
+.monthlyCaption {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+
+.monthlyCaption > p {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  flex-shrink: 0;
+  border-radius: 100px;
+}
+
+.dot[data-variant="outlined"] {
+  border: 1px solid var(--border-strong);
+}
+
+.dot[data-variant="filled"] {
+  background-color: var(--coral-500);
+}
+
+.recordSection {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+  padding: 20px 16px 40px;
+}
+
+.sectionGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.titleArea > p + p {
+  margin-top: 4px;
+}
+
+.twoGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.fieldCard {
+  padding: 12px 0;
+  text-align: center;
+}
+
+.fourGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+.fourGrid .fieldCard {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}

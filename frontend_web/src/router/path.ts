@@ -55,4 +55,7 @@ export const PATH = {
 
   // ETC
   APP_INFO: "/app-info",
+
+  // Menstruation
+  MENSTRUATION_RECORD: "/menstruation/record",
 };

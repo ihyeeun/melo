@@ -197,6 +197,9 @@ const ChatFoodCameraPage = createGuardedLazyActivity(
   () => import("@/features/camera/pages/FoodImageFeedbackPage"),
 );
 const AppInfoPage = createLazyActivity(() => import("@/features/kakao-web-auth/pages/AppInfoPage"));
+const MenstruationPage = createLazyActivity(
+  () => import("@/features/menstruation/pages/MenstruationRecordPage"),
+);
 
 const ACTIVITIES = {
   Home: HomePage,
@@ -242,6 +245,7 @@ const ACTIVITIES = {
   ChatCamera: ChatCameraPage,
   ChatFoodCamera: ChatFoodCameraPage,
   AppInfo: AppInfoPage,
+  Menstruation: MenstruationPage,
 };
 
 const ACTIVITY_ROUTES: Record<keyof typeof ACTIVITIES, RoutePath> = {
@@ -302,6 +306,7 @@ const ACTIVITY_ROUTES: Record<keyof typeof ACTIVITIES, RoutePath> = {
   ChatCamera: PATH.CHAT_CAMERA,
   ChatFoodCamera: PATH.CHAT_FOOD_CAMERA,
   AppInfo: PATH.APP_INFO,
+  Menstruation: PATH.MENSTRUATION_RECORD,
 };
 
 type ActivityName = keyof typeof ACTIVITY_ROUTES;
@@ -601,13 +606,11 @@ function getDefaultHistoryEntries(activityName: ActivityName, params: ActivityPa
   const definedParams = Object.fromEntries(
     Object.entries(params).filter((entry): entry is [string, string] => entry[1] !== undefined),
   );
-  const defaultHistory = getRouteDefinitions(activityName).find(
-    (routeDefinition) => routeDefinition.defaultHistory,
-  )?.defaultHistory?.(definedParams);
+  const defaultHistory = getRouteDefinitions(activityName)
+    .find((routeDefinition) => routeDefinition.defaultHistory)
+    ?.defaultHistory?.(definedParams);
 
-  return Array.isArray(defaultHistory)
-    ? defaultHistory
-    : (defaultHistory?.entries ?? []);
+  return Array.isArray(defaultHistory) ? defaultHistory : (defaultHistory?.entries ?? []);
 }
 
 function getDefaultHistoryActivities(activityName: ActivityName, params: ActivityParams) {
@@ -1156,14 +1159,10 @@ function replaceActivityWithDefaultHistory(
 
   if (!firstParentActivity) {
     const activityId = createStackflowActivityId();
-    const result = stackflowActions.replace(
-      targetActivity.activityName,
-      targetActivity.params,
-      {
-        ...(options?.animate == null ? undefined : { animate: options.animate }),
-        activityId,
-      },
-    );
+    const result = stackflowActions.replace(targetActivity.activityName, targetActivity.params, {
+      ...(options?.animate == null ? undefined : { animate: options.animate }),
+      activityId,
+    });
     setActivityNavigationState(result.activityId, options?.state);
     return;
   }
@@ -1245,10 +1244,7 @@ type NavigateBackToPathAndPushOptions = {
   to: To;
 };
 
-type NavigateBackThroughPathAndPushOptions = Omit<
-  NavigateBackToPathAndPushOptions,
-  "backTo"
-> & {
+type NavigateBackThroughPathAndPushOptions = Omit<NavigateBackToPathAndPushOptions, "backTo"> & {
   through: To;
 };
 
@@ -1404,14 +1400,10 @@ export function navigateBackToPathAndPushFromRoot({
         ...backToDefaultHistoryActivities,
         backToActivity,
       ];
-      const rootResult = stackflowActions.replace(
-        rootActivity.activityName,
-        rootActivity.params,
-        {
-          animate: false,
-          activityId: createStackflowActivityId(),
-        },
-      );
+      const rootResult = stackflowActions.replace(rootActivity.activityName, rootActivity.params, {
+        animate: false,
+        activityId: createStackflowActivityId(),
+      });
       setActivityNavigationState(rootResult.activityId, null);
 
       childActivities.forEach((childActivity) => {

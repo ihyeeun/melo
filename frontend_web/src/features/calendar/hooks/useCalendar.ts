@@ -1,9 +1,10 @@
-import { startOfWeek, subWeeks } from "date-fns";
-import { type SetStateAction, useMemo, useState } from "react";
+import { addMonths, startOfMonth, startOfWeek, subMonths, subWeeks } from "date-fns";
+import { type SetStateAction, useCallback, useMemo, useState } from "react";
 
 import {
   buildMonthCalendarDays,
   buildWeekCalendarDays,
+  getMonthDates,
   moveNext,
   movePrev,
 } from "@/features/calendar/utils/calendar";
@@ -103,10 +104,7 @@ export function useCalendar({
     const previousWeekStart = subWeeks(currentWeekStart, 1);
     const candidateTime = candidateWeekStart.getTime();
 
-    if (
-      candidateTime < previousWeekStart.getTime() ||
-      candidateTime > currentWeekStart.getTime()
-    ) {
+    if (candidateTime < previousWeekStart.getTime() || candidateTime > currentWeekStart.getTime()) {
       return currentDate;
     }
 
@@ -155,5 +153,48 @@ export function useCalendar({
     goPrev,
     goNext,
     goToday,
+  };
+}
+
+type UseMonthCalendarParams = {
+  initialDate?: Date;
+  weekStartsOn?: 0 | 1;
+};
+
+export function useMonthCalendar({ initialDate, weekStartsOn = 1 }: UseMonthCalendarParams = {}) {
+  // 현재 보고 있는 월
+  const [viewDate, setViewDate] = useState(() => {
+    return startOfMonth(initialDate ?? new Date());
+  });
+
+  // 달력 칸에 표시할 전체 날짜
+  const visibleDates = useMemo(
+    () => getMonthDates(viewDate, weekStartsOn),
+    [viewDate, weekStartsOn],
+  );
+
+  const goPrevMonth = useCallback(() => {
+    setViewDate((current) => startOfMonth(subMonths(current, 1)));
+  }, []);
+
+  const goNextMonth = useCallback(() => {
+    setViewDate((current) => startOfMonth(addMonths(current, 1)));
+  }, []);
+
+  const goToday = useCallback(() => {
+    setViewDate(startOfMonth(new Date()));
+  }, []);
+
+  const goToMonth = useCallback((date: Date) => {
+    setViewDate(startOfMonth(date));
+  }, []);
+
+  return {
+    viewDate,
+    visibleDates,
+    goPrevMonth,
+    goNextMonth,
+    goToday,
+    goToMonth,
   };
 }
