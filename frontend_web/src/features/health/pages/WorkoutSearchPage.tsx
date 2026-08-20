@@ -24,6 +24,7 @@ import { SearchInputHeader } from "@/shared/commons/header/SearchInputHeader";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import { LoadingIndicator } from "@/shared/commons/loading/Loading";
 import { ScrollFogArea } from "@/shared/commons/scrollFog";
+import { toast } from "@/shared/commons/toast/toast";
 import {
   navigateBack,
   useNavigate,
@@ -177,6 +178,7 @@ export default function WorkoutSearchPage() {
 
   const handleComplete = () => {
     if (hasAddedWorkoutRecord()) {
+      toast.success("운동 기록을 완료했어요");
       trackWorkoutRecordCompleted();
     }
 
