@@ -475,7 +475,7 @@ export default function MealSearchPage() {
   );
 
   const renderPersonalMenuEmptyState = (message: string) => (
-    <section className={styles.emptyResult}>
+    <section className={`${styles.emptyResultContainer} ${styles.emptyResult}`}>
       <p className="body-l-medium">{message}</p>
       <div className={styles.emptyActionButton}>
         <Button
@@ -501,7 +501,7 @@ export default function MealSearchPage() {
     if (isRegisteredMenusPending) {
       return (
         <section className={styles.loadingContainer}>
-          <LoadingIndicator />
+          <LoadingIndicator iconSize={24} />
         </section>
       );
     }
@@ -523,7 +523,7 @@ export default function MealSearchPage() {
               size="xs"
             >
               영양 성분 직접 등록
-              <SystemIcon name="chevron-right" size={18} />
+              <SystemIcon name="chevron-right" size={14} />
             </Button>
           </div>
           {registeredMenuList.map(renderMenuCard)}
@@ -542,7 +542,7 @@ export default function MealSearchPage() {
           size="xs"
         >
           영양 성분 직접 등록
-          <SystemIcon name="chevron-right" size={18} />
+          <SystemIcon name="chevron-right" size={14} />
         </Button>
       </section>
     );
@@ -570,7 +570,7 @@ export default function MealSearchPage() {
 
       {isPending ? (
         <section className={styles.loadingContainer}>
-          <LoadingIndicator />
+          <LoadingIndicator iconSize={24} />
         </section>
       ) : isError ? (
         renderPersonalMenuEmptyState("메뉴를 불러오지 못했어요")
@@ -684,7 +684,7 @@ export default function MealSearchPage() {
     if (isSearchPending) {
       return (
         <div className={styles.loadingContainer}>
-          <LoadingIndicator />
+          <LoadingIndicator iconSize={24} />
         </div>
       );
     }
@@ -837,7 +837,7 @@ function FolderPanel({
     <div className={styles.searchContent}>
       {isFolderPending ? (
         <section className={styles.loadingContainer}>
-          <LoadingIndicator />
+          <LoadingIndicator iconSize={24} />
         </section>
       ) : isFolderError ? (
         <div className={styles.emptyResultContainer}>
@@ -864,7 +864,7 @@ function FolderPanel({
             onClick={() => navigate(PATH.CREATE_FOLDER)}
           >
             <span>새 폴더 만들기</span>
-            <SystemIcon name="chevron-right" size={16} />
+            <SystemIcon name="chevron-right" size={14} />
           </Button>
           {folderList.map((folder) => (
             <article key={folder.folder_id} className={styles.folderItem}>
@@ -875,7 +875,7 @@ function FolderPanel({
               >
                 <div className={styles.folderContent}>
                   <div className={styles.folderName}>
-                    <span className={`title-s-semi text-primary ${styles.folderTitle}`}>
+                    <span className={`body-l-medium text-primary ${styles.folderTitle}`}>
                       {folder.folder_name}
                     </span>
                   </div>
