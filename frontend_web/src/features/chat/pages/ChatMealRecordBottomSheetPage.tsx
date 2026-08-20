@@ -195,16 +195,16 @@ export default function ChatMealRecordBottomSheetPage() {
     try {
       if (previousMealRecord.time !== nextTime) {
         const deleteResult = await deleteDiaryMealRecordMutate({
+          dateKey: context.dateKey,
+          request: prepareRegisterRequest({
             dateKey: context.dateKey,
-            request: prepareRegisterRequest({
-              dateKey: context.dateKey,
-              mealType: previousMealType,
-              menus: [],
-              image: context.image,
-              mealTime: context.dayMeals.mealRecordMealTimesByTime[previousMealRecord.time],
-            }),
-            currentMenusByTime: context.dayMeals.menusByTime,
-          });
+            mealType: previousMealType,
+            menus: [],
+            image: context.image,
+            mealTime: context.dayMeals.mealRecordMealTimesByTime[previousMealRecord.time],
+          }),
+          currentMenusByTime: context.dayMeals.menusByTime,
+        });
 
         if (deleteResult !== DELETE_MEAL_RECORD_RESULT.DELETED) {
           toast.warning("식사 기록 저장에 실패했어요. 잠시 후 다시 시도해주세요.");

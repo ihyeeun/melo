@@ -301,7 +301,7 @@ export function ChatMealRecordBottomSheet({
           {dateLabel ? <p className={`title-m-semi text-primary`}>{dateLabel}</p> : null}
 
           <section>
-            <p className={`${styles.marginBottom8px} body-l-semi text-primary`}>섭취시간대</p>
+            <p className={`${styles.marginBottom8px} body-l-medium text-primary`}>섭취시간대</p>
             <div className={styles.mealTypeList}>
               {MEAL_TYPE_OPTIONS.map((option) => {
                 const isActive = option.key === mealType;
@@ -316,9 +316,9 @@ export function ChatMealRecordBottomSheet({
                     aria-pressed={isActive}
                     aria-label={option.label}
                   >
-                    <SystemIcon name={iconName} size={32} />
+                    <SystemIcon name={iconName} size={24} />
                     <span
-                      className={`${isActive ? styles.primaryText : styles.secondaryText} body-s-medium`}
+                      className={`${isActive ? styles.primaryText : styles.secondaryText} body-s-regular`}
                     >
                       {option.label}
                     </span>
@@ -330,12 +330,12 @@ export function ChatMealRecordBottomSheet({
 
           <section className={styles.menuSection}>
             <article className={styles.calorieTitle}>
-              <span className="body-l-semi text-primary">총 칼로리</span>
+              <span className="body-l-medium text-primary">총 칼로리</span>
               <div className={`${styles.calorieValueWrapper} textNoWrap`}>
                 <span className={`text-primary title-l-semi`}>
                   {formatDisplayNumber(totalCalories)}
                 </span>
-                <span className="title-m-semi">kcal</span>
+                <span className="body-l-regular">kcal</span>
               </div>
             </article>
 
@@ -358,7 +358,7 @@ export function ChatMealRecordBottomSheet({
                       onClick={() => handleNavigateMenuDetail(item.id)}
                     >
                       <div className={styles.menuName}>
-                        <p className="body-l-semi">{item.recommendation.menu_name}</p>
+                        <p className="body-l-medium">{item.recommendation.menu_name}</p>
                         <button
                           type="button"
                           className={styles.menuRemoveButton}
@@ -481,7 +481,13 @@ export function ChatMealRecordBottomSheet({
                 );
               })}
 
-              <Button variant="outlined" border="secondary" onClick={handleAddMore} fullWidth>
+              <Button
+                variant="outlined"
+                border="secondary"
+                size="s"
+                onClick={handleAddMore}
+                fullWidth
+              >
                 <SystemIcon name="plus" size={16} />
                 음식 추가
               </Button>
@@ -492,7 +498,7 @@ export function ChatMealRecordBottomSheet({
         <section className={styles.actionBar}>
           <Button
             variant="default"
-            size="m"
+            size="s"
             fullWidth
             disabled={isSubmitPending}
             onClick={handleSubmit}

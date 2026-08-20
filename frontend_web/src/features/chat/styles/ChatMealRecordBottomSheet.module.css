@@ -27,7 +27,7 @@
 .mealTypeList {
   display: grid;
   gap: 5px;
-  grid-template-columns: repeat(auto-fit, minmax(63px, 1fr));
+  grid-template-columns: repeat(5, 1fr);
 }
 
 .mealTypeButton {
@@ -65,7 +65,7 @@
   display: flex;
   gap: 4px;
   margin-left: auto;
-  align-items: center;
+  align-items: baseline;
 }
 
 .menuList {

@@ -2114,7 +2114,7 @@ export default function ChatPage() {
                   <p className={`${styles.timeText} caption-m-medium`}>
                     {formatTimeText(new Date())}
                   </p>
-                  <p className={`${styles.userBubble} body-l-medium`}>{pendingMealRecordInput}</p>
+                  <p className={`${styles.userBubble} body-m-regular`}>{pendingMealRecordInput}</p>
                 </div>
 
                 <AssistantPendingMessage />
@@ -2127,7 +2127,7 @@ export default function ChatPage() {
                   <p className={`${styles.timeText} caption-m-medium`}>
                     {formatTimeText(new Date())}
                   </p>
-                  <p className={`${styles.userBubble} body-l-medium`}>{pendingInput}</p>
+                  <p className={`${styles.userBubble} body-m-regular`}>{pendingInput}</p>
                 </div>
 
                 {isTypingPending ? <AssistantPendingMessage /> : null}
