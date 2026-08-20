@@ -28,7 +28,7 @@ import NumberField from "@/shared/commons/input/NumberField";
 import { ScrollFogArea } from "@/shared/commons/scrollFog";
 import { useNavigate } from "@/shared/navigation/stackflowNavigation";
 import { formatDateKeyToMonthDayWeekdayLabel } from "@/shared/utils/dateFormat";
-import { formatNumberWithMaxOneDecimal } from "@/shared/utils/numberFormat";
+import { formatDisplayNumber } from "@/shared/utils/numberFormat";
 import { getServingUnitLabel } from "@/shared/utils/servingUnit";
 
 type SelectedMenuItem = {
@@ -333,7 +333,7 @@ export function ChatMealRecordBottomSheet({
               <span className="body-l-semi text-primary">총 칼로리</span>
               <div className={`${styles.calorieValueWrapper} textNoWrap`}>
                 <span className={`text-primary title-l-semi`}>
-                  {formatNumberWithMaxOneDecimal(totalCalories)}
+                  {formatDisplayNumber(totalCalories)}
                 </span>
                 <span className="title-m-semi">kcal</span>
               </div>
@@ -373,7 +373,7 @@ export function ChatMealRecordBottomSheet({
                       </div>
                       <p className={`body-s-medium text-tertiary`}>
                         {item.recommendation.brand && <span>{item.recommendation.brand} ㅣ </span>}
-                        {formatNumberWithMaxOneDecimal(itemCalories)}kcal
+                        {formatDisplayNumber(itemCalories)}kcal
                       </p>
                     </div>
 
@@ -481,12 +481,7 @@ export function ChatMealRecordBottomSheet({
                 );
               })}
 
-              <Button
-                variant="outlined"
-                border="secondary"
-                onClick={handleAddMore}
-                fullWidth
-              >
+              <Button variant="outlined" border="secondary" onClick={handleAddMore} fullWidth>
                 <SystemIcon name="plus" size={16} />
                 음식 추가
               </Button>

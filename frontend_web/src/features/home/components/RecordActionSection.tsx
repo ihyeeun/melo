@@ -15,7 +15,7 @@ import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import { Skeleton, SkeletonStatus } from "@/shared/commons/skeleton/Skeleton";
 import { useNavigate } from "@/shared/navigation/stackflowNavigation";
 import { getTodayFormatDateKey, isFutureDateKey } from "@/shared/utils/dateFormat";
-import { formatNumberWithMaxOneDecimal } from "@/shared/utils/numberFormat";
+import { formatDisplayNumber } from "@/shared/utils/numberFormat";
 
 const MEAL_TYPES = [
   { type: "0", label: "아침", icon: "breakfast" },
@@ -118,7 +118,7 @@ export default function RecordActionSection({ selectedDate }: { selectedDate: st
                       <div className={styles.mealInfo}>
                         <MealSummaryText menus={menus} />
                         <p className="body-s-regular text-disabled">
-                          {formatNumberWithMaxOneDecimal(calories)}kcal
+                          {formatDisplayNumber(calories)}kcal
                         </p>
                       </div>
                     )}

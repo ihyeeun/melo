@@ -1,16 +1,13 @@
-import type {
-  DayMealSummary,
-  MenuWithQuantity,
-} from "@/features/home/utils/dayMealSummary";
+import type { DayMealSummary, MenuWithQuantity } from "@/features/home/utils/dayMealSummary";
 import { MEAL_TYPE_OPTIONS, MENU_UNIT } from "@/shared/api/types/api.dto";
-import { formatNumberWithMaxOneDecimal } from "@/shared/utils/numberFormat";
+import { formatDisplayNumber } from "@/shared/utils/numberFormat";
 
 export type ClipboardDayMeals = Pick<DayMealSummary, "menusByTime">;
 
 function formatMenuForClipboard(menu: MenuWithQuantity) {
   const amountUnit = menu.unit === MENU_UNIT.MILLILITER ? "ml" : "g";
-  const amount = formatNumberWithMaxOneDecimal(menu.quantity);
-  const calories = formatNumberWithMaxOneDecimal(menu.calories);
+  const amount = formatDisplayNumber(menu.quantity);
+  const calories = formatDisplayNumber(menu.calories);
 
   return `${menu.name} ${amount}${amountUnit} ${calories}kcal`;
 }

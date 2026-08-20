@@ -108,7 +108,7 @@ import {
   parseDate,
   parseDateKey,
 } from "@/shared/utils/dateFormat";
-import { formatNumberWithMaxOneDecimal } from "@/shared/utils/numberFormat";
+import { formatDisplayNumber } from "@/shared/utils/numberFormat";
 import { formatBaseServingUnit, SERVING_UNIT_PERSON } from "@/shared/utils/servingUnit";
 
 const MEAL_RECORD_MODE_CHIP_ID = "meal-record";
@@ -3185,7 +3185,7 @@ function MealRecordCard({
         <span
           className={`${styles.mealRecordSummaryCalories} ${styles.recommendCalories} textNoWrap body-l-medium`}
         >
-          {formatNumberWithMaxOneDecimal(totalCalories)}kcal
+          {formatDisplayNumber(totalCalories)}kcal
         </span>
         {hasMultipleItems ? (
           <SystemIcon
@@ -3208,7 +3208,7 @@ function MealRecordCard({
               <span
                 className={`${styles.mealRecordMenuCalories} ${styles.textAlternative} textNoWrap body-s-medium`}
               >
-                {formatNumberWithMaxOneDecimal(item.recordedCalories)}kcal
+                {formatDisplayNumber(item.recordedCalories)}kcal
               </span>
             </div>
           ))}
@@ -3324,7 +3324,7 @@ function RecommendationSection({
                 </span>
               </p>
               <span className={`${styles.recommendCalories} textNoWrap body-l-medium`}>
-                {formatNumberWithMaxOneDecimal(topRecommendation.calories)}kcal
+                {formatDisplayNumber(topRecommendation.calories)}kcal
               </span>
             </div>
             {topRecommendation.data_source === 1 && (
@@ -3486,7 +3486,7 @@ function FeedbackSection({
                 <p className={`${styles.textAssistive} body-s-regular`}>총 칼로리</p>
 
                 <p className={`${styles.feedbackCalories} textNoWrap body-l-medium`}>
-                  {formatNumberWithMaxOneDecimal(feedback.total_calories)}kcal
+                  {formatDisplayNumber(feedback.total_calories)}kcal
                   <SystemIcon
                     name="chevron-up"
                     size={12}
@@ -3502,7 +3502,7 @@ function FeedbackSection({
                   {formatMenuServing(primaryMenu)}
                 </p>
                 <p className={`${styles.feedbackCalories} textNoWrap body-l-medium`}>
-                  {formatNumberWithMaxOneDecimal(primaryMenu.calories)}kcal
+                  {formatDisplayNumber(primaryMenu.calories)}kcal
                 </p>
               </div>
             )}
@@ -3520,7 +3520,7 @@ function FeedbackSection({
                   </p>
 
                   <span className={`${styles.feedbackMenuItemCalories} textNoWrap body-s-medium`}>
-                    {formatNumberWithMaxOneDecimal(menu.calories)}kcal
+                    {formatDisplayNumber(menu.calories)}kcal
                   </span>
                 </li>
               ))}
@@ -3703,7 +3703,7 @@ function NutritionCardContent({
           <span className={`${styles.recommendAmount} textNoWrap`}>{formatMenuServing(meal)}</span>
         </p>
         <span className={`${styles.recommendCalories} textNoWrap body-l-medium`}>
-          {formatNumberWithMaxOneDecimal(meal.calories)}kcal
+          {formatDisplayNumber(meal.calories)}kcal
         </span>
       </div>
 
@@ -4165,7 +4165,7 @@ type MenuServingInfo = {
 };
 
 function formatMenuServing(menu: MenuServingInfo) {
-  return `${formatBaseServingUnit(menu.unit_quantity)} (${formatNumberWithMaxOneDecimal(menu.weight)}${menu.unit === 0 ? "g" : "ml"})`;
+  return `${formatBaseServingUnit(menu.unit_quantity)} (${formatDisplayNumber(menu.weight)}${menu.unit === 0 ? "g" : "ml"})`;
 }
 
 function resolveErrorMessage(
