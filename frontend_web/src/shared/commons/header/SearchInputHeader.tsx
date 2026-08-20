@@ -56,7 +56,6 @@ export function SearchInputHeader({
 
   useEffect(() => {
     if (!onEnterRef.current) return;
-    if (isComposing) return;
     if (!didMountRef.current) {
       didMountRef.current = true;
       return;
@@ -71,7 +70,7 @@ export function SearchInputHeader({
     return () => {
       window.clearTimeout(timeoutId);
     };
-  }, [value, debounceMs, isComposing]);
+  }, [value, debounceMs]);
 
   const classes = [styles.root, safeAreaTop ? styles.safeAreaTop : "", className ?? ""]
     .filter(Boolean)
