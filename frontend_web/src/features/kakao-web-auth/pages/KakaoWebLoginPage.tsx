@@ -1,5 +1,6 @@
 import { redirectToKakaoWebLogin } from "@/features/kakao-web-auth/api/kakaoWebAuth";
 import styles from "@/features/kakao-web-auth/styles/AppInfo.module.css";
+import { TERMS_AND_PRIVACY_POLICY_URL } from "@/shared/config/externalLinks";
 
 export default function KakaoWebLoginPage() {
   return (
@@ -24,7 +25,7 @@ export default function KakaoWebLoginPage() {
             <p className={`${styles.loginFooter} body-s-medium`}>
               가입하면 melo의 <br />
               <a
-                href="https://third-princess-d57.notion.site/termsofuseandprivacypolicy"
+                href={TERMS_AND_PRIVACY_POLICY_URL}
                 rel="noreferrer"
                 target="_blank"
                 className={styles.link}

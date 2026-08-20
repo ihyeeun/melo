@@ -142,7 +142,6 @@ const SettingsPage = createLazyActivity(() => import("@/features/settings/Settin
 const SettingsSubCodePage = createLazyActivity(
   () => import("@/features/settings/SettingsSubCodePage"),
 );
-const TermsPage = createLazyActivity(() => import("@/features/terms/TermsPage"));
 const MenuBoardCameraPage = createGuardedLazyActivity(
   FEATURE_GUARD.MENU_BOARD_CAMERA,
   () => import("@/features/camera/pages/MenuBoardImageRecommendationPage"),
@@ -214,7 +213,6 @@ const ACTIVITIES = {
   Settings: SettingsPage,
   SettingsFeedback: SettingsFeedbackPage,
   SettingsSubCode: SettingsSubCodePage,
-  Terms: TermsPage,
   MealRecord: MealRecordPage,
   MealRecordAddSearch: MealSearchPage,
   MealDetail: MealDetailPage,
@@ -260,7 +258,6 @@ const ACTIVITY_ROUTES: Record<keyof typeof ACTIVITIES, RoutePath> = {
   Settings: PATH.SETTINGS,
   SettingsFeedback: PATH.SETTINGS_FEEDBACK,
   SettingsSubCode: PATH.SETTINGS_SUB_CODE,
-  Terms: PATH.TERMS,
   MealRecord: PATH.MEAL_RECORD,
   MealRecordAddSearch: {
     path: PATH.MEAL_RECORD_ADD_SEARCH,
