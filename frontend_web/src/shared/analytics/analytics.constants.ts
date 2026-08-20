@@ -1,6 +1,6 @@
 export const EVENT_NAME = {
   APP_OPEN: "app_open",
-  APP_UPDATE_SHOWN: "app_update_shown",
+  VITE_PRELOAD_ERROR: "vite_preload_error",
   SCREEN_VIEW: "screen_view",
 
   CAMERA_CANCEL: "camera_cancel",
