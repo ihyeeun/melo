@@ -34,6 +34,8 @@ const SYSTEM_ICON_SRC = {
   walking: "/icons/system-icons/walking.svg",
   "arrow-filled-right": "/icons/system-icons/arrow-filled-right.svg",
   "arrow-filled-left": "/icons/system-icons/arrow-filled-left.svg",
+  "contract-edit": "/icons/system-icons/contract-edit.svg",
+  "photo-library": "/icons/system-icons/photo-library.svg",
 } as const;
 
 export type SystemIconName = keyof typeof SYSTEM_ICON_SRC;
