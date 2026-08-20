@@ -1,6 +1,8 @@
 import { Toast } from "@base-ui/react/toast";
 import { useEffect, useSyncExternalStore } from "react";
 
+import { track } from "@/shared/analytics/analytics";
+import { EVENT_NAME } from "@/shared/analytics/analytics.constants";
 import type { AppToastData } from "@/shared/commons/toast/toastManager";
 
 import { getHasVitePreloadError, subscribeVitePreloadError } from "./vitePreloadError";
@@ -32,6 +34,10 @@ export function VitePreloadErrorToastBridge() {
         dismissible: false,
         position: "bottom",
       },
+    });
+
+    track(EVENT_NAME.APP_UPDATE_SHOWN, {
+      trigger: "vite_preload_error",
     });
   }, [add, hasPreloadError]);
 
