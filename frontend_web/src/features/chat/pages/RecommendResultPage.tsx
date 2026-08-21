@@ -171,6 +171,7 @@ function RecommendResultContent({
 
     return recommendations;
   }, [recommendations, selectedFilter]);
+  const isMenuSelected = selectedRecommendationCount > 0;
 
   useSyncMenuDraftWithDayMeals({
     dateKey: recordDateKey,
@@ -286,18 +287,18 @@ function RecommendResultContent({
 
       <section className={styles.titleSection}>
         <div className={styles.intro}>
-          <p className={`${styles.introMessage} title-m-semi`}>
+          <p className={`${styles.introMessage} title-m-medium`}>
             <span className={styles.textPrimary}>{profileNickname}</span>님을 위한
             <br />
             메뉴를 추천해드려요!
           </p>
 
-          {/* <img
+          <img
             src="/icons/characters/menu-recommendation.png"
             className={styles.characterImage}
             alt=""
             aria-hidden="true"
-          /> */}
+          />
         </div>
         <div className={styles.filterList} aria-label="추천 결과 필터">
           {RECOMMEND_FILTER_OPTIONS.map((option) => {
@@ -354,10 +355,12 @@ function RecommendResultContent({
           fullWidth
           variant="default"
           size="m"
-          disabled={selectedRecommendationCount === 0 || isMealRegisterPending || isDayMealsPending}
+          disabled={!isMenuSelected || isMealRegisterPending || isDayMealsPending}
           onClick={handleSubmitMealRecord}
         >
-          {selectedRecommendationCount}개 기록하기
+          {isMenuSelected
+            ? `${selectedRecommendationCount}개 기록하기`
+            : "기록할 메뉴를 선택해주세요"}
         </Button>
       </footer>
     </section>

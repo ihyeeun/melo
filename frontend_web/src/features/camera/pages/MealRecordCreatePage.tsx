@@ -75,8 +75,7 @@ export default function MealRecordCreatePage() {
   const autoTriggeredRef = useRef(false);
 
   const { mutateAsync: uploadFoodImage } = useCreateMealRecordByFoodImageMutation();
-  const { mutateAsync: uploadNutritionLabelImage } =
-    useCreateMenuByNutritionLabelImageMutation();
+  const { mutateAsync: uploadNutritionLabelImage } = useCreateMenuByNutritionLabelImageMutation();
   const { mutateAsync: mealRegisterAsync } = useTodayMealRecordRegisterMutation();
 
   const dateKey = getSafeDateKey(searchParams.get("date"));
@@ -325,7 +324,7 @@ export default function MealRecordCreatePage() {
 
   return (
     <section className={styles.page}>
-      <PageHeader title="사진 촬영" onBack={returnFromCameraPage} />
+      <PageHeader title={isUploading ? "사진 분석" : "사진 촬영"} onBack={returnFromCameraPage} />
 
       {isOpeningCamera ? (
         <main className={styles.main} />

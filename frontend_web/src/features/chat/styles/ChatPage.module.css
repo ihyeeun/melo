@@ -76,10 +76,6 @@
   height: 100%;
 }
 
-.emptyTitle {
-  text-align: center;
-}
-
 .emptyText {
   align-items: center;
   display: flex;
@@ -509,13 +505,13 @@
 
 .menuNotFoundCard {
   background-color: var(--background-default);
-  border: 1px solid var(--border-subtle);
-  border-radius: 8px;
+  border: 1px solid var(--background-selected);
+  border-radius: 16px;
   display: flex;
   flex-direction: column;
   gap: 8px;
   padding: 16px;
-  width: 96%;
+  width: 266px;
   cursor: pointer;
 }
 
@@ -853,6 +849,7 @@
 .plusIcon {
   transition: transform 180ms ease;
   border-radius: 100px;
+  color: var(--text-tertiary);
 }
 
 .plusIconOpen {
@@ -920,8 +917,8 @@
 
 .addActionPanelVisible {
   opacity: 1;
-  padding: 0 20px;
-  min-height: 200px;
+  padding: 12px 20px;
+  min-height: 140px;
 }
 
 .addActionPanelHidden {
@@ -930,21 +927,25 @@
   pointer-events: none;
 }
 
-.addActionItemButton {
+.addActionGruop {
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  background-color: var(--background-gray-1);
-  border-radius: 8px;
-  color: var(--text-primary);
-  display: inline-flex;
   gap: 8px;
-  justify-content: flex-start;
-  padding: 16px 20px;
-  width: 100%;
 }
 
-.addActionItemIcon {
-  width: 30px;
-  height: 30px;
+.addActionItemButton {
+  width: 60px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  box-shadow: var(--shadow-outer);
+}
+
+.actionItemIcon {
+  color: var(--navy-600);
 }
 
 .searchMenuList {

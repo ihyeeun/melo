@@ -5,16 +5,30 @@ import {
   useWithdrawMutation,
 } from "@/features/settings/hooks/mutations/useAccountMutation";
 import { PATH } from "@/router/path";
+import { isNativeApp, openNativeInAppBrowser } from "@/shared/api/bridge/nativeBridge";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import { LoadingOverlay } from "@/shared/commons/loading/Loading";
 import { ConfirmModal } from "@/shared/commons/modals/ConfirmModal";
 import { toast } from "@/shared/commons/toast/toast";
+import {
+  NUTRITION_ANALYSIS_INFO_URL,
+  TERMS_AND_PRIVACY_POLICY_URL,
+} from "@/shared/config/externalLinks";
 import { useNavigate } from "@/shared/navigation/stackflowNavigation";
 
 import styles from "./styles/SettingsPage.module.css";
 
-const NUTRITION_ANALYSIS_INFO_URL = "https://third-princess-d57.notion.site/info";
+function openExternalDocument(url: string) {
+  if (!isNativeApp()) {
+    window.open(url, "_blank", "noopener,noreferrer");
+    return;
+  }
+
+  void openNativeInAppBrowser(url).catch(() => {
+    window.open(url, "_blank", "noopener,noreferrer");
+  });
+}
 
 function resolveErrorMessage(error: unknown, fallbackMessage: string) {
   if (error instanceof Error && error.message.trim().length > 0) {
@@ -51,7 +65,11 @@ export default function SettingsPage() {
             <SystemIcon name="chevron-right" size={24} className={styles.menuChevron} />
           </button>
 
-          <button type="button" className={styles.menuItem} onClick={() => navigate(PATH.TERMS)}>
+          <button
+            type="button"
+            className={styles.menuItem}
+            onClick={() => openExternalDocument(TERMS_AND_PRIVACY_POLICY_URL)}
+          >
             <span className={`${styles.menuLabel} body-l-semi`}>
               서비스이용약관 / 개인정보처리방침
             </span>
@@ -61,9 +79,7 @@ export default function SettingsPage() {
           <button
             type="button"
             className={styles.menuItem}
-            onClick={() =>
-              window.open(NUTRITION_ANALYSIS_INFO_URL, "_blank", "noopener,noreferrer")
-            }
+            onClick={() => openExternalDocument(NUTRITION_ANALYSIS_INFO_URL)}
           >
             <span className={`${styles.menuLabel} body-l-semi`}>영양 분석 및 산출 근거</span>
             <SystemIcon name="chevron-right" size={24} className={styles.menuChevron} />

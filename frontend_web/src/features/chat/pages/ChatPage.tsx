@@ -108,7 +108,7 @@ import {
   parseDate,
   parseDateKey,
 } from "@/shared/utils/dateFormat";
-import { formatNumberWithMaxOneDecimal } from "@/shared/utils/numberFormat";
+import { formatDisplayNumber } from "@/shared/utils/numberFormat";
 import { formatBaseServingUnit, SERVING_UNIT_PERSON } from "@/shared/utils/servingUnit";
 
 const MEAL_RECORD_MODE_CHIP_ID = "meal-record";
@@ -1855,7 +1855,6 @@ export default function ChatPage() {
       <main ref={mainRef} className={styles.main}>
         {shouldShowEmptySection ? <EmptySection /> : null}
         {shouldShowTimelineSkeleton ? <ChatHistorySkeleton /> : null}
-
         {shouldRenderTimeline ? (
           <div className={styles.chatTimeline}>
             {timelineItems.map((timelineItem, index) => {
@@ -2114,7 +2113,7 @@ export default function ChatPage() {
                   <p className={`${styles.timeText} caption-m-medium`}>
                     {formatTimeText(new Date())}
                   </p>
-                  <p className={`${styles.userBubble} body-l-medium`}>{pendingMealRecordInput}</p>
+                  <p className={`${styles.userBubble} body-m-regular`}>{pendingMealRecordInput}</p>
                 </div>
 
                 <AssistantPendingMessage />
@@ -2127,7 +2126,7 @@ export default function ChatPage() {
                   <p className={`${styles.timeText} caption-m-medium`}>
                     {formatTimeText(new Date())}
                   </p>
-                  <p className={`${styles.userBubble} body-l-medium`}>{pendingInput}</p>
+                  <p className={`${styles.userBubble} body-m-regular`}>{pendingInput}</p>
                 </div>
 
                 {isTypingPending ? <AssistantPendingMessage /> : null}
@@ -2569,8 +2568,8 @@ function getMealRecordCancelDescription(target: MealRecordCancelTarget | null) {
 function EmptySection() {
   return (
     <div className={styles.emptySection}>
-      {/* <img src="/icons/characters/score-81.png" alt="" aria-hidden="true" /> */}
-      <p className={`title-m-semi ${styles.emptyTitle}`}>
+      <img src="/icons/characters/question.png" width={200} alt="" aria-hidden="true" />
+      <p className={`body-l-medium text-tertiary textCenter`}>
         식단 고민,
         <br />
         무엇이든 물어보세요
@@ -3071,7 +3070,6 @@ function ChatInput({
           <SystemIcon
             name="plus-circle"
             size={32}
-            mode="image"
             className={`${styles.plusIcon} ${isAddActionOpen ? styles.plusIconOpen : ""}`}
           />
         </button>
@@ -3082,7 +3080,7 @@ function ChatInput({
             rows={1}
             value={value}
             className={`${styles.textInput} body-s-regular`}
-            // placeholder="맥도날드에 왔는데 뭐 먹을까?"
+            placeholder="메시지 입력"
             onChange={(event) => {
               handleInputChange(event.target.value.slice(0, 500));
             }}
@@ -3110,15 +3108,17 @@ function ChatInput({
         className={`${styles.addActionPanel} ${isAddActionOpen ? styles.addActionPanelVisible : styles.addActionPanelHidden}`}
         aria-hidden={!isAddActionOpen}
       >
-        <button
-          type="button"
-          className={styles.addActionItemButton}
-          onClick={onDirectMenuRecordClick}
-          disabled={!isAddActionOpen}
-        >
-          <SystemIcon name="search" size={24} className={styles.addActionItemIcon} />
-          <span className="body-l-medium">직접 메뉴 기록하기</span>
-        </button>
+        <div className={styles.addActionGruop}>
+          <button
+            type="button"
+            className={styles.addActionItemButton}
+            onClick={onDirectMenuRecordClick}
+            disabled={!isAddActionOpen}
+          >
+            <SystemIcon name="search" size={24} className={styles.actionItemIcon} />
+          </button>
+          <span className="body-xs-regular">직접 기록</span>
+        </div>
       </div>
     </div>
   );
@@ -3185,7 +3185,7 @@ function MealRecordCard({
         <span
           className={`${styles.mealRecordSummaryCalories} ${styles.recommendCalories} textNoWrap body-l-medium`}
         >
-          {formatNumberWithMaxOneDecimal(totalCalories)}kcal
+          {formatDisplayNumber(totalCalories)}kcal
         </span>
         {hasMultipleItems ? (
           <SystemIcon
@@ -3208,7 +3208,7 @@ function MealRecordCard({
               <span
                 className={`${styles.mealRecordMenuCalories} ${styles.textAlternative} textNoWrap body-s-medium`}
               >
-                {formatNumberWithMaxOneDecimal(item.recordedCalories)}kcal
+                {formatDisplayNumber(item.recordedCalories)}kcal
               </span>
             </div>
           ))}
@@ -3324,7 +3324,7 @@ function RecommendationSection({
                 </span>
               </p>
               <span className={`${styles.recommendCalories} textNoWrap body-l-medium`}>
-                {formatNumberWithMaxOneDecimal(topRecommendation.calories)}kcal
+                {formatDisplayNumber(topRecommendation.calories)}kcal
               </span>
             </div>
             {topRecommendation.data_source === 1 && (
@@ -3486,7 +3486,7 @@ function FeedbackSection({
                 <p className={`${styles.textAssistive} body-s-regular`}>총 칼로리</p>
 
                 <p className={`${styles.feedbackCalories} textNoWrap body-l-medium`}>
-                  {formatNumberWithMaxOneDecimal(feedback.total_calories)}kcal
+                  {formatDisplayNumber(feedback.total_calories)}kcal
                   <SystemIcon
                     name="chevron-up"
                     size={12}
@@ -3502,7 +3502,7 @@ function FeedbackSection({
                   {formatMenuServing(primaryMenu)}
                 </p>
                 <p className={`${styles.feedbackCalories} textNoWrap body-l-medium`}>
-                  {formatNumberWithMaxOneDecimal(primaryMenu.calories)}kcal
+                  {formatDisplayNumber(primaryMenu.calories)}kcal
                 </p>
               </div>
             )}
@@ -3520,7 +3520,7 @@ function FeedbackSection({
                   </p>
 
                   <span className={`${styles.feedbackMenuItemCalories} textNoWrap body-s-medium`}>
-                    {formatNumberWithMaxOneDecimal(menu.calories)}kcal
+                    {formatDisplayNumber(menu.calories)}kcal
                   </span>
                 </li>
               ))}
@@ -3584,20 +3584,14 @@ function MemuNotFoundCard({
     <section
       className={`${styles.menuNotFoundCard} ${animate ? styles.assistantResultCardAnimated : ""}`}
     >
-      {/* <img src="/login/melo-logo.png" width={35} alt="" aria-hidden="true" /> */}
-      <p className="body-l-medium">
+      <img src="/icons/characters/search.png" width={48} alt="" aria-hidden="true" />
+      <p className="body-l-regular">
         영양성분을 인식했어요!
         <br />
         어떤 브랜드의 메뉴인가요?
       </p>
-      <Button
-        variant="outlined"
-        border="primary"
-        size="xs"
-        onClick={handleNutritionRegisterClick}
-        fullWidth
-      >
-        메뉴명 입력하기
+      <Button variant="default" size="xs" onClick={handleNutritionRegisterClick} fullWidth>
+        메뉴 입력하기
       </Button>
     </section>
   );
@@ -3703,7 +3697,7 @@ function NutritionCardContent({
           <span className={`${styles.recommendAmount} textNoWrap`}>{formatMenuServing(meal)}</span>
         </p>
         <span className={`${styles.recommendCalories} textNoWrap body-l-medium`}>
-          {formatNumberWithMaxOneDecimal(meal.calories)}kcal
+          {formatDisplayNumber(meal.calories)}kcal
         </span>
       </div>
 
@@ -4165,7 +4159,7 @@ type MenuServingInfo = {
 };
 
 function formatMenuServing(menu: MenuServingInfo) {
-  return `${formatBaseServingUnit(menu.unit_quantity)} (${formatNumberWithMaxOneDecimal(menu.weight)}${menu.unit === 0 ? "g" : "ml"})`;
+  return `${formatBaseServingUnit(menu.unit_quantity)} (${formatDisplayNumber(menu.weight)}${menu.unit === 0 ? "g" : "ml"})`;
 }
 
 function resolveErrorMessage(

@@ -16,6 +16,7 @@ import { ScrollFogArea } from "@/shared/commons/scrollFog";
 import { useNavigate } from "@/shared/navigation/stackflowNavigation";
 import { useSelectedDateKey, useSetSelectedDate } from "@/shared/stores/selectedDate.store";
 import { getTodayFormatDateKey, isFutureDateKey, parseDateKey } from "@/shared/utils/dateFormat";
+import { formatDisplayNumber } from "@/shared/utils/numberFormat";
 
 const MEAL_TYPES = [
   { time: "0", label: "아침", icon: "breakfast" },
@@ -256,7 +257,7 @@ export default function DiaryPage() {
                     <div className={styles.mealInfo}>
                       <span className="caption-m-medium text-tertiary">{label}</span>
                       <span className="caption-m-medium text-secondary marginLeft">
-                        {calories.toLocaleString()}kcal
+                        {formatDisplayNumber(calories)}kcal
                       </span>
                     </div>
                   </button>

@@ -4,7 +4,7 @@ import { MENU_DATA_SOURCE, type MenuDataSource } from "@/shared/api/types/api.dt
 import { DataSourceBadge } from "@/shared/commons/badge/DataSourceBadge";
 import { SelectedCard } from "@/shared/commons/card/SelectedCard";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
-import { formatNumberWithMaxOneDecimal } from "@/shared/utils/numberFormat";
+import { formatDisplayNumber } from "@/shared/utils/numberFormat";
 import { getServingUnitLabel } from "@/shared/utils/servingUnit";
 
 import styles from "./MealMenuCard.module.css";
@@ -169,7 +169,7 @@ export function MealMenuCard({
 
             {shouldShowCalories ? (
               <span className={`textNoWrap title-s-regular text-primary marginLeft`}>
-                {formatNumberWithMaxOneDecimal(displayedCalories)}kcal
+                {formatDisplayNumber(displayedCalories)}kcal
               </span>
             ) : null}
           </section>
