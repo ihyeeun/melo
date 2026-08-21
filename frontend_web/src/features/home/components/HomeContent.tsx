@@ -6,7 +6,6 @@ import { navigateToChatCameraIfSupported } from "@/features/camera/utils/chatCam
 import PreviewTodayScoreSection from "@/features/home/components/PreviewTodayScoreSection";
 import RecordActionSection from "@/features/home/components/RecordActionSection";
 import styles from "@/features/home/styles/HomePage.module.css";
-import { PATH } from "@/router/path";
 import { FloatingCameraButton } from "@/shared/commons/button/FloatingCameraButton";
 import { ScrollFogArea } from "@/shared/commons/scrollFog";
 import { FEATURE_GUARD, useIsFeatureBlocked } from "@/shared/guards/featureGuard";
@@ -42,13 +41,6 @@ export default function HomeContent({
       <div className={`page ${styles.pageColor}`}>
         <Calendar selectedDate={selectedDate} onSelectDate={onSelectDate} />
         <ScrollFogArea role="main" className={`main ${styles.content}`}>
-          <button
-            onClick={() => {
-              navigate(PATH.MENSTRUATION_RECORD);
-            }}
-          >
-            생리 기록
-          </button>
           <PreviewTodayScoreSection />
           <RecordActionSection selectedDate={selectedDateKey} />
         </ScrollFogArea>

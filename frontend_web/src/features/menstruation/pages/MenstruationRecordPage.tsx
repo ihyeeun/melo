@@ -5,6 +5,7 @@ import styles from "@/features/menstruation/styles/MenstruationRecord.module.css
 import { Button } from "@/shared/commons/button/Button";
 import { SelectedCard } from "@/shared/commons/card/SelectedCard";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
+import { navigateBack } from "@/shared/navigation/stackflowNavigation";
 
 const AMOUNTS = [
   { type: "0", label: "적음" },
@@ -27,7 +28,12 @@ const SYMPTOMS = [
 export default function MenstruationRecordPage() {
   return (
     <div className={`page ${styles.root}`}>
-      <PageHeader title={"생리 기록"} onBack={() => {}} />
+      <PageHeader
+        title={"생리 기록"}
+        onBack={() => {
+          navigateBack();
+        }}
+      />
 
       <main className={`main ${styles.content}`}>
         <section className={styles.monthlySection}>

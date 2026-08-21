@@ -32,3 +32,5 @@ export type MenstrualCalculateCalendar = {
     menstrualDates: DateRange[];
   };
 };
+
+export type MenstrualPhase = "MENSTRUAL" | "FOLLICULAR" | "OVULATORY" | "LUTEAL";

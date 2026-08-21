@@ -5,6 +5,7 @@ import type {
   CycleType,
   DateRange,
   MenstrualCalculateCalendar,
+  MenstrualPhase,
 } from "@/features/menstruation/types/menstruation.type";
 import { formatDateKey, parseDateKey } from "@/shared/utils/dateFormat";
 
@@ -256,4 +257,46 @@ export function isDateInRange(targetDate: string, range: DateRange): boolean {
   const isBeforeEnd = targetDate <= range.endDate;
 
   return isAfterStart && isBeforeEnd;
+}
+
+export function getMenstrualPhaseByDate(
+  cycles: CycleItem[],
+  targetDate: string,
+): MenstrualPhase | null {
+  const periods = calculateMenstrual(cycles);
+
+  if (!periods) return null;
+
+  const latestCycle = sortCyclesByLatest(cycles)[0];
+
+  const cycleDay =
+    differenceInCalendarDays(parseDateKey(targetDate), parseDateKey(latestCycle.start_date)) + 1;
+
+  if (cycleDay < 1) return null;
+
+  const menstrualEnd = periods.menstrual;
+
+  const follicularEnd = menstrualEnd + periods.follicular;
+
+  const ovulatoryEnd = follicularEnd + periods.ovulatory;
+
+  const lutealEnd = ovulatoryEnd + periods.luteal;
+
+  if (cycleDay <= menstrualEnd) {
+    return "MENSTRUAL";
+  }
+
+  if (cycleDay <= follicularEnd) {
+    return "FOLLICULAR";
+  }
+
+  if (cycleDay <= ovulatoryEnd) {
+    return "OVULATORY";
+  }
+
+  if (cycleDay <= lutealEnd) {
+    return "LUTEAL";
+  }
+
+  return null;
 }
