@@ -4,11 +4,20 @@ import { useState } from "react";
 import { useMonthCalendar } from "@/features/calendar/hooks/useCalendar";
 import styles from "@/features/calendar/styles/MenstruationCalendar.module.css";
 import { WEEKDAY_LABELS } from "@/features/calendar/types/calendar.types";
+import { useGetMenstruationCyclesQuery } from "@/features/menstruation/hooks/queries/menstruation.query";
+import type { MenstrualCalculateCalendar } from "@/features/menstruation/types/menstruation.type";
+import {
+  calculateMenstrualCalendar,
+  isDateInRange,
+} from "@/features/menstruation/utils/menstruation.util";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
+import { formatDateKey, getTodayFormatDateKey } from "@/shared/utils/dateFormat";
 
 export default function MenstruationCalendar() {
   const [selectedDate, setSelectedDate] = useState<Date>();
-
+  const today = getTodayFormatDateKey();
+  const { data: menstruationData } = useGetMenstruationCyclesQuery({ date: today, limit: 7 });
+  const menstrualDate = calculateMenstrualCalendar(menstruationData?.cycles ?? []);
   const { viewDate, visibleDates, goPrevMonth, goNextMonth, goToday, goToMonth } =
     useMonthCalendar();
 
@@ -63,9 +72,11 @@ export default function MenstruationCalendar() {
 
         <div className={styles.grid} role="grid" aria-label="월경 기록 달력">
           {visibleDates.map((date) => {
+            const dateKey = formatDateKey(date);
             const today = isToday(date);
-            const selected = selectedDate ? isSameDay(date, selectedDate) : false;
+            const selected = selectedDate ? isSameDay(date, selectedDate) : today;
             const outside = !isSameMonth(date, viewDate);
+            const menstruationType = getMenstruationType(dateKey, menstrualDate?.calendar);
 
             return (
               <button
@@ -76,6 +87,7 @@ export default function MenstruationCalendar() {
                 data-today={today}
                 data-selected={selected}
                 data-outside={outside}
+                data-menstruation={menstruationType}
                 aria-pressed={selected}
                 aria-current={today ? "date" : undefined}
                 aria-label={date.toLocaleDateString("ko-KR", {
@@ -93,4 +105,23 @@ export default function MenstruationCalendar() {
       </>
     </section>
   );
+}
+
+type MenstruationType = "menstrual" | "possible" | "predicted" | undefined;
+
+function getMenstruationType(
+  targetDate: string,
+  calendar: MenstrualCalculateCalendar["calendar"] | undefined,
+): MenstruationType {
+  if (!calendar) return undefined;
+
+  for (const date of calendar.menstrualDates) {
+    if (isDateInRange(targetDate, date)) return "menstrual";
+  }
+
+  if (calendar.possibleDate && isDateInRange(targetDate, calendar.possibleDate)) return "possible";
+
+  if (calendar.predictedDate === targetDate) return "predicted";
+
+  return undefined;
 }

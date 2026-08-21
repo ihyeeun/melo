@@ -1,12 +1,10 @@
 import type { ReactNode } from "react";
 
 import MenstruationCalendar from "@/features/calendar/components/menstruation/MenstruationCalendar";
-import { useGetMenstruationCyclesQuery } from "@/features/menstruation/hooks/queries/menstruation.query";
 import styles from "@/features/menstruation/styles/MenstruationRecord.module.css";
 import { Button } from "@/shared/commons/button/Button";
 import { SelectedCard } from "@/shared/commons/card/SelectedCard";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
-import { getTodayFormatDateKey } from "@/shared/utils/dateFormat";
 
 const AMOUNTS = [
   { type: "0", label: "적음" },
@@ -27,10 +25,6 @@ const SYMPTOMS = [
 ];
 
 export default function MenstruationRecordPage() {
-  const today = getTodayFormatDateKey();
-
-  const { data: cycles } = useGetMenstruationCyclesQuery({ date: today, limit: 7 });
-
   return (
     <div className={`page ${styles.root}`}>
       <PageHeader title={"생리 기록"} onBack={() => {}} />

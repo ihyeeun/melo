@@ -5,7 +5,7 @@ import type { getCyclesRequest } from "@/features/menstruation/types/menstruatio
 
 export function useGetMenstruationCyclesQuery({ date, limit }: getCyclesRequest) {
   return useQuery({
-    queryKey: ["menstruation-records", { date }],
+    queryKey: ["menstruation-cycles", { date, limit }],
     queryFn: () => getMenstruationCycles({ date, limit }),
   });
 }
