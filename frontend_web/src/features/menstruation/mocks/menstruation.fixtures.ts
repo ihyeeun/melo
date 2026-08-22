@@ -9,18 +9,18 @@ import {
 
 /** 최근 월경 회차 조회 API가 반환할 고정 목 데이터 */
 export const mockMenstruationCycles: CycleItem[] = [
-  {
-    cycle_id: 7,
-    start_date: "2026-08-14",
-    end_date: "2026-08-17",
-    is_end: true,
-  },
-  {
-    cycle_id: 6,
-    start_date: "2026-07-14",
-    end_date: "2026-07-17",
-    is_end: true,
-  },
+  // {
+  //   cycle_id: 7,
+  //   start_date: "2026-08-14",
+  //   end_date: "2026-08-17",
+  //   is_end: true,
+  // },
+  // {
+  //   cycle_id: 6,
+  //   start_date: "2026-07-14",
+  //   end_date: "2026-07-17",
+  //   is_end: true,
+  // },
   // {
   //   cycle_id: 5,
   //   start_date: "2026-06-22",

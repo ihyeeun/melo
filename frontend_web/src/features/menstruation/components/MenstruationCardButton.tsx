@@ -2,35 +2,37 @@ import {
   HOME_PHASE_CONTENT,
   MENSTRUAL_PHASE_ORDER,
 } from "@/features/menstruation/constants/menstruation.constant";
-import { useGetMenstruationCyclesQuery } from "@/features/menstruation/hooks/queries/menstruation.query";
 import styles from "@/features/menstruation/styles/MenstruationCardButton.module.css";
-import { getMenstrualPhaseByDate } from "@/features/menstruation/utils/menstruation.util";
+import type { MenstrualPhase } from "@/features/menstruation/types/menstruation.type";
 import { PATH } from "@/router/path";
+import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import { useNavigate } from "@/shared/navigation/stackflowNavigation";
-import { useSelectedDateKey } from "@/shared/stores/selectedDate.store";
 
 const PHASE_TIMELINE = [...MENSTRUAL_PHASE_ORDER, MENSTRUAL_PHASE_ORDER[0]];
 
-export default function MenstruationCardButton() {
+const EMPTY_PHASE_CONTENT = {
+  title: "주기 기록을 시작해 볼까요?",
+  message: "기록을 바탕으로\n생리 예정일과 \n주기별 맞춤 정보를\n 알려드려요.",
+  source: "/icons/characters/question-color.png",
+} as const;
+
+export default function MenstruationCardButton({ phase }: { phase: MenstrualPhase | null }) {
   const navigate = useNavigate();
-  const selectedDate = useSelectedDateKey();
-  const { data: menstruationData } = useGetMenstruationCyclesQuery({
-    date: selectedDate,
-    limit: 7,
-  });
-  const currentPhase = getMenstrualPhaseByDate(menstruationData?.cycles ?? [], selectedDate);
-  const homeContent = currentPhase ? HOME_PHASE_CONTENT[currentPhase] : null;
+  const isEmpty = phase === null;
+  const homeContent = isEmpty ? EMPTY_PHASE_CONTENT : HOME_PHASE_CONTENT[phase];
 
-  if (!currentPhase || !homeContent) return null;
-
-  const activePhaseIndex = MENSTRUAL_PHASE_ORDER.indexOf(currentPhase);
+  const activePhaseIndex = isEmpty ? -1 : MENSTRUAL_PHASE_ORDER.indexOf(phase);
   const progressPercent = ((activePhaseIndex + 0.5) / PHASE_TIMELINE.length) * 100;
 
   return (
     <button
       type="button"
       className={styles.root}
-      aria-label={`${homeContent.title}. ${homeContent.message} 생리 주기 기록 보기`}
+      aria-label={
+        isEmpty
+          ? `${homeContent.title}. ${homeContent.message} 생리 기록 시작하기`
+          : `${homeContent.title}. ${homeContent.message} 생리 주기 기록 보기`
+      }
       onClick={() => {
         return navigate(PATH.MENSTRUATION_RECORD);
       }}
@@ -47,33 +49,43 @@ export default function MenstruationCardButton() {
       <span className={`${styles.title} title-s-semi text-primary`}>{homeContent.title}</span>
       <span className={styles.messageBubble}>{homeContent.message}</span>
 
-      <span className={styles.stepper} aria-hidden="true">
-        <span className={styles.track}>
-          <span className={styles.progress} style={{ width: `${progressPercent}%` }} />
+      {isEmpty ? (
+        <span className={`${styles.emptyAction} body-m-regular`}>
+          생리 기록 시작하기
+          <SystemIcon name="chevron-right" size={14} />
         </span>
+      ) : (
+        <span className={styles.stepper} aria-hidden="true">
+          <span className={styles.track}>
+            <span className={styles.progress} style={{ width: `${progressPercent}%` }} />
+          </span>
 
-        <span className={styles.phaseList}>
-          {PHASE_TIMELINE.map((phase, index) => {
-            const phaseState =
-              index < activePhaseIndex
-                ? styles.completed
-                : index === activePhaseIndex
-                  ? styles.current
-                  : styles.upcoming;
+          <span className={styles.phaseList}>
+            {PHASE_TIMELINE.map((timelinePhase, index) => {
+              const phaseState =
+                index < activePhaseIndex
+                  ? styles.completed
+                  : index === activePhaseIndex
+                    ? styles.current
+                    : styles.upcoming;
 
-            return (
-              <span className={`${styles.phaseItem} ${phaseState}`} key={`${phase}-${index}`}>
-                <span className={styles.dotArea}>
-                  <span className={styles.dot} />
+              return (
+                <span
+                  className={`${styles.phaseItem} ${phaseState}`}
+                  key={`${timelinePhase}-${index}`}
+                >
+                  <span className={styles.dotArea}>
+                    <span className={styles.dot} />
+                  </span>
+                  <span className={`${styles.phaseLabel} body-xs-regular`}>
+                    {HOME_PHASE_CONTENT[timelinePhase].phaseLabel}
+                  </span>
                 </span>
-                <span className={`${styles.phaseLabel} body-xs-regular`}>
-                  {HOME_PHASE_CONTENT[phase].phaseLabel}
-                </span>
-              </span>
-            );
-          })}
+              );
+            })}
+          </span>
         </span>
-      </span>
+      )}
     </button>
   );
 }

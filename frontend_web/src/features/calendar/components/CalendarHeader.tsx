@@ -1,4 +1,5 @@
 import { isToday } from "date-fns";
+import type { ReactNode } from "react";
 
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 
@@ -13,6 +14,7 @@ type Props = {
   onPrev: () => void;
   onNext: () => void;
   onToday: () => void;
+  headerAction?: ReactNode;
 };
 
 export default function CalendarHeader({
@@ -23,11 +25,13 @@ export default function CalendarHeader({
   onPrev,
   onNext,
   onToday,
+  headerAction,
 }: Props) {
   const weekTitle = isToday(selectedDate) ? "오늘" : formatCalendarHeader(selectedDate, "week");
   const monthTitle = formatCalendarHeader(viewDate, "month");
 
   const isMonthView = viewMode === "month";
+  const hasHeaderAction = headerAction !== undefined && headerAction !== null;
 
   return (
     <div className={`calendar-header ${isMonthView ? "is-month" : "is-week"}`}>
@@ -49,16 +53,21 @@ export default function CalendarHeader({
           </button>
         </div>
 
-        <div className="calendar-header-right" aria-hidden={!isMonthView}>
-          <button
-            type="button"
-            className="body-l-medium text-secondary"
-            onClick={onToday}
-            aria-label="오늘 날짜로 이동"
-            tabIndex={isMonthView ? 0 : -1}
-          >
-            오늘
-          </button>
+        <div
+          className={`calendar-header-right${hasHeaderAction ? " has-action" : ""}`}
+          aria-hidden={!isMonthView && !hasHeaderAction}
+        >
+          {headerAction}
+          {isMonthView ? (
+            <button
+              type="button"
+              className="body-l-medium text-secondary"
+              onClick={onToday}
+              aria-label="오늘 날짜로 이동"
+            >
+              오늘
+            </button>
+          ) : null}
         </div>
       </div>
 

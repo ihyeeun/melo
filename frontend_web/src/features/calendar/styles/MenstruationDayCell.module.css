@@ -1,0 +1,54 @@
+.root {
+  --menstruation-selected-border: var(--navy-900);
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease;
+}
+
+.numberContainer {
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease;
+}
+
+.week[data-menstruation="menstrual"],
+.month[data-menstruation="menstrual"] .numberContainer {
+  background-color: var(--coral-100);
+  color: var(--text-secondary);
+  border-radius: 16px;
+  mix-blend-mode: multiply;
+}
+
+.month[data-menstruation="menstrual"] {
+  background-color: var(--coral-100);
+}
+
+.week[data-menstruation="possible"],
+.week[data-menstruation="predicted"],
+.month[data-menstruation="possible"] .numberContainer,
+.month[data-menstruation="predicted"] .numberContainer {
+  border: 1px dashed var(--border-strong);
+  color: var(--text-secondary);
+  border-radius: 16px;
+}
+
+.selected.week[data-menstruation="possible"],
+.selected.week[data-menstruation="predicted"],
+.selected.month[data-menstruation="possible"] .numberContainer,
+.selected.month[data-menstruation="predicted"] .numberContainer {
+  background-color: var(--coral-50);
+}
+
+.outside[data-menstruation="menstrual"] {
+  color: var(--background-default);
+  opacity: 0.4;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .root,
+  .numberContainer {
+    transition-duration: 0.01ms;
+  }
+}

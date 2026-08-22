@@ -1,4 +1,4 @@
-import { addMonths, startOfMonth, startOfWeek, subMonths, subWeeks } from "date-fns";
+import { addMonths, addWeeks, startOfMonth, startOfWeek, subMonths, subWeeks } from "date-fns";
 import { type SetStateAction, useCallback, useMemo, useState } from "react";
 
 import {
@@ -81,6 +81,13 @@ export function useCalendar({
     });
   }, [viewDate, selectedDate, recordedDates, weekStartsOn]);
 
+  const viewWeekStart = startOfWeek(viewDate, { weekStartsOn });
+  const currentWeekStart = startOfWeek(new Date(), { weekStartsOn });
+  const previousWeekStart = subWeeks(currentWeekStart, 1);
+  const canGoPrevWeek =
+    subWeeks(viewWeekStart, 1).getTime() >= previousWeekStart.getTime();
+  const canGoNextWeek = addWeeks(viewWeekStart, 1).getTime() <= currentWeekStart.getTime();
+
   const toggleViewMode = () => {
     setViewMode((prev) => (prev === "week" ? "month" : "week"));
     setViewDate(selectedDate);
@@ -148,6 +155,8 @@ export function useCalendar({
     viewDate,
     weekDays,
     monthDays,
+    canGoPrevWeek,
+    canGoNextWeek,
     toggleViewMode,
     selectDate,
     goPrev,

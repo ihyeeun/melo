@@ -5,14 +5,19 @@ import { formatDayNumber } from "../utils/format";
 
 type DayCellVariant = "week" | "month";
 
-type Props = {
+export type DayCellRenderProps = {
   day: CalendarDay;
   weekdayLabel?: string;
   onSelect: (date: Date) => void;
   variant?: DayCellVariant;
 };
 
-export default function DayCell({ day, weekdayLabel, onSelect, variant = "week" }: Props) {
+export default function DayCell({
+  day,
+  weekdayLabel,
+  onSelect,
+  variant = "week",
+}: DayCellRenderProps) {
   const classNames = [
     "calendar-day-cell",
     `calendar-day-cell--${variant}`,

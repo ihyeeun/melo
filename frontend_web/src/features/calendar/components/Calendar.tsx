@@ -1,18 +1,20 @@
 import "@/features/calendar/styles/calendar.css";
 
-import { addMonths, startOfMonth } from "date-fns";
-import { useMemo } from "react";
+import { addMonths, addWeeks, startOfMonth, subMonths, subWeeks } from "date-fns";
+import { type ReactNode, useMemo } from "react";
 
 import CalendarHeader from "@/features/calendar/components/CalendarHeader";
+import type { DayCellRenderProps } from "@/features/calendar/components/dayCell";
 import MonthlyCalendar from "@/features/calendar/components/MonthlyCalendar";
 import WeeklyCalendar from "@/features/calendar/components/WeeklyCalendar";
 import { formatDateKey } from "@/shared/utils/dateFormat";
 
 import { useCalendarRecordedDatesQuery } from "../hooks/queries/useCalendarRecordedDatesQuery";
 import { useCalendar } from "../hooks/useCalendar";
-import { buildMonthCalendarDays } from "../utils/calendar";
+import { buildMonthCalendarDays, buildWeekCalendarDays } from "../utils/calendar";
 
 type Props = {
+  headerAction?: ReactNode;
   initialDate?: Date;
   recordedDates?: string[];
   onSelectDate?: (date: Date) => void;
@@ -20,11 +22,13 @@ type Props = {
   selectedDate?: Date;
   showMonthBackground?: boolean;
   showRecordedDots?: boolean;
+  renderDayCell?: (props: DayCellRenderProps) => ReactNode;
 };
 
 const EMPTY_RECORDED_DATES: string[] = [];
 
 export default function Calendar({
+  headerAction,
   initialDate,
   recordedDates: fallbackRecordedDates = EMPTY_RECORDED_DATES,
   onSelectDate,
@@ -32,13 +36,15 @@ export default function Calendar({
   selectedDate: controlledSelectedDate,
   showMonthBackground = true,
   showRecordedDots = true,
+  renderDayCell,
 }: Props) {
   const {
     viewMode,
     selectedDate,
     viewDate,
     weekDays,
-    monthDays,
+    canGoPrevWeek,
+    canGoNextWeek,
     toggleViewMode,
     selectDate,
     goPrev,
@@ -53,11 +59,10 @@ export default function Calendar({
 
   const monthDateRange = useMemo(() => {
     const startDate = startOfMonth(viewDate);
-    const endDate = addMonths(startDate, 1);
 
     return {
-      startDate: formatDateKey(startDate),
-      endDate: formatDateKey(endDate),
+      startDate: formatDateKey(subMonths(startDate, 1)),
+      endDate: formatDateKey(addMonths(startDate, 2)),
     };
   }, [viewDate]);
 
@@ -67,17 +72,61 @@ export default function Calendar({
     endDate: monthDateRange.endDate,
   });
 
-  const displayedMonthDays = useMemo(() => {
-    if (!showRecordedDots) return monthDays;
-    if (recordedDates.length === 0) return monthDays;
+  const displayedMonthPages = useMemo(() => {
+    const monthlyRecordedDates = showRecordedDots ? recordedDates : EMPTY_RECORDED_DATES;
 
-    return buildMonthCalendarDays({
-      baseDate: viewDate,
-      selectedDate,
-      recordedDates,
-      weekStartsOn: 1,
-    });
-  }, [monthDays, recordedDates, selectedDate, showRecordedDots, viewDate]);
+    return [subMonths(viewDate, 1), viewDate, addMonths(viewDate, 1)].map((baseDate) =>
+      buildMonthCalendarDays({
+        baseDate,
+        selectedDate,
+        recordedDates: monthlyRecordedDates,
+        weekStartsOn: 1,
+      }),
+    );
+  }, [recordedDates, selectedDate, showRecordedDots, viewDate]);
+
+  const displayedWeekPages = useMemo(() => {
+    const pages = [];
+    const weeklyRecordedDates = showRecordedDots
+      ? fallbackRecordedDates
+      : EMPTY_RECORDED_DATES;
+
+    if (canGoPrevWeek) {
+      pages.push(
+        buildWeekCalendarDays({
+          baseDate: subWeeks(viewDate, 1),
+          selectedDate,
+          recordedDates: weeklyRecordedDates,
+          weekStartsOn: 1,
+        }),
+      );
+    }
+
+    pages.push(weekDays);
+
+    if (canGoNextWeek) {
+      pages.push(
+        buildWeekCalendarDays({
+          baseDate: addWeeks(viewDate, 1),
+          selectedDate,
+          recordedDates: weeklyRecordedDates,
+          weekStartsOn: 1,
+        }),
+      );
+    }
+
+    return pages;
+  }, [
+    canGoNextWeek,
+    canGoPrevWeek,
+    fallbackRecordedDates,
+    selectedDate,
+    showRecordedDots,
+    viewDate,
+    weekDays,
+  ]);
+
+  const currentWeekPageIndex = canGoPrevWeek ? 1 : 0;
 
   const handleSelectDateInWeek = (date: Date) => {
     selectDate(date);
@@ -106,22 +155,27 @@ export default function Calendar({
         onPrev={goPrev}
         onNext={goNext}
         onToday={handleGoToday}
+        headerAction={headerAction}
       />
 
       <div className="calendar-body">
         {viewMode === "week" ? (
           <WeeklyCalendar
-            days={weekDays}
+            pages={displayedWeekPages}
+            currentPageIndex={currentWeekPageIndex}
             onSelectDate={handleSelectDateInWeek}
             onSwipePrev={goPrev}
             onSwipeNext={goNext}
+            renderDayCell={renderDayCell}
           />
         ) : (
           <MonthlyCalendar
-            days={displayedMonthDays}
+            pages={displayedMonthPages}
+            currentPageIndex={1}
             onSelectDate={handleSelectDateInMonth}
             onSwipePrev={goPrev}
             onSwipeNext={goNext}
+            renderDayCell={renderDayCell}
           />
         )}
       </div>

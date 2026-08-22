@@ -73,6 +73,16 @@
   width: 12px;
 }
 
+.emptyAction {
+  bottom: 20px;
+  color: var(--btn-default);
+  left: 25px;
+  position: absolute;
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
 .stepper {
   bottom: 10px;
   display: block;

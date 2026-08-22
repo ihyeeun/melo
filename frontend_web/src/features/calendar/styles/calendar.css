@@ -84,7 +84,8 @@
     transform 220ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.calendar-header.is-month .calendar-header-right {
+.calendar-header.is-month .calendar-header-right,
+.calendar-header-right.has-action {
   opacity: 1;
   pointer-events: auto;
   transform: translateX(0);
@@ -133,24 +134,51 @@
   color: var(--calendar-fg);
 }
 
-.weekly-calendar {
+.calendar-pager {
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  touch-action: pan-x pan-y;
+  width: 100%;
+}
+
+.calendar-pager::-webkit-scrollbar {
+  display: none;
+}
+
+.calendar-pager-track {
+  align-items: flex-start;
+  display: flex;
+  width: 100%;
+}
+
+.calendar-pager-page {
+  flex: 0 0 100%;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+}
+
+.weekly-calendar-page {
   display: grid;
   gap: 6px;
   grid-template-columns: repeat(7, minmax(0, 1fr));
   padding: 0 16px;
   place-items: center center;
-  touch-action: pan-y;
-  width: 100%;
 }
 
 .monthly-calendar {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  touch-action: pan-y;
   width: 100%;
   padding: 16px;
   padding-top: 0px;
+}
+
+.monthly-calendar-viewport {
+  transition: height 180ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .monthly-calendar-weekdays {
@@ -168,6 +196,7 @@
 }
 
 .monthly-calendar-grid {
+  align-content: start;
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
   place-items: center;
@@ -186,7 +215,7 @@
 
 .calendar-day-cell--week {
   border: 1px solid transparent;
-  border-radius: 20px;
+  border-radius: 16px;
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -303,6 +332,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .monthly-calendar-viewport,
   .calendar-header *,
   .calendar-header *::before,
   .calendar-header *::after {

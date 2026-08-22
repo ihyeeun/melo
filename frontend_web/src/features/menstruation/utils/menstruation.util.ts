@@ -6,6 +6,7 @@ import type {
   DateRange,
   MenstrualCalculateCalendar,
   MenstrualPhase,
+  MenstruationDateType,
 } from "@/features/menstruation/types/menstruation.type";
 import { formatDateKey, parseDateKey } from "@/shared/utils/dateFormat";
 
@@ -257,6 +258,25 @@ export function isDateInRange(targetDate: string, range: DateRange): boolean {
   const isBeforeEnd = targetDate <= range.endDate;
 
   return isAfterStart && isBeforeEnd;
+}
+
+export function getMenstruationDateType(
+  targetDate: string,
+  calendar: MenstrualCalculateCalendar["calendar"] | undefined,
+): MenstruationDateType {
+  if (!calendar) return undefined;
+
+  for (const date of calendar.menstrualDates) {
+    if (isDateInRange(targetDate, date)) return "menstrual";
+  }
+
+  if (calendar.possibleDate && isDateInRange(targetDate, calendar.possibleDate)) {
+    return "possible";
+  }
+
+  if (calendar.predictedDate === targetDate) return "predicted";
+
+  return undefined;
 }
 
 export function getMenstrualPhaseByDate(

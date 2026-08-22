@@ -5,10 +5,9 @@ import { useMonthCalendar } from "@/features/calendar/hooks/useCalendar";
 import styles from "@/features/calendar/styles/MenstruationCalendar.module.css";
 import { WEEKDAY_LABELS } from "@/features/calendar/types/calendar.types";
 import { useGetMenstruationCyclesQuery } from "@/features/menstruation/hooks/queries/menstruation.query";
-import type { MenstrualCalculateCalendar } from "@/features/menstruation/types/menstruation.type";
 import {
   calculateMenstrualCalendar,
-  isDateInRange,
+  getMenstruationDateType,
 } from "@/features/menstruation/utils/menstruation.util";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import { formatDateKey, getTodayFormatDateKey } from "@/shared/utils/dateFormat";
@@ -82,7 +81,7 @@ export default function MenstruationCalendar({ onSelectedDate }: CalendarProps) 
             const today = isToday(date);
             const selected = selectedDate ? isSameDay(date, selectedDate) : today;
             const outside = !isSameMonth(date, viewDate);
-            const menstruationType = getMenstruationType(dateKey, menstrualDate?.calendar);
+            const menstruationType = getMenstruationDateType(dateKey, menstrualDate?.calendar);
 
             return (
               <button
@@ -111,23 +110,4 @@ export default function MenstruationCalendar({ onSelectedDate }: CalendarProps) 
       </>
     </section>
   );
-}
-
-type MenstruationType = "menstrual" | "possible" | "predicted" | undefined;
-
-function getMenstruationType(
-  targetDate: string,
-  calendar: MenstrualCalculateCalendar["calendar"] | undefined,
-): MenstruationType {
-  if (!calendar) return undefined;
-
-  for (const date of calendar.menstrualDates) {
-    if (isDateInRange(targetDate, date)) return "menstrual";
-  }
-
-  if (calendar.possibleDate && isDateInRange(targetDate, calendar.possibleDate)) return "possible";
-
-  if (calendar.predictedDate === targetDate) return "predicted";
-
-  return undefined;
 }
