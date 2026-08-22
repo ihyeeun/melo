@@ -13,7 +13,11 @@ import {
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import { formatDateKey, getTodayFormatDateKey } from "@/shared/utils/dateFormat";
 
-export default function MenstruationCalendar() {
+interface CalendarProps {
+  onSelectedDate?: (date: string) => void;
+}
+
+export default function MenstruationCalendar({ onSelectedDate }: CalendarProps) {
   const [selectedDate, setSelectedDate] = useState<Date>();
   const today = getTodayFormatDateKey();
   const { data: menstruationData } = useGetMenstruationCyclesQuery({ date: today, limit: 7 });
@@ -23,6 +27,8 @@ export default function MenstruationCalendar() {
 
   const handleSelectDate = (date: Date) => {
     setSelectedDate(date);
+
+    onSelectedDate?.(formatDateKey(date));
 
     // 앞뒤 달의 날짜를 누르면 해당 월로 이동
     if (!isSameMonth(date, viewDate)) {

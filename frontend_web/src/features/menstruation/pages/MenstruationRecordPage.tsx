@@ -1,31 +1,99 @@
-import type { ReactNode } from "react";
+import { type ReactNode, useState } from "react";
 
 import MenstruationCalendar from "@/features/calendar/components/menstruation/MenstruationCalendar";
+import { useGetMenstrualRecordedQuery } from "@/features/menstruation/hooks/queries/menstruation.query";
 import styles from "@/features/menstruation/styles/MenstruationRecord.module.css";
+import {
+  MENSTRUATION_FLOW,
+  MENSTRUATION_STATUS,
+  MENSTRUATION_SYMPTOM,
+  type MenstruationFlow,
+  type MenstruationRecordedItem,
+  type MenstruationStatus,
+  type MenstruationSymptom,
+} from "@/features/menstruation/types/menstruation.type";
 import { Button } from "@/shared/commons/button/Button";
 import { SelectedCard } from "@/shared/commons/card/SelectedCard";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
 import { navigateBack } from "@/shared/navigation/stackflowNavigation";
+import { getTodayFormatDateKey } from "@/shared/utils/dateFormat";
 
 const AMOUNTS = [
-  { type: "0", label: "적음" },
-  { type: "1", label: "보통" },
-  { type: "2", label: "많음" },
-  { type: "3", label: "매우 많음" },
+  {
+    value: MENSTRUATION_FLOW.LIGHT,
+    label: "적음",
+  },
+  {
+    value: MENSTRUATION_FLOW.MEDIUM,
+    label: "보통",
+  },
+  {
+    value: MENSTRUATION_FLOW.HEAVY,
+    label: "많음",
+  },
+  {
+    value: MENSTRUATION_FLOW.VERY_HEAVY,
+    label: "매우 많음",
+  },
 ];
 
 const SYMPTOMS = [
-  { type: "0", label: "복통" },
-  { type: "1", label: "허리 통증" },
-  { type: "2", label: "두통" },
-  { type: "3", label: "피로감" },
-  { type: "4", label: "예민함" },
-  { type: "5", label: "붓기" },
-  { type: "6", label: "유방 통증" },
-  { type: "7", label: "식욕 변화" },
+  {
+    value: MENSTRUATION_SYMPTOM.ABDOMINAL_PAIN,
+    label: "복통",
+  },
+  {
+    value: MENSTRUATION_SYMPTOM.BACK_PAIN,
+    label: "허리 통증",
+  },
+  {
+    value: MENSTRUATION_SYMPTOM.HEADACHE,
+    label: "두통",
+  },
+  {
+    value: MENSTRUATION_SYMPTOM.FATIGUE,
+    label: "피로감",
+  },
+  {
+    value: MENSTRUATION_SYMPTOM.SENSITIVITY,
+    label: "예민함",
+  },
+  {
+    value: MENSTRUATION_SYMPTOM.SWELLING,
+    label: "붓기",
+  },
+  {
+    value: MENSTRUATION_SYMPTOM.BREAST_PAIN,
+    label: "유방 통증",
+  },
+  {
+    value: MENSTRUATION_SYMPTOM.APPETITE_CHANGE,
+    label: "식욕 변화",
+  },
 ];
 
+type MenstruationFormValues = {
+  menstruationStatus: MenstruationStatus;
+  flow: MenstruationFlow | null;
+  symptoms: MenstruationSymptom[];
+};
+
 export default function MenstruationRecordPage() {
+  const [selectedDate, setSelectedDate] = useState<string>(getTodayFormatDateKey());
+  const recordMenstrualQuery = useGetMenstrualRecordedQuery(selectedDate);
+  const MENSTRUATION_RECORD_FORM_ID = "menstruation-record-form";
+
+  const handleSave = (values: MenstruationFormValues) => {
+    const request = {
+      date: selectedDate,
+      menstruation_status: values.menstruationStatus,
+      flow: values.flow,
+      symptoms: values.symptoms,
+    };
+
+    console.log(request);
+  };
+
   return (
     <div className={`page ${styles.root}`}>
       <PageHeader
@@ -37,7 +105,7 @@ export default function MenstruationRecordPage() {
 
       <main className={`main ${styles.content}`}>
         <section className={styles.monthlySection}>
-          <MenstruationCalendar />
+          <MenstruationCalendar onSelectedDate={setSelectedDate} />
           <div className={styles.monthlyCaption}>
             <p className="body-xs-regular text-secondary">
               <span className={styles.dot} data-variant="outlined" />
@@ -50,46 +118,28 @@ export default function MenstruationRecordPage() {
           </div>
         </section>
 
-        <section className={styles.recordSection}>
-          <SectionLayout title="생리 유무">
-            <div className={styles.twoGrid}>
-              <SelectedCard isSelected={true} className={styles.fieldCard}>
-                <p className="body-m-regular text-primary">있음</p>
-              </SelectedCard>
-              <SelectedCard isSelected={false} className={styles.fieldCard}>
-                <p className="body-m-regular text-primary">없음</p>
-              </SelectedCard>
-            </div>
-          </SectionLayout>
+        {recordMenstrualQuery.isPending && <p>기록을 불러오는 중...</p>}
 
-          <SectionLayout title="생리 양" description="오늘의 생리 양은 어떤가요?">
-            <div className={styles.fourGrid}>
-              {AMOUNTS.map(({ label }) => {
-                return (
-                  <SelectedCard isSelected={false} className={styles.fieldCard}>
-                    <p className="body-s-regular">{label}</p>
-                  </SelectedCard>
-                );
-              })}
-            </div>
-          </SectionLayout>
+        {recordMenstrualQuery.isError && <p>기록을 불러오지 못했습니다.</p>}
 
-          <SectionLayout title="증상 기록" description="해당되는 증상을 선택해주세요.">
-            <div className={styles.twoGrid}>
-              {SYMPTOMS.map(({ label }) => {
-                return (
-                  <SelectedCard isSelected={false} className={styles.fieldCard}>
-                    {label}
-                  </SelectedCard>
-                );
-              })}
-            </div>
-          </SectionLayout>
-        </section>
+        {recordMenstrualQuery.isSuccess && (
+          <MenstruationRecordForm
+            key={selectedDate}
+            formId={MENSTRUATION_RECORD_FORM_ID}
+            onSubmit={handleSave}
+            initRecord={recordMenstrualQuery.data?.record}
+          />
+        )}
       </main>
 
       <footer className="footer">
-        <Button onClick={() => {}} fullWidth size="m">
+        <Button
+          type="submit"
+          form={MENSTRUATION_RECORD_FORM_ID}
+          disabled={!recordMenstrualQuery.isSuccess}
+          fullWidth
+          size="m"
+        >
           기록 저장하기
         </Button>
       </footer>
@@ -115,5 +165,111 @@ function SectionLayout({
 
       {children}
     </div>
+  );
+}
+
+function MenstruationRecordForm({
+  formId,
+  onSubmit,
+  initRecord,
+}: {
+  formId: string;
+  onSubmit: (values: MenstruationFormValues) => void;
+  initRecord: MenstruationRecordedItem["record"];
+}) {
+  const [menstrualStatus, setMenstrualStatus] = useState<MenstruationStatus | null>(
+    () => initRecord?.menstruation_status ?? null,
+  );
+  const [flow, setFlow] = useState<MenstruationFlow | null>(() => initRecord.flow ?? null);
+  const [symptoms, setSymptoms] = useState<MenstruationSymptom[]>(() => [
+    ...(initRecord.symptoms ?? []),
+  ]);
+
+  const handleSymptomToggle = (symptom: MenstruationSymptom) => {
+    setSymptoms((previous) => {
+      const isAlreadySelected = previous.includes(symptom);
+
+      if (isAlreadySelected) {
+        return previous.filter((item) => item !== symptom);
+      }
+
+      return [...previous, symptom];
+    });
+  };
+
+  const handleSubmit = (event: React.SubmitEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (!menstrualStatus) return;
+
+    onSubmit({
+      menstruationStatus: menstrualStatus,
+      flow,
+      symptoms,
+    });
+  };
+
+  return (
+    <form id={formId} onSubmit={handleSubmit} className={styles.recordSection}>
+      <SectionLayout title="생리 유무">
+        <div className={styles.twoGrid}>
+          <SelectedCard
+            isSelected={menstrualStatus === MENSTRUATION_STATUS.BLEEDING}
+            className={styles.fieldCard}
+            setSelectedChange={() => setMenstrualStatus(MENSTRUATION_STATUS.BLEEDING)}
+          >
+            <p className="body-m-regular text-primary">있음</p>
+          </SelectedCard>
+          <SelectedCard
+            isSelected={menstrualStatus === MENSTRUATION_STATUS.NOT_BLEEDING}
+            className={styles.fieldCard}
+            setSelectedChange={() => {
+              setMenstrualStatus(MENSTRUATION_STATUS.NOT_BLEEDING);
+              setFlow(null);
+            }}
+          >
+            <p className="body-m-regular text-primary">없음</p>
+          </SelectedCard>
+        </div>
+      </SectionLayout>
+
+      <SectionLayout title="생리 양" description="오늘의 생리 양은 어떤가요?">
+        <div className={styles.fourGrid}>
+          {AMOUNTS.map(({ value, label }) => {
+            return (
+              <SelectedCard
+                key={value}
+                isSelected={flow === value}
+                setSelectedChange={() => {
+                  setFlow(value);
+                }}
+                className={styles.fieldCard}
+              >
+                <p className="body-s-regular">{label}</p>
+              </SelectedCard>
+            );
+          })}
+        </div>
+      </SectionLayout>
+
+      <SectionLayout title="증상 기록" description="해당되는 증상을 선택해주세요.">
+        <div className={styles.twoGrid}>
+          {SYMPTOMS.map(({ value, label }) => {
+            return (
+              <SelectedCard
+                key={value}
+                isSelected={symptoms.includes(value)}
+                setSelectedChange={() => {
+                  handleSymptomToggle(value);
+                }}
+                className={styles.fieldCard}
+              >
+                {label}
+              </SelectedCard>
+            );
+          })}
+        </div>
+      </SectionLayout>
+    </form>
   );
 }

@@ -1,6 +1,7 @@
 import type {
   getCyclesRequest,
   MenstruationCyclesResponse,
+  MenstruationRecordedItem,
 } from "@/features/menstruation/types/menstruation.type";
 import { webApiData } from "@/shared/api/apiClient";
 
@@ -9,6 +10,16 @@ export async function getMenstruationCycles({ date, limit }: getCyclesRequest) {
     endpoint: "/menstrual-cycles",
     method: "POST",
     params: { date, limit },
+  });
+
+  return response;
+}
+
+export async function getMenstrualRecorded(date: string) {
+  const response = await webApiData<MenstruationRecordedItem>({
+    endpoint: "/menstrual-recorded",
+    method: "POST",
+    params: { date },
   });
 
   return response;

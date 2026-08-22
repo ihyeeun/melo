@@ -14,8 +14,12 @@ export const handlers = [
   http.post("*/menstrual-cycles", () => success({ cycles: mockMenstruationCycles })),
 
   // 해당 날짜의 월경 기록 조회
-  http.get("*/menstrual-records/:date", ({ params }) => {
-    const record = mockMenstruationRecords.find(({ date }) => date === params.date) ?? null;
+  http.post("*/menstrual-recorded", ({ request }) => {
+    const url = new URL(request.url);
+    const requestedDate = url.searchParams.get("date");
+
+    const record = mockMenstruationRecords.find(({ date }) => date === requestedDate) ?? [];
+
     return success({ record });
   }),
 

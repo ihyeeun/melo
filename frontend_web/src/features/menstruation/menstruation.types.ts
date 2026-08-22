@@ -32,7 +32,7 @@ export type MenstruationRecord = {
   menstruation_status: MenstruationStatus;
   flow: MenstruationFlow | null;
   symptoms: MenstruationSymptom[];
-  cycle_id: string | null;
+  cycle_id: number;
 };
 
 export type CreateMenstruationCycleRequest = {
