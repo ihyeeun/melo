@@ -16,6 +16,7 @@ const SYSTEM_ICON_SRC = {
   drag: "/icons/system-icons/drag.svg",
   exit: "/icons/system-icons/exit.svg",
   fitness: "/icons/system-icons/fitness.svg",
+  humidity: "/icons/system-icons/humidity.svg",
   info: "/icons/system-icons/info.svg",
   kebab: "/icons/system-icons/kebab.svg",
   breakfast: "/icons/system-icons/light-mode.svg",

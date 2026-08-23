@@ -15,6 +15,7 @@ import {
 import { Button } from "@/shared/commons/button/Button";
 import { SelectedCard } from "@/shared/commons/card/SelectedCard";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
+import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import { navigateBack } from "@/shared/navigation/stackflowNavigation";
 import { getTodayFormatDateKey } from "@/shared/utils/dateFormat";
 
@@ -22,18 +23,22 @@ const AMOUNTS = [
   {
     value: MENSTRUATION_FLOW.LIGHT,
     label: "적음",
+    iconCount: 1,
   },
   {
     value: MENSTRUATION_FLOW.MEDIUM,
     label: "보통",
+    iconCount: 2,
   },
   {
     value: MENSTRUATION_FLOW.HEAVY,
     label: "많음",
+    iconCount: 3,
   },
   {
     value: MENSTRUATION_FLOW.VERY_HEAVY,
     label: "매우 많음",
+    iconCount: 4,
   },
 ];
 
@@ -235,7 +240,7 @@ function MenstruationRecordForm({
 
       <SectionLayout title="생리 양" description="오늘의 생리 양은 어떤가요?">
         <div className={styles.fourGrid}>
-          {AMOUNTS.map(({ value, label }) => {
+          {AMOUNTS.map(({ value, label, iconCount }) => {
             return (
               <SelectedCard
                 key={value}
@@ -245,7 +250,12 @@ function MenstruationRecordForm({
                 }}
                 className={styles.fieldCard}
               >
-                <p className="body-s-regular">{label}</p>
+                <span className={styles.amountIcons} aria-hidden="true">
+                  {Array.from({ length: iconCount }, (_, iconIndex) => (
+                    <SystemIcon key={iconIndex} name="humidity" size={12} />
+                  ))}
+                </span>
+                <p className="body-s-regular text-primary">{label}</p>
               </SelectedCard>
             );
           })}
@@ -262,7 +272,7 @@ function MenstruationRecordForm({
                 setSelectedChange={() => {
                   handleSymptomToggle(value);
                 }}
-                className={styles.fieldCard}
+                className={`${styles.fieldCard} body-m-regular text-primary`}
               >
                 {label}
               </SelectedCard>

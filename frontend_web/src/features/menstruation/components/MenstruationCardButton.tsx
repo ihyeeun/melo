@@ -11,8 +11,8 @@ import { useNavigate } from "@/shared/navigation/stackflowNavigation";
 const PHASE_TIMELINE = [...MENSTRUAL_PHASE_ORDER, MENSTRUAL_PHASE_ORDER[0]];
 
 const EMPTY_PHASE_CONTENT = {
-  title: "주기 기록을 시작해 볼까요?",
-  message: "기록을 바탕으로\n생리 예정일과 \n주기별 맞춤 정보를\n 알려드려요.",
+  title: "생리 기록을 시작해 볼까요?",
+  message: "주기에 맞춰\n 식단과 운동을 \n더 똑똑하게 관리해봐요!",
   source: "/icons/characters/question-color.png",
 } as const;
 
