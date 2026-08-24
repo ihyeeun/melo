@@ -58,9 +58,8 @@ export function ConfirmModal({
             });
           }}
           variant="outlined"
-          interaction="normal"
-          size="normal"
-          color="primary"
+          size="s"
+          border="primary"
         >
           {cancelText}
         </Button>
@@ -79,10 +78,8 @@ export function ConfirmModal({
             props.onClick?.(e); // 닫기 동작 유지
             void onConfirm(); // 로직 실행
           }}
-          variant="filled"
-          interaction="normal"
-          size="normal"
-          color="primary"
+          variant="default"
+          size="s"
         >
           {confirmText}
         </Button>
@@ -102,10 +99,8 @@ export function ConfirmModal({
           console.error(error);
         }
       }}
-      variant="filled"
-      interaction="normal"
-      size="normal"
-      color="primary"
+      variant="default"
+      size="s"
     >
       {confirmText}
     </Button>

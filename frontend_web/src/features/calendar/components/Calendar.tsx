@@ -12,15 +12,14 @@ import { useCalendarRecordedDatesQuery } from "../hooks/queries/useCalendarRecor
 import { useCalendar } from "../hooks/useCalendar";
 import { buildMonthCalendarDays } from "../utils/calendar";
 
-export type CalendarVariant = "primary" | "normal";
-
 type Props = {
   initialDate?: Date;
   recordedDates?: string[];
   onSelectDate?: (date: Date) => void;
+  safeAreaTop?: boolean;
   selectedDate?: Date;
+  showMonthBackground?: boolean;
   showRecordedDots?: boolean;
-  variant?: CalendarVariant;
 };
 
 const EMPTY_RECORDED_DATES: string[] = [];
@@ -29,9 +28,10 @@ export default function Calendar({
   initialDate,
   recordedDates: fallbackRecordedDates = EMPTY_RECORDED_DATES,
   onSelectDate,
+  safeAreaTop = true,
   selectedDate: controlledSelectedDate,
+  showMonthBackground = true,
   showRecordedDots = true,
-  variant = "primary",
 }: Props) {
   const {
     viewMode,
@@ -95,7 +95,9 @@ export default function Calendar({
   };
 
   return (
-    <section className={`calendar-root calendar-root--${variant}`}>
+    <section
+      className={`calendar-root is-${viewMode}${safeAreaTop ? " has-safe-area-top" : ""}${showMonthBackground ? " has-month-background" : ""}`}
+    >
       <CalendarHeader
         viewMode={viewMode}
         viewDate={viewDate}

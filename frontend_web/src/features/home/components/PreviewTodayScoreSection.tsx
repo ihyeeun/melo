@@ -1,215 +1,201 @@
-import ActivityCaloriesPopover from "@/features/health/components/ActivityCaloriesPopover";
 import { useActivityCalories } from "@/features/health/hooks/useActivityCalories";
-import ActionCard from "@/features/home/components/cards/ActionCard";
+import Tile from "@/features/home/components/cards/Tile";
 import { useDayMealsQuery } from "@/features/home/hooks/queries/useTodayRecordQuery";
-import style from "@/features/home/styles/PreviewTodayScoreSection.module.css";
-import {
-  getActivityAdjustedTargetCalories,
-  getActivityCalorieProgressDash,
-  getCalorieSummary,
-  hasValidTargets,
-  resolveTargetCalories,
-} from "@/features/home/utils/todayMealFeedback";
+import styles from "@/features/home/styles/PreviewTodayScoreSection.module.css";
+import { getDayNutritionSummary } from "@/features/home/utils/dayMealSummary";
 import { useGetProfileQuery } from "@/features/profile/hooks/queries/useProfileQuery";
-import { PATH } from "@/router/path";
-import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
+import { InfoPopover } from "@/shared/commons/popover/InfoPopover";
 import ScoreProgress from "@/shared/commons/progress/Progress";
 import { Skeleton, SkeletonStatus } from "@/shared/commons/skeleton/Skeleton";
-import { toast } from "@/shared/commons/toast/toast";
-import { useNavigate } from "@/shared/navigation/stackflowNavigation";
-import { useTargetsLoadedState, useTargetsState } from "@/shared/stores/targetNutrient.store";
-import { calculateDailyNutritionMetricsForDisplay } from "@/shared/utils/nutrientScore";
+import { useSelectedDateKey } from "@/shared/stores/selectedDate.store";
 
-type PreviewTodayScoreSectionProps = {
-  selectedDate: string;
-};
+const SCORE_CHARACTER_SOURCES = [
+  { maxScore: 20, src: "/icons/characters/score-0.png" },
+  { maxScore: 40, src: "/icons/characters/score-21.png" },
+  { maxScore: 60, src: "/icons/characters/score-41.png" },
+  { maxScore: 80, src: "/icons/characters/score-61.png" },
+  { maxScore: 100, src: "/icons/characters/score-81.png" },
+] as const;
 
-type PreviewTodayScoreCardProps = {
-  currentCalories: number;
-  date?: string;
-  isCalorieExceeded: boolean;
-  message: string;
-  onClick?: () => void;
-  progressDash?: { label?: string; value: number } | null;
-  progressMax: number | null;
-  progressValue: number;
-  score: number | null;
-  targetCalories: number | null;
-};
+const DEFAULT_CHARACTER_SRC = SCORE_CHARACTER_SOURCES[0].src;
 
-export default function PreviewTodayScoreSection({ selectedDate }: PreviewTodayScoreSectionProps) {
-  const navigation = useNavigate();
+export default function PreviewTodayScoreSection() {
+  const selectedDateKey = useSelectedDateKey();
+  const { isWorkoutRecordPending, summary: activitySummary } = useActivityCalories(selectedDateKey);
+  const {
+    data: dayMeal,
+    isError: isSummaryError,
+    isPending: isSummaryPending,
+  } = useDayMealsQuery(selectedDateKey);
+  const {
+    data: profile,
+    isError: isProfileError,
+    isPending: isProfilePending,
+  } = useGetProfileQuery();
 
-  const { data: dayMealSummary, isPending: isSummaryPending } = useDayMealsQuery(selectedDate);
-  const { summary: activitySummary } = useActivityCalories(selectedDate);
-
-  const targets = useTargetsState();
-  const hasTargetsLoaded = useTargetsLoadedState();
-  const targetCalories = resolveTargetCalories(targets);
-  const adjustedTargetCalories = getActivityAdjustedTargetCalories(
-    targetCalories,
-    activitySummary?.calories,
-  );
-  const hasTargetCalories = targetCalories !== null;
-  const shouldFetchProfile = hasTargetsLoaded && !hasTargetCalories;
-  const { isPending: isProfilePending } = useGetProfileQuery({
-    enabled: shouldFetchProfile,
-  });
-
-  const nutritionInput =
-    hasValidTargets(targets) && dayMealSummary
-      ? {
-          actualCalories: dayMealSummary.totalCalories,
-          targetCalories: targets.target_calories,
-          actualMacrosInGram: {
-            carbs: dayMealSummary.totalNutrients.carbs,
-            protein: dayMealSummary.totalNutrients.protein,
-            fat: dayMealSummary.totalNutrients.fat,
-          },
-          targetMacroRatios: {
-            carbs: targets.target_ratio[0],
-            protein: targets.target_ratio[1],
-            fat: targets.target_ratio[2],
-          },
-        }
-      : null;
-
-  const nutritionMetrics = nutritionInput
-    ? calculateDailyNutritionMetricsForDisplay(nutritionInput)
-    : null;
-  const score = nutritionInput ? (nutritionMetrics?.score.totalScore ?? 0) : null;
-  const calorieSummary = getCalorieSummary(
-    dayMealSummary?.totalCalories ?? 0,
-    adjustedTargetCalories,
-  );
-  const isCalorieExceeded =
-    adjustedTargetCalories !== null &&
-    (dayMealSummary?.totalCalories ?? 0) > adjustedTargetCalories;
-  const isTargetInfoPending = shouldFetchProfile && isProfilePending;
-  const progressDash = getActivityCalorieProgressDash({
-    targetCalories,
-    adjustedTargetCalories,
-  });
-
-  const handleTodayMealScoreClick = () => {
-    if (!hasValidTargets(targets)) {
-      toast.warning("목표 칼로리 설정 후 이용할 수 있어요");
-      return;
-    }
-
-    if (!dayMealSummary) {
-      return;
-    }
-
-    const scoreForNavigation = nutritionMetrics?.score.totalScore ?? 0;
-
-    navigation(PATH.TODAY_MEAL_SCORE, {
-      state: {
-        score: scoreForNavigation,
-        targets: targets,
-        currents: dayMealSummary,
-      },
-    });
-  };
-
-  if (isSummaryPending) {
+  if (isSummaryPending || isProfilePending || isWorkoutRecordPending) {
     return <PreviewTodayScoreSkeleton />;
   }
 
-  return (
-    <PreviewTodayScoreCard
-      score={score}
-      message={isTargetInfoPending ? "목표 정보를 불러오는 중입니다." : calorieSummary.message}
-      currentCalories={calorieSummary.roundedCurrentCalories}
-      targetCalories={calorieSummary.roundedTargetCalories}
-      progressValue={calorieSummary.roundedCurrentCalories}
-      progressMax={calorieSummary.roundedTargetCalories}
-      progressDash={progressDash}
-      isCalorieExceeded={isCalorieExceeded}
-      onClick={handleTodayMealScoreClick}
-      date={selectedDate}
-    />
-  );
-}
+  const nutritionSummary = getDayNutritionSummary(dayMeal, profile, activitySummary?.calories);
+  const nutrition = isProfileError
+    ? { message: "목표 정보를 불러오지 못했어요", score: null }
+    : isSummaryError
+      ? { message: "식사 정보를 불러오지 못했어요", score: null }
+      : nutritionSummary;
+  const characterSrc = getScoreCharacterSrc(nutrition.score ?? 0);
+  const activityCalories =
+    typeof nutritionSummary.calories.activity === "number" &&
+    Number.isFinite(nutritionSummary.calories.activity) &&
+    nutritionSummary.calories.activity > 0
+      ? Math.round(nutritionSummary.calories.activity)
+      : 0;
 
-export function PreviewTodayScorePreview() {
   return (
-    <PreviewTodayScoreCard
-      score={84}
-      message="오늘 목표까지 1,240kcal 남았어요"
-      currentCalories={560}
-      targetCalories={1800}
-      progressValue={560}
-      progressMax={1800}
-      isCalorieExceeded={false}
-    />
-  );
-}
+    <div className={styles.root}>
+      <article className={styles.nutritionBalanceCard}>
+        <div className={styles.summaryArea}>
+          <div className={styles.titleArea}>
+            <p className="text-primary title-s-semi">오늘의 영양 밸런스</p>
+            <p className={`${styles.message} text-tertiary body-s-regular`}>{nutrition.message}</p>
+          </div>
 
-function PreviewTodayScoreCard({
-  currentCalories,
-  date,
-  isCalorieExceeded,
-  message,
-  onClick,
-  progressDash = null,
-  progressMax,
-  progressValue,
-  score,
-  targetCalories,
-}: PreviewTodayScoreCardProps) {
-  return (
-    <ActionCard className={style.content} onClick={onClick}>
-      <section className={style.scoreContainer}>
-        <div className={style.scoreText}>
-          <img src="/icons/face-2.svg" width={50} alt="" aria-hidden="true" />
-          <span className={`typo-title1`}>{score ?? "--"}점</span>
+          <p className={`text-primary title-xl-medium ${styles.score}`}>
+            {nutrition.score ?? "--"}
+            <span className="text-tertiary body-l-regular"> 점</span>
+          </p>
         </div>
-        <p className={`typo-body3 ${style.textAssistive}`}>{message}</p>
-      </section>
 
-      <section className={style.caloriesContainer}>
-        <p className={`${style.calorieText} textNoWrap typo-title2`}>
-          <span className={`${style.score} typo-h2`}>
-            {currentCalories.toLocaleString("ko-KR")}
-          </span>
-          {"/ "}
-          {targetCalories !== null ? targetCalories.toLocaleString("ko-KR") : "--"} kcal
-          {date ? <ActivityCaloriesPopover /> : null}
-          <SystemIcon name="chevron-right-normal" size={24} className={style.icon} />
-        </p>
-        <ScoreProgress
-          value={progressMax === null ? 0 : progressValue}
-          max={progressMax ?? 100}
-          dash={progressDash}
-          variant={isCalorieExceeded ? "danger-white" : "primary-white"}
+        <img
+          className={styles.character}
+          src={characterSrc}
+          width={154}
+          height={154}
+          alt=""
+          aria-hidden="true"
         />
+      </article>
+
+      <section className={styles.nutritionSection}>
+        <Tile className={styles.calorieGroup}>
+          <p className={`body-l-medium text-primary`}>칼로리</p>
+          <div className={styles.calorieValue}>
+            <p>
+              <span className={`title-l-semi text-primary ${styles.currentCalorie}`}>
+                {nutritionSummary.calories.current.toLocaleString("ko-KR")}
+              </span>{" "}
+              <span className={`body-l-regular text-tertiary`}>
+                / {nutritionSummary.calories.target.toLocaleString("ko-KR")} kcal
+              </span>
+            </p>
+            {activityCalories > 0 && (
+              <InfoPopover ariaLabel="운동 칼로리 안내" side="bottom">
+                운동으로 {activityCalories.toLocaleString("ko-KR")}kcal 소모
+              </InfoPopover>
+            )}
+          </div>
+          <ScoreProgress variant="primary" value={nutritionSummary.calories.progressPercent} />
+        </Tile>
+
+        <Tile className={styles.macrosGroup}>
+          <div className={styles.macrosItem}>
+            <div className={styles.macroTitle}>
+              <p className="body-s-medium text-primary">탄수화물</p>
+              {nutritionSummary.notices.carbsEstimatedFromSubNutrients && (
+                <InfoPopover ariaLabel="순탄수 기준 안내">
+                  탄수화물에서 대체당과 식이섬유를 뺀 순탄수를 기준으로 탄수화물 정보를 제공하고
+                  있어요
+                </InfoPopover>
+              )}
+            </div>
+            <p>
+              <span className="body-s-medium text-primary">
+                {nutritionSummary.nutrients.carbs.current.toLocaleString("ko-KR")}
+              </span>{" "}
+              <span className="caption-m-regular text-tertiary">
+                / {nutritionSummary.nutrients.carbs.target.toLocaleString("ko-KR")}g
+              </span>
+            </p>
+            <ScoreProgress
+              variant="navy"
+              value={nutritionSummary.nutrients.carbs.progressPercent}
+            />
+          </div>
+          <div className={styles.macrosItem}>
+            <p className="body-s-medium text-primary">단백질</p>
+            <p>
+              <span className="body-s-medium text-primary">
+                {nutritionSummary.nutrients.protein.current.toLocaleString("ko-KR")}
+              </span>{" "}
+              <span className="caption-m-regular text-tertiary">
+                / {nutritionSummary.nutrients.protein.target.toLocaleString("ko-KR")}g
+              </span>
+            </p>
+            <ScoreProgress
+              variant="navy"
+              value={nutritionSummary.nutrients.protein.progressPercent}
+            />
+          </div>
+          <div className={styles.macrosItem}>
+            <p className="body-s-medium text-primary">지방</p>
+            <p>
+              <span className="body-s-medium text-primary">
+                {nutritionSummary.nutrients.fat.current.toLocaleString("ko-KR")}
+              </span>{" "}
+              <span className="caption-m-regular text-tertiary">
+                / {nutritionSummary.nutrients.fat.target.toLocaleString("ko-KR")}g
+              </span>
+            </p>
+            <ScoreProgress variant="navy" value={nutritionSummary.nutrients.fat.progressPercent} />
+          </div>
+        </Tile>
       </section>
-    </ActionCard>
+    </div>
+  );
+}
+
+function getScoreCharacterSrc(score: number) {
+  const safeScore = Math.round(Math.min(100, Math.max(0, Number.isFinite(score) ? score : 0)));
+
+  return (
+    SCORE_CHARACTER_SOURCES.find(({ maxScore }) => safeScore <= maxScore)?.src ??
+    DEFAULT_CHARACTER_SRC
   );
 }
 
 function PreviewTodayScoreSkeleton() {
   return (
-    <ActionCard className={style.content}>
-      <SkeletonStatus className={style.skeletonContent} label="오늘 식사 점수를 불러오는 중입니다.">
-        <section className={style.scoreContainer}>
-          <div className={style.scoreText}>
-            <Skeleton width={50} height={50} variant="circle" />
-            <Skeleton width={68} height={30} radius={999} />
-          </div>
-          <Skeleton width={136} height={18} radius={999} />
-        </section>
-
-        <section className={style.caloriesContainer}>
-          <div className={`${style.calorieText} textNoWrap`}>
-            <Skeleton width={92} height={24} radius={999} />
-            <Skeleton width={112} height={24} radius={999} />
+    <SkeletonStatus className={styles.root} label="오늘 식사 점수를 불러오는 중입니다.">
+      <div className={styles.nutritionBalanceCard}>
+        <div className={styles.summaryArea}>
+          <div className={styles.skeletonTitleArea}>
+            <Skeleton width={136} height={25} radius={12} />
+            <Skeleton width={154} height={20} radius={12} />
           </div>
 
-          <Skeleton width="100%" height={12} radius={999} />
-        </section>
-      </SkeletonStatus>
-    </ActionCard>
+          <Skeleton className={styles.score} width={72} height={45} radius={12} />
+        </div>
+
+        <Skeleton className={styles.skeletonCharacter} width={100} height={100} radius={100} />
+      </div>
+
+      <section className={styles.nutritionSection}>
+        <Tile className={styles.calorieGroup}>
+          <Skeleton width={52} height={25} radius={12} />
+          <Skeleton width={190} height={32} radius={12} />
+          <Skeleton width="100%" height={8} radius={12} />
+        </Tile>
+
+        <Tile className={styles.macrosGroup}>
+          {Array.from({ length: 3 }).map((_, index) => (
+            <div key={index} className={styles.macrosItem}>
+              <Skeleton width={52} height={20} radius={12} />
+              <Skeleton width={72} height={20} radius={12} />
+              <Skeleton width="100%" height={8} radius={12} />
+            </div>
+          ))}
+        </Tile>
+      </section>
+    </SkeletonStatus>
   );
 }

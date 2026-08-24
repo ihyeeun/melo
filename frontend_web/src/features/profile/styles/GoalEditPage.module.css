@@ -1,5 +1,5 @@
 .page {
-  background-color: var(--bg-normal);
+  background-color: var(--background-gray-1);
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -8,7 +8,7 @@
 }
 
 .pageWhite {
-  background-color: var(--bg-white);
+  background-color: var(--background-default);
 }
 
 .main {
@@ -18,7 +18,7 @@
 }
 
 .loadingText {
-  color: var(--label-alternative);
+  color: var(--text-secondary);
   text-align: center;
 }
 
@@ -40,8 +40,23 @@
   border-bottom: none;
 }
 
+.birthYearSummaryItem {
+  cursor: pointer;
+  position: relative;
+}
+
+.birthYearSummarySelect {
+  appearance: none;
+  cursor: pointer;
+  height: 100%;
+  inset: 0;
+  opacity: 0;
+  position: absolute;
+  width: 100%;
+}
+
 .summaryLabel {
-  color: var(--label-normal);
+  color: var(--text-primary);
 }
 
 .summaryValueRow {
@@ -51,11 +66,11 @@
 }
 
 .summaryValue {
-  color: var(--label-assistive);
+  color: var(--text-tertiary);
 }
 
 .summaryChevron {
-  color: var(--interaction-normal);
+  color: var(--text-primary);
 }
 
 .stageSection {
@@ -71,10 +86,6 @@
   flex-direction: column;
   gap: 16px;
   padding: 0 20px;
-}
-
-.sheetContent[data-editor-field="birthYear"] {
-  min-height: 460px;
 }
 
 .sheetBody {
@@ -95,11 +106,11 @@
 }
 
 .editorTitle {
-  color: var(--label-normal);
-  font-size: var(--fs-20);
+  color: var(--text-primary);
+  font-size: 20px;
   font-weight: var(--fw-semibold);
-  letter-spacing: var(--letter-spacing-tight);
-  line-height: var(--line-height-145);
+  letter-spacing: -0.04em;
+  line-height: 1.45;
   margin: 0;
   padding: 0 4px;
 }
@@ -112,10 +123,10 @@
 }
 
 .selectableCard {
-  background: var(--bg-white);
-  border: 1px solid var(--border-neutral);
+  background: var(--background-default);
+  border: 1px solid var(--border-subtle);
   border-radius: 8px;
-  color: var(--label-normal);
+  color: var(--text-primary);
   cursor: pointer;
   transition:
     background-color 120ms ease,
@@ -124,12 +135,12 @@
 }
 
 .selectableCardActive {
-  background: var(--interaction-primary);
-  border-color: var(--border-primary);
+  background: var(--background-selected);
+  border-color: var(--border-strong);
 }
 
 .selectableCard:focus-visible {
-  outline: 2px solid var(--border-primary);
+  outline: 2px solid var(--border-strong);
   outline-offset: 2px;
 }
 
@@ -142,10 +153,10 @@
 }
 
 .genderCardLabel {
-  font-size: var(--fs-18);
+  font-size: 18px;
   font-weight: var(--fw-semibold);
-  letter-spacing: var(--letter-spacing-tight);
-  line-height: var(--line-height-145);
+  letter-spacing: -0.04em;
+  line-height: 1.45;
 }
 
 .optionList {
@@ -164,59 +175,16 @@
 }
 
 .optionTitle {
-  color: var(--label-normal);
+  color: var(--text-primary);
 }
 
 .optionDescription {
-  color: var(--label-alternative);
-}
-
-.birthYearPicker {
-  flex: 1;
-  height: 320px;
-  min-height: 320px;
-}
-
-.birthYearPickerItem {
-  color: var(--label-assistive);
-}
-
-.birthYearPickerItem[data-distance="1"] {
-  color: var(--gray-600);
-}
-
-.birthYearPickerItem[data-distance="2"] {
-  color: var(--gray-600);
-}
-
-.birthYearPickerItem[data-distance="3"] {
-  color: var(--gray-500);
-}
-
-.birthYearPickerItemSelected {
-  color: var(--label-normal);
-}
-
-.birthYearPickerHighlight {
-  background: var(--interaction-primary);
-  border: 1px solid var(--border-primary);
-  border-radius: 8px;
-  left: 12.5px;
-  right: 12.5px;
+  color: var(--text-secondary);
 }
 
 @media (max-height: 700px) {
-  .sheetContent[data-editor-field="birthYear"] {
-    min-height: 420px;
-  }
-
   .sheetContent[data-editor-field="activity"],
   .sheetContent[data-editor-field="goal"] {
     min-height: 460px;
-  }
-
-  .birthYearPicker {
-    height: 290px;
-    min-height: 290px;
   }
 }

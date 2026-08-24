@@ -21,7 +21,7 @@ export default function MonthlyCalendar({ days, onSelectDate, onSwipePrev, onSwi
     <div className="monthly-calendar" style={motionStyle} {...swipeHandlers}>
       <div className="monthly-calendar-weekdays">
         {WEEKDAY_LABELS.map((label) => (
-          <div key={label} className="monthly-calendar-weekday typo-label4">
+          <div key={label} className="monthly-calendar-weekday caption-m-semi">
             {label}
           </div>
         ))}

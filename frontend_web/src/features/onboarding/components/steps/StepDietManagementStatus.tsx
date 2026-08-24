@@ -51,12 +51,12 @@ export default function StepDietManagementStatus({ data, update }: StepComponent
   return (
     <section className={`${styles.content} ${styles.onboardingStepReadable}`}>
       <div className={styles.onboardingTitle}>
-        <h2 className="typo-title1">
+        <h2 className="title-l-semi">
           식단 관리를 위해
           <br />
           지금 하고 있는 것이 있나요?
         </h2>
-        <p className={`${styles.textAlternative} typo-body2`}>복수 선택 가능</p>
+        <p className={`${styles.textAlternative} body-l-medium`}>복수 선택 가능</p>
       </div>
 
       <div className={styles.onboardingOptionList}>

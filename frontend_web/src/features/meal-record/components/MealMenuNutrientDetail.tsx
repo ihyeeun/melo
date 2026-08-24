@@ -2,7 +2,7 @@ import { Tabs } from "@base-ui/react";
 import { useEffect, useMemo, useState } from "react";
 
 import { NutrientDetailList } from "@/features/meal-record/components/NutrientDetailList";
-import { NutrientWarningPopover } from "@/features/meal-record/components/NutrientWarningPopover";
+import { NUTRIENT_DETAIL_INFO_MESSAGES } from "@/features/meal-record/constants/nutrientInfoMessages";
 import {
   formatNutrientValue,
   type MainNutrientKey,
@@ -22,6 +22,7 @@ import {
 import { Button } from "@/shared/commons/button/Button";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import NumberField from "@/shared/commons/input/NumberField";
+import { InfoPopover } from "@/shared/commons/popover/InfoPopover";
 import { formatBaseServingUnit } from "@/shared/utils/servingUnit";
 
 import styles from "../styles/MealMenuNutrientDetail.module.css";
@@ -387,13 +388,14 @@ export function MealMenuNutrientDetail({
     <>
       <section className={styles.summarySection}>
         <div className={styles.summaryContent}>
-          <p className={`typo-title2 ${styles.textNormal}`}>{previewMenu.name}</p>
+          <p className={`title-m-semi ${styles.textNormal}`}>{previewMenu.name}</p>
           <div className={styles.summarySecond}>
             {previewMenu.brand && (
-              <p className={`typo-label4 ${styles.textAlternative}`}>{previewMenu.brand}</p>
+              <p className={`body-xs-regular ${styles.textAlternative}`}>{previewMenu.brand}</p>
             )}
-            <p className={`${styles.textNormal} ${styles.calories} textNoWrap typo-title1`}>
-              {formatNutrientValue(previewMenu.calories)} kcal
+            <p className={`${styles.textNormal} ${styles.calories} textNoWrap title-xl-medium`}>
+              {formatNutrientValue(previewMenu.calories)}
+              <span className="title-m-medium text-tertiary"> kcal</span>
             </p>
           </div>
         </div>
@@ -406,12 +408,19 @@ export function MealMenuNutrientDetail({
               {summaryMacroItems.map((macro) => (
                 <article key={macro.key} className={styles.macroItem}>
                   <div className={styles.macroLabelRow}>
-                    <p className={`typo-body2 ${styles.textAlternative}`}>{macro.label}</p>
-                    {macro.showWarning && <NutrientWarningPopover />}
+                    <p className={`body-s-regular text-secondary`}>{macro.label}</p>
+                    {macro.showWarning && (
+                      <InfoPopover
+                        ariaLabel="영양성분 주의 안내"
+                        messages={NUTRIENT_DETAIL_INFO_MESSAGES}
+                      />
+                    )}
                   </div>
-                  <p className={`typo-title3 ${styles.macroValue}`}>
-                    <span className={styles.macroNumber}>{formatNutrientValue(macro.value)}</span>
-                    <span className={`${styles.macroUnit}`}>g</span>
+                  <p className={`${styles.macroValue}`}>
+                    <span className="title-m-medium text-primary marginLeft">
+                      {formatNutrientValue(macro.value)}
+                    </span>
+                    <span className="body-s-regular text-tertiary">g</span>
                   </p>
                 </article>
               ))}
@@ -431,14 +440,14 @@ export function MealMenuNutrientDetail({
           <Tabs.List className={styles.TabsList}>
             <Tabs.Tab
               value="unit"
-              className={`${styles.TabsTab} ${inputMode === "unit" ? "typo-label1" : "typo-label2"}`}
+              className={`${styles.TabsTab} ${inputMode === "unit" ? "body-l-semi" : "body-l-medium"}`}
             >
               {formatBaseServingUnit(menu.unit_quantity)} ({menu.weight}
               {menu.unit === MENU_UNIT.GRAM ? "g" : "ml"})
             </Tabs.Tab>
             <Tabs.Tab
               value="weight"
-              className={`${styles.TabsTab} ${inputMode === "weight" ? "typo-label1" : "typo-label2"}`}
+              className={`${styles.TabsTab} ${inputMode === "weight" ? "body-l-semi" : "body-l-medium"}`}
             >
               {menu.unit === MENU_UNIT.GRAM ? "g" : "ml"}
             </Tabs.Tab>
@@ -468,7 +477,7 @@ export function MealMenuNutrientDetail({
                 classNames={{
                   group: styles.FieldInputGroup,
                   inputWrapper: styles.FieldInputWrapper,
-                  input: `typo-body1 ${styles.FieldInput}`,
+                  input: `title-m-medium ${styles.FieldInput}`,
                 }}
                 format={{
                   minimumFractionDigits: 0,
@@ -516,7 +525,7 @@ export function MealMenuNutrientDetail({
                 classNames={{
                   group: styles.FieldInputGroup,
                   inputWrapper: styles.FieldInputWrapper,
-                  input: `typo-body1 ${styles.FieldInput}`,
+                  input: `title-m-semi ${styles.FieldInput}`,
                 }}
                 format={{
                   minimumFractionDigits: 0,
@@ -550,10 +559,10 @@ export function MealMenuNutrientDetail({
           aria-expanded={isDetailOpen}
           aria-controls={detailListId}
         >
-          <span className="typo-title3">상세 영양성분 보기</span>
+          <span className="title-s-semi">상세 영양성분 보기</span>
           <SystemIcon
-            name="chevron-down-normal"
-            size={24}
+            name="chevron-down"
+            size={20}
             className={`${styles.arrowIcon} ${isDetailOpen ? styles.arrowIconExpanded : ""}`}
           />
         </button>
@@ -564,12 +573,10 @@ export function MealMenuNutrientDetail({
 
             {showEditSection ? (
               <section className={styles.editSection}>
-                <p className={`typo-body3 ${styles.textNormal}`}>영양성분이 잘못되었나요?</p>
+                <p className={`body-s-regular ${styles.textNormal}`}>영양성분이 잘못되었나요?</p>
                 <Button
                   variant="text"
-                  interaction={isEditAndAddEnabled ? "normal" : "disable"}
-                  size="small"
-                  color="normal"
+                  size="xs"
                   onClick={handleEditAndAddClick}
                   disabled={!isEditAndAddEnabled}
                 >

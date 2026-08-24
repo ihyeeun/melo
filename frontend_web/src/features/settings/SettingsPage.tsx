@@ -5,16 +5,30 @@ import {
   useWithdrawMutation,
 } from "@/features/settings/hooks/mutations/useAccountMutation";
 import { PATH } from "@/router/path";
+import { isNativeApp, openNativeInAppBrowser } from "@/shared/api/bridge/nativeBridge";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import { LoadingOverlay } from "@/shared/commons/loading/Loading";
 import { ConfirmModal } from "@/shared/commons/modals/ConfirmModal";
 import { toast } from "@/shared/commons/toast/toast";
+import {
+  NUTRITION_ANALYSIS_INFO_URL,
+  TERMS_AND_PRIVACY_POLICY_URL,
+} from "@/shared/config/externalLinks";
 import { useNavigate } from "@/shared/navigation/stackflowNavigation";
 
 import styles from "./styles/SettingsPage.module.css";
 
-const NUTRITION_ANALYSIS_INFO_URL = "https://third-princess-d57.notion.site/info";
+function openExternalDocument(url: string) {
+  if (!isNativeApp()) {
+    window.open(url, "_blank", "noopener,noreferrer");
+    return;
+  }
+
+  void openNativeInAppBrowser(url).catch(() => {
+    window.open(url, "_blank", "noopener,noreferrer");
+  });
+}
 
 function resolveErrorMessage(error: unknown, fallbackMessage: string) {
   if (error instanceof Error && error.message.trim().length > 0) {
@@ -45,45 +59,30 @@ export default function SettingsPage() {
             }}
           >
             <div className={styles.labelContainer}>
-              <img src="/icons/question.svg" alt="Feedback Icon" className={styles.img} />
-              <span className={`${styles.menuLabel} typo-title4`}>문의하기 / 아이디어 보내기</span>
+              <SystemIcon name="info" size={24} className={styles.menuIcon} />
+              <span className={`${styles.menuLabel} body-l-semi`}>문의하기 / 아이디어 보내기</span>
             </div>
-            <SystemIcon name="chevron-right-thin" size={24} className={styles.menuChevron} />
-          </button>
-
-          {/* <button
-            type="button"
-            className={styles.menuItem}
-            onClick={() => navigate(PATH.SETTINGS_SUB_CODE)}
-          >
-            <div className={styles.labelContainer}>
-              <img
-                src="/icons/coupon.svg"
-                aria-hidden="true"
-                alt="구독 코드 입력"
-                className={styles.img}
-              />
-              <span className={`${styles.menuLabel} typo-title4`}>구독 코드 입력</span>
-            </div>
-            <SystemIcon name="chevron-right-thin" size={24} className={styles.menuChevron} />
-          </button> */}
-
-          <button type="button" className={styles.menuItem} onClick={() => navigate(PATH.TERMS)}>
-            <span className={`${styles.menuLabel} typo-title4`}>
-              서비스이용약관 / 개인정보처리방침
-            </span>
-            <SystemIcon name="chevron-right-thin" size={24} className={styles.menuChevron} />
+            <SystemIcon name="chevron-right" size={24} className={styles.menuChevron} />
           </button>
 
           <button
             type="button"
             className={styles.menuItem}
-            onClick={() =>
-              window.open(NUTRITION_ANALYSIS_INFO_URL, "_blank", "noopener,noreferrer")
-            }
+            onClick={() => openExternalDocument(TERMS_AND_PRIVACY_POLICY_URL)}
           >
-            <span className={`${styles.menuLabel} typo-title4`}>영양 분석 및 산출 근거</span>
-            <SystemIcon name="chevron-right-thin" size={24} className={styles.menuChevron} />
+            <span className={`${styles.menuLabel} body-l-semi`}>
+              서비스이용약관 / 개인정보처리방침
+            </span>
+            <SystemIcon name="chevron-right" size={24} className={styles.menuChevron} />
+          </button>
+
+          <button
+            type="button"
+            className={styles.menuItem}
+            onClick={() => openExternalDocument(NUTRITION_ANALYSIS_INFO_URL)}
+          >
+            <span className={`${styles.menuLabel} body-l-semi`}>영양 분석 및 산출 근거</span>
+            <SystemIcon name="chevron-right" size={24} className={styles.menuChevron} />
           </button>
 
           <button
@@ -91,8 +90,8 @@ export default function SettingsPage() {
             className={styles.menuItem}
             onClick={() => setIsLogoutModalOpen(true)}
           >
-            <span className={`${styles.menuLabel} typo-title4`}>로그아웃</span>
-            <SystemIcon name="chevron-right-thin" size={24} className={styles.menuChevron} />
+            <span className={`${styles.menuLabel} body-l-semi`}>로그아웃</span>
+            <SystemIcon name="chevron-right" size={24} className={styles.menuChevron} />
           </button>
 
           <button
@@ -100,8 +99,8 @@ export default function SettingsPage() {
             className={styles.menuItem}
             onClick={() => setIsWithdrawModalOpen(true)}
           >
-            <span className={`${styles.menuLabel} typo-title4`}>탈퇴하기</span>
-            <SystemIcon name="chevron-right-thin" size={24} className={styles.menuChevron} />
+            <span className={`${styles.menuLabel} body-l-semi`}>탈퇴하기</span>
+            <SystemIcon name="chevron-right" size={24} className={styles.menuChevron} />
           </button>
         </div>
       </main>

@@ -278,14 +278,10 @@ export default function ChatMenuDetailPage() {
 
       <footer className={styles.footer}>
         <Button
-          variant="filled"
-          size="large"
-          color="primary"
+          variant="default"
+          size="m"
           fullWidth
           onClick={handleConfirmSelection}
-          interaction={
-            selection && !isMealRegisterPending && !isDirectSubmitPending ? "normal" : "disable"
-          }
           disabled={!selection || isMealRegisterPending || isDirectSubmitPending}
         >
           {footerLabel}

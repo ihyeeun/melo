@@ -34,12 +34,11 @@ import { CheckButtonModal } from "@/shared/commons/modals/CheckButtonModal";
 import { toast } from "@/shared/commons/toast/toast";
 import {
   navigateBack,
-  useNavigate,
+  navigateBackToPathOrPushFromRoot,
   useSearchParams,
 } from "@/shared/navigation/stackflowNavigation";
 
 export default function FoodCameraPage() {
-  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [isOpeningCamera, setIsOpeningCamera] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
@@ -151,7 +150,10 @@ export default function FoodCameraPage() {
       });
 
       toast.success("촬영한 사진의 메뉴가 기록되었어요.");
-      navigate(getMealRecordPath(dateKey, mealType), { replace: true });
+      navigateBackToPathOrPushFromRoot({
+        animate: false,
+        to: getMealRecordPath(dateKey, mealType),
+      });
     } catch (error) {
       if (!hasRecognitionSucceeded) {
         track(EVENT_NAME.FOOD_SCAN_FAIL, {
@@ -170,7 +172,6 @@ export default function FoodCameraPage() {
     isUploading,
     mealRegisterAsync,
     mealType,
-    navigate,
     prepareRegisterRequest,
     returnFromCameraPage,
     upsertMenu,

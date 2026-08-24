@@ -1,0 +1,20 @@
+.card {
+  background-color: var(--background-default);
+  border: 1px solid var(--border-default);
+  border-radius: 16px;
+  width: 100%;
+}
+
+.clickable {
+  cursor: pointer;
+}
+
+.clickable:focus-visible {
+  outline: 2px solid var(--border-strong);
+  outline-offset: 2px;
+}
+
+.card[data-selected="true"] {
+  background-color: var(--background-selected);
+  border-color: var(--border-strong);
+}

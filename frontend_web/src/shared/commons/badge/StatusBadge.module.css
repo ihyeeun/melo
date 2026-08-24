@@ -17,7 +17,7 @@
 }
 
 .label {
-  color: var(--label-normal);
+  color: var(--text-primary);
 }
 
 .appropriate {

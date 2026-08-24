@@ -61,6 +61,7 @@ import { ScrollWheelPicker } from "@/shared/commons/picker/ScrollWheelPicker";
 import { Skeleton, SkeletonStatus } from "@/shared/commons/skeleton/Skeleton";
 import { toast } from "@/shared/commons/toast/toast";
 import {
+  navigateBack,
   resetStackflow,
   useLocation,
   useNavigate,
@@ -467,7 +468,11 @@ export default function MealRecordPage() {
       if (changedRequests.length === 0) {
         clearAllDrafts();
         toast.success("식사 기록이 저장되었어요");
-        resetStackflow(PATH.DIARY, { animate: false });
+        navigateBack({
+          animate: false,
+          fallbackTo: PATH.DIARY,
+          skipBackHandler: true,
+        });
         return;
       }
 
@@ -509,7 +514,11 @@ export default function MealRecordPage() {
       }
 
       clearAllDrafts();
-      resetStackflow(PATH.DIARY, { animate: false });
+      navigateBack({
+        animate: false,
+        fallbackTo: PATH.DIARY,
+        skipBackHandler: true,
+      });
       toast.success("식사 기록이 저장되었어요");
     } catch {
       toast.warning("식사 기록 저장에 실패했어요", "잠시 후 다시 시도해주세요.");
@@ -535,16 +544,15 @@ export default function MealRecordPage() {
   useStackflowBackHandler(handleBackGuard);
 
   const handleBack = () => {
-    if (handleBackGuard()) {
-      return;
-    }
-
-    resetStackflow(PATH.DIARY, { animate: false });
+    navigateBack({ fallbackTo: PATH.DIARY });
   };
 
   const handleExit = () => {
     clearAllDrafts();
-    resetStackflow(PATH.DIARY, { animate: false });
+    navigateBack({
+      fallbackTo: PATH.DIARY,
+      skipBackHandler: true,
+    });
   };
 
   const handleMealSearchNavigate = () => {
@@ -559,13 +567,13 @@ export default function MealRecordPage() {
 
       <main className={styles.content}>
         <article className={styles.summaryCard}>
-          <p className="typo-title2">섭취 칼로리</p>
+          <p className="title-m-semi">섭취 칼로리</p>
 
           <div className={`${styles.calorieRow} textNoWrap`}>
-            <span className={`${styles.textPrimary} typo-h2`}>
+            <span className={`${styles.textPrimary} title-l-semi`}>
               {totalCalories.toLocaleString("ko-KR", { maximumFractionDigits: 1 })}
             </span>
-            <span className="typo-caption1">kcal</span>
+            <span className="title-m-semi">kcal</span>
           </div>
         </article>
 
@@ -584,7 +592,7 @@ export default function MealRecordPage() {
                   onClick={() => handleChangeMealType(option.key)}
                   aria-pressed={isActive}
                 >
-                  <span className="typo-label3">{option.label}</span>
+                  <span className="body-m-regular">{option.label}</span>
                 </button>
               );
             })}
@@ -602,7 +610,7 @@ export default function MealRecordPage() {
                   onClick={handleRemoveImage}
                   aria-label="식사 사진 삭제"
                 >
-                  <SystemIcon name="close" size={28} />
+                  <SystemIcon name="exit" size={28} />
                 </button>
               </div>
 
@@ -614,12 +622,12 @@ export default function MealRecordPage() {
             <div className={styles.menuList}>
               <Button
                 variant="text"
-                color="normal"
+                size="xs"
                 className={styles.marginLeftAuto}
                 onClick={handleOpenTimeSheet}
               >
                 <span>{formattedMealRecordTime}</span>
-                <SystemIcon name="chevron-right-thin" size={20} />
+                <SystemIcon name="chevron-right" size={20} />
               </Button>
 
               {displayMenuItems.map((menu, index) => (
@@ -642,33 +650,26 @@ export default function MealRecordPage() {
           ) : showDidNotEatState ? (
             <article className={styles.didNotEatState}>
               <img
-                src="/icons/character-not-eat.svg"
+                src="/icons/characters/score-0.png"
                 alt=""
                 aria-hidden="true"
                 className={styles.didNotEatImage}
               />
-              <p className="typo-body1">안 먹었어요</p>
+              <p className="title-m-semi">안 먹었어요</p>
             </article>
           ) : (
             <button type="button" className={styles.emptyState} onClick={handleMealSearchNavigate}>
               <div className={styles.emptyStateIcon}>
-                <SystemIcon name="circle-plus-large" mode="image" size={32} />
+                <SystemIcon name="plus-circle" size={32} />
               </div>
-              <p className="typo-body1">기록하러 가볼까요?</p>
+              <p className="title-m-semi">기록하러 가볼까요?</p>
             </button>
           )}
         </section>
       </main>
 
       <footer className={styles.footer}>
-        <Button
-          onClick={handleMealSearchNavigate}
-          variant="outlined"
-          interaction="normal"
-          size="large"
-          color="primary"
-          fullWidth
-        >
+        <Button onClick={handleMealSearchNavigate} variant="outlined" size="m" fullWidth>
           추가하기
         </Button>
 
@@ -676,10 +677,8 @@ export default function MealRecordPage() {
           onClick={() => {
             void handleComplete();
           }}
-          variant="filled"
-          interaction="normal"
-          size="large"
-          color="primary"
+          variant="default"
+          size="m"
           fullWidth
           disabled={isSavePending}
         >
@@ -705,8 +704,8 @@ export default function MealRecordPage() {
       >
         <div className={styles.timeSheetContent}>
           <div className={styles.timeSheetHeader}>
-            <h2 className="typo-title2 textNormal">식사 시간</h2>
-            <Button onClick={handleResetTime} variant="text" color="normal">
+            <h2 className="title-m-semi text-primary">식사 시간</h2>
+            <Button onClick={handleResetTime} variant="text" size="xs">
               삭제
             </Button>
           </div>
@@ -715,7 +714,7 @@ export default function MealRecordPage() {
             height={290}
             itemHeight={67}
             classNames={{
-              item: `typo-title1 ${styles.timePickerItem}`,
+              item: `title-l-semi ${styles.timePickerItem}`,
               itemSelected: styles.timePickerItemSelected,
               highlight: styles.timePickerHighlight,
             }}
@@ -748,7 +747,7 @@ export default function MealRecordPage() {
             }}
           />
 
-          <Button size="large" fullWidth onClick={handleConfirmTime}>
+          <Button size="m" fullWidth onClick={handleConfirmTime}>
             확인
           </Button>
         </div>

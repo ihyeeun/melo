@@ -108,7 +108,7 @@ import {
   parseDate,
   parseDateKey,
 } from "@/shared/utils/dateFormat";
-import { formatNumberWithMaxOneDecimal } from "@/shared/utils/numberFormat";
+import { formatDisplayNumber } from "@/shared/utils/numberFormat";
 import { formatBaseServingUnit, SERVING_UNIT_PERSON } from "@/shared/utils/servingUnit";
 
 const MEAL_RECORD_MODE_CHIP_ID = "meal-record";
@@ -1855,7 +1855,6 @@ export default function ChatPage() {
       <main ref={mainRef} className={styles.main}>
         {shouldShowEmptySection ? <EmptySection /> : null}
         {shouldShowTimelineSkeleton ? <ChatHistorySkeleton /> : null}
-
         {shouldRenderTimeline ? (
           <div className={styles.chatTimeline}>
             {timelineItems.map((timelineItem, index) => {
@@ -1881,7 +1880,7 @@ export default function ChatPage() {
                   >
                     {shouldShowDateDivider && timelineItem.date ? (
                       <div className={styles.dateDivider}>
-                        <span className={`${styles.dateText} typo-caption4`}>
+                        <span className={`${styles.dateText} caption-m-medium`}>
                           {formatDateDividerText(timelineItem.date)}
                         </span>
                       </div>
@@ -1956,7 +1955,7 @@ export default function ChatPage() {
                 <section key={timelineItem.key} className={styles.conversationSection}>
                   {shouldShowDateDivider && timelineItem.date ? (
                     <div className={styles.dateDivider}>
-                      <span className={`${styles.dateText} typo-caption4`}>
+                      <span className={`${styles.dateText} caption-m-medium`}>
                         {formatDateDividerText(timelineItem.date)}
                       </span>
                     </div>
@@ -1964,12 +1963,14 @@ export default function ChatPage() {
 
                   {!shouldHideUserMessage ? (
                     <div className={styles.userMessageGroup}>
-                      <p className={`${styles.timeText} typo-caption4`}>
+                      <p className={`${styles.timeText} caption-m-regular`}>
                         {formatTimeText(chatItem.createdAt)}
                       </p>
                       <div className={styles.userMessageContent}>
                         {!userImageUrl && (
-                          <p className={`${styles.userBubble} typo-body2`}>{chatItem.input_text}</p>
+                          <p className={`${styles.userBubble} body-m-regular`}>
+                            {chatItem.input_text}
+                          </p>
                         )}
                         {userImageUrl && (
                           <button
@@ -2109,8 +2110,10 @@ export default function ChatPage() {
             {pendingMealRecordInput !== null ? (
               <section className={styles.conversationSection} aria-live="polite">
                 <div className={styles.userMessageGroup}>
-                  <p className={`${styles.timeText} typo-caption4`}>{formatTimeText(new Date())}</p>
-                  <p className={`${styles.userBubble} typo-body2`}>{pendingMealRecordInput}</p>
+                  <p className={`${styles.timeText} caption-m-medium`}>
+                    {formatTimeText(new Date())}
+                  </p>
+                  <p className={`${styles.userBubble} body-m-regular`}>{pendingMealRecordInput}</p>
                 </div>
 
                 <AssistantPendingMessage />
@@ -2120,8 +2123,10 @@ export default function ChatPage() {
             {pendingInput !== null ? (
               <section className={styles.conversationSection} aria-live="polite">
                 <div className={styles.userMessageGroup}>
-                  <p className={`${styles.timeText} typo-caption4`}>{formatTimeText(new Date())}</p>
-                  <p className={`${styles.userBubble} typo-body2`}>{pendingInput}</p>
+                  <p className={`${styles.timeText} caption-m-medium`}>
+                    {formatTimeText(new Date())}
+                  </p>
+                  <p className={`${styles.userBubble} body-m-regular`}>{pendingInput}</p>
                 </div>
 
                 {isTypingPending ? <AssistantPendingMessage /> : null}
@@ -2145,7 +2150,7 @@ export default function ChatPage() {
                     className={styles.quickChipWrapper}
                   >
                     {shouldShowHint ? (
-                      <p className={`${styles.mealRecordModeHintBubble} typo-body3`}>
+                      <p className={`${styles.mealRecordModeHintBubble} body-s-medium`}>
                         {MEAL_RECORD_MODE_HINT_MESSAGE}
                       </p>
                     ) : null}
@@ -2162,8 +2167,8 @@ export default function ChatPage() {
                       onClick={() => handleQuickChipToggle(chip.id, isSelected)}
                       aria-pressed={isSelected}
                     >
-                      <span className="typo-body2">{chip.label}</span>
-                      {isSelected && <SystemIcon name="close" size={18} />}
+                      <span className="body-l-medium">{chip.label}</span>
+                      {isSelected && <SystemIcon name="exit" size={18} />}
                     </button>
                   </div>
                 );
@@ -2174,7 +2179,7 @@ export default function ChatPage() {
           {isFloatingButtonVisible && (
             <div className={styles.floatingCameraButtonWrapper}>
               {shouldShowCameraHint && (
-                <div className={`${styles.fabBubble} typo-caption4`}>메뉴 찍기</div>
+                <div className={`${styles.fabBubble} caption-m-medium`}>메뉴 찍기</div>
               )}
               <button
                 type="button"
@@ -2185,9 +2190,9 @@ export default function ChatPage() {
                 aria-label={isScrollToBottomButtonVisible ? "맨 아래로 이동" : "촬영하기"}
               >
                 {isScrollToBottomButtonVisible ? (
-                  <SystemIcon name="chevron-down-normal" size={24} />
+                  <SystemIcon name="chevron-down" size={24} />
                 ) : (
-                  <SystemIcon name="camera" size={32} />
+                  <SystemIcon name="camera" size={28} />
                 )}
               </button>
             </div>
@@ -2563,8 +2568,8 @@ function getMealRecordCancelDescription(target: MealRecordCancelTarget | null) {
 function EmptySection() {
   return (
     <div className={styles.emptySection}>
-      <img src="/icons/character-cool.svg" />
-      <p className={`typo-body1 ${styles.emptyTitle}`}>
+      <img src="/icons/characters/question.png" width={200} alt="" aria-hidden="true" />
+      <p className={`body-l-medium text-tertiary textCenter`}>
         식단 고민,
         <br />
         무엇이든 물어보세요
@@ -2624,25 +2629,25 @@ function MealRecordModeGuide() {
   return (
     <>
       <article className={`${styles.feedbackCard} ${styles.assistantResultCardAnimated}`}>
-        <p className={`textNormal typo-title4`}>식사 기록 모드 사용 방법 📌</p>
+        <p className={`text-primary body-l-semi`}>식사 기록 모드 사용 방법 📌</p>
 
         <ol className={styles.mealRecordModeGuideList}>
           <li className={styles.mealRecordModeGuideItem}>
-            <span className={`${styles.mealRecordModeGuideNumber} typo-caption4`}>1</span>
+            <span className={`${styles.mealRecordModeGuideNumber} caption-m-medium`}>1</span>
             <div className={styles.mealRecordModeGuideText}>
-              <p className={`${styles.textNormal} typo-body3`}>
+              <p className={`${styles.textNormal} body-s-medium`}>
                 자연스럽게 식사 내용을 입력해 주세요.
               </p>
-              <p className={`${styles.textAssistive} typo-body3`}>
+              <p className={`${styles.textAssistive} body-s-medium`}>
                 예) 아침에 사과 1개와 그릭요거트 먹었어
               </p>
             </div>
           </li>
 
           <li className={styles.mealRecordModeGuideItem}>
-            <span className={`${styles.mealRecordModeGuideNumber} typo-caption4`}>2</span>
+            <span className={`${styles.mealRecordModeGuideNumber} caption-m-medium`}>2</span>
             <div className={styles.mealRecordModeGuideText}>
-              <p className={`${styles.textNormal} typo-body3`}>
+              <p className={`${styles.textNormal} body-s-medium`}>
                 멜로가 내용을 인식해서
                 <br />
                 칼로리와 식단을 자동으로 기록해요. 🤖
@@ -2651,9 +2656,9 @@ function MealRecordModeGuide() {
           </li>
 
           <li className={styles.mealRecordModeGuideItem}>
-            <span className={`${styles.mealRecordModeGuideNumber} typo-caption4`}>3</span>
+            <span className={`${styles.mealRecordModeGuideNumber} caption-m-medium`}>3</span>
             <div className={styles.mealRecordModeGuideText}>
-              <p className={`${styles.textNormal} typo-body3`}>
+              <p className={`${styles.textNormal} body-s-medium`}>
                 기록이 완료되면 이렇게 확인할 수 있어요. 👀
               </p>
             </div>
@@ -2661,22 +2666,22 @@ function MealRecordModeGuide() {
         </ol>
 
         <div className={styles.mealRecordModeExampleCard} aria-hidden="true">
-          <p className={`${styles.textPrimary} typo-body3`}>아침 기록 완료!</p>
+          <p className={`${styles.textPrimary} body-s-medium`}>아침 기록 완료!</p>
           <div className={styles.mealRecordModeExampleSummary}>
-            <p className={`${styles.mealRecordModeExampleName} ${styles.textNormal} typo-body3`}>
+            <p className={`${styles.mealRecordModeExampleName} ${styles.textNormal} body-s-medium`}>
               사과 외 1개
             </p>
             <span
-              className={`${styles.mealRecordModeExampleCalories} ${styles.textNormal} textNoWrap typo-body3`}
+              className={`${styles.mealRecordModeExampleCalories} ${styles.textNormal} textNoWrap body-s-medium`}
             >
               231kcal
             </span>
-            <SystemIcon name="chevron-down-thin" size={18} />
+            <SystemIcon name="chevron-down" size={18} />
           </div>
           <div className={styles.mealRecordModeExampleAction}>
-            <span className={`${styles.mealRecordModeExampleButton} typo-label4`}>기록 취소</span>
+            <span className={`${styles.mealRecordModeExampleButton} body-s-medium`}>기록 취소</span>
             <span
-              className={`${styles.mealRecordModeExampleButton} ${styles.mealRecordModeExampleButtonPrimary} typo-label4`}
+              className={`${styles.mealRecordModeExampleButton} ${styles.mealRecordModeExampleButtonPrimary} body-s-medium`}
             >
               수정하기
             </span>
@@ -2684,7 +2689,7 @@ function MealRecordModeGuide() {
         </div>
       </article>
 
-      <p className={`${styles.assistantBubble} ${styles.assistantBubbleAnimated} typo-body3`}>
+      <p className={`${styles.assistantBubble} ${styles.assistantBubbleAnimated} body-s-medium`}>
         편하게 채팅하듯 입력하면
         <br />
         멜로가 알아서 기록해줄게요! ✨
@@ -2692,8 +2697,8 @@ function MealRecordModeGuide() {
 
       <aside className={`${styles.mealRecordModeTipCard}`}>
         <div>
-          <p className={`${styles.mealRecordModeTipTitle} typo-title4`}>💡 TIP</p>
-          <p className={`${styles.textNormal} typo-body3`}>
+          <p className={`${styles.mealRecordModeTipTitle} body-l-semi`}>💡 TIP</p>
+          <p className={`${styles.textNormal} body-s-medium`}>
             모드를 끄고 싶을 때는
             <br />
             다시 '식사 기록 모드' 버튼을 눌러주세요!
@@ -2792,7 +2797,7 @@ function UserImagePreviewOverlay({ onClose, src }: { onClose: () => void; src: s
         aria-label="이미지 닫기"
         onClick={onClose}
       >
-        <SystemIcon name="close" size={24} />
+        <SystemIcon name="exit" size={24} />
       </button>
       <img src={src} alt="사용자가 업로드한 이미지" className={styles.userImagePreviewImage} />
     </div>
@@ -2823,7 +2828,7 @@ function AssistantMessageBubbles({
             key={index}
             className={`${styles.assistantBubble} ${
               timeText && isLastBubble ? `${styles.assistantBubbleWithTime}` : ""
-            } ${animate ? styles.assistantBubbleAnimated : ""} typo-body2`}
+            } ${animate ? styles.assistantBubbleAnimated : ""} body-m-regular`}
             data-time={timeText && isLastBubble ? timeText : undefined}
           >
             <AssistantMessageText text={bubbleMessage} />
@@ -3038,7 +3043,7 @@ function ChatInput({
           {searchMenus.map((menuName) => (
             <li
               key={menuName}
-              className={`${styles.searchMenuItem} typo-body2`}
+              className={`${styles.searchMenuItem} body-l-medium`}
               role="option"
               tabIndex={0}
               aria-selected="false"
@@ -3063,9 +3068,8 @@ function ChatInput({
           aria-label={isAddActionOpen ? "추가 기능 닫기" : "추가 기능 열기"}
         >
           <SystemIcon
-            name="circle-plus"
+            name="plus-circle"
             size={32}
-            mode="image"
             className={`${styles.plusIcon} ${isAddActionOpen ? styles.plusIconOpen : ""}`}
           />
         </button>
@@ -3075,8 +3079,8 @@ function ChatInput({
             ref={textInputRef}
             rows={1}
             value={value}
-            className={`${styles.textInput} typo-body2`}
-            // placeholder="맥도날드에 왔는데 뭐 먹을까?"
+            className={`${styles.textInput} body-s-regular`}
+            placeholder="메시지 입력"
             onChange={(event) => {
               handleInputChange(event.target.value.slice(0, 500));
             }}
@@ -3094,7 +3098,7 @@ function ChatInput({
               onClick={handleSendClick}
               aria-label="메시지 전송"
             >
-              <SystemIcon name="chevron-up-normal" size={32} />
+              <SystemIcon name="chevron-up" size={32} />
             </button>
           )}
         </div>
@@ -3104,15 +3108,17 @@ function ChatInput({
         className={`${styles.addActionPanel} ${isAddActionOpen ? styles.addActionPanelVisible : styles.addActionPanelHidden}`}
         aria-hidden={!isAddActionOpen}
       >
-        <button
-          type="button"
-          className={styles.addActionItemButton}
-          onClick={onDirectMenuRecordClick}
-          disabled={!isAddActionOpen}
-        >
-          <img src="/icons/search-icon.svg" className={styles.addActionItemIcon} />
-          <span className="typo-body2">직접 메뉴 기록하기</span>
-        </button>
+        <div className={styles.addActionGruop}>
+          <button
+            type="button"
+            className={styles.addActionItemButton}
+            onClick={onDirectMenuRecordClick}
+            disabled={!isAddActionOpen}
+          >
+            <SystemIcon name="search" size={24} className={styles.actionItemIcon} />
+          </button>
+          <span className="body-xs-regular">직접 기록</span>
+        </div>
       </div>
     </div>
   );
@@ -3154,10 +3160,10 @@ function MealRecordCard({
       className={`${styles.mealRecordCard} ${styles.mealRecordCardWithTime} ${animate ? styles.mealRecordCardAnimated : ""}`}
       data-time={timeText}
     >
-      <p className={`${styles.textAssistive} ${styles.datelabel}  typo-caption4`}>
+      <p className={`${styles.textAssistive} ${styles.datelabel}  caption-m-medium`}>
         {formatDateKeyToMonthDayWeekdayLabel(dateKey)}
       </p>
-      <p className={`${styles.textPrimary} typo-title2`}>{mealTimeLabel} 기록 완료!</p>
+      <p className={`${styles.textPrimary} title-m-medium`}>{mealTimeLabel} 기록 완료!</p>
 
       <button
         type="button"
@@ -3171,20 +3177,20 @@ function MealRecordCard({
         }}
         aria-expanded={hasMultipleItems ? isOpen : undefined}
       >
-        <p className={`${styles.mealRecordSummaryName} ${styles.textNormal} typo-title4`}>
+        <p className={`${styles.mealRecordSummaryName} ${styles.textNormal} body-l-medium`}>
           {hasMultipleItems
             ? `${primaryItem.menu_name} 외 ${items.length - 1}개`
             : primaryItem.menu_name}
         </p>
         <span
-          className={`${styles.mealRecordSummaryCalories} ${styles.recommendCalories} textNoWrap typo-title3`}
+          className={`${styles.mealRecordSummaryCalories} ${styles.recommendCalories} textNoWrap body-l-medium`}
         >
-          {formatNumberWithMaxOneDecimal(totalCalories)}kcal
+          {formatDisplayNumber(totalCalories)}kcal
         </span>
         {hasMultipleItems ? (
           <SystemIcon
-            name="chevron-up-normal"
-            size={24}
+            name="chevron-up"
+            size={12}
             className={`${styles.mealRecordChevron} ${isOpen ? styles.mealRecordChevronOpen : ""}`}
           />
         ) : null}
@@ -3195,14 +3201,14 @@ function MealRecordCard({
           {items.map((item) => (
             <div key={item.menu_id} className={styles.mealRecordMenuItem}>
               <div className={styles.mealRecordMenuText}>
-                <p className={`${styles.mealRecordMenuName} ${styles.textNormal} typo-body3`}>
+                <p className={`${styles.mealRecordMenuName} ${styles.textNormal} body-s-regular`}>
                   {item.menu_name}
                 </p>
               </div>
               <span
-                className={`${styles.mealRecordMenuCalories} ${styles.textAlternative} textNoWrap typo-body3`}
+                className={`${styles.mealRecordMenuCalories} ${styles.textAlternative} textNoWrap body-s-medium`}
               >
-                {formatNumberWithMaxOneDecimal(item.recordedCalories)}kcal
+                {formatDisplayNumber(item.recordedCalories)}kcal
               </span>
             </div>
           ))}
@@ -3210,22 +3216,10 @@ function MealRecordCard({
       ) : null}
 
       <div className={styles.mealRecordAction}>
-        <Button
-          size="small"
-          variant="outlined"
-          color="normal"
-          interaction="normal"
-          onClick={handleCancelClick}
-        >
+        <Button size="xs" variant="outlined" border="secondary" onClick={handleCancelClick}>
           기록 취소
         </Button>
-        <Button
-          size="small"
-          variant="outlined"
-          color="primary"
-          interaction="normal"
-          onClick={onEditClick}
-        >
+        <Button size="xs" variant="outlined" onClick={onEditClick}>
           수정하기
         </Button>
       </div>
@@ -3307,28 +3301,30 @@ function RecommendationSection({
           onKeyDown={handleRecommendationCardKeyDown}
         >
           {topRecommendation.rank && (
-            <span className={`${styles.rankBadge} typo-label6`}>{topRecommendation.rank}위</span>
+            <span className={`${styles.rankBadge} body-xs-regular`}>
+              {topRecommendation.rank}위
+            </span>
           )}
 
           <div className={styles.recommendContents}>
-            <p className={`${styles.recommendMenuName} typo-title2`}>
+            <p className={`${styles.recommendMenuName} title-m-medium`}>
               {topRecommendation.menu_name}
             </p>
             <div className={styles.recommendMetaRow}>
               <p className={styles.menuInfoRow}>
                 {topRecommendation.brand && (
-                  <span className={`${styles.recommendBrand} typo-label4`}>
+                  <span className={`${styles.recommendBrand} body-s-regular`}>
                     {topRecommendation.brand}
                   </span>
                 )}
-                <span className={`${styles.recommendAmount} textNoWrap typo-label4`}>
+                <span className={`${styles.recommendAmount} textNoWrap body-s-regular`}>
                   {formatBaseServingUnit(topRecommendation.unit_quantity)} (
                   {topRecommendation.weight}
                   {topRecommendation.unit === 0 ? "g" : "ml"})
                 </span>
               </p>
-              <span className={`${styles.recommendCalories} textNoWrap typo-title2`}>
-                {formatNumberWithMaxOneDecimal(topRecommendation.calories)}kcal
+              <span className={`${styles.recommendCalories} textNoWrap body-l-medium`}>
+                {formatDisplayNumber(topRecommendation.calories)}kcal
               </span>
             </div>
             {topRecommendation.data_source === 1 && (
@@ -3339,24 +3335,26 @@ function RecommendationSection({
 
             <div className={styles.recommendAction}>
               <Button
-                size="small"
+                size="xs"
+                variant="outlined"
+                border="primary"
                 aria-pressed={isMealRecorded}
                 onClick={handleMealRecordToggleClick}
               >
-                식사 기록
-                {isMealRecorded ? (
+                식사 기록하기
+                {/* {isMealRecorded ? (
                   <SystemIcon name="check" size={16} className={styles.recommendActionIcon} />
                 ) : (
                   <SystemIcon name="plus" size={16} className={styles.recommendActionIcon} />
-                )}
+                )} */}
               </Button>
-              <Button size="small" variant="outlined" onClick={handleRecommendationDetailClick}>
-                자세히 보기
-                <SystemIcon
-                  name="chevron-right-normal"
-                  size={16}
-                  className={styles.recommendActionIcon}
-                />
+              <Button
+                size="xs"
+                variant="outlined"
+                border="secondary"
+                onClick={handleRecommendationDetailClick}
+              >
+                영양성분 보기
               </Button>
             </div>
           </div>
@@ -3372,12 +3370,12 @@ function RecommendationSection({
           aria-label="메뉴 목록 더보기"
           onClick={() => navigate(getRecommendResultPath(chatId))}
         >
-          <p className={`${styles.textNormal} typo-body2`}>
+          <p className={`${styles.textNormal} body-l-medium`}>
             다른 메뉴도 있어요 (총 {recommendations.length}개)
           </p>
-          <p className={`${styles.ActionIcon} typo-label3`}>
+          <p className={`${styles.ActionIcon} body-m-regular`}>
             더보기
-            <SystemIcon name="chevron-right-normal" size={20} />
+            <SystemIcon name="chevron-right" size={14} />
           </p>
         </button>
       ) : null}
@@ -3469,7 +3467,7 @@ function FeedbackSection({
 
         <div className={styles.feedbackContents}>
           <div className={styles.feedbackMenuSummary}>
-            <p className={`${styles.feedbackMenuTitle} typo-title2`}>
+            <p className={`${styles.feedbackMenuTitle} title-m-medium`}>
               {hasMultipleMenus
                 ? `${primaryMenu.menu_name} 외 ${feedback.menus.length - 1}개`
                 : primaryMenu.menu_name}
@@ -3485,13 +3483,13 @@ function FeedbackSection({
                   setIsMenuListOpen((prev) => !prev);
                 }}
               >
-                <p className={`${styles.textAssistive} typo-label4`}>총 칼로리</p>
+                <p className={`${styles.textAssistive} body-s-regular`}>총 칼로리</p>
 
-                <p className={`${styles.feedbackCalories} textNoWrap typo-title3`}>
-                  {formatNumberWithMaxOneDecimal(feedback.total_calories)}kcal
+                <p className={`${styles.feedbackCalories} textNoWrap body-l-medium`}>
+                  {formatDisplayNumber(feedback.total_calories)}kcal
                   <SystemIcon
-                    name="chevron-up-normal"
-                    size={24}
+                    name="chevron-up"
+                    size={12}
                     className={`${styles.feedbackMenuChevron} ${
                       isMenuListOpen ? styles.feedbackMenuChevronOpen : ""
                     }`}
@@ -3500,11 +3498,11 @@ function FeedbackSection({
               </button>
             ) : (
               <div className={`${styles.feedbackMenuToggle}`}>
-                <p className={`${styles.textAlternative} typo-label4`}>
+                <p className={`${styles.textAlternative} body-s-regular`}>
                   {formatMenuServing(primaryMenu)}
                 </p>
-                <p className={`${styles.feedbackCalories} textNoWrap typo-title3`}>
-                  {formatNumberWithMaxOneDecimal(primaryMenu.calories)}kcal
+                <p className={`${styles.feedbackCalories} textNoWrap body-l-medium`}>
+                  {formatDisplayNumber(primaryMenu.calories)}kcal
                 </p>
               </div>
             )}
@@ -3517,10 +3515,12 @@ function FeedbackSection({
                   key={`${menu.menu_id}-${menu.input_menu_name}-${index}`}
                   className={styles.feedbackMenuItem}
                 >
-                  <p className={`${styles.feedbackMenuItemName} typo-body3`}>{menu.menu_name}</p>
+                  <p className={`${styles.feedbackMenuItemName} body-s-regular`}>
+                    {menu.menu_name}
+                  </p>
 
-                  <span className={`${styles.feedbackMenuItemCalories} textNoWrap typo-body3`}>
-                    {formatNumberWithMaxOneDecimal(menu.calories)}kcal
+                  <span className={`${styles.feedbackMenuItemCalories} textNoWrap body-s-medium`}>
+                    {formatDisplayNumber(menu.calories)}kcal
                   </span>
                 </li>
               ))}
@@ -3529,25 +3529,28 @@ function FeedbackSection({
 
           <div className={styles.feedbackAction}>
             <Button
-              size="small"
+              size="xs"
+              variant="outlined"
+              border="primary"
               fullWidth
               aria-pressed={isMealRecorded}
               onClick={handleMealRecordToggleClick}
             >
-              식사 기록
-              {isMealRecorded ? (
+              식사 기록하기
+              {/* {isMealRecorded ? (
                 <SystemIcon name="check" size={16} className={styles.feedbackActionIcon} />
               ) : (
                 <SystemIcon name="plus" size={16} className={styles.feedbackActionIcon} />
-              )}
+              )} */}
             </Button>
-            <Button size="small" variant="outlined" fullWidth onClick={handleFeedbackDetailClick}>
-              자세히 보기
-              <SystemIcon
-                name="chevron-right-normal"
-                size={16}
-                className={styles.feedbackActionIcon}
-              />
+            <Button
+              size="xs"
+              variant="outlined"
+              border="secondary"
+              fullWidth
+              onClick={handleFeedbackDetailClick}
+            >
+              영양성분 보기
             </Button>
           </div>
         </div>
@@ -3581,14 +3584,14 @@ function MemuNotFoundCard({
     <section
       className={`${styles.menuNotFoundCard} ${animate ? styles.assistantResultCardAnimated : ""}`}
     >
-      <img src="/icons/loading-3.svg" width={35} />
-      <p className="typo-body2">
+      <img src="/icons/characters/search.png" width={48} alt="" aria-hidden="true" />
+      <p className="body-l-regular">
         영양성분을 인식했어요!
         <br />
         어떤 브랜드의 메뉴인가요?
       </p>
-      <Button size="small" onClick={handleNutritionRegisterClick} fullWidth>
-        메뉴명 입력하기
+      <Button variant="default" size="xs" onClick={handleNutritionRegisterClick} fullWidth>
+        메뉴 입력하기
       </Button>
     </section>
   );
@@ -3659,7 +3662,7 @@ function NutritionSection({
 
 function NutritionCardError() {
   return (
-    <p className={`${styles.nutritionErrorText} typo-body2`}>메뉴 정보를 불러오지 못했어요.</p>
+    <p className={`${styles.nutritionErrorText} body-l-medium`}>메뉴 정보를 불러오지 못했어요.</p>
   );
 }
 
@@ -3687,20 +3690,22 @@ function NutritionCardContent({
 
   return (
     <div className={styles.recommendContents}>
-      <p className={`${styles.recommendMenuName} typo-title2`}>{meal.menu_name}</p>
+      <p className={`${styles.recommendMenuName} title-m-medium`}>{meal.menu_name}</p>
       <div className={styles.recommendMetaRow}>
-        <p className={`${styles.menuInfoRow} typo-label4`}>
+        <p className={`${styles.menuInfoRow} body-s-regular`}>
           {meal.brand && <span className={styles.recommendBrand}>{meal.brand}</span>}
           <span className={`${styles.recommendAmount} textNoWrap`}>{formatMenuServing(meal)}</span>
         </p>
-        <span className={`${styles.recommendCalories} textNoWrap typo-title3`}>
-          {formatNumberWithMaxOneDecimal(meal.calories)}kcal
+        <span className={`${styles.recommendCalories} textNoWrap body-l-medium`}>
+          {formatDisplayNumber(meal.calories)}kcal
         </span>
       </div>
 
       <div className={styles.recommendAction}>
         <Button
-          size="small"
+          variant="outlined"
+          border="primary"
+          size="xs"
           fullWidth
           aria-pressed={isMealRecorded}
           onClick={handleMealRecordClick}
@@ -3749,8 +3754,8 @@ function FeedbackScoreGauge({ score }: { score: number }) {
           />
         </svg>
         <div className={styles.feedbackScoreLabel}>
-          <p className={`${styles.feedbackScoreValue} typo-h2`}>{safeScore}점</p>
-          <p className={`${styles.feedbackScoreCaption} typo-body3`}>메뉴 추천도</p>
+          <p className={`${styles.feedbackScoreValue} title-l-semi`}>{safeScore}점</p>
+          <p className={`${styles.feedbackScoreCaption} body-s-medium`}>메뉴 추천도</p>
         </div>
         <img
           src={gaugeVisual.characterIcon}
@@ -3770,20 +3775,20 @@ function FeedbackScoreGauge({ score }: { score: number }) {
 function getFeedbackGaugeVisual(score: number) {
   if (score < 40) {
     return {
-      characterIcon: "/icons/face-1.svg",
+      characterIcon: "/icons/characters/score-0.png",
       valueClassName: styles.feedbackGaugeValueLow,
     };
   }
 
   if (score < 80) {
     return {
-      characterIcon: "/icons/face-2.svg",
+      characterIcon: "/icons/characters/score-41.png",
       valueClassName: styles.feedbackGaugeValueWarning,
     };
   }
 
   return {
-    characterIcon: "/icons/face-3.svg",
+    characterIcon: "/icons/characters/score-81.png",
     valueClassName: styles.feedbackGaugeValueNormal,
   };
 }
@@ -4154,7 +4159,7 @@ type MenuServingInfo = {
 };
 
 function formatMenuServing(menu: MenuServingInfo) {
-  return `${formatBaseServingUnit(menu.unit_quantity)} (${formatNumberWithMaxOneDecimal(menu.weight)}${menu.unit === 0 ? "g" : "ml"})`;
+  return `${formatBaseServingUnit(menu.unit_quantity)} (${formatDisplayNumber(menu.weight)}${menu.unit === 0 ? "g" : "ml"})`;
 }
 
 function resolveErrorMessage(

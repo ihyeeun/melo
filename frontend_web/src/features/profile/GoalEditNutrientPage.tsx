@@ -225,9 +225,8 @@ export default function GoalEditNutrientPage() {
           onClick={handleComplete}
           disabled={!visibleDraft || isSubmitting}
           fullWidth
-          variant="filled"
-          size="large"
-          interaction={!visibleDraft || isSubmitting ? "disable" : "normal"}
+          variant="default"
+          size="m"
         >
           {isSubmitting ? "완료 중..." : "완료"}
         </Button>

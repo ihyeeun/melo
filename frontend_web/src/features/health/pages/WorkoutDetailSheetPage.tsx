@@ -85,28 +85,28 @@ export default function WorkoutDetailSheetPage() {
 
     return (
       <div className={styles.sheetContainer}>
-        <h2 className={`${styles.title} typo-title3`}>{detailWorkout.workout_name}</h2>
+        <h2 className={`${styles.title} title-s-semi`}>{detailWorkout.workout_name}</h2>
 
         <div className={styles.thumbnail}>
           {imageUrl ? (
             <img src={imageUrl} alt="" className={styles.thumbnailImage} />
           ) : (
-            <p className={`typo-title4 textAssistive`}>이미지 준비 중이에요</p>
+            <p className={`body-l-semi text-tertiary`}>이미지 준비 중이에요</p>
           )}
         </div>
         <section className={styles.infoGroup}>
-          <p className={`${styles.sectionTitle} typo-label3`}>기구</p>
-          {equipment ? <p className={`typo-label3`}>{equipment}</p> : null}
+          <p className={`${styles.sectionTitle} body-m-regular`}>기구</p>
+          {equipment ? <p className={`body-m-regular`}>{equipment}</p> : null}
         </section>
 
         {bodyParts.length > 0 ? (
           <section className={styles.infoGroup}>
-            <p className={`${styles.sectionTitle} typo-label3`}>운동 부하</p>
+            <p className={`${styles.sectionTitle} body-m-regular`}>운동 부하</p>
             <div className={styles.chipList}>{bodyParts.join(", ")}</div>
           </section>
         ) : null}
 
-        <Button variant="filled" color="primary" fullWidth onClick={handleRegister}>
+        <Button variant="default" fullWidth onClick={handleRegister}>
           운동 추가하기
         </Button>
       </div>
@@ -123,8 +123,8 @@ export default function WorkoutDetailSheetPage() {
 function SheetStatus({ message, onClose }: { message: string; onClose: () => void }) {
   return (
     <section className={styles.statusContainer}>
-      <p className="typo-body2">{message}</p>
-      <Button variant="outlined" color="normal" size="small" onClick={onClose}>
+      <p className="body-l-medium">{message}</p>
+      <Button variant="outlined" border="secondary" size="xs" onClick={onClose}>
         닫기
       </Button>
     </section>

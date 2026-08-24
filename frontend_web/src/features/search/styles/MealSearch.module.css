@@ -1,5 +1,5 @@
 .page {
-  background-color: var(--bg-normal);
+  background-color: var(--background-gray-1);
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -21,7 +21,7 @@
 }
 
 .pullToRefreshIndicator {
-  color: var(--label-alternative);
+  color: var(--text-secondary);
 }
 
 .pullToRefreshIndicatorInner {
@@ -61,16 +61,16 @@
 }
 
 .searchInput {
-  background-color: var(--bg-white);
-  border: 1px solid var(--border-neutral);
+  background-color: var(--background-default);
+  border: 1px solid var(--border-subtle);
   border-radius: 8px;
-  color: var(--label-normal);
+  color: var(--text-primary);
   padding: 10px 20px;
   width: 100%;
 }
 
 .searchInput::placeholder {
-  color: var(--label-assistive);
+  color: var(--text-tertiary);
 }
 
 .searchInput:focus {
@@ -94,10 +94,10 @@
 
 .categoryChip {
   align-items: center;
-  background-color: var(--bg-white);
-  border: 1px solid var(--border-neutral);
+  background-color: var(--background-default);
+  border: 1px solid var(--border-subtle);
   border-radius: 100px;
-  color: var(--label-normal);
+  color: var(--text-primary);
   display: inline-flex;
   justify-content: center;
   padding: 6px 14px;
@@ -107,7 +107,7 @@
 .categoryChipSelected {
   background-color: var(--primary-normal);
   border-color: var(--primary-normal);
-  color: var(--static-white);
+  color: var(--background-default);
 }
 
 .bottomContainer {
@@ -132,8 +132,8 @@
 }
 
 .personalMenuTabsList {
-  background-color: var(--bg-white);
-  border-bottom: 1px solid var(--border-neutral);
+  background-color: var(--background-default);
+  border-bottom: 1px solid var(--border-subtle);
   display: grid;
   flex: 0 0 auto;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -150,7 +150,7 @@
   align-items: center;
   background: transparent;
   border: 0;
-  color: var(--label-assistive);
+  color: var(--text-tertiary);
   cursor: pointer;
   display: inline-flex;
   justify-content: center;
@@ -161,7 +161,7 @@
 }
 
 .personalMenuTabsTab[data-active] {
-  color: var(--label-normal);
+  color: var(--text-primary);
 }
 
 .personalMenuTabsIndicator {
@@ -201,10 +201,10 @@
 
 .directRegisterPrompt {
   align-items: center;
-  background-color: var(--bg-white);
-  border: 1px solid var(--border-neutral);
+  background-color: var(--background-default);
+  border: 1px solid var(--border-subtle);
   border-radius: 8px;
-  color: var(--label-normal);
+  color: var(--text-primary);
   display: flex;
   gap: 16px;
   justify-content: space-between;
@@ -214,7 +214,7 @@
 }
 
 .directRegisterPromptAction {
-  color: var(--label-assistive);
+  color: var(--text-tertiary);
   margin-left: auto;
   align-items: center;
   display: flex;
@@ -229,7 +229,7 @@
 
 .loadingContainer {
   align-items: center;
-  color: var(--label-normal);
+  color: var(--text-primary);
   display: flex;
   justify-content: center;
   min-height: 100px;
@@ -253,10 +253,10 @@
 
 .emptyResult {
   align-items: center;
-  background-color: var(--bg-white);
-  border: 1px solid var(--border-neutral);
+  background-color: var(--background-default);
+  border: 1px solid var(--border-subtle);
   border-radius: 8px;
-  color: var(--label-normal);
+  color: var(--text-primary);
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -266,11 +266,11 @@
 }
 
 .emptyResultText {
-  color: var(--label-normal);
+  color: var(--text-primary);
 }
 
 .placeholderText {
-  color: var(--label-normal);
+  color: var(--text-primary);
 }
 
 .similarSection {
@@ -280,7 +280,7 @@
 }
 
 .similarSectionTitle {
-  color: var(--label-normal);
+  color: var(--text-primary);
 }
 
 .footer {
@@ -301,7 +301,7 @@
 }
 
 .bottomText {
-  color: var(--label-normal);
+  color: var(--text-primary);
   padding-right: 10px;
 }
 
@@ -341,10 +341,10 @@
 
 .folderItem {
   align-items: stretch;
-  background-color: var(--bg-white);
-  border: 1px solid var(--border-neutral);
+  background-color: var(--background-default);
+  border: 1px solid var(--border-subtle);
   border-radius: 8px;
-  color: var(--label-normal);
+  color: var(--text-primary);
   display: flex;
   gap: 8px;
   overflow: hidden;
@@ -373,7 +373,7 @@
 }
 
 .folderMenuNames {
-  color: var(--label-assistive);
+  color: var(--text-tertiary);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

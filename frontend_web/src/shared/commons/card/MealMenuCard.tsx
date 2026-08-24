@@ -1,9 +1,10 @@
-import type { KeyboardEvent, MouseEvent } from "react";
+import type { MouseEvent } from "react";
 
 import { MENU_DATA_SOURCE, type MenuDataSource } from "@/shared/api/types/api.dto";
 import { DataSourceBadge } from "@/shared/commons/badge/DataSourceBadge";
+import { SelectedCard } from "@/shared/commons/card/SelectedCard";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
-import { formatNumberWithMaxOneDecimal } from "@/shared/utils/numberFormat";
+import { formatDisplayNumber } from "@/shared/utils/numberFormat";
 import { getServingUnitLabel } from "@/shared/utils/servingUnit";
 
 import styles from "./MealMenuCard.module.css";
@@ -64,9 +65,9 @@ function getActionAriaLabel(icon: MealMenuCardIcon) {
 }
 
 function ActionIcon({ icon }: { icon: MealMenuCardIcon }) {
-  if (icon === "add") return <SystemIcon name="circle-plus" mode="image" size={24} />;
-  if (icon === "check") return <SystemIcon name="circle-check-selected" mode="image" size={24} />;
-  return <SystemIcon name="close" size={24} />;
+  if (icon === "add") return <SystemIcon name="plus-circle" size={24} />;
+  if (icon === "check") return <SystemIcon name="check" size={24} className={styles.selected} />;
+  return <SystemIcon name="exit" size={24} />;
 }
 
 export function MealMenuCard({
@@ -87,23 +88,6 @@ export function MealMenuCard({
   onClick,
   onIconClick,
 }: MealMenuCardProps) {
-  const classes = [
-    styles.card,
-    state === "select" ? styles.selected : "",
-    onClick ? styles.clickable : "",
-    className ?? "",
-  ]
-    .filter(Boolean)
-    .join(" ");
-
-  const handleCardKeyDown = (event: KeyboardEvent<HTMLElement>) => {
-    if (!onClick) return;
-    if (event.key !== "Enter" && event.key !== " ") return;
-
-    event.preventDefault();
-    onClick();
-  };
-
   const handleIconClick = (event: MouseEvent<HTMLButtonElement>) => {
     event.stopPropagation();
     onIconClick?.();
@@ -111,7 +95,6 @@ export function MealMenuCard({
 
   const isSelected = state === "select";
   const isPersonalMenu = data_source === MENU_DATA_SOURCE.PERSONAL;
-  const shouldShowChipList = isPersonalMenu;
   const safeQuantityInput =
     typeof quantity === "number" && Number.isFinite(quantity) && quantity > 0 ? quantity : null;
   const safeWeight = toPositiveNumber(weight);
@@ -133,79 +116,67 @@ export function MealMenuCard({
   ]
     .filter(Boolean)
     .join(" ");
-  // const servingAmountLabel =
-  //   servingUnitLabel === "인분"
-  //     ? `${formatQuantity(safeDisplayUnitCount)}${servingUnitLabel}`
-  //     : `1${servingUnitLabel}`;
 
   return (
-    <article
-      className={classes}
-      role={onClick ? "button" : undefined}
-      tabIndex={onClick ? 0 : undefined}
-      onClick={onClick}
-      onKeyDown={handleCardKeyDown}
+    <SelectedCard
+      isSelected={isSelected}
+      setSelectedChange={onClick ? () => onClick() : undefined}
+      className={className}
     >
       <div className={styles.content}>
+        {typeof rank === "number" && Number.isFinite(rank) ? (
+          <span className={`${styles.rankBadge} caption-m-medium`}>{rank}위</span>
+        ) : null}
+
         <section className={styles.header}>
-          {typeof rank === "number" && Number.isFinite(rank) ? (
-            <span className={`${styles.rankBadge} typo-caption4`}>{rank}위</span>
-          ) : null}
+          <p className={`${styles.title} body-l-medium text-primary ellipsis`}>{name}</p>
 
-          <div className={styles.titleSection}>
-            <p className={`${styles.title} typo-title3 ellipsis`}>{name}</p>
-
-            {icon !== null && (
-              <button
-                type="button"
-                className={styles.iconButton}
-                onClick={handleIconClick}
-                disabled={!onIconClick}
-                aria-label={getActionAriaLabel(icon)}
-              >
-                <ActionIcon icon={icon} />
-              </button>
-            )}
-          </div>
+          {icon !== null && (
+            <button
+              type="button"
+              className={styles.iconButton}
+              onClick={handleIconClick}
+              disabled={!onIconClick}
+              aria-label={getActionAriaLabel(icon)}
+            >
+              <ActionIcon icon={icon} />
+            </button>
+          )}
         </section>
 
         {shouldShowMeta ? (
           <section className={metaClassName}>
             {shouldShowServingInfo ? (
-              <p className={styles.prouductInfo}>
+              <p className={`${styles.menuInfoGroup}`}>
                 {brand && (
-                  <span className={`${styles.brand} typo-label4`} title={brand}>
+                  <span className={`ellipsis body-s-regular text-tertiary`} title={brand}>
                     {brand}
                   </span>
                 )}
-                <span className={`${styles.unitAmount} typo-label4`}>
+                <span className={`textNoWrap body-s-regular text-secondary`}>
                   {formatQuantity(safeDisplayUnitCount)}
-                  {servingUnitLabel}
+                  {servingUnitLabel}{" "}
+                  {`(${formatQuantity(resolvedConsumedWeight)}${weightUnitText})`}
                 </span>
-                <span
-                  className={`${styles.unitAmount} typo-label4`}
-                >{`(${formatQuantity(resolvedConsumedWeight)}${weightUnitText})`}</span>
               </p>
             ) : null}
 
             {description && (
-              <p className={`typo-body3 ${styles.description} ellipsis`}>{description}</p>
+              <p className={`body-s-regular text-primary ${styles.description} ellipsis`}>
+                {description}
+              </p>
             )}
 
             {shouldShowCalories ? (
-              <span className={`${styles.calories} textNoWrap typo-title3`}>
-                {formatNumberWithMaxOneDecimal(displayedCalories)}kcal
+              <span className={`textNoWrap title-s-regular text-primary marginLeft`}>
+                {formatDisplayNumber(displayedCalories)}kcal
               </span>
             ) : null}
           </section>
         ) : null}
-      </div>
 
-      {shouldShowChipList && (
-        <div className={styles.chipList}>
-          {isPersonalMenu && <DataSourceBadge variant="personal" active={isSelected} />}
-        </div>
-      )}
-    </article>
+        {isPersonalMenu && <DataSourceBadge variant="personal" active={isSelected} />}
+      </div>
+    </SelectedCard>
   );
 }

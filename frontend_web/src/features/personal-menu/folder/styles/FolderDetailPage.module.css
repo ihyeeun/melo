@@ -1,5 +1,5 @@
 .page {
-  background-color: var(--bg-normal);
+  background-color: var(--background-gray-1);
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -35,11 +35,11 @@
 }
 
 .sectionTitle {
-  color: var(--label-normal);
+  color: var(--text-primary);
 }
 
 .menuCount {
-  color: var(--label-assistive);
+  color: var(--text-tertiary);
   flex-shrink: 0;
 }
 
@@ -57,7 +57,7 @@
 
 .stateContainer {
   align-items: center;
-  color: var(--label-assistive);
+  color: var(--text-tertiary);
   display: flex;
   flex: 1;
   flex-direction: column;

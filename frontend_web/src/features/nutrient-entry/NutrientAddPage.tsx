@@ -217,12 +217,12 @@ export function NutrientAddFormPage({
         <div className={styles.content}>
           <div className={styles.fieldWrap}>
             <div className={styles.labelRow}>
-              <p className={`typo-title3 ${styles.labelText}`}>음식명</p>
-              <p className={`typo-label6 ${styles.requiredText}`}>* 필수로 작성해주세요</p>
+              <p className={`title-s-semi ${styles.labelText}`}>음식명</p>
+              <p className={`body-xs-regular ${styles.requiredText}`}>* 필수로 작성해주세요</p>
             </div>
 
             <input
-              className={`typo-body3 ${styles.textInput}`}
+              className={`body-s-medium ${styles.textInput}`}
               type="text"
               maxLength={300}
               value={foodName}
@@ -231,11 +231,11 @@ export function NutrientAddFormPage({
               aria-label="음식명 입력"
             />
 
-            <p className={`typo-body3 ${styles.limitText}`}>최대 300자 이내</p>
+            <p className={`body-s-medium ${styles.limitText}`}>최대 300자 이내</p>
           </div>
 
           <div className={styles.fieldWrap}>
-            <p className={`typo-title3 ${styles.labelText}`}>브랜드명</p>
+            <p className={`title-s-semi ${styles.labelText}`}>브랜드명</p>
             <button
               type="button"
               className={styles.brandButton}
@@ -243,7 +243,7 @@ export function NutrientAddFormPage({
               aria-label="브랜드명 검색 열기"
             >
               <span
-                className={`typo-body3 ${brandName ? styles.brandValue : styles.brandPlaceholder}`}
+                className={`body-s-medium ${brandName ? styles.brandValue : styles.brandPlaceholder}`}
               >
                 {brandName || "브랜드명 입력"}
               </span>
@@ -255,12 +255,10 @@ export function NutrientAddFormPage({
 
       <footer className={styles.footer}>
         <Button
-          variant="filled"
-          size="large"
-          color="primary"
+          variant="default"
+          size="m"
           fullWidth
           onClick={handleNext}
-          interaction={isNextDisabled ? "disable" : "normal"}
           disabled={isNextDisabled}
         >
           {nextLabel}

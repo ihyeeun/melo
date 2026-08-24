@@ -42,6 +42,7 @@ import { CheckButtonModal } from "@/shared/commons/modals/CheckButtonModal";
 import { toast } from "@/shared/commons/toast/toast";
 import {
   navigateBack,
+  navigateBackToPathOrPushFromRoot,
   useNavigate,
   useSearchParams,
 } from "@/shared/navigation/stackflowNavigation";
@@ -74,8 +75,7 @@ export default function MealRecordCreatePage() {
   const autoTriggeredRef = useRef(false);
 
   const { mutateAsync: uploadFoodImage } = useCreateMealRecordByFoodImageMutation();
-  const { mutateAsync: uploadNutritionLabelImage } =
-    useCreateMenuByNutritionLabelImageMutation();
+  const { mutateAsync: uploadNutritionLabelImage } = useCreateMenuByNutritionLabelImageMutation();
   const { mutateAsync: mealRegisterAsync } = useTodayMealRecordRegisterMutation();
 
   const dateKey = getSafeDateKey(searchParams.get("date"));
@@ -192,7 +192,10 @@ export default function MealRecordCreatePage() {
         });
 
         toast.success("촬영한 사진의 메뉴가 기록되었어요.");
-        navigate(getMealRecordPath(dateKey, mealType), { replace: true });
+        navigateBackToPathOrPushFromRoot({
+          animate: false,
+          to: getMealRecordPath(dateKey, mealType),
+        });
       } catch (error) {
         if (!hasRecognitionSucceeded) {
           track(EVENT_NAME.FOOD_SCAN_FAIL, {
@@ -209,7 +212,6 @@ export default function MealRecordCreatePage() {
       draftKey,
       mealRegisterAsync,
       mealType,
-      navigate,
       prepareRegisterRequest,
       returnFromCameraPage,
       uploadFoodImage,
@@ -322,7 +324,7 @@ export default function MealRecordCreatePage() {
 
   return (
     <section className={styles.page}>
-      <PageHeader title="사진 촬영" onBack={returnFromCameraPage} />
+      <PageHeader title={isUploading ? "사진 분석" : "사진 촬영"} onBack={returnFromCameraPage} />
 
       {isOpeningCamera ? (
         <main className={styles.main} />

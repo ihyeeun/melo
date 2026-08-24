@@ -24,6 +24,7 @@ import { SearchInputHeader } from "@/shared/commons/header/SearchInputHeader";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import { LoadingIndicator } from "@/shared/commons/loading/Loading";
 import { ScrollFogArea } from "@/shared/commons/scrollFog";
+import { toast } from "@/shared/commons/toast/toast";
 import {
   navigateBack,
   useNavigate,
@@ -177,6 +178,7 @@ export default function WorkoutSearchPage() {
 
   const handleComplete = () => {
     if (hasAddedWorkoutRecord()) {
+      toast.success("운동 기록을 완료했어요");
       trackWorkoutRecordCompleted();
     }
 
@@ -219,11 +221,10 @@ export default function WorkoutSearchPage() {
     if (isError) {
       return (
         <section className={styles.emptyState}>
-          <p className="typo-body2">운동을 검색하지 못했어요</p>
+          <p className="body-l-medium">운동을 검색하지 못했어요</p>
           <Button
             variant="text"
-            color="normal"
-            size="small"
+            size="xs"
             onClick={() => {
               void refetch();
             }}
@@ -237,7 +238,7 @@ export default function WorkoutSearchPage() {
     if (workouts.length === 0) {
       return (
         <section className={styles.emptyState}>
-          <p className="typo-body2">
+          <p className="body-l-medium">
             {hasSearchCondition ? "검색 결과가 없어요" : "표시할 운동이 없어요"}
           </p>
         </section>
@@ -297,7 +298,7 @@ export default function WorkoutSearchPage() {
       </main>
 
       <footer className={styles.footer}>
-        <Button fullWidth size="large" onClick={handleComplete}>
+        <Button fullWidth size="m" onClick={handleComplete}>
           추가 완료
         </Button>
       </footer>
@@ -319,7 +320,7 @@ function FilterChipGroup({
       <div className={styles.filterScroller}>
         <button
           type="button"
-          className={`${styles.filterChip} ${value === null ? styles.filterChipSelected : ""} typo-label3`}
+          className={`${styles.filterChip} ${value === null ? styles.filterChipSelected : ""} body-m-regular`}
           aria-pressed={value === null}
           onClick={() => onChange(null)}
         >
@@ -329,7 +330,7 @@ function FilterChipGroup({
           <button
             key={option}
             type="button"
-            className={`${styles.filterChip} ${value === option ? styles.filterChipSelected : ""} typo-label3`}
+            className={`${styles.filterChip} ${value === option ? styles.filterChipSelected : ""} body-m-regular`}
             aria-pressed={value === option}
             onClick={() => onChange(option)}
           >
@@ -355,7 +356,7 @@ function FilterTabGroup({
       <div className={styles.filterScroller} role="tablist">
         <button
           type="button"
-          className={`${styles.filterTab} ${value === null ? styles.tabSelected : ""} typo-label3`}
+          className={`${styles.filterTab} ${value === null ? styles.tabSelected : ""} body-m-regular`}
           aria-pressed={value === null}
           onClick={() => onChange(null)}
         >
@@ -367,7 +368,7 @@ function FilterTabGroup({
             type="button"
             role="tab"
             aria-selected={value === option}
-            className={`${styles.filterTab} ${value === option ? styles.tabSelected : ""} typo-label3`}
+            className={`${styles.filterTab} ${value === option ? styles.tabSelected : ""} body-m-regular`}
             onClick={() => onChange(value === option ? null : option)}
           >
             {option}
@@ -401,12 +402,15 @@ function WorkoutSearchResultCard({
           {workout.workout_image ? (
             <img src={workout.workout_image} alt="" className={styles.thumbnailImage} />
           ) : (
-            <SystemIcon name={workout.workout_type === "cardio" ? "walking" : "fire"} size={28} />
+            <SystemIcon
+              name={workout.workout_type === "cardio" ? "walking" : "fitness"}
+              size={28}
+            />
           )}
         </div>
 
         <div className={styles.resultContent}>
-          <h2 className={`ellipsis typo-title4`}>{workout.workout_name}</h2>
+          <p className={`ellipsis body-l-medium`}>{workout.workout_name}</p>
         </div>
       </button>
 
@@ -420,11 +424,7 @@ function WorkoutSearchResultCard({
         disabled={isSelected}
         onClick={onAdd}
       >
-        <SystemIcon
-          name={isSelected ? "circle-check-selected" : "circle-plus"}
-          mode="image"
-          size={24}
-        />
+        <SystemIcon name={isSelected ? "check" : "plus-circle"} size={24} />
       </button>
     </article>
   );

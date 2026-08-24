@@ -1,5 +1,5 @@
 .page {
-  background-color: var(--bg-normal);
+  background-color: var(--background-gray-1);
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -33,7 +33,7 @@
 }
 
 .labelText {
-  color: var(--label-normal);
+  color: var(--text-primary);
 }
 
 .requiredText {
@@ -41,16 +41,16 @@
 }
 
 .textInput {
-  background-color: var(--bg-white);
-  border: 1px solid var(--border-neutral);
+  background-color: var(--background-default);
+  border: 1px solid var(--border-subtle);
   border-radius: 8px;
-  color: var(--label-normal);
+  color: var(--text-primary);
   padding: 10px 14px;
   width: 100%;
 }
 
 .textInput::placeholder {
-  color: var(--label-assistive);
+  color: var(--text-tertiary);
 }
 
 .textInput:focus {
@@ -58,16 +58,16 @@
 }
 
 .limitText {
-  color: var(--label-alternative);
+  color: var(--text-secondary);
   text-align: end;
 }
 
 .brandButton {
   align-items: center;
-  background-color: var(--bg-white);
-  border: 1px solid var(--border-neutral);
+  background-color: var(--background-default);
+  border: 1px solid var(--border-subtle);
   border-radius: 8px;
-  color: var(--label-normal);
+  color: var(--text-primary);
   display: inline-flex;
   padding: 10px 14px;
   text-align: left;
@@ -75,20 +75,20 @@
 }
 
 .brandButton:focus {
-  border-color: var(--border-primary);
+  border-color: var(--border-strong);
   outline: none;
 }
 
 .brandValue {
-  color: var(--label-normal);
+  color: var(--text-primary);
 }
 
 .brandPlaceholder {
-  color: var(--label-assistive);
+  color: var(--text-tertiary);
 }
 
 .brandSearchIcon {
-  color: var(--label-normal);
+  color: var(--text-primary);
   flex-shrink: 0;
   margin-left: auto;
 }

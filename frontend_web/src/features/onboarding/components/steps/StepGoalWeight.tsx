@@ -30,9 +30,9 @@ export default function StepGoalWeight({ data, update }: StepComponentProps) {
   return (
     <section className={`${styles.content} ${styles.onboardingStepReadable}`}>
       <div className={`${styles.onboardingTitle} ${styles.onboardingTitleGroup}`}>
-        <h2 className="typo-title1">목표 몸무게가 몇인가요?</h2>
+        <h2 className="title-l-semi">목표 몸무게가 몇인가요?</h2>
         {diff !== undefined && (
-          <p className={`${styles.textAlternative} typo-body2`}>
+          <p className={`${styles.textAlternative} body-l-medium`}>
             현재 몸무게 기준 {diff > 0 ? "+" : ""}
             {diffLabel}kg
           </p>

@@ -19,7 +19,6 @@ import { Button } from "@/shared/commons/button/Button";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import { EditorInput } from "@/shared/commons/input/EditorInput";
-import { ScrollWheelPicker } from "@/shared/commons/picker/ScrollWheelPicker";
 import {
   getBirthYearRange,
   isValidBirthYear,
@@ -43,6 +42,8 @@ type EditableField =
   | "activity"
   | "goal"
   | "goalWeight";
+
+type SheetEditableField = Exclude<EditableField, "birthYear">;
 
 type SummaryField = {
   id: EditableField;
@@ -119,7 +120,7 @@ export default function GoalEditPage() {
   const updateDraft = useUpdateGoalEditDraft();
   const hasInitializedRef = useRef(false);
   const editorInputRef = useRef<HTMLInputElement>(null);
-  const [editingField, setEditingField] = useState<EditableField | null>(null);
+  const [editingField, setEditingField] = useState<SheetEditableField | null>(null);
   const [sheetData, setSheetData] = useState<GoalEditDraft>({});
 
   useEffect(() => {
@@ -152,7 +153,7 @@ export default function GoalEditPage() {
   );
 
   const openEditor = (field: EditableField) => {
-    if (!visibleDraft) return;
+    if (!visibleDraft || field === "birthYear") return;
     setEditingField(field);
     setSheetData({ ...visibleDraft });
   };
@@ -185,21 +186,6 @@ export default function GoalEditPage() {
       }
 
       updateDraft({ gender: sheetData.gender });
-      closeEditor();
-      return;
-    }
-
-    if (editingField === "birthYear") {
-      const nextBirthYear = isValidBirthYear(sheetData.birthYear)
-        ? sheetData.birthYear
-        : birthYearDefault;
-
-      if (!isValidBirthYear(nextBirthYear)) {
-        toast.warning("출생 연도를 다시 확인해주세요");
-        return;
-      }
-
-      updateDraft({ birthYear: nextBirthYear });
       closeEditor();
       return;
     }
@@ -283,9 +269,15 @@ export default function GoalEditPage() {
     navigate(-1);
   };
 
-  const selectedBirthYear = isValidBirthYear(sheetData.birthYear)
-    ? sheetData.birthYear
+  const currentBirthYear = visibleDraft?.birthYear;
+  const selectedBirthYear = isValidBirthYear(currentBirthYear)
+    ? currentBirthYear
     : birthYearDefault;
+  const selectDefaultBirthYear = () => {
+    if (!isValidBirthYear(currentBirthYear)) {
+      updateDraft({ birthYear: birthYearDefault });
+    }
+  };
   const isInstantSelectEditor =
     editingField === "gender" || editingField === "activity" || editingField === "goal";
   const hasPositiveValue = (value?: number) => value !== undefined && value > 0;
@@ -323,36 +315,6 @@ export default function GoalEditPage() {
             >
               <span className={styles.genderCardLabel}>여성</span>
             </button>
-          </div>
-        </section>
-      );
-    }
-
-    if (editingField === "birthYear") {
-      return (
-        <section className={styles.editorSection}>
-          <h2 className={styles.editorTitle}>출생연도</h2>
-          <div className={styles.birthYearPicker}>
-            <ScrollWheelPicker
-              height="100%"
-              highlightHeight={72}
-              itemHeight={80}
-              classNames={{
-                item: `typo-h1 ${styles.birthYearPickerItem}`,
-                itemSelected: `typo-h1 ${styles.birthYearPickerItemSelected}`,
-                highlight: styles.birthYearPickerHighlight,
-              }}
-              columns={[
-                {
-                  key: "birthYear",
-                  value: String(selectedBirthYear),
-                  options: birthYearOptions,
-                  renderOption: (value) => `${value} 년`,
-                  ariaLabel: "출생연도 선택",
-                },
-              ]}
-              onChange={(_, value) => updateSheetData({ birthYear: Number(value) })}
-            />
           </div>
         </section>
       );
@@ -421,8 +383,8 @@ export default function GoalEditPage() {
                   applyInstantSelection({ activity: index as OnboardingData["activity"] })
                 }
               >
-                <p className={`${styles.optionTitle} typo-title3`}>{activity.title}</p>
-                <p className={`${styles.optionDescription} typo-body3`}>{activity.description}</p>
+                <p className={`${styles.optionTitle} title-s-semi`}>{activity.title}</p>
+                <p className={`${styles.optionDescription} body-s-medium`}>{activity.description}</p>
               </button>
             ))}
           </div>
@@ -443,8 +405,8 @@ export default function GoalEditPage() {
                 aria-pressed={sheetData.goal === index}
                 onClick={() => applyInstantSelection({ goal: index as OnboardingData["goal"] })}
               >
-                <p className={`${styles.optionTitle} typo-title3`}>{goal.title}</p>
-                <p className={`${styles.optionDescription} typo-body3`}>{goal.description}</p>
+                <p className={`${styles.optionTitle} title-s-semi`}>{goal.title}</p>
+                <p className={`${styles.optionDescription} body-s-medium`}>{goal.description}</p>
               </button>
             ))}
           </div>
@@ -489,26 +451,67 @@ export default function GoalEditPage() {
 
         {visibleDraft && (
           <section className={styles.summarySection}>
-            {SUMMARY_FIELDS.map((field) => (
-              <button
-                key={field.id}
-                type="button"
-                className={styles.summaryItem}
-                onClick={() => openEditor(field.id)}
-              >
-                <span className={`${styles.summaryLabel} typo-title4`}>{field.label}</span>
-                <div className={styles.summaryValueRow}>
-                  <span className={`${styles.summaryValue} typo-body2`}>
-                    {getSummaryValue(field.id, visibleDraft)}
-                  </span>
-                  <SystemIcon
-                    name="chevron-right-thin"
-                    className={styles.summaryChevron}
-                    size={24}
-                  />
-                </div>
-              </button>
-            ))}
+            {SUMMARY_FIELDS.map((field) => {
+              if (field.id === "birthYear") {
+                return (
+                  <div
+                    key={field.id}
+                    className={`${styles.summaryItem} ${styles.birthYearSummaryItem}`}
+                  >
+                    <span className={`${styles.summaryLabel} body-l-semi`} aria-hidden="true">
+                      {field.label}
+                    </span>
+                    <div className={styles.summaryValueRow} aria-hidden="true">
+                      <span className={`${styles.summaryValue} body-l-medium`}>
+                        {selectedBirthYear}년
+                      </span>
+                      <SystemIcon
+                        name="chevron-right"
+                        className={styles.summaryChevron}
+                        size={24}
+                      />
+                    </div>
+                    <select
+                      className={styles.birthYearSummarySelect}
+                      value={String(selectedBirthYear)}
+                      aria-label="출생 연도 선택"
+                      onFocus={selectDefaultBirthYear}
+                      onPointerDown={selectDefaultBirthYear}
+                      onChange={(event) =>
+                        updateDraft({ birthYear: Number(event.target.value) })
+                      }
+                    >
+                      {birthYearOptions.map((year) => (
+                        <option key={year} value={year}>
+                          {year} 년
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                );
+              }
+
+              return (
+                <button
+                  key={field.id}
+                  type="button"
+                  className={styles.summaryItem}
+                  onClick={() => openEditor(field.id)}
+                >
+                  <span className={`${styles.summaryLabel} body-l-semi`}>{field.label}</span>
+                  <div className={styles.summaryValueRow}>
+                    <span className={`${styles.summaryValue} body-l-medium`}>
+                      {getSummaryValue(field.id, visibleDraft)}
+                    </span>
+                    <SystemIcon
+                      name="chevron-right"
+                      className={styles.summaryChevron}
+                      size={24}
+                    />
+                  </div>
+                </button>
+              );
+            })}
           </section>
         )}
       </main>
@@ -518,9 +521,8 @@ export default function GoalEditPage() {
           onClick={handleStartPlan}
           disabled={isFooterDisabled}
           fullWidth
-          variant="filled"
-          size="large"
-          interaction={isFooterDisabled ? "disable" : "normal"}
+          variant="default"
+          size="m"
         >
           새로운 식단 계획 받기
         </Button>
@@ -534,11 +536,9 @@ export default function GoalEditPage() {
               <Button
                 fullWidth
                 onClick={applyEditor}
-                variant="filled"
-                size="large"
-                color="primary"
+                variant="default"
+                size="m"
                 disabled={isEditorConfirmDisabled}
-                interaction={isEditorConfirmDisabled ? "disable" : "normal"}
               >
                 확인
               </Button>

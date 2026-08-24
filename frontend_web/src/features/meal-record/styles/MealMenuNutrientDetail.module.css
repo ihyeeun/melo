@@ -1,7 +1,7 @@
 .summarySection {
-  background-color: var(--bg-white);
+  background-color: var(--background-default);
   border-radius: 8px;
-  border: 1px solid var(--border-neutral);
+  border: 1px solid var(--border-subtle);
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -49,9 +49,10 @@
 }
 
 .macroValue {
-  color: var(--label-primary);
-  text-align: right;
   flex: 1;
+  gap: 2px;
+  display: flex;
+  align-items: center;
 }
 
 .macroNumber {
@@ -60,7 +61,7 @@
 }
 
 .macroUnit {
-  color: var(--label-primary);
+  color: var(--primary-normal);
   flex: 0 0 auto;
 }
 
@@ -85,8 +86,8 @@
 }
 
 .TabsList {
-  background-color: var(--bg-white);
-  border: 1px solid var(--border-neutral);
+  background-color: var(--background-default);
+  border: 1px solid var(--border-subtle);
   border-radius: 8px;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -94,10 +95,10 @@
 }
 
 .TabsTab {
-  background: var(--bg-white);
+  background: var(--background-default);
   border: 0;
   border-radius: 6px;
-  color: var(--label-assistive);
+  color: var(--text-tertiary);
   cursor: pointer;
   margin: 0;
   outline: none;
@@ -105,8 +106,8 @@
   text-align: center;
 
   &[data-active] {
-    background: var(--interaction-primary);
-    color: var(--label-primary);
+    background: var(--background-selected);
+    color: var(--primary-normal);
   }
 }
 
@@ -115,8 +116,8 @@
 }
 
 .FieldGroup {
-  background-color: var(--bg-white);
-  border: 1px solid var(--border-neutral);
+  background-color: var(--background-default);
+  border: 1px solid var(--border-subtle);
   border-radius: 8px;
   display: flex;
   gap: 10px;
@@ -147,7 +148,7 @@
 }
 
 .FieldInput::placeholder {
-  color: var(--label-assistive);
+  color: var(--text-tertiary);
 }
 
 .FieldInput:focus {
@@ -158,7 +159,7 @@
   align-items: center;
   background: transparent;
   border: 0;
-  color: var(--label-normal);
+  color: var(--text-primary);
   cursor: pointer;
   display: inline-flex;
   height: 24px;
@@ -186,7 +187,7 @@
 
 .detailToggleButton {
   align-items: center;
-  color: var(--label-normal);
+  color: var(--text-primary);
   display: flex;
   justify-content: space-between;
   width: 100%;
@@ -205,7 +206,7 @@
 }
 
 .groupDivider {
-  background-color: var(--border-neutral);
+  background-color: var(--border-subtle);
   height: 1px;
   margin: 12px 0;
   width: 100%;
@@ -218,7 +219,7 @@
 
 .detailRow {
   align-items: center;
-  color: var(--label-normal);
+  color: var(--text-primary);
   display: flex;
   gap: 8px;
   justify-content: space-between;
@@ -226,7 +227,6 @@
 }
 
 .detailLabelSub {
-  color: var(--label-alternative);
   padding-left: 4px;
 }
 
@@ -239,10 +239,10 @@
 
 .warningButton {
   align-items: center;
-  background: var(--interaction-alternative);
+  background: var(--gray-300);
   border: 0;
   border-radius: 50%;
-  color: var(--label-alternative);
+  color: var(--text-secondary);
   cursor: pointer;
   display: inline-flex;
   height: 26px;
@@ -261,7 +261,7 @@
 .warningTooltip {
   background: var(--primary-normal);
   border-radius: 6px;
-  color: var(--static-white);
+  color: var(--background-default);
   max-width: min(360px, calc(100vw - 96px));
   padding: 10px 14px;
   white-space: normal;
@@ -270,7 +270,7 @@
 
 .editSection {
   align-items: center;
-  background-color: var(--bg-white);
+  background-color: var(--background-default);
   border-radius: 6px;
   display: flex;
   justify-content: space-between;
@@ -278,16 +278,16 @@
 }
 
 .textNormal {
-  color: var(--label-normal);
+  color: var(--text-primary);
 }
 
 .textAlternative {
-  color: var(--label-alternative);
+  color: var(--text-secondary);
 }
 
 .arrowIcon {
   transition: transform 0.2s ease;
-  color: var(--interaction-normal);
+  color: var(--text-primary);
 }
 
 .arrowIconExpanded {

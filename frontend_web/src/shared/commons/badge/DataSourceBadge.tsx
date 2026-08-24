@@ -2,7 +2,6 @@ import styles from "./DataSourceBadge.module.css";
 
 export const DATA_SOURCE_BADGE_VARIANT = {
   PERSONAL: "personal",
-  AI_ESTIMATED: "aiEstimated",
 } as const;
 
 export type DataSourceBadgeVariant =
@@ -17,12 +16,10 @@ type DataSourceBadgeProps = {
 
 const BADGE_LABEL: Record<DataSourceBadgeVariant, string> = {
   personal: "개인용",
-  aiEstimated: "AI 추정치",
 };
 
 const VARIANT_CLASS: Record<DataSourceBadgeVariant, string> = {
   personal: styles.personal,
-  aiEstimated: styles["ai-estimated"],
 };
 
 export function DataSourceBadge({
@@ -31,12 +28,12 @@ export function DataSourceBadge({
   label,
   className,
 }: DataSourceBadgeProps) {
-  const classes = [styles.badge, VARIANT_CLASS[variant], "typo-caption4", className ?? ""]
+  const classes = [styles.badge, VARIANT_CLASS[variant], "caption-m-medium", className ?? ""]
     .filter(Boolean)
     .join(" ");
 
   return (
-    <span className={classes} data-active={active ? "true" : undefined}>
+    <span className={classes} data-active={active}>
       {label ?? BADGE_LABEL[variant]}
     </span>
   );

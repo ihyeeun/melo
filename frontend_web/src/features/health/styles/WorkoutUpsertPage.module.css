@@ -1,5 +1,5 @@
 .page {
-  background-color: var(--bg-normal);
+  background-color: var(--background-gray-1);
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -32,7 +32,7 @@
 }
 
 .label {
-  color: var(--label-normal);
+  color: var(--text-primary);
 }
 
 .required {
@@ -48,10 +48,10 @@
 .readonlyValue,
 .inputWrap {
   align-items: center;
-  background-color: var(--bg-white);
-  border: 1px solid var(--border-neutral);
+  background-color: var(--background-default);
+  border: 1px solid var(--border-subtle);
   border-radius: 8px;
-  color: var(--label-normal);
+  color: var(--text-primary);
   display: flex;
   min-height: 44px;
   padding: 10px 14px;
@@ -66,7 +66,7 @@
 .input {
   background: transparent;
   border: 0;
-  color: var(--label-normal);
+  color: var(--text-primary);
   flex: 1;
   min-width: 0;
   outline: none;
@@ -81,7 +81,7 @@
 }
 
 .input::placeholder {
-  color: var(--label-assistive);
+  color: var(--text-tertiary);
 }
 
 .input:read-only {
@@ -89,7 +89,7 @@
 }
 
 .unit {
-  color: var(--label-normal);
+  color: var(--text-primary);
   flex-shrink: 0;
 }
 
@@ -100,10 +100,10 @@
 }
 
 .segmentButton {
-  background-color: var(--bg-white);
-  border: 1px solid var(--border-neutral);
+  background-color: var(--background-default);
+  border: 1px solid var(--border-subtle);
   border-radius: 8px;
-  color: var(--label-normal);
+  color: var(--text-primary);
   height: 44px;
   text-align: center;
 }
@@ -111,7 +111,7 @@
 .segmentButtonActive {
   border-color: var(--primary-normal);
   color: var(--primary-normal);
-  background-color: var(--interaction-primary);
+  background-color: var(--background-selected);
 }
 
 .setList {
@@ -134,7 +134,7 @@
 }
 
 .setRow {
-  box-shadow: inset 2px 0 0 var(--border-neutral);
+  box-shadow: inset 2px 0 0 var(--border-subtle);
   transition: box-shadow 0.1s ease-in-out;
 }
 
@@ -143,19 +143,19 @@
 }
 
 .setHeader {
-  color: var(--label-assistive);
+  color: var(--text-tertiary);
 }
 
 .setOrder {
   text-align: center;
-  color: var(--label-normal);
+  color: var(--text-primary);
 }
 
 .iconButton {
   align-items: center;
   background-color: transparent;
   border: 0;
-  color: var(--label-assistive);
+  color: var(--text-tertiary);
   display: inline-flex;
   height: 32px;
   justify-content: center;
@@ -164,19 +164,19 @@
 }
 
 .iconButton:disabled {
-  color: var(--label-disable);
+  color: var(--text-disabled);
 }
 
 .statusContainer {
   align-items: center;
-  color: var(--label-assistive);
+  color: var(--text-tertiary);
   display: flex;
   justify-content: center;
   min-height: 240px;
 }
 
 .footer {
-  background-color: var(--bg-normal);
+  background-color: var(--background-gray-1);
   display: flex;
   gap: 8px;
   padding: 0 20px;

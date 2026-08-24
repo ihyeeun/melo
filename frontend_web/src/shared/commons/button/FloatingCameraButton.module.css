@@ -2,10 +2,10 @@
   align-items: center;
   border: 0;
   border-radius: 100px;
-  box-shadow: var(--shadow-emphasize);
+  box-shadow: var(--shadow-outer);
   cursor: pointer;
   display: inline-flex;
-  height: 64px;
+  height: 60px;
   justify-content: center;
   position: fixed;
   right: 24px;
@@ -15,83 +15,16 @@
     box-shadow 0.14s ease,
     transform 0.14s ease;
   user-select: none;
-  width: 64px;
+  width: 60px;
+  margin-bottom: var(--safe-area-bottom);
 }
 
 .primary {
-  background-color: var(--primary-normal);
-  color: var(--interaction-white-1);
+  background-color: var(--btn-default);
+  color: var(--background-default);
 }
 
 .light {
-  background-color: var(--bg-white);
-  color: var(--static-black);
-}
-
-@media (hover: hover) {
-  .button:not(.interactionForced).primary:hover {
-    background-color: var(--primary-strong);
-  }
-
-  .button:not(.interactionForced).light:hover {
-    background-color: var(--gray-100);
-  }
-}
-
-.button:not(.interactionForced):focus-visible {
-  outline: 2px solid var(--primary-strong);
-  outline-offset: 2px;
-}
-
-.button:not(.interactionForced):active {
-  transform: scale(0.96);
-}
-
-.button:disabled {
-  box-shadow: none;
-  cursor: not-allowed;
-  transform: none;
-}
-
-.button.primary:disabled,
-.interactionDisable.primary {
-  background-color: var(--interaction-alternative);
-  color: var(--label-assistive);
-}
-
-.button.light:disabled,
-.interactionDisable.light {
-  background-color: var(--gray-300);
-  color: var(--label-assistive);
-}
-
-.interactionForced {
-  outline: none;
-  transform: none;
-}
-
-.interactionHover.primary,
-.interactionFocused.primary,
-.interactionPressed.primary {
-  background-color: var(--primary-strong);
-}
-
-.interactionHover.light,
-.interactionFocused.light,
-.interactionPressed.light {
-  background-color: var(--gray-100);
-}
-
-.interactionFocused {
-  outline: 2px solid var(--primary-strong);
-  outline-offset: 2px;
-}
-
-.interactionPressed {
-  transform: scale(0.96);
-}
-
-.interactionDisable {
-  box-shadow: none;
-  cursor: not-allowed;
+  background-color: var(--background-default);
+  color: var(--btn-default);
 }

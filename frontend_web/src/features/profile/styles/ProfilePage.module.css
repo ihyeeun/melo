@@ -1,5 +1,5 @@
 .page {
-  background-color: var(--bg-normal);
+  background-color: var(--background-gray-1);
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -43,17 +43,20 @@
 }
 
 .subscribeBadge {
+  background-color: var(--background-selected);
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  color: var(--primary-normal);
   margin-right: 2px;
-  width: 30px;
-  height: 30px;
+  padding: 4px 8px;
 }
 
 .nickname {
-  color: var(--label-normal);
+  color: var(--text-primary);
 }
 
 .highlight {
-  color: var(--label-primary);
+  color: var(--primary-normal);
 }
 
 .textButton {
@@ -68,7 +71,7 @@
 }
 
 .goalText {
-  color: var(--label-normal);
+  color: var(--text-primary);
   word-break: keep-all;
 }
 
@@ -85,8 +88,8 @@
 }
 
 .activeCard.activeMetricCard {
-  background-color: var(--interaction-primary);
-  border-color: var(--border-primary);
+  background-color: var(--background-selected);
+  border-color: var(--border-strong);
 }
 
 .activeCardRow {
@@ -97,7 +100,7 @@
 }
 
 .activeCardTitle {
-  color: var(--label-normal);
+  color: var(--text-primary);
   flex-shrink: 0;
 }
 
@@ -110,16 +113,16 @@
 }
 
 .activeCardValue {
-  color: var(--label-primary);
+  color: var(--primary-normal);
 }
 
 .activeCardUnit {
-  color: var(--label-normal);
+  color: var(--text-primary);
 }
 
 .weeklySection {
-  background-color: var(--bg-white);
-  border: 1px solid var(--border-neutral);
+  background-color: var(--background-default);
+  border: 1px solid var(--border-subtle);
   border-radius: 8px;
   display: flex;
   flex-direction: column;
@@ -135,7 +138,7 @@
 }
 
 .weeklyTitle {
-  color: var(--label-normal);
+  color: var(--text-primary);
 }
 
 .legendRow {
@@ -147,7 +150,7 @@
 
 .legendItem {
   align-items: center;
-  color: var(--label-normal);
+  color: var(--text-primary);
   display: flex;
   gap: 6px;
 }
@@ -168,7 +171,7 @@
 }
 
 .weeklyStatusText {
-  color: var(--label-alternative);
+  color: var(--text-secondary);
   text-align: center;
   padding: 24px 0;
 }
@@ -209,7 +212,7 @@
 }
 
 .weeklyChartSkeletonGridLine {
-  border-top: 1px solid var(--border-neutral);
+  border-top: 1px solid var(--border-subtle);
   display: block;
   width: 100%;
 }
@@ -248,12 +251,12 @@
 
 .input {
   padding: 14px 12px;
-  border: 1px solid var(--border-neutral);
+  border: 1px solid var(--border-subtle);
   border-radius: 4px;
 }
 
 .input::placeholder {
-  color: var(--label-assistive);
+  color: var(--text-tertiary);
 }
 
 .nickNameErrorMessage {
@@ -272,7 +275,7 @@
 }
 
 .weeklyYLabel {
-  color: var(--label-assistive);
+  color: var(--text-tertiary);
   padding-left: 22px;
 }
 

@@ -138,7 +138,7 @@ export default function ProfilePage() {
             onClick={() => navigate(PATH.SETTINGS)}
             aria-label="설정"
           >
-            <SystemIcon name="setting" size={24} />
+            <SystemIcon name="settings" size={24} />
           </button>
         }
       />
@@ -148,10 +148,10 @@ export default function ProfilePage() {
           <section className={styles.summarySection}>
             <div className={styles.summaryText}>
               <div className={styles.nicknameRow}>
-                {profile?.is_subscribed && (
-                  <img src="/icons/subscribe-badge.svg" className={styles.subscribeBadge} />
-                )}
-                <p className={`${styles.nickname} typo-title1`}>
+                {/* {profile?.is_subscribed && (
+                  <span className={`${styles.subscribeBadge} caption-m-semi`}>구독</span>
+                )} */}
+                <p className={`${styles.nickname} title-l-semi`}>
                   <span className={styles.highlight}>{nickname}</span> 님
                 </p>
 
@@ -163,11 +163,11 @@ export default function ProfilePage() {
                     navigate(PATH.PROFILE_NICKNAME_SHEET);
                   }}
                 >
-                  <SystemIcon name="pencil-fill" size={24} />
+                  <SystemIcon name="edit" size={24} />
                 </button>
               </div>
 
-              <p className={`${styles.goalText} typo-body1`}>
+              <p className={`${styles.goalText} title-m-semi`}>
                 목표 체중까지{" "}
                 <span className={styles.highlight}>
                   {remainingWeight.toLocaleString("ko-KR")}kg
@@ -177,14 +177,9 @@ export default function ProfilePage() {
             </div>
 
             <div className={styles.textButton}>
-              <Button
-                onClick={() => navigate(PATH.GOAL_EDIT)}
-                variant="text"
-                size="small"
-                color="normal"
-              >
+              <Button onClick={() => navigate(PATH.GOAL_EDIT)} variant="text" size="xs">
                 목표 재설정
-                <SystemIcon name="chevron-right-thin" size={20} className={styles.icon} />
+                <SystemIcon name="chevron-right" size={14} className={styles.icon} />
               </Button>
             </div>
           </section>
@@ -195,13 +190,13 @@ export default function ProfilePage() {
                 onClick={() => handleSelectMetric("weight")}
                 className={`${styles.activeCard} ${selectedMetric === "weight" ? styles.activeMetricCard : ""}`}
               >
-                <p className={`${styles.activeCardTitle} typo-title4`}>체중</p>
+                <p className={`${styles.activeCardTitle} body-l-semi`}>체중</p>
 
                 <div className={styles.activeCardValueRow}>
-                  <span className={`${styles.activeCardValue} typo-body3 amp-mask`}>
+                  <span className={`${styles.activeCardValue} body-s-medium amp-mask`}>
                     {currentWeight.toLocaleString("ko-KR")}
                   </span>
-                  <span className={`${styles.activeCardUnit} typo-caption3`}>kg</span>
+                  <span className={`${styles.activeCardUnit} body-m-regular`}>kg</span>
                 </div>
               </ActionCard>
 
@@ -209,15 +204,15 @@ export default function ProfilePage() {
                 onClick={() => handleSelectMetric("calories")}
                 className={`${styles.activeCard} ${selectedMetric === "calories" ? styles.activeMetricCard : ""}`}
               >
-                <p className={`${styles.activeCardTitle} typo-title4`}>섭취량</p>
+                <p className={`${styles.activeCardTitle} body-l-semi`}>섭취량</p>
 
                 <div className={styles.activeCardValueRow}>
-                  <span className={`${styles.activeCardValue} typo-body3`}>
+                  <span className={`${styles.activeCardValue} body-s-medium`}>
                     {(dayMeal?.totalCalories ?? 0).toLocaleString("ko-KR", {
                       maximumFractionDigits: 1,
                     })}
                   </span>
-                  <span className={`${styles.activeCardUnit} textNoWrap typo-caption3`}>kcal</span>
+                  <span className={`${styles.activeCardUnit} textNoWrap body-m-regular`}>kcal</span>
                 </div>
               </ActionCard>
 
@@ -225,29 +220,29 @@ export default function ProfilePage() {
                 onClick={() => handleSelectMetric("steps")}
                 className={`${styles.activeCard} ${selectedMetric === "steps" ? styles.activeMetricCard : ""}`}
               >
-                <p className={`${styles.activeCardTitle} typo-title4`}>걸음 수</p>
+                <p className={`${styles.activeCardTitle} body-l-semi`}>걸음 수</p>
 
                 <div className={styles.activeCardValueRow}>
-                  <span className={`${styles.activeCardValue} typo-body3`}>
+                  <span className={`${styles.activeCardValue} body-s-medium`}>
                     {todaySteps.toLocaleString("ko-KR")}
                   </span>
-                  <span className={`${styles.activeCardUnit} typo-caption3`}>보</span>
+                  <span className={`${styles.activeCardUnit} body-m-regular`}>보</span>
                 </div>
               </ActionCard>
             </section>
 
             <section className={styles.weeklySection}>
               <div className={styles.weeklyHeader}>
-                <span className={`${styles.weeklyTitle} typo-title4`}>주간 기록 현황</span>
+                <span className={`${styles.weeklyTitle} body-l-semi`}>주간 기록 현황</span>
 
                 <div className={styles.legendRow}>
                   {metricConfig.targetLabel && (
-                    <span className={`${styles.legendItem} typo-caption3`}>
+                    <span className={`${styles.legendItem} body-m-regular`}>
                       <span className={`${styles.legendDot} ${styles.legendTarget}`} />
                       {metricConfig.targetLabel}
                     </span>
                   )}
-                  <span className={`${styles.legendItem} typo-caption3`}>
+                  <span className={`${styles.legendItem} body-m-regular`}>
                     <span className={`${styles.legendDot} ${styles.legendCurrent}`} />
                     {metricConfig.title}
                   </span>
@@ -257,12 +252,12 @@ export default function ProfilePage() {
               {weeklyRecordQuery.isPending ? (
                 <WeeklyRecordSkeleton />
               ) : weeklyRecordQuery.hasError ? (
-                <p className={`${styles.weeklyStatusText} typo-label2`}>
+                <p className={`${styles.weeklyStatusText} body-l-semi`}>
                   주간 기록을 불러오지 못했어요. 잠시 뒤 다시 시도해주세요.
                 </p>
               ) : (
                 <section className={styles.weeklyChart}>
-                  <span className={`${styles.weeklyYLabel} typo-caption4`}>
+                  <span className={`${styles.weeklyYLabel} caption-m-medium`}>
                     {metricConfig.title}
                   </span>
                   <WeeklyRecordChart

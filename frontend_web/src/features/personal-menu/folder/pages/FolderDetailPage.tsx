@@ -319,12 +319,10 @@ export default function FolderDetailPage() {
     if (isFolderError || !folderDetail) {
       return (
         <section className={styles.stateContainer}>
-          <p className="typo-body2">폴더를 불러오지 못했어요</p>
+          <p className="body-l-medium">폴더를 불러오지 못했어요</p>
           <Button
             variant="text"
-            interaction="normal"
-            size="small"
-            color="normal"
+            size="xs"
             onClick={() => {
               void refetchFolderDetail();
             }}
@@ -338,7 +336,7 @@ export default function FolderDetailPage() {
     if (folderMenus.length === 0) {
       return (
         <section className={styles.stateContainer}>
-          <p className="typo-body2">폴더에 담긴 음식이 없어요</p>
+          <p className="body-l-medium">폴더에 담긴 음식이 없어요</p>
         </section>
       );
     }
@@ -347,14 +345,13 @@ export default function FolderDetailPage() {
       <section className={styles.menuSection}>
         <div className={styles.menuSectionHeader}>
           <div className={styles.menuTitleGroup}>
-            <span className={`typo-label4 ${styles.menuCount}`}>{folderMenus.length}개</span>
+            <span className={`body-s-medium ${styles.menuCount}`}>{folderMenus.length}개</span>
           </div>
 
           <Button
             className={styles.bulkActionButton}
             variant="text"
-            color={areAllFolderMenusSelected ? "normal" : "primary"}
-            size="small"
+            size="xs"
             onClick={handleToggleAllFolderMenus}
           >
             <SystemIcon name={areAllFolderMenusSelected ? "minus" : "plus"} size={14} />
@@ -412,10 +409,8 @@ export default function FolderDetailPage() {
       <footer className={styles.footer}>
         <Button
           onClick={handleApplySelectedMenus}
-          variant="filled"
-          interaction={selectedCount > 0 ? "normal" : "disable"}
-          size="large"
-          color="primary"
+          variant="default"
+          size="m"
           fullWidth
           disabled={selectedCount === 0}
         >

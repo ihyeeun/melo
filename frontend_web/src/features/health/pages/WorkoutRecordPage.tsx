@@ -77,11 +77,10 @@ export default function WorkoutRecordPage() {
     if (workoutRecordQuery.isError) {
       return (
         <section className={styles.emptyState}>
-          <p className="typo-body2">{errorMessage}</p>
+          <p className="body-l-medium">{errorMessage}</p>
           <Button
             variant="text"
-            color="normal"
-            size="small"
+            size="xs"
             onClick={() => {
               void workoutRecordQuery.refetch();
             }}
@@ -95,7 +94,7 @@ export default function WorkoutRecordPage() {
     if (workouts.length === 0) {
       return (
         <section className={styles.emptyState}>
-          <p className="typo-body2">{emptyMessage}</p>
+          <p className="body-l-medium">{emptyMessage}</p>
         </section>
       );
     }
@@ -129,40 +128,41 @@ export default function WorkoutRecordPage() {
       <Calendar
         selectedDate={selectedDate}
         onSelectDate={setSelectedDate}
+        safeAreaTop={false}
+        showMonthBackground={false}
         showRecordedDots={false}
-        variant="normal"
       />
 
       <main className={styles.content}>
         <section className={styles.cardContainer}>
-          <p className="typo-title3">오늘 운동 요약</p>
+          <p className="title-s-medium">오늘 운동 요약</p>
           <div className={styles.summaryGrid} aria-label="운동 요약">
             <article className={styles.summaryCard}>
-              <span className={`${styles.summaryTitle} typo-caption3`}>총 운동 시간</span>
+              <span className={`${styles.summaryTitle} body-m-regular`}>총 운동 시간</span>
               <div className={styles.summaryValueRow}>
-                <span className={`${styles.summaryValue} typo-title2`}>
+                <span className={`${styles.summaryValue} title-m-medium`}>
                   {formatWorkoutDuration(summary.duration)}
                 </span>
               </div>
             </article>
             <article className={styles.summaryCard}>
-              <span className={`${styles.summaryTitle} typo-caption3`}>총 소모 칼로리</span>
+              <span className={`${styles.summaryTitle} body-m-regular`}>총 소모 칼로리</span>
               <div className={styles.summaryValueRow}>
-                <span className={`${styles.summaryValue} typo-title2`}>
+                <span className={`${styles.summaryValue} title-m-medium`}>
                   {summary.burnedCalories.toLocaleString("ko-KR")}
                 </span>
-                <span className="typo-caption3">kcal</span>
+                <span className="body-m-regular">kcal</span>
               </div>
             </article>
           </div>
         </section>
 
         <div className={styles.sectionHeader}>
-          <p className="typo-title3">오늘 한 운동</p>
+          <p className="title-s-medium">오늘 한 운동</p>
           {workouts.length > 0 && (
-            <Button variant="text" color="normal" size="small" onClick={handleEditWorkoutRecords}>
+            <Button variant="text" size="xs" onClick={handleEditWorkoutRecords}>
               수정
-              <SystemIcon name="chevron-right-thin" size={18} />
+              <SystemIcon name="chevron-right" size={14} />
             </Button>
           )}
         </div>
@@ -171,7 +171,7 @@ export default function WorkoutRecordPage() {
       </main>
 
       <footer className={styles.footer}>
-        <Button fullWidth size="large" onClick={handleSearchWorkout}>
+        <Button fullWidth size="m" onClick={handleSearchWorkout}>
           <SystemIcon name="plus" size={18} />
           운동 추가하기
         </Button>
@@ -193,24 +193,24 @@ function WorkoutRecordCard({
         {workout.workout_image ? (
           <img src={workout.workout_image} alt="" className={styles.thumbnailImage} />
         ) : (
-          <SystemIcon name={workout.workout_type === "cardio" ? "walking" : "fire"} size={28} />
+          <SystemIcon name={workout.workout_type === "cardio" ? "walking" : "fitness"} size={28} />
         )}
       </div>
 
       <div className={styles.recordContent}>
-        <p className={`ellipsis typo-title4`}>{workout.workout_name}</p>
+        <p className={`ellipsis body-l-medium`}>{workout.workout_name}</p>
 
-        <p className="typo-caption4">
+        <p className="caption-m-medium">
           {workout.workout_type === "cardio"
             ? `${formatWorkoutDuration(workout.workout_duration)}`
             : `${workout.set_list?.length}세트`}
         </p>
       </div>
 
-      <span className={`${styles.calorieText} typo-label3`}>
+      <span className={`body-m-regular text-secondary`}>
         {workout.burned_calories.toLocaleString("ko-KR")}kcal
       </span>
-      <SystemIcon name="chevron-right-thin" size={18} className={styles.chevronIcon} />
+      <SystemIcon name="chevron-right" size={18} className={styles.chevronIcon} />
     </button>
   );
 }

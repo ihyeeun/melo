@@ -1,56 +1,97 @@
-.content {
+.root {
   display: flex;
   flex-direction: column;
-  background-color: var(--bg-primary-2);
-  gap: 16px;
-  padding: 24px 20px;
-  border: none;
+  gap: 28px;
 }
 
-.scoreContainer {
+.nutritionBalanceCard {
+  background-color: var(--background-default);
+  border-radius: 20px;
+  box-shadow: var(--shadow-outer);
+  display: flex;
+  min-height: 154px;
+  overflow: hidden;
+  width: 100%;
+}
+
+.summaryArea {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 8px;
+  padding: 20px 0 12px 20px;
+}
+
+.titleArea,
+.skeletonTitleArea {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  background-color: var(--bg-white);
-  border-radius: 8px;
-  padding: 12px 24px;
-  align-items: center;
 }
 
-.scoreText {
-  align-items: center;
-  display: flex;
-  gap: 16px;
+.message {
+  -webkit-box-orient: vertical;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
 }
 
 .score {
-  color: var(--label-primary);
+  margin-top: auto;
 }
 
-.caloriesContainer {
+.character {
+  align-self: center;
+  flex: 0 0 154px;
+  height: 154px;
+  object-fit: contain;
+  scale: 1.4;
+  translate: 0 4px;
+  width: 154px;
+}
+
+.skeletonCharacter {
+  align-self: center;
+  margin-right: 20px;
+}
+
+.nutritionSection {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
-.calorieText {
-  color: var(--label-normal);
-  align-items: center;
-  display: flex;
-  gap: 4px;
-}
-
-.skeletonContent {
+.calorieGroup {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 8px;
 }
 
-.icon {
-  margin-left: auto;
-  color: var(--interaction-normal);
+.currentCalorie {
+  font-weight: var(--fw-medium);
 }
 
-.textAssistive {
-  color: var(--label-assistive);
+.calorieValue {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+}
+
+.macrosGroup {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.macrosItem {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.macroTitle {
+  align-items: center;
+  display: flex;
+  gap: 2px;
 }

@@ -334,7 +334,7 @@ export default function MealDetailPage() {
         rightSlot={
           isPersonalMenuData &&
           mealIsDeleted === 0 && (
-            <Button variant="text" color="normal" onClick={handleDelete}>
+            <Button variant="text" size="xs" onClick={handleDelete}>
               삭제
             </Button>
           )
@@ -358,12 +358,10 @@ export default function MealDetailPage() {
 
       <footer className={styles.footer}>
         <Button
-          variant="filled"
-          size="large"
-          color="primary"
+          variant="default"
+          size="m"
           fullWidth
           onClick={handleAddMenu}
-          interaction={selection ? "normal" : "disable"}
           disabled={!selection || mealIsDeleted !== 0}
         >
           {footerButtonLabel}

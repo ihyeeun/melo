@@ -65,7 +65,7 @@ export default function ProfileNicknameSheetPage() {
       <BottomSheet isOpen={isOpen} onClose={closeSheet}>
         <div className={styles.sheetContainer}>
           <section className={styles.sheetContent}>
-            <p className="typo-title2">닉네임 수정하기</p>
+            <p className="title-m-semi">닉네임 수정하기</p>
             <div className={styles.fieldGroup}>
               <input
                 placeholder="닉네임 입력"
@@ -74,7 +74,7 @@ export default function ProfileNicknameSheetPage() {
                   setNickName(sanitizeNickName(e.target.value));
                   setNickNameErrorMessage("");
                 }}
-                className={`${styles.input} typo-body3`}
+                className={`${styles.input} body-s-medium`}
                 aria-invalid={nickNameErrorMessage ? true : undefined}
                 aria-describedby={
                   nickNameErrorMessage ? "profile-nickname-error-message" : undefined
@@ -84,7 +84,7 @@ export default function ProfileNicknameSheetPage() {
               {nickNameErrorMessage ? (
                 <p
                   id="profile-nickname-error-message"
-                  className={`${styles.nickNameErrorMessage} typo-body3`}
+                  className={`${styles.nickNameErrorMessage} body-s-medium`}
                   role="alert"
                 >
                   {nickNameErrorMessage}
@@ -94,10 +94,8 @@ export default function ProfileNicknameSheetPage() {
           </section>
 
           <Button
-            variant="filled"
-            interaction={nickName.trim() === "" ? "disable" : "normal"}
-            size="large"
-            color="primary"
+            variant="default"
+            size="m"
             fullWidth
             onClick={handleUpdateNickName}
             disabled={nickName.trim() === "" || isNickNamePending}

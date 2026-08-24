@@ -8,7 +8,6 @@ export default function AuthLayout() {
       <Stack.Screen name="kakaoLogin" options={{ title: "Kakao Login", headerShown: false }} />
       <Stack.Screen name="appleLogin" options={{ title: "Apple Login", headerShown: false }} />
       <Stack.Screen name="onboarding" options={{ headerShown: false }} />
-      <Stack.Screen name="terms" options={{ title: "", headerShown: false }} />
     </Stack>
   );
 }
