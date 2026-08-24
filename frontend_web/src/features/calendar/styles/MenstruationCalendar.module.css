@@ -34,13 +34,37 @@
   color: var(--navy-950);
 }
 
+.viewport {
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  touch-action: pan-x pan-y;
+  transition: height 180ms cubic-bezier(0.22, 1, 0.36, 1);
+  width: 100%;
+}
+
+.viewport::-webkit-scrollbar {
+  display: none;
+}
+
+.track {
+  align-items: flex-start;
+  display: flex;
+  width: 100%;
+}
+
 .grid {
   /* border: 1px solid red; */
+  flex: 0 0 100%;
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
   gap: 6px;
   align-items: center;
   justify-content: center;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
 }
 
 .day {
@@ -116,4 +140,10 @@
 .day[data-outside="true"][data-menstruation="menstrual"] {
   opacity: 40%;
   color: var(--background-default);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .viewport {
+    transition-duration: 0.01ms;
+  }
 }
