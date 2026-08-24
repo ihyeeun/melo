@@ -10,7 +10,7 @@ const config: ExpoConfig = {
       projectId: "507c0e33-8576-4aba-84f4-00d6b74a7338",
     },
   },
-  version: "1.2.1",
+  version: "1.2.2",
   orientation: "portrait",
   icon: "./assets/design-update/logo/melo-logo.png",
   scheme: "melo",
