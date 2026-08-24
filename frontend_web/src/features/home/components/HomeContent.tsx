@@ -45,13 +45,11 @@ export default function HomeContent({
     useState<HomeDashboardMode>("menstruation");
   const profileQuery = useGetProfileQuery();
   const canToggleDashboardMode = profileQuery.data?.user_id === MENSTRUATION_HOME_USER_ID;
-  const dashboardMode: HomeDashboardMode = canToggleDashboardMode
-    ? selectedDashboardMode
-    : "daily";
-  const menstruationCyclesQuery = useGetMenstruationCyclesQuery(
-    { date: selectedDateKey, limit: 7 },
-    { enabled: dashboardMode === "menstruation" },
-  );
+  const dashboardMode: HomeDashboardMode = canToggleDashboardMode ? selectedDashboardMode : "daily";
+  const menstruationCyclesQuery = useGetMenstruationCyclesQuery({
+    date: selectedDateKey,
+    enabled: dashboardMode === "menstruation",
+  });
   const menstruationCycles = menstruationCyclesQuery.data?.cycles;
   const menstrualCalendar = useMemo(
     () => calculateMenstrualCalendar(menstruationCycles ?? []),
@@ -141,7 +139,9 @@ function HomeCalendar({
   return (
     <Calendar
       headerAction={
-        showModeToggle ? <HomeDashboardModeToggle value={mode} onChange={onModeChange} /> : undefined
+        showModeToggle ? (
+          <HomeDashboardModeToggle value={mode} onChange={onModeChange} />
+        ) : undefined
       }
       selectedDate={selectedDate}
       onSelectDate={onSelectDate}

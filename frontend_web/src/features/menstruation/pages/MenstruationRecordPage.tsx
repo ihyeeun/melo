@@ -1,17 +1,22 @@
 import { type ReactNode, useState } from "react";
 
 import MenstruationCalendar from "@/features/calendar/components/menstruation/MenstruationCalendar";
-import { useGetMenstrualRecordedQuery } from "@/features/menstruation/hooks/queries/menstruation.query";
+import { useSaveMenstrualRecordMutation } from "@/features/menstruation/hooks/mutations/menstruation.mutation";
+import {
+  useGetMenstrualRecordedQuery,
+  useGetMenstruationCyclesQuery,
+} from "@/features/menstruation/hooks/queries/menstruation.query";
 import styles from "@/features/menstruation/styles/MenstruationRecord.module.css";
 import {
   MENSTRUATION_FLOW,
   MENSTRUATION_STATUS,
   MENSTRUATION_SYMPTOM,
   type MenstruationFlow,
-  type MenstruationRecordedItem,
   type MenstruationStatus,
   type MenstruationSymptom,
 } from "@/features/menstruation/types/menstruation.type";
+import { findCandidateCycle } from "@/features/menstruation/utils/menstruation.util";
+import type { MenstraulRecordReponseDto } from "@/shared/api/types/api.response.dto";
 import { Button } from "@/shared/commons/button/Button";
 import { SelectedCard } from "@/shared/commons/card/SelectedCard";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
@@ -79,24 +84,33 @@ const SYMPTOMS = [
 
 type MenstruationFormValues = {
   menstruationStatus: MenstruationStatus;
-  flow: MenstruationFlow | null;
+  flow: MenstruationFlow | undefined;
   symptoms: MenstruationSymptom[];
 };
 
 export default function MenstruationRecordPage() {
   const [selectedDate, setSelectedDate] = useState<string>(getTodayFormatDateKey());
   const recordMenstrualQuery = useGetMenstrualRecordedQuery(selectedDate);
+  const menstruationCyclesQuery = useGetMenstruationCyclesQuery({
+    date: selectedDate,
+    enabled: true,
+  });
+  const saveMenstrualRecordMutation = useSaveMenstrualRecordMutation();
   const MENSTRUATION_RECORD_FORM_ID = "menstruation-record-form";
 
   const handleSave = (values: MenstruationFormValues) => {
-    const request = {
+    if (!recordMenstrualQuery.isSuccess || !menstruationCyclesQuery.isSuccess) return;
+
+    const cycle = findCandidateCycle(menstruationCyclesQuery.data.cycles, selectedDate);
+
+    saveMenstrualRecordMutation.mutate({
       date: selectedDate,
-      menstruation_status: values.menstruationStatus,
+      menstruationStatus: values.menstruationStatus,
       flow: values.flow,
       symptoms: values.symptoms,
-    };
-
-    console.log(request);
+      existingRecord: recordMenstrualQuery.data.record,
+      cycle,
+    });
   };
 
   return (
@@ -132,22 +146,13 @@ export default function MenstruationRecordPage() {
             key={selectedDate}
             formId={MENSTRUATION_RECORD_FORM_ID}
             onSubmit={handleSave}
-            initRecord={recordMenstrualQuery.data?.record}
+            initRecord={recordMenstrualQuery.data.record}
+            isSubmitting={
+              !menstruationCyclesQuery.isSuccess || saveMenstrualRecordMutation.isPending
+            }
           />
         )}
       </main>
-
-      <footer className="footer">
-        <Button
-          type="submit"
-          form={MENSTRUATION_RECORD_FORM_ID}
-          disabled={!recordMenstrualQuery.isSuccess}
-          fullWidth
-          size="m"
-        >
-          기록 저장하기
-        </Button>
-      </footer>
     </div>
   );
 }
@@ -177,17 +182,21 @@ function MenstruationRecordForm({
   formId,
   onSubmit,
   initRecord,
+  isSubmitting,
 }: {
   formId: string;
   onSubmit: (values: MenstruationFormValues) => void;
-  initRecord: MenstruationRecordedItem["record"];
+  initRecord: MenstraulRecordReponseDto["record"];
+  isSubmitting: boolean;
 }) {
   const [menstrualStatus, setMenstrualStatus] = useState<MenstruationStatus | null>(
     () => initRecord?.menstruation_status ?? null,
   );
-  const [flow, setFlow] = useState<MenstruationFlow | null>(() => initRecord.flow ?? null);
+  const [flow, setFlow] = useState<MenstruationFlow | undefined>(
+    () => initRecord?.flow ?? undefined,
+  );
   const [symptoms, setSymptoms] = useState<MenstruationSymptom[]>(() => [
-    ...(initRecord.symptoms ?? []),
+    ...(initRecord?.symptoms ?? []),
   ]);
 
   const handleSymptomToggle = (symptom: MenstruationSymptom) => {
@@ -230,7 +239,7 @@ function MenstruationRecordForm({
             className={styles.fieldCard}
             setSelectedChange={() => {
               setMenstrualStatus(MENSTRUATION_STATUS.NOT_BLEEDING);
-              setFlow(null);
+              setFlow(undefined);
             }}
           >
             <p className="body-m-regular text-primary">없음</p>
@@ -280,6 +289,17 @@ function MenstruationRecordForm({
           })}
         </div>
       </SectionLayout>
+
+      <footer className={styles.footer}>
+        <Button
+          type="submit"
+          disabled={menstrualStatus === null || isSubmitting}
+          fullWidth
+          size="m"
+        >
+          기록 저장하기
+        </Button>
+      </footer>
     </form>
   );
 }

@@ -1,62 +1,47 @@
-// response
-export interface MenstruationCyclesResponse {
-  cycles: CycleItem[];
-}
-
-export interface CycleItem {
-  cycle_id: number;
-  start_date: string;
-  end_date: string;
-  is_end: boolean;
-}
-
 export const MENSTRUATION_STATUS = {
-  BLEEDING: "BLEEDING",
-  NOT_BLEEDING: "NOT_BLEEDING",
+  BLEEDING: "있음",
+  NOT_BLEEDING: "없음",
 } as const;
 
 export type MenstruationStatus = (typeof MENSTRUATION_STATUS)[keyof typeof MENSTRUATION_STATUS];
 
 export const MENSTRUATION_FLOW = {
-  LIGHT: "LIGHT",
-  MEDIUM: "MEDIUM",
-  HEAVY: "HEAVY",
-  VERY_HEAVY: "VERY_HEAVY",
+  LIGHT: "적음",
+  MEDIUM: "보통",
+  HEAVY: "많음",
+  VERY_HEAVY: "매우 많음",
 } as const;
 
 export type MenstruationFlow = (typeof MENSTRUATION_FLOW)[keyof typeof MENSTRUATION_FLOW];
 
 export const MENSTRUATION_SYMPTOM = {
-  ABDOMINAL_PAIN: "ABDOMINAL_PAIN",
-  BACK_PAIN: "BACK_PAIN",
-  HEADACHE: "HEADACHE",
-  FATIGUE: "FATIGUE",
-  SENSITIVITY: "SENSITIVITY",
-  SWELLING: "SWELLING",
-  BREAST_PAIN: "BREAST_PAIN",
-  APPETITE_CHANGE: "APPETITE_CHANGE",
+  ABDOMINAL_PAIN: "복통",
+  BACK_PAIN: "허리 통증",
+  HEADACHE: "두통",
+  FATIGUE: "피로감",
+  SENSITIVITY: "예민함",
+  SWELLING: "붓기",
+  BREAST_PAIN: "유방 통증",
+  APPETITE_CHANGE: "식욕 변화",
 } as const;
 
 export type MenstruationSymptom = (typeof MENSTRUATION_SYMPTOM)[keyof typeof MENSTRUATION_SYMPTOM];
 
-export interface MenstruationRecordedItem {
-  record: {
-    date: string;
-    menstruation_status: MenstruationStatus;
-    flow?: MenstruationFlow;
-    symptoms?: MenstruationSymptom[];
-    cycle_id: number;
-  };
-}
-
-// request
-export interface getCyclesRequest {
-  date: string;
-  limit: number;
-}
-
 //
 export type CycleType = { type: "CREATE_CYCLE" } | { type: "EXTEND_CYCLE"; cycle_id: number };
+export type MenstrualSaveDecision =
+  | { type: "CREATE_CYCLE" }
+  | {
+      type: "CREATE_DAILY_RECORD";
+      cycleId: number;
+    }
+  | {
+      type: "UPDATE_DAILY_RECORD";
+    }
+  | {
+      type: "BLOCKED";
+      reason: "ACTIVE_CYCLE_REQUIRED";
+    };
 
 export type DateRange = {
   startDate: string;

@@ -1,13 +1,19 @@
 import { addDays, differenceInCalendarDays } from "date-fns";
 
-import type {
-  CycleItem,
-  CycleType,
-  DateRange,
-  MenstrualCalculateCalendar,
-  MenstrualPhase,
-  MenstruationDateType,
+import {
+  type CycleType,
+  type DateRange,
+  type MenstrualCalculateCalendar,
+  type MenstrualPhase,
+  type MenstrualSaveDecision,
+  MENSTRUATION_STATUS,
+  type MenstruationDateType,
+  type MenstruationStatus,
 } from "@/features/menstruation/types/menstruation.type";
+import type {
+  MenstraulRecordReponseDto,
+  MenstrualCycleItemResponseDto,
+} from "@/shared/api/types/api.response.dto";
 import { formatDateKey, parseDateKey } from "@/shared/utils/dateFormat";
 
 const DEFAULT_CYCLE = 28; //평균 주기 : 생리 시작 - 다음 생리 시작된 날까지의 간격
@@ -15,7 +21,7 @@ const DEFAULT_MENSTRUAL = 5; //기본 월경기
 const DEFAULT_OVULATORY = 3; //배란기
 const DEFAULT_LUTEAL = 13; //황체기
 
-export function calculateMenstrual(cycles: CycleItem[]) {
+export function calculateMenstrual(cycles: MenstrualCycleItemResponseDto[]) {
   if (cycles.length === 0) return null;
 
   const latestCycles = sortCyclesByLatest(cycles);
@@ -72,11 +78,22 @@ export function calculateMenstrual(cycles: CycleItem[]) {
   return { menstrual, follicular, ovulatory, luteal };
 }
 
-function sortCyclesByLatest(cycles: CycleItem[]): CycleItem[] {
+function sortCyclesByLatest(
+  cycles: MenstrualCycleItemResponseDto[],
+): MenstrualCycleItemResponseDto[] {
   return [...cycles].sort((a, b) => b.start_date.localeCompare(a.start_date));
 }
 
-function calculateCycleLengthsAvg(cycles: CycleItem[]): number {
+export function findCandidateCycle(
+  cycles: MenstrualCycleItemResponseDto[],
+  targetDate: string,
+): MenstrualCycleItemResponseDto | null {
+  const cyclesStartedByTargetDate = cycles.filter((cycle) => cycle.start_date <= targetDate);
+
+  return sortCyclesByLatest(cyclesStartedByTargetDate)[0] ?? null;
+}
+
+function calculateCycleLengthsAvg(cycles: MenstrualCycleItemResponseDto[]): number {
   if (cycles.length < 2) return DEFAULT_CYCLE;
 
   // 기본 원칙 : 입력 데이터가 2회 이상 쌓이면 개인 평균 주기로 전환.
@@ -104,7 +121,7 @@ function calculateCycleLengthsAvg(cycles: CycleItem[]): number {
   return Math.round(cycleAvg);
 }
 
-function calculateMenstrualPeriod(cycle: CycleItem): number {
+function calculateMenstrualPeriod(cycle: MenstrualCycleItemResponseDto): number {
   const menstrualPeriod =
     differenceInCalendarDays(parseDateKey(cycle.end_date), parseDateKey(cycle.start_date)) + 1;
 
@@ -123,12 +140,12 @@ export function resolveCycleType({
   cycle,
   targetDate,
 }: {
-  cycle: CycleItem;
+  cycle: MenstrualCycleItemResponseDto | null;
   targetDate: string;
 }): CycleType {
   const CYCLE_MAX_DAY = 14;
 
-  if (!cycle) return { type: "CREATE_CYCLE" };
+  if (cycle === null) return { type: "CREATE_CYCLE" };
 
   const diffDay =
     differenceInCalendarDays(parseDateKey(targetDate), parseDateKey(cycle.start_date)) + 1;
@@ -158,7 +175,62 @@ export function resolveCycleType({
   };
 }
 
-export function calculateMenstrualCalendar(cycles: CycleItem[]): MenstrualCalculateCalendar | null {
+export function resolveMenstrualSaveDecision({
+  existingRecord,
+  cycle,
+  targetDate,
+  menstruationStatus,
+}: {
+  existingRecord: MenstraulRecordReponseDto["record"];
+  cycle: MenstrualCycleItemResponseDto | null;
+  targetDate: string;
+  menstruationStatus: MenstruationStatus;
+}): MenstrualSaveDecision {
+  // 1. 해당 날짜에 기록이 이미 있으면 수정
+  if (existingRecord !== null) {
+    return {
+      type: "UPDATE_DAILY_RECORD",
+    };
+  }
+
+  const cycleType = resolveCycleType({
+    cycle,
+    targetDate,
+  });
+
+  // 2. 생리 없음 기록
+  if (menstruationStatus === MENSTRUATION_STATUS.NOT_BLEEDING) {
+    // 없음 기록은 새로운 회차를 생성할 수 없음
+    if (cycle === null || cycle.is_end || cycleType.type === "CREATE_CYCLE") {
+      return {
+        type: "BLOCKED",
+        reason: "ACTIVE_CYCLE_REQUIRED",
+      };
+    }
+
+    return {
+      type: "CREATE_DAILY_RECORD",
+      cycleId: cycleType.cycle_id,
+    };
+  }
+
+  // 3. 생리 있음 + 연결 가능한 회차 없음
+  if (cycleType.type === "CREATE_CYCLE") {
+    return {
+      type: "CREATE_CYCLE",
+    };
+  }
+
+  // 4. 생리 있음 + 연결 가능한 기존 회차 있음
+  return {
+    type: "CREATE_DAILY_RECORD",
+    cycleId: cycleType.cycle_id,
+  };
+}
+
+export function calculateMenstrualCalendar(
+  cycles: MenstrualCycleItemResponseDto[],
+): MenstrualCalculateCalendar | null {
   if (cycles.length === 0) return null;
 
   const latestCycles = sortCyclesByLatest(cycles);
@@ -218,7 +290,7 @@ function calculateDateRange(startDate: string, duration: number): DateRange | nu
   };
 }
 
-function calculateCycleLengths(cycles: CycleItem[]): number[] {
+function calculateCycleLengths(cycles: MenstrualCycleItemResponseDto[]): number[] {
   const cycleLengths: number[] = [];
 
   for (let idx = 0; idx < cycles.length - 1; ++idx) {
@@ -238,7 +310,7 @@ function calculateCycleLengths(cycles: CycleItem[]): number[] {
   return cycleLengths;
 }
 
-function calculatePossibleDateRange(cycles: CycleItem[]): number {
+function calculatePossibleDateRange(cycles: MenstrualCycleItemResponseDto[]): number {
   const cycleLengths = calculateCycleLengths(cycles);
   const average =
     cycleLengths.reduce((sum, cycleLength) => sum + cycleLength, 0) / cycleLengths.length;
@@ -280,7 +352,7 @@ export function getMenstruationDateType(
 }
 
 export function getMenstrualPhaseByDate(
-  cycles: CycleItem[],
+  cycles: MenstrualCycleItemResponseDto[],
   targetDate: string,
 ): MenstrualPhase | null {
   const periods = calculateMenstrual(cycles);

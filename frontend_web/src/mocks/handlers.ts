@@ -18,7 +18,7 @@ export const handlers = [
     const url = new URL(request.url);
     const requestedDate = url.searchParams.get("date");
 
-    const record = mockMenstruationRecords.find(({ date }) => date === requestedDate) ?? [];
+    const record = mockMenstruationRecords.find((item) => item?.date === requestedDate) ?? null;
 
     return success({ record });
   }),

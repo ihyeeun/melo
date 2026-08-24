@@ -1,14 +1,15 @@
-import type { CycleItem } from "@/features/menstruation/types/menstruation.type";
-
 import {
   MENSTRUATION_FLOW,
   MENSTRUATION_STATUS,
   MENSTRUATION_SYMPTOM,
-  type MenstruationRecord,
-} from "../menstruation.types";
+} from "@/features/menstruation/types/menstruation.type";
+import type {
+  MenstraulRecordReponseDto,
+  MenstrualCycleItemResponseDto,
+} from "@/shared/api/types/api.response.dto";
 
 /** 최근 월경 회차 조회 API가 반환할 고정 목 데이터 */
-export const mockMenstruationCycles: CycleItem[] = [
+export const mockMenstruationCycles: MenstrualCycleItemResponseDto[] = [
   {
     cycle_id: 7,
     start_date: "2026-08-14",
@@ -54,54 +55,12 @@ export const mockMenstruationCycles: CycleItem[] = [
 ];
 
 /** 날짜별 월경 기록 조회 API가 반환할 고정 목 데이터 */
-export const mockMenstruationRecords: MenstruationRecord[] = [
+export const mockMenstruationRecords: MenstraulRecordReponseDto["record"][] = [
   {
     date: "2026-08-22",
     menstruation_status: MENSTRUATION_STATUS.BLEEDING,
     flow: MENSTRUATION_FLOW.MEDIUM,
     symptoms: [MENSTRUATION_SYMPTOM.ABDOMINAL_PAIN],
     cycle_id: 7,
-  },
-  {
-    date: "2026-08-19",
-    menstruation_status: MENSTRUATION_STATUS.BLEEDING,
-    flow: MENSTRUATION_FLOW.HEAVY,
-    symptoms: [MENSTRUATION_SYMPTOM.BACK_PAIN, MENSTRUATION_SYMPTOM.HEADACHE],
-    cycle_id: 6,
-  },
-  {
-    date: "2026-07-20",
-    menstruation_status: MENSTRUATION_STATUS.BLEEDING,
-    flow: MENSTRUATION_FLOW.MEDIUM,
-    symptoms: [],
-    cycle_id: 5,
-  },
-  {
-    date: "2026-07-25",
-    menstruation_status: MENSTRUATION_STATUS.NOT_BLEEDING,
-    flow: null,
-    symptoms: [],
-    cycle_id: 4,
-  },
-  {
-    date: "2026-06-22",
-    menstruation_status: MENSTRUATION_STATUS.BLEEDING,
-    flow: MENSTRUATION_FLOW.LIGHT,
-    symptoms: [MENSTRUATION_SYMPTOM.FATIGUE],
-    cycle_id: 3,
-  },
-  {
-    date: "2026-06-27",
-    menstruation_status: MENSTRUATION_STATUS.NOT_BLEEDING,
-    flow: null,
-    symptoms: [],
-    cycle_id: 2,
-  },
-  {
-    date: "2026-05-25",
-    menstruation_status: MENSTRUATION_STATUS.BLEEDING,
-    flow: MENSTRUATION_FLOW.VERY_HEAVY,
-    symptoms: [MENSTRUATION_SYMPTOM.ABDOMINAL_PAIN, MENSTRUATION_SYMPTOM.BACK_PAIN],
-    cycle_id: 1,
   },
 ];

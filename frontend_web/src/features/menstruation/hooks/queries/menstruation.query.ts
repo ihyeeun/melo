@@ -4,26 +4,26 @@ import {
   getMenstrualRecorded,
   getMenstruationCycles,
 } from "@/features/menstruation/api/menstruation.api";
-import type { getCyclesRequest } from "@/features/menstruation/types/menstruation.type";
 
-type MenstruationCyclesQueryOptions = {
-  enabled?: boolean;
-};
-
-export function useGetMenstruationCyclesQuery(
-  { date, limit }: getCyclesRequest,
-  options?: MenstruationCyclesQueryOptions,
-) {
+export function useGetMenstruationCyclesQuery({
+  date,
+  enabled,
+}: {
+  date: string;
+  enabled: boolean;
+}) {
   return useQuery({
-    queryKey: ["menstruation-cycles", { date, limit }],
-    queryFn: () => getMenstruationCycles({ date, limit }),
-    enabled: options?.enabled,
+    queryKey: ["menstruation-cycles"],
+    queryFn: () => getMenstruationCycles(date),
+    enabled: enabled,
+    staleTime: Infinity,
   });
 }
 
 export function useGetMenstrualRecordedQuery(date: string) {
   return useQuery({
-    queryKey: ["menstrual-recorded", { date }],
+    queryKey: ["menstrual-recorded", date],
     queryFn: () => getMenstrualRecorded(date),
+    staleTime: Infinity,
   });
 }

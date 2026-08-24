@@ -19,7 +19,10 @@ interface CalendarProps {
 export default function MenstruationCalendar({ onSelectedDate }: CalendarProps) {
   const [selectedDate, setSelectedDate] = useState<Date>();
   const today = getTodayFormatDateKey();
-  const { data: menstruationData } = useGetMenstruationCyclesQuery({ date: today, limit: 7 });
+  const { data: menstruationData } = useGetMenstruationCyclesQuery({
+    date: today,
+    enabled: true,
+  });
   const menstrualDate = calculateMenstrualCalendar(menstruationData?.cycles ?? []);
   const { viewDate, visibleDates, goPrevMonth, goNextMonth, goToday, goToMonth } =
     useMonthCalendar();
