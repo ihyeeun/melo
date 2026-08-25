@@ -44,3 +44,10 @@ export const HOME_PHASE_CONTENT = {
     source: string;
   }
 >;
+
+export const HOME_DELAYED_CONTENT = {
+  phaseLabel: "지연 중",
+  title: "지연 중",
+  message: "생리가 시작되면\n기록으로 알려주세요!",
+  source: "/icons/characters/luteal.png",
+} as const;

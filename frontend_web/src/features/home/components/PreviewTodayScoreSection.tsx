@@ -5,7 +5,7 @@ import styles from "@/features/home/styles/PreviewTodayScoreSection.module.css";
 import type { HomeDashboardMode } from "@/features/home/types/homeDashboard.types";
 import { getDayNutritionSummary } from "@/features/home/utils/dayMealSummary";
 import MenstruationCardButton from "@/features/menstruation/components/MenstruationCardButton";
-import type { MenstrualPhase } from "@/features/menstruation/types/menstruation.type";
+import type { MenstrualDisplayState } from "@/features/menstruation/types/menstruation.type";
 import type { ProfileResponseDto } from "@/shared/api/types/api.response.dto";
 import { InfoPopover } from "@/shared/commons/popover/InfoPopover";
 import ScoreProgress from "@/shared/commons/progress/Progress";
@@ -24,7 +24,7 @@ const DEFAULT_CHARACTER_SRC = SCORE_CHARACTER_SOURCES[0].src;
 
 type Props = {
   dashboardMode: HomeDashboardMode;
-  menstrualPhase: MenstrualPhase | null;
+  menstrualDisplayState: MenstrualDisplayState | null;
   isMenstruationPending: boolean;
   profile: ProfileResponseDto | undefined;
   isProfileError: boolean;
@@ -33,7 +33,7 @@ type Props = {
 
 export default function PreviewTodayScoreSection({
   dashboardMode,
-  menstrualPhase,
+  menstrualDisplayState,
   isMenstruationPending,
   profile,
   isProfileError,
@@ -75,7 +75,7 @@ export default function PreviewTodayScoreSection({
   return (
     <div className={styles.root}>
       {dashboardMode === "menstruation" ? (
-        <MenstruationCardButton phase={menstrualPhase} />
+        <MenstruationCardButton displayState={menstrualDisplayState} />
       ) : (
         <article className={styles.nutritionBalanceCard}>
           <div className={styles.summaryArea}>

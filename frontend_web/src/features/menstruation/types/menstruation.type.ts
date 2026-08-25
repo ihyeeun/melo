@@ -59,4 +59,6 @@ export type MenstrualCalculateCalendar = {
 
 export type MenstrualPhase = "MENSTRUAL" | "FOLLICULAR" | "OVULATORY" | "LUTEAL";
 
+export type MenstrualDisplayState = MenstrualPhase | "DELAYED";
+
 export type MenstruationDateType = "menstrual" | "possible" | "predicted" | undefined;

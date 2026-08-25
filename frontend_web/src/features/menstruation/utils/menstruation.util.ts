@@ -4,6 +4,7 @@ import {
   type CycleType,
   type DateRange,
   type MenstrualCalculateCalendar,
+  type MenstrualDisplayState,
   type MenstrualPhase,
   type MenstrualSaveDecision,
   MENSTRUATION_STATUS,
@@ -20,6 +21,7 @@ const DEFAULT_CYCLE = 28; //평균 주기 : 생리 시작 - 다음 생리 시작
 const DEFAULT_MENSTRUAL = 5; //기본 월경기
 const DEFAULT_OVULATORY = 3; //배란기
 const DEFAULT_LUTEAL = 13; //황체기
+const MAX_CYCLE_DAY = 45;
 
 export function calculateMenstrual(cycles: MenstrualCycleItemResponseDto[]) {
   if (cycles.length === 0) return null;
@@ -388,6 +390,40 @@ export function getMenstrualPhaseByDate(
 
   if (cycleDay <= lutealEnd) {
     return "LUTEAL";
+  }
+
+  return null;
+}
+
+/**
+ * 홈 카드에서 사용하는 표시 상태를 계산한다.
+ * 생리 단계 계산과 분리해 DELAYED가 menstrual_phase 분석값에 포함되지 않도록 한다.
+ */
+export function getMenstrualDisplayStateByDate(
+  cycles: MenstrualCycleItemResponseDto[],
+  targetDate: string,
+): MenstrualDisplayState | null {
+  const phase = getMenstrualPhaseByDate(cycles, targetDate);
+
+  if (phase) return phase;
+  if (cycles.length === 0) return null;
+
+  const latestCycle = sortCyclesByLatest(cycles)[0];
+  const cycleDay =
+    differenceInCalendarDays(parseDateKey(targetDate), parseDateKey(latestCycle.start_date)) + 1;
+
+  if (cycleDay < 1) return null;
+
+  const possibleEndDate = calculateMenstrualCalendar(cycles)?.calendar.possibleDate?.endDate;
+
+  // 기존 황체기 계산이 끝나도 생리 가능일 마지막 날까지는 황체기로 표시한다.
+  if (possibleEndDate && targetDate <= possibleEndDate) {
+    return "LUTEAL";
+  }
+
+  // 생리 가능일이 끝난 다음 날부터 최대 주기인 45일차까지 지연 상태로 표시한다.
+  if (possibleEndDate && targetDate > possibleEndDate && cycleDay <= MAX_CYCLE_DAY) {
+    return "DELAYED";
   }
 
   return null;

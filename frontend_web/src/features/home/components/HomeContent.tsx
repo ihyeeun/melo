@@ -14,7 +14,7 @@ import { useGetMenstruationCyclesQuery } from "@/features/menstruation/hooks/que
 import type { MenstrualCalculateCalendar } from "@/features/menstruation/types/menstruation.type";
 import {
   calculateMenstrualCalendar,
-  getMenstrualPhaseByDate,
+  getMenstrualDisplayStateByDate,
   getMenstruationDateType,
 } from "@/features/menstruation/utils/menstruation.util";
 import { useGetProfileQuery } from "@/features/profile/hooks/queries/useProfileQuery";
@@ -55,8 +55,8 @@ export default function HomeContent({
     () => calculateMenstrualCalendar(menstruationCycles ?? []),
     [menstruationCycles],
   );
-  const menstrualPhase = useMemo(
-    () => getMenstrualPhaseByDate(menstruationCycles ?? [], selectedDateKey),
+  const menstrualDisplayState = useMemo(
+    () => getMenstrualDisplayStateByDate(menstruationCycles ?? [], selectedDateKey),
     [menstruationCycles, selectedDateKey],
   );
 
@@ -83,7 +83,7 @@ export default function HomeContent({
         <ScrollFogArea role="main" className={`main ${styles.content}`}>
           <PreviewTodayScoreSection
             dashboardMode={dashboardMode}
-            menstrualPhase={menstrualPhase}
+            menstrualDisplayState={menstrualDisplayState}
             isMenstruationPending={menstruationCyclesQuery.isPending}
             profile={profileQuery.data}
             isProfileError={profileQuery.isError}
