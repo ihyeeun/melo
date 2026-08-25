@@ -60,7 +60,7 @@ export async function updateMenstrualRecorded(body: MenstrualRecordFieldsDto) {
   return response;
 }
 
-export async function deleteMenstrualRecorded(cycle_id: number) {
+export async function deleteMenstrualCycle(cycle_id: number) {
   await appApiData({
     endpoint: "/menstrual/cycle/delete",
     method: "POST",

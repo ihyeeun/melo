@@ -1,7 +1,10 @@
 import { type ReactNode, useState } from "react";
 
 import MenstruationCalendar from "@/features/calendar/components/menstruation/MenstruationCalendar";
-import { useSaveMenstrualRecordMutation } from "@/features/menstruation/hooks/mutations/menstruation.mutation";
+import {
+  useDeleteMenstrualCycleMutation,
+  useSaveMenstrualRecordMutation,
+} from "@/features/menstruation/hooks/mutations/menstruation.mutation";
 import {
   useGetMenstrualRecordedQuery,
   useGetMenstruationCyclesQuery,
@@ -15,12 +18,17 @@ import {
   type MenstruationStatus,
   type MenstruationSymptom,
 } from "@/features/menstruation/types/menstruation.type";
-import { findCandidateCycle } from "@/features/menstruation/utils/menstruation.util";
+import {
+  findCandidateCycle,
+  getCycleIdToDeleteForFirstDayNotBleeding,
+} from "@/features/menstruation/utils/menstruation.util";
 import type { MenstraulRecordReponseDto } from "@/shared/api/types/api.response.dto";
 import { Button } from "@/shared/commons/button/Button";
 import { SelectedCard } from "@/shared/commons/card/SelectedCard";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
+import { LoadingOverlay } from "@/shared/commons/loading/Loading";
+import { ConfirmModal } from "@/shared/commons/modals/ConfirmModal";
 import { Skeleton, SkeletonStatus } from "@/shared/commons/skeleton/Skeleton";
 import { toast } from "@/shared/commons/toast/toast";
 import { navigateBack } from "@/shared/navigation/stackflowNavigation";
@@ -92,6 +100,7 @@ type MenstruationFormValues = {
 
 export default function MenstruationRecordPage() {
   const [selectedDate, setSelectedDate] = useState<string>(getTodayFormatDateKey());
+  const [cycleIdPendingDeletion, setCycleIdPendingDeletion] = useState<number | null>(null);
   const recordMenstrualQuery = useGetMenstrualRecordedQuery(selectedDate);
   const menstruationCyclesQuery = useGetMenstruationCyclesQuery({
     date: selectedDate,
@@ -102,12 +111,25 @@ export default function MenstruationRecordPage() {
       toast.success("기록되었어요");
     },
   });
+  const deleteMenstrualCycleMutation = useDeleteMenstrualCycleMutation();
   const MENSTRUATION_RECORD_FORM_ID = "menstruation-record-form";
 
   const handleSave = (values: MenstruationFormValues) => {
     if (!recordMenstrualQuery.isSuccess || !menstruationCyclesQuery.isSuccess) return;
 
     const cycle = findCandidateCycle(menstruationCyclesQuery.data.cycles, selectedDate);
+
+    const cycleIdToDelete = getCycleIdToDeleteForFirstDayNotBleeding({
+      cycle,
+      existingRecord: recordMenstrualQuery.data.record,
+      menstruationStatus: values.menstruationStatus,
+      targetDate: selectedDate,
+    });
+
+    if (cycleIdToDelete !== null) {
+      setCycleIdPendingDeletion(cycleIdToDelete);
+      return;
+    }
 
     saveMenstrualRecordMutation.mutate({
       date: selectedDate,
@@ -117,6 +139,18 @@ export default function MenstruationRecordPage() {
       existingRecord: recordMenstrualQuery.data.record,
       cycle,
     });
+  };
+
+  const handleDeleteCycleConfirm = async () => {
+    if (cycleIdPendingDeletion === null || deleteMenstrualCycleMutation.isPending) return;
+
+    try {
+      await deleteMenstrualCycleMutation.mutateAsync(cycleIdPendingDeletion);
+      toast.success("생리 기록이 삭제되었어요");
+    } catch (error) {
+      toast.warning("생리 기록 삭제에 실패했어요", "잠시 후 다시 시도해주세요.");
+      throw error;
+    }
   };
 
   return (
@@ -149,16 +183,36 @@ export default function MenstruationRecordPage() {
 
         {recordMenstrualQuery.isSuccess && (
           <MenstruationRecordForm
-            key={selectedDate}
+            key={`${selectedDate}-${recordMenstrualQuery.data.record?.cycle_id ?? "empty"}`}
             formId={MENSTRUATION_RECORD_FORM_ID}
             onSubmit={handleSave}
             initRecord={recordMenstrualQuery.data.record}
             isSubmitting={
-              !menstruationCyclesQuery.isSuccess || saveMenstrualRecordMutation.isPending
+              !menstruationCyclesQuery.isSuccess ||
+              saveMenstrualRecordMutation.isPending ||
+              deleteMenstrualCycleMutation.isPending
             }
           />
         )}
       </main>
+
+      <ConfirmModal
+        open={cycleIdPendingDeletion !== null}
+        onOpenChange={(open) => {
+          if (!open) setCycleIdPendingDeletion(null);
+        }}
+        title="이 회차의 생리 기록을 삭제할까요?"
+        description={"첫날의 기록을 '없음'으로 변경하면\n이 회차의 생리 기록이 모두 삭제돼요."}
+        cancelText="취소"
+        confirmText="전체 삭제"
+        confirmDisabled={deleteMenstrualCycleMutation.isPending}
+        closeOnConfirm={false}
+        onConfirm={handleDeleteCycleConfirm}
+      />
+
+      {deleteMenstrualCycleMutation.isPending ? (
+        <LoadingOverlay label="생리 기록을 삭제하는 중입니다." />
+      ) : null}
     </div>
   );
 }

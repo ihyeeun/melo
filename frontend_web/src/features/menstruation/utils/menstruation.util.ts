@@ -95,6 +95,27 @@ export function findCandidateCycle(
   return sortCyclesByLatest(cyclesStartedByTargetDate)[0] ?? null;
 }
 
+export function getCycleIdToDeleteForFirstDayNotBleeding({
+  cycle,
+  existingRecord,
+  menstruationStatus,
+  targetDate,
+}: {
+  cycle: MenstrualCycleItemResponseDto | null;
+  existingRecord: MenstraulRecordReponseDto["record"];
+  menstruationStatus: MenstruationStatus;
+  targetDate: string;
+}): number | null {
+  const shouldDeleteCycle =
+    cycle !== null &&
+    existingRecord !== null &&
+    existingRecord.cycle_id === cycle.cycle_id &&
+    cycle.start_date === targetDate &&
+    menstruationStatus === MENSTRUATION_STATUS.NOT_BLEEDING;
+
+  return shouldDeleteCycle ? cycle.cycle_id : null;
+}
+
 function calculateCycleLengthsAvg(cycles: MenstrualCycleItemResponseDto[]): number {
   if (cycles.length < 2) return DEFAULT_CYCLE;
 

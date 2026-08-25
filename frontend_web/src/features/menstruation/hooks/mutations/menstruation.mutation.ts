@@ -3,6 +3,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   createMenstrualCycleRecorded,
   createMenstrualRecorded,
+  deleteMenstrualCycle,
   updateMenstrualRecorded,
 } from "@/features/menstruation/api/menstruation.api";
 import type {
@@ -52,6 +53,25 @@ export function useUpdateMenstrualRecordedMutation() {
 
       // 무효화 대신 setQuery를 사용해도 될 거 같음.
       queryClient.invalidateQueries({ queryKey: ["menstrual-recorded", data.record?.date] });
+    },
+  });
+}
+
+export function useDeleteMenstrualCycleMutation(callbacks?: UseMutationCallback) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: deleteMenstrualCycle,
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["menstruation-cycles"] }),
+        queryClient.invalidateQueries({ queryKey: ["menstrual-recorded"] }),
+      ]);
+
+      callbacks?.onSuccess?.();
+    },
+    onError: (error) => {
+      callbacks?.onError?.(error);
     },
   });
 }
