@@ -11,7 +11,6 @@
   display: grid;
   grid-template-columns: 40px 132px 40px;
   justify-content: center;
-  /* border: 1px solid red; */
 }
 
 .navigationButton {
@@ -26,7 +25,6 @@
 .weekdays {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
-  /* border: 1px solid red; */
   padding: 8px 0;
 }
 
@@ -76,10 +74,12 @@
   height: 40px;
   /* border: 1px solid green; */
   border-radius: 16px;
+  border: 3px solid transparent;
 }
 
 /* 실제 또는 계산된 월경 범위 */
 .day[data-menstruation="menstrual"] {
+  border-color: var(--coral-400);
   background-color: var(--coral-400);
   color: var(--background-default);
 }
@@ -99,15 +99,20 @@
 
 /* 오늘 */
 .day[data-today="true"] {
-  border-color: var(--primary-normal);
+  border-color: var(--navy-800);
   background-color: var(--navy-800);
   color: var(--background-default);
 }
 
 .day[data-today="true"][data-menstruation="menstrual"] {
-  height: 43px;
   border: 3px solid var(--navy-800);
   background-color: var(--coral-400);
+}
+
+.day[data-today="true"][data-menstruation="menstrual"][data-selected="true"] {
+  border-color: var(--navy-800);
+  background-color: var(--coral-400);
+  box-shadow: 0 0 0 1.5px var(--navy-800);
 }
 
 /* 선택 날짜 */
@@ -116,15 +121,15 @@
 }
 
 .day[data-today="true"][data-selected="true"] {
-  height: 43px;
-  border: 3px solid var(--navy-800);
+  border-color: var(--background-gray-2);
   background-color: var(--background-gray-2);
   color: var(--text-primary);
 }
 
 .day[data-selected="true"][data-menstruation="menstrual"] {
+  box-shadow: 0 0 0 1.5px var(--coral-400);
   background-color: var(--coral-400);
-  box-shadow: inset 0 0 0 2px var(--navy-900);
+  border-color: var(--coral-400);
   color: var(--background-default);
 }
 

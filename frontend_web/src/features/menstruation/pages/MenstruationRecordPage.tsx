@@ -21,6 +21,7 @@ import { Button } from "@/shared/commons/button/Button";
 import { SelectedCard } from "@/shared/commons/card/SelectedCard";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
+import { Skeleton, SkeletonStatus } from "@/shared/commons/skeleton/Skeleton";
 import { toast } from "@/shared/commons/toast/toast";
 import { navigateBack } from "@/shared/navigation/stackflowNavigation";
 import { getTodayFormatDateKey } from "@/shared/utils/dateFormat";
@@ -142,9 +143,9 @@ export default function MenstruationRecordPage() {
           </div>
         </section>
 
-        {recordMenstrualQuery.isPending && <p>기록을 불러오는 중...</p>}
-
         {recordMenstrualQuery.isError && <p>기록을 불러오지 못했습니다.</p>}
+
+        {recordMenstrualQuery.isPending && <FormSkeleton />}
 
         {recordMenstrualQuery.isSuccess && (
           <MenstruationRecordForm
@@ -306,5 +307,30 @@ function MenstruationRecordForm({
         </Button>
       </footer>
     </form>
+  );
+}
+
+function FormSkeleton() {
+  return (
+    <SkeletonStatus className={styles.recordSection} label="생리 기록을 불러오는 중입니다">
+      <SectionLayout title="생리 유무">
+        <div className={styles.twoGrid}>
+          <Skeleton width="100%" height={49} radius={16} />
+          <Skeleton width="100%" height={49} radius={16} />
+        </div>
+      </SectionLayout>
+
+      <SectionLayout title="생리 양" description="오늘의 생리 양은 어떤가요?">
+        <div className={styles.fourGrid}>
+          {Array.from({ length: 4 }, (_, idx) => (
+            <Skeleton key={idx} width="100%" height={68} radius={16} />
+          ))}
+        </div>
+      </SectionLayout>
+
+      <SectionLayout title="증상 기록" description="해당되는 증상을 선택해주세요.">
+        <div className={styles.twoGrid} />
+      </SectionLayout>
+    </SkeletonStatus>
   );
 }
