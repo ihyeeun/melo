@@ -10,7 +10,7 @@ export function useGetMenstruationCyclesQuery({
   enabled,
 }: {
   date: string;
-  enabled: boolean;
+  enabled?: boolean;
 }) {
   return useQuery({
     queryKey: ["menstruation-cycles"],

@@ -15,6 +15,7 @@ import type {
   MenstraulRecordReponseDto,
   MenstrualCycleItemResponseDto,
 } from "@/shared/api/types/api.response.dto";
+import type { UseMutationCallback } from "@/shared/api/types/callback.types";
 
 export function useCreateMenstrualCycleRecordedMutation() {
   const queryClient = useQueryClient();
@@ -102,7 +103,7 @@ export async function saveMenstrualRecord(input: SaveMenstrualRecordInput) {
   }
 }
 
-export function useSaveMenstrualRecordMutation() {
+export function useSaveMenstrualRecordMutation(callbacks?: UseMutationCallback) {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -114,6 +115,8 @@ export function useSaveMenstrualRecordMutation() {
           queryKey: ["menstrual-recorded", variables.date],
         }),
       ]);
+
+      callbacks?.onSuccess?.();
     },
   });
 }

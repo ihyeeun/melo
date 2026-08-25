@@ -21,6 +21,7 @@ import { Button } from "@/shared/commons/button/Button";
 import { SelectedCard } from "@/shared/commons/card/SelectedCard";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
+import { toast } from "@/shared/commons/toast/toast";
 import { navigateBack } from "@/shared/navigation/stackflowNavigation";
 import { getTodayFormatDateKey } from "@/shared/utils/dateFormat";
 
@@ -95,7 +96,11 @@ export default function MenstruationRecordPage() {
     date: selectedDate,
     enabled: true,
   });
-  const saveMenstrualRecordMutation = useSaveMenstrualRecordMutation();
+  const saveMenstrualRecordMutation = useSaveMenstrualRecordMutation({
+    onSuccess: () => {
+      toast.success("기록되었어요");
+    },
+  });
   const MENSTRUATION_RECORD_FORM_ID = "menstruation-record-form";
 
   const handleSave = (values: MenstruationFormValues) => {

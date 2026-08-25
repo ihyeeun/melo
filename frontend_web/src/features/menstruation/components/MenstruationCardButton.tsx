@@ -5,6 +5,8 @@ import {
 import styles from "@/features/menstruation/styles/MenstruationCardButton.module.css";
 import type { MenstrualPhase } from "@/features/menstruation/types/menstruation.type";
 import { PATH } from "@/router/path";
+import { track } from "@/shared/analytics/analytics";
+import { EVENT_NAME } from "@/shared/analytics/analytics.constants";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import { useNavigate } from "@/shared/navigation/stackflowNavigation";
 
@@ -34,6 +36,9 @@ export default function MenstruationCardButton({ phase }: { phase: MenstrualPhas
           : `${homeContent.title}. ${homeContent.message} 생리 주기 기록 보기`
       }
       onClick={() => {
+        track(EVENT_NAME.CLICK_MENSTRUAL_DASHBORAD, {
+          menstrual_phase: phase,
+        });
         return navigate(PATH.MENSTRUATION_RECORD);
       }}
     >
