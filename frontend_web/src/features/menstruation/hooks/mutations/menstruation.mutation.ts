@@ -6,10 +6,11 @@ import {
   deleteMenstrualCycle,
   updateMenstrualRecorded,
 } from "@/features/menstruation/api/menstruation.api";
-import type {
-  MenstruationFlow,
-  MenstruationStatus,
-  MenstruationSymptom,
+import {
+  MENSTRUATION_STATUS,
+  type MenstruationFlow,
+  type MenstruationStatus,
+  type MenstruationSymptom,
 } from "@/features/menstruation/types/menstruation.type";
 import { resolveMenstrualSaveDecision } from "@/features/menstruation/utils/menstruation.util";
 import type {
@@ -80,12 +81,19 @@ type SaveMenstrualRecordInput = {
   date: string;
   menstruationStatus: MenstruationStatus;
   flow: MenstruationFlow | undefined;
-  symptoms: MenstruationSymptom[];
+  symptoms: MenstruationSymptom[] | undefined;
   existingRecord: MenstraulRecordReponseDto["record"];
   cycle: MenstrualCycleItemResponseDto | null;
 };
 
 export async function saveMenstrualRecord(input: SaveMenstrualRecordInput) {
+  const isBleeding = input.menstruationStatus === MENSTRUATION_STATUS.BLEEDING;
+  const menstrualDetails = isBleeding
+    ? {
+        flow: input.flow,
+        symptoms: input.symptoms,
+      }
+    : {};
   const decision = resolveMenstrualSaveDecision({
     existingRecord: input.existingRecord,
     cycle: input.cycle,
@@ -97,8 +105,7 @@ export async function saveMenstrualRecord(input: SaveMenstrualRecordInput) {
     case "CREATE_CYCLE":
       return createMenstrualCycleRecorded({
         date: input.date,
-        flow: input.flow,
-        symptoms: input.symptoms,
+        ...menstrualDetails,
       });
 
     case "CREATE_DAILY_RECORD":
@@ -106,16 +113,14 @@ export async function saveMenstrualRecord(input: SaveMenstrualRecordInput) {
         date: input.date,
         cycle_id: decision.cycleId,
         menstruation_status: input.menstruationStatus,
-        flow: input.flow,
-        symptoms: input.symptoms,
+        ...menstrualDetails,
       });
 
     case "UPDATE_DAILY_RECORD":
       return updateMenstrualRecorded({
         date: input.date,
         menstruation_status: input.menstruationStatus,
-        flow: input.flow,
-        symptoms: input.symptoms,
+        ...menstrualDetails,
       });
 
     case "BLOCKED":

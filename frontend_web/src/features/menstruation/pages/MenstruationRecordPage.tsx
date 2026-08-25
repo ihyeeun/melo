@@ -95,7 +95,7 @@ const SYMPTOMS = [
 type MenstruationFormValues = {
   menstruationStatus: MenstruationStatus;
   flow: MenstruationFlow | undefined;
-  symptoms: MenstruationSymptom[];
+  symptoms: MenstruationSymptom[] | undefined;
 };
 
 export default function MenstruationRecordPage() {
@@ -249,15 +249,17 @@ function MenstruationRecordForm({
   initRecord: MenstraulRecordReponseDto["record"];
   isSubmitting: boolean;
 }) {
+  const hasInitialBleeding = initRecord?.menstruation_status === MENSTRUATION_STATUS.BLEEDING;
   const [menstrualStatus, setMenstrualStatus] = useState<MenstruationStatus | null>(
     () => initRecord?.menstruation_status ?? null,
   );
   const [flow, setFlow] = useState<MenstruationFlow | undefined>(
-    () => initRecord?.flow ?? undefined,
+    () => (hasInitialBleeding ? initRecord.flow : undefined),
   );
-  const [symptoms, setSymptoms] = useState<MenstruationSymptom[]>(() => [
-    ...(initRecord?.symptoms ?? []),
-  ]);
+  const [symptoms, setSymptoms] = useState<MenstruationSymptom[]>(() =>
+    hasInitialBleeding ? [...(initRecord.symptoms ?? [])] : [],
+  );
+  const areDetailsDisabled = menstrualStatus === MENSTRUATION_STATUS.NOT_BLEEDING;
 
   const handleSymptomToggle = (symptom: MenstruationSymptom) => {
     setSymptoms((previous) => {
@@ -278,8 +280,8 @@ function MenstruationRecordForm({
 
     onSubmit({
       menstruationStatus: menstrualStatus,
-      flow,
-      symptoms,
+      flow: areDetailsDisabled ? undefined : flow,
+      symptoms: areDetailsDisabled ? undefined : symptoms,
     });
   };
 
@@ -300,6 +302,7 @@ function MenstruationRecordForm({
             setSelectedChange={() => {
               setMenstrualStatus(MENSTRUATION_STATUS.NOT_BLEEDING);
               setFlow(undefined);
+              setSymptoms([]);
             }}
           >
             <p className="body-m-regular text-primary">없음</p>
@@ -307,13 +310,19 @@ function MenstruationRecordForm({
         </div>
       </SectionLayout>
 
-      <SectionLayout title="생리 양" description="오늘의 생리 양은 어떤가요?">
+      <SectionLayout
+        title="생리 양"
+        description={
+          areDetailsDisabled ? "생리가 있는 날에만 기록할 수 있어요." : "오늘의 생리 양은 어떤가요?"
+        }
+      >
         <div className={styles.fourGrid}>
           {AMOUNTS.map(({ value, label, iconCount }) => {
             return (
               <SelectedCard
                 key={value}
                 isSelected={flow === value}
+                disabled={areDetailsDisabled}
                 setSelectedChange={() => {
                   setFlow(value);
                 }}
@@ -331,13 +340,21 @@ function MenstruationRecordForm({
         </div>
       </SectionLayout>
 
-      <SectionLayout title="증상 기록" description="해당되는 증상을 선택해주세요.">
+      <SectionLayout
+        title="증상 기록"
+        description={
+          areDetailsDisabled
+            ? "생리가 있는 날에만 기록할 수 있어요."
+            : "해당되는 증상을 선택해주세요."
+        }
+      >
         <div className={styles.twoGrid}>
           {SYMPTOMS.map(({ value, label }) => {
             return (
               <SelectedCard
                 key={value}
                 isSelected={symptoms.includes(value)}
+                disabled={areDetailsDisabled}
                 setSelectedChange={() => {
                   handleSymptomToggle(value);
                 }}
