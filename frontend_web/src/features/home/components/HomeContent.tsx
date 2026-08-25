@@ -30,8 +30,6 @@ type HomeContentProps = {
   selectedDateKey: string;
 };
 
-const MENSTRUATION_HOME_USER_ID = 101;
-
 export default function HomeContent({
   onSelectDate,
   selectedDate,
@@ -44,7 +42,7 @@ export default function HomeContent({
   const [selectedDashboardMode, setSelectedDashboardMode] =
     useState<HomeDashboardMode>("menstruation");
   const profileQuery = useGetProfileQuery();
-  const canToggleDashboardMode = profileQuery.data?.user_id === MENSTRUATION_HOME_USER_ID;
+  const canToggleDashboardMode = profileQuery.data?.role === "ADMIN";
   const dashboardMode: HomeDashboardMode = canToggleDashboardMode ? selectedDashboardMode : "daily";
   const menstruationCyclesQuery = useGetMenstruationCyclesQuery({
     date: selectedDateKey,
