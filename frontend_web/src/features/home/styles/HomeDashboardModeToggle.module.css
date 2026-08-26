@@ -34,13 +34,12 @@
   border-radius: 999px;
   color: var(--text-tertiary);
   display: inline-flex;
-  height: 24px;
+  height: 28px;
   justify-content: center;
   min-width: 38px;
   padding: 0 8px;
   position: relative;
-  transition:
-    color 160ms ease;
+  transition: color 160ms ease;
   z-index: 1;
 }
 

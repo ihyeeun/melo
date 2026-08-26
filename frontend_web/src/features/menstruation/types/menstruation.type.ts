@@ -19,10 +19,18 @@ export const MENSTRUATION_SYMPTOM = {
   BACK_PAIN: "허리 통증",
   HEADACHE: "두통",
   FATIGUE: "피로감",
-  SENSITIVITY: "예민함",
+  MOOD_SWINGS: "감정 기복",
   SWELLING: "붓기",
   BREAST_PAIN: "유방 통증",
   APPETITE_CHANGE: "식욕 변화",
+  DIARRHEA: "설사",
+  ACNE: "여드름",
+  SLEEP_PATTERN_CHANGE: "수면 패턴 변화",
+  BLOATING: "복부 팽만",
+  CONSTIPATION: "변비",
+  NAUSEA: "메스꺼움",
+  PELVIC_PAIN: "골반 통증",
+  NONE: "없음",
 } as const;
 
 export type MenstruationSymptom = (typeof MENSTRUATION_SYMPTOM)[keyof typeof MENSTRUATION_SYMPTOM];

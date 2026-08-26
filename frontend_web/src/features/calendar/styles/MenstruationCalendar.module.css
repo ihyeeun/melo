@@ -77,14 +77,23 @@
   border: 3px solid transparent;
 }
 
-/* 실제 또는 계산된 월경 범위 */
+/* 1개 선택 */
+.day[data-today="true"] {
+  border-color: var(--navy-800);
+  background-color: var(--navy-800);
+  color: var(--background-default);
+}
+
+.day[data-selected="true"] {
+  background: var(--background-gray-2);
+}
+
 .day[data-menstruation="menstrual"] {
   border-color: var(--coral-400);
   background-color: var(--coral-400);
   color: var(--background-default);
 }
 
-/* 다음 월경 예상일을 포함한 가능일 범위 */
 .day[data-menstruation="possible"],
 .day[data-menstruation="predicted"] {
   background-color: var(--background-default);
@@ -92,16 +101,15 @@
   color: var(--text-secondary);
 }
 
-/* 앞뒤 달 날짜 */
 .day[data-outside="true"] {
   color: var(--gray-300);
 }
 
-/* 오늘 */
-.day[data-today="true"] {
+/* 2개 선택 */
+.day[data-today="true"][data-selected="true"] {
   border-color: var(--navy-800);
-  background-color: var(--navy-800);
-  color: var(--background-default);
+  background-color: var(--background-gray-2);
+  color: var(--text-primary);
 }
 
 .day[data-today="true"][data-menstruation="menstrual"] {
@@ -109,25 +117,15 @@
   background-color: var(--coral-400);
 }
 
-.day[data-today="true"][data-menstruation="menstrual"][data-selected="true"] {
-  border-color: var(--navy-800);
-  background-color: var(--coral-400);
-  box-shadow: 0 0 0 1.5px var(--navy-800);
-}
-
-/* 선택 날짜 */
-.day[data-selected="true"] {
-  background: var(--background-gray-2);
-}
-
-.day[data-today="true"][data-selected="true"] {
-  border-color: var(--background-gray-2);
-  background-color: var(--background-gray-2);
-  color: var(--text-primary);
+.day[data-today="true"][data-menstruation="possible"],
+.day[data-today="true"].day[data-menstruation="predicted"] {
+  background-color: var(--coral-50);
 }
 
 .day[data-selected="true"][data-menstruation="menstrual"] {
-  box-shadow: 0 0 0 1.5px var(--coral-400);
+  box-shadow:
+    0 -1.5px 0 var(--coral-400),
+    0 1.5px 0 var(--coral-400);
   background-color: var(--coral-400);
   border-color: var(--coral-400);
   color: var(--background-default);
@@ -138,13 +136,27 @@
   background-color: var(--coral-50);
 }
 
-.day[data-selected="true"][data-outside="true"] {
+.day[data-outside="true"] [data-selected="true"] {
   color: var(--text-disabled);
 }
 
 .day[data-outside="true"][data-menstruation="menstrual"] {
   opacity: 40%;
   color: var(--background-default);
+}
+
+/* 3개 선택 */
+.day[data-today="true"][data-selected="true"][data-menstruation="menstrual"] {
+  border-color: var(--navy-800);
+  background-color: var(--coral-400);
+  box-shadow:
+    0 -1.5px 0 var(--navy-800),
+    0 1.5px 0 var(--navy-800);
+}
+
+.day[data-today="true"][data-selected="true"][data-menstruation="possible"],
+.day[data-today="true"][data-selected="true"][data-menstruation="predicted"] {
+  border-color: transparent;
 }
 
 @media (prefers-reduced-motion: reduce) {

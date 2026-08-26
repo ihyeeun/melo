@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import Calendar from "@/features/calendar/components/Calendar";
 import type { DayCellRenderProps } from "@/features/calendar/components/dayCell";
@@ -18,6 +18,8 @@ import {
   getMenstruationDateType,
 } from "@/features/menstruation/utils/menstruation.util";
 import { useGetProfileQuery } from "@/features/profile/hooks/queries/useProfileQuery";
+import { track } from "@/shared/analytics/analytics";
+import { EVENT_NAME } from "@/shared/analytics/analytics.constants";
 import { FloatingCameraButton } from "@/shared/commons/button/FloatingCameraButton";
 import { ScrollFogArea } from "@/shared/commons/scrollFog";
 import { FEATURE_GUARD, useIsFeatureBlocked } from "@/shared/guards/featureGuard";
@@ -39,8 +41,7 @@ export default function HomeContent({
   const isAiCameraBlocked = useIsFeatureBlocked(FEATURE_GUARD.MENU_BOARD_CAMERA);
   const [chatCameraUpdateUrl, setChatCameraUpdateUrl] = useState<string | null>(null);
   const [isChatCameraUpdateModalOpen, setIsChatCameraUpdateModalOpen] = useState(false);
-  const [selectedDashboardMode, setSelectedDashboardMode] =
-    useState<HomeDashboardMode>("menstruation");
+  const [selectedDashboardMode, setSelectedDashboardMode] = useState<HomeDashboardMode>("daily");
   const profileQuery = useGetProfileQuery();
   const canToggleDashboardMode = profileQuery.data?.role === "ADMIN";
   const dashboardMode: HomeDashboardMode = canToggleDashboardMode ? selectedDashboardMode : "daily";
@@ -67,6 +68,28 @@ export default function HomeContent({
     }
   };
 
+  const shouldTrackMenstruationToggleRef = useRef(false);
+
+  const handleDashboardModeChange = (mode: HomeDashboardMode) => {
+    if (mode === "menstruation") {
+      shouldTrackMenstruationToggleRef.current = true;
+    }
+
+    setSelectedDashboardMode(mode);
+  };
+
+  useEffect(() => {
+    if (!shouldTrackMenstruationToggleRef.current) return;
+    if (dashboardMode !== "menstruation") return;
+    if (!menstruationCyclesQuery.isFetched) return;
+
+    shouldTrackMenstruationToggleRef.current = false;
+
+    track(EVENT_NAME.CLICK_MENSTRUAL_DASHBOARD, {
+      menstrual_phase: menstrualDisplayState === "DELAYED" ? null : menstrualDisplayState,
+    });
+  }, [dashboardMode, menstruationCyclesQuery.isFetched, menstrualDisplayState]);
+
   return (
     <>
       <div className={`page ${styles.pageColor}`}>
@@ -76,7 +99,7 @@ export default function HomeContent({
           selectedDate={selectedDate}
           onSelectDate={onSelectDate}
           showModeToggle={canToggleDashboardMode}
-          onModeChange={setSelectedDashboardMode}
+          onModeChange={handleDashboardModeChange}
         />
         <ScrollFogArea role="main" className={`main ${styles.content}`}>
           <PreviewTodayScoreSection

@@ -57,41 +57,6 @@ const AMOUNTS = [
   },
 ];
 
-const SYMPTOMS = [
-  {
-    value: MENSTRUATION_SYMPTOM.ABDOMINAL_PAIN,
-    label: "복통",
-  },
-  {
-    value: MENSTRUATION_SYMPTOM.BACK_PAIN,
-    label: "허리 통증",
-  },
-  {
-    value: MENSTRUATION_SYMPTOM.HEADACHE,
-    label: "두통",
-  },
-  {
-    value: MENSTRUATION_SYMPTOM.FATIGUE,
-    label: "피로감",
-  },
-  {
-    value: MENSTRUATION_SYMPTOM.SENSITIVITY,
-    label: "예민함",
-  },
-  {
-    value: MENSTRUATION_SYMPTOM.SWELLING,
-    label: "붓기",
-  },
-  {
-    value: MENSTRUATION_SYMPTOM.BREAST_PAIN,
-    label: "유방 통증",
-  },
-  {
-    value: MENSTRUATION_SYMPTOM.APPETITE_CHANGE,
-    label: "식욕 변화",
-  },
-];
-
 type MenstruationFormValues = {
   menstruationStatus: MenstruationStatus;
   flow: MenstruationFlow | undefined;
@@ -253,8 +218,8 @@ function MenstruationRecordForm({
   const [menstrualStatus, setMenstrualStatus] = useState<MenstruationStatus | null>(
     () => initRecord?.menstruation_status ?? null,
   );
-  const [flow, setFlow] = useState<MenstruationFlow | undefined>(
-    () => (hasInitialBleeding ? initRecord.flow : undefined),
+  const [flow, setFlow] = useState<MenstruationFlow | undefined>(() =>
+    hasInitialBleeding ? initRecord.flow : undefined,
   );
   const [symptoms, setSymptoms] = useState<MenstruationSymptom[]>(() =>
     hasInitialBleeding ? [...(initRecord.symptoms ?? [])] : [],
@@ -349,18 +314,18 @@ function MenstruationRecordForm({
         }
       >
         <div className={styles.twoGrid}>
-          {SYMPTOMS.map(({ value, label }) => {
+          {Object.values(MENSTRUATION_SYMPTOM).map((symptom) => {
             return (
               <SelectedCard
-                key={value}
-                isSelected={symptoms.includes(value)}
+                key={symptom}
+                isSelected={symptoms.includes(symptom)}
                 disabled={areDetailsDisabled}
                 setSelectedChange={() => {
-                  handleSymptomToggle(value);
+                  handleSymptomToggle(symptom);
                 }}
                 className={`${styles.fieldCard} body-m-regular text-primary`}
               >
-                {label}
+                {symptom}
               </SelectedCard>
             );
           })}

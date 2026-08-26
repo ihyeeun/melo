@@ -37,7 +37,7 @@ export const EVENT_NAME = {
 
   WORKOUT_RECORD_COMPLETED: "workout_record_completed",
 
-  CLICK_MENSTRUAL_DASHBORAD: "click_menstrual_dashboard",
+  CLICK_MENSTRUAL_DASHBOARD: "click_menstrual_dashboard",
 } as const;
 
 export type AnalyticsEventName = (typeof EVENT_NAME)[keyof typeof EVENT_NAME];

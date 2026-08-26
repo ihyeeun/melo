@@ -23,6 +23,7 @@
 
 .month[data-menstruation="menstrual"] {
   background-color: var(--coral-100);
+  border-radius: 16px;
 }
 
 .week[data-menstruation="possible"],
