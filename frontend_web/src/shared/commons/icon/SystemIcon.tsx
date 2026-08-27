@@ -37,6 +37,10 @@ const SYSTEM_ICON_SRC = {
   "arrow-filled-left": "/icons/system-icons/arrow-filled-left.svg",
   "contract-edit": "/icons/system-icons/contract-edit.svg",
   "photo-library": "/icons/system-icons/photo-library.svg",
+  alert: "/icons/system-icons/alert.svg",
+  error: "/icons/system-icons/error.svg",
+  "info-colored": "/icons/system-icons/info-colored.svg",
+  success: "/icons/system-icons/success.svg",
 } as const;
 
 export type SystemIconName = keyof typeof SYSTEM_ICON_SRC;

@@ -47,28 +47,16 @@
 
 .app-toast-icon {
   align-items: center;
-  background: var(--status-link);
-  border-radius: 50%;
-  color: var(--background-default);
   display: inline-flex;
   flex-shrink: 0;
-  height: 18px;
+  height: 20px;
   justify-content: center;
-  width: 18px;
+  width: 20px;
   margin-right: 8px;
-  border: 1px;
 }
 
 .app-toast-icon [data-system-icon] {
   display: block;
-}
-
-.app-toast-status-mark {
-  display: block;
-  font-size: 14px;
-  font-weight: var(--fw-bold);
-  letter-spacing: 0;
-  line-height: 1;
 }
 
 .app-toast-title,
@@ -106,23 +94,11 @@
   display: block;
 }
 
-.app-toast[data-type="warning"] .app-toast-icon {
-  background: var(--coral-400);
-}
-
-.app-toast[data-type="error"] .app-toast-icon {
-  background: var(--coral-600);
-}
-
-.app-toast[data-type="success"] .app-toast-icon {
-  background: var(--navy-500);
-}
-
 .app-toast[data-has-description="true"] {
   align-items: flex-start;
 }
 
-.app-toast[data-has-description="true"] .app-toast-icon,
+.app-toast[data-has-description="true"],
 .app-toast[data-has-description="true"] .app-toast-close {
   margin-top: 1px;
 }
