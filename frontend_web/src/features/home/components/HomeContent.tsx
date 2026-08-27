@@ -43,7 +43,7 @@ export default function HomeContent({
   const [isChatCameraUpdateModalOpen, setIsChatCameraUpdateModalOpen] = useState(false);
   const [selectedDashboardMode, setSelectedDashboardMode] = useState<HomeDashboardMode>("daily");
   const profileQuery = useGetProfileQuery();
-  const canToggleDashboardMode = profileQuery.data?.role === "ADMIN";
+  const canToggleDashboardMode = profileQuery.data?.user_id === 101;
   const dashboardMode: HomeDashboardMode = canToggleDashboardMode ? selectedDashboardMode : "daily";
   const menstruationCyclesQuery = useGetMenstruationCyclesQuery({
     date: selectedDateKey,
