@@ -768,7 +768,7 @@
 
 .chipSection {
   flex: 1;
-  display: none;
+  display: flex;
   align-items: flex-end;
   gap: 10px;
   overflow: visible;

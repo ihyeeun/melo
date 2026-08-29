@@ -2303,9 +2303,8 @@ function getMealRecordParseRegisterTarget(
   parseResponse: ChatMealRecordParseResponseDto,
   fallbackDate: Date,
 ): MealRecordParseRegisterTarget {
-  const mealRecordParse = parseResponse.meal_record_parse;
-  const responseDate = parseResponse.date ?? mealRecordParse?.date;
-  const responseMealTime = parseResponse.time ?? mealRecordParse?.time;
+  const responseDate = parseResponse.date;
+  const responseMealTime = parseResponse.time;
   const dateKey =
     typeof responseDate === "string" && isValidDateKey(responseDate)
       ? responseDate
@@ -2323,16 +2322,11 @@ function getMealRecordParseRegisterTarget(
 function getMealRecordParseDraftMenus(
   parseResponse: ChatMealRecordParseResponseDto,
 ): MenuDraftType[] {
-  const mealRecordParse = parseResponse.meal_record_parse;
-  const menuIds = Array.isArray(parseResponse.menu_ids)
-    ? parseResponse.menu_ids
-    : (mealRecordParse?.menu_ids ?? []);
-  const menuQuantities = Array.isArray(parseResponse.menu_quantities)
-    ? parseResponse.menu_quantities
-    : (mealRecordParse?.menu_quantities ?? []);
+  const resMenuIds = parseResponse.menu_ids;
+  const resMenuWeight = parseResponse.menu_quantities;
 
-  return menuIds.flatMap((menuId, index) => {
-    const quantity = getPositiveNumber(menuQuantities[index]);
+  return resMenuIds.flatMap((menuId, index) => {
+    const quantity = getPositiveNumber(resMenuWeight[index]);
 
     if (!isPositiveInteger(menuId) || quantity === null) {
       return [];
