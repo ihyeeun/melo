@@ -1,4 +1,4 @@
-import { addDays } from "date-fns";
+import { addDays, differenceInCalendarDays } from "date-fns";
 
 import {
   calculateCycleIntervals,
@@ -15,10 +15,13 @@ interface DateRange {
 interface MenstrualPhaseDates {
   cycleId: number;
   phase: {
-    menstrual: DateRange;
-    follicular: DateRange | null;
-    ovulatory: DateRange | null;
-    luteal: DateRange | null;
+    menstrual: {
+      recordedDates: DateRange;
+      predictedDates: DateRange | null;
+    };
+    follicularDates: DateRange | null;
+    ovulatoryDates: DateRange | null;
+    lutealDates: DateRange | null;
   };
   predictedNextDate: string;
   possibleNextDates: DateRange;
@@ -36,22 +39,39 @@ export function calculateMenstrualPhaseDates(
   for (let idx = 0; idx < sortedCycles.length; ++idx) {
     const cycle = sortedCycles[idx];
     const cyclesForCalculation = sortedCycles.slice(idx, idx + 7);
-    const calculation = calculateMenstrualPhaseDurations(cyclesForCalculation, cycle.cycle_id);
+    const calculation = calculateMenstrualPhaseDurations(cyclesForCalculation);
 
     if (!calculation) continue;
 
     const menstrual = calculateDateRange(cycle.start_date, calculation.menstrual);
     if (!menstrual) continue;
 
+    // 실제 기록된 지속 월경 구간
+    const recordedDates: DateRange = {
+      startDate: cycle.start_date,
+      endDate: cycle.end_date,
+    };
+
+    // 마지막 기록일 이후 남아 있는 예상 월경 구간
+    const predictedDates: DateRange | null = !cycle.is_end
+      ? calculateDateRange(
+          getNextDate(recordedDates.endDate),
+          differenceInCalendarDays(
+            parseDateKey(menstrual.endDate),
+            parseDateKey(recordedDates.endDate),
+          ),
+        )
+      : null;
+
     let nextPhaseDate = getNextDate(menstrual.endDate);
 
-    const follicular = calculateDateRange(nextPhaseDate, calculation.follicular);
-    if (follicular) nextPhaseDate = getNextDate(follicular.endDate);
+    const follicularDates = calculateDateRange(nextPhaseDate, calculation.follicular);
+    if (follicularDates) nextPhaseDate = getNextDate(follicularDates.endDate);
 
-    const ovulatory = calculateDateRange(nextPhaseDate, calculation.ovulatory);
-    if (ovulatory) nextPhaseDate = getNextDate(ovulatory.endDate);
+    const ovulatoryDates = calculateDateRange(nextPhaseDate, calculation.ovulatory);
+    if (ovulatoryDates) nextPhaseDate = getNextDate(ovulatoryDates.endDate);
 
-    const luteal = calculateDateRange(nextPhaseDate, calculation.luteal);
+    const lutealDates = calculateDateRange(nextPhaseDate, calculation.luteal);
 
     const predictedNextDate = formatDateKey(
       addDays(parseDateKey(cycle.start_date), calculation.cycle),
@@ -61,10 +81,13 @@ export function calculateMenstrualPhaseDates(
     result.push({
       cycleId: cycle.cycle_id,
       phase: {
-        menstrual,
-        follicular,
-        ovulatory,
-        luteal,
+        menstrual: {
+          recordedDates,
+          predictedDates,
+        },
+        follicularDates,
+        ovulatoryDates,
+        lutealDates,
       },
       predictedNextDate,
       possibleNextDates,

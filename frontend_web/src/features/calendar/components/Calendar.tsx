@@ -87,9 +87,7 @@ export default function Calendar({
 
   const displayedWeekPages = useMemo(() => {
     const pages = [];
-    const weeklyRecordedDates = showRecordedDots
-      ? fallbackRecordedDates
-      : EMPTY_RECORDED_DATES;
+    const weeklyRecordedDates = showRecordedDots ? fallbackRecordedDates : EMPTY_RECORDED_DATES;
 
     if (canGoPrevWeek) {
       pages.push(

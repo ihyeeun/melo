@@ -11,10 +11,10 @@ function success<T>(data: T, message = "요청이 성공적으로 처리되었�
 
 export const handlers = [
   // 최근 월경 회차 조회
-  http.post("*/menstrual-cycles", () => success({ cycles: mockMenstruationCycles })),
+  http.post("*/menstrual/cycles", () => success({ cycles: mockMenstruationCycles })),
 
   // 해당 날짜의 월경 기록 조회
-  http.post("*/menstrual-recorded", ({ request }) => {
+  http.post("*/menstrual/record/detail", ({ request }) => {
     const url = new URL(request.url);
     const requestedDate = url.searchParams.get("date");
 

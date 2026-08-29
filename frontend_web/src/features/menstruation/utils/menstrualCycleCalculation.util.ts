@@ -25,11 +25,10 @@ const LUTEAL = 13;
 /** 개인용 월경 단계 기간 계산 */
 export function calculateMenstrualPhaseDurations(
   cycles: MenstrualCycleItemResponseDto[],
-  cycleId: number,
 ): MenstrualPhaseDurations | null {
   if (cycles.length === 0) return null;
 
-  const latestCycles = sortCyclesByLatest(cycles, cycleId);
+  const latestCycles = sortCyclesByLatest(cycles);
   if (!latestCycles) return null;
 
   // 개인용 평균 주기 계산 : N
@@ -44,71 +43,34 @@ export function calculateMenstrualPhaseDurations(
       parseDateKey(standardCycle.end_date),
       parseDateKey(standardCycle.start_date),
     ) + 1;
-  let menstrual = standardCycle.is_end
+  const menstrual = standardCycle.is_end
     ? standardCycleMenstrual
     : Math.max(standardCycleMenstrual, MENSTRUAL);
 
+  // 월경기 이후 남는 일수 N-M : R
+  const remainingCycleLen = averageCycleLength - menstrual;
+
   // 난포기, 배란기, 황체기
-  let follicular = averageCycleLength - 16 - menstrual;
-  let ovulatory = OVULATORY;
-  let luteal = LUTEAL;
+  let follicular = 0;
+  let ovulatory = 0;
+  let luteal = 0;
 
-  // 예외 1. 주기가 매우 짧은 경우
-  if (averageCycleLength <= 21) {
-    menstrual = 3;
-    follicular = 2;
-    ovulatory = 3;
-    luteal = averageCycleLength - 8;
-
-    return { menstrual, follicular, ovulatory, luteal, cycle: averageCycleLength };
-  } else if (averageCycleLength <= 23) {
-    menstrual = 4;
-    follicular = averageCycleLength - 20;
-    ovulatory = 3;
-    luteal = 13;
-
-    return { menstrual, follicular, ovulatory, luteal, cycle: averageCycleLength };
-  }
-  // 예외 4. 월경 기간이 한 주기를 초과하는 경우
-  if (menstrual >= averageCycleLength) {
-    follicular = 0;
-    ovulatory = 0;
-    luteal = 0;
-
-    return { menstrual, follicular, ovulatory, luteal, cycle: averageCycleLength };
-  }
-
-  // 예외 2. 월경 기간이 길어진 경우
-  if (menstrual >= averageCycleLength - 13) {
-    // 2. 월경 기간이 배란기 종료일까지 이어지는 경우
-    // 배란기 구간을 건너뛰고 월경기 종료 즉시 황체기 단계로 진입
-    follicular = 0;
-    ovulatory = 0;
-    return { menstrual, follicular, ovulatory, luteal, cycle: averageCycleLength };
-  }
-
-  if (menstrual >= averageCycleLength - 16) {
-    // 1. 월경 기간이 난포기 종료일까지 이어지는 경우
-    // 난포기 구간을 건너뛰고 월경기 종료 즉시 배란기 단계로 진입
-    follicular = 0;
-    return { menstrual, follicular, ovulatory, luteal, cycle: averageCycleLength };
-  }
+  if (remainingCycleLen >= 16) {
+    luteal = LUTEAL;
+    ovulatory = Math.min(OVULATORY, remainingCycleLen - luteal);
+    follicular = remainingCycleLen - luteal - ovulatory;
+  } else if (remainingCycleLen >= 0) {
+    luteal = remainingCycleLen;
+  } // 음수인 경우에는 난포기, 배란기, 황체기 값 0으로 retrun
 
   return { menstrual, follicular, ovulatory, luteal, cycle: averageCycleLength };
 }
 
 /** 월경 회차 최신순 정렬 */
-function sortCyclesByLatest(
+export function sortCyclesByLatest(
   cycles: MenstrualCycleItemResponseDto[],
-  cycleId: number,
 ): MenstrualCycleItemResponseDto[] | null {
-  const standardCycle = cycles.find(({ cycle_id }) => cycle_id === cycleId);
-
-  if (!standardCycle) return null;
-
-  return cycles
-    .filter((cycle) => cycle.start_date <= standardCycle.start_date)
-    .sort((a, b) => b.start_date.localeCompare(a.start_date));
+  return cycles.sort((a, b) => b.start_date.localeCompare(a.start_date));
 }
 
 /** 월경 회차별 간격 배열 */

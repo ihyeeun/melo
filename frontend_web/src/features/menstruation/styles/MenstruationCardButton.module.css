@@ -19,12 +19,10 @@
 }
 
 .img {
-  height: 100%;
   inset: 0;
   object-fit: cover;
   pointer-events: none;
   position: absolute;
-  width: 100%;
   z-index: 0;
   object-position: right center;
 }

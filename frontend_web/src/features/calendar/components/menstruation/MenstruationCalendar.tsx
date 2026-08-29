@@ -7,6 +7,7 @@ import styles from "@/features/calendar/styles/MenstruationCalendar.module.css";
 import { WEEKDAY_LABELS } from "@/features/calendar/types/calendar.types";
 import { getMonthDates } from "@/features/calendar/utils/calendar";
 import { useGetMenstruationCyclesQuery } from "@/features/menstruation/hooks/queries/menstruation.query";
+import { calculateMenstrualPhaseDates } from "@/features/menstruation/utils/menstrualPhaseDatesCalculation.util";
 import {
   calculateMenstrualCalendar,
   getMenstruationDateType,
@@ -26,6 +27,8 @@ export default function MenstruationCalendar({ onSelectedDate }: CalendarProps) 
     date: today,
     enabled: true,
   });
+  const menstrualCalculateDates = calculateMenstrualPhaseDates(menstruationData?.cycles ?? []);
+  console.log(menstrualCalculateDates);
   const menstrualDate = calculateMenstrualCalendar(menstruationData?.cycles ?? []);
   const { viewDate, goPrevMonth, goNextMonth, goToday, goToMonth } = useMonthCalendar();
   const monthPages = useMemo(

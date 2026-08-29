@@ -1,9 +1,11 @@
-import { useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 
 import {
   getMenstrualRecorded,
   getMenstruationCycles,
 } from "@/features/menstruation/api/menstruation.api";
+import { menstrualKeys } from "@/features/menstruation/constants/queryKey";
+import { transformMenstrualCyclesResponse } from "@/features/menstruation/utils/menstrualTransformer.util";
 
 export function useGetMenstruationCyclesQuery({
   date,
@@ -13,17 +15,28 @@ export function useGetMenstruationCyclesQuery({
   enabled?: boolean;
 }) {
   return useQuery({
-    queryKey: ["menstruation-cycles"],
-    queryFn: () => getMenstruationCycles(date),
+    queryKey: menstrualKeys.cycles.history(),
+    queryFn: () => getMenstruationCycles({ date, limit: 7 }),
     enabled: enabled,
-    staleTime: Infinity,
   });
 }
 
 export function useGetMenstrualRecordedQuery(date: string) {
   return useQuery({
-    queryKey: ["menstrual-recorded", date],
+    queryKey: menstrualKeys.detail.day(date),
     queryFn: () => getMenstrualRecorded(date),
-    staleTime: Infinity,
+  });
+}
+
+export function useMenstrualHistoryInfiniteQuery(initTargetDate: string, enabled: boolean) {
+  return useInfiniteQuery({
+    queryKey: menstrualKeys.cycles.history(),
+    initialPageParam: initTargetDate,
+    queryFn: async ({ pageParam }) => {
+      const response = await getMenstruationCycles({ date: pageParam, limit: 7 });
+      return transformMenstrualCyclesResponse(response, 7);
+    },
+    getNextPageParam: (lastPage) => lastPage.nextTargetDate ?? undefined,
+    enabled: enabled,
   });
 }

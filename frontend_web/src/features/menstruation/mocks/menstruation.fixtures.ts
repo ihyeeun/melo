@@ -12,8 +12,8 @@ import type {
 export const mockMenstruationCycles: MenstrualCycleItemResponseDto[] = [
   {
     cycle_id: 7,
-    start_date: "2026-08-14",
-    end_date: "2026-08-14",
+    start_date: "2026-08-15",
+    end_date: "2026-08-19",
     is_end: false,
   },
   // {
