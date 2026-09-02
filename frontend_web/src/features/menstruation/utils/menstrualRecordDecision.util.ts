@@ -10,9 +10,7 @@ import type {
 } from "@/shared/api/types/api.response.dto";
 import { parseDateKey } from "@/shared/utils/dateFormat";
 
-type CycleDecision =
-  | { type: "CREATE_CYCLE" }
-  | { type: "EXTEND_CYCLE"; cycleId: number };
+type CycleDecision = { type: "CREATE_CYCLE" } | { type: "EXTEND_CYCLE"; cycleId: number };
 
 type MenstrualSaveDecision =
   | { type: "CREATE_CYCLE" }
@@ -30,6 +28,16 @@ function resolveCycleDecision({
   targetDate: string;
 }): CycleDecision {
   if (cycle === null) return { type: "CREATE_CYCLE" };
+
+  const daysSinceCycleEnd = differenceInCalendarDays(
+    parseDateKey(targetDate),
+    parseDateKey(cycle.end_date),
+  );
+
+  // 종료가 확정된 회차 이후의 '있음' 기록은 새 회차로 시작한다.
+  if (cycle.is_end && daysSinceCycleEnd > 0) {
+    return { type: "CREATE_CYCLE" };
+  }
 
   const cycleDay =
     differenceInCalendarDays(parseDateKey(targetDate), parseDateKey(cycle.start_date)) + 1;
