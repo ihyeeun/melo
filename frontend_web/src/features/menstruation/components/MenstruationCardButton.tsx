@@ -81,6 +81,13 @@ export default function MenstruationCardButton({
       <span className={`${styles.title} title-s-semi text-primary`}>{homeContent.title}</span>
       <span className={styles.messageBubble}>{homeContent.message}</span>
 
+      {!isEmpty && (
+        <span className={`${styles.actionButton} caption-s-medium text-tertiary`}>
+          기록
+          <SystemIcon name="chevron-right" size={11} />
+        </span>
+      )}
+
       {isEmpty ? (
         <span className={`${styles.emptyAction} body-m-regular`}>
           생리 기록 시작하기
