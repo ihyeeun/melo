@@ -52,8 +52,10 @@ export function calculateMenstrualPhaseDates(
       endDate: cycle.end_date,
     };
 
-    // 마지막 기록일 이후 남아 있는 예상 월경 구간
-    const predictedDates: DateRange | null = !cycle.is_end
+    // 새 회차의 첫 기록일에만 이후 예상 월경 구간을 보여준다.
+    const shouldShowPredictedDates =
+      !cycle.is_end && recordedDates.startDate === recordedDates.endDate;
+    const predictedDates: DateRange | null = shouldShowPredictedDates
       ? calculateDateRange(
           getNextDate(recordedDates.endDate),
           differenceInCalendarDays(

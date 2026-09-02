@@ -5,9 +5,7 @@ import {
   useDeleteMenstrualCycleMutation,
   useSaveMenstrualRecordMutation,
 } from "@/features/menstruation/hooks/mutations/menstruation.mutation";
-import {
-  useGetMenstrualRecordedQuery,
-} from "@/features/menstruation/hooks/queries/menstruation.query";
+import { useGetMenstrualRecordedQuery } from "@/features/menstruation/hooks/queries/menstruation.query";
 import { useMenstrualHistoryCoverage } from "@/features/menstruation/hooks/useMenstrualHistoryCoverage";
 import styles from "@/features/menstruation/styles/MenstruationRecord.module.css";
 import {
@@ -18,6 +16,7 @@ import {
   type MenstruationStatus,
   type MenstruationSymptom,
 } from "@/features/menstruation/types/menstruation.type";
+import { getMenstrualTypeFromPhase } from "@/features/menstruation/utils/menstrualPhaseDatesCalculation.util";
 import { getCycleIdToDeleteForFirstDayNotBleeding } from "@/features/menstruation/utils/menstrualRecordDecision.util";
 import type { MenstraulRecordReponseDto } from "@/shared/api/types/api.response.dto";
 import { Button } from "@/shared/commons/button/Button";
@@ -72,6 +71,19 @@ export default function MenstruationRecordPage() {
   });
   const deleteMenstrualCycleMutation = useDeleteMenstrualCycleMutation();
   const MENSTRUATION_RECORD_FORM_ID = "menstruation-record-form";
+  const selectedMenstrualType =
+    menstrualHistory.status === "ready"
+      ? getMenstrualTypeFromPhase({
+          targetDate: selectedDate,
+          phaseDate: menstrualHistory.phaseDate ?? undefined,
+          latestCycleId: menstrualHistory.cycles[0]?.cycle_id ?? null,
+        })
+      : null;
+  const defaultMenstruationStatus =
+    selectedMenstrualType === "menstrual_recorded" ||
+    selectedMenstrualType === "menstrual_predicted"
+      ? MENSTRUATION_STATUS.BLEEDING
+      : null;
 
   const handleSave = (values: MenstruationFormValues) => {
     if (!recordMenstrualQuery.isSuccess || !menstrualHistory.isContextReady) return;
@@ -148,6 +160,7 @@ export default function MenstruationRecordPage() {
             formId={MENSTRUATION_RECORD_FORM_ID}
             onSubmit={handleSave}
             initRecord={recordMenstrualQuery.data.record}
+            defaultMenstruationStatus={defaultMenstruationStatus}
             isSubmitting={
               !menstrualHistory.isContextReady ||
               saveMenstrualRecordMutation.isPending ||
@@ -203,17 +216,20 @@ function MenstruationRecordForm({
   formId,
   onSubmit,
   initRecord,
+  defaultMenstruationStatus,
   isSubmitting,
 }: {
   formId: string;
   onSubmit: (values: MenstruationFormValues) => void;
   initRecord: MenstraulRecordReponseDto["record"];
+  defaultMenstruationStatus: MenstruationStatus | null;
   isSubmitting: boolean;
 }) {
   const hasInitialBleeding = initRecord?.menstruation_status === MENSTRUATION_STATUS.BLEEDING;
-  const [menstrualStatus, setMenstrualStatus] = useState<MenstruationStatus | null>(
-    () => initRecord?.menstruation_status ?? null,
-  );
+  const [selectedMenstrualStatus, setSelectedMenstrualStatus] =
+    useState<MenstruationStatus | null>(null);
+  const menstrualStatus =
+    selectedMenstrualStatus ?? initRecord?.menstruation_status ?? defaultMenstruationStatus;
   const [flow, setFlow] = useState<MenstruationFlow | undefined>(() =>
     hasInitialBleeding ? initRecord.flow : undefined,
   );
@@ -253,7 +269,7 @@ function MenstruationRecordForm({
           <SelectedCard
             isSelected={menstrualStatus === MENSTRUATION_STATUS.BLEEDING}
             className={styles.fieldCard}
-            setSelectedChange={() => setMenstrualStatus(MENSTRUATION_STATUS.BLEEDING)}
+            setSelectedChange={() => setSelectedMenstrualStatus(MENSTRUATION_STATUS.BLEEDING)}
           >
             <p className="body-m-regular text-primary">있음</p>
           </SelectedCard>
@@ -261,7 +277,7 @@ function MenstruationRecordForm({
             isSelected={menstrualStatus === MENSTRUATION_STATUS.NOT_BLEEDING}
             className={styles.fieldCard}
             setSelectedChange={() => {
-              setMenstrualStatus(MENSTRUATION_STATUS.NOT_BLEEDING);
+              setSelectedMenstrualStatus(MENSTRUATION_STATUS.NOT_BLEEDING);
               setFlow(undefined);
               setSymptoms([]);
             }}
