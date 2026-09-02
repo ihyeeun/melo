@@ -13,7 +13,7 @@ export function isMenstrualCycleDelayed({
   targetDate: string;
   phaseDate: MenstrualPhaseDates | null | undefined;
 }): boolean {
-  if (!phaseDate || targetDate <= phaseDate.phase.menstrual.recordedDates.startDate) return false;
+  if (!phaseDate || targetDate <= phaseDate.possibleNextDates.endDate) return false;
 
   const cycleStartDate = phaseDate.phase.menstrual.recordedDates.startDate;
   const cycleDay =

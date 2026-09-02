@@ -67,13 +67,21 @@ export default function HomeContent({
   const selectedPhaseDate = selectedOwnerCycle
     ? phaseByCycleId.get(selectedOwnerCycle.cycle_id)
     : undefined;
-  const menstrualStatus = menstrualHistory.isContextReady
-    ? (getMenstrualTypeFromPhase({
+  const resolvedMenstrualStatus = menstrualHistory.isContextReady
+    ? getMenstrualTypeFromPhase({
         targetDate: selectedDateKey,
         phaseDate: selectedPhaseDate,
         latestCycleId: latestMenstrualCycleId,
-      }) ?? null)
+      })
     : null;
+
+  const shouldExtendLuteal =
+    resolvedMenstrualStatus == null &&
+    selectedPhaseDate !== undefined &&
+    selectedPhaseDate.possibleNextDates.startDate <= selectedDateKey &&
+    selectedDateKey <= selectedPhaseDate.possibleNextDates.endDate;
+
+  const menstrualStatus = shouldExtendLuteal ? "luteal" : resolvedMenstrualStatus;
   const isMenstruationDelayed =
     menstrualHistory.isContextReady &&
     menstrualStatus == null &&
