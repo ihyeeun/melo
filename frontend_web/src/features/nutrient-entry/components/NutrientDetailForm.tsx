@@ -147,7 +147,7 @@ export function NutrientDetailForm({
         </div>
         <div className={styles.weightRow}>
           <SingleDecimalInput
-            className={`body-s-medium ${styles.valueInput}`}
+            className={`body-s-medium ${styles.valueInput} amp-unmask`}
             placeholder="0"
             aria-label="총 용량 입력"
             value={totalWeight}
@@ -198,12 +198,13 @@ export function NutrientDetailForm({
       <div className={styles.topFieldSection}>
         <div className={styles.titleRow}>
           <p className={`body-l-semi ${styles.titleText}`}>
-            총 칼로리 <span className={`body-m-regular ${styles.titleUnit} textNoWrap`}>(kcal)</span>
+            총 칼로리{" "}
+            <span className={`body-m-regular ${styles.titleUnit} textNoWrap`}>(kcal)</span>
           </p>
           <p className={`body-s-medium ${styles.requiredText}`}>* 필수로 작성해주세요</p>
         </div>
         <SingleDecimalInput
-          className={`body-s-medium ${styles.valueInput}`}
+          className={`body-s-medium ${styles.valueInput} amp-unmask`}
           placeholder="0"
           aria-label="총 칼로리 입력"
           value={totalCalories}
@@ -241,7 +242,7 @@ export function NutrientDetailForm({
                   <span className={`body-m-regular ${styles.unitText}`}> ({field.unit})</span>
                 </p>
                 <SingleDecimalInput
-                  className={`body-s-medium ${styles.nutrientInput}`}
+                  className={`body-s-medium ${styles.nutrientInput} amp-unmask`}
                   value={fieldValue}
                   onValueChange={(nextValue) => {
                     onFieldChange(field.key, nextValue === undefined ? "" : String(nextValue));

@@ -210,7 +210,9 @@ export function NutrientRegisterFormPage({
         <div className={styles.content}>
           <section className={styles.topSection}>
             {isCameraEntry ? (
-              <p className={`title-s-semi ${styles.recognizedInfoText}`}>사진에서 인식한 영양정보</p>
+              <p className={`title-s-semi ${styles.recognizedInfoText}`}>
+                사진에서 인식한 영양정보
+              </p>
             ) : (
               <>
                 <div className={styles.fieldWrap}>
@@ -220,7 +222,7 @@ export function NutrientRegisterFormPage({
                   </div>
 
                   <input
-                    className={`body-s-medium ${styles.textInput}`}
+                    className={`body-s-medium ${styles.textInput} amp-unmask`}
                     type="text"
                     value={formState.name ?? ""}
                     onChange={handleFoodNameChange}

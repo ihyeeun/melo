@@ -129,7 +129,7 @@ export default function CreateFolderPage() {
           </label>
           <input
             id="folder-name"
-            className={`body-l-medium ${styles.folderNameInput}`}
+            className={`body-l-medium ${styles.folderNameInput} amp-unmask`}
             value={folderName}
             onChange={(event) => setFolderName(event.target.value)}
             placeholder="폴더 이름을 입력해주세요"

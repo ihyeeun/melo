@@ -1,9 +1,6 @@
 import { type ChangeEvent, useEffect, useState } from "react";
 
-import {
-  getMealType,
-  getSafeDateKey,
-} from "@/features/meal-record/utils/mealRecord.queryParams";
+import { getMealType, getSafeDateKey } from "@/features/meal-record/utils/mealRecord.queryParams";
 import {
   buildMenuSelectionPathContext,
   getMenuSelectionPath,
@@ -66,9 +63,7 @@ export default function NutrientAddPage() {
   const locationState = (location.state ?? {}) as NutrientAddLocationState;
   const menuSelectionRouteContext = getMenuSelectionRouteContextFromSearchParams(searchParams);
   const dateKey = getSafeDateKey(searchParams.get("date") ?? locationState.dateKey ?? null);
-  const mealType = getMealType(
-    searchParams.get("mealType") ?? locationState.mealType ?? null,
-  );
+  const mealType = getMealType(searchParams.get("mealType") ?? locationState.mealType ?? null);
   const menuSelectionContext: MenuSelectionPathParams | null = menuSelectionRouteContext.target
     ? buildMenuSelectionPathContext({
         dateKey,
@@ -222,7 +217,7 @@ export function NutrientAddFormPage({
             </div>
 
             <input
-              className={`body-s-medium ${styles.textInput}`}
+              className={`body-s-medium ${styles.textInput} amp-unmask`}
               type="text"
               maxLength={300}
               value={foodName}
@@ -254,13 +249,7 @@ export function NutrientAddFormPage({
       </main>
 
       <footer className={styles.footer}>
-        <Button
-          variant="default"
-          size="m"
-          fullWidth
-          onClick={handleNext}
-          disabled={isNextDisabled}
-        >
+        <Button variant="default" size="m" fullWidth onClick={handleNext} disabled={isNextDisabled}>
           {nextLabel}
         </Button>
       </footer>
