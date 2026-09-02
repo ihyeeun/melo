@@ -13,23 +13,22 @@
 }
 
 .week[data-menstruation="menstrual_recorded"],
-.week[data-menstruation="menstrual_predicted"],
-.month[data-menstruation="menstrual_recorded"] .numberContainer,
-.month[data-menstruation="menstrual_predicted"] .numberContainer {
+.month[data-menstruation="menstrual_recorded"] .numberContainer {
   background-color: var(--coral-100);
   color: var(--text-secondary);
   border-radius: 16px;
   mix-blend-mode: multiply;
 }
 
-.month[data-menstruation="menstrual_recorded"],
-.month[data-menstruation="menstrual_predicted"] {
+.month[data-menstruation="menstrual_recorded"] {
   background-color: var(--coral-100);
   border-radius: 16px;
 }
 
+.week[data-menstruation="menstrual_predicted"],
 .week[data-menstruation="next_possible"],
 .week[data-menstruation="next_predicted"],
+.month[data-menstruation="menstrual_predicted"] .numberContainer,
 .month[data-menstruation="next_possible"] .numberContainer,
 .month[data-menstruation="next_predicted"] .numberContainer {
   border: 1px dashed var(--border-strong);
