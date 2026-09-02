@@ -19,6 +19,7 @@ import type {
   MenstrualCycleItemResponseDto,
 } from "@/shared/api/types/api.response.dto";
 import type { UseMutationCallback } from "@/shared/api/types/callback.types";
+import { isFutureDateKey } from "@/shared/utils/dateFormat";
 
 export function useDeleteMenstrualCycleMutation(callbacks?: UseMutationCallback) {
   const queryClient = useQueryClient();
@@ -49,6 +50,10 @@ type SaveMenstrualRecordInput = {
 };
 
 async function saveMenstrualRecord(input: SaveMenstrualRecordInput) {
+  if (isFutureDateKey(input.date)) {
+    throw new Error("미래 날짜에는 생리 기록을 저장할 수 없어요.");
+  }
+
   const isBleeding = input.menstruationStatus === MENSTRUATION_STATUS.BLEEDING;
   const menstrualDetails = isBleeding
     ? {

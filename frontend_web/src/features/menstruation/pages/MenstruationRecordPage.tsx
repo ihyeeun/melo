@@ -31,7 +31,7 @@ import { ConfirmModal } from "@/shared/commons/modals/ConfirmModal";
 import { Skeleton, SkeletonStatus } from "@/shared/commons/skeleton/Skeleton";
 import { toast } from "@/shared/commons/toast/toast";
 import { navigateBack } from "@/shared/navigation/stackflowNavigation";
-import { getTodayFormatDateKey } from "@/shared/utils/dateFormat";
+import { getTodayFormatDateKey, isFutureDateKey } from "@/shared/utils/dateFormat";
 
 const AMOUNTS = [
   {
@@ -65,6 +65,7 @@ type MenstruationFormValues = {
 export default function MenstruationRecordPage() {
   const [selectedDate, setSelectedDate] = useState<string>(getTodayFormatDateKey());
   const [cycleIdPendingDeletion, setCycleIdPendingDeletion] = useState<number | null>(null);
+  const isFutureDate = isFutureDateKey(selectedDate);
   const recordMenstrualQuery = useGetMenstrualRecordedQuery(selectedDate);
   const menstrualHistory = useMenstrualHistoryCoverage({ targetDate: selectedDate });
   const saveMenstrualRecordMutation = useSaveMenstrualRecordMutation({
@@ -111,6 +112,11 @@ export default function MenstruationRecordPage() {
   const isMenstruationContinuation = !isOwnerCycleStartDate && belongsToExistingCycle;
 
   const handleSave = (values: MenstruationFormValues) => {
+    if (isFutureDate) {
+      toast.warning("미래 날짜에는 생리 기록을 저장할 수 없어요.");
+      return;
+    }
+
     if (!recordMenstrualQuery.isSuccess || !menstrualHistory.isContextReady) return;
 
     const cycle = menstrualHistory.ownerCycle;
@@ -187,6 +193,7 @@ export default function MenstruationRecordPage() {
             initRecord={recordMenstrualQuery.data.record}
             defaultMenstruationStatus={defaultMenstruationStatus}
             isMenstruationContinuation={isMenstruationContinuation}
+            isFutureDate={isFutureDate}
             isSubmitting={
               !menstrualHistory.isContextReady ||
               saveMenstrualRecordMutation.isPending ||
@@ -244,6 +251,7 @@ function MenstruationRecordForm({
   initRecord,
   defaultMenstruationStatus,
   isMenstruationContinuation,
+  isFutureDate,
   isSubmitting,
 }: {
   formId: string;
@@ -251,6 +259,7 @@ function MenstruationRecordForm({
   initRecord: MenstraulRecordReponseDto["record"];
   defaultMenstruationStatus: MenstruationStatus | null;
   isMenstruationContinuation: boolean;
+  isFutureDate: boolean;
   isSubmitting: boolean;
 }) {
   const hasInitialBleeding = initRecord?.menstruation_status === MENSTRUATION_STATUS.BLEEDING;
@@ -271,14 +280,10 @@ function MenstruationRecordForm({
   const handleSymptomToggle = (symptom: MenstruationSymptom) => {
     setSymptoms((previous) => {
       if (symptom === MENSTRUATION_SYMPTOM.NONE) {
-        return previous.includes(MENSTRUATION_SYMPTOM.NONE)
-          ? []
-          : [MENSTRUATION_SYMPTOM.NONE];
+        return previous.includes(MENSTRUATION_SYMPTOM.NONE) ? [] : [MENSTRUATION_SYMPTOM.NONE];
       }
 
-      const symptomsWithoutNone = previous.filter(
-        (item) => item !== MENSTRUATION_SYMPTOM.NONE,
-      );
+      const symptomsWithoutNone = previous.filter((item) => item !== MENSTRUATION_SYMPTOM.NONE);
       const isAlreadySelected = symptomsWithoutNone.includes(symptom);
 
       if (isAlreadySelected) {
@@ -386,11 +391,11 @@ function MenstruationRecordForm({
       <footer className={styles.footer}>
         <Button
           type="submit"
-          disabled={menstrualStatus === null || isSubmitting}
+          disabled={isFutureDate || menstrualStatus === null || isSubmitting}
           fullWidth
           size="m"
         >
-          기록 저장하기
+          {isFutureDate ? "미래 날짜는 기록할 수 없습니다" : "기록 저장하기"}
         </Button>
       </footer>
     </form>
