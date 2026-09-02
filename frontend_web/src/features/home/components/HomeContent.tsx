@@ -46,7 +46,7 @@ export default function HomeContent({
   const [selectedDashboardMode, setSelectedDashboardMode] = useState<HomeDashboardMode>("daily");
   const [calendarCoverageStartDate, setCalendarCoverageStartDate] = useState(selectedDateKey);
   const profileQuery = useGetProfileQuery();
-  const canToggleDashboardMode = profileQuery.data?.user_id === 101;
+  const canToggleDashboardMode = profileQuery.data?.role === "ADMIN";
   const dashboardMode: HomeDashboardMode = canToggleDashboardMode ? selectedDashboardMode : "daily";
   const requiredMenstrualHistoryDate =
     calendarCoverageStartDate < selectedDateKey ? calendarCoverageStartDate : selectedDateKey;
@@ -108,12 +108,7 @@ export default function HomeContent({
     track(EVENT_NAME.CLICK_MENSTRUAL_DASHBOARD, {
       menstrual_phase: isMenstruationDelayed ? null : menstrualStatus,
     });
-  }, [
-    dashboardMode,
-    isMenstruationDelayed,
-    menstrualHistory.isContextReady,
-    menstrualStatus,
-  ]);
+  }, [dashboardMode, isMenstruationDelayed, menstrualHistory.isContextReady, menstrualStatus]);
 
   return (
     <>
