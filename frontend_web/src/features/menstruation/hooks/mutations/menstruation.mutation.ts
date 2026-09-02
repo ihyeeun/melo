@@ -116,8 +116,8 @@ export function useSaveMenstrualRecordMutation(callbacks?: UseMutationCallback) 
 
       track(EVENT_NAME.MENSTRUAL_RECORDED, {
         "생리 유무": variables.menstruationStatus,
-        "생리 양": variables.flow ?? undefined,
-        "증상 기록": variables.symptoms?.join(",") ?? undefined,
+        "생리 양": variables.flow,
+        "증상 기록": variables.symptoms,
       });
 
       callbacks?.onSuccess?.();
