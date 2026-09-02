@@ -1,4 +1,4 @@
-import { addMonths, addWeeks, startOfMonth, startOfWeek, subMonths, subWeeks } from "date-fns";
+import { addMonths, addWeeks, startOfMonth, startOfWeek, subMonths } from "date-fns";
 import { type SetStateAction, useCallback, useMemo, useState } from "react";
 
 import {
@@ -83,9 +83,6 @@ export function useCalendar({
 
   const viewWeekStart = startOfWeek(viewDate, { weekStartsOn });
   const currentWeekStart = startOfWeek(new Date(), { weekStartsOn });
-  const previousWeekStart = subWeeks(currentWeekStart, 1);
-  const canGoPrevWeek =
-    subWeeks(viewWeekStart, 1).getTime() >= previousWeekStart.getTime();
   const canGoNextWeek = addWeeks(viewWeekStart, 1).getTime() <= currentWeekStart.getTime();
 
   const toggleViewMode = () => {
@@ -105,13 +102,11 @@ export function useCalendar({
     }
   };
 
-  const clampWeekNavigationDate = (candidateDate: Date, currentDate: Date) => {
+  const clampFutureWeekNavigationDate = (candidateDate: Date, currentDate: Date) => {
     const candidateWeekStart = startOfWeek(candidateDate, { weekStartsOn });
     const currentWeekStart = startOfWeek(new Date(), { weekStartsOn });
-    const previousWeekStart = subWeeks(currentWeekStart, 1);
-    const candidateTime = candidateWeekStart.getTime();
 
-    if (candidateTime < previousWeekStart.getTime() || candidateTime > currentWeekStart.getTime()) {
+    if (candidateWeekStart.getTime() > currentWeekStart.getTime()) {
       return currentDate;
     }
 
@@ -120,11 +115,7 @@ export function useCalendar({
 
   const goPrev = () => {
     setViewDate((prev) => {
-      const candidateDate = movePrev(prev, viewMode);
-
-      if (viewMode !== "week") return candidateDate;
-
-      return clampWeekNavigationDate(candidateDate, prev);
+      return movePrev(prev, viewMode);
     });
   };
 
@@ -134,7 +125,7 @@ export function useCalendar({
 
       if (viewMode !== "week") return candidateDate;
 
-      return clampWeekNavigationDate(candidateDate, prev);
+      return clampFutureWeekNavigationDate(candidateDate, prev);
     });
   };
 
@@ -155,7 +146,6 @@ export function useCalendar({
     viewDate,
     weekDays,
     monthDays,
-    canGoPrevWeek,
     canGoNextWeek,
     toggleViewMode,
     selectDate,

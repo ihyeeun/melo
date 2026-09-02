@@ -45,7 +45,6 @@ export default function Calendar({
     selectedDate,
     viewDate,
     weekDays,
-    canGoPrevWeek,
     canGoNextWeek,
     toggleViewMode,
     selectDate,
@@ -88,19 +87,17 @@ export default function Calendar({
   }, [recordedDates, selectedDate, showRecordedDots, viewDate]);
 
   const displayedWeekPages = useMemo(() => {
-    const pages = [];
     const weeklyRecordedDates = showRecordedDots ? fallbackRecordedDates : EMPTY_RECORDED_DATES;
-
-    if (canGoPrevWeek) {
-      pages.push(
-        buildWeekCalendarDays({
-          baseDate: subWeeks(viewDate, 1),
-          selectedDate,
-          recordedDates: weeklyRecordedDates,
-          weekStartsOn: 1,
-        }),
-      );
-    }
+    // 과거 주는 계속 탐색할 수 있으므로 이전 주를 항상 렌더링한다. 현재 주를
+    // 가운데 인덱스(1)에 고정해 pager 재정렬과 inert 상태를 일관되게 유지한다.
+    const pages = [
+      buildWeekCalendarDays({
+        baseDate: subWeeks(viewDate, 1),
+        selectedDate,
+        recordedDates: weeklyRecordedDates,
+        weekStartsOn: 1,
+      }),
+    ];
 
     pages.push(weekDays);
 
@@ -118,7 +115,6 @@ export default function Calendar({
     return pages;
   }, [
     canGoNextWeek,
-    canGoPrevWeek,
     fallbackRecordedDates,
     selectedDate,
     showRecordedDots,
@@ -126,7 +122,7 @@ export default function Calendar({
     weekDays,
   ]);
 
-  const currentWeekPageIndex = canGoPrevWeek ? 1 : 0;
+  const currentWeekPageIndex = 1;
 
   const visibleStartDateKey = useMemo(() => {
     const pages = viewMode === "month" ? displayedMonthPages : displayedWeekPages;
