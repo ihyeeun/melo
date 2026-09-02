@@ -14,6 +14,8 @@ import {
   type MenstruationSymptom,
 } from "@/features/menstruation/types/menstruation.type";
 import { resolveMenstrualSaveDecision } from "@/features/menstruation/utils/menstrualRecordDecision.util";
+import { track } from "@/shared/analytics/analytics";
+import { EVENT_NAME } from "@/shared/analytics/analytics.constants";
 import type {
   MenstraulRecordReponseDto,
   MenstrualCycleItemResponseDto,
@@ -31,6 +33,10 @@ export function useDeleteMenstrualCycleMutation(callbacks?: UseMutationCallback)
         queryClient.invalidateQueries({ queryKey: menstrualKeys.cycles.all() }),
         queryClient.invalidateQueries({ queryKey: menstrualKeys.detail.all() }),
       ]);
+
+      track(EVENT_NAME.MENSTRUAL_RECORDED, {
+        "생리 유무": "기록 삭제",
+      });
 
       callbacks?.onSuccess?.();
     },
@@ -107,6 +113,12 @@ export function useSaveMenstrualRecordMutation(callbacks?: UseMutationCallback) 
           queryKey: menstrualKeys.detail.day(variables.date),
         }),
       ]);
+
+      track(EVENT_NAME.MENSTRUAL_RECORDED, {
+        "생리 유무": variables.menstruationStatus,
+        "생리 양": variables.flow ?? undefined,
+        "증상 기록": variables.symptoms?.join(",") ?? undefined,
+      });
 
       callbacks?.onSuccess?.();
     },
