@@ -5,7 +5,7 @@ import styles from "@/features/home/styles/PreviewTodayScoreSection.module.css";
 import type { HomeDashboardMode } from "@/features/home/types/homeDashboard.types";
 import { getDayNutritionSummary } from "@/features/home/utils/dayMealSummary";
 import MenstruationCardButton from "@/features/menstruation/components/MenstruationCardButton";
-import type { MenstrualStatus } from "@/features/menstruation/utils/menstrualPhaseDatesCalculation.util";
+import type { MenstrualStatus } from "@/features/menstruation/types/menstruation.type";
 import type { ProfileResponseDto } from "@/shared/api/types/api.response.dto";
 import { InfoPopover } from "@/shared/commons/popover/InfoPopover";
 import ScoreProgress from "@/shared/commons/progress/Progress";

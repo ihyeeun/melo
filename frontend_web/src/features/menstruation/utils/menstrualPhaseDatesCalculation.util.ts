@@ -1,5 +1,6 @@
 import { addDays, differenceInCalendarDays } from "date-fns";
 
+import type { MenstrualStatus } from "@/features/menstruation/types/menstruation.type";
 import {
   calculateCycleIntervals,
   calculateMenstrualPhaseDurations,
@@ -144,16 +145,6 @@ function calculatePossibleDateRange(
   };
 }
 
-export type MenstrualStatus =
-  | "menstrual_recorded"
-  | "menstrual_predicted"
-  | "follcular"
-  | "ovulatory"
-  | "luteal"
-  | "next_possible"
-  | "next_predicted"
-  | undefined;
-
 /**
  * phase Dates 모델을 타입으로 변경하는 resolver.
  * latestCycleId는 owner 기준 부분 이력이 아니라 전체 조회 이력의 최신 회차 ID여야 한다.
@@ -178,7 +169,7 @@ export function getMenstrualTypeFromPhase({
     return "menstrual_predicted";
 
   if (follicularDates !== null && isDateInPhaseRange(targetDate, follicularDates))
-    return "follcular";
+    return "follicular";
 
   if (ovulatoryDates !== null && isDateInPhaseRange(targetDate, ovulatoryDates)) return "ovulatory";
 

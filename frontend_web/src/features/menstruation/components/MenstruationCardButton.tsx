@@ -4,17 +4,15 @@ import {
   MENSTRUAL_PHASE_ORDER,
 } from "@/features/menstruation/constants/menstruation.constant";
 import styles from "@/features/menstruation/styles/MenstruationCardButton.module.css";
-import type { MenstrualStatus } from "@/features/menstruation/utils/menstrualPhaseDatesCalculation.util";
+import type { MenstrualStatus } from "@/features/menstruation/types/menstruation.type";
 import { PATH } from "@/router/path";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import { useNavigate } from "@/shared/navigation/stackflowNavigation";
 
-const PHASE_TIMELINE = [...MENSTRUAL_PHASE_ORDER, MENSTRUAL_PHASE_ORDER[0]].map(
-  (status) => ({
-    status,
-    label: HOME_MENSTRUAL_STATUS_VIEW[status].phaseLabel,
-  }),
-);
+const PHASE_TIMELINE = [...MENSTRUAL_PHASE_ORDER, MENSTRUAL_PHASE_ORDER[0]].map((status) => ({
+  status,
+  label: HOME_MENSTRUAL_STATUS_VIEW[status].phaseLabel,
+}));
 const DELAYED_TIMELINE = [
   ...MENSTRUAL_PHASE_ORDER.map((status) => ({
     status,
@@ -42,9 +40,7 @@ export default function MenstruationCardButton({
   const navigate = useNavigate();
   const statusView = menstrualStatus ? HOME_MENSTRUAL_STATUS_VIEW[menstrualStatus] : null;
   const isEmpty = statusView === null && !isDelayed;
-  const homeContent = isDelayed
-    ? HOME_DELAYED_CONTENT
-    : (statusView ?? EMPTY_PHASE_CONTENT);
+  const homeContent = isDelayed ? HOME_DELAYED_CONTENT : (statusView ?? EMPTY_PHASE_CONTENT);
   const timeline = isDelayed ? DELAYED_TIMELINE : PHASE_TIMELINE;
 
   const activePhaseIndex = isEmpty

@@ -1,8 +1,8 @@
-import type { MenstrualStatus } from "@/features/menstruation/utils/menstrualPhaseDatesCalculation.util";
+import type { MenstrualStatus } from "@/features/menstruation/types/menstruation.type";
 
 export const MENSTRUAL_PHASE_ORDER = [
   "menstrual_recorded",
-  "follcular",
+  "follicular",
   "ovulatory",
   "luteal",
 ] as const;
@@ -53,7 +53,7 @@ const LUTEAL_VIEW = {
 export const HOME_MENSTRUAL_STATUS_VIEW = {
   menstrual_recorded: MENSTRUAL_VIEW,
   menstrual_predicted: MENSTRUAL_VIEW,
-  follcular: FOLLICULAR_VIEW,
+  follicular: FOLLICULAR_VIEW,
   ovulatory: OVULATORY_VIEW,
   luteal: LUTEAL_VIEW,
   next_possible: LUTEAL_VIEW,
