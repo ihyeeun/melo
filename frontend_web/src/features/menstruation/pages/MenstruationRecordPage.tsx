@@ -270,13 +270,22 @@ function MenstruationRecordForm({
 
   const handleSymptomToggle = (symptom: MenstruationSymptom) => {
     setSymptoms((previous) => {
-      const isAlreadySelected = previous.includes(symptom);
-
-      if (isAlreadySelected) {
-        return previous.filter((item) => item !== symptom);
+      if (symptom === MENSTRUATION_SYMPTOM.NONE) {
+        return previous.includes(MENSTRUATION_SYMPTOM.NONE)
+          ? []
+          : [MENSTRUATION_SYMPTOM.NONE];
       }
 
-      return [...previous, symptom];
+      const symptomsWithoutNone = previous.filter(
+        (item) => item !== MENSTRUATION_SYMPTOM.NONE,
+      );
+      const isAlreadySelected = symptomsWithoutNone.includes(symptom);
+
+      if (isAlreadySelected) {
+        return symptomsWithoutNone.filter((item) => item !== symptom);
+      }
+
+      return [...symptomsWithoutNone, symptom];
     });
   };
 
