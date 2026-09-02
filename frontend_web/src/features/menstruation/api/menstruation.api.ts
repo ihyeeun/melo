@@ -1,4 +1,4 @@
-import { appApiData, webApiData } from "@/shared/api/apiClient";
+import { appApiData } from "@/shared/api/apiClient";
 import type {
   CreateMenstrualCycleRequestDto,
   CreateMenstrualRecordRequestDto,
@@ -31,7 +31,7 @@ export async function createMenstrualRecorded(body: CreateMenstrualRecordRequest
 }
 
 export async function getMenstruationCycles({ date, limit }: { date: string; limit: number }) {
-  const response = await webApiData<MenstrualCyclesResponseDto>({
+  const response = await appApiData<MenstrualCyclesResponseDto>({
     endpoint: "/menstrual/cycles",
     method: "POST",
     body: { date, limit },
@@ -41,7 +41,7 @@ export async function getMenstruationCycles({ date, limit }: { date: string; lim
 }
 
 export async function getMenstrualRecorded(date: string) {
-  const response = await webApiData<MenstraulRecordReponseDto>({
+  const response = await appApiData<MenstraulRecordReponseDto>({
     endpoint: "/menstrual/record/detail",
     method: "POST",
     body: { date },

@@ -6,57 +6,19 @@ import {
   deleteMenstrualCycle,
   updateMenstrualRecorded,
 } from "@/features/menstruation/api/menstruation.api";
+import { menstrualKeys } from "@/features/menstruation/constants/queryKey";
 import {
   MENSTRUATION_STATUS,
   type MenstruationFlow,
   type MenstruationStatus,
   type MenstruationSymptom,
 } from "@/features/menstruation/types/menstruation.type";
-import { resolveMenstrualSaveDecision } from "@/features/menstruation/utils/menstruation.util";
+import { resolveMenstrualSaveDecision } from "@/features/menstruation/utils/menstrualRecordDecision.util";
 import type {
   MenstraulRecordReponseDto,
   MenstrualCycleItemResponseDto,
 } from "@/shared/api/types/api.response.dto";
 import type { UseMutationCallback } from "@/shared/api/types/callback.types";
-
-export function useCreateMenstrualCycleRecordedMutation() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: createMenstrualCycleRecorded,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["menstruation-cycles"] });
-    },
-  });
-}
-
-export function useCreateMenstrualRecordedMutation() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: createMenstrualRecorded,
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["menstruation-cycles"] });
-
-      // 무효화 대신 setQuery를 사용해도 될 거 같음.
-      queryClient.invalidateQueries({ queryKey: ["menstrual-recorded", data.record?.date] });
-    },
-  });
-}
-
-export function useUpdateMenstrualRecordedMutation() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: updateMenstrualRecorded,
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["menstruation-cycles"] });
-
-      // 무효화 대신 setQuery를 사용해도 될 거 같음.
-      queryClient.invalidateQueries({ queryKey: ["menstrual-recorded", data.record?.date] });
-    },
-  });
-}
 
 export function useDeleteMenstrualCycleMutation(callbacks?: UseMutationCallback) {
   const queryClient = useQueryClient();
@@ -65,8 +27,8 @@ export function useDeleteMenstrualCycleMutation(callbacks?: UseMutationCallback)
     mutationFn: deleteMenstrualCycle,
     onSuccess: async () => {
       await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ["menstruation-cycles"] }),
-        queryClient.invalidateQueries({ queryKey: ["menstrual-recorded"] }),
+        queryClient.invalidateQueries({ queryKey: menstrualKeys.cycles.all() }),
+        queryClient.invalidateQueries({ queryKey: menstrualKeys.detail.all() }),
       ]);
 
       callbacks?.onSuccess?.();
@@ -86,7 +48,7 @@ type SaveMenstrualRecordInput = {
   cycle: MenstrualCycleItemResponseDto | null;
 };
 
-export async function saveMenstrualRecord(input: SaveMenstrualRecordInput) {
+async function saveMenstrualRecord(input: SaveMenstrualRecordInput) {
   const isBleeding = input.menstruationStatus === MENSTRUATION_STATUS.BLEEDING;
   const menstrualDetails = isBleeding
     ? {
@@ -135,9 +97,9 @@ export function useSaveMenstrualRecordMutation(callbacks?: UseMutationCallback) 
     mutationFn: saveMenstrualRecord,
     onSuccess: async (_, variables) => {
       await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ["menstruation-cycles"] }),
+        queryClient.invalidateQueries({ queryKey: menstrualKeys.cycles.all() }),
         queryClient.invalidateQueries({
-          queryKey: ["menstrual-recorded", variables.date],
+          queryKey: menstrualKeys.detail.day(variables.date),
         }),
       ]);
 

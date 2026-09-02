@@ -1,4 +1,10 @@
-import { addMonths, isSameDay, isSameMonth, isToday, subMonths } from "date-fns";
+import {
+  addMonths,
+  isSameDay,
+  isSameMonth,
+  isToday,
+  subMonths,
+} from "date-fns";
 import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
 
 import { useMonthCalendar } from "@/features/calendar/hooks/useCalendar";
@@ -6,14 +12,14 @@ import { useCalendarPager } from "@/features/calendar/hooks/useCalendarPager";
 import styles from "@/features/calendar/styles/MenstruationCalendar.module.css";
 import { WEEKDAY_LABELS } from "@/features/calendar/types/calendar.types";
 import { getMonthDates } from "@/features/calendar/utils/calendar";
-import { useGetMenstruationCyclesQuery } from "@/features/menstruation/hooks/queries/menstruation.query";
-import { calculateMenstrualPhaseDates } from "@/features/menstruation/utils/menstrualPhaseDatesCalculation.util";
+import { useMenstrualHistoryCoverage } from "@/features/menstruation/hooks/useMenstrualHistoryCoverage";
+import { findMenstrualOwnerCycle } from "@/features/menstruation/utils/menstrualCycleContext.util";
 import {
-  calculateMenstrualCalendar,
-  getMenstruationDateType,
-} from "@/features/menstruation/utils/menstruation.util";
+  calculateMenstrualPhaseDates,
+  getMenstrualTypeFromPhase,
+} from "@/features/menstruation/utils/menstrualPhaseDatesCalculation.util";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
-import { formatDateKey, getTodayFormatDateKey } from "@/shared/utils/dateFormat";
+import { formatDateKey } from "@/shared/utils/dateFormat";
 
 interface CalendarProps {
   onSelectedDate?: (date: string) => void;
@@ -22,14 +28,6 @@ interface CalendarProps {
 export default function MenstruationCalendar({ onSelectedDate }: CalendarProps) {
   const [selectedDate, setSelectedDate] = useState<Date>();
   const currentPageRef = useRef<HTMLDivElement>(null);
-  const today = getTodayFormatDateKey();
-  const { data: menstruationData } = useGetMenstruationCyclesQuery({
-    date: today,
-    enabled: true,
-  });
-  const menstrualCalculateDates = calculateMenstrualPhaseDates(menstruationData?.cycles ?? []);
-  console.log(menstrualCalculateDates);
-  const menstrualDate = calculateMenstrualCalendar(menstruationData?.cycles ?? []);
   const { viewDate, goPrevMonth, goNextMonth, goToday, goToMonth } = useMonthCalendar();
   const monthPages = useMemo(
     () =>
@@ -39,6 +37,19 @@ export default function MenstruationCalendar({ onSelectedDate }: CalendarProps) 
       })),
     [viewDate],
   );
+  const requiredHistoryDate = formatDateKey(monthPages[0]?.dates[0] ?? viewDate);
+  const menstrualHistory = useMenstrualHistoryCoverage({ targetDate: requiredHistoryDate });
+  const cycles = menstrualHistory.cycles;
+  const latestCycleId = cycles[0]?.cycle_id ?? null;
+  const phaseDates = useMemo(
+    () => calculateMenstrualPhaseDates(cycles) ?? [],
+    [cycles],
+  );
+  const phaseByCycleId = useMemo(
+    () => new Map(phaseDates.map((phaseDate) => [phaseDate.cycleId, phaseDate])),
+    [phaseDates],
+  );
+  const isPhaseContextReady = menstrualHistory.isContextReady;
   const currentPageIndex = 1;
   const currentPageKey = formatDateKey(viewDate);
 
@@ -154,14 +165,19 @@ export default function MenstruationCalendar({ onSelectedDate }: CalendarProps) 
                   inert={!isCurrentPage}
                 >
                   {dates.map((date) => {
-                    const dateKey = formatDateKey(date);
+                    const targetDate = formatDateKey(date);
                     const today = isToday(date);
                     const selected = selectedDate ? isSameDay(date, selectedDate) : today;
                     const outside = !isSameMonth(date, baseDate);
-                    const menstruationType = getMenstruationDateType(
-                      dateKey,
-                      menstrualDate?.calendar,
-                    );
+                    const ownerCycle = findMenstrualOwnerCycle(cycles, targetDate);
+                    const targetPhase = ownerCycle
+                      ? phaseByCycleId.get(ownerCycle.cycle_id)
+                      : undefined;
+                    const menstruationType = getMenstrualTypeFromPhase({
+                      targetDate,
+                      phaseDate: isPhaseContextReady ? targetPhase : undefined,
+                      latestCycleId,
+                    });
 
                     return (
                       <button

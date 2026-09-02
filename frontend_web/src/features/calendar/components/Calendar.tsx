@@ -1,7 +1,7 @@
 import "@/features/calendar/styles/calendar.css";
 
 import { addMonths, addWeeks, startOfMonth, subMonths, subWeeks } from "date-fns";
-import { type ReactNode, useMemo } from "react";
+import { type ReactNode, useEffect, useMemo } from "react";
 
 import CalendarHeader from "@/features/calendar/components/CalendarHeader";
 import type { DayCellRenderProps } from "@/features/calendar/components/dayCell";
@@ -18,6 +18,7 @@ type Props = {
   initialDate?: Date;
   recordedDates?: string[];
   onSelectDate?: (date: Date) => void;
+  onVisibleStartDateChange?: (dateKey: string) => void;
   safeAreaTop?: boolean;
   selectedDate?: Date;
   showMonthBackground?: boolean;
@@ -32,6 +33,7 @@ export default function Calendar({
   initialDate,
   recordedDates: fallbackRecordedDates = EMPTY_RECORDED_DATES,
   onSelectDate,
+  onVisibleStartDateChange,
   safeAreaTop = true,
   selectedDate: controlledSelectedDate,
   showMonthBackground = true,
@@ -125,6 +127,17 @@ export default function Calendar({
   ]);
 
   const currentWeekPageIndex = canGoPrevWeek ? 1 : 0;
+
+  const visibleStartDateKey = useMemo(() => {
+    const pages = viewMode === "month" ? displayedMonthPages : displayedWeekPages;
+    const firstRenderedDate = pages[0]?.[0]?.date;
+    return firstRenderedDate ? formatDateKey(firstRenderedDate) : null;
+  }, [displayedMonthPages, displayedWeekPages, viewMode]);
+
+  useEffect(() => {
+    if (!visibleStartDateKey) return;
+    onVisibleStartDateChange?.(visibleStartDateKey);
+  }, [onVisibleStartDateChange, visibleStartDateKey]);
 
   const handleSelectDateInWeek = (date: Date) => {
     selectDate(date);

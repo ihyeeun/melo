@@ -24,12 +24,11 @@ const LUTEAL = 13;
 
 /** 개인용 월경 단계 기간 계산 */
 export function calculateMenstrualPhaseDurations(
-  cycles: MenstrualCycleItemResponseDto[],
+  cycles: readonly MenstrualCycleItemResponseDto[],
 ): MenstrualPhaseDurations | null {
   if (cycles.length === 0) return null;
 
   const latestCycles = sortCyclesByLatest(cycles);
-  if (!latestCycles) return null;
 
   // 개인용 평균 주기 계산 : N
   const cycleIntervals = calculateCycleIntervals(latestCycles);
@@ -68,13 +67,15 @@ export function calculateMenstrualPhaseDurations(
 
 /** 월경 회차 최신순 정렬 */
 export function sortCyclesByLatest(
-  cycles: MenstrualCycleItemResponseDto[],
-): MenstrualCycleItemResponseDto[] | null {
-  return cycles.sort((a, b) => b.start_date.localeCompare(a.start_date));
+  cycles: readonly MenstrualCycleItemResponseDto[],
+): MenstrualCycleItemResponseDto[] {
+  return [...cycles].sort((a, b) => b.start_date.localeCompare(a.start_date));
 }
 
 /** 월경 회차별 간격 배열 */
-export function calculateCycleIntervals(cycles: MenstrualCycleItemResponseDto[]): number[] {
+export function calculateCycleIntervals(
+  cycles: readonly MenstrualCycleItemResponseDto[],
+): number[] {
   const cycleLengths: number[] = [];
 
   for (let idx = 0; idx < cycles.length - 1; ++idx) {
@@ -93,7 +94,7 @@ export function calculateCycleIntervals(cycles: MenstrualCycleItemResponseDto[])
 }
 
 /** 월경 주기 평균 값 구하기 + 반올림 */
-function calculateCycleAverage(days: number[]): number {
+function calculateCycleAverage(days: readonly number[]): number {
   const vaildDays = days.filter((day) => day >= 21 && day <= 45);
   if (vaildDays.length < 2) return CYCLE_LEN; // 예외 5. 정상 간격 데이터가 2회 미만인 경우 기본값 유지
 

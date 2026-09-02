@@ -35,7 +35,7 @@
 }
 
 .dot[data-variant="outlined"] {
-  border: 1px solid var(--border-strong);
+  border: 1px dashed var(--border-strong);
 }
 
 .dot[data-variant="filled"] {

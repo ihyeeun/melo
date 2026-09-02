@@ -5,7 +5,7 @@ import styles from "@/features/home/styles/PreviewTodayScoreSection.module.css";
 import type { HomeDashboardMode } from "@/features/home/types/homeDashboard.types";
 import { getDayNutritionSummary } from "@/features/home/utils/dayMealSummary";
 import MenstruationCardButton from "@/features/menstruation/components/MenstruationCardButton";
-import type { MenstrualDisplayState } from "@/features/menstruation/types/menstruation.type";
+import type { MenstrualStatus } from "@/features/menstruation/utils/menstrualPhaseDatesCalculation.util";
 import type { ProfileResponseDto } from "@/shared/api/types/api.response.dto";
 import { InfoPopover } from "@/shared/commons/popover/InfoPopover";
 import ScoreProgress from "@/shared/commons/progress/Progress";
@@ -24,7 +24,8 @@ const DEFAULT_CHARACTER_SRC = SCORE_CHARACTER_SOURCES[0].src;
 
 type Props = {
   dashboardMode: HomeDashboardMode;
-  menstrualDisplayState: MenstrualDisplayState | null;
+  menstrualStatus: MenstrualStatus | null;
+  isMenstruationDelayed: boolean;
   isMenstruationPending: boolean;
   profile: ProfileResponseDto | undefined;
   isProfileError: boolean;
@@ -33,7 +34,8 @@ type Props = {
 
 export default function PreviewTodayScoreSection({
   dashboardMode,
-  menstrualDisplayState,
+  menstrualStatus,
+  isMenstruationDelayed,
   isMenstruationPending,
   profile,
   isProfileError,
@@ -47,15 +49,9 @@ export default function PreviewTodayScoreSection({
     isPending: isSummaryPending,
   } = useDayMealsQuery(selectedDateKey);
 
-  const isMenstruationCardPending =
-    dashboardMode === "menstruation" && isMenstruationPending;
+  const isMenstruationCardPending = dashboardMode === "menstruation" && isMenstruationPending;
 
-  if (
-    isSummaryPending ||
-    isProfilePending ||
-    isWorkoutRecordPending ||
-    isMenstruationCardPending
-  ) {
+  if (isSummaryPending || isProfilePending || isWorkoutRecordPending || isMenstruationCardPending) {
     return <PreviewTodayScoreSkeleton />;
   }
 
@@ -75,13 +71,18 @@ export default function PreviewTodayScoreSection({
   return (
     <div className={styles.root}>
       {dashboardMode === "menstruation" ? (
-        <MenstruationCardButton displayState={menstrualDisplayState} />
+        <MenstruationCardButton
+          menstrualStatus={menstrualStatus}
+          isDelayed={isMenstruationDelayed}
+        />
       ) : (
         <article className={styles.nutritionBalanceCard}>
           <div className={styles.summaryArea}>
             <div className={styles.titleArea}>
               <p className="text-primary title-s-semi">오늘의 영양 밸런스</p>
-              <p className={`${styles.message} text-tertiary body-s-regular`}>{nutrition.message}</p>
+              <p className={`${styles.message} text-tertiary body-s-regular`}>
+                {nutrition.message}
+              </p>
             </div>
 
             <p className={`text-primary title-xl-medium ${styles.score}`}>

@@ -3,7 +3,8 @@ export const menstrualKeys = {
 
   cycles: {
     all: () => [...menstrualKeys.all, "cycles"] as const,
-    history: () => [...menstrualKeys.cycles.all(), "history"] as const,
+    history: (headAnchor: string) =>
+      [...menstrualKeys.cycles.all(), "history", { headAnchor }] as const,
   },
 
   detail: {

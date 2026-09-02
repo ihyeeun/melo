@@ -7,8 +7,8 @@ import {
 } from "@/features/menstruation/hooks/mutations/menstruation.mutation";
 import {
   useGetMenstrualRecordedQuery,
-  useGetMenstruationCyclesQuery,
 } from "@/features/menstruation/hooks/queries/menstruation.query";
+import { useMenstrualHistoryCoverage } from "@/features/menstruation/hooks/useMenstrualHistoryCoverage";
 import styles from "@/features/menstruation/styles/MenstruationRecord.module.css";
 import {
   MENSTRUATION_FLOW,
@@ -18,10 +18,7 @@ import {
   type MenstruationStatus,
   type MenstruationSymptom,
 } from "@/features/menstruation/types/menstruation.type";
-import {
-  findCandidateCycle,
-  getCycleIdToDeleteForFirstDayNotBleeding,
-} from "@/features/menstruation/utils/menstruation.util";
+import { getCycleIdToDeleteForFirstDayNotBleeding } from "@/features/menstruation/utils/menstrualRecordDecision.util";
 import type { MenstraulRecordReponseDto } from "@/shared/api/types/api.response.dto";
 import { Button } from "@/shared/commons/button/Button";
 import { SelectedCard } from "@/shared/commons/card/SelectedCard";
@@ -67,10 +64,7 @@ export default function MenstruationRecordPage() {
   const [selectedDate, setSelectedDate] = useState<string>(getTodayFormatDateKey());
   const [cycleIdPendingDeletion, setCycleIdPendingDeletion] = useState<number | null>(null);
   const recordMenstrualQuery = useGetMenstrualRecordedQuery(selectedDate);
-  const menstruationCyclesQuery = useGetMenstruationCyclesQuery({
-    date: selectedDate,
-    enabled: true,
-  });
+  const menstrualHistory = useMenstrualHistoryCoverage({ targetDate: selectedDate });
   const saveMenstrualRecordMutation = useSaveMenstrualRecordMutation({
     onSuccess: () => {
       toast.success("기록되었어요");
@@ -80,9 +74,9 @@ export default function MenstruationRecordPage() {
   const MENSTRUATION_RECORD_FORM_ID = "menstruation-record-form";
 
   const handleSave = (values: MenstruationFormValues) => {
-    if (!recordMenstrualQuery.isSuccess || !menstruationCyclesQuery.isSuccess) return;
+    if (!recordMenstrualQuery.isSuccess || !menstrualHistory.isContextReady) return;
 
-    const cycle = findCandidateCycle(menstruationCyclesQuery.data.cycles, selectedDate);
+    const cycle = menstrualHistory.ownerCycle;
 
     const cycleIdToDelete = getCycleIdToDeleteForFirstDayNotBleeding({
       cycle,
@@ -144,6 +138,8 @@ export default function MenstruationRecordPage() {
 
         {recordMenstrualQuery.isError && <p>기록을 불러오지 못했습니다.</p>}
 
+        {menstrualHistory.status === "error" && <p>생리 회차를 불러오지 못했습니다.</p>}
+
         {recordMenstrualQuery.isPending && <FormSkeleton />}
 
         {recordMenstrualQuery.isSuccess && (
@@ -153,7 +149,7 @@ export default function MenstruationRecordPage() {
             onSubmit={handleSave}
             initRecord={recordMenstrualQuery.data.record}
             isSubmitting={
-              !menstruationCyclesQuery.isSuccess ||
+              !menstrualHistory.isContextReady ||
               saveMenstrualRecordMutation.isPending ||
               deleteMenstrualCycleMutation.isPending
             }

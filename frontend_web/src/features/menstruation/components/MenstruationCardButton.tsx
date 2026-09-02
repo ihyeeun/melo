@@ -1,16 +1,30 @@
 import {
   HOME_DELAYED_CONTENT,
-  HOME_PHASE_CONTENT,
+  HOME_MENSTRUAL_STATUS_VIEW,
   MENSTRUAL_PHASE_ORDER,
 } from "@/features/menstruation/constants/menstruation.constant";
 import styles from "@/features/menstruation/styles/MenstruationCardButton.module.css";
-import type { MenstrualDisplayState } from "@/features/menstruation/types/menstruation.type";
+import type { MenstrualStatus } from "@/features/menstruation/utils/menstrualPhaseDatesCalculation.util";
 import { PATH } from "@/router/path";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import { useNavigate } from "@/shared/navigation/stackflowNavigation";
 
-const PHASE_TIMELINE = [...MENSTRUAL_PHASE_ORDER, MENSTRUAL_PHASE_ORDER[0]];
-const DELAYED_TIMELINE = [...MENSTRUAL_PHASE_ORDER, "DELAYED"] as const;
+const PHASE_TIMELINE = [...MENSTRUAL_PHASE_ORDER, MENSTRUAL_PHASE_ORDER[0]].map(
+  (status) => ({
+    status,
+    label: HOME_MENSTRUAL_STATUS_VIEW[status].phaseLabel,
+  }),
+);
+const DELAYED_TIMELINE = [
+  ...MENSTRUAL_PHASE_ORDER.map((status) => ({
+    status,
+    label: HOME_MENSTRUAL_STATUS_VIEW[status].phaseLabel,
+  })),
+  {
+    status: "delayed",
+    label: HOME_DELAYED_CONTENT.phaseLabel,
+  },
+];
 
 const EMPTY_PHASE_CONTENT = {
   title: "생리 기록을 시작해 볼까요?",
@@ -19,25 +33,25 @@ const EMPTY_PHASE_CONTENT = {
 } as const;
 
 export default function MenstruationCardButton({
-  displayState,
+  menstrualStatus,
+  isDelayed,
 }: {
-  displayState: MenstrualDisplayState | null;
+  menstrualStatus: MenstrualStatus | null;
+  isDelayed: boolean;
 }) {
   const navigate = useNavigate();
-  const isEmpty = displayState === null;
-  const isDelayed = displayState === "DELAYED";
-  const homeContent = isEmpty
-    ? EMPTY_PHASE_CONTENT
-    : isDelayed
-      ? HOME_DELAYED_CONTENT
-      : HOME_PHASE_CONTENT[displayState];
+  const statusView = menstrualStatus ? HOME_MENSTRUAL_STATUS_VIEW[menstrualStatus] : null;
+  const isEmpty = statusView === null && !isDelayed;
+  const homeContent = isDelayed
+    ? HOME_DELAYED_CONTENT
+    : (statusView ?? EMPTY_PHASE_CONTENT);
   const timeline = isDelayed ? DELAYED_TIMELINE : PHASE_TIMELINE;
 
   const activePhaseIndex = isEmpty
     ? -1
     : isDelayed
-      ? DELAYED_TIMELINE.length - 1
-      : MENSTRUAL_PHASE_ORDER.indexOf(displayState);
+      ? timeline.length - 1
+      : (statusView?.phaseIndex ?? -1);
   const progressPercent = ((activePhaseIndex + 0.5) / timeline.length) * 100;
 
   return (
@@ -77,24 +91,24 @@ export default function MenstruationCardButton({
           </span>
 
           <span className={styles.phaseList}>
-            {timeline.map((timelineState, index) => {
+            {timeline.map((timelineStep, index) => {
               const phaseState =
                 index < activePhaseIndex
                   ? styles.completed
                   : index === activePhaseIndex
                     ? styles.current
-                    : styles.upcoming;
+                    : "";
 
               return (
                 <span
                   className={`${styles.phaseItem} ${phaseState}`}
-                  key={`${timelineState}-${index}`}
+                  key={`${timelineStep.status}-${index}`}
                 >
                   <span className={styles.dotArea}>
                     <span className={styles.dot} />
                   </span>
                   <span className={`${styles.phaseLabel} body-xs-regular`}>
-                    {getDisplayStateLabel(timelineState)}
+                    {timelineStep.label}
                   </span>
                 </span>
               );
@@ -104,10 +118,4 @@ export default function MenstruationCardButton({
       )}
     </button>
   );
-}
-
-function getDisplayStateLabel(displayState: MenstrualDisplayState): string {
-  if (displayState === "DELAYED") return HOME_DELAYED_CONTENT.phaseLabel;
-
-  return HOME_PHASE_CONTENT[displayState].phaseLabel;
 }

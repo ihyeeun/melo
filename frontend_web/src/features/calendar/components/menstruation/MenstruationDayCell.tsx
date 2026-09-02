@@ -1,11 +1,11 @@
 import type { DayCellRenderProps } from "@/features/calendar/components/dayCell";
 import styles from "@/features/calendar/styles/MenstruationDayCell.module.css";
-import type { MenstruationDateType } from "@/features/menstruation/types/menstruation.type";
+import type { MenstrualStatus } from "@/features/menstruation/utils/menstrualPhaseDatesCalculation.util";
 
 import { formatDayNumber } from "../../utils/format";
 
 type Props = DayCellRenderProps & {
-  menstruationType: MenstruationDateType;
+  menstruationType: MenstrualStatus | null;
 };
 
 export default function MenstruationDayCell({
@@ -21,7 +21,7 @@ export default function MenstruationDayCell({
     styles.root,
     styles[variant],
     day.isSelected ? `is-selected ${styles.selected}` : "",
-    day.isToday ? `is-today ${styles.today}` : "",
+    day.isToday ? "is-today" : "",
     !day.isCurrentMonth ? `is-outside ${styles.outside}` : "",
   ]
     .filter(Boolean)

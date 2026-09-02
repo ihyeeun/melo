@@ -4,8 +4,8 @@ import { useState } from "react";
 import { useRegisterWeightMutation } from "@/features/home/hooks/mutations/useBodyLogMutation";
 import { useGetBodyLog } from "@/features/home/hooks/queries/useTodayRecordQuery";
 import styles from "@/features/home/styles/TodayBodyLogSection.module.css";
-import { useGetMenstruationCyclesQuery } from "@/features/menstruation/hooks/queries/menstruation.query";
-import { getMenstrualPhaseByDate } from "@/features/menstruation/utils/menstruation.util";
+import { useMenstrualHistoryCoverage } from "@/features/menstruation/hooks/useMenstrualHistoryCoverage";
+import { getMenstrualTypeFromPhase } from "@/features/menstruation/utils/menstrualPhaseDatesCalculation.util";
 import { useGetProfileQuery } from "@/features/profile/hooks/queries/useProfileQuery";
 import { PATH } from "@/router/path";
 import { track } from "@/shared/analytics/analytics";
@@ -45,10 +45,18 @@ export default function WeightLogBottomSheetActivity() {
   const draftWeight = weightDraft === null ? initialWeight : weightDraft.value;
   const isOpen =
     activity.transitionState === "enter-active" || activity.transitionState === "enter-done";
-  const menstrualQuery = useGetMenstruationCyclesQuery({ date, enabled: profile?.gender === 1 });
-  const menstrualStatus = menstrualQuery.isSuccess
-    ? getMenstrualPhaseByDate(menstrualQuery.data.cycles, date)
-    : null;
+  const menstrualHistory = useMenstrualHistoryCoverage({
+    targetDate: date,
+    enabled: profile?.gender === 1,
+  });
+  const menstrualStatus =
+    menstrualHistory.status === "ready"
+      ? getMenstrualTypeFromPhase({
+          targetDate: date,
+          phaseDate: menstrualHistory.phaseDate ?? undefined,
+          latestCycleId: menstrualHistory.cycles[0]?.cycle_id ?? null,
+        })
+      : null;
 
   const closeSheet = () => {
     if (!activity.isActive) return;

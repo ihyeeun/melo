@@ -7,12 +7,12 @@ import {
 import type { MenstrualCycleItemResponseDto } from "@/shared/api/types/api.response.dto";
 import { formatDateKey, parseDateKey } from "@/shared/utils/dateFormat";
 
-interface DateRange {
+export interface DateRange {
   startDate: string;
   endDate: string;
 }
 
-interface MenstrualPhaseDates {
+export interface MenstrualPhaseDates {
   cycleId: number;
   phase: {
     menstrual: {
@@ -32,7 +32,7 @@ export function calculateMenstrualPhaseDates(
   cycles: MenstrualCycleItemResponseDto[],
 ): MenstrualPhaseDates[] | null {
   if (cycles.length === 0) return null;
-  const sortedCycles = cycles.sort((a, b) => b.start_date.localeCompare(a.start_date));
+  const sortedCycles = [...cycles].sort((a, b) => b.start_date.localeCompare(a.start_date));
 
   const result: MenstrualPhaseDates[] = [];
 
@@ -140,4 +140,64 @@ function calculatePossibleDateRange(
     startDate: formatDateKey(addDays(parseDateKey(predictedDate), -len)),
     endDate: formatDateKey(addDays(parseDateKey(predictedDate), len)),
   };
+}
+
+export type MenstrualStatus =
+  | "menstrual_recorded"
+  | "menstrual_predicted"
+  | "follcular"
+  | "ovulatory"
+  | "luteal"
+  | "next_possible"
+  | "next_predicted"
+  | undefined;
+
+/**
+ * phase Dates 모델을 타입으로 변경하는 resolver.
+ * latestCycleId는 owner 기준 부분 이력이 아니라 전체 조회 이력의 최신 회차 ID여야 한다.
+ */
+export function getMenstrualTypeFromPhase({
+  targetDate,
+  phaseDate,
+  latestCycleId,
+}: {
+  targetDate: string;
+  phaseDate: MenstrualPhaseDates | undefined;
+  latestCycleId: number | null;
+}): MenstrualStatus | null {
+  if (!phaseDate) return null;
+
+  const { menstrual, follicularDates, ovulatoryDates, lutealDates } = phaseDate.phase;
+  const { recordedDates, predictedDates } = menstrual;
+
+  if (isDateInPhaseRange(targetDate, recordedDates)) return "menstrual_recorded";
+
+  if (predictedDates !== null && isDateInPhaseRange(targetDate, predictedDates))
+    return "menstrual_predicted";
+
+  if (follicularDates !== null && isDateInPhaseRange(targetDate, follicularDates))
+    return "follcular";
+
+  if (ovulatoryDates !== null && isDateInPhaseRange(targetDate, ovulatoryDates)) return "ovulatory";
+
+  if (lutealDates !== null && isDateInPhaseRange(targetDate, lutealDates)) return "luteal";
+
+  // 다음 월경 예측은 이미 다음 실제 회차가 존재하는 과거 회차에는 노출하지 않는다.
+  if (phaseDate.cycleId !== latestCycleId) return null;
+
+  if (targetDate === phaseDate.predictedNextDate) return "next_predicted";
+
+  if (isDateInPhaseRange(targetDate, phaseDate.possibleNextDates)) return "next_possible";
+
+  return null;
+}
+
+function isDateInPhaseRange(
+  targetDate: string,
+  range: {
+    startDate: string;
+    endDate: string;
+  },
+) {
+  return range.startDate <= targetDate && targetDate <= range.endDate;
 }

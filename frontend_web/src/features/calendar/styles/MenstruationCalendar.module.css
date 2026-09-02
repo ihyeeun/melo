@@ -88,14 +88,20 @@
   background: var(--background-gray-2);
 }
 
-.day[data-menstruation="menstrual"] {
+.day[data-menstruation="menstrual_recorded"] {
   border-color: var(--coral-400);
   background-color: var(--coral-400);
   color: var(--background-default);
 }
 
-.day[data-menstruation="possible"],
-.day[data-menstruation="predicted"] {
+.day[data-menstruation="menstrual_predicted"] {
+  border-color: var(--coral-300);
+  background-color: var(--coral-300);
+  color: var(--background-default);
+}
+
+.day[data-menstruation="next_possible"],
+.day[data-menstruation="next_predicted"] {
   background-color: var(--background-default);
   border: 1px dashed var(--border-strong);
   color: var(--text-secondary);
@@ -112,17 +118,17 @@
   color: var(--text-primary);
 }
 
-.day[data-today="true"][data-menstruation="menstrual"] {
+.day[data-today="true"][data-menstruation="menstrual_recorded"] {
   border: 3px solid var(--navy-800);
   background-color: var(--coral-400);
 }
 
-.day[data-today="true"][data-menstruation="possible"],
-.day[data-today="true"].day[data-menstruation="predicted"] {
+.day[data-today="true"][data-menstruation="next_possible"],
+.day[data-today="true"].day[data-menstruation="next_predicted"] {
   background-color: var(--coral-50);
 }
 
-.day[data-selected="true"][data-menstruation="menstrual"] {
+.day[data-selected="true"][data-menstruation="menstrual_recorded"] {
   box-shadow:
     0 -1.5px 0 var(--coral-400),
     0 1.5px 0 var(--coral-400);
@@ -131,22 +137,22 @@
   color: var(--background-default);
 }
 
-.day[data-selected="true"][data-menstruation="possible"],
-.day[data-selected="true"].day[data-menstruation="predicted"] {
+.day[data-selected="true"][data-menstruation="next_possible"],
+.day[data-selected="true"].day[data-menstruation="next_predicted"] {
   background-color: var(--coral-50);
 }
 
-.day[data-outside="true"] [data-selected="true"] {
+.day[data-outside="true"][data-selected="true"] {
   color: var(--text-disabled);
 }
 
-.day[data-outside="true"][data-menstruation="menstrual"] {
+.day[data-outside="true"][data-menstruation="menstrual_recorded"] {
   opacity: 40%;
   color: var(--background-default);
 }
 
 /* 3개 선택 */
-.day[data-today="true"][data-selected="true"][data-menstruation="menstrual"] {
+.day[data-today="true"][data-selected="true"][data-menstruation="menstrual_recorded"] {
   border-color: var(--navy-800);
   background-color: var(--coral-400);
   box-shadow:
@@ -154,8 +160,8 @@
     0 1.5px 0 var(--navy-800);
 }
 
-.day[data-today="true"][data-selected="true"][data-menstruation="possible"],
-.day[data-today="true"][data-selected="true"][data-menstruation="predicted"] {
+.day[data-today="true"][data-selected="true"][data-menstruation="next_possible"],
+.day[data-today="true"][data-selected="true"][data-menstruation="next_predicted"] {
   border-color: transparent;
 }
 

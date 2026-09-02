@@ -1,5 +1,4 @@
 .root {
-  --menstruation-selected-border: var(--navy-900);
   transition:
     background-color 160ms ease,
     border-color 160ms ease,
@@ -13,36 +12,40 @@
     color 160ms ease;
 }
 
-.week[data-menstruation="menstrual"],
-.month[data-menstruation="menstrual"] .numberContainer {
+.week[data-menstruation="menstrual_recorded"],
+.week[data-menstruation="menstrual_predicted"],
+.month[data-menstruation="menstrual_recorded"] .numberContainer,
+.month[data-menstruation="menstrual_predicted"] .numberContainer {
   background-color: var(--coral-100);
   color: var(--text-secondary);
   border-radius: 16px;
   mix-blend-mode: multiply;
 }
 
-.month[data-menstruation="menstrual"] {
+.month[data-menstruation="menstrual_recorded"],
+.month[data-menstruation="menstrual_predicted"] {
   background-color: var(--coral-100);
   border-radius: 16px;
 }
 
-.week[data-menstruation="possible"],
-.week[data-menstruation="predicted"],
-.month[data-menstruation="possible"] .numberContainer,
-.month[data-menstruation="predicted"] .numberContainer {
+.week[data-menstruation="next_possible"],
+.week[data-menstruation="next_predicted"],
+.month[data-menstruation="next_possible"] .numberContainer,
+.month[data-menstruation="next_predicted"] .numberContainer {
   border: 1px dashed var(--border-strong);
   color: var(--text-secondary);
   border-radius: 16px;
 }
 
-.selected.week[data-menstruation="possible"],
-.selected.week[data-menstruation="predicted"],
-.selected.month[data-menstruation="possible"] .numberContainer,
-.selected.month[data-menstruation="predicted"] .numberContainer {
+.selected.week[data-menstruation="next_possible"],
+.selected.week[data-menstruation="next_predicted"],
+.selected.month[data-menstruation="next_possible"] .numberContainer,
+.selected.month[data-menstruation="next_predicted"] .numberContainer {
   background-color: var(--coral-50);
 }
 
-.outside[data-menstruation="menstrual"] {
+.outside[data-menstruation="menstrual_recorded"],
+.outside[data-menstruation="menstrual_predicted"] {
   color: var(--background-default);
   opacity: 0.4;
 }

@@ -34,39 +34,3 @@ export const MENSTRUATION_SYMPTOM = {
 } as const;
 
 export type MenstruationSymptom = (typeof MENSTRUATION_SYMPTOM)[keyof typeof MENSTRUATION_SYMPTOM];
-
-//
-export type CycleType = { type: "CREATE_CYCLE" } | { type: "EXTEND_CYCLE"; cycle_id: number };
-export type MenstrualSaveDecision =
-  | { type: "CREATE_CYCLE" }
-  | {
-      type: "CREATE_DAILY_RECORD";
-      cycleId: number;
-    }
-  | {
-      type: "UPDATE_DAILY_RECORD";
-    }
-  | {
-      type: "BLOCKED";
-      reason: "ACTIVE_CYCLE_REQUIRED";
-    };
-
-export type DateRange = {
-  startDate: string;
-  endDate: string;
-};
-
-export type MenstrualCalculateCalendar = {
-  cyclePeriod: number;
-  calendar: {
-    possibleDate?: DateRange;
-    predictedDate?: string;
-    menstrualDates: DateRange[];
-  };
-};
-
-export type MenstrualPhase = "MENSTRUAL" | "FOLLICULAR" | "OVULATORY" | "LUTEAL";
-
-export type MenstrualDisplayState = MenstrualPhase | "DELAYED";
-
-export type MenstruationDateType = "menstrual" | "possible" | "predicted" | undefined;

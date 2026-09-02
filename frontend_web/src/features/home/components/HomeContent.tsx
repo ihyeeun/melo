@@ -10,16 +10,18 @@ import PreviewTodayScoreSection from "@/features/home/components/PreviewTodaySco
 import RecordActionSection from "@/features/home/components/RecordActionSection";
 import styles from "@/features/home/styles/HomePage.module.css";
 import type { HomeDashboardMode } from "@/features/home/types/homeDashboard.types";
-import { useGetMenstruationCyclesQuery } from "@/features/menstruation/hooks/queries/menstruation.query";
-import type { MenstrualCalculateCalendar } from "@/features/menstruation/types/menstruation.type";
+import { useMenstrualHistoryCoverage } from "@/features/menstruation/hooks/useMenstrualHistoryCoverage";
+import { findMenstrualOwnerCycle } from "@/features/menstruation/utils/menstrualCycleContext.util";
+import { isMenstrualCycleDelayed } from "@/features/menstruation/utils/menstrualHomeState.util";
 import {
-  calculateMenstrualCalendar,
-  getMenstrualDisplayStateByDate,
-  getMenstruationDateType,
-} from "@/features/menstruation/utils/menstruation.util";
+  calculateMenstrualPhaseDates,
+  getMenstrualTypeFromPhase,
+  type MenstrualPhaseDates,
+} from "@/features/menstruation/utils/menstrualPhaseDatesCalculation.util";
 import { useGetProfileQuery } from "@/features/profile/hooks/queries/useProfileQuery";
 import { track } from "@/shared/analytics/analytics";
 import { EVENT_NAME } from "@/shared/analytics/analytics.constants";
+import type { MenstrualCycleItemResponseDto } from "@/shared/api/types/api.response.dto";
 import { FloatingCameraButton } from "@/shared/commons/button/FloatingCameraButton";
 import { ScrollFogArea } from "@/shared/commons/scrollFog";
 import { FEATURE_GUARD, useIsFeatureBlocked } from "@/shared/guards/featureGuard";
@@ -42,22 +44,40 @@ export default function HomeContent({
   const [chatCameraUpdateUrl, setChatCameraUpdateUrl] = useState<string | null>(null);
   const [isChatCameraUpdateModalOpen, setIsChatCameraUpdateModalOpen] = useState(false);
   const [selectedDashboardMode, setSelectedDashboardMode] = useState<HomeDashboardMode>("daily");
+  const [calendarCoverageStartDate, setCalendarCoverageStartDate] = useState(selectedDateKey);
   const profileQuery = useGetProfileQuery();
   const canToggleDashboardMode = profileQuery.data?.user_id === 101;
   const dashboardMode: HomeDashboardMode = canToggleDashboardMode ? selectedDashboardMode : "daily";
-  const menstruationCyclesQuery = useGetMenstruationCyclesQuery({
-    date: selectedDateKey,
-    enabled: dashboardMode === "menstruation",
+  const requiredMenstrualHistoryDate =
+    calendarCoverageStartDate < selectedDateKey ? calendarCoverageStartDate : selectedDateKey;
+  const menstrualHistory = useMenstrualHistoryCoverage({
+    targetDate: requiredMenstrualHistoryDate,
+    enabled: dashboardMode === "menstruation" && canToggleDashboardMode,
   });
-  const menstruationCycles = menstruationCyclesQuery.data?.cycles;
-  const menstrualCalendar = useMemo(
-    () => calculateMenstrualCalendar(menstruationCycles ?? []),
-    [menstruationCycles],
+  const menstrualPhaseDates = useMemo(
+    () => calculateMenstrualPhaseDates(menstrualHistory.cycles) ?? [],
+    [menstrualHistory.cycles],
   );
-  const menstrualDisplayState = useMemo(
-    () => getMenstrualDisplayStateByDate(menstruationCycles ?? [], selectedDateKey),
-    [menstruationCycles, selectedDateKey],
+  const latestMenstrualCycleId = menstrualHistory.cycles[0]?.cycle_id ?? null;
+  const phaseByCycleId = useMemo(
+    () => new Map(menstrualPhaseDates.map((phaseDate) => [phaseDate.cycleId, phaseDate])),
+    [menstrualPhaseDates],
   );
+  const selectedOwnerCycle = findMenstrualOwnerCycle(menstrualHistory.cycles, selectedDateKey);
+  const selectedPhaseDate = selectedOwnerCycle
+    ? phaseByCycleId.get(selectedOwnerCycle.cycle_id)
+    : undefined;
+  const menstrualStatus = menstrualHistory.isContextReady
+    ? (getMenstrualTypeFromPhase({
+        targetDate: selectedDateKey,
+        phaseDate: selectedPhaseDate,
+        latestCycleId: latestMenstrualCycleId,
+      }) ?? null)
+    : null;
+  const isMenstruationDelayed =
+    menstrualHistory.isContextReady &&
+    menstrualStatus == null &&
+    isMenstrualCycleDelayed({ targetDate: selectedDateKey, phaseDate: selectedPhaseDate });
 
   const handleNavigateChatCamera = async () => {
     const result = await navigateToChatCameraIfSupported(navigate);
@@ -81,31 +101,40 @@ export default function HomeContent({
   useEffect(() => {
     if (!shouldTrackMenstruationToggleRef.current) return;
     if (dashboardMode !== "menstruation") return;
-    if (!menstruationCyclesQuery.isFetched) return;
+    if (!menstrualHistory.isContextReady) return;
 
     shouldTrackMenstruationToggleRef.current = false;
 
     track(EVENT_NAME.CLICK_MENSTRUAL_DASHBOARD, {
-      menstrual_phase: menstrualDisplayState === "DELAYED" ? null : menstrualDisplayState,
+      menstrual_phase: isMenstruationDelayed ? null : menstrualStatus,
     });
-  }, [dashboardMode, menstruationCyclesQuery.isFetched, menstrualDisplayState]);
+  }, [
+    dashboardMode,
+    isMenstruationDelayed,
+    menstrualHistory.isContextReady,
+    menstrualStatus,
+  ]);
 
   return (
     <>
       <div className={`page ${styles.pageColor}`}>
         <HomeCalendar
           mode={dashboardMode}
-          menstrualCalendar={menstrualCalendar?.calendar}
+          menstrualCycles={menstrualHistory.cycles}
+          phaseByCycleId={phaseByCycleId}
+          isMenstrualContextReady={menstrualHistory.isContextReady}
           selectedDate={selectedDate}
           onSelectDate={onSelectDate}
+          onVisibleStartDateChange={setCalendarCoverageStartDate}
           showModeToggle={canToggleDashboardMode}
           onModeChange={handleDashboardModeChange}
         />
         <ScrollFogArea role="main" className={`main ${styles.content}`}>
           <PreviewTodayScoreSection
             dashboardMode={dashboardMode}
-            menstrualDisplayState={menstrualDisplayState}
-            isMenstruationPending={menstruationCyclesQuery.isPending}
+            menstrualStatus={menstrualStatus}
+            isMenstruationDelayed={isMenstruationDelayed}
+            isMenstruationPending={menstrualHistory.isContextPending}
             profile={profileQuery.data}
             isProfileError={profileQuery.isError}
             isProfilePending={profileQuery.isPending}
@@ -135,24 +164,34 @@ export default function HomeContent({
 
 function HomeCalendar({
   mode,
-  menstrualCalendar,
+  menstrualCycles,
+  phaseByCycleId,
+  isMenstrualContextReady,
   selectedDate,
   onSelectDate,
+  onVisibleStartDateChange,
   showModeToggle,
   onModeChange,
 }: {
   mode: HomeDashboardMode;
-  menstrualCalendar: MenstrualCalculateCalendar["calendar"] | undefined;
+  menstrualCycles: readonly MenstrualCycleItemResponseDto[];
+  phaseByCycleId: ReadonlyMap<number, MenstrualPhaseDates>;
+  isMenstrualContextReady: boolean;
   selectedDate: Date;
   onSelectDate: (date: Date) => void;
+  onVisibleStartDateChange: (dateKey: string) => void;
   showModeToggle: boolean;
   onModeChange: (mode: HomeDashboardMode) => void;
 }) {
   const renderMenstruationDayCell = (props: DayCellRenderProps) => {
-    const menstruationType = getMenstruationDateType(
-      formatDateKey(props.day.date),
-      menstrualCalendar,
-    );
+    const targetDate = formatDateKey(props.day.date);
+    const ownerCycle = findMenstrualOwnerCycle(menstrualCycles, targetDate);
+    const phaseDate = ownerCycle ? phaseByCycleId.get(ownerCycle.cycle_id) : undefined;
+    const menstruationType = getMenstrualTypeFromPhase({
+      targetDate,
+      phaseDate: isMenstrualContextReady ? phaseDate : undefined,
+      latestCycleId: menstrualCycles[0]?.cycle_id ?? null,
+    });
 
     return <MenstruationDayCell {...props} menstruationType={menstruationType} />;
   };
@@ -166,6 +205,7 @@ function HomeCalendar({
       }
       selectedDate={selectedDate}
       onSelectDate={onSelectDate}
+      onVisibleStartDateChange={onVisibleStartDateChange}
       showRecordedDots={mode === "daily"}
       renderDayCell={mode === "menstruation" ? renderMenstruationDayCell : undefined}
     />
