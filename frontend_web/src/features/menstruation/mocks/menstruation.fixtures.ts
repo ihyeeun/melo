@@ -12,16 +12,16 @@ import type {
 export const mockMenstruationCycles: MenstrualCycleItemResponseDto[] = [
   {
     cycle_id: 7,
-    start_date: "2026-08-14",
-    end_date: "2026-08-17",
-    is_end: true,
-  },
-  {
-    cycle_id: 6,
     start_date: "2026-07-14",
-    end_date: "2026-07-17",
+    end_date: "2026-08-11",
     is_end: true,
   },
+  // {
+  //   cycle_id: 6,
+  //   start_date: "2026-07-14",
+  //   end_date: "2026-07-17",
+  //   is_end: true,
+  // },
   // {
   //   cycle_id: 5,
   //   start_date: "2026-06-22",

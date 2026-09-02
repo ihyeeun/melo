@@ -226,8 +226,9 @@ function MenstruationRecordForm({
   isSubmitting: boolean;
 }) {
   const hasInitialBleeding = initRecord?.menstruation_status === MENSTRUATION_STATUS.BLEEDING;
-  const [selectedMenstrualStatus, setSelectedMenstrualStatus] =
-    useState<MenstruationStatus | null>(null);
+  const [selectedMenstrualStatus, setSelectedMenstrualStatus] = useState<MenstruationStatus | null>(
+    null,
+  );
   const menstrualStatus =
     selectedMenstrualStatus ?? initRecord?.menstruation_status ?? defaultMenstruationStatus;
   const [flow, setFlow] = useState<MenstruationFlow | undefined>(() =>

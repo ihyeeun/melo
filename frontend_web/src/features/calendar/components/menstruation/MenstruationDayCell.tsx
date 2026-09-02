@@ -1,6 +1,6 @@
 import type { DayCellRenderProps } from "@/features/calendar/components/dayCell";
 import styles from "@/features/calendar/styles/MenstruationDayCell.module.css";
-import type { MenstrualStatus } from "@/features/menstruation/utils/menstrualPhaseDatesCalculation.util";
+import type { MenstrualStatus } from "@/features/menstruation/types/menstruation.type";
 
 import { formatDayNumber } from "../../utils/format";
 

@@ -26,6 +26,7 @@ export interface MenstrualPhaseDates {
   };
   predictedNextDate: string;
   possibleNextDates: DateRange;
+  hasNextMenstrualPredictionOverlap: boolean;
 }
 
 /** 각 회차별 날짜 모델 배열 */
@@ -81,6 +82,11 @@ export function calculateMenstrualPhaseDates(
     );
     const possibleNextDates = calculatePossibleDateRange(cyclesForCalculation, predictedNextDate);
 
+    const hasNextMenstrualPredictionOverlap = isDateRangeOverlapping(
+      recordedDates,
+      possibleNextDates,
+    );
+
     result.push({
       cycleId: cycle.cycle_id,
       phase: {
@@ -94,6 +100,7 @@ export function calculateMenstrualPhaseDates(
       },
       predictedNextDate,
       possibleNextDates,
+      hasNextMenstrualPredictionOverlap,
     });
   }
 
@@ -175,8 +182,9 @@ export function getMenstrualTypeFromPhase({
 
   if (lutealDates !== null && isDateInPhaseRange(targetDate, lutealDates)) return "luteal";
 
-  // 다음 월경 예측은 이미 다음 실제 회차가 존재하는 과거 회차에는 노출하지 않는다.
-  if (phaseDate.cycleId !== latestCycleId) return null;
+  // 과거 회차이거나 현재 월경 구간과 겹치는 다음 예측은 노출하지 않는다.
+  if (phaseDate.cycleId !== latestCycleId || phaseDate.hasNextMenstrualPredictionOverlap)
+    return null;
 
   if (targetDate === phaseDate.predictedNextDate) return "next_predicted";
 
@@ -193,4 +201,9 @@ function isDateInPhaseRange(
   },
 ) {
   return range.startDate <= targetDate && targetDate <= range.endDate;
+}
+
+/** 양 끝 날짜를 포함해 두 날짜 구간이 하루라도 겹치는지 확인한다. */
+function isDateRangeOverlapping(first: DateRange, second: DateRange): boolean {
+  return first.startDate <= second.endDate && second.startDate <= first.endDate;
 }

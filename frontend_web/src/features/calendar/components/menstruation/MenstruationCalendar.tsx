@@ -1,10 +1,4 @@
-import {
-  addMonths,
-  isSameDay,
-  isSameMonth,
-  isToday,
-  subMonths,
-} from "date-fns";
+import { addMonths, isSameDay, isSameMonth, isToday, subMonths } from "date-fns";
 import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
 
 import { useMonthCalendar } from "@/features/calendar/hooks/useCalendar";
@@ -41,10 +35,7 @@ export default function MenstruationCalendar({ onSelectedDate }: CalendarProps) 
   const menstrualHistory = useMenstrualHistoryCoverage({ targetDate: requiredHistoryDate });
   const cycles = menstrualHistory.cycles;
   const latestCycleId = cycles[0]?.cycle_id ?? null;
-  const phaseDates = useMemo(
-    () => calculateMenstrualPhaseDates(cycles) ?? [],
-    [cycles],
-  );
+  const phaseDates = useMemo(() => calculateMenstrualPhaseDates(cycles) ?? [], [cycles]);
   const phaseByCycleId = useMemo(
     () => new Map(phaseDates.map((phaseDate) => [phaseDate.cycleId, phaseDate])),
     [phaseDates],
@@ -134,7 +125,6 @@ export default function MenstruationCalendar({ onSelectedDate }: CalendarProps) 
           <SystemIcon name="arrow-filled-right" size={24} />
         </button>
       </header>
-
       <>
         <div className={styles.weekdays} aria-hidden="true">
           {WEEKDAY_LABELS.map((weekday) => (
