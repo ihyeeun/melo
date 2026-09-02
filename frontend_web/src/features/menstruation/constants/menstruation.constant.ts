@@ -61,8 +61,8 @@ export const HOME_MENSTRUAL_STATUS_VIEW = {
 } as const satisfies Record<VisibleMenstrualStatus, HomeMenstrualStatusView>;
 
 export const HOME_DELAYED_CONTENT = {
-  phaseLabel: "지연 중",
+  phaseLabel: "생리 예정",
   title: "지연 중",
   message: "생리가 시작되면\n기록으로 알려주세요!",
-  source: "/icons/characters/luteal.png",
+  source: "/icons/characters/question-color.png",
 } as const;
