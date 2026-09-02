@@ -9,10 +9,16 @@ import { PATH } from "@/router/path";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import { useNavigate } from "@/shared/navigation/stackflowNavigation";
 
-const PHASE_TIMELINE = [...MENSTRUAL_PHASE_ORDER, MENSTRUAL_PHASE_ORDER[0]].map((status) => ({
-  status,
-  label: HOME_MENSTRUAL_STATUS_VIEW[status].phaseLabel,
-}));
+const PHASE_TIMELINE = [
+  ...MENSTRUAL_PHASE_ORDER.map((status) => ({
+    status,
+    label: HOME_MENSTRUAL_STATUS_VIEW[status].phaseLabel,
+  })),
+  {
+    status: "next_predicted",
+    label: "생리 예정",
+  },
+];
 const DELAYED_TIMELINE = [
   ...MENSTRUAL_PHASE_ORDER.map((status) => ({
     status,
