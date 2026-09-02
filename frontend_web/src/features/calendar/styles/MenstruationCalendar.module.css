@@ -79,13 +79,14 @@
 
 /* 1개 선택 */
 .day[data-today="true"] {
-  border-color: var(--navy-800);
-  background-color: var(--navy-800);
-  color: var(--background-default);
+  border-color: var(--background-gray-2);
+  background-color: var(--background-gray-2);
 }
 
 .day[data-selected="true"] {
-  background: var(--background-gray-2);
+  background: var(--navy-800);
+  color: var(--background-default);
+  border-color: var(--navy-800);
 }
 
 .day[data-menstruation="menstrual_recorded"] {
@@ -94,12 +95,7 @@
   color: var(--background-default);
 }
 
-.day[data-menstruation="menstrual_predicted"] {
-  border-color: var(--coral-300);
-  background-color: var(--coral-300);
-  color: var(--background-default);
-}
-
+.day[data-menstruation="menstrual_predicted"],
 .day[data-menstruation="next_possible"],
 .day[data-menstruation="next_predicted"] {
   background-color: var(--background-default);
@@ -109,6 +105,7 @@
 
 .day[data-outside="true"] {
   color: var(--gray-300);
+  opacity: 0.8;
 }
 
 /* 2개 선택 */
@@ -119,27 +116,29 @@
 }
 
 .day[data-today="true"][data-menstruation="menstrual_recorded"] {
-  border: 3px solid var(--navy-800);
   background-color: var(--coral-400);
 }
 
+.day[data-today="true"][data-menstruation="menstrual_predicted"],
 .day[data-today="true"][data-menstruation="next_possible"],
 .day[data-today="true"].day[data-menstruation="next_predicted"] {
   background-color: var(--coral-50);
 }
 
 .day[data-selected="true"][data-menstruation="menstrual_recorded"] {
-  box-shadow:
-    0 -1.5px 0 var(--coral-400),
-    0 1.5px 0 var(--coral-400);
+  /* box-shadow:
+    0 -1.5px 0 var(--navy-800),
+    0 1.5px 0 var(--navy-800); */
   background-color: var(--coral-400);
-  border-color: var(--coral-400);
+  border-color: var(--navy-800);
   color: var(--background-default);
 }
 
+.day[data-selected="true"][data-menstruation="menstrual_predicted"],
 .day[data-selected="true"][data-menstruation="next_possible"],
 .day[data-selected="true"].day[data-menstruation="next_predicted"] {
-  background-color: var(--coral-50);
+  background-color: var(--navy-50);
+  border-color: var(--navy-800);
 }
 
 .day[data-outside="true"][data-selected="true"] {
@@ -147,7 +146,6 @@
 }
 
 .day[data-outside="true"][data-menstruation="menstrual_recorded"] {
-  opacity: 40%;
   color: var(--background-default);
 }
 
@@ -155,11 +153,12 @@
 .day[data-today="true"][data-selected="true"][data-menstruation="menstrual_recorded"] {
   border-color: var(--navy-800);
   background-color: var(--coral-400);
-  box-shadow:
+  /* box-shadow:
     0 -1.5px 0 var(--navy-800),
-    0 1.5px 0 var(--navy-800);
+    0 1.5px 0 var(--navy-800); */
 }
 
+.day[data-today="true"][data-selected="true"][data-menstruation="menstrual_predicted"],
 .day[data-today="true"][data-selected="true"][data-menstruation="next_possible"],
 .day[data-today="true"][data-selected="true"][data-menstruation="next_predicted"] {
   border-color: transparent;
