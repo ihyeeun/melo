@@ -105,5 +105,8 @@ export function useSaveMenstrualRecordMutation(callbacks?: UseMutationCallback) 
 
       callbacks?.onSuccess?.();
     },
+    onError: (error) => {
+      callbacks?.onError?.(error);
+    },
   });
 }

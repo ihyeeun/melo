@@ -68,6 +68,10 @@ export default function MenstruationRecordPage() {
     onSuccess: () => {
       toast.success("기록되었어요");
     },
+    onError: (error) => {
+      toast.warning(error.message);
+      throw error;
+    },
   });
   const deleteMenstrualCycleMutation = useDeleteMenstrualCycleMutation();
   const MENSTRUATION_RECORD_FORM_ID = "menstruation-record-form";
