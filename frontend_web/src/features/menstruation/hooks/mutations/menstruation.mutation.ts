@@ -86,7 +86,7 @@ async function saveMenstrualRecord(input: SaveMenstrualRecordInput) {
       });
 
     case "BLOCKED":
-      throw new Error("연결할 수 있는 진행 중인 월경 회차가 없습니다.");
+      throw new Error("종료할 수 있는 생리 주기가 존재하지 않습니다.");
   }
 }
 

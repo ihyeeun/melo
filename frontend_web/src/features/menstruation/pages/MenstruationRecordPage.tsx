@@ -17,7 +17,10 @@ import {
   type MenstruationSymptom,
 } from "@/features/menstruation/types/menstruation.type";
 import { getMenstrualTypeFromPhase } from "@/features/menstruation/utils/menstrualPhaseDatesCalculation.util";
-import { getCycleIdToDeleteForFirstDayNotBleeding } from "@/features/menstruation/utils/menstrualRecordDecision.util";
+import {
+  getCycleIdToDeleteForFirstDayNotBleeding,
+  resolveMenstrualSaveDecision,
+} from "@/features/menstruation/utils/menstrualRecordDecision.util";
 import type { MenstraulRecordReponseDto } from "@/shared/api/types/api.response.dto";
 import { Button } from "@/shared/commons/button/Button";
 import { SelectedCard } from "@/shared/commons/card/SelectedCard";
@@ -88,6 +91,24 @@ export default function MenstruationRecordPage() {
     selectedMenstrualType === "menstrual_predicted"
       ? MENSTRUATION_STATUS.BLEEDING
       : null;
+  const ownerCycle = menstrualHistory.ownerCycle;
+  const bleedingSaveDecision =
+    recordMenstrualQuery.isSuccess && menstrualHistory.isContextReady
+      ? resolveMenstrualSaveDecision({
+          existingRecord: recordMenstrualQuery.data.record,
+          cycle: ownerCycle,
+          targetDate: selectedDate,
+          menstruationStatus: MENSTRUATION_STATUS.BLEEDING,
+        })
+      : null;
+  const isOwnerCycleStartDate = ownerCycle?.start_date === selectedDate;
+  const existingRecordCycleId = recordMenstrualQuery.data?.record?.cycle_id;
+  const belongsToExistingCycle =
+    selectedMenstrualType === "menstrual_recorded" ||
+    selectedMenstrualType === "menstrual_predicted" ||
+    (existingRecordCycleId !== undefined && existingRecordCycleId === ownerCycle?.cycle_id) ||
+    bleedingSaveDecision?.type === "CREATE_DAILY_RECORD";
+  const isMenstruationContinuation = !isOwnerCycleStartDate && belongsToExistingCycle;
 
   const handleSave = (values: MenstruationFormValues) => {
     if (!recordMenstrualQuery.isSuccess || !menstrualHistory.isContextReady) return;
@@ -165,6 +186,7 @@ export default function MenstruationRecordPage() {
             onSubmit={handleSave}
             initRecord={recordMenstrualQuery.data.record}
             defaultMenstruationStatus={defaultMenstruationStatus}
+            isMenstruationContinuation={isMenstruationContinuation}
             isSubmitting={
               !menstrualHistory.isContextReady ||
               saveMenstrualRecordMutation.isPending ||
@@ -180,7 +202,7 @@ export default function MenstruationRecordPage() {
           if (!open) setCycleIdPendingDeletion(null);
         }}
         title="이 회차의 생리 기록을 삭제할까요?"
-        description={"첫날의 기록을 '없음'으로 변경하면\n이 회차의 생리 기록이 모두 삭제돼요."}
+        description={"첫날의 기록을 '종료'로 변경하면\n이 회차의 생리 기록이 모두 삭제돼요."}
         cancelText="취소"
         confirmText="전체 삭제"
         confirmDisabled={deleteMenstrualCycleMutation.isPending}
@@ -221,12 +243,14 @@ function MenstruationRecordForm({
   onSubmit,
   initRecord,
   defaultMenstruationStatus,
+  isMenstruationContinuation,
   isSubmitting,
 }: {
   formId: string;
   onSubmit: (values: MenstruationFormValues) => void;
   initRecord: MenstraulRecordReponseDto["record"];
   defaultMenstruationStatus: MenstruationStatus | null;
+  isMenstruationContinuation: boolean;
   isSubmitting: boolean;
 }) {
   const hasInitialBleeding = initRecord?.menstruation_status === MENSTRUATION_STATUS.BLEEDING;
@@ -242,6 +266,7 @@ function MenstruationRecordForm({
     hasInitialBleeding ? [...(initRecord.symptoms ?? [])] : [],
   );
   const areDetailsDisabled = menstrualStatus === MENSTRUATION_STATUS.NOT_BLEEDING;
+  const bleedingStatusLabel = isMenstruationContinuation ? "지속" : "시작";
 
   const handleSymptomToggle = (symptom: MenstruationSymptom) => {
     setSymptoms((previous) => {
@@ -276,7 +301,7 @@ function MenstruationRecordForm({
             className={styles.fieldCard}
             setSelectedChange={() => setSelectedMenstrualStatus(MENSTRUATION_STATUS.BLEEDING)}
           >
-            <p className="body-m-regular text-primary">있음</p>
+            <p className="body-m-regular text-primary">{bleedingStatusLabel}</p>
           </SelectedCard>
           <SelectedCard
             isSelected={menstrualStatus === MENSTRUATION_STATUS.NOT_BLEEDING}
@@ -287,7 +312,7 @@ function MenstruationRecordForm({
               setSymptoms([]);
             }}
           >
-            <p className="body-m-regular text-primary">없음</p>
+            <p className="body-m-regular text-primary">종료</p>
           </SelectedCard>
         </div>
       </SectionLayout>
