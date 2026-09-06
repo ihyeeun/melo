@@ -1,21 +1,10 @@
-import type { MenstrualStatus } from "@/features/menstruation/types/menstruation.type";
-
-export const MENSTRUAL_PHASE_ORDER = [
-  "menstrual_recorded",
-  "follicular",
-  "ovulatory",
-  "luteal",
-] as const;
-
-type VisibleMenstrualStatus = Exclude<MenstrualStatus, undefined>;
-
-type HomeMenstrualStatusView = {
-  phaseIndex: number;
-  phaseLabel: string;
-  title: string;
-  message: string;
-  source: string;
-};
+const EMPTY_PHASE_CONTENT = {
+  phaseIndex: -1,
+  phaseLabel: "기록 전",
+  title: "생리 기록을 시작해 볼까요?",
+  message: "주기에 맞춰\n 식단과 운동을 \n더 똑똑하게 관리해봐요!",
+  source: "/icons/characters/question-color.png",
+} as const;
 
 const MENSTRUAL_VIEW = {
   phaseIndex: 0,
@@ -58,11 +47,5 @@ export const HOME_MENSTRUAL_STATUS_VIEW = {
   luteal: LUTEAL_VIEW,
   next_possible: LUTEAL_VIEW,
   next_predicted: LUTEAL_VIEW,
-} as const satisfies Record<VisibleMenstrualStatus, HomeMenstrualStatusView>;
-
-export const HOME_DELAYED_CONTENT = {
-  phaseLabel: "지연 중",
-  title: "지연 중",
-  message: "생리가 시작되면\n기록으로 알려주세요!",
-  source: "/icons/characters/question-color.png",
+  undefined: EMPTY_PHASE_CONTENT,
 } as const;

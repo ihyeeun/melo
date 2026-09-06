@@ -7,6 +7,7 @@ import type { HomeDashboardMode } from "@/features/home/types/homeDashboard.type
 type Props = {
   value: HomeDashboardMode;
   onChange: (mode: HomeDashboardMode) => void;
+  className?: string;
 };
 
 const MODE_OPTIONS: { label: string; value: HomeDashboardMode }[] = [
@@ -14,10 +15,10 @@ const MODE_OPTIONS: { label: string; value: HomeDashboardMode }[] = [
   { label: "생리", value: "menstruation" },
 ];
 
-export default function HomeDashboardModeToggle({ value, onChange }: Props) {
+export default function HomeDashboardModeToggle({ value, onChange, className }: Props) {
   return (
     <ToggleGroup
-      className={styles.root}
+      className={[styles.root, className].filter(Boolean).join(" ")}
       aria-label="홈 표시 모드"
       data-mode={value}
       value={[value]}

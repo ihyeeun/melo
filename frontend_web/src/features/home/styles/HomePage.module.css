@@ -27,3 +27,9 @@
   padding-top: 12px;
   padding-bottom: calc(30px + var(--tab-height));
 }
+
+.pageColor .modeToggle {
+  position: absolute;
+  top: calc(var(--safe-area-top) + 4px);
+  right: 16px;
+}

@@ -1,59 +1,31 @@
-import {
-  HOME_DELAYED_CONTENT,
-  HOME_MENSTRUAL_STATUS_VIEW,
-  MENSTRUAL_PHASE_ORDER,
-} from "@/features/menstruation/constants/menstruation.constant";
+import { HOME_MENSTRUAL_STATUS_VIEW } from "@/features/menstruation/constants/menstruation.constant";
 import styles from "@/features/menstruation/styles/MenstruationCardButton.module.css";
 import type { MenstrualStatus } from "@/features/menstruation/types/menstruation.type";
 import { PATH } from "@/router/path";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import { useNavigate } from "@/shared/navigation/stackflowNavigation";
 
-const PHASE_TIMELINE = [
-  ...MENSTRUAL_PHASE_ORDER.map((status) => ({
-    status,
-    label: HOME_MENSTRUAL_STATUS_VIEW[status].phaseLabel,
-  })),
-  {
-    status: "next_predicted",
-    label: "생리 예정",
-  },
-];
-const DELAYED_TIMELINE = [
-  ...MENSTRUAL_PHASE_ORDER.map((status) => ({
-    status,
-    label: HOME_MENSTRUAL_STATUS_VIEW[status].phaseLabel,
-  })),
-  {
-    status: "delayed",
-    label: HOME_DELAYED_CONTENT.phaseLabel,
-  },
-];
-
-const EMPTY_PHASE_CONTENT = {
-  title: "생리 기록을 시작해 볼까요?",
-  message: "주기에 맞춰\n 식단과 운동을 \n더 똑똑하게 관리해봐요!",
-  source: "/icons/characters/question-color.png",
-} as const;
-
-export default function MenstruationCardButton({
-  menstrualStatus,
-  isDelayed,
-}: {
-  menstrualStatus: MenstrualStatus | null;
-  isDelayed: boolean;
-}) {
+export default function MenstruationCardButton() {
+  const menstrualStatus: MenstrualStatus = undefined;
   const navigate = useNavigate();
-  const statusView = menstrualStatus ? HOME_MENSTRUAL_STATUS_VIEW[menstrualStatus] : null;
-  const isEmpty = statusView === null && !isDelayed;
-  const homeContent = isDelayed ? HOME_DELAYED_CONTENT : (statusView ?? EMPTY_PHASE_CONTENT);
-  const timeline = isDelayed ? DELAYED_TIMELINE : PHASE_TIMELINE;
+  const homeContent = menstrualStatus
+    ? HOME_MENSTRUAL_STATUS_VIEW[menstrualStatus]
+    : HOME_MENSTRUAL_STATUS_VIEW["undefined"];
 
-  const activePhaseIndex = isEmpty
-    ? -1
-    : isDelayed
-      ? timeline.length - 1
-      : (statusView?.phaseIndex ?? -1);
+  const isEmpty = menstrualStatus === undefined;
+
+  const timeline = [
+    ...new Set(
+      Object.values(HOME_MENSTRUAL_STATUS_VIEW)
+        .filter(({ phaseIndex }) => isEmpty || phaseIndex >= 0)
+        .sort((a, b) => a.phaseIndex - b.phaseIndex)
+        .map(({ phaseLabel }) => phaseLabel),
+    ),
+    ...(isEmpty ? [] : ["생리 예정"]),
+  ];
+
+  const activePhaseIndex = timeline.indexOf(homeContent.phaseLabel);
+
   const progressPercent = ((activePhaseIndex + 0.5) / timeline.length) * 100;
 
   return (
@@ -81,50 +53,39 @@ export default function MenstruationCardButton({
       <span className={`${styles.title} title-s-semi text-primary`}>{homeContent.title}</span>
       <span className={styles.messageBubble}>{homeContent.message}</span>
 
-      {!isEmpty && (
-        <span className={`${styles.actionButton} caption-s-medium text-tertiary`}>
-          기록
-          <SystemIcon name="chevron-right" size={11} />
+      <span className={`${styles.actionButton} caption-s-medium text-tertiary`}>
+        기록
+        <SystemIcon name="chevron-right" size={11} />
+      </span>
+
+      <span className={styles.stepper} aria-hidden="true">
+        <span className={styles.track}>
+          <span className={styles.progress} style={{ width: `${progressPercent}%` }} />
         </span>
-      )}
 
-      {isEmpty ? (
-        <span className={`${styles.emptyAction} body-m-regular`}>
-          생리 기록 시작하기
-          <SystemIcon name="chevron-right" size={14} />
-        </span>
-      ) : (
-        <span className={styles.stepper} aria-hidden="true">
-          <span className={styles.track}>
-            <span className={styles.progress} style={{ width: `${progressPercent}%` }} />
-          </span>
+        <span className={styles.phaseList}>
+          {timeline.map((timelineStep, index) => {
+            const phaseState =
+              index < activePhaseIndex
+                ? styles.completed
+                : index === activePhaseIndex
+                  ? styles.current
+                  : "";
 
-          <span className={styles.phaseList}>
-            {timeline.map((timelineStep, index) => {
-              const phaseState =
-                index < activePhaseIndex
-                  ? styles.completed
-                  : index === activePhaseIndex
-                    ? styles.current
-                    : "";
-
-              return (
-                <span
-                  className={`${styles.phaseItem} ${phaseState}`}
-                  key={`${timelineStep.status}-${index}`}
-                >
-                  <span className={styles.dotArea}>
-                    <span className={styles.dot} />
-                  </span>
-                  <span className={`${styles.phaseLabel} body-xs-regular`}>
-                    {timelineStep.label}
-                  </span>
+            return (
+              <span
+                className={`${styles.phaseItem} ${phaseState}`}
+                key={`${timelineStep}-${index}`}
+              >
+                <span className={styles.dotArea}>
+                  <span className={styles.dot} />
                 </span>
-              );
-            })}
-          </span>
+                <span className={`${styles.phaseLabel} body-xs-regular`}>{timelineStep}</span>
+              </span>
+            );
+          })}
         </span>
-      )}
+      </span>
     </button>
   );
 }

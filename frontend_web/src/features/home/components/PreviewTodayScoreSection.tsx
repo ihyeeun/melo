@@ -2,7 +2,9 @@ import { useActivityCalories } from "@/features/health/hooks/useActivityCalories
 import Tile from "@/features/home/components/cards/Tile";
 import { useDayMealsQuery } from "@/features/home/hooks/queries/useTodayRecordQuery";
 import styles from "@/features/home/styles/PreviewTodayScoreSection.module.css";
+import type { HomeDashboardMode } from "@/features/home/types/homeDashboard.types";
 import { getDayNutritionSummary } from "@/features/home/utils/dayMealSummary";
+import MenstruationCardButton from "@/features/menstruation/components/MenstruationCardButton";
 import {
   useGetProfileQuery,
   useGoalSnapshotByDateQuery,
@@ -22,7 +24,7 @@ const SCORE_CHARACTER_SOURCES = [
 
 const DEFAULT_CHARACTER_SRC = SCORE_CHARACTER_SOURCES[0].src;
 
-export default function PreviewTodayScoreSection() {
+export default function PreviewTodayScoreSection({ homeMode }: { homeMode: HomeDashboardMode }) {
   const selectedDateKey = useSelectedDateKey();
   const { isWorkoutRecordPending, summary: activitySummary } = useActivityCalories(selectedDateKey);
   const {
@@ -65,28 +67,34 @@ export default function PreviewTodayScoreSection() {
       : 0;
   return (
     <div className={styles.root}>
-      <article className={styles.nutritionBalanceCard}>
-        <div className={styles.summaryArea}>
-          <div className={styles.titleArea}>
-            <p className="text-primary title-s-semi">오늘의 영양 밸런스</p>
-            <p className={`${styles.message} text-tertiary body-s-regular`}>{nutrition.message}</p>
+      {homeMode === "menstruation" ? (
+        <MenstruationCardButton />
+      ) : (
+        <article className={styles.nutritionBalanceCard}>
+          <div className={styles.summaryArea}>
+            <div className={styles.titleArea}>
+              <p className="text-primary title-s-semi">오늘의 영양 밸런스</p>
+              <p className={`${styles.message} text-tertiary body-s-regular`}>
+                {nutrition.message}
+              </p>
+            </div>
+
+            <p className={`text-primary title-xl-medium ${styles.score}`}>
+              {nutrition.score ?? "--"}
+              <span className="text-tertiary body-l-regular"> 점</span>
+            </p>
           </div>
 
-          <p className={`text-primary title-xl-medium ${styles.score}`}>
-            {nutrition.score ?? "--"}
-            <span className="text-tertiary body-l-regular"> 점</span>
-          </p>
-        </div>
-
-        <img
-          className={styles.character}
-          src={characterSrc}
-          width={154}
-          height={154}
-          alt=""
-          aria-hidden="true"
-        />
-      </article>
+          <img
+            className={styles.character}
+            src={characterSrc}
+            width={154}
+            height={154}
+            alt=""
+            aria-hidden="true"
+          />
+        </article>
+      )}
 
       <section className={styles.nutritionSection}>
         <Tile className={styles.calorieGroup}>
