@@ -3,7 +3,10 @@ import Tile from "@/features/home/components/cards/Tile";
 import { useDayMealsQuery } from "@/features/home/hooks/queries/useTodayRecordQuery";
 import styles from "@/features/home/styles/PreviewTodayScoreSection.module.css";
 import { getDayNutritionSummary } from "@/features/home/utils/dayMealSummary";
-import type { ProfileResponseDto } from "@/shared/api/types/api.response.dto";
+import {
+  useGetProfileQuery,
+  useGoalSnapshotByDateQuery,
+} from "@/features/profile/hooks/queries/useProfileQuery";
 import { InfoPopover } from "@/shared/commons/popover/InfoPopover";
 import ScoreProgress from "@/shared/commons/progress/Progress";
 import { Skeleton, SkeletonStatus } from "@/shared/commons/skeleton/Skeleton";
@@ -19,17 +22,7 @@ const SCORE_CHARACTER_SOURCES = [
 
 const DEFAULT_CHARACTER_SRC = SCORE_CHARACTER_SOURCES[0].src;
 
-type Props = {
-  profile: ProfileResponseDto | undefined;
-  isProfileError: boolean;
-  isProfilePending: boolean;
-};
-
-export default function PreviewTodayScoreSection({
-  profile,
-  isProfileError,
-  isProfilePending,
-}: Props) {
+export default function PreviewTodayScoreSection() {
   const selectedDateKey = useSelectedDateKey();
   const { isWorkoutRecordPending, summary: activitySummary } = useActivityCalories(selectedDateKey);
   const {
@@ -37,12 +30,27 @@ export default function PreviewTodayScoreSection({
     isError: isSummaryError,
     isPending: isSummaryPending,
   } = useDayMealsQuery(selectedDateKey);
+  const {
+    data: profile,
+    isError: isProfileError,
+    isPending: isProfilePending,
+  } = useGetProfileQuery();
 
-  if (isSummaryPending || isProfilePending || isWorkoutRecordPending) {
+  const { data: userGoal, isPending: isUserGoalPending } =
+    useGoalSnapshotByDateQuery(selectedDateKey);
+
+  if (isSummaryPending || isProfilePending || isWorkoutRecordPending || isUserGoalPending) {
     return <PreviewTodayScoreSkeleton />;
   }
 
-  const nutritionSummary = getDayNutritionSummary(dayMeal, profile, activitySummary?.calories);
+  const nutritionSummary = getDayNutritionSummary(
+    dayMeal,
+    {
+      target_calories: userGoal?.target_calories ?? profile!.target_calories,
+      target_ratio: userGoal?.target_ratio ?? profile!.target_ratio,
+    },
+    activitySummary?.calories,
+  );
   const nutrition = isProfileError
     ? { message: "목표 정보를 불러오지 못했어요", score: null }
     : isSummaryError
@@ -61,9 +69,7 @@ export default function PreviewTodayScoreSection({
         <div className={styles.summaryArea}>
           <div className={styles.titleArea}>
             <p className="text-primary title-s-semi">오늘의 영양 밸런스</p>
-            <p className={`${styles.message} text-tertiary body-s-regular`}>
-              {nutrition.message}
-            </p>
+            <p className={`${styles.message} text-tertiary body-s-regular`}>{nutrition.message}</p>
           </div>
 
           <p className={`text-primary title-xl-medium ${styles.score}`}>
