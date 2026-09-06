@@ -46,7 +46,7 @@ export default function HomePage() {
           onClick={() => {
             void handleNavigateChatCamera();
           }}
-          bottomOffset={-24}
+          bottomOffset={0}
         />
       ) : null}
 
