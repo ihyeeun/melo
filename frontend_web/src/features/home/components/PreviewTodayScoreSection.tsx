@@ -2,10 +2,7 @@ import { useActivityCalories } from "@/features/health/hooks/useActivityCalories
 import Tile from "@/features/home/components/cards/Tile";
 import { useDayMealsQuery } from "@/features/home/hooks/queries/useTodayRecordQuery";
 import styles from "@/features/home/styles/PreviewTodayScoreSection.module.css";
-import type { HomeDashboardMode } from "@/features/home/types/homeDashboard.types";
 import { getDayNutritionSummary } from "@/features/home/utils/dayMealSummary";
-import MenstruationCardButton from "@/features/menstruation/components/MenstruationCardButton";
-import type { MenstrualStatus } from "@/features/menstruation/types/menstruation.type";
 import type { ProfileResponseDto } from "@/shared/api/types/api.response.dto";
 import { InfoPopover } from "@/shared/commons/popover/InfoPopover";
 import ScoreProgress from "@/shared/commons/progress/Progress";
@@ -23,20 +20,12 @@ const SCORE_CHARACTER_SOURCES = [
 const DEFAULT_CHARACTER_SRC = SCORE_CHARACTER_SOURCES[0].src;
 
 type Props = {
-  dashboardMode: HomeDashboardMode;
-  menstrualStatus: MenstrualStatus | null;
-  isMenstruationDelayed: boolean;
-  isMenstruationPending: boolean;
   profile: ProfileResponseDto | undefined;
   isProfileError: boolean;
   isProfilePending: boolean;
 };
 
 export default function PreviewTodayScoreSection({
-  dashboardMode,
-  menstrualStatus,
-  isMenstruationDelayed,
-  isMenstruationPending,
   profile,
   isProfileError,
   isProfilePending,
@@ -49,9 +38,7 @@ export default function PreviewTodayScoreSection({
     isPending: isSummaryPending,
   } = useDayMealsQuery(selectedDateKey);
 
-  const isMenstruationCardPending = dashboardMode === "menstruation" && isMenstruationPending;
-
-  if (isSummaryPending || isProfilePending || isWorkoutRecordPending || isMenstruationCardPending) {
+  if (isSummaryPending || isProfilePending || isWorkoutRecordPending) {
     return <PreviewTodayScoreSkeleton />;
   }
 
@@ -70,37 +57,30 @@ export default function PreviewTodayScoreSection({
       : 0;
   return (
     <div className={styles.root}>
-      {dashboardMode === "menstruation" ? (
-        <MenstruationCardButton
-          menstrualStatus={menstrualStatus}
-          isDelayed={isMenstruationDelayed}
-        />
-      ) : (
-        <article className={styles.nutritionBalanceCard}>
-          <div className={styles.summaryArea}>
-            <div className={styles.titleArea}>
-              <p className="text-primary title-s-semi">오늘의 영양 밸런스</p>
-              <p className={`${styles.message} text-tertiary body-s-regular`}>
-                {nutrition.message}
-              </p>
-            </div>
-
-            <p className={`text-primary title-xl-medium ${styles.score}`}>
-              {nutrition.score ?? "--"}
-              <span className="text-tertiary body-l-regular"> 점</span>
+      <article className={styles.nutritionBalanceCard}>
+        <div className={styles.summaryArea}>
+          <div className={styles.titleArea}>
+            <p className="text-primary title-s-semi">오늘의 영양 밸런스</p>
+            <p className={`${styles.message} text-tertiary body-s-regular`}>
+              {nutrition.message}
             </p>
           </div>
 
-          <img
-            className={styles.character}
-            src={characterSrc}
-            width={154}
-            height={154}
-            alt=""
-            aria-hidden="true"
-          />
-        </article>
-      )}
+          <p className={`text-primary title-xl-medium ${styles.score}`}>
+            {nutrition.score ?? "--"}
+            <span className="text-tertiary body-l-regular"> 점</span>
+          </p>
+        </div>
+
+        <img
+          className={styles.character}
+          src={characterSrc}
+          width={154}
+          height={154}
+          alt=""
+          aria-hidden="true"
+        />
+      </article>
 
       <section className={styles.nutritionSection}>
         <Tile className={styles.calorieGroup}>

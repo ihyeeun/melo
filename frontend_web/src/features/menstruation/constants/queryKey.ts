@@ -6,9 +6,4 @@ export const menstrualKeys = {
     history: (headAnchor: string) =>
       [...menstrualKeys.cycles.all(), "history", { headAnchor }] as const,
   },
-
-  detail: {
-    all: () => [...menstrualKeys.all, "detail"] as const,
-    day: (date: string) => [...menstrualKeys.detail.all(), date] as const,
-  },
 };
