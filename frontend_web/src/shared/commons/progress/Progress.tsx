@@ -7,6 +7,8 @@ export type ProgressVariant = "primary" | "navy";
 type ScoreProgressProps = {
   value: number;
   label?: string;
+  ariaLabel?: string;
+  valueText?: string;
   max?: number;
   variant?: ProgressVariant;
 };
@@ -14,6 +16,8 @@ type ScoreProgressProps = {
 export default function ScoreProgress({
   value,
   label,
+  ariaLabel,
+  valueText,
   max = 100,
   variant = "primary",
 }: ScoreProgressProps) {
@@ -26,6 +30,8 @@ export default function ScoreProgress({
       data-variant={variant}
       value={safeValue}
       max={safeMax}
+      aria-label={ariaLabel}
+      getAriaValueText={valueText === undefined ? undefined : () => valueText}
     >
       {label && <Progress.Label className={styles.Label}>{label}</Progress.Label>}
       <div className={styles.TrackWrap}>

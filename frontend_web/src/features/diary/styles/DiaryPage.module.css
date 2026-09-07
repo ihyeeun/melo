@@ -1,13 +1,31 @@
 .root {
-  background-color: var(--gray-50);
+  background-color: var(--gray-200);
+}
+
+.root .scrollArea {
+  padding: 0;
 }
 
 .content {
+  --content-top-gap: 10px;
+  --card-overlap: 40px;
+  position: relative;
+  isolation: isolate;
+  min-height: 100%;
   display: flex;
   flex-direction: column;
-  gap: 28px;
-  padding-top: 12px;
-  padding-bottom: 20px;
+  gap: 40px;
+  padding: var(--content-top-gap) 16px 20px;
+}
+
+.content::before {
+  content: "";
+  position: absolute;
+  inset: calc(var(--content-top-gap) + var(--card-overlap)) 0 0;
+  border-radius: 60px 60px 0 0 / 30px 30px 0 0;
+  background: linear-gradient(180deg, var(--background-default) 0%, var(--background-gray-1) 90%);
+  pointer-events: none;
+  z-index: -1;
 }
 
 .fieldGroup {
@@ -16,49 +34,63 @@
   gap: 12px;
 }
 
-.mealSummaryCard {
-  background-color: var(--background-default);
-  border-radius: 20px;
-  box-shadow: var(--shadow-outer);
+.nutritionSummary {
   display: flex;
   flex-direction: column;
+  gap: 8px;
+}
+
+.mealSummaryCard,
+.macroCard {
+  background-color: var(--background-default);
+  border-radius: 20px;
   width: 100%;
-  padding-top: 16px;
+  border: 1px solid var(--border-subtle);
+  padding: 16px 20px;
 }
 
-.macroArea {
+.mealSummaryCard {
+  box-shadow: var(--shadow-outer);
+}
+
+.calorieGauge {
+  max-width: 240px;
+  margin: -16px auto 0;
+}
+
+.calorieGaugeCharacter {
+  position: absolute;
+  bottom: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 44%;
+  height: auto;
+  object-fit: contain;
+  pointer-events: none;
+}
+
+.macroCard {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  padding: 12px 0;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.macroItem {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.macroTitle {
+  display: flex;
   align-items: center;
-  justify-items: center;
+  gap: 2px;
+  min-height: 28px;
 }
 
-.macroName {
-  text-align: center;
-  width: fit-content;
-  border-radius: 16px;
-  padding: 6px 12px;
-  background-color: var(--coral-100);
-}
-
-.caloriesArea {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  border-top: 1px solid var(--border-subtle);
-}
-
-.calorieItem {
-  text-align: center;
-  padding: 16px 0;
-}
-
-.calorieItem > p + p {
-  margin-top: 2px;
-}
-
-.calorieItem + .calorieItem {
-  border-left: 1px solid var(--border-subtle);
+.macroItem > p {
+  margin-top: auto;
 }
 
 .burnedCalorieTitle {

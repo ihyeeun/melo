@@ -1,0 +1,28 @@
+.root {
+  aspect-ratio: 220 / 100;
+  position: relative;
+  width: 100%;
+}
+
+.svg {
+  display: block;
+  height: 100%;
+  width: 100%;
+}
+
+.track,
+.value {
+  fill: none;
+  stroke-linecap: round;
+  stroke-width: 23px;
+}
+
+.value {
+  transition: stroke-dashoffset 300ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .value {
+    transition: none;
+  }
+}

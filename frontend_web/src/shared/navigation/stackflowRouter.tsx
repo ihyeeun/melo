@@ -177,7 +177,7 @@ const ChatNutritionDetailActivity = createGuardedLazyActivity(
   FEATURE_GUARD.CHAT,
   () => import("@/features/chat/pages/ChatMenuDetailPage"),
 );
-const DiaryPage = createLazyActivity(() => import("@/features/diary/DiaryPage"));
+const DiaryPage = createLazyActivity(() => import("@/features/diary/pages/DiaryPage"));
 const RecommendResultPage = createLazyActivity(
   () => import("@/features/chat/pages/RecommendResultPage"),
 );

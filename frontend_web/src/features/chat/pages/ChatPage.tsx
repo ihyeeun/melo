@@ -95,6 +95,7 @@ import { Button } from "@/shared/commons/button/Button";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import { ConfirmModal } from "@/shared/commons/modals/ConfirmModal";
+import ArcProgress from "@/shared/commons/progress/ArcProgress";
 import { Skeleton, SkeletonStatus } from "@/shared/commons/skeleton/Skeleton";
 import { toast } from "@/shared/commons/toast/toast";
 import { navigateBack, useNavigate } from "@/shared/navigation/stackflowNavigation";
@@ -113,14 +114,6 @@ import { formatBaseServingUnit, SERVING_UNIT_PERSON } from "@/shared/utils/servi
 
 const MEAL_RECORD_MODE_CHIP_ID = "meal-record";
 const QUICK_CHIP_LIST = [{ id: MEAL_RECORD_MODE_CHIP_ID, label: "식사 기록 모드" }];
-const FEEDBACK_GAUGE_VIEWBOX_WIDTH = 220;
-const FEEDBACK_GAUGE_VIEWBOX_HEIGHT = 100;
-const FEEDBACK_GAUGE_CENTER_X = 110;
-const FEEDBACK_GAUGE_CENTER_Y = 95;
-const FEEDBACK_GAUGE_RADIUS = 75;
-const FEEDBACK_GAUGE_START_ANGLE = 170;
-const FEEDBACK_GAUGE_END_ANGLE = 10;
-const FEEDBACK_GAUGE_PATH = getFeedbackGaugePath();
 const CAMERA_HINT_DISMISSED_SESSION_KEY = "chat.cameraHintDismissed";
 const SCROLL_BOTTOM_THRESHOLD = 24;
 const SOFT_KEYBOARD_VISIBLE_HEIGHT_THRESHOLD = 120;
@@ -3726,93 +3719,31 @@ function isNestedInteractiveTarget(target: EventTarget | null, boundary: HTMLEle
 }
 
 function FeedbackScoreGauge({ score }: { score: number }) {
-  const roundedScore = Math.round(score);
+  const roundedScore = Number.isFinite(score) ? Math.round(score) : 0;
   const safeScore = Math.min(Math.max(roundedScore, 0), 100);
-  const gaugeVisual = getFeedbackGaugeVisual(safeScore);
-  const markerPosition = getFeedbackGaugeMarkerPosition(safeScore);
+  const color =
+    safeScore < 40
+      ? "var(--status-low)"
+      : safeScore < 80
+        ? "var(--status-warning)"
+        : "var(--primary-normal)";
 
   return (
-    <div className={styles.feedbackScoreGauge} aria-label={`메뉴 추천도 ${safeScore}점`}>
-      <div className={styles.feedbackGaugeArc}>
-        <svg
-          className={styles.feedbackGaugeSvg}
-          viewBox={`0 0 ${FEEDBACK_GAUGE_VIEWBOX_WIDTH} ${FEEDBACK_GAUGE_VIEWBOX_HEIGHT}`}
-          aria-hidden="true"
-        >
-          <path className={styles.feedbackGaugeTrack} d={FEEDBACK_GAUGE_PATH} pathLength={100} />
-          <path
-            className={`${styles.feedbackGaugeValue} ${gaugeVisual.valueClassName}`}
-            d={FEEDBACK_GAUGE_PATH}
-            pathLength={100}
-            style={{ strokeDasharray: `${safeScore} 100` }}
-          />
-        </svg>
+    <div className={styles.feedbackScoreGauge}>
+      <ArcProgress
+        value={safeScore}
+        ariaLabel="메뉴 추천도"
+        valueText={`${safeScore}점 / 100점`}
+        color={color}
+        className={styles.feedbackGaugeArc}
+      >
         <div className={styles.feedbackScoreLabel}>
           <p className={`${styles.feedbackScoreValue} title-l-semi`}>{safeScore}점</p>
           <p className={`${styles.feedbackScoreCaption} body-s-medium`}>메뉴 추천도</p>
         </div>
-        <img
-          src={gaugeVisual.characterIcon}
-          alt=""
-          aria-hidden="true"
-          className={styles.feedbackGaugeCharacter}
-          style={{
-            left: markerPosition.x,
-            top: markerPosition.y,
-          }}
-        />
-      </div>
+      </ArcProgress>
     </div>
   );
-}
-
-function getFeedbackGaugeVisual(score: number) {
-  if (score < 40) {
-    return {
-      characterIcon: "/icons/characters/score-0.png",
-      valueClassName: styles.feedbackGaugeValueLow,
-    };
-  }
-
-  if (score < 80) {
-    return {
-      characterIcon: "/icons/characters/score-41.png",
-      valueClassName: styles.feedbackGaugeValueWarning,
-    };
-  }
-
-  return {
-    characterIcon: "/icons/characters/score-81.png",
-    valueClassName: styles.feedbackGaugeValueNormal,
-  };
-}
-
-function getFeedbackGaugeMarkerPosition(score: number) {
-  const angle =
-    FEEDBACK_GAUGE_START_ANGLE -
-    ((FEEDBACK_GAUGE_START_ANGLE - FEEDBACK_GAUGE_END_ANGLE) * score) / 100;
-  const { x, y } = getFeedbackGaugePoint(angle);
-
-  return {
-    x: `${(x / FEEDBACK_GAUGE_VIEWBOX_WIDTH) * 100}%`,
-    y: `${(y / FEEDBACK_GAUGE_VIEWBOX_HEIGHT) * 100}%`,
-  };
-}
-
-function getFeedbackGaugePath() {
-  const start = getFeedbackGaugePoint(FEEDBACK_GAUGE_START_ANGLE);
-  const end = getFeedbackGaugePoint(FEEDBACK_GAUGE_END_ANGLE);
-
-  return `M ${start.x} ${start.y} A ${FEEDBACK_GAUGE_RADIUS} ${FEEDBACK_GAUGE_RADIUS} 0 0 1 ${end.x} ${end.y}`;
-}
-
-function getFeedbackGaugePoint(angle: number) {
-  const radian = (angle * Math.PI) / 180;
-
-  return {
-    x: FEEDBACK_GAUGE_CENTER_X + FEEDBACK_GAUGE_RADIUS * Math.cos(radian),
-    y: FEEDBACK_GAUGE_CENTER_Y - FEEDBACK_GAUGE_RADIUS * Math.sin(radian),
-  };
 }
 
 function getChatItemImageUrl(chatItem: ChatHistoryItemResponseDto) {
