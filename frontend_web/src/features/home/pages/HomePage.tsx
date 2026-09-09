@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 import Calendar from "@/features/calendar/components/Calendar";
 import MenstruationDayCell from "@/features/calendar/components/menstruation/MenstruationDayCell";
@@ -33,6 +33,14 @@ export default function HomePage() {
     historyStartDate: calendarStartDate,
   });
 
+  const contentRef = useRef<HTMLDivElement>(null);
+  const scrollToTop = () => {
+    contentRef.current?.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  };
+
   const handleNavigateChatCamera = async () => {
     const result = await navigateToChatCameraIfSupported(navigate);
 
@@ -49,21 +57,31 @@ export default function HomePage() {
           onSelectDate={setSelectedDate}
           onVisibleStartDateChange={setCalendarStartDate}
           showRecordedDots={mode === "daily"}
-          renderDayCell={mode === "menstruation" ? (props) => (
-            <MenstruationDayCell
-              {...props}
-              menstruationType={getMenstrualCalendarStatus({
-                targetDate: formatDateKey(props.day.date),
-                cycles: menstrualPhase.cycles,
-                latestPhaseDate: menstrualPhase.isLoading || menstrualPhase.isError
-                  ? null
-                  : menstrualPhase.latestPhaseDate,
-              })}
-            />
-          ) : undefined}
+          renderDayCell={
+            mode === "menstruation"
+              ? (props) => (
+                  <MenstruationDayCell
+                    {...props}
+                    menstruationType={getMenstrualCalendarStatus({
+                      targetDate: formatDateKey(props.day.date),
+                      cycles: menstrualPhase.cycles,
+                      latestPhaseDate:
+                        menstrualPhase.isLoading || menstrualPhase.isError
+                          ? null
+                          : menstrualPhase.latestPhaseDate,
+                    })}
+                  />
+                )
+              : undefined
+          }
         />
-        <HomeDashboardModeToggle className={styles.modeToggle} value={mode} onChange={setMode} />
-        <ScrollFogArea role="main" className={`main ${styles.content}`}>
+        <HomeDashboardModeToggle
+          className={styles.modeToggle}
+          value={mode}
+          onChange={setMode}
+          onClick={scrollToTop}
+        />
+        <ScrollFogArea role="main" ref={contentRef} className={`main ${styles.content}`}>
           <PreviewTodayScoreSection homeMode={mode} menstrualPhase={menstrualPhase} />
           <RecordActionSection />
         </ScrollFogArea>

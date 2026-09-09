@@ -8,6 +8,7 @@ type Props = {
   value: HomeDashboardMode;
   onChange: (mode: HomeDashboardMode) => void;
   className?: string;
+  onClick: () => void;
 };
 
 const MODE_OPTIONS: { label: string; value: HomeDashboardMode }[] = [
@@ -15,7 +16,7 @@ const MODE_OPTIONS: { label: string; value: HomeDashboardMode }[] = [
   { label: "생리", value: "menstruation" },
 ];
 
-export default function HomeDashboardModeToggle({ value, onChange, className }: Props) {
+export default function HomeDashboardModeToggle({ value, onChange, className, onClick }: Props) {
   return (
     <ToggleGroup
       className={[styles.root, className].filter(Boolean).join(" ")}
@@ -29,6 +30,7 @@ export default function HomeDashboardModeToggle({ value, onChange, className }: 
           onChange(nextMode);
         }
       }}
+      onClick={onClick}
     >
       <span className={styles.indicator} aria-hidden="true" />
       {MODE_OPTIONS.map((option) => (
