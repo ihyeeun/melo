@@ -1,3 +1,5 @@
+import type { ReactNode } from "react";
+
 import Calendar from "@/features/calendar/components/Calendar";
 import styles from "@/features/diary/styles/DiaryPage.module.css";
 import { useGetWorkoutRecordQuery } from "@/features/health/hooks/queries/workout.query";
@@ -6,7 +8,6 @@ import { useSyncNativeStepCount } from "@/features/health/hooks/useSyncNativeSte
 import Tile from "@/features/home/components/cards/Tile";
 import { useDayMealsQuery, useGetBodyLog } from "@/features/home/hooks/queries/useTodayRecordQuery";
 import { getDayNutritionSummary } from "@/features/home/utils/dayMealSummary";
-import { DayMealCopyButton } from "@/features/meal-record/components/DayMealCopyButton";
 import { useGetProfileQuery } from "@/features/profile/hooks/queries/useProfileQuery";
 import { PATH } from "@/router/path";
 import { getMealRecordPath, getMealSearchPath, getWorkoutRecordPath } from "@/router/pathHelpers";
@@ -64,9 +65,6 @@ export default function DiaryPage() {
   const nutrition = getDayNutritionSummary(dayMeal, profile, activitySummary?.calories);
   const currentCalorie = nutrition.calories.current;
   const targetCalorie = nutrition.calories.target;
-  const calorieDiff = targetCalorie - currentCalorie;
-  const calorieStatusText =
-    calorieDiff < 0 ? "초과했어요" : calorieDiff === 0 ? "완벽해요!" : "더 먹을 수 있어요";
 
   if (isSummaryPending || isProfilePending || isStepCaloriesPending || isWorkoutRecordPending) {
     return;
@@ -127,11 +125,10 @@ export default function DiaryPage() {
                 className={styles.calorieGauge}
               >
                 <img
-                  src="/icons/characters/score-41.png"
+                  src="/icons/characters/diary.png"
                   alt=""
                   aria-hidden="true"
-                  width={104}
-                  height={104}
+                  width={58}
                   className={styles.calorieGaugeCharacter}
                 />
               </ArcProgress>
@@ -143,12 +140,6 @@ export default function DiaryPage() {
                     : "kcal / 목표 미설정"}
                 </span>
               </p>
-              {targetCalorie > 0 && (
-                <p className="caption-m-medium text-tertiary textCenter">
-                  {calorieDiff !== 0 && `${Math.abs(calorieDiff).toLocaleString()} kcal `}
-                  {calorieStatusText}
-                </p>
-              )}
             </section>
 
             <section className={styles.macroCard} aria-label="영양소 섭취량">
@@ -188,43 +179,49 @@ export default function DiaryPage() {
             </section>
           </div>
 
-          <Tile>
-            <div className={styles.burnedCalorieTitle}>
-              <h2 className="title-s-semi text-primary">총 소모 칼로리</h2>
-              <p className="body-l-medium text-primary marginLeft">
-                <span className="title-l-semi text-primary">
-                  {activitySummary?.totalCalories.toLocaleString() ?? 0}
-                </span>{" "}
-                kcal
-              </p>
-            </div>
+          <SectionLayout title="총 소모 칼로리">
+            <div className={styles.burnedCaloriesCard}>
+              <div className={styles.burnedCalorieList}>
+                <section className={styles.burnedCalorieItem}>
+                  <span className={styles.iconBg}>
+                    <SystemIcon name="exercise" size={24} className="text-tertiary" />
+                  </span>
+                  <div>
+                    <p className="body-s-medium text-primary">운동으로 소모</p>
+                    <p className="body-l-medium text-secondary">
+                      {activitySummary?.workoutCalories.toLocaleString() ?? 0} kcal
+                    </p>
+                  </div>
+                </section>
 
-            <div className={styles.burnedCalorieList}>
-              <div className={styles.burnedCalorieItem}>
-                <span className="caption-m-medium text-tertiary">운동</span>
-                <span className="caption-m-medium text-secondary marginLeft">
-                  {activitySummary?.workoutCalories.toLocaleString() ?? 0} kcal
-                </span>
+                <section className={styles.burnedCalorieItem}>
+                  <span className={styles.iconBg}>
+                    <SystemIcon name="steps" size={24} className="text-tertiary" />
+                  </span>
+                  <div>
+                    <p className={`${styles.titleWithIcon} body-s-medium text-primar`}>
+                      걸음으로 소모
+                      <InfoPopover ariaLabel="걸음 소모 칼로리 안내" iconSize={16}>
+                        평소 활동량을 고려해 목표 칼로리가 설정되어 있어요
+                      </InfoPopover>
+                    </p>
+                    <p className="body-l-medium text-secondary">
+                      {activitySummary?.stepCalories.toLocaleString() ?? 0} kcal
+                    </p>
+                  </div>
+                </section>
               </div>
-              <div className={styles.burnedCalorieItem}>
-                <span className="caption-m-medium text-tertiary">걸음</span>
-                <InfoPopover
-                  ariaLabel="걸음 소모 칼로리 안내"
-                  iconSize={16}
-                  className={styles.infoPopover}
-                >
-                  평소 활동량을 고려해 목표 칼로리가 설정되어 있어요
-                </InfoPopover>
-                <span className="caption-m-medium text-secondary marginLeft">
-                  {activitySummary?.stepCalories.toLocaleString() ?? 0} kcal
-                </span>
+
+              <div className={styles.burnedTotalCalorie}>
+                <p className="body-l-medium text-primary">총 소모 칼로리</p>
+                <p className="body-l-medium text-primary marginLeft">
+                  {activitySummary?.totalCalories.toLocaleString() ?? 0} kcal
+                </p>
               </div>
             </div>
-          </Tile>
+          </SectionLayout>
 
-          <section className={styles.fieldGroup}>
-            <h2 className="title-s-semi text-primary">건강 기록</h2>
-
+          <SectionLayout title="건강 기록">
             <div className={styles.bodyLogGroup}>
               <Tile onClick={openStepsEditor} className={styles.bodyLogButton}>
                 <div className={styles.bodyLogTitle}>
@@ -257,13 +254,10 @@ export default function DiaryPage() {
                 </div>
               </Tile>
             </div>
-          </section>
+          </SectionLayout>
 
-          <div className={styles.fieldGroup}>
-            <div className={styles.mealRecordTitle}>
-              <h2 className="title-s-semi text-primary">식단 기록</h2>
-              <DayMealCopyButton dayMeals={dayMeal} />
-            </div>
+          <SectionLayout title="식단 기록">
+            {/* <DayMealCopyButton dayMeals={dayMeal} /> */}
 
             <ul className={styles.mealRecordGroup}>
               {MEAL_TYPES.map(({ time, label, icon }) => {
@@ -272,6 +266,7 @@ export default function DiaryPage() {
                 const hasMealRecord =
                   (dayMeal?.menusByTime[time].length ?? 0) > 0 ||
                   Boolean(dayMeal?.didNotEatByTime[time]);
+                const hasMenu = dayMeal?.menusByTime[time];
 
                 return (
                   <li key={time}>
@@ -280,23 +275,38 @@ export default function DiaryPage() {
                       className={styles.mealRecordButton}
                       onClick={() => handleMoveMealRecord(time, hasMealRecord)}
                     >
-                      <div className={styles.mealImageBox}>
-                        {hasImage ? (
-                          <img
-                            src={dayMeal?.imagesByTime[time]}
-                            className={styles.mealImage}
-                            alt={label}
-                          />
+                      <div className={styles.mealImageBox} data-hasMeal={hasMealRecord}>
+                        {hasMealRecord ? (
+                          hasImage ? (
+                            <img
+                              src={dayMeal?.imagesByTime[time]}
+                              className={styles.mealImage}
+                              alt={label}
+                            />
+                          ) : (
+                            <div className={styles.hasMealRecordSection}>
+                              <div className={styles.mealIcon} data-hasMeal={hasMealRecord}>
+                                <SystemIcon name={icon} size={18} />
+                              </div>
+                              {hasMenu?.map((menu) => {
+                                return (
+                                  <p className={`${styles.menuName} body-s-medium text-primary`}>
+                                    {menu.name}
+                                  </p>
+                                );
+                              })}
+                            </div>
+                          )
                         ) : (
-                          <div className={styles.mealIcon} data-recorded={hasMealRecord}>
-                            <SystemIcon name={icon} size={18} />
+                          <div className={styles.mealIcon} data-hasMeal={hasMealRecord}>
+                            <SystemIcon name="plus" size={18} />
                           </div>
                         )}
                       </div>
 
                       <div className={styles.mealInfo}>
-                        <span className="caption-m-medium text-tertiary">{label}</span>
-                        <span className="caption-m-medium text-secondary marginLeft">
+                        <span className="body-l-medium text-primary">{label}</span>
+                        <span className="body-m-regular text-tertiary marginLeft">
                           {formatDisplayNumber(calories)}kcal
                         </span>
                       </div>
@@ -305,53 +315,76 @@ export default function DiaryPage() {
                 );
               })}
             </ul>
-          </div>
+          </SectionLayout>
 
-          <Tile
-            className={`${styles.fieldGroup} ${styles.workoutGroupButton}`}
-            onClick={handleMoveWorkoutRecord}
-          >
-            <div className={styles.workoutRecordTitle}>
-              <h2 className="title-s-semi text-primary">운동 기록</h2>
-              <SystemIcon
-                name="chevron-right"
-                size={18}
-                className="marginLeft text-secondary"
-                onClick={handleMoveWorkoutRecord}
-              />
-            </div>
+          <SectionLayout title="운동 기록">
+            <Tile className={`${styles.workoutGroupButton}`} onClick={handleMoveWorkoutRecord}>
+              {hasWorkoutRecords ? (
+                <ul className={styles.workoutRecordGroup}>
+                  {workouts.map((item) => {
+                    const setCount = item.set_list?.length ?? 0;
 
-            {hasWorkoutRecords ? (
-              <ul className={styles.workoutRecordGroup}>
-                {workouts.map((item) => {
-                  const setCount = item.set_list?.length ?? 0;
-
-                  return (
-                    <li key={item.workout_id} className={styles.workoutRecordItem}>
-                      <div className={styles.workoutImageBox}>
-                        {item.workout_image ? (
-                          <img src={item.workout_image} className={styles.workoutImage} alt="" />
-                        ) : (
-                          <SystemIcon name="more-horiz" size={24} />
-                        )}
-                      </div>
-                      <div className={styles.workoutInfo}>
-                        <p className="body-s-regular text-secondary">{item.workout_name}</p>
-                        <p className="body-s-regular text-disabled">
-                          {setCount > 0 && `${setCount}세트`} {item.workout_duration}분{" "}
-                          {item.burned_calories.toLocaleString()}kcal
-                        </p>
-                      </div>
-                    </li>
-                  );
-                })}
-              </ul>
-            ) : (
-              <p className="body-s-regular text-tertiary">아직 오늘의 운동 기록이 없어요</p>
-            )}
-          </Tile>
+                    return (
+                      <li key={item.workout_id} className={styles.workoutRecordItem}>
+                        <div className={styles.workoutImageBox}>
+                          {item.workout_image ? (
+                            <img src={item.workout_image} className={styles.workoutImage} alt="" />
+                          ) : (
+                            <SystemIcon name="more-horiz" size={24} />
+                          )}
+                        </div>
+                        <div className={styles.workoutInfo}>
+                          <p className="body-s-regular text-secondary">{item.workout_name}</p>
+                          <p className="body-s-regular text-disabled">
+                            {setCount > 0 && `${setCount}세트`} {item.workout_duration}분{" "}
+                            {item.burned_calories.toLocaleString()}kcal
+                          </p>
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              ) : (
+                <div className={styles.workoutEmptyAction}>
+                  <div className={styles.workoutEmptyContent}>
+                    <p className="body-l-medium text-primary">
+                      {hasWorkoutRecords ? "" : "아직 오늘의 운동 기록이 없어요"}
+                    </p>
+                    <p className="body-s-regular text-tertiary">아직 오늘의 운동 기록이 없어요</p>
+                  </div>
+                  <SystemIcon
+                    name="chevron-right"
+                    size={18}
+                    className="marginLeft text-secondary"
+                    onClick={handleMoveWorkoutRecord}
+                  />
+                </div>
+              )}
+            </Tile>
+          </SectionLayout>
         </div>
       </ScrollFogArea>
+    </div>
+  );
+}
+
+function SectionLayout({
+  title,
+  description,
+  children,
+}: {
+  title: string;
+  description?: string;
+  children: ReactNode;
+}) {
+  return (
+    <div className={styles.sectionGroup}>
+      <div className={styles.titleArea}>
+        <h2 className="title-s-semi text-primary">{title}</h2>
+        {description && <p className="body-s-regular text-tertiary">{description}</p>}
+      </div>
+
+      {children}
     </div>
   );
 }

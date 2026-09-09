@@ -41,6 +41,8 @@ const SYSTEM_ICON_SRC = {
   error: "/icons/system-icons/error.svg",
   "info-colored": "/icons/system-icons/info-colored.svg",
   success: "/icons/system-icons/success.svg",
+  exercise: "/icons/system-icons/exercise.svg",
+  steps: "/icons/system-icons/steps.svg",
 } as const;
 
 export type SystemIconName = keyof typeof SYSTEM_ICON_SRC;

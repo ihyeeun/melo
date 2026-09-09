@@ -28,12 +28,6 @@
   z-index: -1;
 }
 
-.fieldGroup {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
 .nutritionSummary {
   display: flex;
   flex-direction: column;
@@ -56,14 +50,14 @@
 .calorieGauge {
   max-width: 240px;
   margin: -16px auto 0;
+  position: relative;
 }
 
 .calorieGaugeCharacter {
   position: absolute;
-  bottom: -6px;
   left: 50%;
+  bottom: 0;
   transform: translateX(-50%);
-  width: 44%;
   height: auto;
   object-fit: contain;
   pointer-events: none;
@@ -93,29 +87,51 @@
   margin-top: auto;
 }
 
-.burnedCalorieTitle {
+.burnedCaloriesCard {
+  border-radius: 20px;
+  border: 1px solid var(--border-subtle);
+  background-color: var(--background-default);
+}
+
+.burnedTotalCalorie {
   display: flex;
   align-items: center;
+  padding: 12px 20px;
+  gap: 10px;
 }
 
 .burnedCalorieList {
-  border-top: 1px solid var(--border-subtle);
-  padding-top: 12px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  border-bottom: 1px solid var(--border-subtle);
 }
 
 .burnedCalorieItem {
   align-items: center;
   display: flex;
-  justify-items: space-between;
+  padding: 24px 0;
+  padding-left: 20px;
+  gap: 8px;
 }
 
-.infoPopover {
-  margin-left: 2px;
-  padding-top: 1px;
+.titleWithIcon {
+  display: flex;
+  align-items: center;
+  gap: 1px;
 }
 
 .burnedCalorieItem + .burnedCalorieItem {
-  margin-top: 4px;
+  border-left: 1px solid var(--border-subtle);
+}
+
+.iconBg {
+  width: 36px;
+  height: 36px;
+  background-color: var(--background-gray-1);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .bodyLogGroup {
@@ -160,41 +176,31 @@
   padding: 0;
   list-style: none;
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: 10px;
-}
-
-.mealRecordGroup > li {
-  grid-column: span 2;
-}
-
-.mealRecordGroup > li:nth-child(4) {
-  grid-column: 2 / span 2;
-}
-
-.mealRecordGroup > li:nth-child(5) {
-  grid-column: 4 / span 2;
-}
-
-.mealRecordTitle {
-  align-items: center;
-  display: flex;
-  justify-content: space-between;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
 }
 
 .mealRecordButton {
   border-radius: 12px;
   width: 100%;
   border: 1px solid var(--border-subtle);
-  padding: 8px;
+  padding: 12px;
   background-color: var(--background-default);
 }
 
 .mealImageBox {
-  aspect-ratio: 3/2;
+  aspect-ratio: 1;
   border-radius: 8px;
   color: var(--text-disabled);
   overflow: hidden;
+}
+
+.mealImageBox[data-hasMeal="true"] {
+  background-color: var(--background-selected);
+}
+
+.mealImageBox[data-hasMeal="false"] {
+  background-color: var(--background-gray-1);
   display: grid;
   place-items: center;
 }
@@ -207,19 +213,38 @@
   object-position: center center;
 }
 
+.hasMealRecordSection {
+  padding: 12px;
+}
+
 .mealIcon {
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: var(--background-gray-1);
+  background-color: var(--coral-400);
+  color: var(--background-default);
   border-radius: 100%;
-  width: 30px;
-  height: 30px;
+  width: 32px;
+  height: 32px;
 }
 
-.mealIcon[data-recorded="true"] {
-  color: var(--btn-default);
-  background-color: var(--background-selected);
+.mealIcon[data-hasMeal="true"] {
+  margin-bottom: 8px;
+}
+
+.mealIcon[data-hasMeal="false"] {
+  background-color: transparent;
+  border: 1px solid var(--border-default);
+  color: var(--text-primary);
+  box-shadow: var(--shadow-outer);
+}
+
+.menuName {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
 }
 
 .mealInfo {
@@ -230,11 +255,6 @@
 
 .mealInfo > span {
   white-space: nowrap;
-}
-
-.workoutRecordTitle {
-  display: flex;
-  align-items: center;
 }
 
 .workoutRecordGroup {
@@ -277,4 +297,19 @@
   display: flex;
   flex-direction: column;
   justify-content: space-around;
+}
+
+.workoutEmptyAction {
+  display: flex;
+  align-items: center;
+}
+
+.workoutEmptyContent {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sectionGroup .titleArea {
+  margin-bottom: 8px;
 }
