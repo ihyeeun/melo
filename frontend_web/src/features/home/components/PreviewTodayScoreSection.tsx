@@ -56,7 +56,7 @@ export default function PreviewTodayScoreSection({
     dayMeal,
     {
       target_calories: userGoal?.target_calories ?? profile?.target_calories ?? 0,
-      target_ratio: userGoal?.target_ratio ?? profile!.target_ratio,
+      target_ratio: userGoal?.target_ratio ?? profile?.target_ratio ?? [0, 0, 0],
     },
     activitySummary?.calories,
   );
