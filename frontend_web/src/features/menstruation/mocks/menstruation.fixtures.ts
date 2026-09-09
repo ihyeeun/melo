@@ -1,12 +1,10 @@
-import type { MenstrualCycleItemResponseDto } from "@/shared/api/types/api.response.dto";
+import type { MenstrualDateRangeResponseDto } from "@/shared/api/types/api.response.dto";
 
 /** 최근 월경 회차 조회 API가 반환할 고정 목 데이터 */
-export const mockMenstruationCycles: MenstrualCycleItemResponseDto[] = [
+export const mockMenstruationCycles: MenstrualDateRangeResponseDto[] = [
   {
-    cycle_id: 7,
     start_date: "2026-07-14",
     end_date: "2026-08-11",
-    is_end: true,
   },
   // {
   //   cycle_id: 6,

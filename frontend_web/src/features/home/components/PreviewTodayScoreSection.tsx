@@ -5,6 +5,7 @@ import styles from "@/features/home/styles/PreviewTodayScoreSection.module.css";
 import type { HomeDashboardMode } from "@/features/home/types/homeDashboard.types";
 import { getDayNutritionSummary } from "@/features/home/utils/dayMealSummary";
 import MenstruationCardButton from "@/features/menstruation/components/MenstruationCardButton";
+import type { MenstrualPhaseResult } from "@/features/menstruation/hooks/useMenstrualPhase";
 import {
   useGetProfileQuery,
   useGoalSnapshotByDateQuery,
@@ -24,7 +25,10 @@ const SCORE_CHARACTER_SOURCES = [
 
 const DEFAULT_CHARACTER_SRC = SCORE_CHARACTER_SOURCES[0].src;
 
-export default function PreviewTodayScoreSection({ homeMode }: { homeMode: HomeDashboardMode }) {
+export default function PreviewTodayScoreSection({ homeMode, menstrualPhase }: {
+  homeMode: HomeDashboardMode;
+  menstrualPhase: MenstrualPhaseResult;
+}) {
   const selectedDateKey = useSelectedDateKey();
   const { isWorkoutRecordPending, summary: activitySummary } = useActivityCalories(selectedDateKey);
   const {
@@ -68,7 +72,7 @@ export default function PreviewTodayScoreSection({ homeMode }: { homeMode: HomeD
   return (
     <div className={styles.root}>
       {homeMode === "menstruation" ? (
-        <MenstruationCardButton />
+        <MenstruationCardButton phase={menstrualPhase} />
       ) : (
         <article className={styles.nutritionBalanceCard}>
           <div className={styles.summaryArea}>

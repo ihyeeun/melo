@@ -1,9 +1,3 @@
-import type {
-  MenstruationFlow,
-  MenstruationStatus,
-  MenstruationSymptom,
-} from "@/features/menstruation/types/menstruation.type";
-
 export interface NutritionLabelMenuRegisterRequestDto extends NutritionLabel {
   name: string;
   brand: string;
@@ -91,17 +85,17 @@ export interface WorkoutSetRequestDto {
 /* ======
  * 월경 기록
  * ====== */
-export interface CreateMenstrualCycleRequestDto {
-  date: string;
-  flow?: MenstruationFlow;
-  symptoms?: MenstruationSymptom[];
+export interface SaveMenstrualRecordsRequestDto {
+  add_ranges: MenstrualDateRangeRequestDto[];
+  remove_ranges: MenstrualDateRangeRequestDto[];
 }
 
-export interface CreateMenstrualRecordRequestDto extends CreateMenstrualCycleRequestDto {
-  menstruation_status: MenstruationStatus;
-  cycle_id: number;
+export interface MenstrualDateRangeRequestDto {
+  start_date: string;
+  end_date: string;
 }
 
-export interface MenstrualRecordFieldsDto extends CreateMenstrualCycleRequestDto {
-  menstruation_status: MenstruationStatus;
+export interface GetMenstrualRecordsRequestDto {
+  from_date: string;
+  to_date: string;
 }

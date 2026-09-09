@@ -1,9 +1,3 @@
-import type {
-  MenstruationFlow,
-  MenstruationStatus,
-  MenstruationSymptom,
-} from "@/features/menstruation/types/menstruation.type";
-
 /* ======
  * 유저 인증
  * ====== */
@@ -395,27 +389,12 @@ export interface WorkoutIdResponseDto {
 /* ======
  * 월경 기록
  * ====== */
-export interface MenstrualCycleResponseDto {
-  cycle: MenstrualCycleItemResponseDto;
+export interface MenstrualRecordsResponseDto {
+  recorded_ranges: MenstrualDateRangeResponseDto[];
+  has_older: boolean;
 }
 
-export interface MenstrualCycleItemResponseDto {
-  cycle_id: number;
+export interface MenstrualDateRangeResponseDto {
   start_date: string;
   end_date: string;
-  is_end: boolean;
-}
-
-export interface MenstraulRecordReponseDto {
-  record: {
-    date: string;
-    flow?: MenstruationFlow;
-    symptoms?: MenstruationSymptom[];
-    menstruation_status: MenstruationStatus;
-    cycle_id: number;
-  } | null;
-}
-
-export interface MenstrualCyclesResponseDto {
-  cycles: MenstrualCycleItemResponseDto[];
 }

@@ -1,7 +1,68 @@
 .calendar {
   display: flex;
   flex-direction: column;
-  padding: 16px 20px;
+  flex-shrink: 0;
+  padding: 80px 20px;
   width: 100%;
-  gap: 12px;
+  gap: 32px;
+
+  --day-cell-height: 48px;
+}
+
+.month {
+  flex-shrink: 0;
+}
+
+.monthTitle {
+  margin: 0;
+}
+
+.status {
+  /* 응답 상태가 바뀌어도 달력 높이를 유지한다. */
+  height: 32px;
+  display: flex;
+  align-items: center;
+  color: var(--text-secondary);
+}
+
+.retryButton {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.weekdays,
+.grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 6px 0;
+  text-align: center;
+}
+
+.weekdays {
+  height: 28px;
+  align-items: center;
+}
+
+.grid {
+  width: 100%;
+  min-inline-size: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  grid-auto-rows: var(--day-cell-height);
+  row-gap: 20px;
+}
+
+.grid > button {
+  width: 100%;
+  min-width: 0;
+  height: 100%;
+}
+
+.grid:disabled {
+  opacity: 0.5;
+}
+
+.grid button:disabled {
+  cursor: default;
 }

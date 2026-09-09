@@ -12,6 +12,10 @@
     color 160ms ease;
 }
 
+.selected.month .numberContainer {
+  border: 2px solid var(--coral-400);
+}
+
 .week[data-menstruation="menstrual_recorded"],
 .month[data-menstruation="menstrual_recorded"] .numberContainer {
   background-color: var(--coral-100);
@@ -25,28 +29,47 @@
   border-radius: 16px;
 }
 
-.week[data-menstruation="menstrual_predicted"],
-.week[data-menstruation="next_possible"],
 .week[data-menstruation="next_predicted"],
-.month[data-menstruation="menstrual_predicted"] .numberContainer,
-.month[data-menstruation="next_possible"] .numberContainer,
 .month[data-menstruation="next_predicted"] .numberContainer {
   border: 1px dashed var(--border-strong);
   color: var(--text-secondary);
   border-radius: 16px;
 }
 
-.selected.week[data-menstruation="next_possible"],
 .selected.week[data-menstruation="next_predicted"],
-.selected.month[data-menstruation="next_possible"] .numberContainer,
 .selected.month[data-menstruation="next_predicted"] .numberContainer {
   background-color: var(--coral-50);
 }
 
-.outside[data-menstruation="menstrual_recorded"],
-.outside[data-menstruation="menstrual_predicted"] {
+.outside[data-menstruation="menstrual_recorded"] {
   color: var(--background-default);
   opacity: 0.4;
+}
+
+.month[data-selection-mode="multiple"] {
+  background-color: transparent;
+  border-radius: 0;
+}
+
+.month[data-selection-mode="multiple"] .numberContainer {
+  width: min(40px, 100%);
+  height: auto;
+  aspect-ratio: 1;
+  border: 0;
+  border-radius: 50%;
+  background-color: transparent;
+  color: var(--text-secondary);
+  mix-blend-mode: normal;
+}
+
+.month[data-selection-mode="multiple"]:global(.is-today) .numberContainer {
+  background-color: var(--navy-800);
+  color: var(--background-default);
+}
+
+.month[data-selection-mode="multiple"].selected .numberContainer {
+  background-color: var(--coral-400);
+  color: var(--background-default);
 }
 
 @media (prefers-reduced-motion: reduce) {

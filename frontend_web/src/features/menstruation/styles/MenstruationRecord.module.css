@@ -7,37 +7,18 @@
   flex-direction: column;
   padding: 0;
   position: relative;
+  overflow-anchor: none;
+  scroll-behavior: auto;
 }
 
 .monthlySection {
+  flex-shrink: 0;
   border-top: 1px solid var(--border-subtle);
   border-bottom: 2px solid var(--border-subtle);
-  padding-bottom: 20px;
+  padding: 12px 0;
 }
 
-.monthlyCaption {
-  display: flex;
-  justify-content: center;
-  gap: 12px;
-}
-
-.monthlyCaption > p {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.dot {
-  width: 10px;
-  height: 10px;
+.loadOlder {
+  height: 1px;
   flex-shrink: 0;
-  border-radius: 100px;
-}
-
-.dot[data-variant="outlined"] {
-  border: 1px dashed var(--border-strong);
-}
-
-.dot[data-variant="filled"] {
-  background-color: var(--coral-500);
 }

@@ -2,10 +2,11 @@ import { addDays, differenceInCalendarDays } from "date-fns";
 
 import type { MenstrualStatus } from "@/features/menstruation/types/menstruation.type";
 import {
-  calculateCycleIntervals,
+  calculateAverageCycleLength,
   calculateMenstrualPhaseDurations,
 } from "@/features/menstruation/utils/menstrualCycleCalculation.util";
-import type { MenstrualCycleItemResponseDto } from "@/shared/api/types/api.response.dto";
+import type { MenstrualCycleContext } from "@/features/menstruation/utils/menstrualCycleContext.util";
+import type { MenstrualDateRangeResponseDto } from "@/shared/api/types/api.response.dto";
 import { formatDateKey, parseDateKey } from "@/shared/utils/dateFormat";
 
 export interface DateRange {
@@ -14,97 +15,56 @@ export interface DateRange {
 }
 
 export interface MenstrualPhaseDates {
-  cycleId: number;
+  cycleStartDate: string;
   phase: {
     menstrual: {
       recordedDates: DateRange;
-      predictedDates: DateRange | null;
     };
     follicularDates: DateRange | null;
     ovulatoryDates: DateRange | null;
     lutealDates: DateRange | null;
   };
   predictedNextDate: string;
-  possibleNextDates: DateRange;
   hasNextMenstrualPredictionOverlap: boolean;
 }
 
-/** 각 회차별 날짜 모델 배열 */
-export function calculateMenstrualPhaseDates(
-  cycles: MenstrualCycleItemResponseDto[],
-): MenstrualPhaseDates[] | null {
-  if (cycles.length === 0) return null;
-  const sortedCycles = [...cycles].sort((a, b) => b.start_date.localeCompare(a.start_date));
+/** 과거 회차는 통계 입력으로만 사용하고, owner의 날짜별 phase 모델 하나를 만든다. */
+export function calculateMenstrualPhaseDates({
+  ownerCycle,
+  validIntervals,
+}: MenstrualCycleContext): MenstrualPhaseDates | null {
+  const cycleLength = calculateAverageCycleLength(validIntervals);
+  const calculation = calculateMenstrualPhaseDurations(ownerCycle, cycleLength);
+  if (calculation.menstrual <= 0) return null;
 
-  const result: MenstrualPhaseDates[] = [];
+  const recordedDates: DateRange = {
+    startDate: ownerCycle.start_date,
+    endDate: ownerCycle.end_date,
+  };
+  let nextPhaseDate = getNextDate(recordedDates.endDate);
 
-  for (let idx = 0; idx < sortedCycles.length; ++idx) {
-    const cycle = sortedCycles[idx];
-    const cyclesForCalculation = sortedCycles.slice(idx, idx + 7);
-    const calculation = calculateMenstrualPhaseDurations(cyclesForCalculation);
+  const follicularDates = calculateDateRange(nextPhaseDate, calculation.follicular);
+  if (follicularDates) nextPhaseDate = getNextDate(follicularDates.endDate);
 
-    if (!calculation) continue;
+  const ovulatoryDates = calculateDateRange(nextPhaseDate, calculation.ovulatory);
+  if (ovulatoryDates) nextPhaseDate = getNextDate(ovulatoryDates.endDate);
 
-    const menstrual = calculateDateRange(cycle.start_date, calculation.menstrual);
-    if (!menstrual) continue;
+  const lutealDates = calculateDateRange(nextPhaseDate, calculation.luteal);
+  const predictedNextDate = formatDateKey(
+    addDays(parseDateKey(ownerCycle.start_date), cycleLength),
+  );
 
-    // 실제 기록된 지속 월경 구간
-    const recordedDates: DateRange = {
-      startDate: cycle.start_date,
-      endDate: cycle.end_date,
-    };
-
-    // 새 회차의 첫 기록일에만 이후 예상 월경 구간을 보여준다.
-    const shouldShowPredictedDates =
-      !cycle.is_end && recordedDates.startDate === recordedDates.endDate;
-    const predictedDates: DateRange | null = shouldShowPredictedDates
-      ? calculateDateRange(
-          getNextDate(recordedDates.endDate),
-          differenceInCalendarDays(
-            parseDateKey(menstrual.endDate),
-            parseDateKey(recordedDates.endDate),
-          ),
-        )
-      : null;
-
-    let nextPhaseDate = getNextDate(menstrual.endDate);
-
-    const follicularDates = calculateDateRange(nextPhaseDate, calculation.follicular);
-    if (follicularDates) nextPhaseDate = getNextDate(follicularDates.endDate);
-
-    const ovulatoryDates = calculateDateRange(nextPhaseDate, calculation.ovulatory);
-    if (ovulatoryDates) nextPhaseDate = getNextDate(ovulatoryDates.endDate);
-
-    const lutealDates = calculateDateRange(nextPhaseDate, calculation.luteal);
-
-    const predictedNextDate = formatDateKey(
-      addDays(parseDateKey(cycle.start_date), calculation.cycle),
-    );
-    const possibleNextDates = calculatePossibleDateRange(cyclesForCalculation, predictedNextDate);
-
-    const hasNextMenstrualPredictionOverlap = isDateRangeOverlapping(
-      recordedDates,
-      possibleNextDates,
-    );
-
-    result.push({
-      cycleId: cycle.cycle_id,
-      phase: {
-        menstrual: {
-          recordedDates,
-          predictedDates,
-        },
-        follicularDates,
-        ovulatoryDates,
-        lutealDates,
-      },
-      predictedNextDate,
-      possibleNextDates,
-      hasNextMenstrualPredictionOverlap,
-    });
-  }
-
-  return result.length > 0 ? result : null;
+  return {
+    cycleStartDate: ownerCycle.start_date,
+    phase: {
+      menstrual: { recordedDates },
+      follicularDates,
+      ovulatoryDates,
+      lutealDates,
+    },
+    predictedNextDate,
+    hasNextMenstrualPredictionOverlap: isDateInPhaseRange(predictedNextDate, recordedDates),
+  };
 }
 
 function calculateDateRange(startDate: string, duration: number): DateRange | null {
@@ -121,59 +81,25 @@ function getNextDate(date: string): string {
   return formatDateKey(addDays(parseDateKey(date), 1));
 }
 
-function calculatePossibleDateRange(
-  cycles: MenstrualCycleItemResponseDto[],
-  predictedDate: string,
-): DateRange {
-  const cycleLengths = calculateCycleIntervals(cycles).filter((day) => day >= 21 && day <= 45);
-
-  if (cycleLengths.length < 2) {
-    const len = 2;
-    return {
-      startDate: formatDateKey(addDays(parseDateKey(predictedDate), -len)),
-      endDate: formatDateKey(addDays(parseDateKey(predictedDate), len)),
-    };
-  }
-
-  const average =
-    cycleLengths.reduce((sum, cycleLength) => sum + cycleLength, 0) / cycleLengths.length;
-
-  const variance =
-    cycleLengths.reduce((sum, cycleLength) => sum + (cycleLength - average) ** 2, 0) /
-    cycleLengths.length;
-
-  const standardDeviation = Math.sqrt(variance);
-
-  const len = Math.min(5, Math.max(1, Math.round(standardDeviation)));
-
-  return {
-    startDate: formatDateKey(addDays(parseDateKey(predictedDate), -len)),
-    endDate: formatDateKey(addDays(parseDateKey(predictedDate), len)),
-  };
-}
-
 /**
  * phase Dates 모델을 타입으로 변경하는 resolver.
- * latestCycleId는 owner 기준 부분 이력이 아니라 전체 조회 이력의 최신 회차 ID여야 한다.
+ * latestCycleStartDate는 owner 기준 부분 이력이 아니라 전체 조회 이력의 최신 시작일이다.
  */
 export function getMenstrualTypeFromPhase({
   targetDate,
   phaseDate,
-  latestCycleId,
+  latestCycleStartDate,
 }: {
   targetDate: string;
   phaseDate: MenstrualPhaseDates | undefined;
-  latestCycleId: number | null;
+  latestCycleStartDate: string | null;
 }): MenstrualStatus | null {
   if (!phaseDate) return null;
 
   const { menstrual, follicularDates, ovulatoryDates, lutealDates } = phaseDate.phase;
-  const { recordedDates, predictedDates } = menstrual;
+  const { recordedDates } = menstrual;
 
   if (isDateInPhaseRange(targetDate, recordedDates)) return "menstrual_recorded";
-
-  if (predictedDates !== null && isDateInPhaseRange(targetDate, predictedDates))
-    return "menstrual_predicted";
 
   if (follicularDates !== null && isDateInPhaseRange(targetDate, follicularDates))
     return "follicular";
@@ -183,27 +109,64 @@ export function getMenstrualTypeFromPhase({
   if (lutealDates !== null && isDateInPhaseRange(targetDate, lutealDates)) return "luteal";
 
   // 과거 회차이거나 현재 월경 구간과 겹치는 다음 예측은 노출하지 않는다.
-  if (phaseDate.cycleId !== latestCycleId || phaseDate.hasNextMenstrualPredictionOverlap)
+  if (
+    phaseDate.cycleStartDate !== latestCycleStartDate ||
+    phaseDate.hasNextMenstrualPredictionOverlap
+  )
     return null;
 
-  if (targetDate === phaseDate.predictedNextDate) return "next_predicted";
+  // 다음 기록이 없으면 예정일 이후 ~ 마지막 월경 시작일 + 45일까지 '월경 시작 예상' 상태를 유지한다.
+  const cycleDay =
+    differenceInCalendarDays(parseDateKey(targetDate), parseDateKey(phaseDate.cycleStartDate)) + 1;
 
-  if (isDateInPhaseRange(targetDate, phaseDate.possibleNextDates)) return "next_possible";
+  // 예상일 당일부터 해당 회차의 45일 차까지만 표시
+  if (targetDate >= phaseDate.predictedNextDate && cycleDay <= 45) {
+    return "next_predicted";
+  }
 
   return null;
 }
 
-function isDateInPhaseRange(
-  targetDate: string,
-  range: {
-    startDate: string;
-    endDate: string;
-  },
-) {
+function isDateInPhaseRange(targetDate: string, range: DateRange): boolean {
   return range.startDate <= targetDate && targetDate <= range.endDate;
 }
 
-/** 양 끝 날짜를 포함해 두 날짜 구간이 하루라도 겹치는지 확인한다. */
-function isDateRangeOverlapping(first: DateRange, second: DateRange): boolean {
-  return first.startDate <= second.endDate && second.startDate <= first.endDate;
+/** 캘린더에는 모든 실제 기록과 최신 회차의 다음 예상일 하루만 표시한다. */
+export function getMenstrualCalendarStatus({
+  targetDate,
+  cycles,
+  latestPhaseDate,
+}: {
+  targetDate: string;
+  cycles: readonly MenstrualDateRangeResponseDto[];
+  latestPhaseDate: MenstrualPhaseDates | null;
+}): MenstrualStatus | null {
+  if (cycles.some((cycle) => cycle.start_date <= targetDate && targetDate <= cycle.end_date)) {
+    return "menstrual_recorded";
+  }
+  if (
+    latestPhaseDate &&
+    !latestPhaseDate.hasNextMenstrualPredictionOverlap &&
+    targetDate === latestPhaseDate.predictedNextDate
+  )
+    return "next_predicted";
+  return null;
+}
+
+export function getMenstrualPhaseDayInfo(
+  targetDate: string,
+  phaseDate: MenstrualPhaseDates | null,
+) {
+  if (!phaseDate) return { menstrualDay: null, daysUntilNext: null };
+  const selectedDate = parseDateKey(targetDate);
+  const recordedDates = phaseDate.phase.menstrual.recordedDates;
+  return {
+    menstrualDay: isDateInPhaseRange(targetDate, recordedDates)
+      ? differenceInCalendarDays(selectedDate, parseDateKey(recordedDates.startDate)) + 1
+      : null,
+    daysUntilNext: differenceInCalendarDays(
+      parseDateKey(phaseDate.predictedNextDate),
+      selectedDate,
+    ),
+  };
 }

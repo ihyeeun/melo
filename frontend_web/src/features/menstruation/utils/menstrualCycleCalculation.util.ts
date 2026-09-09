@@ -1,50 +1,40 @@
 import { differenceInCalendarDays } from "date-fns";
 
-import type { MenstrualCycleItemResponseDto } from "@/shared/api/types/api.response.dto";
+import type { MenstrualDateRangeResponseDto } from "@/shared/api/types/api.response.dto";
 import { parseDateKey } from "@/shared/utils/dateFormat";
-
-/** 월경 계산 공식 */
 
 interface MenstrualPhaseDurations {
   menstrual: number;
   follicular: number;
   ovulatory: number;
   luteal: number;
-  cycle: number;
 }
 
 /** 월경 주기 기본 값 */
 const CYCLE_LEN = 28;
-/** 월경기 기본 값 */
-const MENSTRUAL = 5;
 /** 배란기 기본 값 */
 const OVULATORY = 3;
 /** 황체기 기본 값 */
 const LUTEAL = 13;
 
-/** 개인용 월경 단계 기간 계산 */
+/** context가 선택한 최근 정상 간격(최대 6개)의 평균. 2개 미만이면 기본 28일이다. */
+export function calculateAverageCycleLength(validIntervals: readonly number[]): number {
+  if (validIntervals.length < 2) return CYCLE_LEN;
+  const average = validIntervals.reduce((sum, days) => sum + days, 0) / validIntervals.length;
+  return Math.round(average);
+}
+
+/** owner의 실제 월경 일수와 이미 계산한 평균 주기로 각 단계의 기간을 구한다. */
 export function calculateMenstrualPhaseDurations(
-  cycles: readonly MenstrualCycleItemResponseDto[],
-): MenstrualPhaseDurations | null {
-  if (cycles.length === 0) return null;
-
-  const latestCycles = sortCyclesByLatest(cycles);
-
-  // 개인용 평균 주기 계산 : N
-  const cycleIntervals = calculateCycleIntervals(latestCycles);
-  const averageCycleLength =
-    cycleIntervals.length < 2 ? CYCLE_LEN : calculateCycleAverage(cycleIntervals);
-
-  // 기준 회차의 월경 기간 : M
-  const standardCycle = latestCycles[0];
-  const standardCycleMenstrual =
+  ownerCycle: MenstrualDateRangeResponseDto,
+  averageCycleLength: number,
+): MenstrualPhaseDurations {
+  // 기준 회차의 월경 기간 : M. 기록된 날짜 수를 그대로 사용한다.
+  const menstrual =
     differenceInCalendarDays(
-      parseDateKey(standardCycle.end_date),
-      parseDateKey(standardCycle.start_date),
+      parseDateKey(ownerCycle.end_date),
+      parseDateKey(ownerCycle.start_date),
     ) + 1;
-  const menstrual = standardCycle.is_end
-    ? standardCycleMenstrual
-    : Math.max(standardCycleMenstrual, MENSTRUAL);
 
   // 월경기 이후 남는 일수 N-M : R
   const remainingCycleLen = averageCycleLength - menstrual;
@@ -54,50 +44,13 @@ export function calculateMenstrualPhaseDurations(
   let ovulatory = 0;
   let luteal = 0;
 
-  if (remainingCycleLen >= 16) {
+  if (remainingCycleLen >= OVULATORY + LUTEAL) {
     luteal = LUTEAL;
-    ovulatory = Math.min(OVULATORY, remainingCycleLen - luteal);
+    ovulatory = OVULATORY;
     follicular = remainingCycleLen - luteal - ovulatory;
   } else if (remainingCycleLen >= 0) {
     luteal = remainingCycleLen;
-  } // 음수인 경우에는 난포기, 배란기, 황체기 값 0으로 retrun
+  } // 음수인 경우에는 난포기, 배란기, 황체기를 0일로 유지한다.
 
-  return { menstrual, follicular, ovulatory, luteal, cycle: averageCycleLength };
-}
-
-/** 월경 회차 최신순 정렬 */
-export function sortCyclesByLatest(
-  cycles: readonly MenstrualCycleItemResponseDto[],
-): MenstrualCycleItemResponseDto[] {
-  return [...cycles].sort((a, b) => b.start_date.localeCompare(a.start_date));
-}
-
-/** 월경 회차별 간격 배열 */
-export function calculateCycleIntervals(
-  cycles: readonly MenstrualCycleItemResponseDto[],
-): number[] {
-  const cycleLengths: number[] = [];
-
-  for (let idx = 0; idx < cycles.length - 1; ++idx) {
-    const currentCycle = cycles[idx];
-    const prevCycle = cycles[idx + 1];
-
-    const cycleLength = differenceInCalendarDays(
-      parseDateKey(currentCycle.start_date),
-      parseDateKey(prevCycle.start_date),
-    );
-
-    cycleLengths.push(cycleLength);
-  }
-
-  return cycleLengths;
-}
-
-/** 월경 주기 평균 값 구하기 + 반올림 */
-function calculateCycleAverage(days: readonly number[]): number {
-  const vaildDays = days.filter((day) => day >= 21 && day <= 45);
-  if (vaildDays.length < 2) return CYCLE_LEN; // 예외 5. 정상 간격 데이터가 2회 미만인 경우 기본값 유지
-
-  const avgCycle = vaildDays.reduce((sum, day) => sum + day, 0) / vaildDays.length;
-  return Math.round(avgCycle);
+  return { menstrual, follicular, ovulatory, luteal };
 }
