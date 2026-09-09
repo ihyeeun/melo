@@ -15,6 +15,10 @@
   padding-top: var(--safe-area-top);
 }
 
+.calendar-root:not(.has-month-background) {
+  --calendar-muted-fg: var(--text-disabled);
+}
+
 .calendar-root.is-month.has-month-background {
   background: linear-gradient(180deg, var(--coral-300) -90px, var(--background-selected) 90%);
   border-radius: 0 0 20px 20px;

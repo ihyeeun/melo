@@ -115,7 +115,11 @@ export default function DiaryPage() {
 
   return (
     <div className={`${styles.root} page`}>
-      <Calendar selectedDate={selectedDate} onSelectDate={setSelectedDate} />
+      <Calendar
+        selectedDate={selectedDate}
+        onSelectDate={setSelectedDate}
+        showMonthBackground={false}
+      />
       <ScrollFogArea role="main" className={`main ${styles.scrollArea}`}>
         <div className={styles.content}>
           <div className={styles.nutritionSummary}>
