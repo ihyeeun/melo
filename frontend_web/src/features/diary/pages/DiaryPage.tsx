@@ -11,6 +11,7 @@ import { getDayNutritionSummary } from "@/features/home/utils/dayMealSummary";
 import { useGetProfileQuery } from "@/features/profile/hooks/queries/useProfileQuery";
 import { PATH } from "@/router/path";
 import { getMealRecordPath, getMealSearchPath, getWorkoutRecordPath } from "@/router/pathHelpers";
+import { isNativeApp, syncAppTab } from "@/shared/api/bridge/nativeBridge";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import { InfoPopover } from "@/shared/commons/popover/InfoPopover";
 import ArcProgress from "@/shared/commons/progress/ArcProgress";
@@ -83,6 +84,15 @@ export default function DiaryPage() {
 
   const handleMoveWorkoutRecord = () => {
     navigate(getWorkoutRecordPath(selectedDateKey));
+  };
+
+  const handleMoveAiCoach = () => {
+    if (isNativeApp()) {
+      syncAppTab("chat");
+      return;
+    }
+
+    navigate(PATH.CHAT);
   };
 
   const getBodyLogSheetPath = (pathname: string, params?: Record<string, string>) => {
@@ -314,6 +324,28 @@ export default function DiaryPage() {
                   </li>
                 );
               })}
+              <li>
+                <button
+                  type="button"
+                  className={`${styles.mealRecordButton} ${styles.aiCoachButton}`}
+                  onClick={handleMoveAiCoach}
+                  aria-label="AI 코치에게 식단 추천받기, AI 코치 탭으로 이동"
+                >
+                  <span className={styles.aiCoachArrow} aria-hidden="true">
+                    <SystemIcon name="arrow-insert" size={24} />
+                  </span>
+                  <img
+                    src="/icons/characters/search.png"
+                    alt=""
+                    className={styles.aiCoachCharacter}
+                  />
+                  <span className={`${styles.aiCoachLabel} body-l-medium text-secondary`}>
+                    AI 코치에게
+                    <br />
+                    식단 추천받기
+                  </span>
+                </button>
+              </li>
             </ul>
           </SectionLayout>
 

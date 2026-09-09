@@ -195,6 +195,47 @@
   overflow: hidden;
 }
 
+.aiCoachButton {
+  position: relative;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-end;
+  overflow: hidden;
+  text-align: left;
+}
+
+.aiCoachArrow {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 50%;
+  box-shadow: var(--shadow-outer);
+  color: var(--text-tertiary);
+}
+
+.aiCoachCharacter {
+  width: 97px;
+  height: auto;
+  margin-left: -18px;
+  opacity: 30%;
+}
+
+.aiCoachLabel {
+  flex-shrink: 0;
+}
+
+.aiCoachButton:focus-visible {
+  outline: 2px solid var(--text-primary);
+  outline-offset: 2px;
+}
+
 .mealImageBox[data-hasMeal="true"] {
   background-color: var(--background-selected);
 }
