@@ -26,6 +26,14 @@ export async function sendMessage({ input }: { input: string }) {
   return response;
 }
 
+export async function getPersonalizedManagement() {
+  return appApiData<ChatRecommendResponseDto>({
+    endpoint: "/chat/personalized-management",
+    method: "POST",
+    timeoutMs: 5 * 60 * 1000,
+  });
+}
+
 export async function registerMenuByNutritionLabelImageFeedback({
   body,
 }: {

@@ -1,9 +1,18 @@
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+
+import { getPersonalizedManagement } from "@/features/chat/api/chat.api";
+import { refetchAndResolveChatHistoryItem } from "@/features/chat/hooks/queries/chatHistoryCache";
+import {
+  getChatHistoryPlaybackBaselineIds,
+  setChatHistoryPlaybackBaselineIds,
+} from "@/features/chat/utils/chatHistoryPlayback";
 import { HOME_MENSTRUAL_STATUS_VIEW } from "@/features/menstruation/constants/menstruation.constant";
 import type { MenstrualPhaseResult } from "@/features/menstruation/hooks/useMenstrualPhase";
 import styles from "@/features/menstruation/styles/MenstruationCardButton.module.css";
 import { getMenstrualPhaseDayInfo } from "@/features/menstruation/utils/menstrualPhaseDatesCalculation.util";
 import { PATH } from "@/router/path";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
+import { toast } from "@/shared/commons/toast/toast";
 import { useNavigate } from "@/shared/navigation/stackflowNavigation";
 import { useSelectedDateKey } from "@/shared/stores/selectedDate.store";
 
@@ -11,6 +20,27 @@ export default function MenstruationCardButton({ phase }: { phase: MenstrualPhas
   const selectedDateKey = useSelectedDateKey();
   const { menstrualStatus, hasRecords, isLoading, isError, retry, phaseDate } = phase;
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const { mutate: requestPersonalizedManagement, isPending } = useMutation({
+    mutationKey: ["personalized-management"],
+    mutationFn: async () => {
+      const baselineIds = await getChatHistoryPlaybackBaselineIds(queryClient);
+      const response = await getPersonalizedManagement();
+      await refetchAndResolveChatHistoryItem(queryClient, {
+        match: (item) =>
+          !baselineIds?.includes(item.id) &&
+          item.response_payload.chat_category === response.chat_category,
+      });
+
+      if (baselineIds !== null) {
+        setChatHistoryPlaybackBaselineIds(queryClient, baselineIds);
+      }
+    },
+    retry: false,
+    onError: (error) => {
+      toast.warning(error.message || "맞춤 관리법을 불러오지 못했어요. 다시 시도해주세요.");
+    },
+  });
   const homeContent = menstrualStatus
     ? HOME_MENSTRUAL_STATUS_VIEW[menstrualStatus]
     : HOME_MENSTRUAL_STATUS_VIEW["undefined"];
@@ -35,7 +65,7 @@ export default function MenstruationCardButton({ phase }: { phase: MenstrualPhas
   const timeline = [
     ...new Set(
       Object.values(HOME_MENSTRUAL_STATUS_VIEW)
-        .filter(({ phaseIndex }) => isEmpty ? phaseIndex < 4 : phaseIndex >= 0)
+        .filter(({ phaseIndex }) => (isEmpty ? phaseIndex < 4 : phaseIndex >= 0))
         .sort((a, b) => a.phaseIndex - b.phaseIndex)
         .map(({ phaseLabel }) => phaseLabel),
     ),
@@ -46,69 +76,82 @@ export default function MenstruationCardButton({ phase }: { phase: MenstrualPhas
   const progressPercent = ((activePhaseIndex + 0.5) / timeline.length) * 100;
 
   return (
-    <button
-      type="button"
-      className={styles.root}
-      disabled={isLoading}
-      aria-busy={isLoading}
-      aria-label={`${title}. ${message} ${isLoading ? "" : isError ? "다시 시도" : "생리 기록 보기"}`}
-      onClick={() => {
-        if (isError) {
-          retry();
-          return;
-        }
-        return navigate(PATH.MENSTRUATION_RECORD);
-      }}
-    >
-      <img
-        src={homeContent.source}
-        width={345}
-        height={200}
-        className={styles.img}
-        alt=""
-        aria-hidden="true"
-      />
+    <div className={styles.root}>
+      <button
+        type="button"
+        className={styles.recordButton}
+        disabled={isLoading}
+        aria-busy={isLoading}
+        aria-label={`${title}. ${message} ${isLoading ? "" : isError ? "다시 시도" : "생리 기록 보기"}`}
+        onClick={() => {
+          if (isError) {
+            retry();
+            return;
+          }
+          return navigate(PATH.MENSTRUATION_RECORD);
+        }}
+      >
+        <img
+          src={homeContent.source}
+          width={345}
+          height={200}
+          className={styles.img}
+          alt=""
+          aria-hidden="true"
+        />
 
-      <div className={styles.actionIcon}>
-        <SystemIcon name="arrow-insert" size={24} />
-      </div>
+        <div className={styles.actionIcon}>
+          <SystemIcon name="arrow-insert" size={24} />
+        </div>
 
-      <span className={`${styles.title} title-s-semi text-primary`}>{title}</span>
-      <span className={styles.messageBubble}>{message}</span>
+        <span className={`${styles.title} title-s-semi text-primary`}>{title}</span>
+        <span className={styles.messageBubble}>{message}</span>
 
-      {!isLoading && !isError && !isUnknownPhase && (
-        <span className={styles.stepper} aria-hidden="true">
-          <span className={styles.track}>
-            <span className={styles.progress} style={{ width: `${progressPercent}%` }} />
-          </span>
+        {!isLoading && !isError && !isUnknownPhase && (
+          <span className={styles.stepper} aria-hidden="true">
+            <span className={styles.track}>
+              <span className={styles.progress} style={{ width: `${progressPercent}%` }} />
+            </span>
 
-          <span className={styles.phaseList}>
-            {timeline.map((timelineStep, index) => {
-              const phaseState =
-                index < activePhaseIndex
-                  ? styles.completed
-                  : index === activePhaseIndex
-                    ? styles.current
-                    : "";
+            <span className={styles.phaseList}>
+              {timeline.map((timelineStep, index) => {
+                const phaseState =
+                  index < activePhaseIndex
+                    ? styles.completed
+                    : index === activePhaseIndex
+                      ? styles.current
+                      : "";
 
-              return (
-                <span
-                  className={`${styles.phaseItem} ${phaseState}`}
-                  key={`${timelineStep}-${index}`}
-                >
-                  <span className={styles.dotArea}>
-                    <span className={styles.dot} />
+                return (
+                  <span
+                    className={`${styles.phaseItem} ${phaseState}`}
+                    key={`${timelineStep}-${index}`}
+                  >
+                    <span className={styles.dotArea}>
+                      <span className={styles.dot} />
+                    </span>
+                    <span className={`${styles.phaseLabel} body-xs-regular`}>{timelineStep}</span>
                   </span>
-                  <span className={`${styles.phaseLabel} body-xs-regular`}>{timelineStep}</span>
-                </span>
-              );
-            })}
+                );
+              })}
+            </span>
           </span>
-        </span>
-      )}
-      <div className={styles.chatActionButton}>
-        <p className="body-s-medium text-primary textCenter">지금 나에게 맞는 관리법 알아보기</p>
-      </div>
-    </button>
+        )}
+      </button>
+      <button
+        type="button"
+        className={`${styles.chatActionButton} body-s-medium text-primary textCenter`}
+        disabled={isLoading || isPending}
+        aria-busy={isPending}
+        onClick={() => {
+          if (queryClient.isMutating({ mutationKey: ["personalized-management"] }) > 0) return;
+
+          requestPersonalizedManagement();
+          navigate(PATH.CHAT);
+        }}
+      >
+        지금 나에게 맞는 관리법 알아보기
+      </button>
+    </div>
   );
 }

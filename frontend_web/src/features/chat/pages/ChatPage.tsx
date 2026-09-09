@@ -1,5 +1,5 @@
 import { useActivity } from "@stackflow/react";
-import { useQueries, useQueryClient } from "@tanstack/react-query";
+import { useIsMutating, useQueries, useQueryClient } from "@tanstack/react-query";
 import type {
   FormEvent,
   KeyboardEvent,
@@ -495,6 +495,10 @@ export default function ChatPage() {
 
   const { data, isPending: isHistoryPending } = useGetChatHistoryQuery();
   const { mutateAsync: sendMessageMutation, isPending: isSendPending } = useSendMessageMutation();
+  const personalizedManagementPendingCount = useIsMutating({
+    mutationKey: ["personalized-management"],
+  });
+  const isChatRequestPending = isSendPending || personalizedManagementPendingCount > 0;
   const { mutateAsync: parseMenusFromTextMutation, isPending: isMealRecordParsePending } =
     useParseMenusFromTextMutation();
   const { mutateAsync: registerDiaryMealRecordMutate, isPending: isDiaryMealRegisterPending } =
@@ -605,16 +609,19 @@ export default function ChatPage() {
     : "idle";
   const isAssistantPlaybackActive = assistantPlayback !== null;
   const isChatSendDisabled =
-    isSendPending ||
+    isChatRequestPending ||
     isAssistantPlaybackActive ||
     isMealRecordParsePending ||
     pendingMealRecordInput !== null;
   const isAwaitingChatResponse =
-    pendingInput !== null || pendingMealRecordInput !== null || isAssistantPlaybackActive;
+    isChatRequestPending ||
+    pendingInput !== null ||
+    pendingMealRecordInput !== null ||
+    isAssistantPlaybackActive;
   const shouldRenderMealRecordModeGuide = isMealRecordModeGuideVisible;
   const hasTimelineContent =
     timelineItems.length > 0 || isAwaitingChatResponse || shouldRenderMealRecordModeGuide;
-  const isTypingPending = isAwaitingChatResponse && isSendPending;
+  const isTypingPending = isAwaitingChatResponse && isChatRequestPending;
   const isInputEmpty = inputValue.trim().length === 0;
   const isQuickActionVisible = isInputEmpty && !isSoftKeyboardVisible && !isAwaitingChatResponse;
   const shouldShowMealRecordModeHint =
@@ -622,7 +629,8 @@ export default function ChatPage() {
     !isMealRecordModeOnboardingDone &&
     !isMealRecordTextMode &&
     !isMealRecordModeHintDismissed;
-  const shouldDeferTimelineRender = pendingInput === null && isTimelineDataPending;
+  const shouldDeferTimelineRender =
+    pendingInput === null && !isChatRequestPending && isTimelineDataPending;
   const shouldRenderTimeline = hasTimelineContent && !shouldDeferTimelineRender;
   const shouldShowTimelineSkeleton = shouldDeferTimelineRender;
   const shouldShowEmptySection = !hasTimelineContent && !isTimelineDataPending;
@@ -947,7 +955,7 @@ export default function ChatPage() {
 
   useEffect(() => {
     if (
-      (pendingInput === null && pendingMealRecordInput === null) ||
+      !isAwaitingChatResponse ||
       !isTop ||
       pendingMealRecordScrollKeyRef.current !== null ||
       timelineScrollTarget !== null
@@ -956,7 +964,7 @@ export default function ChatPage() {
     }
 
     keepBottomIfFollowing("instant");
-  }, [isTop, keepBottomIfFollowing, pendingInput, pendingMealRecordInput, timelineScrollTarget]);
+  }, [isAwaitingChatResponse, isTop, keepBottomIfFollowing, timelineScrollTarget]);
 
   useEffect(() => {
     updateIsScrolledAwayFromBottom();
@@ -1602,6 +1610,7 @@ export default function ChatPage() {
   useLayoutEffect(() => {
     if (
       isHistoryPending ||
+      isChatRequestPending ||
       !isTop ||
       pendingInput !== null ||
       pendingMealRecordInput !== null ||
@@ -1677,6 +1686,7 @@ export default function ChatPage() {
     assistantPlayback,
     chatList,
     forceScrollToBottom,
+    isChatRequestPending,
     isHistoryPending,
     isTop,
     pendingInput,
@@ -1940,9 +1950,9 @@ export default function ChatPage() {
                 currentMealRecord?.previousMealRecord.menus.some(
                   (menu) => menu.id === nutritionMenuId,
                 ) === true;
-              const shouldHideUserMessage = isNutritionLabelMenuRegisteredActionPayload(
-                chatItem.response_payload,
-              );
+              const shouldHideUserMessage =
+                isNutritionLabelMenuRegisteredActionPayload(chatItem.response_payload) ||
+                (!isNonEmptyMessage(chatItem.input_text) && !userImageUrl);
 
               return (
                 <section key={timelineItem.key} className={styles.conversationSection}>
@@ -2113,14 +2123,16 @@ export default function ChatPage() {
               </section>
             ) : null}
 
-            {pendingInput !== null ? (
+            {pendingInput !== null || isTypingPending ? (
               <section className={styles.conversationSection} aria-live="polite">
-                <div className={styles.userMessageGroup}>
-                  <p className={`${styles.timeText} caption-m-medium`}>
-                    {formatTimeText(new Date())}
-                  </p>
-                  <p className={`${styles.userBubble} body-m-regular`}>{pendingInput}</p>
-                </div>
+                {pendingInput !== null ? (
+                  <div className={styles.userMessageGroup}>
+                    <p className={`${styles.timeText} caption-m-medium`}>
+                      {formatTimeText(new Date())}
+                    </p>
+                    <p className={`${styles.userBubble} body-m-regular`}>{pendingInput}</p>
+                  </div>
+                ) : null}
 
                 {isTypingPending ? <AssistantPendingMessage /> : null}
               </section>
