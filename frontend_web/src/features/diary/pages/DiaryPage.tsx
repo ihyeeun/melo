@@ -8,7 +8,10 @@ import { useSyncNativeStepCount } from "@/features/health/hooks/useSyncNativeSte
 import Tile from "@/features/home/components/cards/Tile";
 import { useDayMealsQuery, useGetBodyLog } from "@/features/home/hooks/queries/useTodayRecordQuery";
 import { getDayNutritionSummary } from "@/features/home/utils/dayMealSummary";
-import { useGetProfileQuery } from "@/features/profile/hooks/queries/useProfileQuery";
+import {
+  useGetProfileQuery,
+  useGoalSnapshotByDateQuery,
+} from "@/features/profile/hooks/queries/useProfileQuery";
 import { PATH } from "@/router/path";
 import { getMealRecordPath, getMealSearchPath, getWorkoutRecordPath } from "@/router/pathHelpers";
 import { isNativeApp, syncAppTab } from "@/shared/api/bridge/nativeBridge";
@@ -44,6 +47,8 @@ export default function DiaryPage() {
 
   const { data: dayMeal, isPending: isSummaryPending } = useDayMealsQuery(selectedDateKey);
   const { data: profile, isPending: isProfilePending } = useGetProfileQuery();
+  const { data: userGoal, isPending: isUserGoalPending } =
+    useGoalSnapshotByDateQuery(selectedDateKey);
   const { data: bodyLog } = useGetBodyLog(selectedDateKey);
   const isToday = selectedDateKey === getTodayFormatDateKey();
   const isFutureDate = isFutureDateKey(selectedDateKey);
@@ -63,13 +68,27 @@ export default function DiaryPage() {
   const workouts = workoutRecordQuery.data?.workout_list ?? [];
   const hasWorkoutRecords = workouts.length > 0;
 
-  const nutrition = getDayNutritionSummary(dayMeal, profile, activitySummary?.calories);
-  const currentCalorie = nutrition.calories.current;
-  const targetCalorie = nutrition.calories.target;
-
-  if (isSummaryPending || isProfilePending || isStepCaloriesPending || isWorkoutRecordPending) {
+  if (
+    isSummaryPending ||
+    isProfilePending ||
+    isUserGoalPending ||
+    isStepCaloriesPending ||
+    isWorkoutRecordPending
+  ) {
     return;
   }
+
+  const nutrition = getDayNutritionSummary(
+    dayMeal,
+    {
+      target_calories: userGoal?.target_calories ?? profile?.target_calories ?? 0,
+      target_ratio: userGoal?.target_ratio ?? profile?.target_ratio ?? [],
+    },
+    activitySummary?.calories,
+  );
+  const currentCalorie = nutrition.calories.current;
+  const targetCalorie = nutrition.calories.target;
+  const targetWeight = userGoal?.target_weight ?? profile?.target_weight;
 
   const handleMoveMealRecord = (
     mealType: (typeof MEAL_TYPES)[number]["time"],
@@ -258,7 +277,7 @@ export default function DiaryPage() {
                 </div>
 
                 <div>
-                  <p className="caption-m-medium text-disabled">목표 {profile?.target_weight}kg</p>
+                  <p className="caption-m-medium text-disabled">목표 {targetWeight}kg</p>
                   <div className={styles.bodyLogValue}>
                     <span className={`title-l-semi amp-mask ${styles.bodyLogValueWeight}`}>
                       {displayWeight.toLocaleString()}

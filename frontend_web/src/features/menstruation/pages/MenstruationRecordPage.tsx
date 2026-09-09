@@ -41,7 +41,8 @@ export default function MenstruationRecordPage() {
       // mutation의 캐시 갱신이 끝난 뒤 편집 상태를 비운다.
       await saveRecords(updateRequest);
       setSelections({});
-      toast.success("생리 기록이 저장되었어요");
+      toast.success("저장했어요");
+      navigateBack();
     } catch {
       toast.error("생리 기록을 저장하지 못했어요. 다시 시도해 주세요.");
     } finally {
