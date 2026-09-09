@@ -25,7 +25,10 @@ const SCORE_CHARACTER_SOURCES = [
 
 const DEFAULT_CHARACTER_SRC = SCORE_CHARACTER_SOURCES[0].src;
 
-export default function PreviewTodayScoreSection({ homeMode, menstrualPhase }: {
+export default function PreviewTodayScoreSection({
+  homeMode,
+  menstrualPhase,
+}: {
   homeMode: HomeDashboardMode;
   menstrualPhase: MenstrualPhaseResult;
 }) {
@@ -52,7 +55,7 @@ export default function PreviewTodayScoreSection({ homeMode, menstrualPhase }: {
   const nutritionSummary = getDayNutritionSummary(
     dayMeal,
     {
-      target_calories: userGoal?.target_calories ?? profile!.target_calories,
+      target_calories: userGoal?.target_calories ?? profile?.target_calories ?? 0,
       target_ratio: userGoal?.target_ratio ?? profile!.target_ratio,
     },
     activitySummary?.calories,
