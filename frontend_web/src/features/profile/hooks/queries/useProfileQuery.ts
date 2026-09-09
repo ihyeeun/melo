@@ -39,8 +39,9 @@ export function useGetProfileQuery(options?: UseGetProfileQueryOptions) {
 
 export function useGoalSnapshotByDateQuery(dateKey: string) {
   const response = useQuery({
-    queryKey: queryKeys.userGoalSnapshot(dateKey),
+    queryKey: queryKeys.snapshot.snapshot(dateKey),
     queryFn: () => getUserGoalSnapshot(dateKey),
+    staleTime: 1000 * 60 * 10,
   });
 
   return response;
