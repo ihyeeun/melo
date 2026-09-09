@@ -786,7 +786,11 @@ export default function MealSearchPage() {
 
       <footer className={styles.footer}>
         {showFoodCameraButton ? (
-          <FloatingCameraButton onClick={handleCameraClick} ariaLabel="사진으로 기록하기" />
+          <FloatingCameraButton
+            onClick={handleCameraClick}
+            bottomOffset="calc(var(--safe-area-bottom) + 70px)"
+            ariaLabel="사진으로 기록하기"
+          />
         ) : null}
 
         <Button

@@ -6,7 +6,7 @@ type FloatingCameraButtonProps = {
   onClick: () => void;
   ariaLabel: string;
   tone?: "primary" | "light";
-  bottomOffset?: number;
+  bottomOffset?: React.CSSProperties["bottom"];
 } & Omit<React.ComponentPropsWithoutRef<"button">, "children" | "onClick" | "aria-label">;
 
 export function FloatingCameraButton({
@@ -32,7 +32,7 @@ export function FloatingCameraButton({
       aria-label={ariaLabel}
       style={{
         ...style,
-        bottom: `${bottomOffset}px`,
+        bottom: bottomOffset,
       }}
     >
       <SystemIcon name="camera" size={28} />
