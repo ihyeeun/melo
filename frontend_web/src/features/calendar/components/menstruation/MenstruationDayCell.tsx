@@ -1,6 +1,7 @@
 import type { DayCellRenderProps } from "@/features/calendar/components/dayCell";
 import styles from "@/features/calendar/styles/MenstruationDayCell.module.css";
 import type { MenstrualStatus } from "@/features/menstruation/types/menstruation.type";
+import { formatDateKey, isFutureDateKey } from "@/shared/utils/dateFormat";
 
 import { formatDayNumber } from "../../utils/format";
 
@@ -40,6 +41,7 @@ export default function MenstruationDayCell({
       className={classNames}
       data-menstruation={menstruationType}
       data-selection-mode={selectionMode}
+      data-future={isFutureDateKey(formatDateKey(day.date))}
       onClick={() => onSelect(day.date)}
       aria-pressed={day.isSelected}
       aria-current={day.isToday ? "date" : undefined}

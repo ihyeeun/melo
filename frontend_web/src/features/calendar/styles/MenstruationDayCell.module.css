@@ -67,9 +67,20 @@
   color: var(--background-default);
 }
 
+.month[data-selection-mode="multiple"][data-future="true"]:not(.selected) .numberContainer {
+  color: var(--text-disabled);
+}
+
 .month[data-selection-mode="multiple"].selected .numberContainer {
   background-color: var(--coral-400);
   color: var(--background-default);
+}
+
+.month[data-selection-mode="multiple"].selected:global(.is-today) .numberContainer {
+  background-color: var(--coral-400);
+  color: var(--background-default);
+  box-shadow: 0 0 0 1.5px var(--navy-800);
+  border: 1.5px solid var(--navy-800);
 }
 
 @media (prefers-reduced-motion: reduce) {
