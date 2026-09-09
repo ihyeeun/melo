@@ -38,14 +38,14 @@ export default function DayCell({
         month: "long",
         day: "numeric",
         weekday: "long",
-      })}${day.isToday ? ", 오늘" : ""}${!day.isCurrentMonth ? ", 이번 달 아님" : ""}`}
+      })}${day.isToday ? ", 오늘" : ""}${!day.isCurrentMonth ? ", 이번 달 아님" : ""}${day.hasRecord ? ", 식사 기록 있음" : ""}`}
     >
       {variant === "week" && weekdayLabel && (
         <span className="calendar-day-weekday caption-m-regular">{weekdayLabel}</span>
       )}
       <div className="calendar-day-number-container">
         <span className="calendar-day-number body-l-regular">{formatDayNumber(day.date)}</span>
-        {variant === "month" ? <EventDot visible={day.hasRecord} /> : null}
+        <EventDot visible={day.hasRecord} />
       </div>
     </button>
   );

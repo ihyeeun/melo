@@ -3,7 +3,7 @@
   --calendar-day-fg: var(--text-secondary);
   --calendar-muted-fg: var(--coral-300);
   --calendar-accent: var(--coral-300);
-  --calendar-dot-bg: var(--text-secondary);
+  --calendar-dot-bg: var(--coral-400);
 
   display: flex;
   flex-direction: column;
@@ -224,12 +224,12 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
-  height: 60px;
+  height: 66px;
   width: 44px;
 }
 
 .calendar-day-cell--month {
-  height: 40px;
+  height: 44px;
   width: 43px;
 }
 
@@ -237,17 +237,16 @@
   color: var(--calendar-muted-fg);
 }
 
-.calendar-day-cell--month.is-selected .calendar-dot {
-  background: var(--primary-normal);
-}
-
 .calendar-day-cell--week.is-selected,
 .calendar-day-cell--month.is-selected .calendar-day-number-container {
-  border-color: var(--calendar-accent);
   background-color: rgba(255, 255, 255, 70%);
-  border-width: 2px;
   color: var(--text-primary);
   border-radius: 16px;
+}
+
+.has-month-background .calendar-day-cell--week.is-selected,
+.has-month-background .calendar-day-cell--month.is-selected .calendar-day-number-container {
+  border: 2px solid var(--calendar-accent);
 }
 
 .calendar-day-cell--month .calendar-day-number-container {
@@ -259,6 +258,12 @@
   position: relative;
   width: 100%;
   border: 1px solid transparent;
+}
+
+.calendar-day-cell--week .calendar-day-number-container {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
 }
 
 .calendar-dots {
@@ -277,10 +282,15 @@
   visibility: hidden;
 }
 
+.calendar-day-cell--week .calendar-dots {
+  margin-top: 2px;
+  position: static;
+}
+
 .calendar-dot {
   background: var(--calendar-dot-bg);
   border-radius: 50%;
-  display: none;
+  display: block;
   height: 4px;
   width: 4px;
 }

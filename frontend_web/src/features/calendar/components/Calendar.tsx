@@ -1,6 +1,16 @@
 import "@/features/calendar/styles/calendar.css";
 
-import { addMonths, addWeeks, startOfMonth, subMonths, subWeeks } from "date-fns";
+import {
+  addDays,
+  addMonths,
+  addWeeks,
+  endOfMonth,
+  endOfWeek,
+  startOfMonth,
+  startOfWeek,
+  subMonths,
+  subWeeks,
+} from "date-fns";
 import { type ReactNode, useEffect, useMemo } from "react";
 
 import CalendarHeader from "@/features/calendar/components/CalendarHeader";
@@ -44,7 +54,6 @@ export default function Calendar({
     viewMode,
     selectedDate,
     viewDate,
-    weekDays,
     canGoNextWeek,
     toggleViewMode,
     selectDate,
@@ -54,73 +63,59 @@ export default function Calendar({
   } = useCalendar({
     initialDate,
     initialViewMode: "week",
-    recordedDates: showRecordedDots ? fallbackRecordedDates : EMPTY_RECORDED_DATES,
     selectedDate: controlledSelectedDate,
   });
 
-  const monthDateRange = useMemo(() => {
-    const startDate = startOfMonth(viewDate);
+  const recordedDateRange = useMemo(() => {
+    const monthStart = startOfMonth(viewDate);
+    // 주·월 전환 시 같은 조회 결과를 사용하고, 인접 월의 바깥 날짜 칸까지 포함한다.
+    const firstDate = startOfWeek(subMonths(monthStart, 1), { weekStartsOn: 1 });
+    const lastDate = endOfWeek(endOfMonth(addMonths(monthStart, 1)), { weekStartsOn: 1 });
 
     return {
-      startDate: formatDateKey(subMonths(startDate, 1)),
-      endDate: formatDateKey(addMonths(startDate, 2)),
+      startDate: formatDateKey(firstDate),
+      endDate: formatDateKey(addDays(lastDate, 1)),
     };
   }, [viewDate]);
 
-  const { recordedDates } = useCalendarRecordedDatesQuery({
-    enabled: showRecordedDots && viewMode === "month",
-    startDate: monthDateRange.startDate,
-    endDate: monthDateRange.endDate,
+  const { data: fetchedRecordedDates } = useCalendarRecordedDatesQuery({
+    enabled: showRecordedDots,
+    startDate: recordedDateRange.startDate,
+    endDate: recordedDateRange.endDate,
   });
+  const recordedDates = showRecordedDots
+    ? (fetchedRecordedDates ?? fallbackRecordedDates)
+    : EMPTY_RECORDED_DATES;
 
   const displayedMonthPages = useMemo(() => {
-    const monthlyRecordedDates = showRecordedDots ? recordedDates : EMPTY_RECORDED_DATES;
-
     return [subMonths(viewDate, 1), viewDate, addMonths(viewDate, 1)].map((baseDate) =>
       buildMonthCalendarDays({
         baseDate,
         selectedDate,
-        recordedDates: monthlyRecordedDates,
+        recordedDates,
         weekStartsOn: 1,
       }),
     );
-  }, [recordedDates, selectedDate, showRecordedDots, viewDate]);
+  }, [recordedDates, selectedDate, viewDate]);
 
   const displayedWeekPages = useMemo(() => {
-    const weeklyRecordedDates = showRecordedDots ? fallbackRecordedDates : EMPTY_RECORDED_DATES;
     // 과거 주는 계속 탐색할 수 있으므로 이전 주를 항상 렌더링한다. 현재 주를
     // 가운데 인덱스(1)에 고정해 pager 재정렬과 inert 상태를 일관되게 유지한다.
-    const pages = [
-      buildWeekCalendarDays({
-        baseDate: subWeeks(viewDate, 1),
-        selectedDate,
-        recordedDates: weeklyRecordedDates,
-        weekStartsOn: 1,
-      }),
-    ];
-
-    pages.push(weekDays);
+    const baseDates = [subWeeks(viewDate, 1), viewDate];
 
     if (canGoNextWeek) {
-      pages.push(
-        buildWeekCalendarDays({
-          baseDate: addWeeks(viewDate, 1),
-          selectedDate,
-          recordedDates: weeklyRecordedDates,
-          weekStartsOn: 1,
-        }),
-      );
+      baseDates.push(addWeeks(viewDate, 1));
     }
 
-    return pages;
-  }, [
-    canGoNextWeek,
-    fallbackRecordedDates,
-    selectedDate,
-    showRecordedDots,
-    viewDate,
-    weekDays,
-  ]);
+    return baseDates.map((baseDate) =>
+      buildWeekCalendarDays({
+        baseDate,
+        selectedDate,
+        recordedDates,
+        weekStartsOn: 1,
+      }),
+    );
+  }, [canGoNextWeek, recordedDates, selectedDate, viewDate]);
 
   const currentWeekPageIndex = 1;
 
