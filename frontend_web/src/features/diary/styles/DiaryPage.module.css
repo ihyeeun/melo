@@ -1,5 +1,10 @@
 .root {
-  background-color: var(--gray-200);
+  background: linear-gradient(
+    180deg,
+    var(--gray-200) 0%,
+    var(--gray-200) 50%,
+    var(--background-gray-1) 90%
+  );
 }
 
 .root .scrollArea {

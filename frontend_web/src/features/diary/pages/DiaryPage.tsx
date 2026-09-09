@@ -153,7 +153,7 @@ export default function DiaryPage() {
                     ? `${currentCalorie.toLocaleString()} / ${targetCalorie.toLocaleString()} kcal`
                     : `${currentCalorie.toLocaleString()} kcal 섭취, 목표 미설정`
                 }
-                color="var(--coral-400)"
+                gradient={{ startColor: "#ff989a", endColor: "var(--coral-400)" }}
                 trackColor="var(--background-gray-2)"
                 className={styles.calorieGauge}
               >
@@ -340,7 +340,7 @@ export default function DiaryPage() {
                       <div className={styles.mealInfo}>
                         <span className="body-l-medium text-primary">{label}</span>
                         <span className="body-m-regular text-tertiary marginLeft">
-                          {formatDisplayNumber(calories)}kcal
+                          {formatDisplayNumber(calories)} kcal
                         </span>
                       </div>
                     </button>
