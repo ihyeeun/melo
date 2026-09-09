@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import Calendar from "@/features/calendar/components/Calendar";
 import MenstruationDayCell from "@/features/calendar/components/menstruation/MenstruationDayCell";
@@ -12,6 +12,8 @@ import type { HomeDashboardMode } from "@/features/home/types/homeDashboard.type
 import { useMenstrualPhase } from "@/features/menstruation/hooks/useMenstrualPhase";
 import { getMenstrualCalendarStatus } from "@/features/menstruation/utils/menstrualPhaseDatesCalculation.util";
 import { useGetProfileQuery } from "@/features/profile/hooks/queries/useProfileQuery";
+import { track } from "@/shared/analytics/analytics";
+import { EVENT_NAME } from "@/shared/analytics/analytics.constants";
 import { FloatingCameraButton } from "@/shared/commons/button/FloatingCameraButton";
 import { ScrollFogArea } from "@/shared/commons/scrollFog";
 import { FEATURE_GUARD, useIsFeatureBlocked } from "@/shared/guards/featureGuard";
@@ -28,6 +30,7 @@ export default function HomePage() {
   const [chatCameraUpdateUrl, setChatCameraUpdateUrl] = useState<string | null>(null);
   const [isChatCameraUpdateModalOpen, setIsChatCameraUpdateModalOpen] = useState(false);
   const [mode, setMode] = useState<HomeDashboardMode>("daily");
+  const pendingMenstrualEntryRef = useRef(false);
   const [calendarStartDate, setCalendarStartDate] = useState(selectedDateKey);
   const menstrualPhase = useMenstrualPhase(selectedDateKey, {
     enabled: mode === "menstruation",
@@ -46,6 +49,24 @@ export default function HomePage() {
     profile?.role === "ADMIN" &&
     // menstrualApplicants.includes(profile!.user_id) &&
     !isProfilePending;
+
+  useEffect(() => {
+    if (mode !== "menstruation" || menstrualPhase.isLoading || !pendingMenstrualEntryRef.current) {
+      return;
+    }
+
+    pendingMenstrualEntryRef.current = false;
+    track(EVENT_NAME.CLICK_MENSTRUAL_DASHBOARD, {
+      menstrual_phase: menstrualPhase.menstrualStatus ?? "",
+    });
+  }, [mode, menstrualPhase.isLoading, menstrualPhase.menstrualStatus]);
+
+  const handleModeChange = (nextMode: HomeDashboardMode) => {
+    if (nextMode === mode) return;
+
+    pendingMenstrualEntryRef.current = nextMode === "menstruation";
+    setMode(nextMode);
+  };
 
   const handleNavigateChatCamera = async () => {
     const result = await navigateToChatCameraIfSupported(navigate);
@@ -85,7 +106,7 @@ export default function HomePage() {
           <HomeDashboardModeToggle
             className={styles.modeToggle}
             value={mode}
-            onChange={setMode}
+            onChange={handleModeChange}
             onClick={scrollToTop}
           />
         )}
