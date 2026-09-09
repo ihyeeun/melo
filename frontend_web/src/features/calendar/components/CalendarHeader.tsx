@@ -58,16 +58,6 @@ export default function CalendarHeader({
           aria-hidden={!isMonthView && !hasHeaderAction}
         >
           {headerAction}
-          {isMonthView ? (
-            <button
-              type="button"
-              className="body-l-medium text-secondary"
-              onClick={onToday}
-              aria-label="오늘 날짜로 이동"
-            >
-              오늘
-            </button>
-          ) : null}
         </div>
       </div>
 
@@ -95,6 +85,16 @@ export default function CalendarHeader({
             </button>
           </div>
         </div>
+        {isMonthView ? (
+          <button
+            type="button"
+            className="body-l-medium text-secondary calendar-today-action"
+            onClick={onToday}
+            aria-label="오늘 날짜로 이동"
+          >
+            오늘
+          </button>
+        ) : null}
       </div>
     </div>
   );

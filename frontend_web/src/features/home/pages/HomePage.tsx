@@ -11,6 +11,7 @@ import styles from "@/features/home/styles/HomePage.module.css";
 import type { HomeDashboardMode } from "@/features/home/types/homeDashboard.types";
 import { useMenstrualPhase } from "@/features/menstruation/hooks/useMenstrualPhase";
 import { getMenstrualCalendarStatus } from "@/features/menstruation/utils/menstrualPhaseDatesCalculation.util";
+import { useGetProfileQuery } from "@/features/profile/hooks/queries/useProfileQuery";
 import { FloatingCameraButton } from "@/shared/commons/button/FloatingCameraButton";
 import { ScrollFogArea } from "@/shared/commons/scrollFog";
 import { FEATURE_GUARD, useIsFeatureBlocked } from "@/shared/guards/featureGuard";
@@ -32,7 +33,6 @@ export default function HomePage() {
     enabled: mode === "menstruation",
     historyStartDate: calendarStartDate,
   });
-
   const contentRef = useRef<HTMLDivElement>(null);
   const scrollToTop = () => {
     contentRef.current?.scrollTo({
@@ -40,6 +40,12 @@ export default function HomePage() {
       behavior: "smooth",
     });
   };
+  const { data: profile, isPending: isProfilePending } = useGetProfileQuery();
+  // const menstrualApplicants = [42, 50, 52, 53, 74, 80];
+  const canDashboardMode =
+    profile?.role === "ADMIN" &&
+    // menstrualApplicants.includes(profile!.user_id) &&
+    !isProfilePending;
 
   const handleNavigateChatCamera = async () => {
     const result = await navigateToChatCameraIfSupported(navigate);
@@ -75,12 +81,14 @@ export default function HomePage() {
               : undefined
           }
         />
-        <HomeDashboardModeToggle
-          className={styles.modeToggle}
-          value={mode}
-          onChange={setMode}
-          onClick={scrollToTop}
-        />
+        {canDashboardMode && (
+          <HomeDashboardModeToggle
+            className={styles.modeToggle}
+            value={mode}
+            onChange={setMode}
+            onClick={scrollToTop}
+          />
+        )}
         <ScrollFogArea role="main" ref={contentRef} className={`main ${styles.content}`}>
           <PreviewTodayScoreSection homeMode={mode} menstrualPhase={menstrualPhase} />
           <RecordActionSection />

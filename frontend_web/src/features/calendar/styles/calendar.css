@@ -303,6 +303,18 @@
   transition:
     grid-template-rows 240ms cubic-bezier(0.22, 1, 0.36, 1),
     opacity 140ms ease;
+  position: relative;
+}
+
+.calendar-today-action {
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  transform: translateY(-50%);
+}
+
+.calendar-today-action:active {
+  transform: translateY(-50%) scale(0.9);
 }
 
 .calendar-month-title-clip {
