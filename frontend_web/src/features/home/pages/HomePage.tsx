@@ -92,10 +92,7 @@ export default function HomePage() {
                     menstruationType={getMenstrualCalendarStatus({
                       targetDate: formatDateKey(props.day.date),
                       cycles: menstrualPhase.cycles,
-                      latestPhaseDate:
-                        menstrualPhase.isLoading || menstrualPhase.isError
-                          ? null
-                          : menstrualPhase.latestPhaseDate,
+                      showPredictions: !menstrualPhase.isLoading && !menstrualPhase.isError,
                     })}
                   />
                 )

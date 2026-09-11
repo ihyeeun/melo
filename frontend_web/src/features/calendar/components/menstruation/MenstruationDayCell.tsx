@@ -32,7 +32,7 @@ export default function MenstruationDayCell({
   const recordLabel = menstruationType === "menstrual_recorded"
     ? ", 생리 기록 있음"
     : menstruationType === "next_predicted"
-      ? ", 다음 월경 예상일"
+      ? ", 월경 예상 시작일"
       : "";
 
   return (

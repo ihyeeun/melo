@@ -62,12 +62,19 @@ export function useMenstrualPhase(
       : selectMenstrualCycleContext({ cycles, targetDate }),
     [cycles, latestContext, targetDate],
   );
+  const historyContext = useMemo(
+    () => historyStartDate < targetDate
+      ? selectMenstrualCycleContext({ cycles, targetDate: historyStartDate })
+      : context,
+    [context, cycles, historyStartDate, targetDate],
+  );
   const oldestFromDate = query.data?.pages.at(-1)?.fromDate;
   const needsMoreHistory = Boolean(
     oldestFromDate &&
     query.hasNextPage &&
     (historyStartDate < oldestFromDate || targetDate < oldestFromDate ||
-      !context || context.validIntervals.length < MAX_VALID_CYCLE_INTERVALS),
+      !context || context.validIntervals.length < MAX_VALID_CYCLE_INTERVALS ||
+      !historyContext || historyContext.validIntervals.length < MAX_VALID_CYCLE_INTERVALS),
   );
   const { fetchNextPage, isFetching, isError } = query;
 
@@ -78,18 +85,9 @@ export function useMenstrualPhase(
     void fetchNextPage({ cancelRefetch: false });
   }, [enabled, fetchNextPage, isError, isFetching, needsMoreHistory]);
 
-  const latestPhaseDate = useMemo(
-    () => latestContext ? calculateMenstrualPhaseDates(latestContext) : null,
-    [latestContext],
-  );
   const phaseDate = useMemo(
-    () => {
-      if (!context) return null;
-      return context.ownerCycle.start_date === latestPhaseDate?.cycleStartDate
-        ? latestPhaseDate
-        : calculateMenstrualPhaseDates(context);
-    },
-    [context, latestPhaseDate],
+    () => context ? calculateMenstrualPhaseDates(context, targetDate) : null,
+    [context, targetDate],
   );
   const isLoading = enabled &&
     (query.isPending || (needsMoreHistory && !isError) || (isError && isFetching));
@@ -98,7 +96,6 @@ export function useMenstrualPhase(
     : getMenstrualTypeFromPhase({
         targetDate,
         phaseDate: phaseDate ?? undefined,
-        latestCycleStartDate: cycles[0]?.start_date ?? null,
       }) ?? undefined;
 
   const retry = () => {
@@ -114,7 +111,6 @@ export function useMenstrualPhase(
     ownerCycle: context?.ownerCycle ?? null,
     calculationCycles: context?.calculationCycles ?? [],
     phaseDate,
-    latestPhaseDate,
     cycles,
     hasRecords: cycles.length > 0,
     isLoading,

@@ -1,8 +1,3 @@
-import { differenceInCalendarDays } from "date-fns";
-
-import type { MenstrualDateRangeResponseDto } from "@/shared/api/types/api.response.dto";
-import { parseDateKey } from "@/shared/utils/dateFormat";
-
 interface MenstrualPhaseDurations {
   menstrual: number;
   follicular: number;
@@ -24,18 +19,11 @@ export function calculateAverageCycleLength(validIntervals: readonly number[]): 
   return Math.round(average);
 }
 
-/** owner의 실제 월경 일수와 이미 계산한 평균 주기로 각 단계의 기간을 구한다. */
+/** 실제 월경 또는 예상 표시의 일수와 회차 길이로 단계별 기간을 구한다. */
 export function calculateMenstrualPhaseDurations(
-  ownerCycle: MenstrualDateRangeResponseDto,
+  menstrual: number,
   averageCycleLength: number,
 ): MenstrualPhaseDurations {
-  // 기준 회차의 월경 기간 : M. 기록된 날짜 수를 그대로 사용한다.
-  const menstrual =
-    differenceInCalendarDays(
-      parseDateKey(ownerCycle.end_date),
-      parseDateKey(ownerCycle.start_date),
-    ) + 1;
-
   // 월경기 이후 남는 일수 N-M : R
   const remainingCycleLen = averageCycleLength - menstrual;
 
