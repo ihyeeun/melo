@@ -35,8 +35,8 @@ export interface MenstrualPhaseDates {
 }
 
 /**
- * 두 실제 기록 사이 또는 최신 기록 이후에서 선택 날짜가 속한 회차를 계산한다.
- * 미기록 회차는 예상 상태 5일 뒤 다음 단계로 이어지며, 실제 기록·통계에 추가하지 않는다.
+ * 실제 기록의 ±5일에 해당하는 예상 회차는 대체하고, 앞선 미기록 예상 회차는 유지한다.
+ * 각 화면 회차의 다음 시작일로 단계를 배분하며, 예상 5일은 실제 기록·통계에 추가하지 않는다.
  */
 export function calculateMenstrualPhaseDates(
   { ownerCycle, nextCycle, validIntervals }: MenstrualCycleContext,
@@ -47,7 +47,6 @@ export function calculateMenstrualPhaseDates(
     (nextCycle && targetDate >= nextCycle.start_date)
   ) return null;
 
-  const averageCycleLength = calculateAverageCycleLength(validIntervals);
   const ownerStart = parseDateKey(ownerCycle.start_date);
   const recordedMenstrualDays = differenceInCalendarDays(
     parseDateKey(ownerCycle.end_date),
@@ -55,26 +54,32 @@ export function calculateMenstrualPhaseDates(
   ) + 1;
   if (recordedMenstrualDays <= 0) return null;
 
-  // 실제 기록이 다음 예상일까지 이어지는 경우에는 겹치는 예상 회차를 만들지 않는다.
-  const canProject = recordedMenstrualDays <= averageCycleLength;
-  // 실제 시작일의 ±5일에 해당하는 예상 회차는 실제 회차로 대체한다.
-  // 그보다 앞선 미기록 회차들은 5일 표시를 유지하고 마지막 회차의 끝만 보정한다.
+  // 예측용 주기 L은 실제 기록 간격으로만 계산한다. 화면 회차 길이 N과 구분한다.
+  const predictionCycleLength = calculateAverageCycleLength(validIntervals);
+  const canProject = recordedMenstrualDays <= predictionCycleLength;
+  // 예상 시작일 P < 다음 실제 시작일 A - 5일인 회차만 남긴다.
+  // 경계의 +5일 기록은 예상 회차를 대체하고, +6일부터는 예상 5일을 유지한다.
+  // 실제 월경이 예상일과 겹치면 예상 회차를 만들지 않는다. 0번은 기준 실제 회차다.
   const lastProjectedIndex = !canProject
     ? 0
     : nextCycle
       ? Math.max(0, Math.ceil((differenceInCalendarDays(
           parseDateKey(nextCycle.start_date),
           ownerStart,
-        ) - PREDICTION_MATCH_TOLERANCE_DAYS) / averageCycleLength) - 1)
+        ) - PREDICTION_MATCH_TOLERANCE_DAYS) / predictionCycleLength) - 1)
       : Infinity;
   const cycleIndex = Math.min(
-    Math.floor(differenceInCalendarDays(parseDateKey(targetDate), ownerStart) / averageCycleLength),
+    Math.floor(differenceInCalendarDays(parseDateKey(targetDate), ownerStart) / predictionCycleLength),
     lastProjectedIndex,
   );
-  const cycleStartDate = formatDateKey(addDays(ownerStart, cycleIndex * averageCycleLength));
+  const cycleStartDate = formatDateKey(addDays(ownerStart, cycleIndex * predictionCycleLength));
   const nextCycleStartDate = nextCycle && cycleIndex === lastProjectedIndex
     ? nextCycle.start_date
-    : formatDateKey(addDays(ownerStart, (cycleIndex + 1) * averageCycleLength));
+    : formatDateKey(addDays(ownerStart, (cycleIndex + 1) * predictionCycleLength));
+  const cycleLength = differenceInCalendarDays(
+    parseDateKey(nextCycleStartDate),
+    parseDateKey(cycleStartDate),
+  );
   const isPredicted = cycleIndex > 0;
   const menstrualDates: DateRange = {
     startDate: cycleStartDate,
@@ -84,7 +89,7 @@ export function calculateMenstrualPhaseDates(
   };
   const calculation = calculateMenstrualPhaseDurations(
     isPredicted ? PREDICTED_MENSTRUAL_DAYS : recordedMenstrualDays,
-    differenceInCalendarDays(parseDateKey(nextCycleStartDate), parseDateKey(cycleStartDate)),
+    cycleLength,
   );
   let nextPhaseDate = getNextDate(menstrualDates.endDate);
 

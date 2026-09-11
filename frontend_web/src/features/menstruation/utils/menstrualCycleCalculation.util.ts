@@ -19,13 +19,13 @@ export function calculateAverageCycleLength(validIntervals: readonly number[]): 
   return Math.round(average);
 }
 
-/** 실제 월경 또는 예상 표시의 일수와 회차 길이로 단계별 기간을 구한다. */
+/** 실제 월경 또는 예상 표시 일수 M과 화면 회차 길이 N으로 단계별 기간을 구한다. */
 export function calculateMenstrualPhaseDurations(
   menstrual: number,
-  averageCycleLength: number,
+  cycleLength: number,
 ): MenstrualPhaseDurations {
   // 월경기 이후 남는 일수 N-M : R
-  const remainingCycleLen = averageCycleLength - menstrual;
+  const remainingCycleLen = cycleLength - menstrual;
 
   // 난포기, 배란기, 황체기
   let follicular = 0;

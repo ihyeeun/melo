@@ -35,7 +35,7 @@ export function selectMenstrualCycleContext({
 
   return {
     ownerCycle: cycles[ownerIndex],
-    // 다음 실제 회차는 화면 구간의 끝을 보정하는 데만 사용한다.
+    // 다음 실제 회차는 예상 회차의 대체와 마지막 화면 구간 보정에 사용한다. 평균 표본에는 넣지 않는다.
     nextCycle: cycles[ownerIndex - 1] ?? null,
     calculationCycles: olderCycles.slice(0, calculationCycleCount),
     validIntervals,
