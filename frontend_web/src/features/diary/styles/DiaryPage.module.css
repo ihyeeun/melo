@@ -176,7 +176,14 @@
   transform: scale(0.995);
 }
 
+.mealCopyButton {
+  position: absolute;
+  right: 0;
+  top: -28px;
+}
+
 .mealRecordGroup {
+  position: relative;
   margin: 0;
   padding: 0;
   list-style: none;

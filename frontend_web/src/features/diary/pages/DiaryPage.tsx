@@ -8,6 +8,7 @@ import { useSyncNativeStepCount } from "@/features/health/hooks/useSyncNativeSte
 import Tile from "@/features/home/components/cards/Tile";
 import { useDayMealsQuery, useGetBodyLog } from "@/features/home/hooks/queries/useTodayRecordQuery";
 import { getDayNutritionSummary } from "@/features/home/utils/dayMealSummary";
+import { DayMealCopyButton } from "@/features/meal-record/components/DayMealCopyButton";
 import {
   useGetProfileQuery,
   useGoalSnapshotByDateQuery,
@@ -290,9 +291,11 @@ export default function DiaryPage() {
           </SectionLayout>
 
           <SectionLayout title="식단 기록">
-            {/* <DayMealCopyButton dayMeals={dayMeal} /> */}
-
             <ul className={styles.mealRecordGroup}>
+              <div className={styles.mealCopyButton}>
+                <DayMealCopyButton dayMeals={dayMeal} />
+              </div>
+
               {MEAL_TYPES.map(({ time, label, icon }) => {
                 const calories = dayMeal?.caloriesByTime[time] ?? 0;
                 const hasImage = Boolean(dayMeal?.imagesByTime[time]);
