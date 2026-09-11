@@ -4,15 +4,13 @@ type TitleValues = {
 };
 
 const countdownTitle = ({ daysUntilNext }: TitleValues) =>
-  daysUntilNext !== null && daysUntilNext > 0
-    ? `월경 ${daysUntilNext}일 전`
-    : "월경 시작 예상";
+  daysUntilNext !== null && daysUntilNext > 0 ? `월경 ${daysUntilNext}일 전` : "월경 시작 예상";
 
 const EMPTY_PHASE_CONTENT = {
   phaseIndex: -1,
   phaseLabel: "기록 전",
   title: () => "생리 기록을 시작해 볼까요?",
-  message: "주기에 맞춰 식단과 운동을\n더 똑똑하게 관리해봐요!",
+  message: "주기에 맞춰 식단과\n운동을 더 똑똑하게\n관리해봐요!",
   source: "/icons/characters/question-color.png",
 } as const;
 

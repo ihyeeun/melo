@@ -22,7 +22,7 @@ export default function MenstruationCardButton({ phase }: { phase: MenstrualPhas
   const selectedDateKey = useSelectedDateKey();
   const selectedDay = parseDate(selectedDateKey);
   const isSelectedDateToday = selectedDay !== null ? isToday(selectedDay) : false;
-  const { menstrualStatus, hasRecords, isLoading, isError, retry, phaseDate } = phase;
+  const { menstrualStatus, isLoading, isError, retry, phaseDate } = phase;
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { mutate: requestPersonalizedManagement, isPending } = useMutation({
@@ -50,21 +50,16 @@ export default function MenstruationCardButton({ phase }: { phase: MenstrualPhas
     : HOME_MENSTRUAL_STATUS_VIEW["undefined"];
 
   const isEmpty = menstrualStatus === undefined;
-  const isUnknownPhase = !isLoading && !isError && hasRecords && isEmpty;
   const title = isLoading
     ? "생리 기록을 불러오고 있어요"
     : isError
       ? "기록을 불러오지 못했어요"
-      : isUnknownPhase
-        ? "주기 정보가 없어요"
-        : homeContent.title(getMenstrualPhaseDayInfo(selectedDateKey, phaseDate));
+      : homeContent.title(getMenstrualPhaseDayInfo(selectedDateKey, phaseDate));
   const message = isLoading
     ? "잠시만 기다려 주세요."
     : isError
       ? "눌러서 다시 시도해 주세요."
-      : isUnknownPhase
-        ? "날짜를 바꾸거나\n생리 기록을 확인해 주세요."
-        : homeContent.message;
+      : homeContent.message;
 
   const timeline = [
     ...new Set(
@@ -111,7 +106,7 @@ export default function MenstruationCardButton({ phase }: { phase: MenstrualPhas
         <span className={`${styles.title} title-s-semi text-primary`}>{title}</span>
         <span className={styles.messageBubble}>{message}</span>
 
-        {!isLoading && !isError && !isUnknownPhase && (
+        {!isLoading && !isError && (
           <span className={styles.stepper} aria-hidden="true">
             <span className={styles.track}>
               <span className={styles.progress} style={{ width: `${progressPercent}%` }} />
