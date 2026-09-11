@@ -267,7 +267,15 @@
 }
 
 .hasMealRecordSection {
+  height: 100%;
   padding: 12px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.hasMealRecordSection > .mealIcon {
+  flex-shrink: 0;
 }
 
 .mealIcon {
@@ -290,14 +298,6 @@
   border: 1px solid var(--border-default);
   color: var(--text-primary);
   box-shadow: var(--shadow-outer);
-}
-
-.menuName {
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
-  overflow: hidden;
 }
 
 .mealInfo {

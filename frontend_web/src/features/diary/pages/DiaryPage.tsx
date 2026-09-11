@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 
 import Calendar from "@/features/calendar/components/Calendar";
+import MealMenuPreview from "@/features/diary/components/MealMenuPreview";
 import styles from "@/features/diary/styles/DiaryPage.module.css";
 import { useGetWorkoutRecordQuery } from "@/features/health/hooks/queries/workout.query";
 import { useActivityCalories } from "@/features/health/hooks/useActivityCalories";
@@ -299,10 +300,9 @@ export default function DiaryPage() {
               {MEAL_TYPES.map(({ time, label, icon }) => {
                 const calories = dayMeal?.caloriesByTime[time] ?? 0;
                 const hasImage = Boolean(dayMeal?.imagesByTime[time]);
+                const menus = dayMeal?.menusByTime[time] ?? [];
                 const hasMealRecord =
-                  (dayMeal?.menusByTime[time].length ?? 0) > 0 ||
-                  Boolean(dayMeal?.didNotEatByTime[time]);
-                const hasMenu = dayMeal?.menusByTime[time];
+                  menus.length > 0 || Boolean(dayMeal?.didNotEatByTime[time]);
 
                 return (
                   <li key={time}>
@@ -324,13 +324,7 @@ export default function DiaryPage() {
                               <div className={styles.mealIcon} data-hasMeal={hasMealRecord}>
                                 <SystemIcon name={icon} size={18} />
                               </div>
-                              {hasMenu?.map((menu) => {
-                                return (
-                                  <p className={`${styles.menuName} body-s-medium text-primary`}>
-                                    {menu.name}
-                                  </p>
-                                );
-                              })}
+                              <MealMenuPreview menus={menus} />
                             </div>
                           )
                         ) : (
