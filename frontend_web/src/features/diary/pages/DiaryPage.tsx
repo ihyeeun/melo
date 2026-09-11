@@ -236,7 +236,12 @@ export default function DiaryPage() {
                   <div>
                     <p className={`${styles.titleWithIcon} body-s-medium text-primar`}>
                       걸음으로 소모
-                      <InfoPopover ariaLabel="걸음 소모 칼로리 안내" iconSize={16}>
+                      <InfoPopover
+                        ariaLabel="걸음 소모 칼로리 안내"
+                        iconSize={16}
+                        side="bottom"
+                        align="end"
+                      >
                         평소 활동량을 고려해 목표 칼로리가 설정되어 있어요
                       </InfoPopover>
                     </p>
@@ -301,8 +306,7 @@ export default function DiaryPage() {
                 const calories = dayMeal?.caloriesByTime[time] ?? 0;
                 const hasImage = Boolean(dayMeal?.imagesByTime[time]);
                 const menus = dayMeal?.menusByTime[time] ?? [];
-                const hasMealRecord =
-                  menus.length > 0 || Boolean(dayMeal?.didNotEatByTime[time]);
+                const hasMealRecord = menus.length > 0 || Boolean(dayMeal?.didNotEatByTime[time]);
 
                 return (
                   <li key={time}>
