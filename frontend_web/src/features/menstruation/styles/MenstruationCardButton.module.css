@@ -7,10 +7,14 @@
   display: block;
   height: 278px;
   isolation: isolate;
-  min-height: 200px;
+  min-height: 230px;
   overflow: hidden;
   position: relative;
   width: 100%;
+}
+
+.root[data-isToday="false"] {
+  height: 230px;
 }
 
 .recordButton {

@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { isToday } from "date-fns";
 
 import { getPersonalizedManagement } from "@/features/chat/api/chat.api";
 import { refetchAndResolveChatHistoryItem } from "@/features/chat/hooks/queries/chatHistoryCache";
@@ -15,9 +16,12 @@ import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import { toast } from "@/shared/commons/toast/toast";
 import { useNavigate } from "@/shared/navigation/stackflowNavigation";
 import { useSelectedDateKey } from "@/shared/stores/selectedDate.store";
+import { parseDate } from "@/shared/utils/dateFormat";
 
 export default function MenstruationCardButton({ phase }: { phase: MenstrualPhaseResult }) {
   const selectedDateKey = useSelectedDateKey();
+  const selectedDay = parseDate(selectedDateKey);
+  const isSelectedDateToday = selectedDay !== null ? isToday(selectedDay) : false;
   const { menstrualStatus, hasRecords, isLoading, isError, retry, phaseDate } = phase;
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -76,7 +80,7 @@ export default function MenstruationCardButton({ phase }: { phase: MenstrualPhas
   const progressPercent = ((activePhaseIndex + 0.5) / timeline.length) * 100;
 
   return (
-    <div className={styles.root}>
+    <div className={styles.root} data-isToday={isSelectedDateToday}>
       <button
         type="button"
         className={styles.recordButton}
@@ -138,20 +142,22 @@ export default function MenstruationCardButton({ phase }: { phase: MenstrualPhas
           </span>
         )}
       </button>
-      <button
-        type="button"
-        className={`${styles.chatActionButton} body-s-medium text-primary textCenter`}
-        disabled={isLoading || isPending}
-        aria-busy={isPending}
-        onClick={() => {
-          if (queryClient.isMutating({ mutationKey: ["personalized-management"] }) > 0) return;
+      {isSelectedDateToday && (
+        <button
+          type="button"
+          className={`${styles.chatActionButton} body-s-medium text-primary textCenter`}
+          disabled={isLoading || isPending}
+          aria-busy={isPending}
+          onClick={() => {
+            if (queryClient.isMutating({ mutationKey: ["personalized-management"] }) > 0) return;
 
-          requestPersonalizedManagement();
-          navigate(PATH.CHAT);
-        }}
-      >
-        지금 나에게 맞는 관리법 알아보기
-      </button>
+            requestPersonalizedManagement();
+            navigate(PATH.CHAT);
+          }}
+        >
+          지금 나에게 맞는 관리법 알아보기
+        </button>
+      )}
     </div>
   );
 }
