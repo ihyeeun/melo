@@ -477,18 +477,6 @@ export default function MealSearchPage() {
   const renderPersonalMenuEmptyState = (message: string) => (
     <section className={`${styles.emptyResultContainer} ${styles.emptyResult}`}>
       <p className="body-l-medium">{message}</p>
-      <div className={styles.emptyActionButton}>
-        <Button
-          onClick={() => {
-            setIsDirectInputSheetOpen(true);
-          }}
-          variant="text"
-          size="xs"
-        >
-          영양 성분 직접 등록
-          <SystemIcon name="chevron-right" size={18} />
-        </Button>
-      </div>
     </section>
   );
 

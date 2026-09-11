@@ -407,9 +407,3 @@
   margin-top: 15px;
   margin-bottom: 5px;
 }
-
-.emptyActionButton {
-  display: flex;
-  justify-content: space-around;
-  width: 100%;
-}
