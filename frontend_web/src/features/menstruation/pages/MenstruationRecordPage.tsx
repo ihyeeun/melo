@@ -1,4 +1,3 @@
-import { isFuture } from "date-fns";
 import { useCallback, useRef, useState } from "react";
 
 import MenstruationCalendar from "@/features/calendar/components/menstruation/MenstruationCalendar";
@@ -15,6 +14,7 @@ import { Button } from "@/shared/commons/button/Button";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
 import { toast } from "@/shared/commons/toast/toast";
 import { navigateBack } from "@/shared/navigation/stackflowNavigation";
+import { isFutureDateKey } from "@/shared/utils/dateFormat";
 
 export default function MenstruationRecordPage() {
   const [selections, setSelections] = useState<MenstrualDateSelections>({});
@@ -29,7 +29,7 @@ export default function MenstruationRecordPage() {
   const canSave = hasChanges && !isLoadingRecords && !hasRecordError && !isSaving;
 
   const handleToggleDate = useCallback((dateKey: string, isRecorded: boolean) => {
-    if (saveInFlightRef.current || isFuture(dateKey)) return;
+    if (saveInFlightRef.current || isFutureDateKey(dateKey)) return;
 
     setSelections((previous) => toggleMenstrualDate(previous, dateKey, isRecorded));
   }, []);
