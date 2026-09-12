@@ -164,7 +164,6 @@
   color: var(--text-accent);
 }
 
-/*  */
 /* 공간이 부족하더라도 텍스트를 줄이거나 줄바꿈하지 않고 끝까지 보여준다. */
 .textNoWrap {
   flex-shrink: 0;

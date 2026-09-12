@@ -328,7 +328,6 @@ function RecommendResultContent({
               return (
                 <li key={item.menu_id}>
                   <MealMenuCard
-                    rank={item.rank}
                     name={item.menu_name}
                     calories={item.calories}
                     unit_quantity={item.unit_quantity}
@@ -336,8 +335,8 @@ function RecommendResultContent({
                     data_source={item.data_source}
                     weight={item.weight}
                     unit={item.unit}
-                    icon={isSelected ? "check" : "add"}
-                    state={isSelected ? "select" : "default"}
+                    icon={"add"}
+                    state={isSelected}
                     onClick={() => handleMenuClick(item.menu_id)}
                     onIconClick={isDayMealsPending ? undefined : () => handleToggleMenu(item)}
                   />

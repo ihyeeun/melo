@@ -4,8 +4,11 @@
   flex-shrink: 0;
   white-space: nowrap;
   width: fit-content;
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+  padding: 4px 6px;
 }
 
 .personal {
-  color: var(--text-disabled);
+  color: var(--text-secondary);
 }

@@ -201,10 +201,7 @@ function FeedbackResultContent({
   const imageUrl = getChatItemImageUrl(chatItem);
   const recognizedFoods = getRecognizedFoods(chatItem);
   const feedbackMenuIds = useMemo(() => menus.map((menu) => menu.menu_id), [menus]);
-  const feedbackMenuIdSet = useMemo(
-    () => new Set(feedbackMenuIds),
-    [feedbackMenuIds],
-  );
+  const feedbackMenuIdSet = useMemo(() => new Set(feedbackMenuIds), [feedbackMenuIds]);
   const targetMealTime = currentMealTime;
   const mealType: MealType = getMealTypeFromChatMealTime(targetMealTime);
   const draftKey = formatMenuDraftKey(recordDateKey, mealType);
@@ -362,8 +359,8 @@ function FeedbackResultContent({
                     data_source={menu.data_source}
                     weight={menu.weight}
                     unit={menu.unit}
-                    icon={isSelected ? "check" : "add"}
-                    state={isSelected ? "select" : "default"}
+                    icon={"add"}
+                    state={isSelected}
                     onClick={
                       isDayMealsPending
                         ? undefined
@@ -771,7 +768,9 @@ function FoodImageFeedbackPreview({
                                   marker.scoreText ? ` ${marker.scoreText}` : ""
                                 } 상세 보기`}
                               >
-                                <span className={`${styles.foodClusterPinListNumber} body-s-medium`}>
+                                <span
+                                  className={`${styles.foodClusterPinListNumber} body-s-medium`}
+                                >
                                   {marker.index + 1}
                                 </span>
                                 <span className={`${styles.foodClusterPinListName} body-s-medium`}>

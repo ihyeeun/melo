@@ -382,8 +382,8 @@ export default function MealSearchPage() {
         data_source={menu.data_source}
         weight={menu.weight}
         unit={menu.unit}
-        icon={isSelected ? "check" : "add"}
-        state={isSelected ? "select" : "default"}
+        icon={"add"}
+        state={isSelected}
         onClick={() => handleMenuDetailPageOpen(menu.id)}
         onIconClick={() => handleToggleMenuSelection(menu)}
       />
