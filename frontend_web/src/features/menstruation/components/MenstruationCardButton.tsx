@@ -14,6 +14,7 @@ import { getMenstrualPhaseDayInfo } from "@/features/menstruation/utils/menstrua
 import { PATH } from "@/router/path";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import { toast } from "@/shared/commons/toast/toast";
+import { FEATURE_GUARD, useIsFeatureBlocked } from "@/shared/guards/featureGuard";
 import { useNavigate } from "@/shared/navigation/stackflowNavigation";
 import { useSelectedDateKey } from "@/shared/stores/selectedDate.store";
 import { parseDate } from "@/shared/utils/dateFormat";
@@ -23,6 +24,8 @@ export default function MenstruationCardButton({ phase }: { phase: MenstrualPhas
   const selectedDay = parseDate(selectedDateKey);
   const isSelectedDateToday = selectedDay !== null ? isToday(selectedDay) : false;
   const { menstrualStatus, isIrregularBleeding, isLoading, isError, retry, phaseDate } = phase;
+  const isFreeBlocked = useIsFeatureBlocked(FEATURE_GUARD.CHAT);
+  const showChatButton = isSelectedDateToday && !isFreeBlocked;
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { mutate: requestPersonalizedManagement, isPending } = useMutation({
@@ -77,7 +80,7 @@ export default function MenstruationCardButton({ phase }: { phase: MenstrualPhas
   const progressPercent = ((activePhaseIndex + 0.5) / timeline.length) * 100;
 
   return (
-    <div className={styles.root} data-isToday={isSelectedDateToday}>
+    <div className={styles.root} data-isChatButtonBlock={showChatButton}>
       <button
         type="button"
         className={styles.recordButton}
@@ -139,7 +142,7 @@ export default function MenstruationCardButton({ phase }: { phase: MenstrualPhas
           </span>
         )}
       </button>
-      {isSelectedDateToday && (
+      {showChatButton && (
         <button
           type="button"
           className={`${styles.chatActionButton} body-s-medium text-primary textCenter`}

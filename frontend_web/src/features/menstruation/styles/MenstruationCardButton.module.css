@@ -13,7 +13,7 @@
   width: 100%;
 }
 
-.root[data-isToday="false"] {
+.root[data-isChatButtonBlock="false"] {
   height: 230px;
 }
 

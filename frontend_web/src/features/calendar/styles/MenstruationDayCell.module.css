@@ -42,7 +42,7 @@
 }
 
 .outside[data-menstruation="menstrual_recorded"] {
-  color: var(--background-default);
+  color: var(--coral-400);
   opacity: 0.4;
 }
 

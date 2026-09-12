@@ -44,10 +44,10 @@ export default function HomePage() {
     });
   };
   const { data: profile, isPending: isProfilePending } = useGetProfileQuery();
-  // const menstrualApplicants = [42, 50, 52, 53, 74, 80];
+  const menstrualApplicants = [42, 50, 52, 53, 74, 80];
+  const freeUser = !profile?.is_subscribed;
   const canDashboardMode =
-    profile?.role === "ADMIN" &&
-    // menstrualApplicants.includes(profile!.user_id) &&
+    (freeUser || menstrualApplicants.includes(profile!.user_id) || profile.role === "ADMIN") &&
     !isProfilePending;
 
   useEffect(() => {
