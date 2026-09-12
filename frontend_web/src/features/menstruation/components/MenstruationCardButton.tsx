@@ -22,7 +22,7 @@ export default function MenstruationCardButton({ phase }: { phase: MenstrualPhas
   const selectedDateKey = useSelectedDateKey();
   const selectedDay = parseDate(selectedDateKey);
   const isSelectedDateToday = selectedDay !== null ? isToday(selectedDay) : false;
-  const { menstrualStatus, isLoading, isError, retry, phaseDate } = phase;
+  const { menstrualStatus, isIrregularBleeding, isLoading, isError, retry, phaseDate } = phase;
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { mutate: requestPersonalizedManagement, isPending } = useMutation({
@@ -54,7 +54,9 @@ export default function MenstruationCardButton({ phase }: { phase: MenstrualPhas
     ? "생리 기록을 불러오고 있어요"
     : isError
       ? "기록을 불러오지 못했어요"
-      : homeContent.title(getMenstrualPhaseDayInfo(selectedDateKey, phaseDate));
+      : isIrregularBleeding
+        ? "부정출혈"
+        : homeContent.title(getMenstrualPhaseDayInfo(selectedDateKey, phaseDate));
   const message = isLoading
     ? "잠시만 기다려 주세요."
     : isError

@@ -161,17 +161,19 @@ function isDateInPhaseRange(targetDate: string, range: DateRange): boolean {
   return range.startDate <= targetDate && targetDate <= range.endDate;
 }
 
-/** 실제 기록과 각 미기록 회차의 예상 시작일만 표시한다. 예상 5일은 기록으로 칠하지 않는다. */
+/** 직접 기록한 날짜와 예상 시작일만 표시한다. 블록 안의 공백과 예상 5일은 기록으로 칠하지 않는다. */
 export function getMenstrualCalendarStatus({
   targetDate,
   cycles,
+  recordedRanges,
   showPredictions = true,
 }: {
   targetDate: string;
   cycles: readonly MenstrualDateRangeResponseDto[];
+  recordedRanges: readonly MenstrualDateRangeResponseDto[];
   showPredictions?: boolean;
 }): MenstrualStatus | null {
-  if (cycles.some((cycle) => cycle.start_date <= targetDate && targetDate <= cycle.end_date)) {
+  if (recordedRanges.some((range) => range.start_date <= targetDate && targetDate <= range.end_date)) {
     return "menstrual_recorded";
   }
   if (!showPredictions) return null;

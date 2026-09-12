@@ -92,6 +92,7 @@ export default function HomePage() {
                     menstruationType={getMenstrualCalendarStatus({
                       targetDate: formatDateKey(props.day.date),
                       cycles: menstrualPhase.cycles,
+                      recordedRanges: menstrualPhase.recordedRanges,
                       showPredictions: !menstrualPhase.isLoading && !menstrualPhase.isError,
                     })}
                   />

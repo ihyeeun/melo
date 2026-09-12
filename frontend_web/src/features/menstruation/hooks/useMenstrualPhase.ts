@@ -8,7 +8,7 @@ import { MENSTRUAL_RECORD_CACHE_OPTIONS } from "@/features/menstruation/constant
 import { selectMenstrualCycleContext } from "@/features/menstruation/utils/menstrualCycleContext.util";
 import {
   MAX_VALID_CYCLE_INTERVALS,
-  normalizeMenstrualCycles,
+  normalizeMenstrualHistory,
 } from "@/features/menstruation/utils/menstrualCycleRecords.util";
 import {
   getMenstrualYearRange,
@@ -46,8 +46,8 @@ export function useMenstrualPhase(
         ? formatDateKey(subMonths(parseDateKey(lastMonthKey), MONTHS_PER_MENSTRUAL_QUERY))
         : undefined,
   });
-  const cycles = useMemo(
-    () => normalizeMenstrualCycles(query.data?.pages.flatMap((page) => page.recorded_ranges) ?? []),
+  const { cycles, recordedRanges, irregularBleedingRanges, classificationStableFrom } = useMemo(
+    () => normalizeMenstrualHistory(query.data?.pages.flatMap((page) => page.recorded_ranges) ?? []),
     [query.data],
   );
   const latestContext = useMemo(() => {
@@ -69,10 +69,13 @@ export function useMenstrualPhase(
     [context, cycles, historyStartDate, targetDate],
   );
   const oldestFromDate = query.data?.pages.at(-1)?.fromDate;
+  const hasStableClassification = classificationStableFrom !== null &&
+    context?.calculationCycles.every((cycle) => cycle.start_date >= classificationStableFrom) &&
+    historyContext?.calculationCycles.every((cycle) => cycle.start_date >= classificationStableFrom);
   const needsMoreHistory = Boolean(
     oldestFromDate &&
     query.hasNextPage &&
-    (historyStartDate < oldestFromDate || targetDate < oldestFromDate ||
+    (historyStartDate < oldestFromDate || targetDate < oldestFromDate || !hasStableClassification ||
       !context || context.validIntervals.length < MAX_VALID_CYCLE_INTERVALS ||
       !historyContext || historyContext.validIntervals.length < MAX_VALID_CYCLE_INTERVALS),
   );
@@ -81,7 +84,7 @@ export function useMenstrualPhase(
   useEffect(() => {
     if (!enabled || !needsMoreHistory || isFetching || isError) return;
 
-    // owner와 정상 간격 최대 6개를 확보할 때까지만 이전 1년씩 추가한다.
+    // 부정출혈 분류가 오래된 미조회 기록에 영향받지 않고 정상 간격 최대 6개가 확보될 때까지 조회한다.
     void fetchNextPage({ cancelRefetch: false });
   }, [enabled, fetchNextPage, isError, isFetching, needsMoreHistory]);
 
@@ -97,6 +100,9 @@ export function useMenstrualPhase(
         targetDate,
         phaseDate: phaseDate ?? undefined,
       }) ?? undefined;
+  const isIrregularBleeding = !isLoading && !isError && irregularBleedingRanges.some(
+    (range) => range.start_date <= targetDate && targetDate <= range.end_date,
+  );
 
   const retry = () => {
     if (query.isFetchNextPageError) {
@@ -112,7 +118,9 @@ export function useMenstrualPhase(
     calculationCycles: context?.calculationCycles ?? [],
     phaseDate,
     cycles,
-    hasRecords: cycles.length > 0,
+    recordedRanges,
+    isIrregularBleeding,
+    hasRecords: recordedRanges.length > 0,
     isLoading,
     isError,
     retry,
