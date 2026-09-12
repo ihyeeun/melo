@@ -146,6 +146,11 @@ export default function CreateFolderPage() {
             <span className={`body-s-medium ${styles.menuCount}`}>{selectedMenus.length}개</span>
           </div>
 
+          <button type="button" className={styles.addButton} onClick={handleAddMenu}>
+            <SystemIcon name="plus-circle" size={18} />
+            <p className="body-m-regular">음식 추가</p>
+          </button>
+
           {selectedMenus.length > 0 ? (
             <div className={styles.menuList}>
               {selectedMenus.map(({ requestMenu, viewMenu }) => (
@@ -170,17 +175,6 @@ export default function CreateFolderPage() {
               폴더에 담을 음식을 추가해주세요
             </div>
           )}
-
-          <Button
-            className={styles.addButton}
-            variant="outlined"
-            border="secondary"
-            fullWidth
-            onClick={handleAddMenu}
-          >
-            <SystemIcon name="plus" size={16} />
-            음식 추가
-          </Button>
         </section>
       </main>
 

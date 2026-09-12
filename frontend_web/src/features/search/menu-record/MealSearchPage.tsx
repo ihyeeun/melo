@@ -456,7 +456,6 @@ export default function MealSearchPage() {
       </span>
     </button>
   );
-
   const renderSearchErrorState = () => (
     <section className={styles.emptyResult}>
       <p className="body-l-medium">메뉴를 검색하지 못했어요</p>
@@ -480,12 +479,7 @@ export default function MealSearchPage() {
     </section>
   );
 
-  const renderRegisteredFoodResult = ({
-    emptyText = "직접 등록한 음식이 없어요",
-  }: {
-    compact?: boolean;
-    emptyText?: string;
-  } = {}) => {
+  const renderRegisteredFoodResult = () => {
     if (isRegisteredMenusPending) {
       return (
         <section className={styles.loadingContainer}>
@@ -498,41 +492,22 @@ export default function MealSearchPage() {
       return renderPersonalMenuEmptyState("메뉴를 불러오지 못했어요");
     }
 
-    if (registeredMenuList.length > 0) {
-      return (
-        <div className={styles.compactResultList}>
-          <div className={`${styles.folderName} ${styles.marginTop}`}>
-            <Button
-              className={styles.directRegisterPromptAction}
-              onClick={() => {
-                setIsDirectInputSheetOpen(true);
-              }}
-              variant="text"
-              size="xs"
-            >
-              영양 성분 직접 등록
-              <SystemIcon name="chevron-right" size={14} />
-            </Button>
-          </div>
-          {registeredMenuList.map(renderMenuCard)}
-        </div>
-      );
-    }
-
     return (
-      <section className={`${styles.emptyResult} ${styles.marginTop}`}>
-        <p className="body-l-medium">{emptyText}</p>
-        <Button
-          onClick={() => {
-            setIsDirectInputSheetOpen(true);
-          }}
-          variant="text"
-          size="xs"
-        >
-          영양 성분 직접 등록
-          <SystemIcon name="chevron-right" size={14} />
-        </Button>
-      </section>
+      <div className={styles.compactResultList}>
+        <div className={` ${styles.marginTop}`}>
+          <button
+            type="button"
+            className={styles.addButton}
+            onClick={() => {
+              setIsDirectInputSheetOpen(true);
+            }}
+          >
+            <SystemIcon name="plus-circle" size={18} />
+            <p className="body-m-regular">영양 성분 직접 등록</p>
+          </button>
+        </div>
+        {registeredMenuList.map(renderMenuCard)}
+      </div>
     );
   };
 
@@ -591,31 +566,23 @@ export default function MealSearchPage() {
       >
         <Tabs.Tab
           value={PERSONAL_MENU_TAB.FREQUENTLY_RECORDED}
-          className={`${styles.personalMenuTabsTab} ${
-            visiblePersonalMenuTab === PERSONAL_MENU_TAB.FREQUENTLY_RECORDED
-              ? "body-l-semi"
-              : "body-l-semi"
-          }`}
+          className={`${styles.personalMenuTabsTab} body-s-medium`}
         >
           자주 먹었어요
         </Tabs.Tab>
         {!isPersonalMenuEditSearchMode ? (
           <Tabs.Tab
             value={PERSONAL_MENU_TAB.FOLDER}
-            className={`${styles.personalMenuTabsTab} ${
-              visiblePersonalMenuTab === PERSONAL_MENU_TAB.FOLDER ? "body-l-semi" : "body-l-semi"
-            }`}
+            className={`${styles.personalMenuTabsTab} body-s-medium`}
           >
             내 폴더
           </Tabs.Tab>
         ) : null}
         <Tabs.Tab
           value={PERSONAL_MENU_TAB.REGISTERED}
-          className={`${styles.personalMenuTabsTab} ${
-            visiblePersonalMenuTab === PERSONAL_MENU_TAB.REGISTERED ? "body-l-semi" : "body-l-semi"
-          }`}
+          className={`${styles.personalMenuTabsTab} body-s-medium`}
         >
-          직접 등록
+          내 등록 메뉴
         </Tabs.Tab>
         <Tabs.Indicator className={styles.personalMenuTabsIndicator} />
       </Tabs.List>
@@ -693,19 +660,19 @@ export default function MealSearchPage() {
     return (
       <div className={styles.emptyResultContainer}>
         {searchMenuList.length === 0 && (
-          <section className={styles.emptyResult}>
-            <p className="body-l-medium">검색 결과가 없어요</p>
-            <div className={styles.buttonContainer}>
-              <Button
-                variant="text"
-                size="xs"
-                onClick={() => {
-                  setIsDirectInputSheetOpen(true);
-                }}
-              >
-                영양 성분 직접 등록
-              </Button>
-            </div>
+          <section className={styles.searchEmptyResult}>
+            <img src="/icons/characters/question.png" alt="" aria-hidden="true" width={200} />
+
+            <p className="body-l-medium text-tertiary">검색 결과가 없어요</p>
+            <Button
+              variant="text"
+              size="xs"
+              onClick={() => {
+                setIsDirectInputSheetOpen(true);
+              }}
+            >
+              <p className="body-s-medium text-secondary">영양 성분 직접 등록</p>
+            </Button>
           </section>
         )}
 
@@ -846,18 +813,16 @@ function FolderPanel({
             </Button>
           </section>
         </div>
-      ) : folderList.length > 0 ? (
+      ) : (
         <div className={styles.folderList}>
-          <Button
-            variant="text"
-            size="xs"
-            fullWidth
-            className={styles.folderAddAction}
+          <button
+            type="button"
+            className={styles.addButton}
             onClick={() => navigate(PATH.CREATE_FOLDER)}
           >
-            <span>새 폴더 만들기</span>
-            <SystemIcon name="chevron-right" size={14} />
-          </Button>
+            <SystemIcon name="plus-circle" size={18} />
+            <p className="body-m-regular">새 폴더 만들기</p>
+          </button>
           {folderList.map((folder) => (
             <article key={folder.folder_id} className={styles.folderItem}>
               <button
@@ -871,31 +836,14 @@ function FolderPanel({
                       {folder.folder_name}
                     </span>
                   </div>
-                  <span className={`body-s-medium ${styles.folderMenuNames}`}>
+                  <span className={`body-s-regular text-secondary ${styles.folderMenuNames}`}>
                     {folder.menu_names.join(", ")}
                   </span>
                 </div>
-                <SystemIcon name="chevron-right" size={24} />
+                <SystemIcon name="chevron-right" size={18} />
               </button>
             </article>
           ))}
-        </div>
-      ) : (
-        <div className={styles.emptyResultContainer}>
-          <section className={`${styles.emptyResult} ${styles.folderEmptyResult}`}>
-            <p className="body-l-medium">
-              자주 먹는 음식을
-              <br />
-              폴더로 모아두고
-              <br />
-              빠르게 기록해보세요!
-            </p>
-
-            <Button onClick={() => navigate(PATH.CREATE_FOLDER)} size="xs" fullWidth>
-              <SystemIcon name="plus" size={16} />
-              <span>폴더 만들기</span>
-            </Button>
-          </section>
         </div>
       )}
     </div>

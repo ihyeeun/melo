@@ -78,7 +78,18 @@
 }
 
 .addButton {
+  display: flex;
+  justify-content: center;
+  align-items: center;
   gap: 4px;
+  border: 1px dashed var(--text-tertiary);
+  color: var(--text-tertiary);
+  border-radius: 16px;
+  padding: 20px 16px;
+}
+
+.addButton:active {
+  background-color: var(--background-gray-2);
 }
 
 .footer {

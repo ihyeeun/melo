@@ -265,6 +265,15 @@
   text-align: center;
 }
 
+.searchEmptyResult {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  justify-content: center;
+  text-align: center;
+}
+
 .emptyResultText {
   color: var(--text-primary);
 }
@@ -340,40 +349,30 @@
 }
 
 .folderItem {
-  align-items: stretch;
   background-color: var(--background-default);
   border: 1px solid var(--border-subtle);
-  border-radius: 8px;
-  color: var(--text-primary);
-  display: flex;
-  gap: 8px;
-  overflow: hidden;
+  border-radius: 16px;
   width: 100%;
 }
 
 .folderContentButton {
+  width: 100%;
   align-items: center;
-  background: transparent;
-  border: 0;
-  color: inherit;
   display: flex;
   flex: 1 1 auto;
-  gap: 8px;
-  min-width: 0;
-  padding: 16px 16px 16px 20px;
-  text-align: left;
+  gap: 10px;
+  padding: 20px 16px;
 }
 
 .folderContent {
   display: flex;
   flex: 1 1 auto;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
   min-width: 0;
 }
 
 .folderMenuNames {
-  color: var(--text-tertiary);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -397,6 +396,22 @@
 .folderAddAction {
   margin-left: auto;
   margin-bottom: 5px;
+}
+
+.addButton {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 4px;
+  border: 1px dashed var(--text-tertiary);
+  color: var(--text-tertiary);
+  border-radius: 16px;
+  padding: 20px 16px;
+  width: 100%;
+}
+
+.addButton:active {
+  background-color: var(--background-gray-2);
 }
 
 .marginLeftAuto {
