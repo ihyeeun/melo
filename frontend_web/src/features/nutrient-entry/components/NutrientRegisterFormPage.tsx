@@ -90,7 +90,6 @@ export function NutrientRegisterFormPage({
   const selectedBrandName = useBrandSearchSelectedBrand(brandSearchReturnKey);
   const clearBrandSearchSelection = useClearBrandSearchSelection();
   const { mutate: registerManualMenu, isPending: isSubmitting } = useRegisterMenuMutation();
-  const isCameraEntry = initialState.entrySource === "camera";
 
   const brandName = (selectedBrandName ?? formState.brand ?? "").trim();
   const nutrientForm = buildNutrientFormFields(formState);
@@ -209,50 +208,43 @@ export function NutrientRegisterFormPage({
       <main className={styles.main}>
         <div className={styles.content}>
           <section className={styles.topSection}>
-            {isCameraEntry ? (
-              <p className={`title-s-semi ${styles.recognizedInfoText}`}>
-                사진에서 인식한 영양정보
-              </p>
-            ) : (
-              <>
-                <div className={styles.fieldWrap}>
-                  <div className={styles.labelRow}>
-                    <p className={`title-s-semi ${styles.labelText}`}>음식명</p>
-                    <p className={`body-s-medium ${styles.requiredText}`}>* 필수로 작성해주세요</p>
-                  </div>
+            <div className={styles.fieldWrap}>
+              <div className={styles.labelRow}>
+                <p className={`title-s-semi ${styles.labelText}`}>음식명</p>
+                <p className={`body-s-medium ${styles.requiredText}`}>* 필수로 작성해주세요</p>
+              </div>
 
-                  <input
-                    className={`body-s-medium ${styles.textInput} amp-unmask`}
-                    type="text"
-                    value={formState.name ?? ""}
-                    onChange={handleFoodNameChange}
-                    placeholder="음식명 입력"
-                    aria-label="음식명 입력"
-                  />
-                </div>
+              <input
+                className={`body-s-medium ${styles.textInput} amp-unmask`}
+                type="text"
+                maxLength={300}
+                value={formState.name ?? ""}
+                onChange={handleFoodNameChange}
+                placeholder="음식명 입력"
+                aria-label="음식명 입력"
+              />
+            </div>
 
-                <div className={styles.fieldWrap}>
-                  <p className={`title-s-semi ${styles.labelText}`}>브랜드명</p>
-                  <button
-                    type="button"
-                    className={styles.brandButton}
-                    onClick={handleOpenBrandSearch}
-                    aria-label="브랜드명 검색 열기"
-                  >
-                    <span
-                      className={`body-s-medium ${brandName ? styles.brandValue : styles.brandPlaceholder}`}
-                    >
-                      {brandName || "브랜드명 입력"}
-                    </span>
-                    <SystemIcon name="search" size={20} className={styles.brandSearchIcon} />
-                  </button>
-                </div>
+            <div className={styles.fieldWrap}>
+              <p className={`title-s-semi ${styles.labelText}`}>브랜드명</p>
+              <button
+                type="button"
+                className={styles.brandButton}
+                onClick={handleOpenBrandSearch}
+                aria-label="브랜드명 검색 열기"
+              >
+                <span
+                  className={`body-s-medium ${brandName ? styles.brandValue : styles.brandPlaceholder}`}
+                >
+                  {brandName || "브랜드명 입력"}
+                </span>
+                <SystemIcon name="search" size={20} className={styles.brandSearchIcon} />
+              </button>
+            </div>
 
-                <div className={styles.nutrientHeader}>
-                  <p className={`title-s-semi ${styles.labelText}`}>영양정보</p>
-                </div>
-              </>
-            )}
+            <div className={styles.nutrientHeader}>
+              <p className={`title-s-semi ${styles.labelText}`}>영양정보</p>
+            </div>
             <div className="divider" />
           </section>
 

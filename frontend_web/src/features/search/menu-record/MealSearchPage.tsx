@@ -297,14 +297,14 @@ export default function MealSearchPage() {
     if (hasMenuSelectionRouteContext) {
       navigate(
         getMenuSelectionPath({
-          path: PATH.NUTRIENT_ADD,
+          path: PATH.NUTRIENT_CAMERA,
           ...menuSelectionPathContext,
         }),
       );
       return;
     }
 
-    navigate(getPathWithMeal(PATH.NUTRIENT_ADD, dateKey, mealType));
+    navigate(getPathWithMeal(PATH.NUTRIENT_CAMERA, dateKey, mealType));
   };
 
   const handleCameraClick = () => {
