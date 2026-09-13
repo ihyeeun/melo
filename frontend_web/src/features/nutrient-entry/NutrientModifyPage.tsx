@@ -40,6 +40,7 @@ import {
 } from "@/shared/api/types/api.dto";
 import { Button } from "@/shared/commons/button/Button";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
+import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import { LoadingOverlay } from "@/shared/commons/loading/Loading";
 import { toast } from "@/shared/commons/toast/toast";
 import {
@@ -294,64 +295,52 @@ export default function NutrientModifyPage() {
   };
 
   return (
-    <section className={styles.page}>
+    <section className={`${styles.page} page`}>
       <PageHeader title="영양성분 수정" onBack={handleBack} />
 
-      <main className={styles.main}>
-        <div className={styles.content}>
-          <section className={styles.topSection}>
-            <p className={`title-l-semi ${styles.textNormal}`}>
-              {foodName || "메뉴 정보를 확인해주세요"}
-            </p>
-            {brandName && <p className={`body-s-medium text-tertiary`}>{brandName}</p>}
-          </section>
+      <main className={`main ${styles.content}`}>
+        <section className={styles.menuNameGroup}>
+          {brandName && <p className={`body-xs-regular text-tertiary`}>{brandName}</p>}
+          <p className={`title-m-semi text-primary`}>{foodName || "메뉴 정보를 확인해주세요"}</p>
+        </section>
 
-          <section className={styles.nutrientSection}>
-            <div className={styles.nutrientHeader}>
-              <p className={`title-s-semi ${styles.textNormal}`}>영양정보</p>
-              <Button
-                variant="text"
-                size="xs"
-                onClick={handleResetForm}
-              >
-                전체 삭제
-              </Button>
-            </div>
-
-            <div className="divider dividerMargin20" />
-
-            <section className={styles.nutrientFormWrap}>
-              <NutrientDetailForm
-                totalWeight={formState.weight}
-                onTotalWeightChange={(nextWeight) => {
-                  setEditedFormState((prev) => ({
-                    ...prev,
-                    weight: nextWeight,
-                  }));
-                }}
-                totalCalories={formState.calories}
-                onTotalCaloriesChange={(nextCalories) => {
-                  setEditedFormState((prev) => ({
-                    ...prev,
-                    calories: nextCalories,
-                  }));
-                }}
-                form={nutrientForm}
-                onFieldChange={handleFieldChange}
-                weightUnit={unit}
-                onWeightUnitChange={(nextUnit) => {
-                  setEditedFormState((prev) => ({
-                    ...prev,
-                    unit: nextUnit,
-                  }));
-                }}
-              />
-            </section>
-          </section>
+        <div className={styles.formClearActionArea}>
+          <button type="button" onClick={handleResetForm} className={styles.clearIcon}>
+            <SystemIcon name="refresh" size={20} className="text-tertiary" />
+            <span className="body-s-medium text-tertiary">전체 초기화</span>
+          </button>
         </div>
+
+        <section className={styles.formSection}>
+          <NutrientDetailForm
+            totalWeight={formState.weight}
+            onTotalWeightChange={(nextWeight) => {
+              setEditedFormState((prev) => ({
+                ...prev,
+                weight: nextWeight,
+              }));
+            }}
+            totalCalories={formState.calories}
+            onTotalCaloriesChange={(nextCalories) => {
+              setEditedFormState((prev) => ({
+                ...prev,
+                calories: nextCalories,
+              }));
+            }}
+            form={nutrientForm}
+            onFieldChange={handleFieldChange}
+            weightUnit={unit}
+            onWeightUnitChange={(nextUnit) => {
+              setEditedFormState((prev) => ({
+                ...prev,
+                unit: nextUnit,
+              }));
+            }}
+          />
+        </section>
       </main>
 
-      <footer className={styles.footer}>
+      <footer className={`footer`}>
         <Button
           variant="default"
           size="m"

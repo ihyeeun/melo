@@ -1,130 +1,37 @@
-.formSection {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  min-height: 100%;
-  width: 100%;
-}
-
-.topFieldSection {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.titleRow {
-  align-items: center;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.titleText {
-  color: var(--text-primary);
-}
-
-.titleUnit {
-  color: var(--text-tertiary);
-}
-
-.requiredText {
-  color: var(--status-error);
-}
-
 .weightRow {
   display: grid;
-  gap: 4px;
+  gap: 8px;
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
-.valueInput {
+.unitButton {
   background-color: var(--background-default);
-  border: 1px solid var(--border-subtle);
-  border-radius: 8px;
+  border: 1px solid var(--border-default);
+  border-radius: 12px;
   color: var(--text-primary);
-  padding: 10px 14px;
-  text-align: right;
+  padding: 8px 16px;
   width: 100%;
-}
+  text-align: center;
 
-.valueInput::placeholder {
-  color: var(--text-tertiary);
-}
-
-.valueInput:focus {
-  /* border-color: var(--border-strong); */
-  outline: none;
-}
-
-.valueInput[type="number"] {
-  appearance: textfield;
-}
-
-.valueInput[type="number"]::-webkit-inner-spin-button,
-.valueInput[type="number"]::-webkit-outer-spin-button {
-  appearance: none;
-  margin: 0;
-}
-
-.selectTrigger {
-  align-items: center;
-  display: flex;
-  gap: 8px;
-  justify-content: flex-end;
-}
-
-.selectPositioner {
-  z-index: 1;
-  margin-top: 8px;
-}
-
-.selectPopup {
-  background-color: var(--background-default);
-  border: 1px solid var(--border-subtle);
-  border-radius: 10px;
-  box-shadow: var(--shadow-outer);
-  min-width: var(--anchor-width);
-  overflow: hidden;
-  padding: 8px;
-}
-
-.selectList {
-  display: flex;
-  flex-direction: column;
-}
-
-.selectItem {
-  color: var(--text-primary);
-  cursor: pointer;
-  padding: 10px 6px;
-}
-
-.selectItem[data-highlighted] {
-  background-color: var(--background-gray-1);
-  outline: none;
-}
-
-.selectItem[data-selected] {
-  color: var(--text-primary);
-}
-
-.selectIcon {
-  color: var(--text-primary);
-  align-items: center;
-  display: flex;
-  justify-content: center;
+  &[data-checked] {
+    border-color: var(--border-strong);
+    background-color: var(--background-selected);
+  }
 }
 
 .nutrientList {
+  --sub-row-gap: 16px;
+
   display: flex;
   flex-direction: column;
+  margin-top: 40px;
 }
 
 .fieldRow {
+  display: grid;
+  grid-template-columns: 1fr 166px;
+  gap: 10px;
   align-items: center;
-  display: flex;
-  gap: 12px;
-  justify-content: space-between;
 }
 
 .fieldRowMain {
@@ -132,54 +39,73 @@
 }
 
 .fieldRowSub {
-  padding: 2px 0;
+  position: relative;
+  padding-left: 20px;
 }
 
-.fieldLabel {
-  color: var(--text-primary);
-  min-width: 0;
+.fieldRowSub::before {
+  content: "";
+  position: absolute;
+  left: 4px;
+  top: calc(-1 * var(--sub-row-gap));
+  bottom: 0;
+  border-left: 1px solid var(--border-default);
+  pointer-events: none;
 }
 
-.fieldLabelMain {
-  color: var(--text-primary);
+.fieldRowSub::after {
+  content: "";
+  position: absolute;
+  left: 4px;
+  top: 50%;
+  width: 10px;
+  border-top: 1px solid var(--border-default);
+  pointer-events: none;
 }
 
-.fieldLabelSub {
-  color: var(--text-secondary);
+.fieldRowSub[data-last-sub="true"]::before {
+  bottom: 50%;
 }
 
-.unitText {
-  color: var(--text-tertiary);
+.fieldRowSub + .fieldRowMain,
+.fieldRowMain + .fieldRowMain {
+  margin-top: 32px;
+}
+.fieldRowMain + .fieldRowSub,
+.fieldRowSub + .fieldRowSub {
+  margin-top: var(--sub-row-gap);
 }
 
-.nutrientInput {
+.fieldSection {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.fieldSection + .fieldSection {
+  margin-top: 20px;
+}
+
+.labelArea {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+
+  > h2 > span {
+    margin-left: 4px;
+  }
+}
+
+.require {
+  color: var(--coral-500);
+}
+
+.input {
   background-color: var(--background-default);
-  border: 1px solid var(--border-subtle);
-  border-radius: 8px;
+  border: 1px solid var(--border-default);
+  border-radius: 12px;
   color: var(--text-primary);
-  flex-shrink: 0;
-  max-width: 190px;
-  min-width: 164px;
-  padding: 10px 14px;
-  text-align: right;
-  width: 50%;
-}
-
-.nutrientInput::placeholder {
-  color: var(--text-tertiary);
-}
-
-.nutrientInput:focus {
-  /* border-color: var(--border-strong); */
-  outline: none;
-}
-
-.nutrientInput[type="number"] {
-  appearance: textfield;
-}
-
-.nutrientInput[type="number"]::-webkit-inner-spin-button,
-.nutrientInput[type="number"]::-webkit-outer-spin-button {
-  appearance: none;
-  margin: 0;
+  padding: 8px 16px;
+  width: 100%;
+  text-align: end;
 }
