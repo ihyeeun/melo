@@ -1,45 +1,49 @@
-.summarySection {
-  background-color: var(--background-default);
-  border-radius: 8px;
-  border: 1px solid var(--border-subtle);
+.root {
+  padding: 20px 0;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  overflow: hidden;
-  padding: 16px 20px;
+  gap: 40px;
 }
 
-.skeletonRoot {
+.menuInfoSection {
   display: flex;
   flex-direction: column;
-  gap: 20px;
-}
-
-.summaryContent {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.summarySecond {
-  align-items: top;
-  display: flex;
   gap: 16px;
 }
 
-.calories {
-  margin-left: auto;
+.menuNames > p + p,
+.menuNames > div + div {
+  margin-top: 6px;
 }
 
-.macroContainer {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+.menuNutritionGroup > div + div {
+  margin-top: 8px;
+}
+
+.caloriesCard {
+  background-color: var(--background-default);
+  border-radius: 16px;
+  padding: 16px 20px;
+}
+
+.calorieUnit {
+  margin-left: 6px;
+}
+
+.macroCard {
+  display: grid;
+  background-color: var(--background-default);
+  border-radius: 16px;
+  gap: 3px;
+  grid-template-columns: repeat(3, 1fr);
+  padding: 8px 16px;
 }
 
 .macroItem {
+  padding: 6.5px 8px;
   display: flex;
-  gap: 2px;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .macroLabelRow {
@@ -48,28 +52,8 @@
   gap: 4px;
 }
 
-.macroValue {
-  flex: 1;
-  gap: 2px;
-  display: flex;
-  align-items: center;
-}
-
-.macroNumber {
-  min-width: 0;
-  overflow-wrap: anywhere;
-}
-
-.macroUnit {
-  color: var(--primary-normal);
-  flex: 0 0 auto;
-}
-
-.skeletonMacroItem {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  min-width: 0;
+.macroValue > span + span {
+  margin-left: 2px;
 }
 
 .servingInputSection {
@@ -78,37 +62,56 @@
   gap: 8px;
 }
 
-.TabsRoot {
+.tabRoot {
   display: flex;
   flex-direction: column;
-  gap: 6px;
   width: 100%;
+  background-color: var(--background-default);
+  border-radius: 16px;
 }
 
-.TabsList {
-  background-color: var(--background-default);
-  border: 1px solid var(--border-subtle);
-  border-radius: 8px;
+.tabsList {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  padding: 4px;
+  border-bottom: 1px solid var(--border-subtle);
+  height: 52px;
+  position: relative;
 }
 
-.TabsTab {
-  background: var(--background-default);
-  border: 0;
-  border-radius: 6px;
-  color: var(--text-tertiary);
-  cursor: pointer;
-  margin: 0;
-  outline: none;
-  padding: 14px 8px;
+.tab {
+  height: 100%;
+  color: var(--text-disabled);
   text-align: center;
 
-  &[data-active] {
-    background: var(--background-selected);
-    color: var(--primary-normal);
+  > span:nth-of-type(2) {
+    margin-left: 2px;
   }
+
+  &[data-active] {
+    color: var(--text-primary);
+
+    > span:nth-of-type(2) {
+      color: var(--text-tertiary);
+    }
+  }
+
+  &:active {
+    background-color: var(--background-gray-1);
+  }
+}
+
+.tabsIndicator {
+  position: absolute;
+  background-color: var(--border-strong);
+  height: 2px;
+  width: var(--active-tab-width);
+  bottom: -1px;
+  left: 0;
+  width: calc(var(--active-tab-width) * 0.6);
+  transform: translateX(calc(var(--active-tab-left, 0px) + var(--active-tab-width) * 0.2));
+  transition:
+    transform 0.22s cubic-bezier(0.2, 0, 0, 1),
+    width 0.22s cubic-bezier(0.2, 0, 0, 1);
 }
 
 .TabsPanel {
@@ -116,14 +119,10 @@
 }
 
 .FieldGroup {
-  background-color: var(--background-default);
-  border: 1px solid var(--border-subtle);
-  border-radius: 8px;
-  display: flex;
-  gap: 10px;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: 32px 1fr 32px;
   align-items: center;
-  padding: 16px;
+  padding: 18px 20px;
   width: 100%;
 }
 
@@ -134,9 +133,19 @@
   justify-content: center;
 }
 
-.FieldInputGroup {
-  display: flex;
-  flex: 1;
+.StepButton {
+  display: grid;
+  place-items: center;
+  background-color: var(--background-gray-1);
+  border-radius: 50%;
+  height: 32px;
+  width: 32px;
+  box-shadow: var(--shadow-outer);
+  color: var(--text-primary);
+
+  &:active {
+    background-color: var(--background-gray-2);
+  }
 }
 
 .FieldInput {
@@ -155,141 +164,50 @@
   outline: none;
 }
 
-.StepButton {
-  align-items: center;
-  background: transparent;
-  border: 0;
-  color: var(--text-primary);
-  cursor: pointer;
-  display: inline-flex;
-  height: 24px;
-  justify-content: center;
-  margin: 0;
-  outline: none;
-  padding: 0;
-  width: 24px;
-}
-
 .detailSection {
-  overflow: hidden;
-  padding: 20px 0;
-}
-
-.skeletonDetailHeader {
-  align-items: center;
   display: flex;
-  justify-content: space-between;
-}
-
-.skeletonDetailRows {
-  padding-top: 20px;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .detailToggleButton {
   align-items: center;
-  color: var(--text-primary);
   display: flex;
   justify-content: space-between;
   width: 100%;
+}
+
+.arrowIcon {
+  transition: transform 0.2s ease;
+
+  &[data-isClicked="true"] {
+    transform: rotate(180deg);
+  }
+}
+
+.detailNutritionSection {
+  background-color: var(--background-default);
+  border-radius: 16px;
+  padding-top: 16px;
+  padding-bottom: 18px;
+}
+
+.editSection {
+  align-items: center;
+  background-color: var(--background-gray-1);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  height: 46px;
+  width: calc(100% - 24px);
+  margin: 20px 12px 0;
 }
 
 .detailList {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  padding-top: 20px;
-}
-
-.detailGroup {
-  display: flex;
-  flex-direction: column;
-}
-
-.groupDivider {
-  background-color: var(--border-subtle);
-  height: 1px;
-  margin: 12px 0;
-  width: 100%;
-}
-
-.detailGroupRows {
-  display: flex;
-  flex-direction: column;
-}
-
-.detailRow {
-  align-items: center;
-  color: var(--text-primary);
-  display: flex;
-  gap: 8px;
-  justify-content: space-between;
-  padding: 8px 0;
-}
-
-.detailLabelSub {
-  padding-left: 4px;
-}
-
-.detailValue {
-  align-items: center;
-  display: inline-flex;
-  gap: 8px;
-  position: relative;
-}
-
-.warningButton {
-  align-items: center;
-  background: var(--gray-300);
-  border: 0;
-  border-radius: 50%;
-  color: var(--text-secondary);
-  cursor: pointer;
-  display: inline-flex;
-  height: 26px;
-  justify-content: center;
-  margin-right: 8px;
-  outline: none;
-  padding: 0;
-  width: 20px;
-  height: 20px;
-}
-
-.warningPositioner {
-  z-index: 3;
-}
-
-.warningTooltip {
-  background: var(--primary-normal);
-  border-radius: 6px;
-  color: var(--background-default);
-  max-width: min(360px, calc(100vw - 96px));
-  padding: 10px 14px;
-  white-space: normal;
-  width: max-content;
-}
-
-.editSection {
-  align-items: center;
-  background-color: var(--background-default);
-  border-radius: 6px;
-  display: flex;
-  justify-content: space-between;
-  padding: 10px 14px;
-}
-
-.textNormal {
-  color: var(--text-primary);
-}
-
-.textAlternative {
-  color: var(--text-secondary);
-}
-
-.arrowIcon {
-  transition: transform 0.2s ease;
-  color: var(--text-primary);
-}
-
-.arrowIconExpanded {
-  transform: rotate(180deg);
+  gap: 12px;
+  padding: 0 16px;
 }

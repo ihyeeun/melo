@@ -32,10 +32,7 @@ import {
   useMenuDraftUpsert,
   useSyncMenuDraftWithDayMeals,
 } from "@/features/meal-record/stores/menuDraft.store";
-import {
-  getMealType,
-  getSafeDateKey,
-} from "@/features/meal-record/utils/mealRecord.queryParams";
+import { getMealType, getSafeDateKey } from "@/features/meal-record/utils/mealRecord.queryParams";
 import { PATH } from "@/router/path";
 import { trackChatMenuSave } from "@/shared/analytics/recommendMenuEvents";
 import { AppApiError } from "@/shared/api/apiClient";
@@ -241,7 +238,7 @@ export default function ChatMenuDetailPage() {
 
         <main className={styles.main}>
           <div className={styles.content}>
-            <MealMenuNutrientDetailSkeleton showEditSection={false} />
+            <MealMenuNutrientDetailSkeleton />
           </div>
         </main>
 

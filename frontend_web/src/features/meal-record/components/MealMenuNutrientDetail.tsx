@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import { NutrientDetailList } from "@/features/meal-record/components/NutrientDetailList";
 import { NUTRIENT_DETAIL_INFO_MESSAGES } from "@/features/meal-record/constants/nutrientInfoMessages";
+import styles from "@/features/meal-record/styles/MealMenuNutrientDetail.module.css";
 import {
   formatNutrientValue,
   type MainNutrientKey,
@@ -19,13 +20,10 @@ import {
   MENU_NUTRIENT_FIELD_KEYS,
   MENU_UNIT,
 } from "@/shared/api/types/api.dto";
-import { Button } from "@/shared/commons/button/Button";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import NumberField from "@/shared/commons/input/NumberField";
 import { InfoPopover } from "@/shared/commons/popover/InfoPopover";
 import { formatBaseServingUnit } from "@/shared/utils/servingUnit";
-
-import styles from "../styles/MealMenuNutrientDetail.module.css";
 
 export type MealMenuNutrientSelection = {
   menu: MealMenuItem;
@@ -385,26 +383,26 @@ export function MealMenuNutrientDetail({
   };
 
   return (
-    <>
-      <section className={styles.summarySection}>
-        <div className={styles.summaryContent}>
-          <p className={`title-m-semi ${styles.textNormal}`}>{previewMenu.name}</p>
-          <div className={styles.summarySecond}>
-            {previewMenu.brand && (
-              <p className={`body-xs-regular ${styles.textAlternative}`}>{previewMenu.brand}</p>
-            )}
-            <p className={`${styles.textNormal} ${styles.calories} textNoWrap title-xl-medium`}>
-              {formatNutrientValue(previewMenu.calories)}
-              <span className="title-m-medium text-tertiary"> kcal</span>
-            </p>
-          </div>
+    <div className={styles.root}>
+      <section className={styles.menuInfoSection}>
+        <div className={styles.menuNames}>
+          {previewMenu.brand && (
+            <p className={`body-xs-regular text-tertiary`}>{previewMenu.brand}</p>
+          )}
+          <p className={`title-m-semi text-primary`}>{previewMenu.name}</p>
         </div>
 
-        {summaryMacroItems.length > 0 ? (
-          <>
-            <div className="divider" />
+        <div className={styles.menuNutritionGroup}>
+          <div className={styles.caloriesCard}>
+            <p className="body-s-regular text-secondary">총 칼로리</p>
+            <p className={`textNoWrap title-xl-medium text-primary`}>
+              {formatNutrientValue(previewMenu.calories)}
+              <span className={`title-s-regular text-tertiary ${styles.calorieUnit}`}>kcal</span>
+            </p>
+          </div>
 
-            <div className={styles.macroContainer}>
+          {summaryMacroItems.length > 0 ? (
+            <div className={styles.macroCard}>
               {summaryMacroItems.map((macro) => (
                 <article key={macro.key} className={styles.macroItem}>
                   <div className={styles.macroLabelRow}>
@@ -413,11 +411,12 @@ export function MealMenuNutrientDetail({
                       <InfoPopover
                         ariaLabel="영양성분 주의 안내"
                         messages={NUTRIENT_DETAIL_INFO_MESSAGES}
+                        iconSize={18}
                       />
                     )}
                   </div>
                   <p className={`${styles.macroValue}`}>
-                    <span className="title-m-medium text-primary marginLeft">
+                    <span className="title-m-medium text-primary">
                       {formatNutrientValue(macro.value)}
                     </span>
                     <span className="body-s-regular text-tertiary">g</span>
@@ -425,32 +424,32 @@ export function MealMenuNutrientDetail({
                 </article>
               ))}
             </div>
-          </>
-        ) : null}
+          ) : null}
+        </div>
       </section>
 
       <section className={styles.servingInputSection}>
+        <p className="title-s-semi text-primary">먹은 양</p>
         <Tabs.Root
-          className={styles.TabsRoot}
+          className={styles.tabRoot}
           value={inputMode}
           onValueChange={(nextValue) => {
             handleModeChange(nextValue === "weight" ? "weight" : "unit");
           }}
         >
-          <Tabs.List className={styles.TabsList}>
-            <Tabs.Tab
-              value="unit"
-              className={`${styles.TabsTab} ${inputMode === "unit" ? "body-l-semi" : "body-l-medium"}`}
-            >
-              {formatBaseServingUnit(menu.unit_quantity)} ({menu.weight}
-              {menu.unit === MENU_UNIT.GRAM ? "g" : "ml"})
+          <Tabs.List className={styles.tabsList}>
+            <Tabs.Tab value="unit" className={`${styles.tab}`}>
+              <span className="body-l-medium">{formatBaseServingUnit(menu.unit_quantity)}</span>
+              <span className="body-l-regular">
+                ({menu.weight}
+                {menu.unit === MENU_UNIT.GRAM ? "g" : "ml"})
+              </span>
             </Tabs.Tab>
-            <Tabs.Tab
-              value="weight"
-              className={`${styles.TabsTab} ${inputMode === "weight" ? "body-l-semi" : "body-l-medium"}`}
-            >
+            <Tabs.Tab value="weight" className={`${styles.tab} body-l-medium`}>
               {menu.unit === MENU_UNIT.GRAM ? "g" : "ml"}
             </Tabs.Tab>
+
+            <Tabs.Indicator className={styles.tabsIndicator} />
           </Tabs.List>
 
           <Tabs.Panel value="unit" className={styles.TabsPanel}>
@@ -461,7 +460,54 @@ export function MealMenuNutrientDetail({
                 aria-label="입력값 감소"
                 onClick={() => handleInputStep(-1)}
               >
-                <SystemIcon name="minus" size={24} />
+                <SystemIcon name="minus" size={18} />
+              </button>
+              <NumberField
+                value={quantityInput}
+                onChange={setQuantityInput}
+                min={MIN_QUANTITY}
+                max={MAX_QUANTITY}
+                step={QUANTITY_STEP}
+                showControls={false}
+                allowOutOfRange
+                normalizeValue={(value) => roundDecimal(value, 1)}
+                isInputTextAllowed={isQuantityInputAllowed}
+                unstyled
+                classNames={{
+                  inputWrapper: styles.FieldInputWrapper,
+                  input: `title-m-medium ${styles.FieldInput}`,
+                }}
+                format={{
+                  minimumFractionDigits: 0,
+                  maximumFractionDigits: 1,
+                  useGrouping: false,
+                }}
+                inputProps={{
+                  inputMode: "decimal",
+                  "aria-label": "단위량 또는 중량 입력",
+                  onBlur: handleInputBlur,
+                }}
+              />
+              <button
+                type="button"
+                className={styles.StepButton}
+                aria-label="입력값 증가"
+                onClick={() => handleInputStep(1)}
+              >
+                <SystemIcon name="plus" size={18} />
+              </button>
+            </div>
+          </Tabs.Panel>
+
+          <Tabs.Panel value="weight" className={styles.TabsPanel}>
+            <div className={styles.FieldGroup}>
+              <button
+                type="button"
+                className={styles.StepButton}
+                aria-label="입력값 감소"
+                onClick={() => handleInputStep(-1)}
+              >
+                <SystemIcon name="minus" size={18} />
               </button>
               <NumberField
                 value={quantityInput}
@@ -496,55 +542,7 @@ export function MealMenuNutrientDetail({
                 aria-label="입력값 증가"
                 onClick={() => handleInputStep(1)}
               >
-                <SystemIcon name="plus" size={24} />
-              </button>
-            </div>
-          </Tabs.Panel>
-
-          <Tabs.Panel value="weight" className={styles.TabsPanel}>
-            <div className={styles.FieldGroup}>
-              <button
-                type="button"
-                className={styles.StepButton}
-                aria-label="입력값 감소"
-                onClick={() => handleInputStep(-1)}
-              >
-                <SystemIcon name="minus" size={24} />
-              </button>
-              <NumberField
-                value={quantityInput}
-                onChange={setQuantityInput}
-                min={MIN_QUANTITY}
-                max={MAX_QUANTITY}
-                step={QUANTITY_STEP}
-                showControls={false}
-                allowOutOfRange
-                normalizeValue={(value) => roundDecimal(value, 1)}
-                isInputTextAllowed={isQuantityInputAllowed}
-                unstyled
-                classNames={{
-                  group: styles.FieldInputGroup,
-                  inputWrapper: styles.FieldInputWrapper,
-                  input: `title-m-semi ${styles.FieldInput}`,
-                }}
-                format={{
-                  minimumFractionDigits: 0,
-                  maximumFractionDigits: 1,
-                  useGrouping: false,
-                }}
-                inputProps={{
-                  inputMode: "decimal",
-                  "aria-label": "단위량 또는 중량 입력",
-                  onBlur: handleInputBlur,
-                }}
-              />
-              <button
-                type="button"
-                className={styles.StepButton}
-                aria-label="입력값 증가"
-                onClick={() => handleInputStep(1)}
-              >
-                <SystemIcon name="plus" size={24} />
+                <SystemIcon name="plus" size={18} />
               </button>
             </div>
           </Tabs.Panel>
@@ -559,32 +557,17 @@ export function MealMenuNutrientDetail({
           aria-expanded={isDetailOpen}
           aria-controls={detailListId}
         >
-          <span className="title-s-semi">상세 영양성분 보기</span>
+          <p className="title-s-semi text-primary">상세 영양성분 보기</p>
           <SystemIcon
             name="chevron-down"
             size={20}
-            className={`${styles.arrowIcon} ${isDetailOpen ? styles.arrowIconExpanded : ""}`}
+            data-isClicked={isDetailOpen}
+            className={`${styles.arrowIcon} text-secondary`}
           />
         </button>
 
         {isDetailOpen && (
-          <>
-            <div className="divider dividerMargin20" />
-
-            {showEditSection ? (
-              <section className={styles.editSection}>
-                <p className={`body-s-regular ${styles.textNormal}`}>영양성분이 잘못되었나요?</p>
-                <Button
-                  variant="text"
-                  size="xs"
-                  onClick={handleEditAndAddClick}
-                  disabled={!isEditAndAddEnabled}
-                >
-                  수정해서 담기
-                </Button>
-              </section>
-            ) : null}
-
+          <section className={styles.detailNutritionSection}>
             <NutrientDetailList
               detailListId={detailListId}
               className={styles.detailList}
@@ -593,9 +576,21 @@ export function MealMenuNutrientDetail({
               calories={previewMenu.calories}
               nutrientValues={nutrientValues}
             />
-          </>
+
+            {showEditSection ? (
+              <button
+                type="button"
+                onClick={handleEditAndAddClick}
+                disabled={!isEditAndAddEnabled}
+                className={styles.editSection}
+              >
+                <span className={`body-s-regular text-tertiary`}>영양성분이 잘못되었다면?</span>
+                <span className="body-s-medium text-secondary marginLeft">수정하기</span>
+              </button>
+            ) : null}
+          </section>
         )}
       </section>
-    </>
+    </div>
   );
 }

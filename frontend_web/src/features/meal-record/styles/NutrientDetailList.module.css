@@ -1,47 +1,38 @@
-.detailList {
+.nutritionList {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 12px;
 }
 
-.detailGroup {
-  display: flex;
-  flex-direction: column;
-}
-
-.groupDivider {
-  background-color: var(--border-subtle);
-  height: 1px;
-  margin: 12px 0;
-  width: 100%;
-}
-
-.detailGroupRows {
-  display: flex;
-  flex-direction: column;
-}
-
-.detailRow {
+.listItem {
   align-items: center;
-  color: var(--text-primary);
   display: flex;
   gap: 8px;
   justify-content: space-between;
-  padding: 8px 0;
 }
 
-.detailLabelSub {
-  color: var(--text-secondary);
-  padding-left: 4px;
+.listItem + .macroGroup {
+  border-top: 1px solid var(--border-subtle);
+  padding-top: 12px;
 }
 
-.detailValue {
+.amount {
   align-items: center;
   display: inline-flex;
   gap: 4px;
   position: relative;
 }
 
-.textNormal {
-  color: var(--text-primary);
+.macroGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.macroGroup + .macroGroup {
+  margin-top: 24px;
+}
+
+.subLabel {
+  padding-left: 12px;
 }

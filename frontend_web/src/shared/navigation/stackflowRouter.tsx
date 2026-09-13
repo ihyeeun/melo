@@ -110,7 +110,9 @@ const WorkoutDetailSheetPage = createLazyActivity(
 const WorkoutUpsertPage = createLazyActivity(
   () => import("@/features/health/pages/WorkoutUpsertPage"),
 );
-const MealDetailPage = createLazyActivity(() => import("@/features/meal-record/MealDetailPage"));
+const MealDetailPage = createLazyActivity(
+  () => import("@/features/meal-record/pages/MealDetailPage"),
+);
 const MealRecordPage = createLazyActivity(
   () => import("@/features/meal-record/pages/MealRecordPage"),
 );
