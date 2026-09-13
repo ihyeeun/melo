@@ -12,6 +12,7 @@ import {
 } from "@/features/menstruation/utils/menstrualRecordSelection.util";
 import { Button } from "@/shared/commons/button/Button";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
+import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import { toast } from "@/shared/commons/toast/toast";
 import { navigateBack } from "@/shared/navigation/stackflowNavigation";
 import { isFutureDateKey } from "@/shared/utils/dateFormat";
@@ -59,6 +60,20 @@ export default function MenstruationRecordPage() {
           navigateBack();
         }}
       />
+
+      <div className={styles.captionSection}>
+        <p className="body-m-medium textCenter">
+          최근 월경 기간을 시작일~종료일까지
+          <br />
+          모두 선택해주세요
+        </p>
+        <div>
+          <span className={`${styles.chip} body-s-semi`}>
+            <SystemIcon name="info-colored" mode="image" />
+            여러 기간을 기록할수록 예측이 정확해져요
+          </span>
+        </div>
+      </div>
 
       <main ref={scrollRef} className={`main ${styles.content}`}>
         <div ref={loadOlderRef} className={styles.loadOlder} aria-hidden="true" />
