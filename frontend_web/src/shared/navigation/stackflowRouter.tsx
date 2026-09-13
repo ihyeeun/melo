@@ -263,21 +263,7 @@ const ACTIVITY_ROUTES: Record<keyof typeof ACTIVITIES, RoutePath> = {
   SettingsFeedback: PATH.SETTINGS_FEEDBACK,
   SettingsSubCode: PATH.SETTINGS_SUB_CODE,
   MealRecord: PATH.MEAL_RECORD,
-  MealRecordAddSearch: {
-    path: PATH.MEAL_RECORD_ADD_SEARCH,
-    defaultHistory: (params) =>
-      params.selectionTarget === "folder"
-        ? []
-        : [
-            {
-              activityName: "MealRecord",
-              activityParams: {
-                date: params.date,
-                mealType: params.mealType,
-              },
-            },
-          ],
-  },
+  MealRecordAddSearch: PATH.MEAL_RECORD_ADD_SEARCH,
   MealDetail: PATH.MEAL_DETAIL,
   CreateFolder: PATH.CREATE_FOLDER,
   FolderDetail: PATH.FOLDER_DETAIL,
