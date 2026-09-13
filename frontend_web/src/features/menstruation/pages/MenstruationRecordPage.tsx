@@ -62,7 +62,7 @@ export default function MenstruationRecordPage() {
       />
 
       <div className={styles.captionSection}>
-        <p className="body-m-medium textCenter">
+        <p className="body-m-medium text-tertiary textCenter">
           최근 월경 기간을 시작일~종료일까지
           <br />
           모두 선택해주세요
