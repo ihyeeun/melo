@@ -1,15 +1,13 @@
 import EventDot from "@/features/calendar/components/EventDot";
 
-import type { CalendarDay } from "../types/calendar.types";
+import type { CalendarDay, ViewMode } from "../types/calendar.types";
 import { formatDayNumber } from "../utils/format";
-
-type DayCellVariant = "week" | "month";
 
 export type DayCellRenderProps = {
   day: CalendarDay;
   weekdayLabel?: string;
   onSelect: (date: Date) => void;
-  variant?: DayCellVariant;
+  variant?: ViewMode;
 };
 
 export default function DayCell({
@@ -18,20 +16,15 @@ export default function DayCell({
   onSelect,
   variant = "week",
 }: DayCellRenderProps) {
-  const classNames = [
-    "calendar-day-cell",
-    `calendar-day-cell--${variant}`,
-    day.isSelected ? "is-selected" : "",
-    day.isToday ? "is-today" : "",
-    !day.isCurrentMonth ? "is-outside" : "",
-  ]
-    .filter(Boolean)
-    .join(" ");
-
   return (
     <button
       type="button"
-      className={classNames}
+      className="calendar-day-cell"
+      data-kind="default"
+      data-view={variant}
+      data-selected={day.isSelected}
+      data-today={day.isToday}
+      data-outside={!day.isCurrentMonth}
       onClick={() => onSelect(day.date)}
       aria-pressed={day.isSelected}
       aria-label={`${day.date.toLocaleDateString("ko-KR", {

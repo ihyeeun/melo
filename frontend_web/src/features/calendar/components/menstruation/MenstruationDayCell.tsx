@@ -18,17 +18,6 @@ export default function MenstruationDayCell({
   variant = "week",
   selectionMode = "single",
 }: Props) {
-  const classNames = [
-    "calendar-day-cell",
-    `calendar-day-cell--${variant}`,
-    styles.root,
-    styles[variant],
-    day.isSelected ? `is-selected ${styles.selected}` : "",
-    day.isToday ? "is-today" : "",
-    !day.isCurrentMonth ? `is-outside ${styles.outside}` : "",
-  ]
-    .filter(Boolean)
-    .join(" ");
   const recordLabel = menstruationType === "menstrual_recorded"
     ? ", 생리 기록 있음"
     : menstruationType === "next_predicted"
@@ -38,7 +27,12 @@ export default function MenstruationDayCell({
   return (
     <button
       type="button"
-      className={classNames}
+      className={`calendar-day-cell ${styles.root}`}
+      data-kind="menstruation"
+      data-view={variant}
+      data-selected={day.isSelected}
+      data-today={day.isToday}
+      data-outside={!day.isCurrentMonth}
       data-menstruation={menstruationType}
       data-selection-mode={selectionMode}
       data-future={isFutureDateKey(formatDateKey(day.date))}

@@ -1,60 +1,60 @@
+/* 클래스는 요소를, data-*는 모드와 상태를 나타낸다. 불리언 상태는 "true"로 비교한다. */
 .calendar-root {
   --calendar-fg: var(--text-primary);
   --calendar-day-fg: var(--text-secondary);
   --calendar-muted-fg: var(--coral-300);
-  --calendar-accent: var(--coral-300);
   --calendar-dot-bg: var(--coral-400);
 
   display: flex;
   flex-direction: column;
   user-select: none;
   width: 100%;
-}
 
-.calendar-root.has-safe-area-top {
-  padding-top: var(--safe-area-top);
-}
+  &[data-safe-area-top="true"] {
+    padding-top: var(--safe-area-top);
+  }
 
-.calendar-root:not(.has-month-background) {
-  --calendar-muted-fg: var(--text-disabled);
-}
+  &:not([data-month-background="true"]) {
+    --calendar-muted-fg: var(--text-disabled);
+  }
 
-.calendar-root.is-month.has-month-background {
-  background: linear-gradient(180deg, var(--coral-300) -90px, var(--background-selected) 90%);
-  border-radius: 0 0 20px 20px;
-  isolation: isolate;
-  overflow: hidden;
-  position: relative;
-}
+  &[data-view="month"][data-month-background="true"] {
+    background: linear-gradient(180deg, var(--coral-300) -90px, var(--background-selected) 90%);
+    border-radius: 0 0 20px 20px;
+    isolation: isolate;
+    overflow: hidden;
+    position: relative;
 
-.calendar-root.is-month.has-month-background::before,
-.calendar-root.is-month.has-month-background::after {
-  border-radius: 50%;
-  content: "";
-  height: 200px;
-  pointer-events: none;
-  position: absolute;
-  width: 200px;
-  z-index: 0;
-}
+    &::before,
+    &::after {
+      border-radius: 50%;
+      content: "";
+      height: 200px;
+      pointer-events: none;
+      position: absolute;
+      width: 200px;
+      z-index: 0;
+    }
 
-.calendar-root.is-month.has-month-background::before {
-  background: radial-gradient(circle 100px at center, #ffdfd8 0%, #ffdfd800 100%);
-  left: -105px;
-  opacity: 0.6;
-  top: 104px;
-}
+    &::before {
+      background: radial-gradient(circle 100px at center, #ffdfd8 0%, #ffdfd800 100%);
+      left: -105px;
+      opacity: 0.6;
+      top: 104px;
+    }
 
-.calendar-root.is-month.has-month-background::after {
-  background: radial-gradient(circle 100px at center, #ffedd8 0%, #ffedd800 100%);
-  opacity: 0.4;
-  right: -71px;
-  top: 56px;
-}
+    &::after {
+      background: radial-gradient(circle 100px at center, #ffedd8 0%, #ffedd800 100%);
+      opacity: 0.4;
+      right: -71px;
+      top: 56px;
+    }
 
-.calendar-root.is-month.has-month-background > * {
-  position: relative;
-  z-index: 1;
+    & > * {
+      position: relative;
+      z-index: 1;
+    }
+  }
 }
 
 .calendar-header {
@@ -86,13 +86,13 @@
   transition:
     opacity 160ms ease,
     transform 220ms cubic-bezier(0.22, 1, 0.36, 1);
-}
 
-.calendar-header.is-month .calendar-header-right,
-.calendar-header-right.has-action {
-  opacity: 1;
-  pointer-events: auto;
-  transform: translateX(0);
+  .calendar-header[data-view="month"] &,
+  &[data-has-action="true"] {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateX(0);
+  }
 }
 
 .calendar-title-button {
@@ -108,10 +108,10 @@
 .calendar-title-icon {
   color: var(--calendar-fg);
   transition: transform 220ms cubic-bezier(0.22, 1, 0.36, 1);
-}
 
-.calendar-header.is-month .calendar-title-icon {
-  transform: rotate(180deg);
+  .calendar-header[data-view="month"] & {
+    transform: rotate(180deg);
+  }
 }
 
 .calendar-title-viewport {
@@ -136,6 +136,53 @@
 .calendar-title-text,
 .calendar-month-title-text {
   color: var(--calendar-fg);
+}
+
+.calendar-month-title {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  align-items: center;
+  transform: translateY(-4px);
+  transition: transform 220ms cubic-bezier(0.22, 1, 0.36, 1);
+  padding: 6px 0;
+
+  .calendar-header[data-view="month"] & {
+    transform: translateY(0);
+  }
+}
+
+.calendar-month-title-wrapper {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    grid-template-rows 240ms cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 140ms ease;
+  position: relative;
+
+  .calendar-header[data-view="month"] & {
+    grid-template-rows: 1fr;
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+
+.calendar-today-action {
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  transform: translateY(-50%);
+
+  &:active {
+    transform: translateY(-50%) scale(0.9);
+  }
+}
+
+.calendar-month-title-clip {
+  min-height: 0;
+  overflow: hidden;
 }
 
 .calendar-pager {
@@ -169,7 +216,7 @@
   gap: 6px;
   grid-template-columns: repeat(7, minmax(0, 1fr));
   padding: 0 16px;
-  place-items: center center;
+  place-items: center;
 }
 
 .monthly-calendar {
@@ -177,8 +224,7 @@
   flex-direction: column;
   gap: 2px;
   width: 100%;
-  padding: 16px;
-  padding-top: 0px;
+  padding: 0 16px 16px;
 }
 
 .monthly-calendar-viewport {
@@ -207,63 +253,94 @@
   place-items: center;
   gap: 6px;
   width: 100%;
+  padding: 0 1px;
 }
 
 .calendar-day-cell {
   align-items: center;
+  border-radius: 16px;
   color: var(--calendar-day-fg);
   cursor: pointer;
   display: flex;
   flex-direction: column;
   justify-content: center;
+
+  &[data-outside="true"] {
+    color: var(--calendar-muted-fg);
+  }
 }
 
-.calendar-day-cell--week {
-  border: 1px solid transparent;
-  border-radius: 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  height: 66px;
-  width: 44px;
+/* 공통 크기는 생리 달력에서도 덮어쓸 수 있도록 우선순위를 낮게 유지한다. */
+:where(.calendar-day-cell) {
+  &[data-view="week"] {
+    gap: 2px;
+    height: 66px;
+    width: 44px;
+  }
+
+  &[data-view="month"] {
+    height: 44px;
+    width: 43px;
+  }
+
+  &[data-view="week"] .calendar-dots {
+    margin-top: 2px;
+    position: static;
+  }
+
+  &[data-view="month"][data-outside="true"] .calendar-dot {
+    opacity: 0.4;
+  }
 }
 
-.calendar-day-cell--month {
-  height: 44px;
-  width: 43px;
+/* 일반 날짜의 배경·테두리·선택 색상은 버튼에서만 관리한다. */
+:where(.calendar-day-cell)[data-kind="default"] {
+  &:where([data-month-background="true"] [data-view="month"][data-outside="false"]) {
+    background-color: rgba(255, 244, 241, 50%);
+  }
+
+  &[data-view="month"][data-today="true"] {
+    border: 1.5px solid var(--coral-300);
+    background-color: rgba(255, 255, 255, 70%);
+  }
+
+  &[data-selected="true"] {
+    background-color: rgba(255, 255, 255, 70%);
+    color: var(--text-primary);
+  }
+
+  [data-month-background="true"] &[data-selected="true"] {
+    border: 1.5px solid var(--coral-300);
+  }
+
+  [data-month-background="true"] &[data-view="month"][data-selected="true"] {
+    --calendar-dot-bg: var(--background-default);
+
+    background-color: var(--coral-400);
+    color: var(--background-default);
+    border: none;
+  }
+
+  &[data-view="month"][data-selected="true"][data-today="true"] {
+    border: 1.5px solid var(--coral-300);
+    background-color: rgba(255, 255, 255, 70%);
+    color: var(--text-primary);
+    --calendar-dot-bg: var(--coral-400);
+  }
 }
 
-.calendar-day-cell.is-outside {
-  color: var(--calendar-muted-fg);
-}
-
-.calendar-day-cell--week.is-selected,
-.calendar-day-cell--month.is-selected .calendar-day-number-container {
-  background-color: rgba(255, 255, 255, 70%);
-  color: var(--text-primary);
-  border-radius: 16px;
-}
-
-.has-month-background .calendar-day-cell--week.is-selected,
-.has-month-background .calendar-day-cell--month.is-selected .calendar-day-number-container {
-  border: 2px solid var(--calendar-accent);
-}
-
-.calendar-day-cell--month .calendar-day-number-container {
+/* 내부 요소는 숫자와 기록 점의 배치만 담당한다. */
+.calendar-day-number-container {
   align-items: center;
   display: flex;
   flex-direction: column;
-  height: 100%;
-  justify-content: center;
-  position: relative;
-  width: 100%;
-  border: 1px solid transparent;
-}
 
-.calendar-day-cell--week .calendar-day-number-container {
-  align-items: center;
-  display: flex;
-  flex-direction: column;
+  :where(.calendar-day-cell)[data-view="month"] & {
+    height: 100%;
+    justify-content: center;
+    position: relative;
+    width: 100%;
+  }
 }
 
 .calendar-dots {
@@ -276,15 +353,10 @@
   position: absolute;
   right: 0;
   width: 100%;
-}
 
-.calendar-dots--empty {
-  visibility: hidden;
-}
-
-.calendar-day-cell--week .calendar-dots {
-  margin-top: 2px;
-  position: static;
+  &[data-visible="false"] {
+    visibility: hidden;
+  }
 }
 
 .calendar-dot {
@@ -293,57 +365,6 @@
   display: block;
   height: 4px;
   width: 4px;
-}
-
-.calendar-day-cell--month.is-outside .calendar-dot {
-  opacity: 0.4;
-}
-
-.calendar-month-title {
-  display: flex;
-  gap: 10px;
-  justify-content: center;
-  align-items: center;
-  transform: translateY(-4px);
-  transition: transform 220ms cubic-bezier(0.22, 1, 0.36, 1);
-  padding: 6px 0;
-}
-
-.calendar-month-title-wrapper {
-  display: grid;
-  grid-template-rows: 0fr;
-  opacity: 0;
-  pointer-events: none;
-  transition:
-    grid-template-rows 240ms cubic-bezier(0.22, 1, 0.36, 1),
-    opacity 140ms ease;
-  position: relative;
-}
-
-.calendar-today-action {
-  position: absolute;
-  top: 50%;
-  right: 12px;
-  transform: translateY(-50%);
-}
-
-.calendar-today-action:active {
-  transform: translateY(-50%) scale(0.9);
-}
-
-.calendar-month-title-clip {
-  min-height: 0;
-  overflow: hidden;
-}
-
-.calendar-header.is-month .calendar-month-title-wrapper {
-  grid-template-rows: 1fr;
-  opacity: 1;
-  pointer-events: auto;
-}
-
-.calendar-header.is-month .calendar-month-title {
-  transform: translateY(0);
 }
 
 @keyframes calendar-title-enter {

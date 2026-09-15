@@ -29,7 +29,13 @@ type Props = {
 
 export default function MenstruationCalendar({ months, ...selection }: Props) {
   return (
-    <section className={`calendar-root ${styles.calendar}`} aria-label="생리 기록 달력">
+    <section
+      className={`calendar-root ${styles.calendar}`}
+      data-view="month"
+      data-safe-area-top={false}
+      data-month-background={false}
+      aria-label="생리 기록 달력"
+    >
       {months.map((month) => (
         <MenstruationMonth key={month.monthKey} {...month} {...selection} />
       ))}

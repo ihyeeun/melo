@@ -34,7 +34,7 @@ export default function CalendarHeader({
   const hasHeaderAction = headerAction !== undefined && headerAction !== null;
 
   return (
-    <div className={`calendar-header ${isMonthView ? "is-month" : "is-week"}`}>
+    <div className="calendar-header" data-view={viewMode}>
       <div className="calendar-header-top">
         <div className="calendar-header-left">
           <button
@@ -54,7 +54,8 @@ export default function CalendarHeader({
         </div>
 
         <div
-          className={`calendar-header-right${hasHeaderAction ? " has-action" : ""}`}
+          className="calendar-header-right"
+          data-has-action={hasHeaderAction}
           aria-hidden={!isMonthView && !hasHeaderAction}
         >
           {headerAction}

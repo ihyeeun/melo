@@ -1,10 +1,4 @@
-.root {
-  transition:
-    background-color 160ms ease,
-    border-color 160ms ease,
-    color 160ms ease;
-}
-
+.root,
 .numberContainer {
   transition:
     background-color 160ms ease,
@@ -12,75 +6,98 @@
     color 160ms ease;
 }
 
-.selected.month .numberContainer {
-  border: 2px solid var(--coral-400);
-}
+:where(.root) {
+  &[data-view="month"][data-outside="false"] {
+    background-color: rgba(255, 244, 241, 50%);
+  }
 
-.week[data-menstruation="menstrual_recorded"],
-.month[data-menstruation="menstrual_recorded"] .numberContainer {
-  background-color: var(--coral-100);
-  color: var(--text-secondary);
-  border-radius: 16px;
-  mix-blend-mode: multiply;
-}
+  &[data-view="week"][data-selected="true"],
+  &[data-view="month"][data-selected="true"] .numberContainer {
+    background-color: rgba(255, 255, 255, 70%);
+    color: var(--text-primary);
+    border-radius: 16px;
+  }
 
-.month[data-menstruation="menstrual_recorded"] {
-  background-color: var(--coral-100);
-  border-radius: 16px;
-}
+  [data-month-background="true"] &[data-view="month"][data-selected="true"] .numberContainer {
+    border: none;
+    background-color: var(--coral-400);
+    color: var(--background-default);
+  }
 
-.week[data-menstruation="next_predicted"],
-.month[data-menstruation="next_predicted"] .numberContainer {
-  border: 1px dashed var(--border-strong);
-  color: var(--text-secondary);
-  border-radius: 16px;
-}
+  /* 여러 날짜를 고르는 화면에서는 내부 원형 표시가 오늘 상태도 담당한다. */
+  &[data-view="month"][data-today="true"]:where([data-selection-mode="single"]) {
+    border: 1.5px solid var(--coral-300);
+    background-color: rgba(255, 255, 255, 70%);
+  }
 
-.selected.week[data-menstruation="next_predicted"],
-.selected.month[data-menstruation="next_predicted"] .numberContainer {
-  background-color: var(--coral-50);
-}
+  &[data-view="month"][data-selected="true"] .numberContainer {
+    border: 2px solid var(--coral-400);
+  }
 
-.outside[data-menstruation="menstrual_recorded"] {
-  color: var(--coral-400);
-  opacity: 0.4;
-}
+  &[data-view="week"][data-menstruation="menstrual_recorded"],
+  &[data-view="month"][data-menstruation="menstrual_recorded"] .numberContainer {
+    background-color: var(--coral-100);
+    color: var(--text-secondary);
+    border-radius: 16px;
+    mix-blend-mode: multiply;
+  }
 
-.month[data-selection-mode="multiple"] {
-  background-color: transparent;
-  border-radius: 0;
-}
+  &[data-view="month"][data-menstruation="menstrual_recorded"] {
+    background-color: var(--coral-100);
+    border-radius: 16px;
+  }
 
-.month[data-selection-mode="multiple"] .numberContainer {
-  width: min(40px, 100%);
-  height: auto;
-  aspect-ratio: 1;
-  border: 0;
-  border-radius: 50%;
-  background-color: transparent;
-  color: var(--text-secondary);
-  mix-blend-mode: normal;
-}
+  &[data-view="week"][data-menstruation="next_predicted"],
+  &[data-view="month"][data-menstruation="next_predicted"] .numberContainer {
+    border: 1px dashed var(--border-strong);
+    color: var(--text-secondary);
+    border-radius: 16px;
+  }
 
-.month[data-selection-mode="multiple"]:global(.is-today) .numberContainer {
-  background-color: var(--navy-800);
-  color: var(--background-default);
-}
+  &[data-view="week"][data-selected="true"][data-menstruation="next_predicted"],
+  &[data-view="month"][data-selected="true"][data-menstruation="next_predicted"] .numberContainer {
+    background-color: var(--coral-50);
+  }
 
-.month[data-selection-mode="multiple"][data-future="true"]:not(.selected) .numberContainer {
-  color: var(--text-disabled);
-}
+  &[data-outside="true"][data-menstruation="menstrual_recorded"] {
+    color: var(--coral-400);
+    opacity: 0.4;
+  }
 
-.month[data-selection-mode="multiple"].selected .numberContainer {
-  background-color: var(--coral-400);
-  color: var(--background-default);
-}
+  &[data-view="month"][data-selection-mode="multiple"] {
+    background-color: transparent;
+    border-radius: 0;
 
-.month[data-selection-mode="multiple"].selected:global(.is-today) .numberContainer {
-  background-color: var(--coral-400);
-  color: var(--background-default);
-  box-shadow: 0 0 0 1.5px var(--navy-800);
-  border: 1.5px solid var(--navy-800);
+    .numberContainer {
+      width: min(40px, 100%);
+      height: auto;
+      aspect-ratio: 1;
+      border: 0;
+      border-radius: 50%;
+      background-color: transparent;
+      color: var(--text-secondary);
+      mix-blend-mode: normal;
+    }
+
+    &[data-today="true"] .numberContainer {
+      background-color: var(--navy-800);
+      color: var(--background-default);
+    }
+
+    &[data-future="true"][data-selected="false"] .numberContainer {
+      color: var(--text-disabled);
+    }
+
+    &[data-selected="true"] .numberContainer {
+      background-color: var(--coral-400);
+      color: var(--background-default);
+    }
+
+    &[data-selected="true"][data-today="true"] .numberContainer {
+      box-shadow: 0 0 0 1.5px var(--navy-800);
+      border: 1.5px solid var(--navy-800);
+    }
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

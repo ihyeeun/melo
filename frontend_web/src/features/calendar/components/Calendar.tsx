@@ -147,7 +147,10 @@ export default function Calendar({
 
   return (
     <section
-      className={`calendar-root is-${viewMode}${safeAreaTop ? " has-safe-area-top" : ""}${showMonthBackground ? " has-month-background" : ""}`}
+      className="calendar-root"
+      data-view={viewMode}
+      data-safe-area-top={safeAreaTop}
+      data-month-background={showMonthBackground}
     >
       <CalendarHeader
         viewMode={viewMode}
