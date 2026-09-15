@@ -11,10 +11,12 @@ import {
 import { useMenuCacheItems } from "@/features/meal-record/hooks/queries/menuCache";
 import {
   formatMenuDraftKey,
+  useMenuDraftClear,
   useMenuDraftStore,
   useSyncMenuDraftWithDayMeals,
 } from "@/features/meal-record/stores/menuDraft.store";
 import { getMealType, getSafeDateKey } from "@/features/meal-record/utils/mealRecord.queryParams";
+import { buildMenuDraftSignature } from "@/features/meal-record/utils/menuDraftSync";
 import { useMenuSelectionAdapter } from "@/features/menu-selection/hooks/useMenuSelectionAdapter";
 import {
   buildMenuSelectionPathContext,
@@ -47,6 +49,7 @@ import { MealMenuCard } from "@/shared/commons/card/MealMenuCard";
 import { SearchInputHeader } from "@/shared/commons/header/SearchInputHeader";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import { LoadingIndicator } from "@/shared/commons/loading/Loading";
+import { ConfirmModal } from "@/shared/commons/modals/ConfirmModal";
 import { toast } from "@/shared/commons/toast/toast";
 import { FEATURE_GUARD, useIsFeatureBlocked } from "@/shared/guards/featureGuard";
 import {
@@ -54,6 +57,7 @@ import {
   navigateBack,
   useNavigate,
   useSearchParams,
+  useStackflowBackHandler,
 } from "@/shared/navigation/stackflowNavigation";
 
 import styles from "../styles/MealSearch.module.css";
@@ -84,6 +88,7 @@ export default function MealSearchPage() {
   const hasMenuSelectionRouteContext = menuSelectionRouteContext.target !== null;
   const [submittedKeyword, setSubmittedKeyword] = useState("");
   const [searchKeyword, setSearchKeyword] = useState("");
+  const [isExitConfirmOpen, setIsExitConfirmOpen] = useState(false);
   const [activePersonalMenuTab, setActivePersonalMenuTab] = useState<PersonalMenuTab>(
     PERSONAL_MENU_TAB.FREQUENTLY_RECORDED,
   );
@@ -112,6 +117,7 @@ export default function MealSearchPage() {
     isError: isDayMealsError,
   } = useDayMealsQuery(dateKey, { enabled: !isPersonalMenuEditSearchMode });
   const draft = useMenuDraftStore((store) => store.drafts[draftKey]);
+  const clearDraft = useMenuDraftClear();
   const hasDraft = Boolean(draft);
   const selectedCount = menuSelectionAdapter.selectedCount;
   const selectedMenuIdSet = menuSelectionAdapter.selectedMenuIdSet;
@@ -119,6 +125,9 @@ export default function MealSearchPage() {
   const showFoodCameraButton = !isPersonalMenuEditSearchMode && !isFoodCameraBlocked;
   const personalMenuEditFallbackPath =
     menuSelectionRouteContext.returnPath ?? (isFolderSearchMode ? PATH.CREATE_FOLDER : null);
+  const backFallbackPath = isFolderSearchMode
+    ? (personalMenuEditFallbackPath ?? PATH.CREATE_FOLDER)
+    : PATH.DIARY;
   const menuSelectionPathContext = buildMenuSelectionPathContext({
     dateKey,
     mealType,
@@ -169,6 +178,36 @@ export default function MealSearchPage() {
     setSearchKeyword("");
   };
 
+  const handleBackGuard = () => {
+    if (hasSearchKeyword) {
+      resetSearchState();
+      return true;
+    }
+
+    if (isFolderSearchMode || isPreviousStackActivity("MealRecord")) {
+      return false;
+    }
+
+    // Without a record page underneath, leaving search also ends the unsaved meal draft.
+    const hasUnsavedChanges =
+      draft &&
+      buildMenuDraftSignature({
+        menus: draft.existingMenus,
+        image: draft.image,
+        mealTime: draft.mealTime,
+      }) !== (draft.serverSignature ?? buildMenuDraftSignature({ menus: [] }));
+
+    if (hasUnsavedChanges) {
+      setIsExitConfirmOpen(true);
+      return true;
+    }
+
+    clearDraft(draftKey);
+    return false;
+  };
+
+  useStackflowBackHandler(handleBackGuard);
+
   useSyncMenuDraftWithDayMeals({
     dateKey,
     mealType,
@@ -202,16 +241,18 @@ export default function MealSearchPage() {
     }
 
     toast.warning("식사 기록을 불러오지 못했어요. 잠시 후 다시 시도해주세요.");
-    navigate(getMealRecordPath(dateKey, mealType), { replace: true });
+    navigateBack({
+      animate: false,
+      fallbackTo: backFallbackPath,
+      skipBackHandler: true,
+    });
   }, [
-    dateKey,
+    backFallbackPath,
     hasDraft,
     isDayMealsError,
     isDayMealsPending,
     isPersonalMenuEditSearchMode,
     isTop,
-    mealType,
-    navigate,
   ]);
 
   const handleToggleMenuSelection = (menu: MenuSimpleResponseDto) => {
@@ -253,13 +294,16 @@ export default function MealSearchPage() {
     resetSearchState();
 
     if (isFolderSearchMode) {
-      navigateBack({ fallbackTo: personalMenuEditFallbackPath ?? PATH.CREATE_FOLDER });
+      navigateBack({
+        fallbackTo: personalMenuEditFallbackPath ?? PATH.CREATE_FOLDER,
+        skipBackHandler: true,
+      });
       return;
     }
 
     const nextPath = getMealRecordPath(dateKey, mealType);
     if (isPreviousStackActivity("MealRecord")) {
-      navigateBack({ fallbackTo: nextPath });
+      navigateBack({ fallbackTo: nextPath, skipBackHandler: true });
       return;
     }
 
@@ -297,14 +341,14 @@ export default function MealSearchPage() {
     if (hasMenuSelectionRouteContext) {
       navigate(
         getMenuSelectionPath({
-          path: PATH.NUTRIENT_ADD,
+          path: PATH.NUTRIENT_CAMERA,
           ...menuSelectionPathContext,
         }),
       );
       return;
     }
 
-    navigate(getPathWithMeal(PATH.NUTRIENT_ADD, dateKey, mealType));
+    navigate(getPathWithMeal(PATH.NUTRIENT_CAMERA, dateKey, mealType));
   };
 
   const handleCameraClick = () => {
@@ -382,8 +426,8 @@ export default function MealSearchPage() {
         data_source={menu.data_source}
         weight={menu.weight}
         unit={menu.unit}
-        icon={isSelected ? "check" : "add"}
-        state={isSelected ? "select" : "default"}
+        icon={"add"}
+        state={isSelected}
         onClick={() => handleMenuDetailPageOpen(menu.id)}
         onIconClick={() => handleToggleMenuSelection(menu)}
       />
@@ -456,7 +500,6 @@ export default function MealSearchPage() {
       </span>
     </button>
   );
-
   const renderSearchErrorState = () => (
     <section className={styles.emptyResult}>
       <p className="body-l-medium">메뉴를 검색하지 못했어요</p>
@@ -477,27 +520,10 @@ export default function MealSearchPage() {
   const renderPersonalMenuEmptyState = (message: string) => (
     <section className={`${styles.emptyResultContainer} ${styles.emptyResult}`}>
       <p className="body-l-medium">{message}</p>
-      <div className={styles.emptyActionButton}>
-        <Button
-          onClick={() => {
-            setIsDirectInputSheetOpen(true);
-          }}
-          variant="text"
-          size="xs"
-        >
-          영양 성분 직접 등록
-          <SystemIcon name="chevron-right" size={18} />
-        </Button>
-      </div>
     </section>
   );
 
-  const renderRegisteredFoodResult = ({
-    emptyText = "직접 등록한 음식이 없어요",
-  }: {
-    compact?: boolean;
-    emptyText?: string;
-  } = {}) => {
+  const renderRegisteredFoodResult = () => {
     if (isRegisteredMenusPending) {
       return (
         <section className={styles.loadingContainer}>
@@ -510,41 +536,22 @@ export default function MealSearchPage() {
       return renderPersonalMenuEmptyState("메뉴를 불러오지 못했어요");
     }
 
-    if (registeredMenuList.length > 0) {
-      return (
-        <div className={styles.compactResultList}>
-          <div className={`${styles.folderName} ${styles.marginTop}`}>
-            <Button
-              className={styles.directRegisterPromptAction}
-              onClick={() => {
-                setIsDirectInputSheetOpen(true);
-              }}
-              variant="text"
-              size="xs"
-            >
-              영양 성분 직접 등록
-              <SystemIcon name="chevron-right" size={14} />
-            </Button>
-          </div>
-          {registeredMenuList.map(renderMenuCard)}
-        </div>
-      );
-    }
-
     return (
-      <section className={`${styles.emptyResult} ${styles.marginTop}`}>
-        <p className="body-l-medium">{emptyText}</p>
-        <Button
-          onClick={() => {
-            setIsDirectInputSheetOpen(true);
-          }}
-          variant="text"
-          size="xs"
-        >
-          영양 성분 직접 등록
-          <SystemIcon name="chevron-right" size={14} />
-        </Button>
-      </section>
+      <div className={styles.compactResultList}>
+        <div className={` ${styles.marginTop}`}>
+          <button
+            type="button"
+            className={styles.addButton}
+            onClick={() => {
+              setIsDirectInputSheetOpen(true);
+            }}
+          >
+            <SystemIcon name="plus-circle" size={18} />
+            <p className="body-m-regular">영양 성분 직접 등록</p>
+          </button>
+        </div>
+        {registeredMenuList.map(renderMenuCard)}
+      </div>
     );
   };
 
@@ -603,31 +610,23 @@ export default function MealSearchPage() {
       >
         <Tabs.Tab
           value={PERSONAL_MENU_TAB.FREQUENTLY_RECORDED}
-          className={`${styles.personalMenuTabsTab} ${
-            visiblePersonalMenuTab === PERSONAL_MENU_TAB.FREQUENTLY_RECORDED
-              ? "body-l-semi"
-              : "body-l-semi"
-          }`}
+          className={`${styles.personalMenuTabsTab} body-s-medium`}
         >
           자주 먹었어요
         </Tabs.Tab>
         {!isPersonalMenuEditSearchMode ? (
           <Tabs.Tab
             value={PERSONAL_MENU_TAB.FOLDER}
-            className={`${styles.personalMenuTabsTab} ${
-              visiblePersonalMenuTab === PERSONAL_MENU_TAB.FOLDER ? "body-l-semi" : "body-l-semi"
-            }`}
+            className={`${styles.personalMenuTabsTab} body-s-medium`}
           >
             내 폴더
           </Tabs.Tab>
         ) : null}
         <Tabs.Tab
           value={PERSONAL_MENU_TAB.REGISTERED}
-          className={`${styles.personalMenuTabsTab} ${
-            visiblePersonalMenuTab === PERSONAL_MENU_TAB.REGISTERED ? "body-l-semi" : "body-l-semi"
-          }`}
+          className={`${styles.personalMenuTabsTab} body-s-medium`}
         >
-          직접 등록
+          내 등록 메뉴
         </Tabs.Tab>
         <Tabs.Indicator className={styles.personalMenuTabsIndicator} />
       </Tabs.List>
@@ -705,19 +704,19 @@ export default function MealSearchPage() {
     return (
       <div className={styles.emptyResultContainer}>
         {searchMenuList.length === 0 && (
-          <section className={styles.emptyResult}>
-            <p className="body-l-medium">검색 결과가 없어요</p>
-            <div className={styles.buttonContainer}>
-              <Button
-                variant="text"
-                size="xs"
-                onClick={() => {
-                  setIsDirectInputSheetOpen(true);
-                }}
-              >
-                영양 성분 직접 등록
-              </Button>
-            </div>
+          <section className={styles.searchEmptyResult}>
+            <img src="/icons/characters/question.png" alt="" aria-hidden="true" width={200} />
+
+            <p className="body-l-medium text-tertiary">검색 결과가 없어요</p>
+            <Button
+              variant="text"
+              size="xs"
+              onClick={() => {
+                setIsDirectInputSheetOpen(true);
+              }}
+            >
+              <p className="body-s-medium text-secondary">영양 성분 직접 등록</p>
+            </Button>
           </section>
         )}
 
@@ -732,15 +731,14 @@ export default function MealSearchPage() {
   };
 
   const handleSearchPageBack = () => {
-    if (hasSearchKeyword) {
-      resetSearchState();
-      return;
-    }
+    navigateBack({ fallbackTo: backFallbackPath });
+  };
 
+  const handleExit = () => {
+    clearDraft(draftKey);
     navigateBack({
-      fallbackTo: isFolderSearchMode
-        ? (personalMenuEditFallbackPath ?? PATH.CREATE_FOLDER)
-        : getMealRecordPath(dateKey, mealType),
+      fallbackTo: backFallbackPath,
+      skipBackHandler: true,
     });
   };
 
@@ -786,7 +784,11 @@ export default function MealSearchPage() {
 
       <footer className={styles.footer}>
         {showFoodCameraButton ? (
-          <FloatingCameraButton onClick={handleCameraClick} ariaLabel="사진으로 기록하기" />
+          <FloatingCameraButton
+            onClick={handleCameraClick}
+            bottomOffset="calc(var(--safe-area-bottom) + 70px)"
+            ariaLabel="사진으로 기록하기"
+          />
         ) : null}
 
         <Button
@@ -807,6 +809,16 @@ export default function MealSearchPage() {
         onClose={handleCloseDirectInputSheet}
         onSelectNumberInput={handleNavigateNutrientAdd}
         onSelectCameraInput={handleNavigateNutrientCamera}
+      />
+
+      <ConfirmModal
+        open={isExitConfirmOpen}
+        onOpenChange={setIsExitConfirmOpen}
+        title="변경사항을 저장하지 않고 나갈까요?"
+        cancelText="나가기"
+        confirmText="계속 수정"
+        onCancel={handleExit}
+        onConfirm={() => {}}
       />
     </section>
   );
@@ -854,18 +866,16 @@ function FolderPanel({
             </Button>
           </section>
         </div>
-      ) : folderList.length > 0 ? (
+      ) : (
         <div className={styles.folderList}>
-          <Button
-            variant="text"
-            size="xs"
-            fullWidth
-            className={styles.folderAddAction}
+          <button
+            type="button"
+            className={styles.addButton}
             onClick={() => navigate(PATH.CREATE_FOLDER)}
           >
-            <span>새 폴더 만들기</span>
-            <SystemIcon name="chevron-right" size={14} />
-          </Button>
+            <SystemIcon name="plus-circle" size={18} />
+            <p className="body-m-regular">새 폴더 만들기</p>
+          </button>
           {folderList.map((folder) => (
             <article key={folder.folder_id} className={styles.folderItem}>
               <button
@@ -879,31 +889,14 @@ function FolderPanel({
                       {folder.folder_name}
                     </span>
                   </div>
-                  <span className={`body-s-medium ${styles.folderMenuNames}`}>
+                  <span className={`body-s-regular text-secondary ${styles.folderMenuNames}`}>
                     {folder.menu_names.join(", ")}
                   </span>
                 </div>
-                <SystemIcon name="chevron-right" size={24} />
+                <SystemIcon name="chevron-right" size={18} />
               </button>
             </article>
           ))}
-        </div>
-      ) : (
-        <div className={styles.emptyResultContainer}>
-          <section className={`${styles.emptyResult} ${styles.folderEmptyResult}`}>
-            <p className="body-l-medium">
-              자주 먹는 음식을
-              <br />
-              폴더로 모아두고
-              <br />
-              빠르게 기록해보세요!
-            </p>
-
-            <Button onClick={() => navigate(PATH.CREATE_FOLDER)} size="xs" fullWidth>
-              <SystemIcon name="plus" size={16} />
-              <span>폴더 만들기</span>
-            </Button>
-          </section>
         </div>
       )}
     </div>

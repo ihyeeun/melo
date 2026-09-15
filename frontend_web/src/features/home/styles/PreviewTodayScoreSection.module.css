@@ -9,9 +9,30 @@
   border-radius: 20px;
   box-shadow: var(--shadow-outer);
   display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  width: 100%;
+}
+
+.nutritionBalanceSummary {
+  display: flex;
   min-height: 154px;
   overflow: hidden;
   width: 100%;
+}
+
+.coachingActionButton,
+.coachingActionSkeleton {
+  margin: 8px 20px 20px;
+  width: calc(100% - 40px);
+}
+
+.coachingActionButton {
+  background-color: var(--background-selected);
+  border: 0.5px solid var(--border-strong);
+  border-radius: 16px;
+  min-height: 40px;
+  padding: 10px 12px;
 }
 
 .summaryArea {

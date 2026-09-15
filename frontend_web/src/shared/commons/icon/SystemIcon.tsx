@@ -16,6 +16,7 @@ const SYSTEM_ICON_SRC = {
   drag: "/icons/system-icons/drag.svg",
   exit: "/icons/system-icons/exit.svg",
   fitness: "/icons/system-icons/fitness.svg",
+  humidity: "/icons/system-icons/humidity.svg",
   info: "/icons/system-icons/info.svg",
   kebab: "/icons/system-icons/kebab.svg",
   breakfast: "/icons/system-icons/light-mode.svg",
@@ -36,6 +37,13 @@ const SYSTEM_ICON_SRC = {
   "arrow-filled-left": "/icons/system-icons/arrow-filled-left.svg",
   "contract-edit": "/icons/system-icons/contract-edit.svg",
   "photo-library": "/icons/system-icons/photo-library.svg",
+  alert: "/icons/system-icons/alert.svg",
+  error: "/icons/system-icons/error.svg",
+  "info-colored": "/icons/system-icons/info-colored.svg",
+  success: "/icons/system-icons/success.svg",
+  exercise: "/icons/system-icons/exercise.svg",
+  steps: "/icons/system-icons/steps.svg",
+  refresh: "/icons/system-icons/refresh.svg",
 } as const;
 
 export type SystemIconName = keyof typeof SYSTEM_ICON_SRC;

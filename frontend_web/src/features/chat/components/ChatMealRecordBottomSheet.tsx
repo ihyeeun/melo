@@ -19,7 +19,10 @@ import {
   type MealType,
   MENU_UNIT,
 } from "@/shared/api/types/api.dto";
-import type { ChatRecommendItemResponseDto } from "@/shared/api/types/api.response.dto";
+import type {
+  ChatFeedbackMenuResponseDto,
+  ChatRecommendItemResponseDto,
+} from "@/shared/api/types/api.response.dto";
 import BottomSheet from "@/shared/commons/bottomSheet/BottomSheet";
 import { Button } from "@/shared/commons/button/Button";
 import { SystemIcon, type SystemIconName } from "@/shared/commons/icon/SystemIcon";
@@ -48,7 +51,7 @@ type ServingContext = {
 export type ChatMealRecordMenu = Pick<
   ChatRecommendItemResponseDto,
   "menu_id" | "menu_name" | "brand" | "unit" | "weight" | "unit_quantity" | "calories"
->;
+> & Pick<ChatFeedbackMenuResponseDto, "estimated_quantity">;
 
 const MEAL_TYPE_ICON_MAP = {
   "0": "breakfast",

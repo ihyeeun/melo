@@ -1,9 +1,10 @@
-import { startOfWeek, subWeeks } from "date-fns";
-import { type SetStateAction, useMemo, useState } from "react";
+import { addMonths, addWeeks, startOfMonth, startOfWeek, subMonths } from "date-fns";
+import { type SetStateAction, useCallback, useMemo, useState } from "react";
 
 import {
   buildMonthCalendarDays,
   buildWeekCalendarDays,
+  getMonthDates,
   moveNext,
   movePrev,
 } from "@/features/calendar/utils/calendar";
@@ -80,6 +81,10 @@ export function useCalendar({
     });
   }, [viewDate, selectedDate, recordedDates, weekStartsOn]);
 
+  const viewWeekStart = startOfWeek(viewDate, { weekStartsOn });
+  const currentWeekStart = startOfWeek(new Date(), { weekStartsOn });
+  const canGoNextWeek = addWeeks(viewWeekStart, 1).getTime() <= currentWeekStart.getTime();
+
   const toggleViewMode = () => {
     setViewMode((prev) => (prev === "week" ? "month" : "week"));
     setViewDate(selectedDate);
@@ -97,16 +102,11 @@ export function useCalendar({
     }
   };
 
-  const clampWeekNavigationDate = (candidateDate: Date, currentDate: Date) => {
+  const clampFutureWeekNavigationDate = (candidateDate: Date, currentDate: Date) => {
     const candidateWeekStart = startOfWeek(candidateDate, { weekStartsOn });
     const currentWeekStart = startOfWeek(new Date(), { weekStartsOn });
-    const previousWeekStart = subWeeks(currentWeekStart, 1);
-    const candidateTime = candidateWeekStart.getTime();
 
-    if (
-      candidateTime < previousWeekStart.getTime() ||
-      candidateTime > currentWeekStart.getTime()
-    ) {
+    if (candidateWeekStart.getTime() > currentWeekStart.getTime()) {
       return currentDate;
     }
 
@@ -115,11 +115,7 @@ export function useCalendar({
 
   const goPrev = () => {
     setViewDate((prev) => {
-      const candidateDate = movePrev(prev, viewMode);
-
-      if (viewMode !== "week") return candidateDate;
-
-      return clampWeekNavigationDate(candidateDate, prev);
+      return movePrev(prev, viewMode);
     });
   };
 
@@ -129,7 +125,7 @@ export function useCalendar({
 
       if (viewMode !== "week") return candidateDate;
 
-      return clampWeekNavigationDate(candidateDate, prev);
+      return clampFutureWeekNavigationDate(candidateDate, prev);
     });
   };
 
@@ -150,10 +146,54 @@ export function useCalendar({
     viewDate,
     weekDays,
     monthDays,
+    canGoNextWeek,
     toggleViewMode,
     selectDate,
     goPrev,
     goNext,
     goToday,
+  };
+}
+
+type UseMonthCalendarParams = {
+  initialDate?: Date;
+  weekStartsOn?: 0 | 1;
+};
+
+export function useMonthCalendar({ initialDate, weekStartsOn = 1 }: UseMonthCalendarParams = {}) {
+  // 현재 보고 있는 월
+  const [viewDate, setViewDate] = useState(() => {
+    return startOfMonth(initialDate ?? new Date());
+  });
+
+  // 달력 칸에 표시할 전체 날짜
+  const visibleDates = useMemo(
+    () => getMonthDates(viewDate, weekStartsOn),
+    [viewDate, weekStartsOn],
+  );
+
+  const goPrevMonth = useCallback(() => {
+    setViewDate((current) => startOfMonth(subMonths(current, 1)));
+  }, []);
+
+  const goNextMonth = useCallback(() => {
+    setViewDate((current) => startOfMonth(addMonths(current, 1)));
+  }, []);
+
+  const goToday = useCallback(() => {
+    setViewDate(startOfMonth(new Date()));
+  }, []);
+
+  const goToMonth = useCallback((date: Date) => {
+    setViewDate(startOfMonth(date));
+  }, []);
+
+  return {
+    viewDate,
+    visibleDates,
+    goPrevMonth,
+    goNextMonth,
+    goToday,
+    goToMonth,
   };
 }

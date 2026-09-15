@@ -1,3 +1,4 @@
+import { isToday } from "date-fns";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { useDayMealsQuery } from "@/features/home/hooks/queries/useTodayRecordQuery";
@@ -23,6 +24,8 @@ import {
   useMenuDraftUpsertPreviews,
   useSyncMenuDraftWithDayMeals,
 } from "@/features/meal-record/stores/menuDraft.store";
+import styles from "@/features/meal-record/styles/MealRecordPage.module.css";
+import { getMealType, getSafeDateKey } from "@/features/meal-record/utils/mealRecord.queryParams";
 import {
   formatMealRecordTime,
   getCurrentMealRecordTime,
@@ -69,9 +72,7 @@ import {
   useStackflowBackHandler,
 } from "@/shared/navigation/stackflowNavigation";
 import { parseMealRecordTransferState } from "@/shared/types/mealRecordTransfer";
-
-import styles from "./styles/MealRecordPage.module.css";
-import { getMealType, getSafeDateKey } from "./utils/mealRecord.queryParams";
+import { formatDateKeyToMonthDayWeekdayLabel, parseDateKey } from "@/shared/utils/dateFormat";
 
 function toPositiveNumber(value: number | null | undefined) {
   if (typeof value !== "number" || !Number.isFinite(value) || value <= 0) {
@@ -152,6 +153,9 @@ export default function MealRecordPage() {
     () => parseMealRecordTransferState(location.state),
     [location.state],
   );
+  const dayText = isToday(parseDateKey(dateKey))
+    ? "오늘의"
+    : formatDateKeyToMonthDayWeekdayLabel(dateKey);
 
   const { data: currentMenus, isPending: isSummaryReady } = useDayMealsQuery(dateKey);
 
@@ -563,40 +567,39 @@ export default function MealRecordPage() {
 
   return (
     <section className={styles.page}>
-      <PageHeader title="식사 기록 상세" onBack={handleBack} />
+      <div className={styles.header}>
+        <PageHeader title="식사 기록 상세" onBack={handleBack} />
+      </div>
 
       <main className={styles.content}>
         <article className={styles.summaryCard}>
-          <p className="title-m-semi">섭취 칼로리</p>
+          <p className="body-s-regular">{dayText} 섭취 칼로리</p>
 
           <div className={`${styles.calorieRow} textNoWrap`}>
-            <span className={`${styles.textPrimary} title-l-semi`}>
+            <span className={`title-xl-medium`}>
               {totalCalories.toLocaleString("ko-KR", { maximumFractionDigits: 1 })}
             </span>
-            <span className="title-m-semi">kcal</span>
+            <span className="title-s-regular text-tertiary">kcal</span>
           </div>
         </article>
 
-        <div className="dividerMargin20 divider" />
+        <section className={styles.mealTypeButtonGroup}>
+          {MEAL_TYPE_OPTIONS.map((option) => {
+            const isActive = option.key === mealType;
 
-        <section className={styles.mealTypeSection}>
-          <div className={styles.mealTypeButtonGroup}>
-            {MEAL_TYPE_OPTIONS.map((option) => {
-              const isActive = option.key === mealType;
-
-              return (
-                <button
-                  key={option.key}
-                  type="button"
-                  className={`${styles.mealTypeButton} ${isActive ? styles.mealTypeActive : ""}`}
-                  onClick={() => handleChangeMealType(option.key)}
-                  aria-pressed={isActive}
-                >
-                  <span className="body-m-regular">{option.label}</span>
-                </button>
-              );
-            })}
-          </div>
+            return (
+              <button
+                key={option.key}
+                type="button"
+                className={`${styles.mealTypeButton}`}
+                data-selected={isActive}
+                onClick={() => handleChangeMealType(option.key)}
+                aria-pressed={isActive}
+              >
+                <span className="body-s-medium">{option.label}</span>
+              </button>
+            );
+          })}
         </section>
 
         <section className={styles.menuSection}>
@@ -627,7 +630,7 @@ export default function MealRecordPage() {
                 onClick={handleOpenTimeSheet}
               >
                 <span>{formattedMealRecordTime}</span>
-                <SystemIcon name="chevron-right" size={20} />
+                <SystemIcon name="chevron-right" size={14} />
               </Button>
 
               {displayMenuItems.map((menu, index) => (
@@ -649,20 +652,13 @@ export default function MealRecordPage() {
             </div>
           ) : showDidNotEatState ? (
             <article className={styles.didNotEatState}>
-              <img
-                src="/icons/characters/score-0.png"
-                alt=""
-                aria-hidden="true"
-                className={styles.didNotEatImage}
-              />
               <p className="title-m-semi">안 먹었어요</p>
             </article>
           ) : (
             <button type="button" className={styles.emptyState} onClick={handleMealSearchNavigate}>
-              <div className={styles.emptyStateIcon}>
-                <SystemIcon name="plus-circle" size={32} />
-              </div>
-              <p className="title-m-semi">기록하러 가볼까요?</p>
+              <img src="/icons/characters/question.png" alt="" aria-hidden="true" width={200} />
+              <p className="body-l-medium text-tertiary">식사 기록이 없어요</p>
+              <p className="body-l-medium text-tertiary">무엇을 드셨는지 알려주세요!</p>
             </button>
           )}
         </section>

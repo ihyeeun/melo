@@ -32,10 +32,7 @@ import {
   useMenuDraftUpsert,
   useSyncMenuDraftWithDayMeals,
 } from "@/features/meal-record/stores/menuDraft.store";
-import {
-  getMealType,
-  getSafeDateKey,
-} from "@/features/meal-record/utils/mealRecord.queryParams";
+import { getMealType, getSafeDateKey } from "@/features/meal-record/utils/mealRecord.queryParams";
 import { PATH } from "@/router/path";
 import { trackChatMenuSave } from "@/shared/analytics/recommendMenuEvents";
 import { AppApiError } from "@/shared/api/apiClient";
@@ -134,6 +131,16 @@ export default function ChatMenuDetailPage() {
           mode: draftMenuSelection.mode,
         }
       : null);
+  const feedbackMenu =
+    chatItem?.response_payload.chat_category === "feedback"
+      ? chatItem.response_payload.feedback?.menus.find((menu) => menu.menu_id === menuId)
+      : undefined;
+  const initialQuantity =
+    resolvedInitialSelection?.quantity ?? feedbackMenu?.estimated_quantity ?? feedbackMenu?.weight;
+  // 추정 중량을 인분으로 반올림해 초기 섭취량이 바뀌지 않도록 중량 모드로 시작합니다.
+  const initialMode =
+    resolvedInitialSelection?.mode ??
+    (feedbackMenu?.estimated_quantity != null ? "weight" : undefined);
   const footerLabel = resolvedInitialSelection ? "수정하기" : "담기";
   const isDirectSubmitPending =
     !shouldUseSelectionOnly &&
@@ -241,7 +248,7 @@ export default function ChatMenuDetailPage() {
 
         <main className={styles.main}>
           <div className={styles.content}>
-            <MealMenuNutrientDetailSkeleton showEditSection={false} />
+            <MealMenuNutrientDetailSkeleton />
           </div>
         </main>
 
@@ -266,8 +273,8 @@ export default function ChatMenuDetailPage() {
         <div className={styles.content}>
           <MealMenuNutrientDetail
             menu={meal}
-            initialQuantity={resolvedInitialSelection?.quantity}
-            initialMode={resolvedInitialSelection?.mode}
+            initialQuantity={initialQuantity}
+            initialMode={initialMode}
             isDetailOpen={isDetailOpen}
             onToggleDetail={() => setIsDetailOpen((prev) => !prev)}
             onSelectionChange={setSelection}

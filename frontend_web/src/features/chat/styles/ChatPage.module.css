@@ -606,44 +606,7 @@
 }
 
 .feedbackGaugeArc {
-  aspect-ratio: 220 / 100;
   max-width: 350px;
-  position: relative;
-  width: 100%;
-}
-
-.feedbackGaugeSvg {
-  display: block;
-  height: 100%;
-  width: 100%;
-}
-
-.feedbackGaugeTrack,
-.feedbackGaugeValue {
-  fill: none;
-  stroke-linecap: round;
-  stroke-width: 23px;
-}
-
-.feedbackGaugeTrack {
-  stroke: var(--background-gray-1);
-}
-
-.feedbackGaugeValue {
-  stroke: var(--primary-normal);
-  transition: stroke-dasharray 300ms ease;
-}
-
-.feedbackGaugeValueLow {
-  stroke: var(--status-low);
-}
-
-.feedbackGaugeValueWarning {
-  stroke: var(--status-warning);
-}
-
-.feedbackGaugeValueNormal {
-  stroke: var(--primary-normal);
 }
 
 .feedbackScoreLabel {
@@ -661,16 +624,6 @@
 .feedbackScoreCaption {
   color: var(--text-tertiary);
   margin-top: 2px;
-}
-
-.feedbackGaugeCharacter {
-  height: 46px;
-  object-fit: contain;
-  pointer-events: none;
-  position: absolute;
-  transform: translate(-50%, -50%);
-  width: 46px;
-  display: none;
 }
 
 .feedbackMenuSummary {

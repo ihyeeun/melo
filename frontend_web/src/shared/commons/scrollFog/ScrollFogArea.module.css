@@ -2,6 +2,14 @@
   min-height: 0;
 }
 
+.root:global(.seed-scroll-fog) {
+  /* SEED uses four mask layers. Safari 15.4 can hide all content when the
+     bottom layer also uses source-in; explicitly keep that layer visible.
+     https://bugs.webkit.org/show_bug.cgi?id=240324 */
+  -webkit-mask-composite: source-in, source-in, source-in, source-over;
+  mask-composite: intersect, intersect, intersect, add;
+}
+
 .hideScrollBar {
   -ms-overflow-style: none;
   scrollbar-width: none;

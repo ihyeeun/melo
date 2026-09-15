@@ -7,6 +7,7 @@ type SelectedCardProps = {
   setSelectedChange?: (isSelected: boolean) => void;
   children: React.ReactNode;
   className?: string;
+  disabled?: boolean;
 };
 
 /**
@@ -18,9 +19,13 @@ export function SelectedCard({
   setSelectedChange,
   children,
   className,
+  disabled = false,
 }: SelectedCardProps) {
+  const isInteractive = setSelectedChange !== undefined;
+  const isEnabled = isInteractive && !disabled;
+
   const handleKeyDown = (event: KeyboardEvent<HTMLElement>) => {
-    if (!setSelectedChange || (event.key !== "Enter" && event.key !== " ")) return;
+    if (!isEnabled || (event.key !== "Enter" && event.key !== " ")) return;
 
     event.preventDefault();
     setSelectedChange(!isSelected);
@@ -28,15 +33,17 @@ export function SelectedCard({
 
   return (
     <article
-      aria-pressed={setSelectedChange ? isSelected : undefined}
-      className={[styles.card, setSelectedChange ? styles.clickable : "", className ?? ""]
+      aria-disabled={isInteractive ? disabled : undefined}
+      aria-pressed={isInteractive ? isSelected : undefined}
+      className={[styles.card, isEnabled ? styles.clickable : "", className ?? ""]
         .filter(Boolean)
         .join(" ")}
+      data-disabled={isInteractive ? disabled : undefined}
       data-selected={isSelected}
-      onClick={setSelectedChange ? () => setSelectedChange(!isSelected) : undefined}
+      onClick={isEnabled ? () => setSelectedChange(!isSelected) : undefined}
       onKeyDown={handleKeyDown}
-      role={setSelectedChange ? "button" : undefined}
-      tabIndex={setSelectedChange ? 0 : undefined}
+      role={isInteractive ? "button" : undefined}
+      tabIndex={isEnabled ? 0 : isInteractive ? -1 : undefined}
     >
       {children}
     </article>

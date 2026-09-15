@@ -1,5 +1,5 @@
 import { useActivity } from "@stackflow/react";
-import { useQueries, useQueryClient } from "@tanstack/react-query";
+import { useIsMutating, useQueries, useQueryClient } from "@tanstack/react-query";
 import type {
   FormEvent,
   KeyboardEvent,
@@ -81,6 +81,7 @@ import { isNativeApp, requestNativeAppDeviceInfo } from "@/shared/api/bridge/nat
 import type { AppDeviceInfoPayload } from "@/shared/api/bridge/nativeBridge.types";
 import { MEAL_TYPE_OPTIONS, type MealTime } from "@/shared/api/types/api.dto";
 import type {
+  ChatFeedbackMenuResponseDto,
   ChatHistoryItemResponseDto,
   ChatMealRecordParseResponseDto,
   ChatNutritionLabelFeedbackResponseDto,
@@ -95,6 +96,7 @@ import { Button } from "@/shared/commons/button/Button";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import { ConfirmModal } from "@/shared/commons/modals/ConfirmModal";
+import ArcProgress from "@/shared/commons/progress/ArcProgress";
 import { Skeleton, SkeletonStatus } from "@/shared/commons/skeleton/Skeleton";
 import { toast } from "@/shared/commons/toast/toast";
 import { navigateBack, useNavigate } from "@/shared/navigation/stackflowNavigation";
@@ -109,18 +111,16 @@ import {
   parseDateKey,
 } from "@/shared/utils/dateFormat";
 import { formatDisplayNumber } from "@/shared/utils/numberFormat";
-import { formatBaseServingUnit, SERVING_UNIT_PERSON } from "@/shared/utils/servingUnit";
+import {
+  convertUnitNumToString,
+  convertWeightToServingCount,
+  formatBaseServingUnit,
+  getServingUnitLabel,
+  SERVING_UNIT_PERSON,
+} from "@/shared/utils/servingUnit";
 
 const MEAL_RECORD_MODE_CHIP_ID = "meal-record";
 const QUICK_CHIP_LIST = [{ id: MEAL_RECORD_MODE_CHIP_ID, label: "식사 기록 모드" }];
-const FEEDBACK_GAUGE_VIEWBOX_WIDTH = 220;
-const FEEDBACK_GAUGE_VIEWBOX_HEIGHT = 100;
-const FEEDBACK_GAUGE_CENTER_X = 110;
-const FEEDBACK_GAUGE_CENTER_Y = 95;
-const FEEDBACK_GAUGE_RADIUS = 75;
-const FEEDBACK_GAUGE_START_ANGLE = 170;
-const FEEDBACK_GAUGE_END_ANGLE = 10;
-const FEEDBACK_GAUGE_PATH = getFeedbackGaugePath();
 const CAMERA_HINT_DISMISSED_SESSION_KEY = "chat.cameraHintDismissed";
 const SCROLL_BOTTOM_THRESHOLD = 24;
 const SOFT_KEYBOARD_VISIBLE_HEIGHT_THRESHOLD = 120;
@@ -502,6 +502,12 @@ export default function ChatPage() {
 
   const { data, isPending: isHistoryPending } = useGetChatHistoryQuery();
   const { mutateAsync: sendMessageMutation, isPending: isSendPending } = useSendMessageMutation();
+  const personalizedManagementPendingCount = useIsMutating({
+    mutationKey: ["personalized-management"],
+  });
+  const mealFeedbackPendingCount = useIsMutating({ mutationKey: ["meal-feedback"] });
+  const isChatRequestPending =
+    isSendPending || personalizedManagementPendingCount > 0 || mealFeedbackPendingCount > 0;
   const { mutateAsync: parseMenusFromTextMutation, isPending: isMealRecordParsePending } =
     useParseMenusFromTextMutation();
   const { mutateAsync: registerDiaryMealRecordMutate, isPending: isDiaryMealRegisterPending } =
@@ -612,16 +618,19 @@ export default function ChatPage() {
     : "idle";
   const isAssistantPlaybackActive = assistantPlayback !== null;
   const isChatSendDisabled =
-    isSendPending ||
+    isChatRequestPending ||
     isAssistantPlaybackActive ||
     isMealRecordParsePending ||
     pendingMealRecordInput !== null;
   const isAwaitingChatResponse =
-    pendingInput !== null || pendingMealRecordInput !== null || isAssistantPlaybackActive;
+    isChatRequestPending ||
+    pendingInput !== null ||
+    pendingMealRecordInput !== null ||
+    isAssistantPlaybackActive;
   const shouldRenderMealRecordModeGuide = isMealRecordModeGuideVisible;
   const hasTimelineContent =
     timelineItems.length > 0 || isAwaitingChatResponse || shouldRenderMealRecordModeGuide;
-  const isTypingPending = isAwaitingChatResponse && isSendPending;
+  const isTypingPending = isAwaitingChatResponse && isChatRequestPending;
   const isInputEmpty = inputValue.trim().length === 0;
   const isQuickActionVisible = isInputEmpty && !isSoftKeyboardVisible && !isAwaitingChatResponse;
   const shouldShowMealRecordModeHint =
@@ -629,7 +638,8 @@ export default function ChatPage() {
     !isMealRecordModeOnboardingDone &&
     !isMealRecordTextMode &&
     !isMealRecordModeHintDismissed;
-  const shouldDeferTimelineRender = pendingInput === null && isTimelineDataPending;
+  const shouldDeferTimelineRender =
+    pendingInput === null && !isChatRequestPending && isTimelineDataPending;
   const shouldRenderTimeline = hasTimelineContent && !shouldDeferTimelineRender;
   const shouldShowTimelineSkeleton = shouldDeferTimelineRender;
   const shouldShowEmptySection = !hasTimelineContent && !isTimelineDataPending;
@@ -954,7 +964,7 @@ export default function ChatPage() {
 
   useEffect(() => {
     if (
-      (pendingInput === null && pendingMealRecordInput === null) ||
+      !isAwaitingChatResponse ||
       !isTop ||
       pendingMealRecordScrollKeyRef.current !== null ||
       timelineScrollTarget !== null
@@ -963,7 +973,7 @@ export default function ChatPage() {
     }
 
     keepBottomIfFollowing("instant");
-  }, [isTop, keepBottomIfFollowing, pendingInput, pendingMealRecordInput, timelineScrollTarget]);
+  }, [isAwaitingChatResponse, isTop, keepBottomIfFollowing, timelineScrollTarget]);
 
   useEffect(() => {
     updateIsScrolledAwayFromBottom();
@@ -1609,6 +1619,7 @@ export default function ChatPage() {
   useLayoutEffect(() => {
     if (
       isHistoryPending ||
+      isChatRequestPending ||
       !isTop ||
       pendingInput !== null ||
       pendingMealRecordInput !== null ||
@@ -1684,6 +1695,7 @@ export default function ChatPage() {
     assistantPlayback,
     chatList,
     forceScrollToBottom,
+    isChatRequestPending,
     isHistoryPending,
     isTop,
     pendingInput,
@@ -1947,9 +1959,9 @@ export default function ChatPage() {
                 currentMealRecord?.previousMealRecord.menus.some(
                   (menu) => menu.id === nutritionMenuId,
                 ) === true;
-              const shouldHideUserMessage = isNutritionLabelMenuRegisteredActionPayload(
-                chatItem.response_payload,
-              );
+              const shouldHideUserMessage =
+                isNutritionLabelMenuRegisteredActionPayload(chatItem.response_payload) ||
+                (!isNonEmptyMessage(chatItem.input_text) && !userImageUrl);
 
               return (
                 <section key={timelineItem.key} className={styles.conversationSection}>
@@ -2120,14 +2132,16 @@ export default function ChatPage() {
               </section>
             ) : null}
 
-            {pendingInput !== null ? (
+            {pendingInput !== null || isTypingPending ? (
               <section className={styles.conversationSection} aria-live="polite">
-                <div className={styles.userMessageGroup}>
-                  <p className={`${styles.timeText} caption-m-medium`}>
-                    {formatTimeText(new Date())}
-                  </p>
-                  <p className={`${styles.userBubble} body-m-regular`}>{pendingInput}</p>
-                </div>
+                {pendingInput !== null ? (
+                  <div className={styles.userMessageGroup}>
+                    <p className={`${styles.timeText} caption-m-medium`}>
+                      {formatTimeText(new Date())}
+                    </p>
+                    <p className={`${styles.userBubble} body-m-regular`}>{pendingInput}</p>
+                  </div>
+                ) : null}
 
                 {isTypingPending ? <AssistantPendingMessage /> : null}
               </section>
@@ -2303,9 +2317,8 @@ function getMealRecordParseRegisterTarget(
   parseResponse: ChatMealRecordParseResponseDto,
   fallbackDate: Date,
 ): MealRecordParseRegisterTarget {
-  const mealRecordParse = parseResponse.meal_record_parse;
-  const responseDate = parseResponse.date ?? mealRecordParse?.date;
-  const responseMealTime = parseResponse.time ?? mealRecordParse?.time;
+  const responseDate = parseResponse.date;
+  const responseMealTime = parseResponse.time;
   const dateKey =
     typeof responseDate === "string" && isValidDateKey(responseDate)
       ? responseDate
@@ -2323,16 +2336,11 @@ function getMealRecordParseRegisterTarget(
 function getMealRecordParseDraftMenus(
   parseResponse: ChatMealRecordParseResponseDto,
 ): MenuDraftType[] {
-  const mealRecordParse = parseResponse.meal_record_parse;
-  const menuIds = Array.isArray(parseResponse.menu_ids)
-    ? parseResponse.menu_ids
-    : (mealRecordParse?.menu_ids ?? []);
-  const menuQuantities = Array.isArray(parseResponse.menu_quantities)
-    ? parseResponse.menu_quantities
-    : (mealRecordParse?.menu_quantities ?? []);
+  const resMenuIds = parseResponse.menu_ids;
+  const resMenuWeight = parseResponse.menu_quantities;
 
-  return menuIds.flatMap((menuId, index) => {
-    const quantity = getPositiveNumber(menuQuantities[index]);
+  return resMenuIds.flatMap((menuId, index) => {
+    const quantity = getPositiveNumber(resMenuWeight[index]);
 
     if (!isPositiveInteger(menuId) || quantity === null) {
       return [];
@@ -3404,6 +3412,9 @@ function FeedbackSection({
   const [isMenuListOpen, setIsMenuListOpen] = useState(false);
   const primaryMenu = feedback.menus[0];
   const hasMultipleMenus = feedback.menus.length > 1;
+  const totalCalories = feedback.menus.some((menu) => menu.estimated_calories != null)
+    ? feedback.menus.reduce((total, menu) => total + (menu.estimated_calories ?? menu.calories), 0)
+    : feedback.total_calories;
   const navigate = useNavigate();
 
   if (!primaryMenu) return null;
@@ -3486,7 +3497,7 @@ function FeedbackSection({
                 <p className={`${styles.textAssistive} body-s-regular`}>총 칼로리</p>
 
                 <p className={`${styles.feedbackCalories} textNoWrap body-l-medium`}>
-                  {formatDisplayNumber(feedback.total_calories)}kcal
+                  {formatDisplayNumber(totalCalories)}kcal
                   <SystemIcon
                     name="chevron-up"
                     size={12}
@@ -3499,10 +3510,10 @@ function FeedbackSection({
             ) : (
               <div className={`${styles.feedbackMenuToggle}`}>
                 <p className={`${styles.textAlternative} body-s-regular`}>
-                  {formatMenuServing(primaryMenu)}
+                  {formatFeedbackMenuServing(primaryMenu)}
                 </p>
                 <p className={`${styles.feedbackCalories} textNoWrap body-l-medium`}>
-                  {formatDisplayNumber(primaryMenu.calories)}kcal
+                  {formatDisplayNumber(primaryMenu.estimated_calories ?? primaryMenu.calories)}kcal
                 </p>
               </div>
             )}
@@ -3520,7 +3531,7 @@ function FeedbackSection({
                   </p>
 
                   <span className={`${styles.feedbackMenuItemCalories} textNoWrap body-s-medium`}>
-                    {formatDisplayNumber(menu.calories)}kcal
+                    {formatDisplayNumber(menu.estimated_calories ?? menu.calories)}kcal
                   </span>
                 </li>
               ))}
@@ -3732,93 +3743,31 @@ function isNestedInteractiveTarget(target: EventTarget | null, boundary: HTMLEle
 }
 
 function FeedbackScoreGauge({ score }: { score: number }) {
-  const roundedScore = Math.round(score);
+  const roundedScore = Number.isFinite(score) ? Math.round(score) : 0;
   const safeScore = Math.min(Math.max(roundedScore, 0), 100);
-  const gaugeVisual = getFeedbackGaugeVisual(safeScore);
-  const markerPosition = getFeedbackGaugeMarkerPosition(safeScore);
+  const color =
+    safeScore < 40
+      ? "var(--status-low)"
+      : safeScore < 80
+        ? "var(--status-warning)"
+        : "var(--primary-normal)";
 
   return (
-    <div className={styles.feedbackScoreGauge} aria-label={`메뉴 추천도 ${safeScore}점`}>
-      <div className={styles.feedbackGaugeArc}>
-        <svg
-          className={styles.feedbackGaugeSvg}
-          viewBox={`0 0 ${FEEDBACK_GAUGE_VIEWBOX_WIDTH} ${FEEDBACK_GAUGE_VIEWBOX_HEIGHT}`}
-          aria-hidden="true"
-        >
-          <path className={styles.feedbackGaugeTrack} d={FEEDBACK_GAUGE_PATH} pathLength={100} />
-          <path
-            className={`${styles.feedbackGaugeValue} ${gaugeVisual.valueClassName}`}
-            d={FEEDBACK_GAUGE_PATH}
-            pathLength={100}
-            style={{ strokeDasharray: `${safeScore} 100` }}
-          />
-        </svg>
+    <div className={styles.feedbackScoreGauge}>
+      <ArcProgress
+        value={safeScore}
+        ariaLabel="메뉴 추천도"
+        valueText={`${safeScore}점 / 100점`}
+        color={color}
+        className={styles.feedbackGaugeArc}
+      >
         <div className={styles.feedbackScoreLabel}>
           <p className={`${styles.feedbackScoreValue} title-l-semi`}>{safeScore}점</p>
           <p className={`${styles.feedbackScoreCaption} body-s-medium`}>메뉴 추천도</p>
         </div>
-        <img
-          src={gaugeVisual.characterIcon}
-          alt=""
-          aria-hidden="true"
-          className={styles.feedbackGaugeCharacter}
-          style={{
-            left: markerPosition.x,
-            top: markerPosition.y,
-          }}
-        />
-      </div>
+      </ArcProgress>
     </div>
   );
-}
-
-function getFeedbackGaugeVisual(score: number) {
-  if (score < 40) {
-    return {
-      characterIcon: "/icons/characters/score-0.png",
-      valueClassName: styles.feedbackGaugeValueLow,
-    };
-  }
-
-  if (score < 80) {
-    return {
-      characterIcon: "/icons/characters/score-41.png",
-      valueClassName: styles.feedbackGaugeValueWarning,
-    };
-  }
-
-  return {
-    characterIcon: "/icons/characters/score-81.png",
-    valueClassName: styles.feedbackGaugeValueNormal,
-  };
-}
-
-function getFeedbackGaugeMarkerPosition(score: number) {
-  const angle =
-    FEEDBACK_GAUGE_START_ANGLE -
-    ((FEEDBACK_GAUGE_START_ANGLE - FEEDBACK_GAUGE_END_ANGLE) * score) / 100;
-  const { x, y } = getFeedbackGaugePoint(angle);
-
-  return {
-    x: `${(x / FEEDBACK_GAUGE_VIEWBOX_WIDTH) * 100}%`,
-    y: `${(y / FEEDBACK_GAUGE_VIEWBOX_HEIGHT) * 100}%`,
-  };
-}
-
-function getFeedbackGaugePath() {
-  const start = getFeedbackGaugePoint(FEEDBACK_GAUGE_START_ANGLE);
-  const end = getFeedbackGaugePoint(FEEDBACK_GAUGE_END_ANGLE);
-
-  return `M ${start.x} ${start.y} A ${FEEDBACK_GAUGE_RADIUS} ${FEEDBACK_GAUGE_RADIUS} 0 0 1 ${end.x} ${end.y}`;
-}
-
-function getFeedbackGaugePoint(angle: number) {
-  const radian = (angle * Math.PI) / 180;
-
-  return {
-    x: FEEDBACK_GAUGE_CENTER_X + FEEDBACK_GAUGE_RADIUS * Math.cos(radian),
-    y: FEEDBACK_GAUGE_CENTER_Y - FEEDBACK_GAUGE_RADIUS * Math.sin(radian),
-  };
 }
 
 function getChatItemImageUrl(chatItem: ChatHistoryItemResponseDto) {
@@ -3977,8 +3926,8 @@ function getMealRecordImage(dayMeals: DayMealSummary, mealTime: MealTime) {
 function toMenuDraftFromChatMealRecordMenu(menu: ChatMealRecordMenu): MenuDraftType {
   return {
     id: menu.menu_id,
-    quantity: menu.weight,
-    mode: "unit",
+    quantity: menu.estimated_quantity ?? menu.weight,
+    mode: menu.estimated_quantity != null ? "weight" : "unit",
   };
 }
 
@@ -4160,6 +4109,19 @@ type MenuServingInfo = {
 
 function formatMenuServing(menu: MenuServingInfo) {
   return `${formatBaseServingUnit(menu.unit_quantity)} (${formatDisplayNumber(menu.weight)}${menu.unit === 0 ? "g" : "ml"})`;
+}
+
+function formatFeedbackMenuServing(menu: ChatFeedbackMenuResponseDto) {
+  const quantity = menu.estimated_quantity ?? menu.weight;
+  const unit = menu.estimated_quantity_unit ?? convertUnitNumToString(menu.unit);
+  const servingCount = convertWeightToServingCount({
+    baseWeight: menu.weight,
+    consumedWeight: quantity,
+  });
+  const servingText =
+    servingCount === null ? "" : `${servingCount}${getServingUnitLabel(menu.unit_quantity)} `;
+
+  return `${servingText}(${formatDisplayNumber(quantity)}${unit})`;
 }
 
 function resolveErrorMessage(

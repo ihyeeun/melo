@@ -4,9 +4,7 @@ import { useDayMealsQuery } from "@/features/home/hooks/queries/useTodayRecordQu
 import { useMenuCacheItems } from "@/features/meal-record/hooks/queries/menuCache";
 import { useSyncMenuDraftWithDayMeals } from "@/features/meal-record/stores/menuDraft.store";
 import { getMealType, getSafeDateKey } from "@/features/meal-record/utils/mealRecord.queryParams";
-import {
-  useMenuSelectionAdapter,
-} from "@/features/menu-selection/hooks/useMenuSelectionAdapter";
+import { useMenuSelectionAdapter } from "@/features/menu-selection/hooks/useMenuSelectionAdapter";
 import {
   getMenuSelectionMenuDetailPath,
   MENU_SELECTION_TARGET,
@@ -374,8 +372,8 @@ export default function FolderDetailPage() {
                 weight={folderMenu.menu.weight}
                 unit={folderMenu.menu.unit}
                 quantity={folderMenu.quantity}
-                icon={isSelected ? "check" : "add"}
-                state={isSelected ? "select" : "default"}
+                icon={"add"}
+                state={isSelected}
                 onClick={() => handleMenuDetailOpen(folderMenu)}
                 onIconClick={() => {
                   handleToggleMenuSelection(folderMenu);

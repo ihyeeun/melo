@@ -17,7 +17,6 @@ import {
 import { PATH } from "@/router/path";
 import { getMealDetailPath, getMealSearchPath } from "@/router/pathHelpers";
 import {
-  navigateBackAndPush,
   navigateBackToPathAndPushFromRoot,
   useLocation,
   useNavigate,
@@ -45,7 +44,6 @@ export default function NutrientRegisterPage() {
   const backFallbackPath = menuSelectionContext?.target
     ? getMenuSelectionSearchPath(menuSelectionContext)
     : getMealSearchPath(dateKey, mealType);
-  const shouldRemoveCameraEntryScreens = locationState.entrySource === "camera";
 
   const getRegisteredMenuDetailPath = (savedMenuId: number) => {
     if (menuSelectionContext?.target) {
@@ -73,15 +71,6 @@ export default function NutrientRegisterPage() {
           navigateBackToPathAndPushFromRoot({
             animate: false,
             backTo: backFallbackPath,
-            to: registeredMenuDetailPath,
-          });
-          return;
-        }
-
-        if (shouldRemoveCameraEntryScreens) {
-          navigateBackAndPush({
-            count: 2,
-            animate: false,
             to: registeredMenuDetailPath,
           });
           return;

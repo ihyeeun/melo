@@ -55,8 +55,8 @@ export function InfoPopover({
           className={styles.positioner}
           side={side}
           align={align}
-          sideOffset={8}
-          collisionPadding={50}
+          sideOffset={6}
+          collisionPadding={16}
         >
           <Popover.Popup
             className={`${styles.popup} body-s-medium`}

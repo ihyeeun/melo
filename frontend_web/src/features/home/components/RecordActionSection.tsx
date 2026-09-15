@@ -14,6 +14,7 @@ import type { MealType } from "@/shared/api/types/api.dto";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import { Skeleton, SkeletonStatus } from "@/shared/commons/skeleton/Skeleton";
 import { useNavigate } from "@/shared/navigation/stackflowNavigation";
+import { useSelectedDateKey } from "@/shared/stores/selectedDate.store";
 import { getTodayFormatDateKey, isFutureDateKey } from "@/shared/utils/dateFormat";
 import { formatDisplayNumber } from "@/shared/utils/numberFormat";
 
@@ -25,7 +26,8 @@ const MEAL_TYPES = [
   { type: "4", label: "야식", icon: "late-snack" },
 ] as const;
 
-export default function RecordActionSection({ selectedDate }: { selectedDate: string }) {
+export default function RecordActionSection() {
+  const selectedDate = useSelectedDateKey();
   const navigate = useNavigate();
   const { data: profile } = useGetProfileQuery();
   const { data: dayMeals, isPending: isDayMealsPending } = useDayMealsQuery(selectedDate);
