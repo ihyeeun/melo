@@ -28,7 +28,7 @@ import { toast } from "@/shared/commons/toast/toast";
 import { FEATURE_GUARD, useIsFeatureBlocked } from "@/shared/guards/featureGuard";
 import { useNavigate } from "@/shared/navigation/stackflowNavigation";
 import { useSelectedDateKey } from "@/shared/stores/selectedDate.store";
-import { getTodayFormatDateKey, isFutureDateKey, parseDateKey } from "@/shared/utils/dateFormat";
+import { getTodayFormatDateKey, parseDateKey } from "@/shared/utils/dateFormat";
 
 const SCORE_CHARACTER_SOURCES = [
   { maxScore: 20, src: "/icons/characters/score-0.png" },
@@ -94,7 +94,6 @@ export default function PreviewTodayScoreSection({
   const showCoachingButton =
     homeMode === "daily" &&
     !isChatBlocked &&
-    !isFutureDateKey(selectedDateKey) &&
     !isSummaryError &&
     dayMeal !== undefined &&
     Object.values(dayMeal.menusByTime).some((menus) => menus.length > 0);
