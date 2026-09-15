@@ -505,7 +505,9 @@ export default function ChatPage() {
   const personalizedManagementPendingCount = useIsMutating({
     mutationKey: ["personalized-management"],
   });
-  const isChatRequestPending = isSendPending || personalizedManagementPendingCount > 0;
+  const mealFeedbackPendingCount = useIsMutating({ mutationKey: ["meal-feedback"] });
+  const isChatRequestPending =
+    isSendPending || personalizedManagementPendingCount > 0 || mealFeedbackPendingCount > 0;
   const { mutateAsync: parseMenusFromTextMutation, isPending: isMealRecordParsePending } =
     useParseMenusFromTextMutation();
   const { mutateAsync: registerDiaryMealRecordMutate, isPending: isDiaryMealRegisterPending } =

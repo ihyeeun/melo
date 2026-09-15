@@ -34,6 +34,15 @@ export async function getPersonalizedManagement() {
   });
 }
 
+export async function getMealFeedback(date: string) {
+  return appApiData<ChatRecommendResponseDto>({
+    endpoint: "/chat/meal-feedback",
+    method: "POST",
+    body: { date },
+    timeoutMs: 5 * 60 * 1000,
+  });
+}
+
 export async function registerMenuByNutritionLabelImageFeedback({
   body,
 }: {
