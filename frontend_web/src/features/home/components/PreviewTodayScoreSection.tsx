@@ -19,6 +19,8 @@ import {
   useGoalSnapshotByDateQuery,
 } from "@/features/profile/hooks/queries/useProfileQuery";
 import { PATH } from "@/router/path";
+import { track } from "@/shared/analytics/analytics";
+import { EVENT_NAME } from "@/shared/analytics/analytics.constants";
 import { InfoPopover } from "@/shared/commons/popover/InfoPopover";
 import ScoreProgress from "@/shared/commons/progress/Progress";
 import { Skeleton, SkeletonStatus } from "@/shared/commons/skeleton/Skeleton";
@@ -162,6 +164,7 @@ export default function PreviewTodayScoreSection({
 
                 requestMealFeedback(selectedDateKey);
                 navigate(PATH.CHAT);
+                track(EVENT_NAME.CLICK_MEAL_FEEDBACK_AI_COACH);
               }}
             >
               {coachingLabel}

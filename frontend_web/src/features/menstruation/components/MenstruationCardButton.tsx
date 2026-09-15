@@ -12,6 +12,8 @@ import type { MenstrualPhaseResult } from "@/features/menstruation/hooks/useMens
 import styles from "@/features/menstruation/styles/MenstruationCardButton.module.css";
 import { getMenstrualPhaseDayInfo } from "@/features/menstruation/utils/menstrualPhaseDatesCalculation.util";
 import { PATH } from "@/router/path";
+import { track } from "@/shared/analytics/analytics";
+import { EVENT_NAME } from "@/shared/analytics/analytics.constants";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import { toast } from "@/shared/commons/toast/toast";
 import { FEATURE_GUARD, useIsFeatureBlocked } from "@/shared/guards/featureGuard";
@@ -153,6 +155,7 @@ export default function MenstruationCardButton({ phase }: { phase: MenstrualPhas
 
             requestPersonalizedManagement();
             navigate(PATH.CHAT);
+            track(EVENT_NAME.CLICK_MY_MANAGEMENT_AI_COACH);
           }}
         >
           지금 나에게 맞는 관리법 알아보기
