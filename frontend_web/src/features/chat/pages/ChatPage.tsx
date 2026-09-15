@@ -81,6 +81,7 @@ import { isNativeApp, requestNativeAppDeviceInfo } from "@/shared/api/bridge/nat
 import type { AppDeviceInfoPayload } from "@/shared/api/bridge/nativeBridge.types";
 import { MEAL_TYPE_OPTIONS, type MealTime } from "@/shared/api/types/api.dto";
 import type {
+  ChatFeedbackMenuResponseDto,
   ChatHistoryItemResponseDto,
   ChatMealRecordParseResponseDto,
   ChatNutritionLabelFeedbackResponseDto,
@@ -110,7 +111,13 @@ import {
   parseDateKey,
 } from "@/shared/utils/dateFormat";
 import { formatDisplayNumber } from "@/shared/utils/numberFormat";
-import { formatBaseServingUnit, SERVING_UNIT_PERSON } from "@/shared/utils/servingUnit";
+import {
+  convertUnitNumToString,
+  convertWeightToServingCount,
+  formatBaseServingUnit,
+  getServingUnitLabel,
+  SERVING_UNIT_PERSON,
+} from "@/shared/utils/servingUnit";
 
 const MEAL_RECORD_MODE_CHIP_ID = "meal-record";
 const QUICK_CHIP_LIST = [{ id: MEAL_RECORD_MODE_CHIP_ID, label: "식사 기록 모드" }];
@@ -3403,6 +3410,9 @@ function FeedbackSection({
   const [isMenuListOpen, setIsMenuListOpen] = useState(false);
   const primaryMenu = feedback.menus[0];
   const hasMultipleMenus = feedback.menus.length > 1;
+  const totalCalories = feedback.menus.some((menu) => menu.estimated_calories != null)
+    ? feedback.menus.reduce((total, menu) => total + (menu.estimated_calories ?? menu.calories), 0)
+    : feedback.total_calories;
   const navigate = useNavigate();
 
   if (!primaryMenu) return null;
@@ -3485,7 +3495,7 @@ function FeedbackSection({
                 <p className={`${styles.textAssistive} body-s-regular`}>총 칼로리</p>
 
                 <p className={`${styles.feedbackCalories} textNoWrap body-l-medium`}>
-                  {formatDisplayNumber(feedback.total_calories)}kcal
+                  {formatDisplayNumber(totalCalories)}kcal
                   <SystemIcon
                     name="chevron-up"
                     size={12}
@@ -3498,10 +3508,10 @@ function FeedbackSection({
             ) : (
               <div className={`${styles.feedbackMenuToggle}`}>
                 <p className={`${styles.textAlternative} body-s-regular`}>
-                  {formatMenuServing(primaryMenu)}
+                  {formatFeedbackMenuServing(primaryMenu)}
                 </p>
                 <p className={`${styles.feedbackCalories} textNoWrap body-l-medium`}>
-                  {formatDisplayNumber(primaryMenu.calories)}kcal
+                  {formatDisplayNumber(primaryMenu.estimated_calories ?? primaryMenu.calories)}kcal
                 </p>
               </div>
             )}
@@ -3519,7 +3529,7 @@ function FeedbackSection({
                   </p>
 
                   <span className={`${styles.feedbackMenuItemCalories} textNoWrap body-s-medium`}>
-                    {formatDisplayNumber(menu.calories)}kcal
+                    {formatDisplayNumber(menu.estimated_calories ?? menu.calories)}kcal
                   </span>
                 </li>
               ))}
@@ -3914,8 +3924,8 @@ function getMealRecordImage(dayMeals: DayMealSummary, mealTime: MealTime) {
 function toMenuDraftFromChatMealRecordMenu(menu: ChatMealRecordMenu): MenuDraftType {
   return {
     id: menu.menu_id,
-    quantity: menu.weight,
-    mode: "unit",
+    quantity: menu.estimated_quantity ?? menu.weight,
+    mode: menu.estimated_quantity != null ? "weight" : "unit",
   };
 }
 
@@ -4097,6 +4107,19 @@ type MenuServingInfo = {
 
 function formatMenuServing(menu: MenuServingInfo) {
   return `${formatBaseServingUnit(menu.unit_quantity)} (${formatDisplayNumber(menu.weight)}${menu.unit === 0 ? "g" : "ml"})`;
+}
+
+function formatFeedbackMenuServing(menu: ChatFeedbackMenuResponseDto) {
+  const quantity = menu.estimated_quantity ?? menu.weight;
+  const unit = menu.estimated_quantity_unit ?? convertUnitNumToString(menu.unit);
+  const servingCount = convertWeightToServingCount({
+    baseWeight: menu.weight,
+    consumedWeight: quantity,
+  });
+  const servingText =
+    servingCount === null ? "" : `${servingCount}${getServingUnitLabel(menu.unit_quantity)} `;
+
+  return `${servingText}(${formatDisplayNumber(quantity)}${unit})`;
 }
 
 function resolveErrorMessage(

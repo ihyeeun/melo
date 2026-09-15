@@ -33,7 +33,7 @@ import {
   trackRecommendMenuCancel,
 } from "@/shared/analytics/recommendMenuEvents";
 import { AppApiError } from "@/shared/api/apiClient";
-import { type MealType } from "@/shared/api/types/api.dto";
+import { type MealType, MENU_UNIT } from "@/shared/api/types/api.dto";
 import type {
   ChatFeedbackMenuResponseDto,
   ChatFoodImageRecognizedMenuResponseDto,
@@ -274,8 +274,8 @@ function FeedbackResultContent({
     upsertMenu({
       key: draftKey,
       id: menu.menu_id,
-      quantity: menu.weight,
-      mode: "unit",
+      quantity: menu.estimated_quantity ?? menu.weight,
+      mode: menu.estimated_quantity != null ? "weight" : "unit",
     });
   };
 
@@ -353,12 +353,19 @@ function FeedbackResultContent({
                 <li key={menu.menu_id}>
                   <MealMenuCard
                     name={menu.menu_name}
-                    calories={menu.calories}
+                    calories={menu.estimated_calories ?? menu.calories}
                     unit_quantity={menu.unit_quantity}
                     brand={menu.brand}
                     data_source={menu.data_source}
                     weight={menu.weight}
-                    unit={menu.unit}
+                    quantity={menu.estimated_quantity ?? menu.weight}
+                    unit={
+                      menu.estimated_quantity_unit === "g"
+                        ? MENU_UNIT.GRAM
+                        : menu.estimated_quantity_unit === "ml"
+                          ? MENU_UNIT.MILLILITER
+                          : menu.unit
+                    }
                     icon={"add"}
                     state={isSelected}
                     onClick={

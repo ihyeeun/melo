@@ -275,6 +275,9 @@ export interface ChatFeedbackMenuResponseDto {
   score: number;
   is_appropriate: boolean;
   data_source: number;
+  estimated_quantity?: number;
+  estimated_quantity_unit?: string;
+  estimated_calories?: number;
 }
 
 export interface ChatHistoryResponseDto {
