@@ -28,7 +28,7 @@ import { toast } from "@/shared/commons/toast/toast";
 import { FEATURE_GUARD, useIsFeatureBlocked } from "@/shared/guards/featureGuard";
 import { useNavigate } from "@/shared/navigation/stackflowNavigation";
 import { useSelectedDateKey } from "@/shared/stores/selectedDate.store";
-import { getTodayFormatDateKey, isFutureDateKey } from "@/shared/utils/dateFormat";
+import { getTodayFormatDateKey, isFutureDateKey, parseDateKey } from "@/shared/utils/dateFormat";
 
 const SCORE_CHARACTER_SOURCES = [
   { maxScore: 20, src: "/icons/characters/score-0.png" },
@@ -48,6 +48,7 @@ export default function PreviewTodayScoreSection({
   menstrualPhase: MenstrualPhaseResult;
 }) {
   const selectedDateKey = useSelectedDateKey();
+  const selectedDate = parseDateKey(selectedDateKey);
   const isChatBlocked = useIsFeatureBlocked(FEATURE_GUARD.CHAT);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -74,7 +75,7 @@ export default function PreviewTodayScoreSection({
   const coachingLabel =
     selectedDateKey === getTodayFormatDateKey()
       ? "오늘의 식사 코칭 받기"
-      : "선택한 날의 식사 코칭 받기";
+      : `${selectedDate.getMonth() + 1}월 ${selectedDate.getDate()}일 식사 코칭 받기`;
   const { isWorkoutRecordPending, summary: activitySummary } = useActivityCalories(selectedDateKey);
   const {
     data: dayMeal,
@@ -96,8 +97,7 @@ export default function PreviewTodayScoreSection({
     !isFutureDateKey(selectedDateKey) &&
     !isSummaryError &&
     dayMeal !== undefined &&
-    Object.values(dayMeal.menusByTime).some((menus) => menus.length > 0) &&
-    profile?.role === "ADMIN";
+    Object.values(dayMeal.menusByTime).some((menus) => menus.length > 0);
 
   if (isSummaryPending || isProfilePending || isWorkoutRecordPending || isUserGoalPending) {
     return <PreviewTodayScoreSkeleton showCoachingButton={showCoachingButton} />;
