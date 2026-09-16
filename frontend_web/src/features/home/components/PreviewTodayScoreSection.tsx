@@ -108,7 +108,9 @@ export default function PreviewTodayScoreSection({
 
   const menstrualApplicants = [42, 50, 52, 53, 74, 80];
   const showCareTrialButton =
-    profile?.is_subscribed && !menstrualApplicants.includes(profile!.user_id);
+    profile?.is_subscribed &&
+    !menstrualApplicants.includes(profile!.user_id) &&
+    profile.gender === 1;
 
   const nutritionSummary = getDayNutritionSummary(
     dayMeal,
