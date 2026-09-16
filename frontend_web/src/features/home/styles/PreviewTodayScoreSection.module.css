@@ -35,6 +35,27 @@
   padding: 10px 12px;
 }
 
+.additionalCareButton {
+  display: flex;
+  align-items: center;
+  width: 100%;
+
+  &:active {
+    background-color: var(--background-gray-1);
+  }
+}
+
+.additionalIcon {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  margin-left: auto;
+  border-radius: 50%;
+  box-shadow: var(--shadow-outer);
+  color: var(--text-secondary);
+}
+
 .summaryArea {
   display: flex;
   flex: 1;
