@@ -14,6 +14,7 @@ import styles from "@/features/home/styles/PreviewTodayScoreSection.module.css";
 import type { HomeDashboardMode } from "@/features/home/types/homeDashboard.types";
 import { getDayNutritionSummary } from "@/features/home/utils/dayMealSummary";
 import MenstruationCardButton from "@/features/menstruation/components/MenstruationCardButton";
+import { menstrualApplicants } from "@/features/menstruation/constants/menstruation.constant";
 import type { MenstrualPhaseResult } from "@/features/menstruation/hooks/useMenstrualPhase";
 import {
   useGetProfileQuery,
@@ -106,7 +107,6 @@ export default function PreviewTodayScoreSection({
     return <PreviewTodayScoreSkeleton showCoachingButton={showCoachingButton} />;
   }
 
-  const menstrualApplicants = [42, 50, 52, 53, 74, 80];
   const showCareTrialButton =
     profile?.is_subscribed &&
     !menstrualApplicants.includes(profile!.user_id) &&

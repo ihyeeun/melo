@@ -9,6 +9,7 @@ import PreviewTodayScoreSection from "@/features/home/components/PreviewTodaySco
 import RecordActionSection from "@/features/home/components/RecordActionSection";
 import styles from "@/features/home/styles/HomePage.module.css";
 import type { HomeDashboardMode } from "@/features/home/types/homeDashboard.types";
+import { menstrualApplicants } from "@/features/menstruation/constants/menstruation.constant";
 import { useMenstrualPhase } from "@/features/menstruation/hooks/useMenstrualPhase";
 import { getMenstrualCalendarStatus } from "@/features/menstruation/utils/menstrualPhaseDatesCalculation.util";
 import { useGetProfileQuery } from "@/features/profile/hooks/queries/useProfileQuery";
@@ -44,7 +45,6 @@ export default function HomePage() {
     });
   };
   const { data: profile, isPending: isProfilePending } = useGetProfileQuery();
-  const menstrualApplicants = [42, 50, 52, 53, 74, 80];
   const freeUser = !profile?.is_subscribed;
   const canDashboardMode =
     (freeUser || menstrualApplicants.includes(profile!.user_id) || profile.role === "ADMIN") &&

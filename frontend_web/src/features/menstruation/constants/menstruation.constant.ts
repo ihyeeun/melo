@@ -63,3 +63,5 @@ export const HOME_MENSTRUAL_STATUS_VIEW = {
   next_predicted: NEXT_MENSTRUAL_VIEW,
   undefined: EMPTY_PHASE_CONTENT,
 } as const;
+
+export const menstrualApplicants = [42, 50, 51, 52, 53, 74, 80];
