@@ -188,6 +188,7 @@ export default function PreviewTodayScoreSection({
           className={styles.additionalCareButton}
           onClick={() => {
             setIsAdditionalCareOpen(true);
+            track(EVENT_NAME.CLICK_MENSTRUAL_CARE);
           }}
         >
           <p className="body-s-medium text-primary">생리 주기 케어 추가 체험 신청</p>
