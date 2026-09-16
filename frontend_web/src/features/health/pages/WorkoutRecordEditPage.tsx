@@ -19,6 +19,7 @@ import {
   useWorkoutRecordEditRecords,
 } from "@/features/health/stores/workoutRecordEdit.store";
 import { formatWorkoutDuration } from "@/features/health/utils/workoutFormat";
+import Tile from "@/features/home/components/cards/Tile";
 import {
   getWorkoutRecordPath,
   getWorkoutSearchPath,
@@ -32,6 +33,7 @@ import type {
   WorkoutRecordResponseDto,
 } from "@/shared/api/types/api.response.dto";
 import { Button } from "@/shared/commons/button/Button";
+import { PageHeader } from "@/shared/commons/header/PageHeader";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import { LoadingIndicator, LoadingOverlay } from "@/shared/commons/loading/Loading";
 import { toast } from "@/shared/commons/toast/toast";
@@ -296,7 +298,7 @@ export default function WorkoutRecordEditPage() {
 
     ensureEditRecordsInitialized();
     navigate(getWorkoutUpsertPath(dateKey, workout.workout_id, { mode: "edit" }), {
-      state: { returnDepth: 1, workoutRecord: workout },
+      state: { workoutRecord: workout },
     });
   };
 
@@ -380,7 +382,7 @@ export default function WorkoutRecordEditPage() {
       "운동 기록을 불러오지 못했어요",
       "운동 기록이 없어요",
       () => (
-        <section className={styles.recordList} aria-label="운동 수정 목록">
+        <section className={styles.workoutList} aria-label="운동 수정 목록">
           {draftRecords.map((workout) => (
             <WorkoutEditCard
               key={workout.workout_id}
@@ -398,63 +400,63 @@ export default function WorkoutRecordEditPage() {
     );
 
   return (
-    <section className={styles.page}>
-      <header className={styles.editHeader}>
-        <button
-          type="button"
-          className={styles.editCloseButton}
-          onClick={closeEditMode}
-          aria-label="운동 수정 닫기"
-        >
-          <SystemIcon name="exit" size={24} />
-        </button>
-        <h1 className={`${styles.editHeaderTitle} body-l-medium`}>운동 수정</h1>
-        <div aria-hidden="true" className={styles.editHeaderSpacer} />
-      </header>
+    <section className={`${styles.page} page`}>
+      <PageHeader
+        title="운동 수정"
+        onBack={() => {
+          closeEditMode();
+          navigateBack();
+        }}
+      />
 
-      <main className={styles.content}>
-        <section className={styles.cardContainer}>
+      <main className={`${styles.content} main`}>
+        <section className={styles.summaryArea}>
           <div className={styles.summaryGrid} aria-label="운동 수정 요약">
-            <article className={styles.summaryCard}>
-              <span className={`${styles.summaryTitle} body-m-regular`}>총 운동 시간</span>
-              <div className={styles.summaryValueRow}>
-                <span className={`${styles.summaryValue} body-l-medium`}>
-                  {formatWorkoutDuration(editSummary.duration)}
-                </span>
-              </div>
-            </article>
-            <article className={styles.summaryCard}>
-              <span className={`${styles.summaryTitle} body-m-regular`}>총 소모 칼로리</span>
-              <div className={styles.summaryValueRow}>
-                <span className={`${styles.summaryValue} body-l-medium`}>
-                  {editSummary.burnedCalories.toLocaleString("ko-KR")}
-                </span>
-                <span className="body-m-regular">kcal</span>
-              </div>
-            </article>
+            <Tile>
+              <p className={`body-l-medium text-primary`}>총 운동 시간</p>
+              <p className={`${styles.amount} title-l-semi text-primary`}>
+                {formatWorkoutDuration(editSummary.duration)
+                  .split(/(시간|분)/)
+                  .map((part, index) =>
+                    part === "시간" || part === "분" ? (
+                      <span key={index} className="body-l-regular text-tertiary">
+                        {` ${part}`}
+                      </span>
+                    ) : (
+                      part
+                    ),
+                  )}
+              </p>
+            </Tile>
+            <Tile>
+              <p className={`body-l-medium text-primary`}>총 소모 칼로리</p>
+              <p className={`${styles.amount} title-l-semi text-primary`}>
+                {editSummary.burnedCalories.toLocaleString("ko-KR")}
+                <span className="body-l-regular text-tertiary"> kcal</span>
+              </p>
+            </Tile>
           </div>
         </section>
 
-        <div className={styles.sectionHeader}>
-          <p className="body-l-medium">오늘 한 운동</p>
+        <div className={styles.workoutListTitle}>
+          <p className="title-s-semi text-primary">오늘 한 운동</p>
         </div>
 
         {renderEditContent()}
       </main>
 
-      <footer className={styles.editFooter}>
+      <footer className={`footer ${styles.editPageFooter}`}>
         <Button
-          size="xs"
+          size="m"
           fullWidth
           variant="outlined"
           disabled={workoutRecordQuery.isPending || workoutRecordQuery.isError || isSavePending}
           onClick={handleSearchWorkout}
         >
-          <SystemIcon name="plus" size={14} />
           운동 추가하기
         </Button>
         <Button
-          size="xs"
+          size="m"
           fullWidth
           disabled={workoutRecordQuery.isPending || workoutRecordQuery.isError || isSavePending}
           onClick={completeEditMode}
@@ -525,8 +527,8 @@ function WorkoutEditCard({
         <SystemIcon name="drag" size={24} />
       </button>
 
-      <button type="button" className={styles.editRecordMain} onClick={onClick}>
-        <div className={styles.thumbnail}>
+      <button type="button" className={styles.editWorkoutItem} onClick={onClick}>
+        <div className={styles.workoutImage}>
           {workout.workout_image ? (
             <img src={workout.workout_image} alt="" className={styles.thumbnailImage} />
           ) : (
@@ -537,18 +539,17 @@ function WorkoutEditCard({
           )}
         </div>
 
-        <div className={styles.recordContent}>
-          <p className={`ellipsis body-l-medium`}>{workout.workout_name}</p>
-          <p className="caption-m-medium">
-            {workout.workout_type === "cardio"
-              ? `${formatWorkoutDuration(workout.workout_duration)}`
-              : `${workout.set_list?.length ?? 0}세트`}
+        <div className={styles.workoutInfoArea}>
+          <p className={`ellipsis body-l-medium text-primary`}>{workout.workout_name}</p>
+          <p className={`body-s-regular text-secondary ${styles.workoutMeta}`}>
+            <span>
+              {workout.workout_type === "cardio"
+                ? `${formatWorkoutDuration(workout.workout_duration)}`
+                : `${workout.set_list?.length ?? 0}세트`}
+            </span>
+            <span>{workout.burned_calories.toLocaleString("ko-KR")}kcal</span>
           </p>
         </div>
-
-        <span className={`body-m-regular text-secondary`}>
-          {workout.burned_calories.toLocaleString("ko-KR")}kcal
-        </span>
       </button>
 
       <button

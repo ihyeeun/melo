@@ -1,10 +1,5 @@
 .page {
   background-color: var(--background-gray-1);
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  min-height: 100dvh;
-  width: 100%;
 }
 
 .main {
@@ -13,11 +8,6 @@
   flex-direction: column;
   min-height: 0;
   width: 100%;
-}
-
-.footer {
-  padding: 0 20px;
-  padding-bottom: var(--safe-area-bottom);
 }
 
 .filterSection {
@@ -47,23 +37,22 @@
 }
 
 .filterChip {
-  align-items: center;
   background-color: var(--background-default);
   border: 1px solid var(--border-subtle);
   border-radius: 100px;
   color: var(--text-primary);
-  display: inline-flex;
+  display: gird;
+  place-items: center;
   flex: 0 0 auto;
-  justify-content: center;
   min-height: 32px;
-  padding: 6px 14px;
+  padding: 4px 12px;
   white-space: nowrap;
 }
 
 .filterChipSelected {
-  background-color: var(--primary-normal);
-  border-color: var(--primary-normal);
-  color: var(--background-default);
+  background-color: var(--coral-300);
+  color: var(--text-primary);
+  border: none;
 }
 
 .bgWhite {
@@ -82,68 +71,40 @@
 }
 
 .tabSelected {
-  border-bottom: 2px solid var(--primary-normal);
-  color: var(--primary-normal);
+  border-bottom: 2px solid var(--border-strong);
 }
 
-.resultSection {
-  height: 100%;
-  flex: 1;
-  min-height: 0;
-  padding: 0 20px;
-  overflow-y: auto;
-}
-
-.resultList {
+.workoutResultListSection {
   display: flex;
   flex-direction: column;
   gap: 8px;
   width: 100%;
+  padding: 0 16px;
 }
 
-.resultCard {
-  align-items: center;
-  background-color: var(--background-default);
-  border: 1px solid var(--border-subtle);
-  border-radius: 8px;
-  color: var(--text-primary);
-  display: flex;
+.workoutCard {
+  display: grid;
+  place-items: center;
+  grid-template-columns: 1fr 32px;
+  padding: 12px 16px;
   gap: 12px;
-  padding: 8px;
-  width: 100%;
-  min-height: 40px;
 }
 
-.resultCardSelected {
-  background-color: var(--background-selected);
-  border-color: var(--border-strong);
-}
-
-.resultMainButton {
-  align-items: center;
-  color: inherit;
-  display: flex;
+.workoutInfoActionButton {
   flex: 1;
+  width: 100%;
+  display: flex;
   gap: 12px;
-  min-width: 0;
-  text-align: left;
-}
-
-.resultMainButton:focus-visible {
-  border-radius: 8px;
-  outline: 2px solid var(--primary-normal);
-  outline-offset: 2px;
-}
-
-.thumbnail {
   align-items: center;
+}
+
+.workoutImageArea {
+  display: grid;
+  place-items: center;
   border-radius: 8px;
-  color: var(--primary-normal);
-  display: inline-flex;
-  justify-content: center;
   overflow: hidden;
   aspect-ratio: 1;
-  width: 70px;
+  width: 66px;
 }
 
 .thumbnailImage {
@@ -152,54 +113,36 @@
   width: 100%;
 }
 
-.resultContent {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  gap: 4px;
-  min-width: 0;
-}
-
-.resultTitle {
-  min-width: 0;
+.workoutName {
+  -webkit-box-orient: vertical;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  word-break: keep-all;
 }
 
 .addButton {
-  align-items: center;
-  color: var(--text-primary);
-  display: inline-flex;
+  display: grid;
+  place-items: center;
   flex: 0 0 32px;
   height: 32px;
-  justify-content: center;
   width: 32px;
-}
+  border: 1px solid var(--border-default);
+  border-radius: 50%;
+  box-shadow: var(--shadow-outer);
 
-.addButton:disabled {
-  cursor: default;
-  pointer-events: none;
-}
-
-.addButtonSelected {
-  color: var(--btn-default);
+  &[data-selected="true"] {
+    border: none;
+    background-color: var(--coral-200);
+  }
 }
 
 .loadingContainer,
-.emptyState {
-  align-items: center;
-  background-color: var(--background-default);
-  border: 1px solid var(--border-subtle);
-  border-radius: 8px;
-  color: var(--text-primary);
-  display: flex;
-  flex-direction: column;
+.emptyWorkoutListSection {
+  display: grid;
+  place-items: center;
   gap: 12px;
-  justify-content: center;
-  min-height: 180px;
-  padding: 24px 20px;
-  text-align: center;
 }
 
 .loadMoreState {

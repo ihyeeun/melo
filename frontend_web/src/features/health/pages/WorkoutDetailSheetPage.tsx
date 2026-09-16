@@ -4,7 +4,7 @@ import { useGetWorkoutDetailQuery } from "@/features/health/hooks/queries/workou
 import { getWorkoutSearchPath, getWorkoutUpsertPath } from "@/router/pathHelpers";
 import BottomSheet from "@/shared/commons/bottomSheet/BottomSheet";
 import { Button } from "@/shared/commons/button/Button";
-import { LoadingIndicator } from "@/shared/commons/loading/Loading";
+import { Skeleton } from "@/shared/commons/skeleton/Skeleton";
 import { useNavigate } from "@/shared/navigation/stackflowNavigation";
 import { navigateBack } from "@/shared/navigation/stackflowNavigationController";
 import { getTodayFormatDateKey, isValidDateKey } from "@/shared/utils/dateFormat";
@@ -49,29 +49,37 @@ export default function WorkoutDetailSheetPage() {
     if (workoutId === null) return;
     navigate(getWorkoutUpsertPath(date, workoutId, workoutPathOptions), {
       replace: true,
-      state: isEditMode ? { returnDepth: 2 } : undefined,
     });
   };
 
   const renderContent = () => {
-    if (workoutId === null) {
-      return <SheetStatus message="운동 정보를 찾을 수 없어요" onClose={closeSheet} />;
+    if (workoutId === null || !detailWorkout) {
+      return <SheetStatus message="운동 정보를 찾을 수 없어요" />;
+    }
+
+    if (workoutDetailQuery.isError) {
+      return <SheetStatus message="운동 상세 정보를 불러오지 못했어요" />;
     }
 
     if (workoutDetailQuery.isPending) {
       return (
-        <section className={styles.statusContainer}>
-          <LoadingIndicator label="운동 상세 정보를 불러오는 중입니다." />
+        <section className={styles.sheetContainer}>
+          <Skeleton height={25} width={124} />
+
+          <div className={styles.thumbnail}>
+            <Skeleton height={180} width={180} />
+          </div>
+
+          <div className={styles.infoGroup}>
+            <Skeleton height={24} width={100} />
+          </div>
+          <div className={styles.infoGroup}>
+            <Skeleton height={24} width={110} />
+          </div>
+
+          <Skeleton height={52} width={"100%"} />
         </section>
       );
-    }
-
-    if (workoutDetailQuery.isError) {
-      return <SheetStatus message="운동 상세 정보를 불러오지 못했어요" onClose={closeSheet} />;
-    }
-
-    if (!detailWorkout) {
-      return <SheetStatus message="운동 정보를 찾을 수 없어요" onClose={closeSheet} />;
     }
 
     const imageUrl = detailWorkout.workout_gif;
@@ -94,15 +102,16 @@ export default function WorkoutDetailSheetPage() {
             <p className={`body-l-semi text-tertiary`}>이미지 준비 중이에요</p>
           )}
         </div>
+
         <section className={styles.infoGroup}>
-          <p className={`${styles.sectionTitle} body-m-regular`}>기구</p>
-          {equipment ? <p className={`body-m-regular`}>{equipment}</p> : null}
+          <p className={`${styles.sectionTitle} body-l-medium`}>기구</p>
+          {equipment ? <p className={`body-l-medium`}>{equipment}</p> : null}
         </section>
 
         {bodyParts.length > 0 ? (
           <section className={styles.infoGroup}>
-            <p className={`${styles.sectionTitle} body-m-regular`}>운동 부하</p>
-            <div className={styles.chipList}>{bodyParts.join(", ")}</div>
+            <p className={`${styles.sectionTitle} body-l-medium`}>운동 부하</p>
+            <div className={`${styles.chipList} body-l-medium`}>{bodyParts.join(", ")}</div>
           </section>
         ) : null}
 
@@ -120,13 +129,10 @@ export default function WorkoutDetailSheetPage() {
   );
 }
 
-function SheetStatus({ message, onClose }: { message: string; onClose: () => void }) {
+function SheetStatus({ message }: { message: string }) {
   return (
     <section className={styles.statusContainer}>
-      <p className="body-l-medium">{message}</p>
-      <Button variant="outlined" border="secondary" size="xs" onClick={onClose}>
-        닫기
-      </Button>
+      <p className="body-l-medium text-tertiary">{message}</p>
     </section>
   );
 }

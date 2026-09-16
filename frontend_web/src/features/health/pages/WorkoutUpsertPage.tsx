@@ -34,10 +34,10 @@ import type {
   WorkoutSearchItemResponseDto,
 } from "@/shared/api/types/api.response.dto";
 import { Button } from "@/shared/commons/button/Button";
+import { SelectedCard } from "@/shared/commons/card/SelectedCard";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import NumberField from "@/shared/commons/input/NumberField";
-import { LoadingIndicator } from "@/shared/commons/loading/Loading";
 import { InfoPopover } from "@/shared/commons/popover/InfoPopover";
 import { toast } from "@/shared/commons/toast/toast";
 import {
@@ -63,21 +63,15 @@ type WorkoutDraftState = {
   key: string;
 };
 
-const INTENSITY_OPTIONS: Array<{ label: string; value: Intensity }> = [
-  { label: "가볍게", value: 0 },
-  { label: "적당히", value: 1 },
-  { label: "격하게", value: 2 },
+const INTENSITY_OPTIONS: Array<{ label: string; value: Intensity; description: string }> = [
+  { label: "가볍게", value: 0, description: "호흡이 편안하고 여유로운 정도" },
+  { label: "적당히", value: 1, description: "숨이 약간 차고 이마에 땀이 맺히는 정도" },
+  { label: "격하게", value: 2, description: "숨이 매우 차며 땀이 많이 나는 고강도" },
 ];
 const WORKOUT_NUMBER_FORMAT = {
   useGrouping: false,
 } satisfies Intl.NumberFormatOptions;
-const WORKOUT_NUMBER_FIELD_CLASS_NAMES = {
-  root: styles["number-field-root"],
-  group: styles["number-field-group"],
-  inputWrapper: styles.inputWrap,
-  input: `${styles.input} body-s-medium`,
-  unit: `${styles.unit} body-s-medium`,
-};
+
 const CARDIO_CALORIE_INFO_MESSAGES = [
   "MET(대사당량) 지수를 기반으로, 체중과 운동 강도를 반영해 계산한 추정치입니다. 개인의 근육량이나 실제 심박수 등에 따라 소모량은 조금 다를 수 있어요.",
 ] as const;
@@ -166,7 +160,6 @@ export default function WorkoutUpsertPage() {
   const [searchParams] = useSearchParams();
   const queryClient = useQueryClient();
   const location = useLocation<{
-    returnDepth?: number;
     workoutRecord?: WorkoutRecordItemResponseDto;
   }>();
   const date = getSafeDateKey(searchParams.get("date"));
@@ -386,7 +379,6 @@ export default function WorkoutUpsertPage() {
     if (isEditSession && workout) {
       replaceEditRecord(createWorkoutRecordFromRequest(requestBody, workout, workoutImage));
       navigateBack({
-        count: location.state?.returnDepth ?? 1,
         fallbackTo: getWorkoutRecordEditPath(date),
       });
       return;
@@ -398,41 +390,66 @@ export default function WorkoutUpsertPage() {
     });
   };
 
-  const renderWorkoutFields = () => {
-    if (!workout) return null;
+  if (workoutQueryPending) {
+    return <></>;
+  }
 
+  if (workoutId === null || !workout || workoutQueryError) {
+    return navigateBack();
+  }
+
+  const renderWorkoutFields = () => {
+    // 1. 유산소
     if (workout.workout_type === "cardio") {
       return (
         <>
-          <LabeledNumberField
-            label="운동 시간"
-            value={draft.workout_duration}
-            onChange={(value) => updateDraft("workout_duration", value)}
-            placeholder="00"
-            unit="분"
-            required
-          />
+          <Field label="운동 시간" required>
+            <NumberField
+              value={draft.workout_duration}
+              onChange={(value) => updateDraft("workout_duration", value)}
+              min={0}
+              max={60 * 24}
+              step={10}
+              unit="분"
+              classNames={{
+                group: styles.timeInputGroup,
+                decrement: styles.timeQuickActionButton,
+                increment: styles.timeQuickActionButton,
+                inputWrapper: styles.weightValueDisplay,
+                input: `title-l-semi text-primary ${styles.timeInput}`,
+                unit: `title-s-regular text-primary`,
+              }}
+              decrementIcon={<SystemIcon name="minus" size={18} />}
+              incrementIcon={<SystemIcon name="plus" size={18} />}
+              inputProps={{
+                inputMode: "numeric",
+                placeholder: "-",
+                "aria-label": "운동한 시간 입력",
+              }}
+            />
+          </Field>
 
           <Field label="운동 강도" required>
-            <div className={styles.segmentGroup}>
+            <section className={styles.intensitySection}>
               {INTENSITY_OPTIONS.map((option) => {
                 const isActive = draft.intensity === option.value;
 
                 return (
-                  <button
+                  <SelectedCard
                     key={option.value}
-                    type="button"
-                    className={`${styles.segmentButton} ${isActive ? styles.segmentButtonActive : ""} body-s-medium`}
                     aria-pressed={isActive}
-                    onClick={() => {
+                    isSelected={isActive}
+                    setSelectedChange={() => {
                       updateIntensity(option.value);
                     }}
+                    className={styles.intensityCardItem}
                   >
-                    {option.label}
-                  </button>
+                    <p className="body-l-medium text-primary">{option.label}</p>
+                    <p className="body-s-regular text-secondary">{option.description}</p>
+                  </SelectedCard>
                 );
               })}
-            </div>
+            </section>
           </Field>
 
           <LabeledNumberField
@@ -453,29 +470,33 @@ export default function WorkoutUpsertPage() {
       );
     }
 
-    const shouldShowWeightInput = !isBodyweightWorkout(workout);
-
+    // 2. 근력 운동
+    const isShowWeightInput = !isBodyweightWorkout(workout);
     return (
       <>
         <Field label="세트" required>
-          <div className={styles.setList}>
+          <div className={styles.setSection}>
             <div
-              className={`${styles.setHeader} ${shouldShowWeightInput ? "" : styles.setHeaderBodyweight} body-s-medium`}
+              className={`${styles.setHeader} body-s-semi`}
+              data-showWeightInput={isShowWeightInput}
               aria-hidden="true"
             >
               <span>세트</span>
-              {shouldShowWeightInput ? <span>무게</span> : null}
-              <span>횟수</span>
+              {isShowWeightInput && <span className="textCenter">무게</span>}
+              <span className="textCenter">횟수</span>
               <span />
             </div>
 
             {draft.set_list.map((set, index) => (
               <div
                 key={set.set_order}
-                className={`${styles.setRow} ${shouldShowWeightInput ? "" : styles.setRowBodyweight}`}
+                className={`${styles.setRow}`}
+                data-showWeightInput={isShowWeightInput}
               >
-                <span className={`${styles.setOrder} body-s-medium`}>{index + 1}세트</span>
-                {shouldShowWeightInput ? (
+                <span className={`${styles.setOrder} body-l-medium text-secondary`}>
+                  {index + 1}
+                </span>
+                {isShowWeightInput && (
                   <NumberField
                     value={set.weight}
                     onChange={(value) => updateSet(set.set_order, "weight", value)}
@@ -483,41 +504,45 @@ export default function WorkoutUpsertPage() {
                     min={0}
                     step={0.1}
                     fractionDigits={1}
-                    unit="kg"
                     showControls={false}
                     unstyled
                     format={WORKOUT_NUMBER_FORMAT}
-                    classNames={WORKOUT_NUMBER_FIELD_CLASS_NAMES}
+                    classNames={{
+                      inputWrapper: styles.setInpuArea,
+                      input: `${styles.setInput} body-l-semi`,
+                    }}
                     inputProps={{
-                      placeholder: "0",
+                      placeholder: "-",
                       "aria-label": `${index + 1}세트 무게`,
                     }}
                   />
-                ) : null}
+                )}
                 <NumberField
                   value={set.reps}
                   onChange={(value) => updateSet(set.set_order, "reps", value)}
                   inputRef={
-                    shouldShowWeightInput
+                    isShowWeightInput
                       ? undefined
                       : (input) => focusPendingSetInput(set.set_order, input)
                   }
                   min={0}
                   step={1}
                   fractionDigits={0}
-                  unit="회"
                   showControls={false}
                   unstyled
                   format={WORKOUT_NUMBER_FORMAT}
-                  classNames={WORKOUT_NUMBER_FIELD_CLASS_NAMES}
+                  classNames={{
+                    inputWrapper: styles.setInpuArea,
+                    input: `${styles.setInput} body-l-semi`,
+                  }}
                   inputProps={{
-                    placeholder: "0",
+                    placeholder: "-",
                     "aria-label": `${index + 1}세트 횟수`,
                   }}
                 />
                 <button
                   type="button"
-                  className={styles.iconButton}
+                  className={styles.deleteButton}
                   disabled={draft.set_list.length === 1}
                   onClick={() => removeSet(set.set_order)}
                   aria-label={`${index + 1}세트 삭제`}
@@ -527,24 +552,11 @@ export default function WorkoutUpsertPage() {
               </div>
             ))}
           </div>
-          <Button variant="outlined" border="secondary" size="xs" fullWidth onClick={addSet}>
-            <SystemIcon name="plus" size={18} />
+          <Button variant="outlined" border="secondary" size="s" fullWidth onClick={addSet}>
+            <SystemIcon name="plus" size={18} className={styles.plusIcon} />
             세트 추가
           </Button>
         </Field>
-
-        <section className={styles.field}>
-          <div className={styles.labelRow}>
-            <p className={`${styles.label} body-l-medium`}>운동 시간</p>
-            <p className={`${styles.required} caption-m-medium`}>*필수</p>
-            <InfoPopover ariaLabel="운동 시간 계산 안내" messages={WEIGHT_DURATION_INFO_MESSAGES} />
-            <p
-              className={`${styles.unit} body-s-medium ${styles.textRight} ${styles.readOnlyTime}`}
-            >
-              {calculatedWorkoutDuration ?? "--"} 분
-            </p>
-          </div>
-        </section>
 
         <LabeledNumberField
           label="소모 칼로리"
@@ -555,55 +567,50 @@ export default function WorkoutUpsertPage() {
             <InfoPopover
               ariaLabel="소모 칼로리 계산 안내"
               messages={WEIGHT_CALORIE_INFO_MESSAGES}
+              className={styles.popover}
             />
           }
           unit="kcal"
           required
         />
+
+        <Field
+          label="예상 운동 시간"
+          rightSlot={
+            <InfoPopover
+              ariaLabel="운동 시간 계산 안내"
+              messages={WEIGHT_DURATION_INFO_MESSAGES}
+              className={styles.popover}
+            />
+          }
+        >
+          <div className={styles.readOnlyInputArea}>
+            <p className={`title-m-medium text-primary`}>
+              {calculatedWorkoutDuration ?? "--"}{" "}
+              <span className="body-l-medium text-tertiary">분</span>
+            </p>
+          </div>
+        </Field>
       </>
     );
   };
 
-  const renderContent = () => {
-    if (workoutId === null) {
-      return <StatusMessage message="운동 정보를 찾을 수 없어요" />;
-    }
+  return (
+    <form className={`${styles.page} page`} onSubmit={handleSubmit}>
+      <header className={styles.header}>
+        <PageHeader title="운동 추가" onBack={handleBack} />
+      </header>
 
-    if (workoutQueryPending) {
-      return (
-        <section className={styles.statusContainer}>
-          <LoadingIndicator label="운동 정보를 불러오는 중입니다." />
+      <main className={`${styles.content} main`}>
+        <section className={styles.workoutTitleGroup}>
+          <p className={`body-xs-regular text-tertiary`}>운동명</p>
+          <p className={`title-m-semi text-primary`}>{workout.workout_name}</p>
         </section>
-      );
-    }
-
-    if (workoutQueryError) {
-      return <StatusMessage message="운동 정보를 불러오지 못했어요" />;
-    }
-
-    if (!workout) {
-      return <StatusMessage message="운동 정보를 찾을 수 없어요" />;
-    }
-
-    return (
-      <div className={styles.content}>
-        <div className={styles.field}>
-          <p className={`text-tertiary body-s-medium`}>운동명</p>
-          <p className={`body-l-medium`}>{workout.workout_name}</p>
-        </div>
 
         {renderWorkoutFields()}
-      </div>
-    );
-  };
+      </main>
 
-  return (
-    <form className={styles.page} onSubmit={handleSubmit}>
-      <PageHeader title="운동 추가" onBack={handleBack} />
-
-      <main className={styles.main}>{renderContent()}</main>
-
-      <footer className={styles.footer}>
+      <footer className={`footer ${styles.footer}`}>
         <Button variant="outlined" border="secondary" size="m" onClick={handleBack}>
           취소
         </Button>
@@ -614,7 +621,7 @@ export default function WorkoutUpsertPage() {
           fullWidth
           disabled={!requestBody || isUpsertPending}
         >
-          저장
+          추가
         </Button>
       </footer>
     </form>
@@ -635,9 +642,9 @@ function Field({
   return (
     <section className={styles.field}>
       <div className={styles.labelRow}>
-        <p className={`${styles.label} body-l-medium`}>{label}</p>
-        {required ? <p className={`${styles.required} caption-m-medium`}>*필수</p> : null}
+        <p className={`title-s-semi text-primary`}>{label}</p>
         {rightSlot}
+        {required && <p className={`${styles.required} caption-m-medium`}>*필수</p>}
       </div>
       {children}
     </section>
@@ -673,20 +680,16 @@ function LabeledNumberField({
         showControls={false}
         unstyled
         format={WORKOUT_NUMBER_FORMAT}
-        classNames={WORKOUT_NUMBER_FIELD_CLASS_NAMES}
+        classNames={{
+          inputWrapper: styles.editInputArea,
+          input: `${styles.editInput} title-m-medium text-primary`,
+          unit: `body-l-medium text-tertiary`,
+        }}
         inputProps={{
           placeholder,
           "aria-label": label,
         }}
       />
     </Field>
-  );
-}
-
-function StatusMessage({ message }: { message: string }) {
-  return (
-    <section className={styles.statusContainer}>
-      <p className="body-l-medium">{message}</p>
-    </section>
   );
 }

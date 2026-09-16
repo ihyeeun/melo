@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import Calendar from "@/features/calendar/components/Calendar";
 import { useGetWorkoutRecordQuery } from "@/features/health/hooks/queries/workout.query";
 import { formatWorkoutDuration } from "@/features/health/utils/workoutFormat";
+import Tile from "@/features/home/components/cards/Tile";
 import { PATH } from "@/router/path";
 import {
   getWorkoutRecordEditPath,
@@ -14,7 +15,7 @@ import type { WorkoutRecordItemResponseDto } from "@/shared/api/types/api.respon
 import { Button } from "@/shared/commons/button/Button";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
-import { LoadingIndicator } from "@/shared/commons/loading/Loading";
+import { Skeleton } from "@/shared/commons/skeleton/Skeleton";
 import { navigateBack, useNavigate } from "@/shared/navigation/stackflowNavigation";
 import { useSelectedDateKey, useSetSelectedDate } from "@/shared/stores/selectedDate.store";
 import { parseDateKey } from "@/shared/utils/dateFormat";
@@ -61,22 +62,23 @@ export default function WorkoutRecordPage() {
   };
 
   const renderStatusContent = (
-    pendingMessage: string,
     errorMessage: string,
     emptyMessage: string,
     content: () => ReactNode,
   ) => {
     if (workoutRecordQuery.isPending) {
       return (
-        <section className={styles.statusContainer}>
-          <LoadingIndicator label={pendingMessage} />
+        <section className={styles.workoutList}>
+          <div className={styles.recordCard}>
+            <Skeleton height={100} width={100} />
+          </div>
         </section>
       );
     }
 
     if (workoutRecordQuery.isError) {
       return (
-        <section className={styles.emptyState}>
+        <section className={styles.workoutListErrorArea}>
           <p className="body-l-medium">{errorMessage}</p>
           <Button
             variant="text"
@@ -93,8 +95,9 @@ export default function WorkoutRecordPage() {
 
     if (workouts.length === 0) {
       return (
-        <section className={styles.emptyState}>
-          <p className="body-l-medium">{emptyMessage}</p>
+        <section className={styles.workoutListEmptyArea}>
+          <img src="/icons/characters/question.png" width={200} />
+          <p className="body-l-medium text-tertiary">{emptyMessage}</p>
         </section>
       );
     }
@@ -103,26 +106,21 @@ export default function WorkoutRecordPage() {
   };
 
   const renderContent = () => {
-    return renderStatusContent(
-      "운동 기록을 불러오는 중입니다.",
-      "운동 기록을 불러오지 못했어요",
-      "운동 기록이 없어요",
-      () => (
-        <section className={styles.recordList} aria-label="운동 기록 목록">
-          {workouts.map((workout) => (
-            <WorkoutRecordCard
-              key={workout.workout_id}
-              workout={workout}
-              onClick={() => handleWorkoutCardClick(workout)}
-            />
-          ))}
-        </section>
-      ),
-    );
+    return renderStatusContent("운동 기록을 불러오지 못했어요", "운동 기록이 없어요", () => (
+      <section className={styles.workoutList} aria-label="운동 기록 목록">
+        {workouts.map((workout) => (
+          <WorkoutRecordCard
+            key={workout.workout_id}
+            workout={workout}
+            onClick={() => handleWorkoutCardClick(workout)}
+          />
+        ))}
+      </section>
+    ));
   };
 
   return (
-    <section className={styles.page}>
+    <section className={`${styles.page} page`}>
       <PageHeader title="운동 기록" onBack={handleBack} />
 
       <Calendar
@@ -133,49 +131,50 @@ export default function WorkoutRecordPage() {
         showRecordedDots={false}
       />
 
-      <main className={styles.content}>
-        <section className={styles.cardContainer}>
-          <p className="title-s-medium">오늘 운동 요약</p>
+      <main className={`${styles.content} main`}>
+        <section className={styles.summaryArea}>
+          <p className="title-s-semi text-primary">오늘 운동 요약</p>
           <div className={styles.summaryGrid} aria-label="운동 요약">
-            <article className={styles.summaryCard}>
-              <span className={`${styles.summaryTitle} body-m-regular`}>총 운동 시간</span>
-              <div className={styles.summaryValueRow}>
-                <span className={`${styles.summaryValue} title-m-medium`}>
-                  {formatWorkoutDuration(summary.duration)}
-                </span>
-              </div>
-            </article>
-            <article className={styles.summaryCard}>
-              <span className={`${styles.summaryTitle} body-m-regular`}>총 소모 칼로리</span>
-              <div className={styles.summaryValueRow}>
-                <span className={`${styles.summaryValue} title-m-medium`}>
-                  {summary.burnedCalories.toLocaleString("ko-KR")}
-                </span>
-                <span className="body-m-regular">kcal</span>
-              </div>
-            </article>
+            <Tile>
+              <p className={`body-l-medium text-primary`}>총 운동 시간</p>
+              <p className={`${styles.amount} title-l-semi text-primary`}>
+                {formatWorkoutDuration(summary.duration)
+                  .split(/(시간|분)/)
+                  .map((part, index) =>
+                    part === "시간" || part === "분" ? (
+                      <span key={index} className="body-l-regular text-tertiary">
+                        {` ${part}`}
+                      </span>
+                    ) : (
+                      part
+                    ),
+                  )}
+              </p>
+            </Tile>
+            <Tile>
+              <p className={`body-l-medium text-primary`}>총 소모 칼로리</p>
+              <p className={`${styles.amount} title-l-semi text-primary`}>
+                {summary.burnedCalories.toLocaleString("ko-KR")}
+                <span className="body-l-regular text-tertiary"> kcal</span>
+              </p>
+            </Tile>
           </div>
         </section>
 
-        <div className={styles.sectionHeader}>
-          <p className="title-s-medium">오늘 한 운동</p>
+        <div className={styles.workoutListTitle}>
+          <p className="title-s-semi text-primary">오늘 한 운동</p>
           {workouts.length > 0 && (
-            <Button variant="text" size="xs" onClick={handleEditWorkoutRecords}>
-              수정
-              <SystemIcon name="chevron-right" size={14} />
-            </Button>
+            <button onClick={handleEditWorkoutRecords} className="body-s-regular text-secondary">
+              수정하기
+            </button>
           )}
         </div>
 
         {renderContent()}
       </main>
-
-      <footer className={styles.footer}>
-        <Button fullWidth size="m" onClick={handleSearchWorkout}>
-          <SystemIcon name="plus" size={18} />
-          운동 추가하기
-        </Button>
-      </footer>
+      <button onClick={handleSearchWorkout} className={styles.addButton}>
+        <SystemIcon name="plus" size={28} />
+      </button>
     </section>
   );
 }
@@ -188,29 +187,32 @@ function WorkoutRecordCard({
   onClick: () => void;
 }) {
   return (
-    <button type="button" className={styles.recordCard} onClick={onClick}>
-      <div className={styles.thumbnail}>
+    <button type="button" className={styles.workoutCard} onClick={onClick}>
+      <div className={styles.workoutImage}>
         {workout.workout_image ? (
           <img src={workout.workout_image} alt="" className={styles.thumbnailImage} />
         ) : (
-          <SystemIcon name={workout.workout_type === "cardio" ? "walking" : "fitness"} size={28} />
+          <SystemIcon
+            name={workout.workout_type === "cardio" ? "walking" : "fitness"}
+            size={28}
+            className="text-tertiary"
+          />
         )}
       </div>
 
-      <div className={styles.recordContent}>
-        <p className={`ellipsis body-l-medium`}>{workout.workout_name}</p>
+      <div className={styles.workoutInfoArea}>
+        <p className={`ellipsis body-l-medium text-primary`}>{workout.workout_name}</p>
 
-        <p className="caption-m-medium">
-          {workout.workout_type === "cardio"
-            ? `${formatWorkoutDuration(workout.workout_duration)}`
-            : `${workout.set_list?.length}세트`}
+        <p className={`body-s-regular text-secondary ${styles.workoutMeta}`}>
+          <span>
+            {workout.workout_type === "cardio"
+              ? `${formatWorkoutDuration(workout.workout_duration)}`
+              : `${workout.set_list?.length}세트`}
+          </span>
+          <span>{workout.burned_calories.toLocaleString("ko-KR")} kcal</span>
         </p>
       </div>
-
-      <span className={`body-m-regular text-secondary`}>
-        {workout.burned_calories.toLocaleString("ko-KR")}kcal
-      </span>
-      <SystemIcon name="chevron-right" size={18} className={styles.chevronIcon} />
+      <SystemIcon name="chevron-right" size={18} className={`text-tertiary`} />
     </button>
   );
 }

@@ -2,40 +2,34 @@
   display: flex;
   flex-direction: column;
   gap: 18px;
-  padding: 0 20px;
+  padding: 0 16px;
 }
 
 .thumbnail {
-  align-items: center;
-  color: var(--primary-normal);
-  display: inline-flex;
-  aspect-ratio: 1;
-  justify-content: center;
-  height: 180px;
+  place-items: center;
+  display: grid;
+  width: 100%;
 }
 
 .thumbnailImage {
-  aspect-ratio: 1;
   height: 180px;
   width: 180px;
   object-fit: cover;
-  border-radius: 8px;
 }
 
 .title {
-  color: var(--text-primary);
-  margin: 0;
-  overflow-wrap: anywhere;
+  word-break: keep-all;
 }
 
 .infoGroup {
   display: flex;
-  gap: 8px;
+  gap: 20px;
   min-width: 0;
+  padding: 0 12px;
 }
 
 .sectionTitle {
-  color: var(--primary-normal);
+  color: var(--coral-500);
   margin: 0;
   flex: 0 0 auto;
 }
@@ -47,23 +41,7 @@
 }
 
 .statusContainer {
-  align-items: center;
-  color: var(--text-primary);
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  justify-content: center;
+  place-items: center;
+  display: grid;
   min-height: 220px;
-  text-align: center;
-}
-
-@media (max-width: 360px) {
-  .sheetContainer {
-    padding-left: 16px;
-    padding-right: 16px;
-  }
-
-  .thumbnail {
-    flex-basis: 88px;
-  }
 }

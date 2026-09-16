@@ -47,7 +47,7 @@
 
 .var--text {
   background-color: transparent;
-  color: var(--text-tertiary);
+  color: var(--text-secondary);
   height: auto;
   min-height: 0;
   min-width: 0;
