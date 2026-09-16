@@ -508,7 +508,8 @@ export default function WorkoutUpsertPage() {
                     unstyled
                     format={WORKOUT_NUMBER_FORMAT}
                     classNames={{
-                      inputWrapper: styles.setInpuArea,
+                      root: styles.setNumberField,
+                      inputWrapper: styles.setInputArea,
                       input: `${styles.setInput} body-l-semi`,
                     }}
                     inputProps={{
@@ -532,7 +533,8 @@ export default function WorkoutUpsertPage() {
                   unstyled
                   format={WORKOUT_NUMBER_FORMAT}
                   classNames={{
-                    inputWrapper: styles.setInpuArea,
+                    root: styles.setNumberField,
+                    inputWrapper: styles.setInputArea,
                     input: `${styles.setInput} body-l-semi`,
                   }}
                   inputProps={{

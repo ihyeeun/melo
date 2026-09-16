@@ -343,7 +343,7 @@ function FilterChipGroup({
       <div className={styles.filterScroller}>
         <button
           type="button"
-          className={`${styles.filterChip} ${value === null ? styles.filterChipSelected : ""} body-m-medium`}
+          className={`${styles.filterChip} ${value === null ? styles.filterChipSelected : ""} body-s-medium`}
           aria-pressed={value === null}
           onClick={() => onChange(null)}
         >
@@ -353,7 +353,7 @@ function FilterChipGroup({
           <button
             key={option}
             type="button"
-            className={`${styles.filterChip} ${value === option ? styles.filterChipSelected : ""} body-m-medium`}
+            className={`${styles.filterChip} ${value === option ? styles.filterChipSelected : ""} body-s-medium`}
             aria-pressed={value === option}
             onClick={() => onChange(option)}
           >
@@ -447,7 +447,9 @@ function WorkoutSearchResultCard({
         className={`${styles.addButton}`}
         data-selected={isSelected}
         aria-label={
-          isSelected ? `${workout.workout_name} 기록에서 제외하기` : `${workout.workout_name} 추가하기`
+          isSelected
+            ? `${workout.workout_name} 기록에서 제외하기`
+            : `${workout.workout_name} 추가하기`
         }
         aria-pressed={isSelected}
         disabled={disabled}
