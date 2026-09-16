@@ -75,8 +75,6 @@
 }
 
 .setSection {
-  display: flex;
-  flex-direction: column;
   border-radius: 12px;
   overflow: hidden;
 }
@@ -88,10 +86,11 @@
   gap: 16px;
   grid-template-columns: 54px minmax(0, 1fr) minmax(0, 1fr) 54px;
   padding: 8px 16px;
+}
 
-  &[data-showWeightInput="false"] {
-    grid-template-columns: 54px minmax(0, 1fr) 54px;
-  }
+.setHeader[data-showWeightInput="false"],
+.setRow[data-showWeightInput="false"] {
+  grid-template-columns: 54px minmax(0, 1fr) 54px;
 }
 
 .setHeader {
@@ -102,10 +101,10 @@
 .setRow {
   transition: box-shadow 0.1s ease-in-out;
   background-color: var(--background-default);
+}
 
-  + .setRow {
-    border-top: 1px solid var(--border-default);
-  }
+.setRow + .setRow {
+  border-top: 1px solid var(--border-default);
 }
 
 .setOrder {
@@ -172,11 +171,11 @@
   padding: 16px;
   width: 100%;
   text-align: end;
+}
 
-  &:focus-within {
-    outline: 1px solid var(--border-strong);
-    outline-offset: 0;
-  }
+.editInputArea:focus-within {
+  outline: 1px solid var(--border-strong);
+  outline-offset: 0;
 }
 
 .editInput {
@@ -184,12 +183,12 @@
   text-align: end;
   border: none;
   padding: 0 4px;
+}
 
-  &:focus,
-  &:focus-visible {
-    outline: none;
-    box-shadow: none;
-  }
+.editInput:focus,
+.editInput:focus-visible {
+  outline: none;
+  box-shadow: none;
 }
 
 .footer {
