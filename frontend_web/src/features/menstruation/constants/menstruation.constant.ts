@@ -64,4 +64,4 @@ export const HOME_MENSTRUAL_STATUS_VIEW = {
   undefined: EMPTY_PHASE_CONTENT,
 } as const;
 
-export const menstrualApplicants = [42, 50, 51, 52, 53, 74, 80];
+export const menstrualApplicants = [38, 42, 50, 51, 52, 53, 74, 80];
