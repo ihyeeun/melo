@@ -154,8 +154,8 @@ const FoodCameraPage = createGuardedLazyActivity(
   FEATURE_GUARD.FOOD_CAMERA,
   () => import("@/features/camera/pages/MealRecordCreatePage"),
 );
-const ProfilePage = createLazyActivity(() => import("@/features/profile/ProfilePage"));
-const GoalEditPage = createLazyActivity(() => import("@/features/profile/GoalEditPage"));
+const ProfilePage = createLazyActivity(() => import("@/features/profile/pages/ProfilePage"));
+const GoalEditPage = createLazyActivity(() => import("@/features/profile/pages/GoalEditPage"));
 const GoalEditTargetCaloriesPage = createLazyActivity(
   () => import("@/features/profile/GoalEditTargetCaloriesPage"),
 );
@@ -1474,6 +1474,10 @@ export function navigateBack({
   fallbackTo?: To;
   skipBackHandler?: boolean;
 } = {}) {
+  if (runActiveBackHandler(skipBackHandler)) {
+    return false;
+  }
+
   const backStackDepth = getBackStackDepth(stackflowActions.getStack());
   const safeCount = Math.min(Math.max(1, count), Math.max(0, backStackDepth - 1));
 
@@ -1484,14 +1488,11 @@ export function navigateBack({
       count: safeCount,
       fallbackOptions,
       fallbackTo,
-      skipBackHandler,
+      // The handler already allowed this navigation before the transition started.
+      skipBackHandler: true,
     }) === true
   ) {
     return true;
-  }
-
-  if (runActiveBackHandler(skipBackHandler)) {
-    return false;
   }
 
   if (safeCount > 0) {

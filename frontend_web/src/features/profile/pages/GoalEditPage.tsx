@@ -12,13 +12,20 @@ import {
   validateStartPlan,
 } from "@/features/profile/goalEdit.model";
 import { useGetProfileQuery } from "@/features/profile/hooks/queries/useProfileQuery";
+import {
+  useGoalEditDraft,
+  useStartGoalEditFlow,
+  useUpdateGoalEditDraft,
+} from "@/features/profile/stores/goalEditFlow.store";
 import styles from "@/features/profile/styles/GoalEditPage.module.css";
 import { PATH } from "@/router/path";
 import BottomSheet from "@/shared/commons/bottomSheet/BottomSheet";
 import { Button } from "@/shared/commons/button/Button";
+import { SelectedCard } from "@/shared/commons/card/SelectedCard";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import { EditorInput } from "@/shared/commons/input/EditorInput";
+import NumberField from "@/shared/commons/input/NumberField";
 import {
   getBirthYearRange,
   isValidBirthYear,
@@ -26,13 +33,12 @@ import {
 } from "@/shared/commons/picker/yearOptions";
 import { Skeleton, SkeletonStatus } from "@/shared/commons/skeleton/Skeleton";
 import { toast } from "@/shared/commons/toast/toast";
-import { useNavigate } from "@/shared/navigation/stackflowNavigation";
-
 import {
-  useGoalEditDraft,
-  useStartGoalEditFlow,
-  useUpdateGoalEditDraft,
-} from "./stores/goalEditFlow.store";
+  navigateBack,
+  useNavigate,
+  useStackflowBackHandler,
+} from "@/shared/navigation/stackflowNavigation";
+import { toOneDecimalPlace } from "@/shared/utils/numberFormat";
 
 type EditableField =
   | "gender"
@@ -158,10 +164,19 @@ export default function GoalEditPage() {
     setSheetData({ ...visibleDraft });
   };
 
-  const closeEditor = () => {
+  const closeEditor = useCallback(() => {
     setEditingField(null);
     setSheetData({});
-  };
+  }, []);
+
+  const handleBackGuard = useCallback(() => {
+    if (editingField === null) return false;
+
+    closeEditor();
+    return true;
+  }, [closeEditor, editingField]);
+
+  useStackflowBackHandler(handleBackGuard);
 
   useEffect(() => {
     if (editingField !== "height" && editingField !== "weight" && editingField !== "goalWeight") {
@@ -266,7 +281,7 @@ export default function GoalEditPage() {
   };
 
   const handleBack = () => {
-    navigate(-1);
+    navigateBack();
   };
 
   const currentBirthYear = visibleDraft?.birthYear;
@@ -286,9 +301,6 @@ export default function GoalEditPage() {
     (editingField === "weight" && !hasPositiveValue(sheetData.weight)) ||
     (editingField === "goalWeight" && !hasPositiveValue(sheetData.target_weight));
 
-  const getSelectableCardClassName = (selected: boolean) =>
-    [styles.selectableCard, selected ? styles.selectableCardActive : ""].filter(Boolean).join(" ");
-
   const renderEditorBody = () => {
     if (!editingField) {
       return null;
@@ -296,25 +308,24 @@ export default function GoalEditPage() {
 
     if (editingField === "gender") {
       return (
-        <section className={styles.editorSection}>
+        <section>
           <h2 className={styles.editorTitle}>성별</h2>
           <div className={styles.genderGrid}>
-            <button
-              type="button"
-              className={getSelectableCardClassName(sheetData.gender === 0)}
-              aria-pressed={sheetData.gender === 0}
-              onClick={() => applyInstantSelection({ gender: 0 })}
+            <SelectedCard
+              isSelected={sheetData.gender === 0}
+              className={styles.selectedCard}
+              setSelectedChange={() => applyInstantSelection({ gender: 0 })}
             >
-              <span className={styles.genderCardLabel}>남성</span>
-            </button>
-            <button
-              type="button"
-              className={getSelectableCardClassName(sheetData.gender === 1)}
-              aria-pressed={sheetData.gender === 1}
-              onClick={() => applyInstantSelection({ gender: 1 })}
+              <p className={`body-l-medium text-secondary textCenter`}>남성</p>
+            </SelectedCard>
+
+            <SelectedCard
+              isSelected={sheetData.gender === 1}
+              className={styles.selectedCard}
+              setSelectedChange={() => applyInstantSelection({ gender: 1 })}
             >
-              <span className={styles.genderCardLabel}>여성</span>
-            </button>
+              <p className={`body-l-medium text-secondary textCenter`}>여성</p>
+            </SelectedCard>
           </div>
         </section>
       );
@@ -322,7 +333,7 @@ export default function GoalEditPage() {
 
     if (editingField === "height") {
       return (
-        <section className={styles.editorSection}>
+        <section>
           <h2 className={styles.editorTitle}>키</h2>
           <EditorInput
             inputRef={editorInputRef}
@@ -346,23 +357,40 @@ export default function GoalEditPage() {
 
     if (editingField === "weight") {
       return (
-        <section className={styles.editorSection}>
+        <section>
           <h2 className={styles.editorTitle}>현재 몸무게</h2>
-          <EditorInput
-            inputRef={editorInputRef}
-            type="number"
-            inputMode="decimal"
+
+          <NumberField
             value={sheetData.weight}
             onChange={(value) => updateSheetData({ weight: value })}
-            placeholder="현재 몸무게 입력"
             min={ONBOARDING_WEIGHT_RANGE.min}
             max={ONBOARDING_WEIGHT_RANGE.max}
             step={0.1}
-            fractionDigits={1}
-            blockOutOfRangeInput
-            unit="kg"
-            clampOnChange={false}
-            normalizeOnBlur={false}
+            normalizeValue={toOneDecimalPlace}
+            decrementAriaLabel="체중 0.1kg 감소"
+            incrementAriaLabel="체중 0.1kg 증가"
+            decrementIcon={<SystemIcon name="minus-circle" mode="image" size={28} />}
+            incrementIcon={<SystemIcon name="plus-circle" mode="image" size={28} />}
+            classNames={{
+              group: styles.weightNumberFieldGroup,
+              decrement: styles.weightAdjustButton,
+              increment: styles.weightAdjustButton,
+              inputWrapper: styles.weightValueDisplay,
+              input: `title-xl-medium text-primary ${styles.weightNumberInput}`,
+              unit: `title-s-regular text-tertiary`,
+            }}
+            unit=" kg"
+            unstyled
+            format={{
+              maximumFractionDigits: 1,
+              minimumFractionDigits: 0,
+              useGrouping: false,
+            }}
+            inputProps={{
+              inputMode: "decimal",
+              placeholder: "0",
+              "aria-label": "오늘의 체중 입력",
+            }}
           />
         </section>
       );
@@ -370,52 +398,50 @@ export default function GoalEditPage() {
 
     if (editingField === "activity") {
       return (
-        <section className={styles.editorSection}>
+        <section>
           <h2 className={styles.editorTitle}>활동량</h2>
-          <div className={styles.optionList}>
-            {ACTIVITY_OPTIONS.map((activity, index) => (
-              <button
-                key={activity.title}
-                type="button"
-                className={getSelectableCardClassName(sheetData.activity === index)}
-                aria-pressed={sheetData.activity === index}
-                onClick={() =>
-                  applyInstantSelection({ activity: index as OnboardingData["activity"] })
-                }
-              >
-                <p className={`${styles.optionTitle} title-s-semi`}>{activity.title}</p>
-                <p className={`${styles.optionDescription} body-s-medium`}>{activity.description}</p>
-              </button>
-            ))}
-          </div>
+          {ACTIVITY_OPTIONS.map((activity, index) => (
+            <SelectedCard
+              key={activity.title}
+              isSelected={sheetData.activity === index}
+              className={styles.segmentCard}
+              aria-pressed={sheetData.activity === index}
+              setSelectedChange={() =>
+                applyInstantSelection({ activity: index as OnboardingData["activity"] })
+              }
+            >
+              <p className={`body-l-medium text-primary`}>{activity.title}</p>
+              <p className={`body-s-regular text-secondary`}>{activity.description}</p>
+            </SelectedCard>
+          ))}
         </section>
       );
     }
 
     if (editingField === "goal") {
       return (
-        <section className={styles.editorSection}>
+        <section>
           <h2 className={styles.editorTitle}>목표</h2>
-          <div className={styles.optionList}>
-            {GOAL_OPTIONS.map((goal, index) => (
-              <button
-                key={goal.title}
-                type="button"
-                className={getSelectableCardClassName(sheetData.goal === index)}
-                aria-pressed={sheetData.goal === index}
-                onClick={() => applyInstantSelection({ goal: index as OnboardingData["goal"] })}
-              >
-                <p className={`${styles.optionTitle} title-s-semi`}>{goal.title}</p>
-                <p className={`${styles.optionDescription} body-s-medium`}>{goal.description}</p>
-              </button>
-            ))}
-          </div>
+          {GOAL_OPTIONS.map((goal, index) => (
+            <SelectedCard
+              key={goal.title}
+              isSelected={sheetData.goal === index}
+              className={styles.segmentCard}
+              aria-pressed={sheetData.goal === index}
+              setSelectedChange={() =>
+                applyInstantSelection({ goal: index as OnboardingData["goal"] })
+              }
+            >
+              <p className={`body-l-medium text-primary`}>{goal.title}</p>
+              <p className={`body-s-regular text-secondary`}>{goal.description}</p>
+            </SelectedCard>
+          ))}
         </section>
       );
     }
 
     return (
-      <section className={styles.editorSection}>
+      <section>
         <h2 className={styles.editorTitle}>목표 몸무게</h2>
         <EditorInput
           inputRef={editorInputRef}
@@ -439,84 +465,54 @@ export default function GoalEditPage() {
 
   const isFooterDisabled = !canStartPlan;
 
+  if (isPending) return <GoalEditSummarySkeleton />;
+  if (!visibleDraft) return <p>error</p>;
+
   return (
-    <div className={styles.page}>
-      <PageHeader title="목표 재설정" onBack={handleBack} />
+    <div className={`${styles.page} page`}>
+      <PageHeader title="정보 및 목표 수정" onBack={handleBack} />
 
-      <main className={styles.main}>
-        {isPending && !visibleDraft && <GoalEditSummarySkeleton />}
-        {!isPending && !visibleDraft && (
-          <p className={styles.loadingText}>프로필을 불러오지 못했어요</p>
-        )}
+      <main className={`main ${styles.content}`}>
+        {SUMMARY_FIELDS.map((field) => {
+          const isBirthItem = field.id === "birthYear";
 
-        {visibleDraft && (
-          <section className={styles.summarySection}>
-            {SUMMARY_FIELDS.map((field) => {
-              if (field.id === "birthYear") {
-                return (
-                  <div
-                    key={field.id}
-                    className={`${styles.summaryItem} ${styles.birthYearSummaryItem}`}
-                  >
-                    <span className={`${styles.summaryLabel} body-l-semi`} aria-hidden="true">
-                      {field.label}
-                    </span>
-                    <div className={styles.summaryValueRow} aria-hidden="true">
-                      <span className={`${styles.summaryValue} body-l-medium`}>
-                        {selectedBirthYear}년
-                      </span>
-                      <SystemIcon
-                        name="chevron-right"
-                        className={styles.summaryChevron}
-                        size={24}
-                      />
-                    </div>
-                    <select
-                      className={styles.birthYearSummarySelect}
-                      value={String(selectedBirthYear)}
-                      aria-label="출생 연도 선택"
-                      onFocus={selectDefaultBirthYear}
-                      onPointerDown={selectDefaultBirthYear}
-                      onChange={(event) =>
-                        updateDraft({ birthYear: Number(event.target.value) })
-                      }
-                    >
-                      {birthYearOptions.map((year) => (
-                        <option key={year} value={year}>
-                          {year} 년
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                );
-              }
+          return (
+            <button
+              key={field.id}
+              type="button"
+              className={`${styles.editItem} ${isBirthItem ? styles.birthYearItem : ""}`}
+              onClick={() => openEditor(field.id)}
+            >
+              <span className={`body-l-medium text-primary`}>{field.label}</span>
+              <div className={styles.profileMeta}>
+                <span className={`body-l-regular text-tertiary`}>
+                  {getSummaryValue(field.id, visibleDraft)}
+                </span>
+                <SystemIcon name="chevron-right" className="text-secondary" size={16} />
+              </div>
 
-              return (
-                <button
-                  key={field.id}
-                  type="button"
-                  className={styles.summaryItem}
-                  onClick={() => openEditor(field.id)}
+              {isBirthItem && (
+                <select
+                  className={styles.birthYearSelect}
+                  value={String(selectedBirthYear)}
+                  aria-label="출생 연도 선택"
+                  onFocus={selectDefaultBirthYear}
+                  onPointerDown={selectDefaultBirthYear}
+                  onChange={(event) => updateDraft({ birthYear: Number(event.target.value) })}
                 >
-                  <span className={`${styles.summaryLabel} body-l-semi`}>{field.label}</span>
-                  <div className={styles.summaryValueRow}>
-                    <span className={`${styles.summaryValue} body-l-medium`}>
-                      {getSummaryValue(field.id, visibleDraft)}
-                    </span>
-                    <SystemIcon
-                      name="chevron-right"
-                      className={styles.summaryChevron}
-                      size={24}
-                    />
-                  </div>
-                </button>
-              );
-            })}
-          </section>
-        )}
+                  {birthYearOptions.map((year) => (
+                    <option key={year} value={year}>
+                      {year}년
+                    </option>
+                  ))}
+                </select>
+              )}
+            </button>
+          );
+        })}
       </main>
 
-      <footer className={styles.footer}>
+      <footer className={`footer`}>
         <Button
           onClick={handleStartPlan}
           disabled={isFooterDisabled}
@@ -529,10 +525,10 @@ export default function GoalEditPage() {
       </footer>
 
       <BottomSheet isOpen={editingField !== null} onClose={closeEditor} disableContentDrag>
-        <div className={styles.sheetContent} data-editor-field={editingField ?? undefined}>
-          <div className={styles.sheetBody}>{renderEditorBody()}</div>
+        <div className={styles.sheetMain} data-editor-field={editingField ?? undefined}>
+          <div className={styles.sheetContent}>{renderEditorBody()}</div>
           {!isInstantSelectEditor && (
-            <div className={styles.sheetActions}>
+            <div className={styles.sheetActionButton}>
               <Button
                 fullWidth
                 onClick={applyEditor}
@@ -556,7 +552,7 @@ function GoalEditSummarySkeleton() {
       {SUMMARY_FIELDS.map((field) => (
         <div key={field.id} className={styles.summaryItem}>
           <Skeleton width="30%" height={22} radius={999} />
-          <span className={styles.summaryValueRow}>
+          <span className={styles.profileMeta}>
             <Skeleton width={92} height={22} radius={999} />
             <Skeleton width={24} height={24} variant="circle" />
           </span>

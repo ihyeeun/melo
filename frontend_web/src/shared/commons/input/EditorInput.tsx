@@ -40,7 +40,7 @@ export function EditorInput({
       <Input
         {...props}
         ref={inputRef}
-        className={`body-s-medium ${styles.input}`}
+        className={`body-l-medium ${styles.input}`}
         value={value ?? ""}
         min={min}
         max={max}
@@ -78,7 +78,7 @@ export function EditorInput({
           }
         }}
       />
-      {unit && <span className={`title-m-semi ${styles.unit}`}>{unit}</span>}
+      {unit && <p className={`title-s-regular text-tertiary ${styles.unit}`}>{unit}</p>}
     </div>
   );
 }

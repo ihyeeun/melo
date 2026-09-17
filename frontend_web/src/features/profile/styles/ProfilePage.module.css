@@ -1,39 +1,17 @@
 .page {
-  background-color: var(--background-gray-1);
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  min-height: 100dvh;
-  width: 100%;
-}
-
-.main {
-  flex: 1;
-  overflow-y: auto;
-  padding: 20px;
+  background-color: var(--background-default);
 }
 
 .content {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  padding-top: 20px;
 }
 
 .headerIconButton {
-  align-items: center;
-  display: inline-flex;
-  justify-content: center;
-}
-
-.summarySection {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.summaryText {
-  display: flex;
-  flex-direction: column;
+  place-items: center;
+  display: grid;
+  border-radius: 16px;
 }
 
 .nicknameRow {
@@ -51,73 +29,54 @@
   padding: 4px 8px;
 }
 
-.nickname {
-  color: var(--text-primary);
-}
-
-.highlight {
-  color: var(--primary-normal);
-}
-
-.textButton {
-  text-align: start;
+.highlightText {
+  color: var(--coral-500);
 }
 
 .inlineIconButton {
-  align-items: center;
-  display: inline-flex;
+  place-items: center;
+  display: grid;
   flex-shrink: 0;
-  justify-content: center;
+  border-radius: 16px;
+}
+
+.goalEditButton {
+  align-items: center;
+  display: flex;
+  flex-shrink: 0;
+  gap: 4px;
+  margin-top: 8px;
+  border-radius: 16px;
 }
 
 .goalText {
-  color: var(--text-primary);
   word-break: keep-all;
 }
 
-.activeCardGrid {
+.healthStatGroup {
   display: grid;
   gap: 8px;
   grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-top: 20px;
 }
 
 .activeCard {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  padding: 16px;
+  box-shadow: var(--shadow-outer);
 }
 
-.activeCard.activeMetricCard {
-  background-color: var(--background-selected);
-  border-color: var(--border-strong);
+.headerIconButton:active,
+.inlineIconButton:active,
+.goalEditButton:active,
+.activeCard:active {
+  background-color: var(--background-gray-1);
 }
 
-.activeCardRow {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  width: 100%;
-}
-
-.activeCardTitle {
-  color: var(--text-primary);
-  flex-shrink: 0;
-}
-
-.activeCardValueRow {
-  align-items: baseline;
-  display: flex;
-  gap: 3px;
-  justify-content: flex-end;
-  width: 100%;
-}
-
-.activeCardValue {
-  color: var(--primary-normal);
-}
-
-.activeCardUnit {
-  color: var(--text-primary);
+.amountUnit {
+  margin-left: 2px;
 }
 
 .weeklySection {
