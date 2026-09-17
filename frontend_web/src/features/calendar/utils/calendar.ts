@@ -78,7 +78,7 @@ export function buildMonthCalendarDays({
   weekStartsOn = 1,
 }: {
   baseDate: Date;
-  selectedDate: Date;
+  selectedDate?: Date;
   recordedDates?: string[];
   weekStartsOn?: 0 | 1;
 }): CalendarDay[] {
@@ -90,7 +90,7 @@ export function buildMonthCalendarDays({
     return {
       date,
       isToday: isToday(date),
-      isSelected: isSameDay(date, selectedDate),
+      isSelected: selectedDate ? isSameDay(date, selectedDate) : false,
       isCurrentMonth: isSameMonth(date, baseDate),
       hasRecord: recordedDateSet.has(key),
     };

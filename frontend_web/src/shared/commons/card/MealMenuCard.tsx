@@ -9,13 +9,10 @@ import { getServingUnitLabel } from "@/shared/utils/servingUnit";
 
 import styles from "./MealMenuCard.module.css";
 
-export type MealMenuCardIcon = "add" | "check" | "delete";
-export type MealMenuCardState = "default" | "select";
+export type MealMenuCardIcon = "add" | "minus" | "delete";
 
 type MealMenuCardProps = {
   name: string;
-  rank?: number;
-  description?: string;
   calories?: number;
   unit_quantity?: string;
   brand?: string;
@@ -23,9 +20,8 @@ type MealMenuCardProps = {
   weight?: number;
   quantity?: number;
   data_source?: MenuDataSource | number;
-  icon?: MealMenuCardIcon | null;
-  state?: MealMenuCardState;
-  hideServingInfo?: boolean;
+  icon?: MealMenuCardIcon;
+  state?: boolean;
   className?: string;
   onClick?: () => void;
   onIconClick?: () => void;
@@ -59,21 +55,23 @@ function parseBaseUnitCount(unitQuantity?: string) {
 }
 
 function getActionAriaLabel(icon: MealMenuCardIcon) {
-  if (icon === "add") return "추가";
-  if (icon === "check") return "선택 완료";
-  return "삭제";
+  if (icon === "add") return "메뉴 추가";
+  return "선택 메뉴 취소";
 }
 
-function ActionIcon({ icon }: { icon: MealMenuCardIcon }) {
-  if (icon === "add") return <SystemIcon name="plus-circle" size={24} />;
-  if (icon === "check") return <SystemIcon name="check" size={24} className={styles.selected} />;
-  return <SystemIcon name="exit" size={24} />;
+function ActionIcon({ icon, isSelected }: { icon: MealMenuCardIcon; isSelected?: boolean }) {
+  if (icon === "delete") return <SystemIcon name="exit" size={18} />;
+
+  return (
+    <span className={styles.actionIcon} data-icon={isSelected ? "minus" : "add"} aria-hidden="true">
+      <SystemIcon name="minus" size={18} />
+      <SystemIcon name="minus" size={18} className={styles.actionIconVertical} />
+    </span>
+  );
 }
 
 export function MealMenuCard({
   name,
-  rank,
-  description,
   calories,
   unit_quantity,
   brand,
@@ -81,9 +79,8 @@ export function MealMenuCard({
   weight,
   quantity,
   data_source,
-  icon = "delete",
-  state = "default",
-  hideServingInfo = false,
+  icon,
+  state = false,
   className,
   onClick,
   onIconClick,
@@ -93,7 +90,7 @@ export function MealMenuCard({
     onIconClick?.();
   };
 
-  const isSelected = state === "select";
+  const isSelected = state;
   const isPersonalMenu = data_source === MENU_DATA_SOURCE.PERSONAL;
   const safeQuantityInput =
     typeof quantity === "number" && Number.isFinite(quantity) && quantity > 0 ? quantity : null;
@@ -108,75 +105,43 @@ export function MealMenuCard({
   const weightUnitText = unit === 1 ? "ml" : "g";
   const servingUnitLabel = getServingUnitLabel(unit_quantity);
   const shouldShowCalories = displayedCalories !== null;
-  const shouldShowServingInfo = !hideServingInfo;
-  const shouldShowMeta = shouldShowServingInfo || shouldShowCalories;
-  const metaClassName = [
-    styles.meta,
-    !shouldShowServingInfo && shouldShowCalories ? styles.metaOnlyCalories : "",
-  ]
-    .filter(Boolean)
-    .join(" ");
 
   return (
-    <SelectedCard
-      isSelected={isSelected}
-      setSelectedChange={onClick ? () => onClick() : undefined}
-      className={className}
-    >
-      <div className={styles.content}>
-        {typeof rank === "number" && Number.isFinite(rank) ? (
-          <span className={`${styles.rankBadge} caption-m-medium`}>{rank}위</span>
-        ) : null}
-
-        <section className={styles.header}>
-          <p className={`${styles.title} body-l-medium text-primary ellipsis`}>{name}</p>
-
-          {icon !== null && (
-            <button
-              type="button"
-              className={styles.iconButton}
-              onClick={handleIconClick}
-              disabled={!onIconClick}
-              aria-label={getActionAriaLabel(icon)}
-            >
-              <ActionIcon icon={icon} />
-            </button>
-          )}
-        </section>
-
-        {shouldShowMeta ? (
-          <section className={metaClassName}>
-            {shouldShowServingInfo ? (
-              <p className={`${styles.menuInfoGroup}`}>
-                {brand && (
-                  <span className={`ellipsis body-s-regular text-tertiary`} title={brand}>
-                    {brand}
-                  </span>
-                )}
-                <span className={`textNoWrap body-s-regular text-secondary`}>
-                  {formatQuantity(safeDisplayUnitCount)}
-                  {servingUnitLabel}{" "}
-                  {`(${formatQuantity(resolvedConsumedWeight)}${weightUnitText})`}
-                </span>
-              </p>
-            ) : null}
-
-            {description && (
-              <p className={`body-s-regular text-primary ${styles.description} ellipsis`}>
-                {description}
-              </p>
-            )}
-
-            {shouldShowCalories ? (
-              <span className={`textNoWrap title-s-regular text-primary marginLeft`}>
-                {formatDisplayNumber(displayedCalories)}kcal
-              </span>
-            ) : null}
-          </section>
-        ) : null}
-
+    <SelectedCard isSelected={isSelected} className={`${styles.root} ${className}`}>
+      <button onClick={onClick ? () => onClick() : undefined} className={styles.contents}>
         {isPersonalMenu && <DataSourceBadge variant="personal" active={isSelected} />}
-      </div>
+
+        <p className={`body-l-medium text-primary ellipsis`}>{name}</p>
+
+        {shouldShowCalories ? (
+          <p className={`${styles.meta} body-s-regular`}>
+            {brand && <span className={`ellipsis text-tertiary`}>{brand}</span>}
+            <span className={`textNoWrap text-secondary`}>
+              {formatQuantity(safeDisplayUnitCount)}
+              {servingUnitLabel} {`(${formatQuantity(resolvedConsumedWeight)}${weightUnitText})`}
+            </span>
+
+            <span className={`textNoWrap text-secondary`}>
+              {formatDisplayNumber(displayedCalories)} kcal
+            </span>
+          </p>
+        ) : null}
+      </button>
+
+      {icon && (
+        <div className={styles.quickAction}>
+          <button
+            type="button"
+            className={styles.iconButton}
+            onClick={handleIconClick}
+            disabled={!onIconClick}
+            aria-label={getActionAriaLabel(icon)}
+            data-selected={isSelected}
+          >
+            <ActionIcon icon={icon} isSelected={isSelected} />
+          </button>
+        </div>
+      )}
     </SelectedCard>
   );
 }

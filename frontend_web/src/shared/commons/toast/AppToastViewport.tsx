@@ -9,13 +9,13 @@ import type { AppToastData, AppToastPosition, AppToastType } from "./toastManage
 function getToastStatusIcon(type?: string) {
   switch (type as AppToastType) {
     case "success":
-      return <SystemIcon name="check" size={14} />;
+      return <SystemIcon name="success" mode="image" size={20} />;
     case "warning":
-      return <span className="app-toast-status-mark">!</span>;
+      return <SystemIcon name="alert" mode="image" size={20} />;
     case "error":
-      return <SystemIcon name="exit" size={14} />;
+      return <SystemIcon name="error" mode="image" size={20} />;
     case "info":
-      return <span className="app-toast-status-mark">i</span>;
+      return <SystemIcon name="info-colored" mode="image" size={20} />;
     default:
       return;
   }
@@ -39,10 +39,10 @@ function AppToastItem({ item }: { item: ToastObject<AppToastData> }) {
       <Toast.Content className="app-toast-content">
         {item.title ? <Toast.Title className="app-toast-title body-l-medium" /> : null}
         {item.description ? (
-          <Toast.Description className="app-toast-description body-s-medium" />
+          <Toast.Description className="app-toast-description body-s-regular" />
         ) : null}
       </Toast.Content>
-      {item.actionProps ? <Toast.Action className="app-toast-action body-l-semi" /> : null}
+      {item.actionProps ? <Toast.Action className="app-toast-action body-s-semi" /> : null}
       {item.data?.dismissible !== false ? (
         <Toast.Close className="app-toast-close" aria-label="알림 닫기">
           <SystemIcon name="exit" size={20} />

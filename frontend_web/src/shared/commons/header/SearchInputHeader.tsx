@@ -122,7 +122,7 @@ export function SearchInputHeader({
         <div className={styles.fieldWrap}>
           <input
             ref={inputRef}
-            className={`${styles.input} ${value ? styles.clearPadding : ""} body-l-medium`}
+            className={`${styles.input} ${value ? styles.clearPadding : ""} body-s-medium amp-unmask`}
             type="search"
             value={value}
             onChange={handleChange}

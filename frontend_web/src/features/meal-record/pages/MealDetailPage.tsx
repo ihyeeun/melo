@@ -9,6 +9,7 @@ import { useMealDeleteMutation } from "@/features/meal-record/hooks/mutations/us
 import { useMealDetailQuery } from "@/features/meal-record/hooks/queries/useMealDetailQuery";
 import { useMenuDraftUpsertPreviews } from "@/features/meal-record/stores/menuDraft.store";
 import styles from "@/features/meal-record/styles/MealDetailPage.module.css";
+import { getMealType, getSafeDateKey } from "@/features/meal-record/utils/mealRecord.queryParams";
 import { useMenuSelectionAdapter } from "@/features/menu-selection/hooks/useMenuSelectionAdapter";
 import {
   buildMenuSelectionPathContext,
@@ -26,15 +27,12 @@ import { Button } from "@/shared/commons/button/Button";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
 import { LoadingOverlay } from "@/shared/commons/loading/Loading";
 import { ConfirmModal } from "@/shared/commons/modals/ConfirmModal";
-import { Skeleton } from "@/shared/commons/skeleton/Skeleton";
 import { toast } from "@/shared/commons/toast/toast";
 import {
   navigateBack,
   useNavigate,
   useSearchParams,
 } from "@/shared/navigation/stackflowNavigation";
-
-import { getMealType, getSafeDateKey } from "./utils/mealRecord.queryParams";
 
 function getMenuIsDeleted(menu: unknown) {
   const isDeleted = (menu as { is_deleted?: unknown }).is_deleted;
@@ -230,18 +228,12 @@ export default function MealDetailPage() {
 
   if (isPending) {
     return (
-      <section className={styles.page}>
+      <section className={`${styles.page} page`}>
         <PageHeader title="영양성분 상세" onBack={handleGoBack} />
 
-        <main className={styles.main}>
-          <div className={styles.content}>
-            <MealMenuNutrientDetailSkeleton />
-          </div>
+        <main className="main">
+          <MealMenuNutrientDetailSkeleton />
         </main>
-
-        <footer className={styles.footer}>
-          <Skeleton width="100%" height={48} radius={8} />
-        </footer>
       </section>
     );
   }
@@ -327,7 +319,7 @@ export default function MealDetailPage() {
   };
 
   return (
-    <section className={styles.page}>
+    <section className={`${styles.page} page`}>
       <PageHeader
         title="영양성분 상세"
         onBack={handleGoBack}
@@ -341,22 +333,20 @@ export default function MealDetailPage() {
         }
       />
 
-      <main className={styles.main}>
-        <div className={styles.content}>
-          <MealMenuNutrientDetail
-            menu={meal}
-            initialQuantity={existingSelection?.quantity}
-            initialMode={existingSelection?.mode}
-            isDetailOpen={isDetailOpen}
-            onToggleDetail={() => setIsDetailOpen((prev) => !prev)}
-            onSelectionChange={setSelection}
-            onEditAndAdd={handleEditAndAdd}
-            showEditSection={showEditSection}
-          />
-        </div>
+      <main className={`main`}>
+        <MealMenuNutrientDetail
+          menu={meal}
+          initialQuantity={existingSelection?.quantity}
+          initialMode={existingSelection?.mode}
+          isDetailOpen={isDetailOpen}
+          onToggleDetail={() => setIsDetailOpen((prev) => !prev)}
+          onSelectionChange={setSelection}
+          onEditAndAdd={handleEditAndAdd}
+          showEditSection={showEditSection}
+        />
       </main>
 
-      <footer className={styles.footer}>
+      <footer className={`footer`}>
         <Button
           variant="default"
           size="m"
@@ -372,9 +362,9 @@ export default function MealDetailPage() {
         open={isDeleteConfirmOpen}
         onOpenChange={setIsDeleteConfirmOpen}
         title="영양 성분 삭제"
-        description="영양 성분을 삭제할까요?"
+        description="저장한 영양 성분을 삭제할까요?"
         cancelText="취소"
-        confirmText="삭제"
+        confirmText="확인"
         confirmDisabled={isDeletePending}
         onConfirm={handleConfirmDelete}
       />

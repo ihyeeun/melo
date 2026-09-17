@@ -1,0 +1,108 @@
+.root,
+.numberContainer {
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease;
+}
+
+:where(.root) {
+  &[data-view="month"][data-outside="false"] {
+    background-color: rgba(255, 244, 241, 50%);
+  }
+
+  &[data-view="week"][data-selected="true"],
+  &[data-view="month"][data-selected="true"] .numberContainer {
+    background-color: rgba(255, 255, 255, 70%);
+    color: var(--text-primary);
+    border-radius: 16px;
+  }
+
+  [data-month-background="true"] &[data-view="month"][data-selected="true"] .numberContainer {
+    border: none;
+    background-color: var(--coral-400);
+    color: var(--background-default);
+  }
+
+  /* 여러 날짜를 고르는 화면에서는 내부 원형 표시가 오늘 상태도 담당한다. */
+  &[data-view="month"][data-today="true"]:where([data-selection-mode="single"]) {
+    border: 1.5px solid var(--coral-300);
+    background-color: rgba(255, 255, 255, 70%);
+  }
+
+  &[data-view="month"][data-selected="true"] .numberContainer {
+    border: 2px solid var(--coral-400);
+  }
+
+  &[data-view="week"][data-menstruation="menstrual_recorded"],
+  &[data-view="month"][data-menstruation="menstrual_recorded"] .numberContainer {
+    background-color: var(--coral-100);
+    color: var(--text-secondary);
+    border-radius: 16px;
+    mix-blend-mode: multiply;
+  }
+
+  &[data-view="month"][data-menstruation="menstrual_recorded"] {
+    background-color: var(--coral-100);
+    border-radius: 16px;
+  }
+
+  &[data-view="week"][data-menstruation="next_predicted"],
+  &[data-view="month"][data-menstruation="next_predicted"] .numberContainer {
+    border: 1px dashed var(--border-strong);
+    color: var(--text-secondary);
+    border-radius: 16px;
+  }
+
+  &[data-view="week"][data-selected="true"][data-menstruation="next_predicted"],
+  &[data-view="month"][data-selected="true"][data-menstruation="next_predicted"] .numberContainer {
+    background-color: var(--coral-50);
+  }
+
+  &[data-outside="true"][data-menstruation="menstrual_recorded"] {
+    color: var(--coral-400);
+    opacity: 0.4;
+  }
+
+  &[data-view="month"][data-selection-mode="multiple"] {
+    background-color: transparent;
+    border-radius: 0;
+
+    .numberContainer {
+      width: min(40px, 100%);
+      height: auto;
+      aspect-ratio: 1;
+      border: 0;
+      border-radius: 50%;
+      background-color: transparent;
+      color: var(--text-secondary);
+      mix-blend-mode: normal;
+    }
+
+    &[data-today="true"] .numberContainer {
+      background-color: var(--navy-800);
+      color: var(--background-default);
+    }
+
+    &[data-future="true"][data-selected="false"] .numberContainer {
+      color: var(--text-disabled);
+    }
+
+    &[data-selected="true"] .numberContainer {
+      background-color: var(--coral-400);
+      color: var(--background-default);
+    }
+
+    &[data-selected="true"][data-today="true"] .numberContainer {
+      box-shadow: 0 0 0 1.5px var(--navy-800);
+      border: 1.5px solid var(--navy-800);
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .root,
+  .numberContainer {
+    transition-duration: 0.01ms;
+  }
+}

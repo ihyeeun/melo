@@ -7,6 +7,10 @@
   width: 100%;
 }
 
+.header {
+  background-color: var(--background-default);
+}
+
 .content {
   flex: 1;
   overflow-y: auto;
@@ -15,19 +19,17 @@
 
 .summaryCard {
   background-color: var(--background-default);
-  border-radius: 8px;
-  color: var(--text-primary);
+  border-radius: 16px;
   display: flex;
-  gap: 8px;
-  padding: 20px;
-  align-items: center;
+  flex-direction: column;
+  padding: 16px 20px;
+  margin-bottom: 40px;
 }
 
 .calorieRow {
   display: flex;
-  gap: 4px;
+  gap: 6px;
   align-items: baseline;
-  margin-left: auto;
 }
 
 .textPrimary {
@@ -37,21 +39,20 @@
 .mealTypeButtonGroup {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
+  gap: 6px;
 }
 
 .mealTypeButton {
   background-color: var(--background-default);
   border: 1px solid var(--border-subtle);
-  border-radius: 100px;
+  border-radius: 16px;
   color: var(--text-primary);
-  padding: 6px 14px;
+  padding: 6px 12px;
 }
 
-.mealTypeActive {
-  background-color: var(--primary-normal);
-  color: var(--background-default);
-  border: none;
+.mealTypeButton[data-selected="true"] {
+  background-color: var(--coral-300);
+  border-color: var(--coral-300);
 }
 
 .menuSection {
@@ -121,19 +122,16 @@
 }
 
 .emptyState {
-  background-color: var(--background-default);
-  border: 1px dashed var(--border-subtle);
-  border-radius: 8px;
-  color: var(--text-secondary);
-  padding: 20px;
+  padding: 40px 0;
   text-align: center;
   width: 100%;
-  height: 335px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 16px;
+  display: grid;
+  place-items: center;
+}
+
+.emptyState:active {
+  border-radius: 16px;
+  background-color: var(--background-gray-2);
 }
 
 .didNotEatState {
@@ -160,15 +158,6 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
   padding: 0 20px;
   padding-bottom: var(--safe-area-bottom);
-}
-
-.emptyStateIcon {
-  border-radius: 100px;
-  display: inline-flex;
-  justify-content: center;
-  align-items: center;
-  width: 32px;
-  height: 32px;
 }
 
 .marginLeftAuto {

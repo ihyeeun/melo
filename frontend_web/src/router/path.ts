@@ -20,7 +20,6 @@ export const PATH = {
   MEAL_RECORD: "/meal-record",
   MEAL_RECORD_ADD_SEARCH: "/meal-record/add/search",
   MEAL_DETAIL: "/meal/detail",
-  NUTRIENT_ADD: "/nutrient-add",
   NUTRIENT_ADD_REGISTER: "/nutrient-add/register",
   NUTRIENT_ADD_MODIFY: "/nutrient-add/modify",
   BRAND_SEARCH: "/brand-search",
@@ -54,4 +53,7 @@ export const PATH = {
 
   // ETC
   APP_INFO: "/app-info",
+
+  // Menstruation
+  MENSTRUATION_RECORD: "/menstruation/record",
 };

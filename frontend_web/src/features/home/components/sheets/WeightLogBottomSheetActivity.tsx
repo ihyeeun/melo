@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRegisterWeightMutation } from "@/features/home/hooks/mutations/useBodyLogMutation";
 import { useGetBodyLog } from "@/features/home/hooks/queries/useTodayRecordQuery";
 import styles from "@/features/home/styles/TodayBodyLogSection.module.css";
+import { useMenstrualPhase } from "@/features/menstruation/hooks/useMenstrualPhase";
 import { useGetProfileQuery } from "@/features/profile/hooks/queries/useProfileQuery";
 import { PATH } from "@/router/path";
 import { track } from "@/shared/analytics/analytics";
@@ -38,6 +39,8 @@ export default function WeightLogBottomSheetActivity() {
   const isToday = date === getTodayFormatDateKey();
   const { data: bodyLog } = useGetBodyLog(date);
   const { data: profile } = useGetProfileQuery();
+  const isFemale = profile?.gender === 1;
+  const { menstrualStatus } = useMenstrualPhase(date, { enabled: isFemale });
   const initialWeight = bodyLog?.weight ?? (isToday ? profile?.weight : undefined);
   const [weightDraft, setWeightDraft] = useState<WeightDraft | null>(null);
   const draftWeight = weightDraft === null ? initialWeight : weightDraft.value;
@@ -87,7 +90,11 @@ export default function WeightLogBottomSheetActivity() {
                   : "unchanged";
 
           if (body_weight_change !== null) {
-            track(EVENT_NAME.BODY_WEIGHT_RECORDED, { body_weight_change, weight_diff: weightDiff });
+            track(EVENT_NAME.BODY_WEIGHT_RECORDED, {
+              body_weight_change,
+              weight_diff: weightDiff,
+              menstrual_phase: isFemale ? (menstrualStatus ?? "") : "",
+            });
           }
 
           toast.success(

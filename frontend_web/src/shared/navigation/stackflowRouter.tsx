@@ -110,10 +110,11 @@ const WorkoutDetailSheetPage = createLazyActivity(
 const WorkoutUpsertPage = createLazyActivity(
   () => import("@/features/health/pages/WorkoutUpsertPage"),
 );
-const MealDetailPage = createLazyActivity(() => import("@/features/meal-record/MealDetailPage"));
-const MealRecordPage = createLazyActivity(() => import("@/features/meal-record/MealRecordPage"));
-const NutrientAddPage = createLazyActivity(
-  () => import("@/features/nutrient-entry/NutrientAddPage"),
+const MealDetailPage = createLazyActivity(
+  () => import("@/features/meal-record/pages/MealDetailPage"),
+);
+const MealRecordPage = createLazyActivity(
+  () => import("@/features/meal-record/pages/MealRecordPage"),
 );
 const NutrientModifyPage = createLazyActivity(
   () => import("@/features/nutrient-entry/NutrientModifyPage"),
@@ -177,7 +178,7 @@ const ChatNutritionDetailActivity = createGuardedLazyActivity(
   FEATURE_GUARD.CHAT,
   () => import("@/features/chat/pages/ChatMenuDetailPage"),
 );
-const DiaryPage = createLazyActivity(() => import("@/features/diary/DiaryPage"));
+const DiaryPage = createLazyActivity(() => import("@/features/diary/pages/DiaryPage"));
 const RecommendResultPage = createLazyActivity(
   () => import("@/features/chat/pages/RecommendResultPage"),
 );
@@ -196,6 +197,9 @@ const ChatFoodCameraPage = createGuardedLazyActivity(
   () => import("@/features/camera/pages/FoodImageFeedbackPage"),
 );
 const AppInfoPage = createLazyActivity(() => import("@/features/kakao-web-auth/pages/AppInfoPage"));
+const MenstruationPage = createLazyActivity(
+  () => import("@/features/menstruation/pages/MenstruationRecordPage"),
+);
 
 const ACTIVITIES = {
   Home: HomePage,
@@ -220,7 +224,6 @@ const ACTIVITIES = {
   FolderDetail: FolderDetailPage,
   MenuBoardCamera: MenuBoardCameraPage,
   FoodCamera: FoodCameraPage,
-  NutrientAdd: NutrientAddPage,
   NutrientCamera: NutrientCameraPage,
   NutrientAddRegister: NutrientRegisterPage,
   NutrientAddModify: NutrientModifyPage,
@@ -240,6 +243,7 @@ const ACTIVITIES = {
   ChatCamera: ChatCameraPage,
   ChatFoodCamera: ChatFoodCameraPage,
   AppInfo: AppInfoPage,
+  Menstruation: MenstruationPage,
 };
 
 const ACTIVITY_ROUTES: Record<keyof typeof ACTIVITIES, RoutePath> = {
@@ -259,27 +263,12 @@ const ACTIVITY_ROUTES: Record<keyof typeof ACTIVITIES, RoutePath> = {
   SettingsFeedback: PATH.SETTINGS_FEEDBACK,
   SettingsSubCode: PATH.SETTINGS_SUB_CODE,
   MealRecord: PATH.MEAL_RECORD,
-  MealRecordAddSearch: {
-    path: PATH.MEAL_RECORD_ADD_SEARCH,
-    defaultHistory: (params) =>
-      params.selectionTarget === "folder"
-        ? []
-        : [
-            {
-              activityName: "MealRecord",
-              activityParams: {
-                date: params.date,
-                mealType: params.mealType,
-              },
-            },
-          ],
-  },
+  MealRecordAddSearch: PATH.MEAL_RECORD_ADD_SEARCH,
   MealDetail: PATH.MEAL_DETAIL,
   CreateFolder: PATH.CREATE_FOLDER,
   FolderDetail: PATH.FOLDER_DETAIL,
   MenuBoardCamera: PATH.MENU_BOARD_CAMERA,
   FoodCamera: PATH.FOOD_CAMERA,
-  NutrientAdd: PATH.NUTRIENT_ADD,
   NutrientCamera: PATH.NUTRIENT_CAMERA,
   NutrientAddRegister: PATH.NUTRIENT_ADD_REGISTER,
   NutrientAddModify: PATH.NUTRIENT_ADD_MODIFY,
@@ -299,6 +288,7 @@ const ACTIVITY_ROUTES: Record<keyof typeof ACTIVITIES, RoutePath> = {
   ChatCamera: PATH.CHAT_CAMERA,
   ChatFoodCamera: PATH.CHAT_FOOD_CAMERA,
   AppInfo: PATH.APP_INFO,
+  Menstruation: PATH.MENSTRUATION_RECORD,
 };
 
 type ActivityName = keyof typeof ACTIVITY_ROUTES;
@@ -598,13 +588,11 @@ function getDefaultHistoryEntries(activityName: ActivityName, params: ActivityPa
   const definedParams = Object.fromEntries(
     Object.entries(params).filter((entry): entry is [string, string] => entry[1] !== undefined),
   );
-  const defaultHistory = getRouteDefinitions(activityName).find(
-    (routeDefinition) => routeDefinition.defaultHistory,
-  )?.defaultHistory?.(definedParams);
+  const defaultHistory = getRouteDefinitions(activityName)
+    .find((routeDefinition) => routeDefinition.defaultHistory)
+    ?.defaultHistory?.(definedParams);
 
-  return Array.isArray(defaultHistory)
-    ? defaultHistory
-    : (defaultHistory?.entries ?? []);
+  return Array.isArray(defaultHistory) ? defaultHistory : (defaultHistory?.entries ?? []);
 }
 
 function getDefaultHistoryActivities(activityName: ActivityName, params: ActivityParams) {
@@ -1153,14 +1141,10 @@ function replaceActivityWithDefaultHistory(
 
   if (!firstParentActivity) {
     const activityId = createStackflowActivityId();
-    const result = stackflowActions.replace(
-      targetActivity.activityName,
-      targetActivity.params,
-      {
-        ...(options?.animate == null ? undefined : { animate: options.animate }),
-        activityId,
-      },
-    );
+    const result = stackflowActions.replace(targetActivity.activityName, targetActivity.params, {
+      ...(options?.animate == null ? undefined : { animate: options.animate }),
+      activityId,
+    });
     setActivityNavigationState(result.activityId, options?.state);
     return;
   }
@@ -1242,10 +1226,7 @@ type NavigateBackToPathAndPushOptions = {
   to: To;
 };
 
-type NavigateBackThroughPathAndPushOptions = Omit<
-  NavigateBackToPathAndPushOptions,
-  "backTo"
-> & {
+type NavigateBackThroughPathAndPushOptions = Omit<NavigateBackToPathAndPushOptions, "backTo"> & {
   through: To;
 };
 
@@ -1401,14 +1382,10 @@ export function navigateBackToPathAndPushFromRoot({
         ...backToDefaultHistoryActivities,
         backToActivity,
       ];
-      const rootResult = stackflowActions.replace(
-        rootActivity.activityName,
-        rootActivity.params,
-        {
-          animate: false,
-          activityId: createStackflowActivityId(),
-        },
-      );
+      const rootResult = stackflowActions.replace(rootActivity.activityName, rootActivity.params, {
+        animate: false,
+        activityId: createStackflowActivityId(),
+      });
       setActivityNavigationState(rootResult.activityId, null);
 
       childActivities.forEach((childActivity) => {

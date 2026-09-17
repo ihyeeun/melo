@@ -6,14 +6,10 @@ import { useSetBrandSearchSelection } from "@/features/search/brand/stores/brand
 import styles from "@/features/search/styles/BrandSearch.module.css";
 import { PATH } from "@/router/path";
 import type { RegisterMenuRequestDto } from "@/shared/api/types/api.dto";
-import { Button } from "@/shared/commons/button/Button";
 import { SearchInputHeader } from "@/shared/commons/header/SearchInputHeader";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import { LoadingIndicator } from "@/shared/commons/loading/Loading";
-import {
-  navigateBack,
-  useLocation,
-} from "@/shared/navigation/stackflowNavigation";
+import { navigateBack, useLocation } from "@/shared/navigation/stackflowNavigation";
 
 type BrandSearchResult = {
   id: string;
@@ -144,11 +140,14 @@ export default function BrandSearch() {
                     <li key={brand.id}>
                       <button
                         type="button"
-                        className={`${styles.brandItem} ${isSelected ? styles.brandItemSelected : ""}`}
+                        className={`${styles.brandItem}`}
                         onClick={() => handleBrandRegister(brand.name)}
                         aria-pressed={isSelected}
                       >
-                        <span className={`title-m-semi ${styles.brandName}`}>{brand.name}</span>
+                        <p className={`body-l-medium text-primary`}>{brand.name}</p>
+                        <div className={`${styles.icon} marginLeft`}>
+                          <SystemIcon name="arrow-insert" size={18} className="text-primary" />
+                        </div>
                       </button>
                     </li>
                   );
@@ -157,23 +156,32 @@ export default function BrandSearch() {
             ) : (
               <div className={styles.emptyResult}>
                 {isInitialSearching ? (
-                  <LoadingIndicator label="브랜드를 검색하는 중입니다." />
+                  <LoadingIndicator iconSize={24} label="브랜드를 검색하는 중입니다." />
                 ) : (
                   <>
-                    <p className={`body-s-medium ${styles.emptyResultSubText}`}>
+                    <img
+                      src="/icons/characters/question.png"
+                      alt=""
+                      aria-hidden="true"
+                      width={200}
+                    />
+
+                    <p className={`body-l-medium text-tertiary`}>
                       일치하는 브랜드가 없어요
                       <br />
-                      브랜드를 직접 등록할 수 있어요
+                      검색하신 <span className="text-primary">{searchKeyword}</span>(으)로 브랜드명
+                      등록을 진행할까요?
                     </p>
-                    <Button
-                      variant="text"
-                      size="xs"
+
+                    <button
+                      type="button"
+                      className={styles.addButton}
                       onClick={() => handleBrandRegister()}
                       disabled={isDirectRegisterDisabled}
                     >
-                      브랜드 직접 등록
-                      <SystemIcon name="chevron-right" size={18} />
-                    </Button>
+                      <SystemIcon name="plus-circle" size={18} />
+                      <p className="body-m-regular">브랜드 등록</p>
+                    </button>
                   </>
                 )}
               </div>
@@ -188,15 +196,15 @@ export default function BrandSearch() {
 
           {hasKeyword && hasResults && (
             <section className={styles.brandAddSection}>
-              <Button
-                variant="text"
-                size="xs"
+              <button
+                type="button"
+                className={styles.addButton}
                 onClick={() => handleBrandRegister()}
                 disabled={isDirectRegisterDisabled}
               >
-                브랜드 직접 입력
-                <SystemIcon name="chevron-right" size={18} />
-              </Button>
+                <SystemIcon name="plus-circle" size={18} />
+                <p className="body-m-regular">브랜드 등록</p>
+              </button>
             </section>
           )}
         </section>

@@ -8,6 +8,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { createRoot } from "react-dom/client";
 
+import { enableMocking } from "@/mocks/enableMocking";
 import { queryClient } from "@/shared/api/queryClient";
 import { initVitePreloadErrorListener } from "@/shared/app-update/vitePreloadError";
 import { VitePreloadErrorToastBridge } from "@/shared/app-update/VitePreloadErrorToastBridge";
@@ -33,4 +34,4 @@ function renderApp() {
 }
 
 initVitePreloadErrorListener();
-renderApp();
+void enableMocking().then(renderApp);

@@ -1,89 +1,142 @@
 .root {
-  background-color: var(--gray-50);
+  background: linear-gradient(
+    180deg,
+    var(--gray-200) 0%,
+    var(--gray-200) 50%,
+    var(--background-gray-1) 90%
+  );
+}
+
+.root .scrollArea {
+  padding: 0;
 }
 
 .content {
+  --content-top-gap: 10px;
+  --card-overlap: 40px;
+  position: relative;
+  isolation: isolate;
+  min-height: 100%;
   display: flex;
   flex-direction: column;
-  gap: 28px;
-  padding-top: 12px;
-  padding-bottom: 20px;
+  gap: 40px;
+  padding: var(--content-top-gap) 16px 20px;
 }
 
-.fieldGroup {
+.content::before {
+  content: "";
+  position: absolute;
+  inset: calc(var(--content-top-gap) + var(--card-overlap)) 0 0;
+  border-radius: 60px 60px 0 0 / 30px 30px 0 0;
+  background: linear-gradient(180deg, var(--background-default) 0%, var(--background-gray-1) 90%);
+  pointer-events: none;
+  z-index: -1;
+}
+
+.nutritionSummary {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
+}
+
+.mealSummaryCard,
+.macroCard {
+  background-color: var(--background-default);
+  border-radius: 20px;
+  width: 100%;
+  border: 1px solid var(--border-subtle);
+  padding: 16px 20px;
 }
 
 .mealSummaryCard {
-  background-color: var(--background-default);
-  border-radius: 20px;
   box-shadow: var(--shadow-outer);
+}
+
+.calorieGauge {
+  max-width: 240px;
+  margin: -16px auto 0;
+  position: relative;
+}
+
+.calorieGaugeCharacter {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%);
+  height: auto;
+  object-fit: contain;
+  pointer-events: none;
+}
+
+.macroCard {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.macroItem {
   display: flex;
   flex-direction: column;
-  width: 100%;
-  padding-top: 16px;
+  gap: 8px;
+  min-width: 0;
 }
 
-.macroArea {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  padding: 12px 0;
-  align-items: center;
-  justify-items: center;
-}
-
-.macroName {
-  text-align: center;
-  width: fit-content;
-  border-radius: 16px;
-  padding: 6px 12px;
-  background-color: var(--coral-100);
-}
-
-.caloriesArea {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  border-top: 1px solid var(--border-subtle);
-}
-
-.calorieItem {
-  text-align: center;
-  padding: 16px 0;
-}
-
-.calorieItem > p + p {
-  margin-top: 2px;
-}
-
-.calorieItem + .calorieItem {
-  border-left: 1px solid var(--border-subtle);
-}
-
-.burnedCalorieTitle {
+.macroTitle {
   display: flex;
   align-items: center;
+  gap: 2px;
+  min-height: 28px;
+}
+
+.macroItem > p {
+  margin-top: auto;
+}
+
+.burnedCaloriesCard {
+  border-radius: 20px;
+  border: 1px solid var(--border-subtle);
+  background-color: var(--background-default);
+}
+
+.burnedTotalCalorie {
+  display: flex;
+  align-items: center;
+  padding: 12px 20px;
+  gap: 10px;
 }
 
 .burnedCalorieList {
-  border-top: 1px solid var(--border-subtle);
-  padding-top: 12px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  border-bottom: 1px solid var(--border-subtle);
 }
 
 .burnedCalorieItem {
   align-items: center;
   display: flex;
-  justify-items: space-between;
+  padding: 24px 0;
+  padding-left: 20px;
+  gap: 8px;
 }
 
-.infoPopover {
-  margin-left: 2px;
-  padding-top: 1px;
+.titleWithIcon {
+  display: flex;
+  align-items: center;
+  gap: 1px;
 }
 
 .burnedCalorieItem + .burnedCalorieItem {
-  margin-top: 4px;
+  border-left: 1px solid var(--border-subtle);
+}
+
+.iconBg {
+  width: 36px;
+  height: 36px;
+  background-color: var(--background-gray-1);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .bodyLogGroup {
@@ -123,46 +176,84 @@
   transform: scale(0.995);
 }
 
+.mealCopyButton {
+  position: absolute;
+  right: 0;
+  top: -28px;
+}
+
 .mealRecordGroup {
+  position: relative;
   margin: 0;
   padding: 0;
   list-style: none;
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: 10px;
-}
-
-.mealRecordGroup > li {
-  grid-column: span 2;
-}
-
-.mealRecordGroup > li:nth-child(4) {
-  grid-column: 2 / span 2;
-}
-
-.mealRecordGroup > li:nth-child(5) {
-  grid-column: 4 / span 2;
-}
-
-.mealRecordTitle {
-  align-items: center;
-  display: flex;
-  justify-content: space-between;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
 }
 
 .mealRecordButton {
   border-radius: 12px;
   width: 100%;
   border: 1px solid var(--border-subtle);
-  padding: 8px;
+  padding: 12px;
   background-color: var(--background-default);
 }
 
 .mealImageBox {
-  aspect-ratio: 3/2;
+  aspect-ratio: 1;
   border-radius: 8px;
   color: var(--text-disabled);
   overflow: hidden;
+}
+
+.aiCoachButton {
+  position: relative;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-end;
+  overflow: hidden;
+  text-align: left;
+}
+
+.aiCoachArrow {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 50%;
+  box-shadow: var(--shadow-outer);
+  color: var(--text-tertiary);
+}
+
+.aiCoachCharacter {
+  width: 97px;
+  height: auto;
+  margin-left: -18px;
+  opacity: 30%;
+}
+
+.aiCoachLabel {
+  flex-shrink: 0;
+}
+
+.aiCoachButton:focus-visible {
+  outline: 2px solid var(--text-primary);
+  outline-offset: 2px;
+}
+
+.mealImageBox[data-hasMeal="true"] {
+  background-color: var(--background-selected);
+}
+
+.mealImageBox[data-hasMeal="false"] {
+  background-color: var(--background-gray-1);
   display: grid;
   place-items: center;
 }
@@ -175,19 +266,38 @@
   object-position: center center;
 }
 
+.hasMealRecordSection {
+  height: 100%;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.hasMealRecordSection > .mealIcon {
+  flex-shrink: 0;
+}
+
 .mealIcon {
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: var(--background-gray-1);
+  background-color: var(--coral-400);
+  color: var(--background-default);
   border-radius: 100%;
-  width: 30px;
-  height: 30px;
+  width: 32px;
+  height: 32px;
 }
 
-.mealIcon[data-recorded="true"] {
-  color: var(--btn-default);
-  background-color: var(--background-selected);
+.mealIcon[data-hasMeal="true"] {
+  margin-bottom: 8px;
+}
+
+.mealIcon[data-hasMeal="false"] {
+  background-color: transparent;
+  border: 1px solid var(--border-default);
+  color: var(--text-primary);
+  box-shadow: var(--shadow-outer);
 }
 
 .mealInfo {
@@ -198,11 +308,6 @@
 
 .mealInfo > span {
   white-space: nowrap;
-}
-
-.workoutRecordTitle {
-  display: flex;
-  align-items: center;
 }
 
 .workoutRecordGroup {
@@ -245,4 +350,19 @@
   display: flex;
   flex-direction: column;
   justify-content: space-around;
+}
+
+.workoutEmptyAction {
+  display: flex;
+  align-items: center;
+}
+
+.workoutEmptyContent {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sectionGroup .titleArea {
+  margin-bottom: 8px;
 }

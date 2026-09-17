@@ -1,65 +1,90 @@
-.content {
+.root {
+  display: flex;
+  transition:
+    background-color 200ms ease,
+    border-color 200ms ease;
+}
+
+.contents {
+  flex: 1;
+  padding: 20px 0 20px 16px;
   display: flex;
   flex-direction: column;
   gap: 4px;
-  padding: 20px;
-}
-
-.rankBadge {
-  align-items: center;
-  align-self: flex-start;
-  background-color: var(--coral-600);
-  border-radius: 6px;
-  color: var(--background-default);
-  display: inline-flex;
-  padding: 3px 7px;
-}
-
-.header {
-  display: flex;
-  gap: 6px;
-}
-
-.title {
   min-width: 0;
-}
-
-.iconButton {
-  align-items: center;
-  border-radius: 6px;
-  display: inline-flex;
-  flex-shrink: 0;
-  height: 24px;
-  justify-content: center;
-  width: 24px;
-  margin-left: auto;
-  color: var(--text-tertiary);
-}
-
-.description {
-  flex: 1;
-}
-
-.selected {
-  color: var(--btn-default);
 }
 
 .meta {
   align-items: baseline;
   display: flex;
-  flex-wrap: wrap;
-  gap: 4px 8px;
-  justify-content: space-between;
+  flex-wrap: nowrap;
+  flex: 1;
   min-width: 0;
 }
 
-.metaOnlyCalories {
-  justify-content: flex-end;
+.meta > span + span::before {
+  content: "|";
+  margin: 0 4px;
+  color: var(--text-disabled);
 }
 
-.menuInfoGroup {
-  align-items: center;
-  display: flex;
-  gap: 6px;
-  flex: 1;
+.quickAction {
+  padding-right: 16px;
+  display: grid;
+  place-items: center;
+}
+
+.iconButton {
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  flex-shrink: 0;
+  height: 32px;
+  width: 32px;
+  background-color: transparent;
+  color: var(--text-primary);
+  border: 1px solid var(--border-default);
+  box-shadow: var(--shadow-outer);
+  transition:
+    background-color 200ms ease,
+    border-color 200ms ease,
+    box-shadow 200ms ease;
+}
+
+.iconButton[data-selected="true"] {
+  background-color: var(--coral-200);
+  border-color: transparent;
+  box-shadow: none;
+}
+
+.actionIcon {
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+}
+
+.actionIcon > span {
+  grid-area: 1 / 1;
+}
+
+.actionIconVertical {
+  opacity: 1;
+  transform: rotate(-90deg);
+  transition:
+    transform 200ms ease,
+    opacity 150ms ease;
+}
+
+.actionIcon[data-icon="minus"] .actionIconVertical {
+  opacity: 0;
+  transform: rotate(0deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .root,
+  .iconButton,
+  .actionIconVertical {
+    transition: none;
+  }
 }
