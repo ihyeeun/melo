@@ -172,7 +172,12 @@ export default function WorkoutRecordPage() {
 
         {renderContent()}
       </main>
-      <button onClick={handleSearchWorkout} className={styles.addButton}>
+      <button
+        onClick={handleSearchWorkout}
+        className={styles.addButton}
+        type="button"
+        aria-label="운동 기록 추가하러 가기"
+      >
         <SystemIcon name="plus" size={28} />
       </button>
     </section>
