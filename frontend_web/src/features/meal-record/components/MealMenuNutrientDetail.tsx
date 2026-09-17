@@ -23,7 +23,7 @@ import {
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import NumberField from "@/shared/commons/input/NumberField";
 import { InfoPopover } from "@/shared/commons/popover/InfoPopover";
-import { formatBaseServingUnit } from "@/shared/utils/servingUnit";
+import { formatBaseServingUnit, getServingUnitLabel } from "@/shared/utils/servingUnit";
 
 export type MealMenuNutrientSelection = {
   menu: MealMenuItem;
@@ -425,6 +425,18 @@ export function MealMenuNutrientDetail({
               ))}
             </div>
           ) : null}
+
+          {showEditSection && (
+            <button
+              type="button"
+              onClick={handleEditAndAddClick}
+              disabled={!isEditAndAddEnabled}
+              className={styles.editSection}
+            >
+              <span className={`body-s-regular text-tertiary`}>영양성분이 잘못되었다면?</span>
+              <span className="body-s-medium text-secondary marginLeft">수정하기</span>
+            </button>
+          )}
         </div>
       </section>
 
@@ -474,8 +486,10 @@ export function MealMenuNutrientDetail({
                 isInputTextAllowed={isQuantityInputAllowed}
                 unstyled
                 classNames={{
+                  group: styles.FieldInputGroup,
                   inputWrapper: styles.FieldInputWrapper,
                   input: `title-m-medium ${styles.FieldInput}`,
+                  unit: `title-s-regular text-primary`,
                 }}
                 format={{
                   minimumFractionDigits: 0,
@@ -487,6 +501,7 @@ export function MealMenuNutrientDetail({
                   "aria-label": "단위량 또는 중량 입력",
                   onBlur: handleInputBlur,
                 }}
+                unit={getServingUnitLabel(menu.unit_quantity)}
               />
               <button
                 type="button"
@@ -523,7 +538,8 @@ export function MealMenuNutrientDetail({
                 classNames={{
                   group: styles.FieldInputGroup,
                   inputWrapper: styles.FieldInputWrapper,
-                  input: `title-m-medium ${styles.FieldInput}`,
+                  input: `title-m-medium ${styles.FieldInput} ${styles.FieldInputWeightWidth}`,
+                  unit: `title-s-regular text-primary`,
                 }}
                 format={{
                   minimumFractionDigits: 0,
@@ -535,6 +551,7 @@ export function MealMenuNutrientDetail({
                   "aria-label": "단위량 또는 중량 입력",
                   onBlur: handleInputBlur,
                 }}
+                unit={menu.unit === MENU_UNIT.GRAM ? "g" : "ml"}
               />
               <button
                 type="button"
@@ -576,18 +593,6 @@ export function MealMenuNutrientDetail({
               calories={previewMenu.calories}
               nutrientValues={nutrientValues}
             />
-
-            {showEditSection ? (
-              <button
-                type="button"
-                onClick={handleEditAndAddClick}
-                disabled={!isEditAndAddEnabled}
-                className={styles.editSection}
-              >
-                <span className={`body-s-regular text-tertiary`}>영양성분이 잘못되었다면?</span>
-                <span className="body-s-medium text-secondary marginLeft">수정하기</span>
-              </button>
-            ) : null}
           </section>
         )}
       </section>

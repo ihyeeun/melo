@@ -56,6 +56,21 @@
   margin-left: 2px;
 }
 
+.editSection {
+  background-color: var(--background-gray-1);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 12px 16px;
+  margin-top: 8px;
+
+  &:active {
+    background-color: var(--background-gray-2);
+  }
+}
+
 .servingInputSection {
   display: flex;
   flex-direction: column;
@@ -127,10 +142,10 @@
 }
 
 .FieldInputWrapper {
-  align-items: center;
+  text-align: center;
+  width: 100%;
   display: flex;
-  flex: 1;
-  justify-content: center;
+  align-items: center;
 }
 
 .StepButton {
@@ -150,16 +165,17 @@
 
 .FieldInput {
   background-color: transparent;
-  border: 0;
-  flex: 1;
-  text-align: center;
-  width: 100%;
+  border: none;
+  text-align: end;
+  padding: 0 2px;
+  width: 52%;
 }
-
+.FieldInputWeightWidth {
+  width: 60%;
+}
 .FieldInput::placeholder {
   color: var(--text-tertiary);
 }
-
 .FieldInput:focus {
   outline: none;
 }
@@ -190,19 +206,6 @@
   border-radius: 16px;
   padding-top: 16px;
   padding-bottom: 18px;
-}
-
-.editSection {
-  align-items: center;
-  background-color: var(--background-gray-1);
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 16px;
-  height: 46px;
-  width: calc(100% - 24px);
-  margin: 20px 12px 0;
 }
 
 .detailList {
