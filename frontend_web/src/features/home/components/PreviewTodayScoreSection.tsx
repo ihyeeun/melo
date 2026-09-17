@@ -1,12 +1,7 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 
-import { getMealFeedback } from "@/features/chat/api/chat.api";
-import { refetchAndResolveChatHistoryItem } from "@/features/chat/hooks/queries/chatHistoryCache";
-import {
-  getChatHistoryPlaybackBaselineIds,
-  setChatHistoryPlaybackBaselineIds,
-} from "@/features/chat/utils/chatHistoryPlayback";
+import { useMealFeedbackMutation } from "@/features/chat/hooks/mutations/useMealFeedbackMutation";
 import { useActivityCalories } from "@/features/health/hooks/useActivityCalories";
 import Tile from "@/features/home/components/cards/Tile";
 import { useDayMealsQuery } from "@/features/home/hooks/queries/useTodayRecordQuery";
@@ -57,22 +52,7 @@ export default function PreviewTodayScoreSection({
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [isAdditionalCareOpen, setIsAdditionalCareOpen] = useState<boolean>(false);
-  const { mutate: requestMealFeedback, isPending: isCoachingPending } = useMutation({
-    mutationKey: ["meal-feedback"],
-    mutationFn: async (date: string) => {
-      const baselineIds = await getChatHistoryPlaybackBaselineIds(queryClient);
-      const response = await getMealFeedback(date);
-      await refetchAndResolveChatHistoryItem(queryClient, {
-        match: (item) =>
-          !baselineIds?.includes(item.id) &&
-          item.response_payload.chat_category === response.chat_category,
-      });
-
-      if (baselineIds !== null) {
-        setChatHistoryPlaybackBaselineIds(queryClient, baselineIds);
-      }
-    },
-    retry: false,
+  const { mutate: requestMealFeedback, isPending: isCoachingPending } = useMealFeedbackMutation({
     onError: (error) => {
       toast.warning(error.message || "식사 코칭을 불러오지 못했어요. 다시 시도해주세요.");
     },

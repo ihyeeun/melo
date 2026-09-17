@@ -1,12 +1,7 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { isToday } from "date-fns";
 
-import { getPersonalizedManagement } from "@/features/chat/api/chat.api";
-import { refetchAndResolveChatHistoryItem } from "@/features/chat/hooks/queries/chatHistoryCache";
-import {
-  getChatHistoryPlaybackBaselineIds,
-  setChatHistoryPlaybackBaselineIds,
-} from "@/features/chat/utils/chatHistoryPlayback";
+import { usePersonalizedManagementMutation } from "@/features/chat/hooks/mutations/usePersonalizedManagementMutation";
 import { HOME_MENSTRUAL_STATUS_VIEW } from "@/features/menstruation/constants/menstruation.constant";
 import type { MenstrualPhaseResult } from "@/features/menstruation/hooks/useMenstrualPhase";
 import styles from "@/features/menstruation/styles/MenstruationCardButton.module.css";
@@ -30,26 +25,12 @@ export default function MenstruationCardButton({ phase }: { phase: MenstrualPhas
   const showChatButton = isSelectedDateToday && !isFreeBlocked;
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { mutate: requestPersonalizedManagement, isPending } = useMutation({
-    mutationKey: ["personalized-management"],
-    mutationFn: async () => {
-      const baselineIds = await getChatHistoryPlaybackBaselineIds(queryClient);
-      const response = await getPersonalizedManagement();
-      await refetchAndResolveChatHistoryItem(queryClient, {
-        match: (item) =>
-          !baselineIds?.includes(item.id) &&
-          item.response_payload.chat_category === response.chat_category,
-      });
-
-      if (baselineIds !== null) {
-        setChatHistoryPlaybackBaselineIds(queryClient, baselineIds);
-      }
-    },
-    retry: false,
-    onError: (error) => {
-      toast.warning(error.message || "맞춤 관리법을 불러오지 못했어요. 다시 시도해주세요.");
-    },
-  });
+  const { mutate: requestPersonalizedManagement, isPending } =
+    usePersonalizedManagementMutation({
+      onError: (error) => {
+        toast.warning(error.message || "맞춤 관리법을 불러오지 못했어요. 다시 시도해주세요.");
+      },
+    });
   const homeContent = menstrualStatus
     ? HOME_MENSTRUAL_STATUS_VIEW[menstrualStatus]
     : HOME_MENSTRUAL_STATUS_VIEW["undefined"];
