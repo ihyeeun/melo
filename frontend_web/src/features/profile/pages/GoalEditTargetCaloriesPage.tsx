@@ -163,7 +163,11 @@ export default function GoalEditTargetCaloriesPage() {
         {visibleDraft && (
           <section>
             <div className={styles.caloriesTitleGroup}>
-              <h2 className="title-l-semi text-primary">하루 목표 칼로리를 설정해주세요</h2>
+              <h2 className="title-l-semi text-primary">
+                수정한 목표에 맞게
+                <br />
+                목표 칼로리도 다시 추천해드릴게요
+              </h2>
               <p className="body-l-regular text-primary">{recommendationMessage}</p>
             </div>
 

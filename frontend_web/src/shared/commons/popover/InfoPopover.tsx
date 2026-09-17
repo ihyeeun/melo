@@ -24,6 +24,7 @@ type InfoPopoverProps = InfoPopoverContentProps & {
   iconSize?: number | string;
   side?: InfoPopoverSide;
   align?: InfoPopoverAlign;
+  defaultOpen?: boolean;
 };
 
 export function InfoPopover({
@@ -34,13 +35,14 @@ export function InfoPopover({
   iconSize = 19,
   side = "left",
   align = "center",
+  defaultOpen = false,
 }: InfoPopoverProps) {
   const handleTriggerClick = (event: MouseEvent<HTMLButtonElement>) => {
     event.stopPropagation();
   };
 
   return (
-    <Popover.Root>
+    <Popover.Root defaultOpen={defaultOpen}>
       <Popover.Trigger
         type="button"
         className={`${styles.trigger} ${className}`}

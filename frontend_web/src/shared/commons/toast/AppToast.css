@@ -21,7 +21,7 @@
 }
 
 .app-toast-region[data-position="bottom"] {
-  bottom: var(--safe-area-bottom, 0px);
+  bottom: calc(var(--safe-area-bottom) + 64px);
   transform: translateX(-50%);
 }
 

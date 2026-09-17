@@ -18,6 +18,17 @@
   padding: 20px 0;
 }
 
+.planInfoAnchor {
+  display: flex;
+  height: 14px;
+  justify-content: center;
+  visibility: hidden;
+}
+
+.planInfoMessage {
+  text-align: center;
+}
+
 .editItem {
   align-items: center;
   display: flex;

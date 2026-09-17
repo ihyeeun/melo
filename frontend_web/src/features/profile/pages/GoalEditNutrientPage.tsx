@@ -22,6 +22,14 @@ import {
 } from "@/features/profile/goalEdit.model";
 import { queryKeys } from "@/features/profile/hooks/queries/queryKey";
 import { useGetProfileQuery } from "@/features/profile/hooks/queries/useProfileQuery";
+import {
+  useEnsureGoalEditFlow,
+  useFinishGoalEditFlow,
+  useGoalEditDraft,
+  useGoalEditHasActiveFlow,
+  useGoalEditInitialDraft,
+  useUpdateGoalEditDraft,
+} from "@/features/profile/stores/goalEditFlow.store";
 import styles from "@/features/profile/styles/GoalEditPage.module.css";
 import { PATH } from "@/router/path";
 import { track } from "@/shared/analytics/analytics";
@@ -34,19 +42,9 @@ import { Button } from "@/shared/commons/button/Button";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import NumberField from "@/shared/commons/input/NumberField";
-import { CheckButtonModal } from "@/shared/commons/modals/CheckButtonModal";
 import { toast } from "@/shared/commons/toast/toast";
 import { resetStackflow, useNavigate } from "@/shared/navigation/stackflowNavigation";
 import { getTodayFormatDateKey } from "@/shared/utils/dateFormat";
-
-import {
-  useEnsureGoalEditFlow,
-  useFinishGoalEditFlow,
-  useGoalEditDraft,
-  useGoalEditHasActiveFlow,
-  useGoalEditInitialDraft,
-  useUpdateGoalEditDraft,
-} from "./stores/goalEditFlow.store";
 
 const INTERNAL_DECIMALS = 4;
 const NUTRIENT_INPUT_PATTERN = /^(?:100(?:\.0?)?|[0-9]{0,2}(?:\.[0-9]?)?)$/;
@@ -83,7 +81,6 @@ export default function GoalEditNutrientPage() {
   const finishGoalEditFlow = useFinishGoalEditFlow();
   const updateDraft = useUpdateGoalEditDraft();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isNutrientTotalModalOpen, setIsNutrientTotalModalOpen] = useState(false);
   const visibleDraft = hasActiveFlow || isSubmitting ? draft : null;
   const hasEditedNutrientsRef = useRef(false);
   const {
@@ -167,7 +164,12 @@ export default function GoalEditNutrientPage() {
     }
 
     if (!hasNutrientTotal(visibleDraft)) {
-      setIsNutrientTotalModalOpen(true);
+      toast.show({
+        title: "탄단지 비율의 합을 100으로 맞춰주세요",
+        type: "error",
+        position: "bottom",
+        timeout: 3000,
+      });
       return;
     }
 
@@ -289,7 +291,7 @@ export default function GoalEditNutrientPage() {
         {visibleDraft && (
           <div className={styles.content}>
             <section className={styles.nutrientTitleGroup}>
-              <h2 className="title-l-semi text-primary">추천하는 탄단지 비율이에요</h2>
+              <h2 className="title-l-semi text-primary">새롭게 추천하는 탄단지 비율이에요</h2>
               <p className="body-l-regular text-primary">
                 {isRecommendationPending
                   ? "추천 비율을 계산하고 있어요"
@@ -380,12 +382,12 @@ export default function GoalEditNutrientPage() {
         </Button>
       </footer>
 
-      <CheckButtonModal
+      {/* <CheckButtonModal
         open={isNutrientTotalModalOpen}
         onOpenChange={setIsNutrientTotalModalOpen}
         title="영양소 비율 확인"
         description="탄단지 비율의 합을 100으로 맞춰주세요"
-      />
+      /> */}
     </div>
   );
 }
