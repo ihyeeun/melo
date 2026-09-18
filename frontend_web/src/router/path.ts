@@ -56,4 +56,7 @@ export const PATH = {
 
   // Menstruation
   MENSTRUATION_RECORD: "/menstruation/record",
+
+  // Water Intake
+  WATER_INTAKE_RECORD: "/water-intake/record",
 };

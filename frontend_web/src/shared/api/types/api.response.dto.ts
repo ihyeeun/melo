@@ -407,3 +407,11 @@ export interface MenstrualDateRangeResponseDto {
   start_date: string;
   end_date: string;
 }
+
+/* ======
+ * 물 섭취 기록
+ * ====== */
+export interface WaterIntakeResponseDto {
+  cup_size: number;
+  water_intake: number;
+}

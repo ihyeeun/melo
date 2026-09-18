@@ -1,0 +1,12 @@
+.root {
+  background-color: var(--navy-50);
+  border: 1px solid var(--navy-100);
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  padding: 20px 16px;
+}
+
+.root > :last-child {
+  margin-left: 12px;
+}

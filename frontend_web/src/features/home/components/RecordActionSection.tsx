@@ -132,6 +132,11 @@ export default function RecordActionSection() {
         )}
       </section>
 
+      {/* <section className={styles.recordGroup}>
+        <h2 className="title-s-semi text-primary">물 섭취 기록</h2>
+        <WaterIntakeRecordActionButton />
+      </section> */}
+
       <section className={styles.recordGroup}>
         <h2 className="title-s-semi text-primary">운동 기록</h2>
         <Tile

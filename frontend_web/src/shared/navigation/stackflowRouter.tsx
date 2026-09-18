@@ -200,6 +200,9 @@ const AppInfoPage = createLazyActivity(() => import("@/features/kakao-web-auth/p
 const MenstruationPage = createLazyActivity(
   () => import("@/features/menstruation/pages/MenstruationRecordPage"),
 );
+const WaterIntakeRecordPage = createLazyActivity(
+  () => import("@/features/water-intake/pages/WaterIntakeRecordPage"),
+);
 
 const ACTIVITIES = {
   Home: HomePage,
@@ -244,6 +247,7 @@ const ACTIVITIES = {
   ChatFoodCamera: ChatFoodCameraPage,
   AppInfo: AppInfoPage,
   Menstruation: MenstruationPage,
+  WaterIntakeRecordPage,
 };
 
 const ACTIVITY_ROUTES: Record<keyof typeof ACTIVITIES, RoutePath> = {
@@ -289,6 +293,7 @@ const ACTIVITY_ROUTES: Record<keyof typeof ACTIVITIES, RoutePath> = {
   ChatFoodCamera: PATH.CHAT_FOOD_CAMERA,
   AppInfo: PATH.APP_INFO,
   Menstruation: PATH.MENSTRUATION_RECORD,
+  WaterIntakeRecordPage: PATH.WATER_INTAKE_RECORD,
 };
 
 type ActivityName = keyof typeof ACTIVITY_ROUTES;
