@@ -7,7 +7,7 @@
 
 .contents {
   flex: 1;
-  padding: 20px 0 20px 16px;
+  padding: 20px 4px 20px 16px;
   display: flex;
   flex-direction: column;
   gap: 4px;
