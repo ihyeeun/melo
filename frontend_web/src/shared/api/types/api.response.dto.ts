@@ -168,7 +168,7 @@ export interface FolderDetailResponseDto {
 export interface RecentMenuResponseDto {
   menu_id: number;
   menu_name: string;
-  menu_brand?: string;
+  brand?: string;
 }
 
 /* ======

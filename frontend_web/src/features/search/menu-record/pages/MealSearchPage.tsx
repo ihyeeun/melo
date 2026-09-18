@@ -715,10 +715,8 @@ export default function MealSearchPage() {
               className={styles.recentMenuItem}
             >
               <span className={`body-l-medium text-primary ellipsis`}>{menu.menu_name}</span>
-              {menu.menu_brand && (
-                <span className={`caption-m-regular text-tertiary ellipsis`}>
-                  {menu.menu_brand}
-                </span>
+              {menu.brand && (
+                <span className={`caption-m-regular text-tertiary ellipsis`}>{menu.brand}</span>
               )}
             </button>
           ))}
