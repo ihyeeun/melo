@@ -52,6 +52,7 @@ import { SearchInputHeader } from "@/shared/commons/header/SearchInputHeader";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import { LoadingIndicator } from "@/shared/commons/loading/Loading";
 import { ConfirmModal } from "@/shared/commons/modals/ConfirmModal";
+import { Skeleton } from "@/shared/commons/skeleton/Skeleton";
 import { toast } from "@/shared/commons/toast/toast";
 import { FEATURE_GUARD, useIsFeatureBlocked } from "@/shared/guards/featureGuard";
 import {
@@ -687,8 +688,24 @@ export default function MealSearchPage() {
     if (isRecentRecordMenuPending)
       return (
         <section className={styles.recentMenuSection}>
-          <h2 className="title-s-semi text-primary">최근에 먹었어요</h2>
-          <p>로딩</p>
+          <div className={styles.recentMenuTitle}>
+            <h2 className="title-s-semi text-primary">최근에 먹었어요</h2>
+            <button
+              type="button"
+              onClick={() => setIsRecentMenuOpen(false)}
+              className="text-secondary marginLeft"
+            >
+              <SystemIcon name="exit" size={18} />
+            </button>
+          </div>
+
+          <div className={styles.recentMenuList}>
+            <Skeleton width={88} height={40} radius={20} />
+            <Skeleton width={75} height={40} radius={20} />
+            <Skeleton width={102} height={40} radius={20} />
+            <Skeleton width={131} height={40} radius={20} />
+            <Skeleton width={182} height={40} radius={20} />
+          </div>
         </section>
       );
 
