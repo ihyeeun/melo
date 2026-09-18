@@ -26,6 +26,7 @@ import {
   MENU_SELECTION_TARGET,
 } from "@/features/menu-selection/utils/menuSelectionRoutes";
 import RegisterBottomSheet from "@/features/search/components/RegisterBottomSheet";
+import { useGetRecentMenusQuery } from "@/features/search/menu-record/hooks/queries/useGetMenus.query";
 import {
   useFolderListInfiniteQuery,
   useMealSearchInfiniteQuery,
@@ -34,6 +35,7 @@ import {
   useGetFrequentlyRecordedMenus,
   useGetRegisteredMenus,
 } from "@/features/search/menu-record/hooks/queries/usePersonalMenusQuery";
+import styles from "@/features/search/styles/MealSearch.module.css";
 import { PATH } from "@/router/path";
 import {
   getFolderDetailPath,
@@ -59,8 +61,6 @@ import {
   useSearchParams,
   useStackflowBackHandler,
 } from "@/shared/navigation/stackflowNavigation";
-
-import styles from "../styles/MealSearch.module.css";
 
 const MENU_SEARCH_PAGE_LIMIT = 20;
 const DIRECT_REGISTER_BUTTON_INTERVAL = 15;
@@ -92,6 +92,8 @@ export default function MealSearchPage() {
   const [activePersonalMenuTab, setActivePersonalMenuTab] = useState<PersonalMenuTab>(
     PERSONAL_MENU_TAB.FREQUENTLY_RECORDED,
   );
+  const [isRecentMenuOpen, setIsRecentMenuOpen] = useState(false);
+
   const searchInputRef = useRef<HTMLInputElement>(null);
   const loadMoreRef = useRef<HTMLDivElement>(null);
   const personalMenuScrollRef = useRef<HTMLDivElement>(null);
@@ -161,6 +163,8 @@ export default function MealSearchPage() {
     enabled: isPersonalMenuEditSearchMode || hasDraft,
     limit: MENU_SEARCH_PAGE_LIMIT,
   });
+  const { data: recentRecordMenu, isPending: isRecentRecordMenuPending } =
+    useGetRecentMenusQuery(isRecentMenuOpen);
 
   const firstSearchResult = searchResults?.pages[0];
   const searchMenuIds = useMemo(
@@ -679,6 +683,50 @@ export default function MealSearchPage() {
     </Tabs.Root>
   );
 
+  const renderRecentRecordMenuContent = () => {
+    if (isRecentRecordMenuPending)
+      return (
+        <section className={styles.recentMenuSection}>
+          <h2 className="title-s-semi text-primary">최근에 먹었어요</h2>
+          <p>로딩</p>
+        </section>
+      );
+
+    const recentMenus = recentRecordMenu ?? [];
+
+    return (
+      <section className={styles.recentMenuSection}>
+        <div className={styles.recentMenuTitle}>
+          <h2 className="title-s-semi text-primary">최근에 먹었어요</h2>
+          <button
+            type="button"
+            onClick={() => setIsRecentMenuOpen(false)}
+            className="text-secondary marginLeft"
+          >
+            <SystemIcon name="exit" size={18} />
+          </button>
+        </div>
+
+        <div className={styles.recentMenuList}>
+          {recentMenus.map((menu) => (
+            <button
+              type="button"
+              onClick={() => handleMenuDetailPageOpen(menu.menu_id)}
+              className={styles.recentMenuItem}
+            >
+              <span className={`body-l-medium text-primary ellipsis`}>{menu.menu_name}</span>
+              {menu.menu_brand && (
+                <span className={`caption-m-regular text-tertiary ellipsis`}>
+                  {menu.menu_brand}
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
+      </section>
+    );
+  };
+
   const renderSearchContent = () => {
     if (isSearchPending) {
       return (
@@ -772,11 +820,14 @@ export default function MealSearchPage() {
         placeholder="메뉴를 검색해보세요"
         inputAriaLabel="메뉴 검색"
         onBack={handleSearchPageBack}
+        onFocus={() => setIsRecentMenuOpen(true)}
       />
 
       <main className={`${styles.main} ${hasSearchKeyword ? styles.searchMain : ""}`}>
         {hasSearchKeyword ? (
           <div className={styles.searchContent}>{renderSearchContent()}</div>
+        ) : isRecentMenuOpen ? (
+          renderRecentRecordMenuContent()
         ) : (
           renderPersonalMenuTabs()
         )}

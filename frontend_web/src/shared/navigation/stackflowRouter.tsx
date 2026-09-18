@@ -128,7 +128,7 @@ const AppOpenSettingsFeedbackPage = createLazyActivity(
 );
 const BrandSearch = createLazyActivity(() => import("@/features/search/brand/BrandSearch"));
 const MealSearchPage = createLazyActivity(
-  () => import("@/features/search/menu-record/MealSearchPage"),
+  () => import("@/features/search/menu-record/pages/MealSearchPage"),
 );
 const CreateFolderPage = createLazyActivity(
   () => import("@/features/personal-menu/folder/pages/CreateFolderPage"),

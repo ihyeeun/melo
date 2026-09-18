@@ -422,3 +422,31 @@
   margin-top: 15px;
   margin-bottom: 5px;
 }
+
+.recentMenuSection {
+  padding: 16px;
+}
+
+.recentMenuTitle {
+  display: flex;
+}
+
+.recentMenuList {
+  margin-top: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  row-gap: 10px;
+  column-gap: 6px;
+}
+
+.recentMenuItem {
+  background-color: var(--background-default);
+  border: 1px solid var(--border-subtle);
+  padding: 8px 16px;
+  border-radius: 20px;
+  max-width: 100%;
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}

@@ -165,6 +165,12 @@ export interface FolderDetailResponseDto {
   menu_input_modes: Array<0 | 1>;
 }
 
+export interface RecentMenuResponseDto {
+  menu_id: number;
+  menu_name: string;
+  menu_brand?: string;
+}
+
 /* ======
  * 채팅
  * ====== */

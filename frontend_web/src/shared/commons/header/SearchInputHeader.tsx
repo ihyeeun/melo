@@ -27,6 +27,8 @@ type Props = {
   inputRef?: RefObject<HTMLInputElement | null>;
   enterKeyHint?: InputHTMLAttributes<HTMLInputElement>["enterKeyHint"];
   blurOnEnter?: boolean;
+  onFocus?: () => void;
+  onBlur?: () => void;
 };
 
 export function SearchInputHeader({
@@ -44,6 +46,8 @@ export function SearchInputHeader({
   inputRef,
   enterKeyHint = "search",
   blurOnEnter = true,
+  onFocus,
+  onBlur,
 }: Props) {
   const [isComposing, setIsComposing] = useState(false);
   const didMountRef = useRef(false);
@@ -133,6 +137,8 @@ export function SearchInputHeader({
             aria-label={inputAriaLabel}
             maxLength={300}
             enterKeyHint={enterKeyHint}
+            onFocus={onFocus}
+            onBlur={onBlur}
           />
 
           {value && (
