@@ -27,12 +27,13 @@ import { useSelectedDateKey } from "@/shared/stores/selectedDate.store";
 
 export default function WaterIntakeRecordPage() {
   const selectdate = useSelectedDateKey();
-  const [waterAmount, setWaterAmount] = useState<number>(0);
+  const [editedWaterAmount, setEditedWaterAmount] = useState<number>();
   const [cupAmount, setCupAmount] = useState<number | undefined>();
   const [isSheetOpen, setIsSheetOpen] = useState<boolean>(false);
 
   const { data: recordWaterIntake, isPending: isWaterIntakePending } =
     useGetWaterIntakeQuery(selectdate);
+  const waterAmount = editedWaterAmount ?? recordWaterIntake?.water_intake ?? 0;
   const { mutate: updateWaterIntake } = useRegisterWaterIntakeMutation({
     onSuccess: () => {
       toast.success("기록을 완료했어요");
@@ -80,7 +81,7 @@ export default function WaterIntakeRecordPage() {
           <NumberField
             value={mlToLiter(waterAmount)}
             onChange={(liter) => {
-              setWaterAmount(literToMl(liter ?? 0));
+              setEditedWaterAmount(literToMl(liter ?? 0));
             }}
             min={mlToLiter(WATER_INTAKE_SIZE.MIN)}
             max={mlToLiter(WATER_INTAKE_SIZE.MAX)}
