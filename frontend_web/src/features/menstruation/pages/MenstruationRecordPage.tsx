@@ -15,7 +15,6 @@ import { PageHeader } from "@/shared/commons/header/PageHeader";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import { toast } from "@/shared/commons/toast/toast";
 import { navigateBack } from "@/shared/navigation/stackflowNavigation";
-import { isFutureDateKey } from "@/shared/utils/dateFormat";
 
 export default function MenstruationRecordPage() {
   const [selections, setSelections] = useState<MenstrualDateSelections>({});
@@ -30,7 +29,7 @@ export default function MenstruationRecordPage() {
   const canSave = hasChanges && !isLoadingRecords && !hasRecordError && !isSaving;
 
   const handleToggleDate = useCallback((dateKey: string, isRecorded: boolean) => {
-    if (saveInFlightRef.current || isFutureDateKey(dateKey)) return;
+    if (saveInFlightRef.current) return;
 
     setSelections((previous) => toggleMenstrualDate(previous, dateKey, isRecorded));
   }, []);
@@ -55,7 +54,7 @@ export default function MenstruationRecordPage() {
   return (
     <div className={`page ${styles.root}`}>
       <PageHeader
-        title={"생리 기록"}
+        title={"월경 기록"}
         onBack={() => {
           navigateBack();
         }}
