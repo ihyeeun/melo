@@ -3,11 +3,9 @@ type Props = {
 };
 
 export default function EventDot({ visible }: Props) {
-  if (!visible) return <div className="calendar-dots calendar-dots--empty" />;
-
   return (
-    <div className="calendar-dots" aria-hidden="true">
-      <span className="calendar-dot" />
+    <div className="calendar-dots" data-visible={visible} aria-hidden="true">
+      {visible && <span className="calendar-dot" />}
     </div>
   );
 }

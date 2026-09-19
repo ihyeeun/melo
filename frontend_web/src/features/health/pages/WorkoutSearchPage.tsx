@@ -1,12 +1,14 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
 
+import { useDeleteWorkoutRecordMutation } from "@/features/health/hooks/mutations/workout.mutation";
 import {
   useGetWorkoutRecordQuery,
   useWorkoutSearchInfiniteQuery,
   workoutKeys,
 } from "@/features/health/hooks/queries/workout.query";
 import {
+  useRemoveWorkoutRecordEditRecord,
   useWorkoutRecordEditDate,
   useWorkoutRecordEditRecords,
 } from "@/features/health/stores/workoutRecordEdit.store";
@@ -20,10 +22,12 @@ import { track } from "@/shared/analytics/analytics";
 import { EVENT_NAME } from "@/shared/analytics/analytics.constants";
 import type { WorkoutSearchItemResponseDto } from "@/shared/api/types/api.response.dto";
 import { Button } from "@/shared/commons/button/Button";
+import { SelectedCard } from "@/shared/commons/card/SelectedCard";
 import { SearchInputHeader } from "@/shared/commons/header/SearchInputHeader";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import { LoadingIndicator } from "@/shared/commons/loading/Loading";
 import { ScrollFogArea } from "@/shared/commons/scrollFog";
+import { toast } from "@/shared/commons/toast/toast";
 import {
   navigateBack,
   useNavigate,
@@ -71,7 +75,15 @@ export default function WorkoutSearchPage() {
   const workoutPathOptions = isEditMode ? ({ mode: "edit" } as const) : undefined;
   const editDate = useWorkoutRecordEditDate();
   const editRecords = useWorkoutRecordEditRecords();
+  const removeEditRecord = useRemoveWorkoutRecordEditRecord();
+  const isEditSession = isEditMode && editDate === dateKey;
   const workoutRecordQuery = useGetWorkoutRecordQuery(dateKey);
+  const { mutate: deleteWorkoutRecord, isPending: isDeletePending } =
+    useDeleteWorkoutRecordMutation({
+      onError: () => {
+        toast.warning("운동 기록을 제외하지 못했어요", "잠시 후 다시 시도해주세요.");
+      },
+    });
   const inputRef = useRef<HTMLInputElement>(null);
   const loadMoreRef = useRef<HTMLDivElement>(null);
   const initialWorkoutIdSetRef = useRef<Set<number> | null>(null);
@@ -114,13 +126,11 @@ export default function WorkoutSearchPage() {
       }),
     [queryClient, workoutIds],
   );
-  const selectedWorkoutIdSet = useMemo(() => {
-    if (isEditMode && editDate === dateKey) {
-      return new Set(editRecords.map((record) => record.workout_id));
-    }
+  const selectedWorkoutRecordMap = useMemo(() => {
+    const records = isEditSession ? editRecords : (workoutRecordQuery.data?.workout_list ?? []);
 
-    return new Set(workoutRecordQuery.data?.workout_list.map((record) => record.workout_id) ?? []);
-  }, [dateKey, editDate, editRecords, isEditMode, workoutRecordQuery.data?.workout_list]);
+    return new Map(records.map((record) => [record.workout_id, record]));
+  }, [editRecords, isEditSession, workoutRecordQuery.data?.workout_list]);
 
   useEffect(() => {
     if (isEditMode || !workoutRecordQuery.data || initialWorkoutIdSetRef.current !== null) {
@@ -177,6 +187,7 @@ export default function WorkoutSearchPage() {
 
   const handleComplete = () => {
     if (hasAddedWorkoutRecord()) {
+      toast.success("운동 기록을 완료했어요");
       trackWorkoutRecordCompleted();
     }
 
@@ -197,10 +208,23 @@ export default function WorkoutSearchPage() {
     setEquipment((current) => (current === nextEquipment ? null : nextEquipment));
   };
 
-  const handleAddWorkout = (workoutId: number) => {
+  const handleUpsertWorkout = (workoutId: number) => {
     navigate(getWorkoutUpsertPath(dateKey, workoutId, workoutPathOptions), {
-      state: isEditMode ? { returnDepth: 2 } : undefined,
+      state: {
+        workoutRecord: selectedWorkoutRecordMap.get(workoutId),
+      },
     });
+  };
+
+  const handleRemoveWorkout = (workoutId: number) => {
+    if (isDeletePending || !selectedWorkoutRecordMap.has(workoutId)) return;
+
+    if (isEditSession) {
+      removeEditRecord(workoutId);
+      return;
+    }
+
+    deleteWorkoutRecord({ date: dateKey, workout_id: workoutId });
   };
 
   const handleWorkoutDetail = (workoutId: number) => {
@@ -218,12 +242,11 @@ export default function WorkoutSearchPage() {
 
     if (isError) {
       return (
-        <section className={styles.emptyState}>
-          <p className="typo-body2">운동을 검색하지 못했어요</p>
+        <section className={styles.emptyWorkoutListSection}>
+          <p className="body-l-medium">운동을 검색하지 못했어요</p>
           <Button
             variant="text"
-            color="normal"
-            size="small"
+            size="xs"
             onClick={() => {
               void refetch();
             }}
@@ -236,8 +259,9 @@ export default function WorkoutSearchPage() {
 
     if (workouts.length === 0) {
       return (
-        <section className={styles.emptyState}>
-          <p className="typo-body2">
+        <section className={styles.emptyWorkoutListSection}>
+          <img src="/icons/characters/question.png" width={200} />
+          <p className="body-l-medium text-tertiary">
             {hasSearchCondition ? "검색 결과가 없어요" : "표시할 운동이 없어요"}
           </p>
         </section>
@@ -245,13 +269,15 @@ export default function WorkoutSearchPage() {
     }
 
     return (
-      <div className={styles.resultList}>
+      <section className={styles.workoutResultListSection}>
         {workouts.map((workout) => (
           <WorkoutSearchResultCard
             key={workout.workout_id}
             workout={workout}
-            isSelected={selectedWorkoutIdSet.has(workout.workout_id)}
-            onAdd={() => handleAddWorkout(workout.workout_id)}
+            isSelected={selectedWorkoutRecordMap.has(workout.workout_id)}
+            disabled={isDeletePending}
+            onUpsert={() => handleUpsertWorkout(workout.workout_id)}
+            onRemove={() => handleRemoveWorkout(workout.workout_id)}
             onDetail={() => handleWorkoutDetail(workout.workout_id)}
           />
         ))}
@@ -260,12 +286,12 @@ export default function WorkoutSearchPage() {
             <LoadingIndicator iconSize={24} label="운동을 더 불러오는 중입니다." />
           ) : null}
         </div>
-      </div>
+      </section>
     );
   };
 
   return (
-    <section className={styles.page}>
+    <section className={`${styles.page} page`}>
       <SearchInputHeader
         value={inputValue}
         onValueChange={setInputValue}
@@ -291,13 +317,11 @@ export default function WorkoutSearchPage() {
           />
         </section>
 
-        <ScrollFogArea className={styles.resultSection} sizes={{ top: 10, bottom: 20 }}>
-          {renderSearchState()}
-        </ScrollFogArea>
+        <ScrollFogArea sizes={{ top: 10, bottom: 20 }}>{renderSearchState()}</ScrollFogArea>
       </main>
 
-      <footer className={styles.footer}>
-        <Button fullWidth size="large" onClick={handleComplete}>
+      <footer className={`footer`}>
+        <Button fullWidth size="m" disabled={isDeletePending} onClick={handleComplete}>
           추가 완료
         </Button>
       </footer>
@@ -319,17 +343,17 @@ function FilterChipGroup({
       <div className={styles.filterScroller}>
         <button
           type="button"
-          className={`${styles.filterChip} ${value === null ? styles.filterChipSelected : ""} typo-label3`}
+          className={`${styles.filterChip} ${value === null ? styles.filterChipSelected : ""} body-s-medium`}
           aria-pressed={value === null}
           onClick={() => onChange(null)}
         >
-          기구
+          전체
         </button>
         {options.map((option) => (
           <button
             key={option}
             type="button"
-            className={`${styles.filterChip} ${value === option ? styles.filterChipSelected : ""} typo-label3`}
+            className={`${styles.filterChip} ${value === option ? styles.filterChipSelected : ""} body-s-medium`}
             aria-pressed={value === option}
             onClick={() => onChange(option)}
           >
@@ -355,7 +379,7 @@ function FilterTabGroup({
       <div className={styles.filterScroller} role="tablist">
         <button
           type="button"
-          className={`${styles.filterTab} ${value === null ? styles.tabSelected : ""} typo-label3`}
+          className={`${styles.filterTab} ${value === null ? styles.tabSelected : ""} body-s-medium`}
           aria-pressed={value === null}
           onClick={() => onChange(null)}
         >
@@ -367,7 +391,7 @@ function FilterTabGroup({
             type="button"
             role="tab"
             aria-selected={value === option}
-            className={`${styles.filterTab} ${value === option ? styles.tabSelected : ""} typo-label3`}
+            className={`${styles.filterTab} ${value === option ? styles.tabSelected : ""} body-s-medium`}
             onClick={() => onChange(value === option ? null : option)}
           >
             {option}
@@ -379,53 +403,60 @@ function FilterTabGroup({
 }
 
 function WorkoutSearchResultCard({
+  disabled,
   isSelected,
-  onAdd,
+  onUpsert,
+  onRemove,
   onDetail,
   workout,
 }: {
+  disabled: boolean;
   isSelected: boolean;
-  onAdd: () => void;
+  onUpsert: () => void;
+  onRemove: () => void;
   onDetail: () => void;
   workout: WorkoutSearchItemResponseDto;
 }) {
   return (
-    <article className={`${styles.resultCard} ${isSelected ? styles.resultCardSelected : ""}`}>
+    <SelectedCard isSelected={isSelected} className={styles.workoutCard}>
       <button
         type="button"
-        className={styles.resultMainButton}
-        aria-label={`${workout.workout_name} 상세 보기`}
-        onClick={onDetail}
+        className={styles.workoutInfoActionButton}
+        aria-label={
+          isSelected ? `${workout.workout_name} 기록 수정하기` : `${workout.workout_name} 상세 보기`
+        }
+        disabled={disabled}
+        onClick={isSelected ? onUpsert : onDetail}
       >
-        <div className={styles.thumbnail}>
+        <div className={styles.workoutImageArea}>
           {workout.workout_image ? (
             <img src={workout.workout_image} alt="" className={styles.thumbnailImage} />
           ) : (
-            <SystemIcon name={workout.workout_type === "cardio" ? "walking" : "fire"} size={28} />
+            <SystemIcon
+              name={workout.workout_type === "cardio" ? "walking" : "fitness"}
+              size={28}
+            />
           )}
         </div>
 
-        <div className={styles.resultContent}>
-          <h2 className={`ellipsis typo-title4`}>{workout.workout_name}</h2>
-        </div>
+        <p className={`body-l-medium text-primary ${styles.workoutName}`}>{workout.workout_name}</p>
       </button>
 
       <button
         type="button"
-        className={`${styles.addButton} ${isSelected ? styles.addButtonSelected : ""}`}
+        className={`${styles.addButton}`}
+        data-selected={isSelected}
         aria-label={
-          isSelected ? `${workout.workout_name} 선택됨` : `${workout.workout_name} 추가하기`
+          isSelected
+            ? `${workout.workout_name} 기록에서 제외하기`
+            : `${workout.workout_name} 추가하기`
         }
         aria-pressed={isSelected}
-        disabled={isSelected}
-        onClick={onAdd}
+        disabled={disabled}
+        onClick={isSelected ? onRemove : onUpsert}
       >
-        <SystemIcon
-          name={isSelected ? "circle-check-selected" : "circle-plus"}
-          mode="image"
-          size={24}
-        />
+        <SystemIcon name={isSelected ? "minus" : "plus"} size={18} />
       </button>
-    </article>
+    </SelectedCard>
   );
 }

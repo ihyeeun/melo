@@ -1,6 +1,6 @@
 .button {
   align-items: center;
-  color: var(--label-normal);
+  color: var(--text-primary);
   display: inline-flex;
   justify-content: center;
   margin-left: 0;
@@ -12,7 +12,7 @@
 }
 
 .button:disabled {
-  color: var(--label-assistive);
+  color: var(--text-tertiary);
   cursor: not-allowed;
 }
 

@@ -25,7 +25,7 @@ export default function StepBody({ data, update }: StepComponentProps) {
   return (
     <section className={`${styles.content} ${styles.onboardingStepReadable}`}>
       <div className={styles.onboardingTitle}>
-        <h2 className="typo-title1">키 / 몸무게가 몇인가요?</h2>
+        <h2 className="title-l-semi">키 / 몸무게가 몇인가요?</h2>
       </div>
 
       <div className={styles.onboardingBodyList}>
@@ -86,7 +86,7 @@ export function InputCard({
 }: InputCardProps) {
   return (
     <Field.Root className={styles.onboardingInputCard}>
-      <Field.Label className={`${styles.textNormal} typo-title3`}>{label}</Field.Label>
+      <Field.Label className={`${styles.textNormal} title-s-semi`}>{label}</Field.Label>
 
       <div className={styles.onboardingInputCardInput}>
         <NumberInput

@@ -2,7 +2,7 @@
 import type { Activity, Stack } from "@stackflow/core";
 import { id as createStackflowActivityId } from "@stackflow/core";
 import { devtoolsPlugin } from "@stackflow/plugin-devtools";
-import { historySyncPlugin } from "@stackflow/plugin-history-sync";
+import { historySyncPlugin, type RouteLike } from "@stackflow/plugin-history-sync";
 import { stackDepthChangePlugin } from "@stackflow/plugin-stack-depth-change";
 import type { StackflowReactPlugin } from "@stackflow/react";
 import { stackflow, useActivity } from "@stackflow/react";
@@ -39,7 +39,7 @@ import { setStackflowNavigateBackHandler } from "./stackflowNavigationController
 import styles from "./StackflowRuntime.module.css";
 
 type ActivityParams = Record<string, string | undefined>;
-type RoutePath = string | string[];
+type RoutePath = RouteLike<ComponentType>;
 
 export type To =
   | string
@@ -95,9 +95,6 @@ type SwipeBackTransitionOptions = {
 type SwipeBackTransitionRequester = (options: SwipeBackTransitionOptions) => boolean;
 
 const HomePage = createLazyActivity(() => import("@/features/home/pages/HomePage"));
-const TodayMealScorePage = createLazyActivity(
-  () => import("@/features/home/pages/TodayMealScorePage"),
-);
 const WorkoutRecordPage = createLazyActivity(
   () => import("@/features/health/pages/WorkoutRecordPage"),
 );
@@ -113,10 +110,11 @@ const WorkoutDetailSheetPage = createLazyActivity(
 const WorkoutUpsertPage = createLazyActivity(
   () => import("@/features/health/pages/WorkoutUpsertPage"),
 );
-const MealDetailPage = createLazyActivity(() => import("@/features/meal-record/MealDetailPage"));
-const MealRecordPage = createLazyActivity(() => import("@/features/meal-record/MealRecordPage"));
-const NutrientAddPage = createLazyActivity(
-  () => import("@/features/nutrient-entry/NutrientAddPage"),
+const MealDetailPage = createLazyActivity(
+  () => import("@/features/meal-record/pages/MealDetailPage"),
+);
+const MealRecordPage = createLazyActivity(
+  () => import("@/features/meal-record/pages/MealRecordPage"),
 );
 const NutrientModifyPage = createLazyActivity(
   () => import("@/features/nutrient-entry/NutrientModifyPage"),
@@ -130,7 +128,7 @@ const AppOpenSettingsFeedbackPage = createLazyActivity(
 );
 const BrandSearch = createLazyActivity(() => import("@/features/search/brand/BrandSearch"));
 const MealSearchPage = createLazyActivity(
-  () => import("@/features/search/menu-record/MealSearchPage"),
+  () => import("@/features/search/menu-record/pages/MealSearchPage"),
 );
 const CreateFolderPage = createLazyActivity(
   () => import("@/features/personal-menu/folder/pages/CreateFolderPage"),
@@ -145,7 +143,6 @@ const SettingsPage = createLazyActivity(() => import("@/features/settings/Settin
 const SettingsSubCodePage = createLazyActivity(
   () => import("@/features/settings/SettingsSubCodePage"),
 );
-const TermsPage = createLazyActivity(() => import("@/features/terms/TermsPage"));
 const MenuBoardCameraPage = createGuardedLazyActivity(
   FEATURE_GUARD.MENU_BOARD_CAMERA,
   () => import("@/features/camera/pages/MenuBoardImageRecommendationPage"),
@@ -157,13 +154,13 @@ const FoodCameraPage = createGuardedLazyActivity(
   FEATURE_GUARD.FOOD_CAMERA,
   () => import("@/features/camera/pages/MealRecordCreatePage"),
 );
-const ProfilePage = createLazyActivity(() => import("@/features/profile/ProfilePage"));
-const GoalEditPage = createLazyActivity(() => import("@/features/profile/GoalEditPage"));
+const ProfilePage = createLazyActivity(() => import("@/features/profile/pages/ProfilePage"));
+const GoalEditPage = createLazyActivity(() => import("@/features/profile/pages/GoalEditPage"));
 const GoalEditTargetCaloriesPage = createLazyActivity(
-  () => import("@/features/profile/GoalEditTargetCaloriesPage"),
+  () => import("@/features/profile/pages/GoalEditTargetCaloriesPage"),
 );
 const GoalEditNutrientPage = createLazyActivity(
-  () => import("@/features/profile/GoalEditNutrientPage"),
+  () => import("@/features/profile/pages/GoalEditNutrientPage"),
 );
 const ChatPage = createGuardedLazyActivity(
   FEATURE_GUARD.CHAT,
@@ -181,7 +178,7 @@ const ChatNutritionDetailActivity = createGuardedLazyActivity(
   FEATURE_GUARD.CHAT,
   () => import("@/features/chat/pages/ChatMenuDetailPage"),
 );
-const DiaryPage = createLazyActivity(() => import("@/features/diary/DiaryPage"));
+const DiaryPage = createLazyActivity(() => import("@/features/diary/pages/DiaryPage"));
 const RecommendResultPage = createLazyActivity(
   () => import("@/features/chat/pages/RecommendResultPage"),
 );
@@ -200,12 +197,17 @@ const ChatFoodCameraPage = createGuardedLazyActivity(
   () => import("@/features/camera/pages/FoodImageFeedbackPage"),
 );
 const AppInfoPage = createLazyActivity(() => import("@/features/kakao-web-auth/pages/AppInfoPage"));
+const MenstruationPage = createLazyActivity(
+  () => import("@/features/menstruation/pages/MenstruationRecordPage"),
+);
+const WaterIntakeRecordPage = createLazyActivity(
+  () => import("@/features/water-intake/pages/WaterIntakeRecordPage"),
+);
 
 const ACTIVITIES = {
   Home: HomePage,
   HomeWeightLogSheet,
   HomeStepsLogSheet,
-  TodayMealScore: TodayMealScorePage,
   WorkoutRecord: WorkoutRecordPage,
   WorkoutRecordEdit: WorkoutRecordEditPage,
   WorkoutSearch: WorkoutSearchPage,
@@ -218,7 +220,6 @@ const ACTIVITIES = {
   Settings: SettingsPage,
   SettingsFeedback: SettingsFeedbackPage,
   SettingsSubCode: SettingsSubCodePage,
-  Terms: TermsPage,
   MealRecord: MealRecordPage,
   MealRecordAddSearch: MealSearchPage,
   MealDetail: MealDetailPage,
@@ -226,7 +227,6 @@ const ACTIVITIES = {
   FolderDetail: FolderDetailPage,
   MenuBoardCamera: MenuBoardCameraPage,
   FoodCamera: FoodCameraPage,
-  NutrientAdd: NutrientAddPage,
   NutrientCamera: NutrientCameraPage,
   NutrientAddRegister: NutrientRegisterPage,
   NutrientAddModify: NutrientModifyPage,
@@ -246,13 +246,14 @@ const ACTIVITIES = {
   ChatCamera: ChatCameraPage,
   ChatFoodCamera: ChatFoodCameraPage,
   AppInfo: AppInfoPage,
+  Menstruation: MenstruationPage,
+  WaterIntakeRecordPage,
 };
 
 const ACTIVITY_ROUTES: Record<keyof typeof ACTIVITIES, RoutePath> = {
   Home: [PATH.HOME, PATH.ROOT],
   HomeWeightLogSheet: PATH.HOME_WEIGHT_LOG_SHEET,
   HomeStepsLogSheet: PATH.HOME_STEPS_LOG_SHEET,
-  TodayMealScore: PATH.TODAY_MEAL_SCORE,
   WorkoutRecord: PATH.WORKOUT_RECORD,
   WorkoutRecordEdit: PATH.WORKOUT_RECORD_EDIT,
   WorkoutSearch: PATH.WORKOUT_RECORD_SEARCH,
@@ -265,7 +266,6 @@ const ACTIVITY_ROUTES: Record<keyof typeof ACTIVITIES, RoutePath> = {
   Settings: PATH.SETTINGS,
   SettingsFeedback: PATH.SETTINGS_FEEDBACK,
   SettingsSubCode: PATH.SETTINGS_SUB_CODE,
-  Terms: PATH.TERMS,
   MealRecord: PATH.MEAL_RECORD,
   MealRecordAddSearch: PATH.MEAL_RECORD_ADD_SEARCH,
   MealDetail: PATH.MEAL_DETAIL,
@@ -273,7 +273,6 @@ const ACTIVITY_ROUTES: Record<keyof typeof ACTIVITIES, RoutePath> = {
   FolderDetail: PATH.FOLDER_DETAIL,
   MenuBoardCamera: PATH.MENU_BOARD_CAMERA,
   FoodCamera: PATH.FOOD_CAMERA,
-  NutrientAdd: PATH.NUTRIENT_ADD,
   NutrientCamera: PATH.NUTRIENT_CAMERA,
   NutrientAddRegister: PATH.NUTRIENT_ADD_REGISTER,
   NutrientAddModify: PATH.NUTRIENT_ADD_MODIFY,
@@ -293,6 +292,8 @@ const ACTIVITY_ROUTES: Record<keyof typeof ACTIVITIES, RoutePath> = {
   ChatCamera: PATH.CHAT_CAMERA,
   ChatFoodCamera: PATH.CHAT_FOOD_CAMERA,
   AppInfo: PATH.APP_INFO,
+  Menstruation: PATH.MENSTRUATION_RECORD,
+  WaterIntakeRecordPage: PATH.WATER_INTAKE_RECORD,
 };
 
 type ActivityName = keyof typeof ACTIVITY_ROUTES;
@@ -305,6 +306,7 @@ const BOTTOM_SHEET_ACTIVITY_NAMES = new Set<ActivityName>([
 ]);
 
 const STACK_TRANSITION_DURATION = 270;
+const PROGRAMMATIC_POPSTATE_TIMEOUT = 3000;
 const EDGE_SWIPE_WIDTH = 44;
 const SWIPE_CANCEL_DISTANCE = -12;
 const SWIPE_START_DISTANCE = 4;
@@ -318,6 +320,8 @@ const activityNavigationStateMap = new Map<string, unknown>();
 const stackflowBackHandlerMap = new Map<string, StackflowBackHandler>();
 let lastScreenViewKey: string | null = null;
 let pruneActivityNavigationStateTimeoutId: number | null = null;
+let programmaticPopStateTimeoutId: number | null = null;
+let pendingProgrammaticPopStateCount = 0;
 let activeSwipeBackTransitionRequester: SwipeBackTransitionRequester | null = null;
 
 function createLazyActivity(loader: () => Promise<{ default: ComponentType }>) {
@@ -326,7 +330,7 @@ function createLazyActivity(loader: () => Promise<{ default: ComponentType }>) {
   return function LazyActivity() {
     return (
       // 페이지 이동마다 생기는 로딩. 각 탭 페이지의 chunk가 로드되면 보여지지 않음
-      <Suspense fallback={<LoadingScreen background="var(--bg-normal)" />}>
+      <Suspense fallback={<LoadingScreen background="var(--background-gray-1)" />}>
         <LazyPage />
       </Suspense>
     );
@@ -380,9 +384,17 @@ function toPathString(to: To) {
   return `${pathname}${normalizeSearch(to.search)}${normalizeHash(to.hash)}`;
 }
 
-function getRoutePaths(activityName: ActivityName): readonly string[] {
+function getRouteDefinitions(activityName: ActivityName) {
   const route = ACTIVITY_ROUTES[activityName];
-  return typeof route === "string" ? [route] : route;
+  const routeDefinitions = Array.isArray(route) ? route : [route];
+
+  return routeDefinitions.map((routeDefinition) =>
+    typeof routeDefinition === "string" ? { path: routeDefinition } : routeDefinition,
+  );
+}
+
+function getRoutePaths(activityName: ActivityName): readonly string[] {
+  return getRouteDefinitions(activityName).map(({ path }) => path);
 }
 
 function getPrimaryRoutePath(activityName: ActivityName) {
@@ -446,7 +458,11 @@ function splitPath(path: string) {
 
 function getComparablePath(path: string) {
   const { pathname, search, hash } = splitPath(path);
-  return `${normalizePathname(pathname)}${search}${hash}`;
+  const searchParams = new URLSearchParams(search);
+  searchParams.sort();
+  const normalizedSearch = searchParams.toString();
+
+  return `${normalizePathname(pathname)}${normalizedSearch ? `?${normalizedSearch}` : ""}${hash}`;
 }
 
 function getCurrentBrowserPath() {
@@ -455,7 +471,16 @@ function getCurrentBrowserPath() {
 
 function getActivityPath(activity: Activity) {
   const contextPath = (activity.context as { path?: string } | undefined)?.path;
-  if (contextPath) return contextPath;
+  if (
+    contextPath &&
+    isActivityName(activity.name) &&
+    getRoutePaths(activity.name).some(
+      (routePath) =>
+        normalizePathname(splitPath(contextPath).pathname) === normalizePathname(routePath),
+    )
+  ) {
+    return contextPath;
+  }
 
   if (isActivityName(activity.name)) {
     return makePathFromActivity(activity.name, activity.params);
@@ -521,6 +546,129 @@ function getActiveStackActivities() {
     .getStack()
     .activities.filter((activity) => !activity.exitedBy)
     .sort((prev, next) => prev.enteredBy.eventDate - next.enteredBy.eventDate);
+}
+
+function findPreviousActivityIndexByPath(activities: Activity[], to: To) {
+  const targetPath = getComparablePath(toPathString(to));
+
+  for (let index = activities.length - 2; index >= 0; index -= 1) {
+    if (getComparablePath(getActivityPath(activities[index])) === targetPath) {
+      return index;
+    }
+  }
+
+  const targetActivity = resolveActivityForPath(to);
+  if (!targetActivity) {
+    return -1;
+  }
+
+  // A caller may only know the stable meal params while the existing activity also carries
+  // selection context. Prefer the nearest compatible activity instead of rebuilding the path.
+  for (let index = activities.length - 2; index >= 0; index -= 1) {
+    const activity = activities[index];
+    if (activity.name !== targetActivity.activityName) {
+      continue;
+    }
+
+    if (
+      targetActivity.activityName === "MealRecordAddSearch" &&
+      targetActivity.params.selectionTarget !== "folder" &&
+      activity.params.selectionTarget === "folder"
+    ) {
+      continue;
+    }
+
+    const hasCompatibleParams = Object.entries(targetActivity.params).every(
+      ([key, value]) => activity.params[key] === value,
+    );
+    if (hasCompatibleParams) {
+      return index;
+    }
+  }
+
+  return -1;
+}
+
+function getDefaultHistoryEntries(activityName: ActivityName, params: ActivityParams) {
+  const definedParams = Object.fromEntries(
+    Object.entries(params).filter((entry): entry is [string, string] => entry[1] !== undefined),
+  );
+  const defaultHistory = getRouteDefinitions(activityName)
+    .find((routeDefinition) => routeDefinition.defaultHistory)
+    ?.defaultHistory?.(definedParams);
+
+  return Array.isArray(defaultHistory) ? defaultHistory : (defaultHistory?.entries ?? []);
+}
+
+function getDefaultHistoryActivities(activityName: ActivityName, params: ActivityParams) {
+  return getDefaultHistoryEntries(activityName, params).flatMap((entry) =>
+    isActivityName(entry.activityName)
+      ? [
+          {
+            activityName: entry.activityName,
+            params: entry.activityParams as ActivityParams,
+          },
+        ]
+      : [],
+  );
+}
+
+function isSameActivity(
+  activity: Activity | undefined,
+  target: { activityName: ActivityName; params: ActivityParams },
+) {
+  return (
+    activity?.name === target.activityName &&
+    Object.entries(target.params).every(([key, value]) => activity.params[key] === value)
+  );
+}
+
+function pushDefaultHistoryActivities(activityName: ActivityName, params: ActivityParams) {
+  const activities = getDefaultHistoryActivities(activityName, params);
+
+  activities.forEach((activity) => {
+    const activeActivity = getActiveActivity();
+    if (isSameActivity(activeActivity, activity)) {
+      return;
+    }
+
+    const result = stackflowActions.push(activity.activityName, activity.params, {
+      animate: false,
+    });
+    setActivityNavigationState(result.activityId, null);
+  });
+}
+
+function expectProgrammaticPopStates(count: number) {
+  if (typeof window === "undefined" || count <= 0) {
+    return;
+  }
+
+  pendingProgrammaticPopStateCount += count;
+
+  if (programmaticPopStateTimeoutId !== null) {
+    window.clearTimeout(programmaticPopStateTimeoutId);
+  }
+
+  programmaticPopStateTimeoutId = window.setTimeout(() => {
+    programmaticPopStateTimeoutId = null;
+    pendingProgrammaticPopStateCount = 0;
+  }, PROGRAMMATIC_POPSTATE_TIMEOUT);
+}
+
+export function consumeExpectedStackflowPopState() {
+  if (pendingProgrammaticPopStateCount <= 0) {
+    return false;
+  }
+
+  pendingProgrammaticPopStateCount -= 1;
+
+  if (pendingProgrammaticPopStateCount === 0 && programmaticPopStateTimeoutId !== null) {
+    window.clearTimeout(programmaticPopStateTimeoutId);
+    programmaticPopStateTimeoutId = null;
+  }
+
+  return true;
 }
 
 function getActiveActivity() {
@@ -986,6 +1134,53 @@ const { Stack: InternalStackflowStack, actions: stackflowActions } = stackflow({
   ],
 });
 
+function replaceActivityWithDefaultHistory(
+  targetActivity: { activityName: ActivityName; params: ActivityParams },
+  options?: NavigateOptions,
+) {
+  const defaultHistoryActivities = getDefaultHistoryActivities(
+    targetActivity.activityName,
+    targetActivity.params,
+  );
+  const [firstParentActivity, ...remainingParentActivities] = defaultHistoryActivities;
+
+  if (!firstParentActivity) {
+    const activityId = createStackflowActivityId();
+    const result = stackflowActions.replace(targetActivity.activityName, targetActivity.params, {
+      ...(options?.animate == null ? undefined : { animate: options.animate }),
+      activityId,
+    });
+    setActivityNavigationState(result.activityId, options?.state);
+    return;
+  }
+
+  if (!isSameActivity(getActiveActivity(), firstParentActivity)) {
+    const parentResult = stackflowActions.replace(
+      firstParentActivity.activityName,
+      firstParentActivity.params,
+      {
+        animate: false,
+        activityId: createStackflowActivityId(),
+      },
+    );
+    setActivityNavigationState(parentResult.activityId, null);
+  }
+
+  remainingParentActivities.forEach((parentActivity) => {
+    const parentResult = stackflowActions.push(parentActivity.activityName, parentActivity.params, {
+      animate: false,
+    });
+    setActivityNavigationState(parentResult.activityId, null);
+  });
+
+  const targetResult = stackflowActions.push(
+    targetActivity.activityName,
+    targetActivity.params,
+    options?.animate == null ? undefined : { animate: options.animate },
+  );
+  setActivityNavigationState(targetResult.activityId, options?.state);
+}
+
 export function navigate(to: To, options?: NavigateOptions): void;
 export function navigate(delta: number): void;
 export function navigate(toOrDelta: To | number, options?: NavigateOptions) {
@@ -1004,21 +1199,41 @@ export function navigate(toOrDelta: To | number, options?: NavigateOptions) {
     return;
   }
 
-  const actionOptions = options?.animate == null ? undefined : { animate: options.animate };
-  const result = options?.replace
-    ? (() => {
-        const activityId = createStackflowActivityId();
+  if (options?.replace) {
+    replaceActivityWithDefaultHistory(resolved, options);
+    pruneActivityNavigationStateMap();
+    return;
+  }
 
-        return stackflowActions.replace(resolved.activityName, resolved.params, {
-          ...actionOptions,
-          activityId,
-        });
-      })()
-    : stackflowActions.push(resolved.activityName, resolved.params, actionOptions);
+  pushDefaultHistoryActivities(resolved.activityName, resolved.params);
+  const actionOptions = options?.animate == null ? undefined : { animate: options.animate };
+  const result = stackflowActions.push(resolved.activityName, resolved.params, actionOptions);
 
   setActivityNavigationState(result.activityId, options?.state);
   pruneActivityNavigationStateMap();
 }
+
+type NavigateBackAndPushOptions = {
+  animate?: boolean;
+  count?: number;
+  fallbackOptions?: NavigateOptions;
+  fallbackTo?: To;
+  pushOptions?: Omit<NavigateOptions, "replace">;
+  skipBackHandler?: boolean;
+  to: To;
+};
+
+type NavigateBackToPathAndPushOptions = {
+  animate?: boolean;
+  backTo: To;
+  pushOptions?: Omit<NavigateOptions, "replace">;
+  skipBackHandler?: boolean;
+  to: To;
+};
+
+type NavigateBackThroughPathAndPushOptions = Omit<NavigateBackToPathAndPushOptions, "backTo"> & {
+  through: To;
+};
 
 export function navigateBackAndPush({
   animate = true,
@@ -1028,15 +1243,7 @@ export function navigateBackAndPush({
   skipBackHandler = false,
   to,
   fallbackTo = to,
-}: {
-  animate?: boolean;
-  count?: number;
-  fallbackOptions?: NavigateOptions;
-  fallbackTo?: To;
-  pushOptions?: Omit<NavigateOptions, "replace">;
-  skipBackHandler?: boolean;
-  to: To;
-}) {
+}: NavigateBackAndPushOptions) {
   if (runActiveBackHandler(skipBackHandler)) {
     return false;
   }
@@ -1063,6 +1270,7 @@ export function navigateBackAndPush({
   const actionOptions = pushOptions?.animate == null ? undefined : { animate: pushOptions.animate };
 
   // Buffer Stackflow events so pop + push is reduced as one navigation change.
+  expectProgrammaticPopStates(requestedCount);
   stackflowActions.dispatchEvent("Paused", {});
   try {
     stackflowActions.pop(requestedCount, { animate });
@@ -1079,6 +1287,185 @@ export function navigateBackAndPush({
   return true;
 }
 
+export function navigateBackToPathOrPushFromRoot({
+  animate = true,
+  fallbackOptions,
+  pushOptions,
+  skipBackHandler = false,
+  to,
+  fallbackTo = to,
+}: Omit<NavigateBackAndPushOptions, "count">) {
+  const activities = getActiveStackActivities();
+  const targetActivityIndex = findPreviousActivityIndexByPath(activities, to);
+
+  if (targetActivityIndex >= 0) {
+    return navigateBack({
+      animate,
+      count: activities.length - 1 - targetActivityIndex,
+      fallbackOptions,
+      fallbackTo,
+      skipBackHandler,
+    });
+  }
+
+  return navigateBackAndPush({
+    animate,
+    count: Math.max(1, activities.length - 1),
+    fallbackOptions,
+    fallbackTo,
+    pushOptions,
+    skipBackHandler,
+    to,
+  });
+}
+
+export function navigateBackToPathAndPushFromRoot({
+  animate = true,
+  backTo,
+  pushOptions,
+  skipBackHandler = false,
+  to,
+}: NavigateBackToPathAndPushOptions) {
+  if (runActiveBackHandler(skipBackHandler)) {
+    return false;
+  }
+
+  const backToActivity = resolveActivityForPath(backTo);
+  const nextActivity = resolveActivityForPath(to);
+  if (!backToActivity || !nextActivity) {
+    navigate(to, {
+      animate: false,
+      ...pushOptions,
+      replace: true,
+    });
+    return true;
+  }
+
+  const activities = getActiveStackActivities();
+  const backToActivityIndex = findPreviousActivityIndexByPath(activities, backTo);
+
+  const pushAnimate = pushOptions?.animate ?? animate;
+  const backToDefaultHistoryActivities = getDefaultHistoryActivities(
+    backToActivity.activityName,
+    backToActivity.params,
+  );
+  const backCount =
+    backToActivityIndex >= 0
+      ? activities.length - 1 - backToActivityIndex
+      : Math.max(0, activities.length - 1);
+
+  expectProgrammaticPopStates(backCount);
+
+  stackflowActions.dispatchEvent("Paused", {});
+  try {
+    if (backToActivityIndex >= 0) {
+      stackflowActions.pop(activities.length - 1 - backToActivityIndex, { animate });
+    } else if (activities.length > 1) {
+      stackflowActions.pop(activities.length - 1, { animate });
+
+      backToDefaultHistoryActivities.forEach((parentActivity, index) => {
+        if (index === 0 && isSameActivity(activities[0], parentActivity)) {
+          return;
+        }
+
+        const parentResult = stackflowActions.push(
+          parentActivity.activityName,
+          parentActivity.params,
+          { animate: false },
+        );
+        setActivityNavigationState(parentResult.activityId, null);
+      });
+
+      const backToResult = stackflowActions.push(
+        backToActivity.activityName,
+        backToActivity.params,
+        { animate: false },
+      );
+      setActivityNavigationState(backToResult.activityId, null);
+    } else {
+      const [rootActivity, ...childActivities] = [
+        ...backToDefaultHistoryActivities,
+        backToActivity,
+      ];
+      const rootResult = stackflowActions.replace(rootActivity.activityName, rootActivity.params, {
+        animate: false,
+        activityId: createStackflowActivityId(),
+      });
+      setActivityNavigationState(rootResult.activityId, null);
+
+      childActivities.forEach((childActivity) => {
+        const childResult = stackflowActions.push(
+          childActivity.activityName,
+          childActivity.params,
+          { animate: false },
+        );
+        setActivityNavigationState(childResult.activityId, null);
+      });
+    }
+
+    const nextResult = stackflowActions.push(nextActivity.activityName, nextActivity.params, {
+      animate: pushAnimate,
+    });
+    setActivityNavigationState(nextResult.activityId, pushOptions?.state);
+  } finally {
+    stackflowActions.dispatchEvent("Resumed", {});
+    pruneActivityNavigationStateMap();
+    if (animate || pushAnimate) {
+      scheduleActivityNavigationStatePrune();
+    }
+  }
+
+  return true;
+}
+
+/**
+ * Removes the matched activity as well as every activity above it, then pushes the next path.
+ *
+ * Example: Origin -> PreviousDetail -> Modify becomes Origin -> NextDetail without relying on a
+ * fixed pop count. If the previous detail is no longer in the stack, only the active activity is
+ * replaced so that the unknown origin stack remains intact.
+ */
+export function navigateBackThroughPathAndPush({
+  animate = true,
+  pushOptions,
+  skipBackHandler = false,
+  through,
+  to,
+}: NavigateBackThroughPathAndPushOptions) {
+  const activities = getActiveStackActivities();
+  const throughActivityIndex = findPreviousActivityIndexByPath(activities, through);
+
+  if (throughActivityIndex > 0) {
+    return navigateBackAndPush({
+      animate,
+      count: activities.length - throughActivityIndex,
+      pushOptions,
+      skipBackHandler,
+      to,
+    });
+  }
+
+  if (throughActivityIndex === 0) {
+    if (runActiveBackHandler(skipBackHandler)) {
+      return false;
+    }
+
+    resetStackflow(to, {
+      animate: pushOptions?.animate ?? animate,
+      state: pushOptions?.state,
+    });
+    return true;
+  }
+
+  return navigateBackAndPush({
+    animate,
+    count: 1,
+    pushOptions,
+    skipBackHandler,
+    to,
+  });
+}
+
 export function navigateBack({
   animate = true,
   count = 1,
@@ -1092,6 +1479,10 @@ export function navigateBack({
   fallbackTo?: To;
   skipBackHandler?: boolean;
 } = {}) {
+  if (runActiveBackHandler(skipBackHandler)) {
+    return false;
+  }
+
   const backStackDepth = getBackStackDepth(stackflowActions.getStack());
   const safeCount = Math.min(Math.max(1, count), Math.max(0, backStackDepth - 1));
 
@@ -1102,17 +1493,15 @@ export function navigateBack({
       count: safeCount,
       fallbackOptions,
       fallbackTo,
-      skipBackHandler,
+      // The handler already allowed this navigation before the transition started.
+      skipBackHandler: true,
     }) === true
   ) {
     return true;
   }
 
-  if (runActiveBackHandler(skipBackHandler)) {
-    return false;
-  }
-
   if (safeCount > 0) {
+    expectProgrammaticPopStates(safeCount);
     stackflowActions.pop(safeCount, { animate });
     pruneActivityNavigationStateMap();
     if (animate) {
@@ -1153,17 +1542,34 @@ function replaceStackWithActivity({
 }) {
   const stack = stackflowActions.getStack();
   const backStackDepth = getBackStackDepth(stack);
+  const defaultHistoryActivities = getDefaultHistoryActivities(activityName, params);
+  const nextActivities = [
+    ...defaultHistoryActivities,
+    {
+      activityName,
+      params,
+    },
+  ];
 
   for (let index = 1; index < backStackDepth; index += 1) {
     stackflowActions.dispatchEvent("Popped", { skipExitActiveState: true });
   }
 
-  const result = stackflowActions.replace(activityName, params, {
-    animate,
+  const [rootActivity, ...childActivities] = nextActivities;
+  const rootResult = stackflowActions.replace(rootActivity.activityName, rootActivity.params, {
+    animate: childActivities.length === 0 ? animate : false,
     activityId: createStackflowActivityId(),
   });
+  setActivityNavigationState(rootResult.activityId, childActivities.length === 0 ? state : null);
 
-  setActivityNavigationState(result.activityId, state);
+  childActivities.forEach((childActivity, index) => {
+    const isTargetActivity = index === childActivities.length - 1;
+    const result = stackflowActions.push(childActivity.activityName, childActivity.params, {
+      animate: isTargetActivity ? animate : false,
+    });
+
+    setActivityNavigationState(result.activityId, isTargetActivity ? state : null);
+  });
   pruneActivityNavigationStateMap();
 }
 
@@ -1221,6 +1627,7 @@ export function pushStackflowPath(to: To, { animate = true }: { animate?: boolea
     return;
   }
 
+  pushDefaultHistoryActivities(resolved.activityName, resolved.params);
   const result = stackflowActions.push(resolved.activityName, resolved.params, { animate });
   setActivityNavigationState(result.activityId, null);
   pruneActivityNavigationStateMap();
@@ -1255,7 +1662,7 @@ export function syncStackflowWithCurrentBrowserPath({
     return;
   }
 
-  stackflowActions.replace(resolved.activityName, resolved.params, { animate });
+  replaceActivityWithDefaultHistory(resolved, { animate, replace: true, state: null });
   pruneActivityNavigationStateMap();
 }
 

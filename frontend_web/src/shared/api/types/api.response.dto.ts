@@ -165,6 +165,12 @@ export interface FolderDetailResponseDto {
   menu_input_modes: Array<0 | 1>;
 }
 
+export interface RecentMenuResponseDto {
+  menu_id: number;
+  menu_name: string;
+  brand?: string;
+}
+
 /* ======
  * 채팅
  * ====== */
@@ -200,24 +206,6 @@ export interface ChatGeneralResponseDto extends ChatResponseBaseDto {
 
 export interface ChatMealRecordParseResponseDto extends ChatResponseBaseDto {
   chat_category: "meal_record_parse";
-  meal_record_parse?: {
-    date?: string;
-    time?: 0 | 1 | 2 | 3 | 4;
-    menu_ids: number[];
-    parsed_items: Array<{
-      name: string;
-      brand?: string;
-      category: string;
-      quantityG: number;
-    }>;
-    matched_menus: Array<{
-      menu_id: number;
-      menu_name: string;
-      quantity_g: number;
-      input_menu_name: string;
-    }>;
-    menu_quantities: number[];
-  };
 }
 
 export interface ChatNutritionLabelFeedbackResponseDto extends ChatResponseBaseDto {
@@ -293,6 +281,9 @@ export interface ChatFeedbackMenuResponseDto {
   score: number;
   is_appropriate: boolean;
   data_source: number;
+  estimated_quantity?: number;
+  estimated_quantity_unit?: string;
+  estimated_calories?: number;
 }
 
 export interface ChatHistoryResponseDto {
@@ -402,4 +393,25 @@ export interface WorkoutDetailResponseDto {
 
 export interface WorkoutIdResponseDto {
   workout_id: number;
+}
+
+/* ======
+ * 월경 기록
+ * ====== */
+export interface MenstrualRecordsResponseDto {
+  recorded_ranges: MenstrualDateRangeResponseDto[];
+  has_older: boolean;
+}
+
+export interface MenstrualDateRangeResponseDto {
+  start_date: string;
+  end_date: string;
+}
+
+/* ======
+ * 물 섭취 기록
+ * ====== */
+export interface WaterIntakeResponseDto {
+  cup_size: number;
+  water_intake: number;
 }

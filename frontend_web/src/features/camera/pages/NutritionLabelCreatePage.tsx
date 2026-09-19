@@ -19,10 +19,11 @@ import {
   buildMenuSelectionPathContext,
   getMenuSelectionPath,
   getMenuSelectionRouteContextFromSearchParams,
+  getMenuSelectionSearchPath,
   type MenuSelectionPathParams,
 } from "@/features/menu-selection/utils/menuSelectionRoutes";
 import { PATH } from "@/router/path";
-import { getPathWithMeal } from "@/router/pathHelpers";
+import { getMealSearchPath, getPathWithMeal } from "@/router/pathHelpers";
 import { requestNativeCameraCapture } from "@/shared/api/bridge/nativeBridge";
 import type { MealType } from "@/shared/api/types/api.dto";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
@@ -36,10 +37,8 @@ import {
 } from "@/shared/navigation/stackflowNavigation";
 
 type NutritionLabelCreateLocationState = {
-  brand?: string;
   dateKey?: string;
   mealType?: MealType;
-  name?: string;
 };
 
 export default function NutrientCameraPage() {
@@ -76,38 +75,15 @@ export default function NutrientCameraPage() {
         : null,
     [dateKey, mealType, menuSelectionRouteContext],
   );
-  const foodName = searchParams.get("name") ?? locationState.name ?? "";
-  const brandName = searchParams.get("brand") ?? locationState.brand ?? "";
   const autoTriggeredRef = useRef(false);
 
   const returnFromCameraPage = useCallback(() => {
-    const nutrientAddFallbackPath = menuSelectionContext?.target
-      ? getMenuSelectionPath({
-          path: PATH.NUTRIENT_ADD,
-          ...menuSelectionContext,
-          extraSearchParams: {
-            name: foodName,
-            brand: brandName,
-          },
-        })
-      : getPathWithMeal(PATH.NUTRIENT_ADD, dateKey, mealType);
-
     navigateBack({
-      fallbackTo: nutrientAddFallbackPath,
-      fallbackOptions: {
-        state: {
-          name: foodName,
-          brand: brandName,
-        },
-      },
+      fallbackTo: menuSelectionContext?.target
+        ? getMenuSelectionSearchPath(menuSelectionContext)
+        : getMealSearchPath(dateKey, mealType),
     });
-  }, [
-    brandName,
-    dateKey,
-    foodName,
-    mealType,
-    menuSelectionContext,
-  ]);
+  }, [dateKey, mealType, menuSelectionContext]);
 
   const handleCameraActions = useCallback(async () => {
     if (isUploading) return;
@@ -147,8 +123,8 @@ export default function NutrientCameraPage() {
         animate: false,
         state: {
           ...imageData, // unit, weight, calories, carbs...
-          name: foodName,
-          brand: brandName,
+          name: "",
+          brand: "",
           entrySource: "camera" as const,
           dateKey,
           mealType,
@@ -164,8 +140,6 @@ export default function NutrientCameraPage() {
     }
   }, [
     dateKey,
-    foodName,
-    brandName,
     isUploading,
     mealType,
     menuSelectionContext,

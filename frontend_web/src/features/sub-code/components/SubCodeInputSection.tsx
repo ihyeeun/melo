@@ -42,7 +42,7 @@ export function SubCodeInputSection({
   return (
     <section className={styles.content}>
       <div className={styles.title}>
-        <Heading className={`${styles.titleHeading} typo-title1`}>구독 코드를 입력해주세요</Heading>
+        <Heading className={`${styles.titleHeading} title-l-semi`}>구독 코드를 입력해주세요</Heading>
       </div>
 
       <Field.Root className={styles.field}>
@@ -52,7 +52,7 @@ export function SubCodeInputSection({
           value={value}
           maxLength={maxLength}
           onChange={(event) => handleChange(event.target.value)}
-          className={`${styles.input} typo-h1`}
+          className={`${styles.input} title-xxl-semi`}
           placeholder="구독코드"
           aria-label="구독 코드"
           ref={inputRef}

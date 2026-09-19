@@ -43,19 +43,10 @@ export default function TodayBodyLogSection({ date }: { date: string }) {
   return (
     <>
       <div className={style.todayContainer}>
-        <TodayMetricCard title="체중" value={displayWeight} unit="kg" onClick={openWeightEditor} />
         <TodayMetricCard title="걸음 수" value={displaySteps} unit="보" onClick={openStepsEditor} />
+        <TodayMetricCard title="체중" value={displayWeight} unit="kg" onClick={openWeightEditor} />
       </div>
     </>
-  );
-}
-
-export function TodayBodyLogPreviewSection() {
-  return (
-    <div className={style.todayContainer}>
-      <TodayMetricCard title="체중" value={62.4} unit="kg" />
-      <TodayMetricCard title="걸음 수" value={4821} unit="보" />
-    </div>
   );
 }
 
@@ -74,14 +65,14 @@ function TodayMetricCard({
     <ActionCard onClick={onClick}>
       <div className={style.cardContainer}>
         <div className={style.cardTitleContainer}>
-          <p className="typo-title4">{title}</p>
-          {title === "체중" && <SystemIcon name="circle-plus-fill" mode="image" size={24} />}
+          <p className="body-l-semi">{title}</p>
+          <SystemIcon name="plus-circle" size={18} />
         </div>
         <div className={style.valueText}>
-          <span className={`typo-h2 amp-mask ${style.highlightValue}`}>
+          <span className={`title-l-semi amp-mask ${style.highlightValue}`}>
             {value.toLocaleString()}
           </span>
-          <span className="typo-caption3">{unit}</span>
+          <span className="body-m-regular">{unit}</span>
         </div>
       </div>
     </ActionCard>

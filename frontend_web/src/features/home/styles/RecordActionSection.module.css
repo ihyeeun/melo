@@ -1,0 +1,152 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.recordGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.mealRecordTitle {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+}
+
+.mealsArea {
+  background-color: var(--background-default);
+  border: 1px solid var(--border-subtle);
+  border-radius: 20px;
+  list-style: none;
+  margin: 0;
+  overflow: hidden;
+  padding: 0;
+}
+
+.mealButton {
+  background: none;
+  border: 0;
+  color: inherit;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px 20px;
+  text-align: left;
+  transition: background-color 120ms ease;
+  width: 100%;
+}
+
+.mealSkeletonButton {
+  cursor: default;
+  pointer-events: none;
+}
+
+.mealSkeletonAction {
+  margin-left: auto;
+}
+
+.mealButton:active,
+.workoutButton:active,
+.bodyLogButton:active {
+  background-color: var(--background-gray-1);
+  transform: scale(0.995);
+}
+
+.mealTitleArea {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+  width: 100%;
+}
+
+.mealItem + .mealItem {
+  border-top: 1px solid var(--border-subtle);
+}
+
+.mealIcon {
+  align-items: center;
+  background-color: var(--background-gray-1);
+  border-radius: 100px;
+  color: var(--text-disabled);
+  display: flex;
+  height: 30px;
+  justify-content: center;
+  width: 30px;
+}
+
+.mealIcon[data-selected="true"] {
+  background-color: var(--background-selected);
+  color: var(--btn-default);
+}
+
+.mealInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0 24px 0 38px;
+}
+
+.mealSummary {
+  min-width: 0;
+  overflow: hidden;
+  position: relative;
+  white-space: nowrap;
+}
+
+.mealSummaryMeasure {
+  pointer-events: none;
+  position: absolute;
+  visibility: hidden;
+  white-space: nowrap;
+}
+
+.workoutButton {
+  align-items: center;
+  display: flex;
+  padding: 20px 16px;
+}
+
+.workoutTitleGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.workoutSkeleton {
+  align-items: center;
+  display: flex;
+  width: 100%;
+}
+
+.bodyLogGroup {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.bodyLogButton {
+  display: flex;
+  flex-direction: column;
+  gap: 33px;
+  width: 100%;
+}
+
+.bodyLogTitle {
+  align-items: center;
+  display: flex;
+  width: 100%;
+}
+
+.bodyLogValue {
+  align-items: baseline;
+  display: flex;
+  gap: 2px;
+}
+
+.bodyLogValueWeight {
+  font-weight: var(--fw-medium);
+}

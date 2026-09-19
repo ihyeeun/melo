@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 
 import styles from "@/features/chat/styles/AssistantPendingMessage.module.css";
+import { LottieLoadingLogo } from "@/shared/commons/loading/LottieLoadingLogo";
 
 const LONG_WAIT_DELAY_MS = 5000;
 const LONG_WAIT_TRANSITION_MS = 320;
@@ -62,13 +63,8 @@ export function AssistantPendingMessage() {
 
       {isLongWaitVisible ? (
         <div className={styles.longWaitStatus} role="status" aria-live="polite">
-          <div className={styles.longWaitMarker} aria-hidden="true">
-            <span className={styles.longWaitDot} />
-            <span className={styles.longWaitDot} />
-            <span className={styles.longWaitDot} />
-            <span className={styles.longWaitDot} />
-          </div>
-          <p key={messageIndex} className={`${styles.longWaitText} typo-body3`}>
+          <LottieLoadingLogo className={`${styles.loadingLogo} ${styles.longWaitLogo}`} />
+          <p key={messageIndex} className={`${styles.longWaitText} body-s-medium`}>
             {getPendingStatusMessage(messageIndex)}
           </p>
         </div>

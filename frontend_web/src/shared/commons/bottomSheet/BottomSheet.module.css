@@ -23,7 +23,7 @@
 }
 
 .handle:global(.seed-bottom-sheet-handle__root) {
-  background-color: var(--static-black);
+  background-color: var(--gray-950);
   border-radius: 100px;
   height: 4px;
   position: relative;

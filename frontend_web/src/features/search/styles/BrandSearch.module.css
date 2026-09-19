@@ -1,5 +1,5 @@
 .page {
-  background-color: var(--bg-normal);
+  background-color: var(--background-gray-1);
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -33,59 +33,61 @@
 
 .brandItem {
   align-items: center;
-  background-color: var(--bg-white);
-  border: 1px solid var(--border-neutral);
-  border-radius: 8px;
-  display: inline-flex;
-  justify-content: space-between;
-  min-height: 44px;
+  display: flex;
+  background-color: var(--background-default);
+  border: 1px solid var(--border-subtle);
+  border-radius: 16px;
   padding: 16px 20px;
-  text-align: left;
   width: 100%;
+  gap: 10px;
 }
 
-.brandItemSelected {
-  background-color: var(--interaction-primary);
-  border-color: var(--primary-normal);
-}
-
-.brandName {
-  color: var(--label-normal);
-}
-
-.brandItemChevron {
-  color: var(--static-black);
-  margin-left: auto;
+.icon {
+  display: grid;
+  place-items: center;
+  height: 32px;
+  width: 32px;
+  border-radius: 50%;
+  border: 1px solid var(--border-default);
+  box-shadow: var(--shadow-outer);
+  flex-shrink: 0;
 }
 
 .emptyResult {
   align-items: center;
-  background-color: var(--bg-white);
-  border: 1px solid var(--border-neutral);
-  border-radius: 8px;
-  color: var(--label-normal);
   display: flex;
   flex-direction: column;
   justify-content: center;
-  padding: 30px 20px 26px;
   text-align: center;
+  gap: 10px;
 }
 
-.emptyResultSubText {
-  color: var(--label-normal);
-  margin-bottom: 10px;
+.addButton {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 4px;
+  border: 1px dashed var(--text-tertiary);
+  color: var(--text-tertiary);
+  border-radius: 16px;
+  padding: 20px 16px;
+  width: 100%;
+}
+
+.addButton:active {
+  background-color: var(--background-gray-2);
 }
 
 .placeholder {
-  background-color: var(--bg-white);
-  border: 1px solid var(--border-neutral);
+  background-color: var(--background-default);
+  border: 1px solid var(--border-subtle);
   border-radius: 8px;
   padding: 30px 20px;
   text-align: center;
 }
 
 .placeholderText {
-  color: var(--label-assistive);
+  color: var(--text-tertiary);
 }
 
 .footer {

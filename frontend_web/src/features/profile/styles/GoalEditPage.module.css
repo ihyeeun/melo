@@ -1,222 +1,256 @@
 .page {
-  background-color: var(--bg-normal);
+  background-color: var(--background-default);
+}
+
+.caloriesTitleGroup {
   display: flex;
   flex-direction: column;
-  height: 100%;
-  min-height: 100dvh;
-  width: 100%;
+  gap: 4px;
+  margin-top: 20px;
+  margin-bottom: 28px;
 }
 
-.pageWhite {
-  background-color: var(--bg-white);
+.calculateWeekMessage {
+  margin-top: 12px;
 }
 
-.main {
-  flex: 1;
-  overflow-y: auto;
-  padding: 0 20px;
+.content {
+  padding: 20px 0;
 }
 
-.loadingText {
-  color: var(--label-alternative);
+.planInfoAnchor {
+  display: flex;
+  height: 14px;
+  justify-content: center;
+  visibility: hidden;
+}
+
+.planInfoMessage {
   text-align: center;
 }
 
-.summarySection {
-  padding-bottom: 8px;
-}
-
-.summaryItem {
+.editItem {
   align-items: center;
-  border-bottom: 1px solid var(--gray-400);
   display: flex;
   justify-content: space-between;
-  padding: 20px 0;
-  text-align: left;
+  padding: 16px;
   width: 100%;
 }
 
-.summaryItem:last-child {
-  border-bottom: none;
+.editItem:active {
+  background-color: var(--background-gray-1);
 }
 
-.summaryLabel {
-  color: var(--label-normal);
+.editItem:nth-child(6) {
+  position: relative;
+  margin-top: 48px;
 }
 
-.summaryValueRow {
+.editItem:nth-child(6)::before {
+  content: "";
+  position: absolute;
+  top: -24px;
+  width: calc(100% - 32px);
+  height: 1px;
+  background: var(--border-default);
+}
+
+.birthYearItem {
+  cursor: pointer;
+  position: relative;
+}
+
+.birthYearSelect {
+  appearance: none;
+  cursor: pointer;
+  height: 100%;
+  inset: 0;
+  opacity: 0;
+  position: absolute;
+  width: 100%;
+}
+
+.profileMeta {
   align-items: center;
   display: inline-flex;
   gap: 4px;
 }
 
-.summaryValue {
-  color: var(--label-assistive);
-}
-
-.summaryChevron {
-  color: var(--interaction-normal);
-}
-
-.stageSection {
-  padding-bottom: 24px;
-}
-
-.footer {
-  padding: 0 20px var(--safe-area-bottom);
+/* bottom sheet 영역 */
+.sheetMain {
+  padding: 0 16px 34px;
 }
 
 .sheetContent {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  padding: 0 20px;
-}
-
-.sheetContent[data-editor-field="birthYear"] {
-  min-height: 460px;
-}
-
-.sheetBody {
   flex: 1;
   min-height: 0;
-  padding-bottom: 30px;
 }
 
-.sheetActions {
-  padding-top: 4px;
-}
-
-.editorSection {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  min-height: 0;
+.sheetActionButton {
+  margin-top: 18px;
 }
 
 .editorTitle {
-  color: var(--label-normal);
-  font-size: var(--fs-20);
+  font-size: 18px;
   font-weight: var(--fw-semibold);
-  letter-spacing: var(--letter-spacing-tight);
-  line-height: var(--line-height-145);
-  margin: 0;
-  padding: 0 4px;
+  line-height: 1.4;
+  letter-spacing: -0.025em;
+  color: var(--text-primary);
+  margin-bottom: 12px;
 }
 
 .genderGrid {
   display: grid;
-  gap: 8px;
-  grid-template-columns: 1fr 1fr;
-  height: 134px;
+  gap: 12px;
+  grid-template-columns: repeat(2, 1fr);
 }
 
-.selectableCard {
-  background: var(--bg-white);
-  border: 1px solid var(--border-neutral);
-  border-radius: 8px;
-  color: var(--label-normal);
-  cursor: pointer;
-  transition:
-    background-color 120ms ease,
-    border-color 120ms ease;
+.selectedCard {
+  padding: 10px 0;
+}
+
+.segmentCard {
+  padding: 20px;
+}
+
+.segmentCard + .segmentCard {
+  margin-top: 8px;
+}
+
+.segmentCard > p + p {
+  margin-top: 4px;
+}
+
+.weightNumberFieldGroup {
+  padding: 8px 0;
   width: 100%;
-}
-
-.selectableCardActive {
-  background: var(--interaction-primary);
-  border-color: var(--border-primary);
-}
-
-.selectableCard:focus-visible {
-  outline: 2px solid var(--border-primary);
-  outline-offset: 2px;
-}
-
-.genderGrid .selectableCard {
+  display: grid;
+  grid-template-columns: 28px 135px 28px;
   align-items: center;
-  display: flex;
   justify-content: center;
-  padding: 0;
+}
+
+.weightAdjustButton {
+  place-items: center;
+  border-radius: 50%;
+  display: grid;
+  height: 28px;
+  width: 28px;
+}
+
+.weightValueDisplay {
+  width: 100%;
   text-align: center;
 }
 
-.genderCardLabel {
-  font-size: var(--fs-18);
-  font-weight: var(--fw-semibold);
-  letter-spacing: var(--letter-spacing-tight);
-  line-height: var(--line-height-145);
+.weightNumberInput {
+  background: transparent;
+  border: 0;
+  margin: 0;
+  padding: 0;
+  text-align: end;
+  width: 4ch;
 }
 
-.optionList {
+.weightNumberInput::placeholder {
+  color: var(--text-disabled);
+}
+
+.weightNumberInput:focus,
+.weightNumberInput:focus-visible {
+  box-shadow: none;
+  outline: none;
+}
+
+/* 탄단지 비율 수정 페이지 */
+.nutrientTitleGroup {
+  margin-bottom: 28px;
+}
+.nutrientTitleGroup > h2 + p {
+  margin-top: 4px;
+}
+
+.macroEditCardGroup {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
-.optionList .selectableCard {
+.macroCard {
+  background-color: var(--background-default);
+  border: 1px solid var(--border-default);
+  border-radius: 16px;
+  padding: 20px;
+  width: 100%;
+}
+
+.macroInfo {
+  width: 100%;
   display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 3px;
-  padding: 16px 20px;
-  text-align: left;
+  align-items: center;
+  margin-bottom: 16px;
 }
 
-.optionTitle {
-  color: var(--label-normal);
+.macroAmount {
+  margin-left: auto;
+}
+.macroAmount > span + span::before {
+  content: "|";
+  margin: 0 7px;
+  color: var(--text-disabled);
 }
 
-.optionDescription {
-  color: var(--label-alternative);
+.macroInputArea {
+  background-color: var(--background-gray-1);
+  border-radius: 20px;
+  width: 100%;
+  padding: 4px;
+  display: grid;
+  grid-template-columns: 32px 1fr 32px;
 }
 
-.birthYearPicker {
-  flex: 1;
-  height: 320px;
-  min-height: 320px;
+.macroAdjustButton {
+  place-items: center;
+  border-radius: 50%;
+  background-color: var(--background-default);
+  box-shadow: var(--shadow-outer);
+  display: grid;
+  height: 32px;
+  width: 32px;
+  color: var(--text-primary);
 }
 
-.birthYearPickerItem {
-  color: var(--label-assistive);
+.macroAdjustButton:active {
+  background-color: var(--background-gray-1);
 }
 
-.birthYearPickerItem[data-distance="1"] {
-  color: var(--gray-600);
+.macroAdjustButton:disabled {
+  background-color: var(--background-gray-2);
+  color: var(--text-disabled);
 }
 
-.birthYearPickerItem[data-distance="2"] {
-  color: var(--gray-600);
+.macroInputSection {
+  text-align: center;
+  width: 100%;
 }
 
-.birthYearPickerItem[data-distance="3"] {
-  color: var(--gray-500);
+.macroInput {
+  background-color: transparent;
+  border: none;
+  text-align: end;
+  padding: 0;
+  width: 20%;
 }
 
-.birthYearPickerItemSelected {
-  color: var(--label-normal);
+.macroInput:focus-within {
+  outline: none;
 }
 
-.birthYearPickerHighlight {
-  background: var(--interaction-primary);
-  border: 1px solid var(--border-primary);
-  border-radius: 8px;
-  left: 12.5px;
-  right: 12.5px;
-}
-
-@media (max-height: 700px) {
-  .sheetContent[data-editor-field="birthYear"] {
-    min-height: 420px;
-  }
-
-  .sheetContent[data-editor-field="activity"],
-  .sheetContent[data-editor-field="goal"] {
-    min-height: 460px;
-  }
-
-  .birthYearPicker {
-    height: 290px;
-    min-height: 290px;
-  }
+.macroTotalCard {
+  display: flex;
+  align-items: center;
+  padding: 20px;
+  border-radius: 16px;
+  background-color: var(--background-gray-1);
+  width: 100%;
 }

@@ -1,3 +1,6 @@
+import { isToday } from "date-fns";
+import type { ReactNode } from "react";
+
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 
 import type { ViewMode } from "../types/calendar.types";
@@ -11,6 +14,7 @@ type Props = {
   onPrev: () => void;
   onNext: () => void;
   onToday: () => void;
+  headerAction?: ReactNode;
 };
 
 export default function CalendarHeader({
@@ -21,56 +25,78 @@ export default function CalendarHeader({
   onPrev,
   onNext,
   onToday,
+  headerAction,
 }: Props) {
-  const weekTitle = formatCalendarHeader(selectedDate, "week");
+  const weekTitle = isToday(selectedDate) ? "오늘" : formatCalendarHeader(selectedDate, "week");
   const monthTitle = formatCalendarHeader(viewDate, "month");
 
+  const isMonthView = viewMode === "month";
+  const hasHeaderAction = headerAction !== undefined && headerAction !== null;
+
   return (
-    <div className="calendar-header">
+    <div className="calendar-header" data-view={viewMode}>
       <div className="calendar-header-top">
         <div className="calendar-header-left">
           <button
             type="button"
             className="calendar-title-button"
             onClick={onToggleViewMode}
-            aria-label={viewMode === "week" ? "월 달력 펼치기" : "주 달력 접기"}
+            aria-expanded={isMonthView}
+            aria-label={isMonthView ? "주 달력 접기" : "월 달력 펼치기"}
           >
-            <span className="calendar-title-text typo-title3">
-              {viewMode === "week" ? weekTitle : "월간"}
+            <span className="calendar-title-viewport">
+              <span key={viewMode} className="calendar-title-text title-s-semi">
+                {isMonthView ? "월간 달력" : weekTitle}
+              </span>
             </span>
-            <SystemIcon
-              name="chevron-down-normal"
-              size={24}
-              className={`calendar-title-icon ${viewMode === "month" ? "is-open" : ""}`}
-            />
+            <SystemIcon name="chevron-down" size={12} className="calendar-title-icon" />
           </button>
         </div>
 
-        {viewMode === "month" && (
-          <div className="calendar-header-right">
-            <button
-              type="button"
-              className="calendar-today-button typo-label3"
-              onClick={onToday}
-              aria-label="오늘 날짜로 이동"
-            >
-              오늘
-            </button>
-          </div>
-        )}
+        <div
+          className="calendar-header-right"
+          data-has-action={hasHeaderAction}
+          aria-hidden={!isMonthView && !hasHeaderAction}
+        >
+          {headerAction}
+        </div>
       </div>
 
-      {viewMode === "month" && (
-        <div className="calendar-month-title">
-          <button type="button" className="calendar-nav-button" onClick={onPrev} aria-label="이전">
-            <SystemIcon name="chevron-left-normal" size={24} />
-          </button>
-          <p className="calendar-month-title-text typo-title3">{monthTitle}</p>
-          <button type="button" className="calendar-nav-button" onClick={onNext} aria-label="다음">
-            <SystemIcon name="chevron-right-normal" size={24} />
-          </button>
+      <div className="calendar-month-title-wrapper" aria-hidden={!isMonthView}>
+        <div className="calendar-month-title-clip">
+          <div className="calendar-month-title">
+            <button
+              type="button"
+              className="calendar-nav-button"
+              onClick={onPrev}
+              aria-label="이전 달"
+              tabIndex={isMonthView ? 0 : -1}
+            >
+              <SystemIcon name="arrow-filled-left" size={24} />
+            </button>
+            <p className="calendar-month-title-text title-m-semi">{monthTitle}</p>
+            <button
+              type="button"
+              className="calendar-nav-button"
+              onClick={onNext}
+              aria-label="다음 달"
+              tabIndex={isMonthView ? 0 : -1}
+            >
+              <SystemIcon name="arrow-filled-right" size={24} />
+            </button>
+          </div>
         </div>
-      )}
+        {isMonthView ? (
+          <button
+            type="button"
+            className="body-l-medium text-secondary calendar-today-action"
+            onClick={onToday}
+            aria-label="오늘 날짜로 이동"
+          >
+            오늘
+          </button>
+        ) : null}
+      </div>
     </div>
   );
 }

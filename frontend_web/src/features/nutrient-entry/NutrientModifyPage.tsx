@@ -28,10 +28,7 @@ import {
   toNullableFiniteNumber,
 } from "@/features/nutrient-entry/utils/nutrientFields";
 import { PATH } from "@/router/path";
-import {
-  getMealDetailPath,
-  getMealRecordPath,
-} from "@/router/pathHelpers";
+import { getMealDetailPath, getMealRecordPath } from "@/router/pathHelpers";
 import {
   type MealMenuItem,
   MENU_DATA_SOURCE,
@@ -43,11 +40,12 @@ import {
 } from "@/shared/api/types/api.dto";
 import { Button } from "@/shared/commons/button/Button";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
+import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import { LoadingOverlay } from "@/shared/commons/loading/Loading";
 import { toast } from "@/shared/commons/toast/toast";
 import {
   navigateBack,
-  navigateBackAndPush,
+  navigateBackThroughPathAndPush,
   useLocation,
   useNavigate,
   useSearchParams,
@@ -206,6 +204,24 @@ export default function NutrientModifyPage() {
     return getMealDetailPath(dateKey, mealType, targetMenuId);
   };
 
+  const navigateToSavedMenuDetail = (targetMenuId: number) => {
+    const detailPath = getMenuDetailPathByMode(targetMenuId);
+    // The modify route may add selection-only params (for example sourceMenuId) that were not on
+    // the source detail route. menuId is the stable identity needed to find that previous detail.
+    const sourceDetailPath = menuId === null ? null : `${PATH.MEAL_DETAIL}?menuId=${menuId}`;
+
+    if (sourceDetailPath === null) {
+      navigate(detailPath, { replace: true });
+      return;
+    }
+
+    navigateBackThroughPathAndPush({
+      animate: false,
+      through: sourceDetailPath,
+      to: detailPath,
+    });
+  };
+
   const handleBack = () => {
     navigateBack({ fallbackTo: getBackFallbackPath() });
   };
@@ -251,11 +267,7 @@ export default function NutrientModifyPage() {
         {
           onSuccess: () => {
             toast.success("영양 성분을 수정했어요");
-            navigateBackAndPush({
-              count: 2,
-              animate: false,
-              to: getMenuDetailPathByMode(menuId),
-            });
+            navigateToSavedMenuDetail(menuId);
           },
           onError: () => {
             toast.warning("영양 성분 수정에 실패했어요");
@@ -274,13 +286,7 @@ export default function NutrientModifyPage() {
         }
 
         toast.success("개인 메뉴로 등록했어요");
-        const detailPath = getMenuDetailPathByMode(createdMenuId);
-
-        navigateBackAndPush({
-          count: 2,
-          animate: false,
-          to: detailPath,
-        });
+        navigateToSavedMenuDetail(createdMenuId);
       },
       onError: () => {
         toast.warning("공용 데이터를 개인 데이터 등록하는데 실패했어요");
@@ -289,73 +295,57 @@ export default function NutrientModifyPage() {
   };
 
   return (
-    <section className={styles.page}>
+    <section className={`${styles.page} page`}>
       <PageHeader title="영양성분 수정" onBack={handleBack} />
 
-      <main className={styles.main}>
-        <div className={styles.content}>
-          <section className={styles.topSection}>
-            <p className={`typo-title1 ${styles.textNormal}`}>
-              {foodName || "메뉴 정보를 확인해주세요"}
-            </p>
-            {brandName && <p className={`typo-label4 textAssistive`}>{brandName}</p>}
-          </section>
+      <main className={`main ${styles.content}`}>
+        <section className={styles.menuNameGroup}>
+          {brandName && <p className={`body-xs-regular text-tertiary`}>{brandName}</p>}
+          <p className={`title-m-semi text-primary`}>{foodName || "메뉴 정보를 확인해주세요"}</p>
+        </section>
 
-          <section className={styles.nutrientSection}>
-            <div className={styles.nutrientHeader}>
-              <p className={`typo-title3 ${styles.textNormal}`}>영양정보</p>
-              <Button
-                variant="text"
-                interaction="normal"
-                size="small"
-                color="normal"
-                onClick={handleResetForm}
-              >
-                전체 삭제
-              </Button>
-            </div>
-
-            <div className="divider dividerMargin20" />
-
-            <section className={styles.nutrientFormWrap}>
-              <NutrientDetailForm
-                totalWeight={formState.weight}
-                onTotalWeightChange={(nextWeight) => {
-                  setEditedFormState((prev) => ({
-                    ...prev,
-                    weight: nextWeight,
-                  }));
-                }}
-                totalCalories={formState.calories}
-                onTotalCaloriesChange={(nextCalories) => {
-                  setEditedFormState((prev) => ({
-                    ...prev,
-                    calories: nextCalories,
-                  }));
-                }}
-                form={nutrientForm}
-                onFieldChange={handleFieldChange}
-                weightUnit={unit}
-                onWeightUnitChange={(nextUnit) => {
-                  setEditedFormState((prev) => ({
-                    ...prev,
-                    unit: nextUnit,
-                  }));
-                }}
-              />
-            </section>
-          </section>
+        <div className={styles.formClearActionArea}>
+          <button type="button" onClick={handleResetForm} className={styles.clearIcon}>
+            <SystemIcon name="refresh" size={20} className="text-tertiary" />
+            <span className="body-s-medium text-tertiary">전체 초기화</span>
+          </button>
         </div>
+
+        <section className={styles.formSection}>
+          <NutrientDetailForm
+            totalWeight={formState.weight}
+            onTotalWeightChange={(nextWeight) => {
+              setEditedFormState((prev) => ({
+                ...prev,
+                weight: nextWeight,
+              }));
+            }}
+            totalCalories={formState.calories}
+            onTotalCaloriesChange={(nextCalories) => {
+              setEditedFormState((prev) => ({
+                ...prev,
+                calories: nextCalories,
+              }));
+            }}
+            form={nutrientForm}
+            onFieldChange={handleFieldChange}
+            weightUnit={unit}
+            onWeightUnitChange={(nextUnit) => {
+              setEditedFormState((prev) => ({
+                ...prev,
+                unit: nextUnit,
+              }));
+            }}
+          />
+        </section>
       </main>
 
-      <footer className={styles.footer}>
+      <footer className={`footer`}>
         <Button
-          variant="filled"
-          size="large"
-          color="primary"
+          variant="default"
+          size="m"
           fullWidth
           onClick={handleSubmit}
-          interaction={isSubmitDisabled ? "disable" : "normal"}
           disabled={isSubmitDisabled}
         >
           수정하기

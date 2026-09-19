@@ -199,15 +199,15 @@ export default function SteptargetCalories({ data, update }: StepComponentProps)
       className={`${styles.content} ${styles.onboardingStepReadable} ${styles.goalCaloriesContent}`}
     >
       <div className={`${styles.onboardingTitle} ${styles.onboardingTitleGroup}`}>
-        <h2 className="typo-title1">목표 칼로리를 설정해주세요</h2>
+        <h2 className="title-l-semi">목표 칼로리를 설정해주세요</h2>
         {isPending ? (
           <div className={styles.onboardingLoadingRow}>
-            <p className={`${styles.textAlternative} typo-body2`}>
+            <p className={`${styles.textAlternative} body-l-medium`}>
               추천 목표 칼로리를 계산하고 있어요
             </p>
           </div>
         ) : (
-          <p className={`${styles.textAlternative} typo-body2`}>
+          <p className={`${styles.textAlternative} body-l-medium`}>
             추천하는 목표 칼로리는{" "}
             <span className="textNoWrap">
               {formattargetCalories(displayRecommendedCalories)}kcal
@@ -219,17 +219,17 @@ export default function SteptargetCalories({ data, update }: StepComponentProps)
 
       <div className={styles.goalCalorieContainer}>
         <button className={styles.onboardingGoalKcalTrigger} type="button" onClick={openEditor}>
-          <p className={`${styles.onboardingGoalKcalValue} textNoWrap typo-h1`}>
+          <p className={`${styles.onboardingGoalKcalValue} textNoWrap title-xxl-semi`}>
             {formattargetCalories(visibletargetCalories)} kcal
           </p>
-          <SystemIcon name="pencil-fill" size={24} />
+          <SystemIcon name="edit" size={24} />
         </button>
 
-        <p className={`${styles.onboardingGoalKcalHelper} typo-body1`}>{goalWeekMessage}</p>
+        <p className={`${styles.onboardingGoalKcalHelper} title-m-semi`}>{goalWeekMessage}</p>
       </div>
       <BottomSheet isOpen={open} onClose={() => setOpen(false)}>
         <div className={`${styles.onboardingGoalKcalSheet}`}>
-          <h3 className="typo-title2">목표 칼로리</h3>
+          <h3 className="title-m-semi">목표 칼로리</h3>
           <EditorInput
             inputRef={inputRef}
             type="number"
@@ -252,9 +252,8 @@ export default function SteptargetCalories({ data, update }: StepComponentProps)
           <Button
             onClick={handleConfirmtargetCalories}
             fullWidth
-            interaction={drafttargetCalories ? "normal" : "disable"}
             disabled={drafttargetCalories === undefined || drafttargetCalories === 0}
-            size="large"
+            size="m"
           >
             다음
           </Button>

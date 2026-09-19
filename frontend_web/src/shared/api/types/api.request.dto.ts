@@ -81,3 +81,29 @@ export interface WorkoutSetRequestDto {
   weight: number;
   reps: number;
 }
+
+/* ======
+ * 월경 기록
+ * ====== */
+export interface SaveMenstrualRecordsRequestDto {
+  add_ranges: MenstrualDateRangeRequestDto[];
+  remove_ranges: MenstrualDateRangeRequestDto[];
+}
+
+export interface MenstrualDateRangeRequestDto {
+  start_date: string;
+  end_date: string;
+}
+
+export interface GetMenstrualRecordsRequestDto {
+  from_date: string;
+  to_date: string;
+}
+
+/* ======
+ * 물 섭취 기록
+ * ====== */
+export interface UpsertWaterIntakeRequestDto {
+  date: string;
+  water_intake: number;
+}

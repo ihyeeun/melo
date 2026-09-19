@@ -1,10 +1,14 @@
 .page {
-  background-color: var(--bg-normal);
+  background-color: var(--background-gray-1);
   display: flex;
   flex-direction: column;
   height: 100%;
   min-height: 100dvh;
   width: 100%;
+}
+
+.header {
+  background-color: var(--background-default);
 }
 
 .content {
@@ -14,44 +18,41 @@
 }
 
 .summaryCard {
-  background-color: var(--bg-white);
-  border-radius: 8px;
-  color: var(--label-normal);
+  background-color: var(--background-default);
+  border-radius: 16px;
   display: flex;
-  gap: 8px;
-  padding: 20px;
-  align-items: center;
+  flex-direction: column;
+  padding: 16px 20px;
+  margin-bottom: 40px;
 }
 
 .calorieRow {
   display: flex;
-  gap: 4px;
+  gap: 6px;
   align-items: baseline;
-  margin-left: auto;
 }
 
 .textPrimary {
-  color: var(--label-primary);
+  color: var(--primary-normal);
 }
 
 .mealTypeButtonGroup {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
+  gap: 6px;
 }
 
 .mealTypeButton {
-  background-color: var(--bg-white);
-  border: 1px solid var(--border-neutral);
-  border-radius: 100px;
-  color: var(--label-normal);
-  padding: 6px 14px;
+  background-color: var(--background-default);
+  border: 1px solid var(--border-subtle);
+  border-radius: 16px;
+  color: var(--text-primary);
+  padding: 6px 12px;
 }
 
-.mealTypeActive {
-  background-color: var(--primary-normal);
-  color: var(--static-white);
-  border: none;
+.mealTypeButton[data-selected="true"] {
+  background-color: var(--coral-300);
+  border-color: var(--coral-300);
 }
 
 .menuSection {
@@ -69,8 +70,8 @@
 }
 
 .menuCardSkeleton {
-  background-color: var(--bg-white);
-  border: 1px solid var(--border-neutral);
+  background-color: var(--background-default);
+  border: 1px solid var(--border-subtle);
   border-radius: 8px;
   display: flex;
   flex-direction: column;
@@ -107,8 +108,8 @@
 
 .photoDeleteButton {
   align-items: center;
-  background-color: var(--dimmer-dimmer);
-  color: var(--static-white);
+  background-color: var(--dimmer-default);
+  color: var(--background-default);
   border: 0;
   border-radius: 100px;
   display: inline-flex;
@@ -121,23 +122,20 @@
 }
 
 .emptyState {
-  background-color: var(--bg-white);
-  border: 1px dashed var(--border-neutral);
-  border-radius: 8px;
-  color: var(--label-alternative);
-  padding: 20px;
+  padding: 40px 0;
   text-align: center;
   width: 100%;
-  height: 335px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 16px;
+  display: grid;
+  place-items: center;
+}
+
+.emptyState:active {
+  border-radius: 16px;
+  background-color: var(--background-gray-2);
 }
 
 .didNotEatState {
-  color: var(--label-alternative);
+  color: var(--text-secondary);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -160,17 +158,6 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
   padding: 0 20px;
   padding-bottom: var(--safe-area-bottom);
-}
-
-.emptyStateIcon {
-  background-color: var(--interaction-alternative);
-  color: var(--static-white);
-  border-radius: 100px;
-  display: inline-flex;
-  justify-content: center;
-  align-items: center;
-  width: 32px;
-  height: 32px;
 }
 
 .marginLeftAuto {
@@ -196,15 +183,15 @@
 }
 
 .timePickerItem {
-  color: var(--label-assistive);
+  color: var(--text-tertiary);
 }
 
 .timePickerItemSelected {
-  color: var(--label-normal);
+  color: var(--text-primary);
 }
 
 .timePickerHighlight {
-  background: var(--interaction-primary);
-  border: 1px solid var(--border-primary);
+  background: var(--background-selected);
+  border: 1px solid var(--border-strong);
   border-radius: 8px;
 }

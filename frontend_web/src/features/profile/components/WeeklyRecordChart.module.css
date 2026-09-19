@@ -1,6 +1,6 @@
 .chartContainer {
-  --chart-current: var(--primary-strong);
-  --chart-grid: var(--border-neutral);
+  --chart-current: var(--coral-600);
+  --chart-grid: var(--border-subtle);
   --chart-target: var(--status-error);
   --chart-tick: #2b2b2b;
   width: 100%;
@@ -24,7 +24,7 @@
 }
 
 .xAxisTickToday {
-  fill: var(--primary-strong);
+  fill: var(--coral-600);
 }
 
 .yAxisTick {
@@ -36,8 +36,8 @@
 }
 
 .tooltip {
-  background-color: var(--bg-white);
-  border: 1px solid var(--border-neutral);
+  background-color: var(--background-default);
+  border: 1px solid var(--border-subtle);
   border-radius: 8px;
   box-shadow: 3px 3px 5px 0 rgb(0 0 0 / 5%);
   min-width: 92px;
@@ -45,7 +45,7 @@
 }
 
 .tooltipLabel {
-  color: var(--label-normal);
+  color: var(--text-primary);
   font-size: 12px;
   line-height: 1.2;
   margin: 0;
@@ -66,7 +66,7 @@
 }
 
 .tooltipRowLabel {
-  color: var(--label-assistive);
+  color: var(--text-tertiary);
   font-size: 12px;
   line-height: 1.2;
   white-space: nowrap;

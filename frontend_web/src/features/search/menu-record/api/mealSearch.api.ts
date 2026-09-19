@@ -3,6 +3,7 @@ import type { SearchMenuRequestDto } from "@/shared/api/types/api.dto";
 import type {
   FolderListResponseDto,
   MenuListResponseDto,
+  RecentMenuResponseDto,
   SearchResponseDto,
 } from "@/shared/api/types/api.response.dto";
 
@@ -46,6 +47,15 @@ export async function getFolders({ limit, cursor }: { limit: number; cursor?: nu
     endpoint: "/home/folders",
     method: "POST",
     body,
+  });
+
+  return response;
+}
+
+export async function getRecentMenus() {
+  const response = await appApiData<RecentMenuResponseDto[]>({
+    method: "POST",
+    endpoint: "/home/recentMenus",
   });
 
   return response;

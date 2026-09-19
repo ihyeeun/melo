@@ -1,4 +1,4 @@
-import { type ChangeEvent, useEffect, useState } from "react";
+import { type ChangeEvent, type ReactNode, useEffect, useState } from "react";
 
 import {
   getMenuSelectionPath,
@@ -90,7 +90,6 @@ export function NutrientRegisterFormPage({
   const selectedBrandName = useBrandSearchSelectedBrand(brandSearchReturnKey);
   const clearBrandSearchSelection = useClearBrandSearchSelection();
   const { mutate: registerManualMenu, isPending: isSubmitting } = useRegisterMenuMutation();
-  const isCameraEntry = initialState.entrySource === "camera";
 
   const brandName = (selectedBrandName ?? formState.brand ?? "").trim();
   const nutrientForm = buildNutrientFormFields(formState);
@@ -203,97 +202,73 @@ export function NutrientRegisterFormPage({
   };
 
   return (
-    <section className={styles.page}>
-      <PageHeader title={title} onBack={handleBack} />
+    <section className={`${styles.page} page`}>
+      <div className={styles.header}>
+        <PageHeader title={title} onBack={handleBack} />
+      </div>
 
-      <main className={styles.main}>
-        <div className={styles.content}>
-          <section className={styles.topSection}>
-            {isCameraEntry ? (
-              <p className={`typo-title3 ${styles.recognizedInfoText}`}>사진에서 인식한 영양정보</p>
-            ) : (
-              <>
-                <div className={styles.fieldWrap}>
-                  <div className={styles.labelRow}>
-                    <p className={`typo-title3 ${styles.labelText}`}>음식명</p>
-                    <p className={`typo-body3 ${styles.requiredText}`}>* 필수로 작성해주세요</p>
-                  </div>
+      <main className={`main ${styles.content}`}>
+        <FieldSection label="음식명">
+          <input
+            className={`body-l-regular ${styles.textInput} amp-unmask`}
+            type="text"
+            maxLength={300}
+            value={formState.name ?? ""}
+            onChange={handleFoodNameChange}
+            placeholder="음식명 입력"
+            aria-label="음식명 입력"
+          />
+        </FieldSection>
 
-                  <input
-                    className={`typo-body3 ${styles.textInput}`}
-                    type="text"
-                    value={formState.name ?? ""}
-                    onChange={handleFoodNameChange}
-                    placeholder="음식명 입력"
-                    aria-label="음식명 입력"
-                  />
-                </div>
+        <FieldSection label="브랜드명" require={false}>
+          <button
+            type="button"
+            className={styles.brandButton}
+            onClick={handleOpenBrandSearch}
+            aria-label="브랜드명 검색 열기"
+          >
+            <p className={`body-l-regular ${brandName ? "text-primary" : "text-tertiary"}`}>
+              {brandName || "브랜드명 검색"}
+            </p>
+            <SystemIcon name="search" size={24} className={"text-tertiary"} />
+          </button>
+        </FieldSection>
 
-                <div className={styles.fieldWrap}>
-                  <p className={`typo-title3 ${styles.labelText}`}>브랜드명</p>
-                  <button
-                    type="button"
-                    className={styles.brandButton}
-                    onClick={handleOpenBrandSearch}
-                    aria-label="브랜드명 검색 열기"
-                  >
-                    <span
-                      className={`typo-body3 ${brandName ? styles.brandValue : styles.brandPlaceholder}`}
-                    >
-                      {brandName || "브랜드명 입력"}
-                    </span>
-                    <SystemIcon name="search" size={20} className={styles.brandSearchIcon} />
-                  </button>
-                </div>
-
-                <div className={styles.nutrientHeader}>
-                  <p className={`typo-title3 ${styles.labelText}`}>영양정보</p>
-                </div>
-              </>
-            )}
-            <div className="divider" />
-          </section>
-
-          <section className={styles.nutrientSection}>
-            <section className={styles.nutrientFormWrap}>
-              <NutrientDetailForm
-                totalWeight={formState.weight}
-                onTotalWeightChange={(nextWeight) => {
-                  setFormState((prev) => ({
-                    ...prev,
-                    weight: nextWeight,
-                  }));
-                }}
-                totalCalories={formState.calories}
-                onTotalCaloriesChange={(nextCalories) => {
-                  setFormState((prev) => ({
-                    ...prev,
-                    calories: nextCalories,
-                  }));
-                }}
-                form={nutrientForm}
-                onFieldChange={handleFieldChange}
-                weightUnit={formState.unit ?? (0 as MenuUnit)}
-                onWeightUnitChange={(nextUnit) => {
-                  setFormState((prev) => ({
-                    ...prev,
-                    unit: nextUnit,
-                  }));
-                }}
-              />
-            </section>
-          </section>
-        </div>
+        <section className={styles.nutrientSection}>
+          <NutrientDetailForm
+            totalWeight={formState.weight}
+            onTotalWeightChange={(nextWeight) => {
+              setFormState((prev) => ({
+                ...prev,
+                weight: nextWeight,
+              }));
+            }}
+            totalCalories={formState.calories}
+            onTotalCaloriesChange={(nextCalories) => {
+              setFormState((prev) => ({
+                ...prev,
+                calories: nextCalories,
+              }));
+            }}
+            form={nutrientForm}
+            onFieldChange={handleFieldChange}
+            weightUnit={formState.unit ?? (0 as MenuUnit)}
+            onWeightUnitChange={(nextUnit) => {
+              setFormState((prev) => ({
+                ...prev,
+                unit: nextUnit,
+              }));
+            }}
+          />
+        </section>
       </main>
 
       <footer className={styles.footer}>
         <Button
-          variant="filled"
-          size="large"
-          color="primary"
+          variant="default"
+          size="m"
           fullWidth
           onClick={handleSubmit}
-          interaction={isSubmitDisabled ? "disable" : "normal"}
           disabled={isSubmitDisabled}
         >
           {submitLabel}
@@ -302,5 +277,26 @@ export function NutrientRegisterFormPage({
 
       {isSubmitting ? <LoadingOverlay label="영양성분을 등록하는 중입니다." /> : null}
     </section>
+  );
+}
+
+function FieldSection({
+  label,
+  require = true,
+  children,
+}: {
+  label: string;
+  require?: boolean;
+  children: ReactNode;
+}) {
+  return (
+    <div className={styles.fieldSection}>
+      <div className={styles.labelArea}>
+        <h2 className="title-s-semi text-primary">{label}</h2>
+        {require && <p className={`caption-m-medium ${styles.require}`}>* 필수로 입력해주세요</p>}
+      </div>
+
+      {children}
+    </div>
   );
 }

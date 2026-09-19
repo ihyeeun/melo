@@ -1,45 +1,49 @@
-.summarySection {
-  background-color: var(--bg-white);
-  border-radius: 8px;
-  border: 1px solid var(--border-neutral);
+.root {
+  padding: 20px 0;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  overflow: hidden;
-  padding: 16px 20px;
+  gap: 40px;
 }
 
-.skeletonRoot {
+.menuInfoSection {
   display: flex;
   flex-direction: column;
-  gap: 20px;
-}
-
-.summaryContent {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.summarySecond {
-  align-items: top;
-  display: flex;
   gap: 16px;
 }
 
-.calories {
-  margin-left: auto;
+.menuNames > p + p,
+.menuNames > div + div {
+  margin-top: 6px;
 }
 
-.macroContainer {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+.menuNutritionGroup > div + div {
+  margin-top: 8px;
+}
+
+.caloriesCard {
+  background-color: var(--background-default);
+  border-radius: 16px;
+  padding: 16px 20px;
+}
+
+.calorieUnit {
+  margin-left: 6px;
+}
+
+.macroCard {
+  display: grid;
+  background-color: var(--background-default);
+  border-radius: 16px;
+  gap: 3px;
+  grid-template-columns: repeat(3, 1fr);
+  padding: 8px 16px;
 }
 
 .macroItem {
+  padding: 6.5px 8px;
   display: flex;
-  gap: 2px;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .macroLabelRow {
@@ -48,27 +52,19 @@
   gap: 4px;
 }
 
-.macroValue {
-  color: var(--label-primary);
-  text-align: right;
-  flex: 1;
+.macroValue > span + span {
+  margin-left: 2px;
 }
 
-.macroNumber {
-  min-width: 0;
-  overflow-wrap: anywhere;
-}
-
-.macroUnit {
-  color: var(--label-primary);
-  flex: 0 0 auto;
-}
-
-.skeletonMacroItem {
+.editSection {
+  background-color: var(--background-gray-2);
+  border-radius: 8px;
   display: flex;
-  flex-direction: column;
-  gap: 6px;
-  min-width: 0;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 12px 16px;
+  margin-top: 8px;
 }
 
 .servingInputSection {
@@ -77,37 +73,56 @@
   gap: 8px;
 }
 
-.TabsRoot {
+.tabRoot {
   display: flex;
   flex-direction: column;
-  gap: 6px;
   width: 100%;
+  background-color: var(--background-default);
+  border-radius: 16px;
 }
 
-.TabsList {
-  background-color: var(--bg-white);
-  border: 1px solid var(--border-neutral);
-  border-radius: 8px;
+.tabsList {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  padding: 4px;
+  border-bottom: 1px solid var(--border-subtle);
+  height: 52px;
+  position: relative;
 }
 
-.TabsTab {
-  background: var(--bg-white);
-  border: 0;
-  border-radius: 6px;
-  color: var(--label-assistive);
-  cursor: pointer;
-  margin: 0;
-  outline: none;
-  padding: 14px 8px;
+.tab {
+  height: 100%;
+  color: var(--text-disabled);
   text-align: center;
 
-  &[data-active] {
-    background: var(--interaction-primary);
-    color: var(--label-primary);
+  > span:nth-of-type(2) {
+    margin-left: 2px;
   }
+
+  &[data-active] {
+    color: var(--text-primary);
+
+    > span:nth-of-type(2) {
+      color: var(--text-tertiary);
+    }
+  }
+
+  &:active {
+    background-color: var(--background-gray-1);
+  }
+}
+
+.tabsIndicator {
+  position: absolute;
+  background-color: var(--border-strong);
+  height: 2px;
+  width: var(--active-tab-width);
+  bottom: -1px;
+  left: 0;
+  width: calc(var(--active-tab-width) * 0.6);
+  transform: translateX(calc(var(--active-tab-left, 0px) + var(--active-tab-width) * 0.2));
+  transition:
+    transform 0.22s cubic-bezier(0.2, 0, 0, 1),
+    width 0.22s cubic-bezier(0.2, 0, 0, 1);
 }
 
 .TabsPanel {
@@ -115,181 +130,83 @@
 }
 
 .FieldGroup {
-  background-color: var(--bg-white);
-  border: 1px solid var(--border-neutral);
-  border-radius: 8px;
-  display: flex;
-  gap: 10px;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: 32px 1fr 32px;
   align-items: center;
-  padding: 16px;
+  padding: 18px 20px;
   width: 100%;
 }
 
 .FieldInputWrapper {
-  align-items: center;
+  text-align: center;
+  width: 100%;
   display: flex;
-  flex: 1;
-  justify-content: center;
+  align-items: center;
 }
 
-.FieldInputGroup {
-  display: flex;
-  flex: 1;
+.StepButton {
+  display: grid;
+  place-items: center;
+  background-color: var(--background-gray-1);
+  border-radius: 50%;
+  height: 32px;
+  width: 32px;
+  box-shadow: var(--shadow-outer);
+  color: var(--text-primary);
+
+  &:active {
+    background-color: var(--background-gray-2);
+  }
 }
 
 .FieldInput {
   background-color: transparent;
-  border: 0;
-  flex: 1;
-  text-align: center;
-  width: 100%;
+  border: none;
+  text-align: end;
+  padding: 0 2px;
+  width: 52%;
 }
-
+.FieldInputWeightWidth {
+  width: 60%;
+}
 .FieldInput::placeholder {
-  color: var(--label-assistive);
+  color: var(--text-tertiary);
 }
-
 .FieldInput:focus {
   outline: none;
 }
 
-.StepButton {
-  align-items: center;
-  background: transparent;
-  border: 0;
-  color: var(--label-normal);
-  cursor: pointer;
-  display: inline-flex;
-  height: 24px;
-  justify-content: center;
-  margin: 0;
-  outline: none;
-  padding: 0;
-  width: 24px;
-}
-
 .detailSection {
-  overflow: hidden;
-  padding: 20px 0;
-}
-
-.skeletonDetailHeader {
-  align-items: center;
   display: flex;
-  justify-content: space-between;
-}
-
-.skeletonDetailRows {
-  padding-top: 20px;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .detailToggleButton {
   align-items: center;
-  color: var(--label-normal);
   display: flex;
   justify-content: space-between;
   width: 100%;
+}
+
+.arrowIcon {
+  transition: transform 0.2s ease;
+
+  &[data-isClicked="true"] {
+    transform: rotate(180deg);
+  }
+}
+
+.detailNutritionSection {
+  background-color: var(--background-default);
+  border-radius: 16px;
+  padding-top: 16px;
+  padding-bottom: 18px;
 }
 
 .detailList {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  padding-top: 20px;
-}
-
-.detailGroup {
-  display: flex;
-  flex-direction: column;
-}
-
-.groupDivider {
-  background-color: var(--border-neutral);
-  height: 1px;
-  margin: 12px 0;
-  width: 100%;
-}
-
-.detailGroupRows {
-  display: flex;
-  flex-direction: column;
-}
-
-.detailRow {
-  align-items: center;
-  color: var(--label-normal);
-  display: flex;
-  gap: 8px;
-  justify-content: space-between;
-  padding: 8px 0;
-}
-
-.detailLabelSub {
-  color: var(--label-alternative);
-  padding-left: 4px;
-}
-
-.detailValue {
-  align-items: center;
-  display: inline-flex;
-  gap: 8px;
-  position: relative;
-}
-
-.warningButton {
-  align-items: center;
-  background: var(--interaction-alternative);
-  border: 0;
-  border-radius: 50%;
-  color: var(--label-alternative);
-  cursor: pointer;
-  display: inline-flex;
-  height: 26px;
-  justify-content: center;
-  margin-right: 8px;
-  outline: none;
-  padding: 0;
-  width: 20px;
-  height: 20px;
-}
-
-.warningPositioner {
-  z-index: 3;
-}
-
-.warningTooltip {
-  background: var(--primary-normal);
-  border-radius: 6px;
-  color: var(--static-white);
-  max-width: min(360px, calc(100vw - 96px));
-  padding: 10px 14px;
-  white-space: normal;
-  width: max-content;
-}
-
-.editSection {
-  align-items: center;
-  background-color: var(--bg-white);
-  border-radius: 6px;
-  display: flex;
-  justify-content: space-between;
-  padding: 10px 14px;
-}
-
-.textNormal {
-  color: var(--label-normal);
-}
-
-.textAlternative {
-  color: var(--label-alternative);
-}
-
-.arrowIcon {
-  transition: transform 0.2s ease;
-  color: var(--interaction-normal);
-}
-
-.arrowIconExpanded {
-  transform: rotate(180deg);
+  gap: 12px;
+  padding: 0 16px;
 }
