@@ -3,7 +3,19 @@
 }
 
 .content {
+  display: flex;
+  flex-direction: column;
   margin-top: 16px;
+  padding-bottom: 24px;
+}
+
+.recordSection {
+  display: flex;
+  flex-direction: column;
+  margin: auto;
+  gap: 16px;
+  width: 100%;
+  max-width: 400px;
 }
 
 .inputGroup {
@@ -30,8 +42,9 @@
 }
 
 .input {
-  width: 50%;
-  padding: 0 7px;
+  width: 110px;
+  padding: 0;
+  margin-right: 7px;
   text-align: end;
   border: none;
 
@@ -53,4 +66,10 @@
   flex-direction: column;
   gap: 12px;
   padding: 0 16px;
+}
+
+.skeletonContent {
+  flex: 1;
+  display: grid;
+  place-items: center;
 }

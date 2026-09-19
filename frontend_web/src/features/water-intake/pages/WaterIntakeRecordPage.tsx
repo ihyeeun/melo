@@ -1,5 +1,6 @@
 import { useState } from "react";
 
+import WaterIntakeGlass from "@/features/water-intake/components/WaterIntakeGlass";
 import {
   WATER_CUP_SIZE,
   WATER_INTAKE_SIZE,
@@ -11,12 +12,15 @@ import {
 import { useGetWaterIntakeQuery } from "@/features/water-intake/hooks/queries/useWaterIntake.query";
 import styles from "@/features/water-intake/styles/WaterIntakeRecordPage.module.css";
 import { literToMl, mlToLiter } from "@/features/water-intake/utils/unit.util";
+import { track } from "@/shared/analytics/analytics";
+import { EVENT_NAME } from "@/shared/analytics/analytics.constants";
 import BottomSheet from "@/shared/commons/bottomSheet/BottomSheet";
 import { Button } from "@/shared/commons/button/Button";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import { EditorInput } from "@/shared/commons/input/EditorInput";
 import NumberField from "@/shared/commons/input/NumberField";
+import { Skeleton } from "@/shared/commons/skeleton/Skeleton";
 import { toast } from "@/shared/commons/toast/toast";
 import { navigateBack } from "@/shared/navigation/stackflowNavigationController";
 import { useSelectedDateKey } from "@/shared/stores/selectedDate.store";
@@ -32,6 +36,7 @@ export default function WaterIntakeRecordPage() {
   const { mutate: updateWaterIntake } = useRegisterWaterIntakeMutation({
     onSuccess: () => {
       toast.success("기록을 완료했어요");
+      track(EVENT_NAME.WATER_INTAKE_RECORD_COMPLETED);
     },
   });
   const { mutate: updateCupSizeMutation } = useRegisterWaterCupSizeMutation({
@@ -55,7 +60,7 @@ export default function WaterIntakeRecordPage() {
   };
 
   if (isWaterIntakePending) {
-    return <>잠시만 기달려~</>;
+    return <SkeletonPage />;
   }
 
   return (
@@ -69,17 +74,19 @@ export default function WaterIntakeRecordPage() {
           기록해주세요
         </h2>
 
-        <section>
+        <section className={styles.recordSection}>
+          <WaterIntakeGlass amountMl={waterAmount} />
+
           <NumberField
             value={mlToLiter(waterAmount)}
             onChange={(liter) => {
-              if (!liter) return;
-              setWaterAmount(literToMl(liter));
+              setWaterAmount(literToMl(liter ?? 0));
             }}
             min={mlToLiter(WATER_INTAKE_SIZE.MIN)}
             max={mlToLiter(WATER_INTAKE_SIZE.MAX)}
             step={mlToLiter(recordWaterIntake?.cup_size ?? 100)}
             fractionDigits={2}
+            format={{ minimumFractionDigits: 2 }}
             unit={"L"}
             inputProps={{
               inputMode: "decimal",
@@ -146,6 +153,31 @@ export default function WaterIntakeRecordPage() {
           </Button>
         </section>
       </BottomSheet>
+    </div>
+  );
+}
+
+function SkeletonPage() {
+  return (
+    <div className="page">
+      <PageHeader title="물 섭취 기록" />
+
+      <main className={`main ${styles.content}`}>
+        <h2 className="title-m-medium text-primary">
+          오늘 물을 얼마나 마셨는지
+          <br />
+          기록해주세요
+        </h2>
+
+        <section className={styles.skeletonContent}>
+          <Skeleton width={230} height={320} />
+          <Skeleton width={"80%"} height={60} />
+        </section>
+      </main>
+
+      <footer className="footer">
+        <Skeleton width={"100%"} height={52} />
+      </footer>
     </div>
   );
 }

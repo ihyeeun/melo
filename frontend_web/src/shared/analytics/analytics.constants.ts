@@ -44,6 +44,8 @@ export const EVENT_NAME = {
 
   CLICK_MENSTRUAL_CARE: "menstrual_care_click",
   CLICK_MENSTRUAL_CARE_TRIAL_APPLY: "menstrual_care_trial_apply",
+
+  WATER_INTAKE_RECORD_COMPLETED: "water_intake_recorded",
 } as const;
 
 export type AnalyticsEventName = (typeof EVENT_NAME)[keyof typeof EVENT_NAME];

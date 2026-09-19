@@ -8,6 +8,7 @@ import styles from "@/features/home/styles/RecordActionSection.module.css";
 import type { MenuWithQuantity } from "@/features/home/utils/dayMealSummary";
 import { DayMealCopyButton } from "@/features/meal-record/components/DayMealCopyButton";
 import { useGetProfileQuery } from "@/features/profile/hooks/queries/useProfileQuery";
+import { WaterIntakeRecordActionButton } from "@/features/water-intake/components/WaterIntakeRecordActionButton";
 import { PATH } from "@/router/path";
 import { getMealRecordPath, getMealSearchPath, getWorkoutRecordPath } from "@/router/pathHelpers";
 import type { MealType } from "@/shared/api/types/api.dto";
@@ -132,10 +133,10 @@ export default function RecordActionSection() {
         )}
       </section>
 
-      {/* <section className={styles.recordGroup}>
+      <section className={styles.recordGroup}>
         <h2 className="title-s-semi text-primary">물 섭취 기록</h2>
         <WaterIntakeRecordActionButton />
-      </section> */}
+      </section>
 
       <section className={styles.recordGroup}>
         <h2 className="title-s-semi text-primary">운동 기록</h2>

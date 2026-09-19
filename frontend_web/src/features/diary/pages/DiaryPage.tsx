@@ -14,6 +14,7 @@ import {
   useGetProfileQuery,
   useGoalSnapshotByDateQuery,
 } from "@/features/profile/hooks/queries/useProfileQuery";
+import { WaterIntakeRecordActionButton } from "@/features/water-intake/components/WaterIntakeRecordActionButton";
 import { PATH } from "@/router/path";
 import { getMealRecordPath, getMealSearchPath, getWorkoutRecordPath } from "@/router/pathHelpers";
 import { isNativeApp, syncAppTab } from "@/shared/api/bridge/nativeBridge";
@@ -371,6 +372,10 @@ export default function DiaryPage() {
                 </button>
               </li>
             </ul>
+          </SectionLayout>
+
+          <SectionLayout title="물 섭취 기록">
+            <WaterIntakeRecordActionButton />
           </SectionLayout>
 
           <SectionLayout title="운동 기록">
