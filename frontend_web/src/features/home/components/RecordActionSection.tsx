@@ -134,6 +134,26 @@ export default function RecordActionSection() {
       </section>
 
       <section className={styles.recordGroup}>
+        <h2 className="title-s-semi text-primary">건강 기록</h2>
+        <div className={styles.bodyLogGroup}>
+          <HealthMetricCard
+            title="걸음 수"
+            value={displaySteps}
+            unit="보"
+            onClick={openStepsEditor}
+            isPending={isBodyLogPending}
+          />
+          <HealthMetricCard
+            title="체중"
+            value={displayWeight}
+            unit="kg"
+            onClick={openWeightEditor}
+            isPending={isBodyLogPending}
+          />
+        </div>
+      </section>
+
+      <section className={styles.recordGroup}>
         <h2 className="title-s-semi text-primary">물 섭취 기록</h2>
         <WaterIntakeRecordActionButton />
       </section>
@@ -168,26 +188,6 @@ export default function RecordActionSection() {
             <SystemIcon size={24} name="chevron-right" className="marginLeft text-secondary" />
           ) : null}
         </Tile>
-      </section>
-
-      <section className={styles.recordGroup}>
-        <h2 className="title-s-semi text-primary">건강 기록</h2>
-        <div className={styles.bodyLogGroup}>
-          <HealthMetricCard
-            title="걸음 수"
-            value={displaySteps}
-            unit="보"
-            onClick={openStepsEditor}
-            isPending={isBodyLogPending}
-          />
-          <HealthMetricCard
-            title="체중"
-            value={displayWeight}
-            unit="kg"
-            onClick={openWeightEditor}
-            isPending={isBodyLogPending}
-          />
-        </div>
       </section>
     </div>
   );

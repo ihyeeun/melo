@@ -36,12 +36,16 @@ export default function WaterIntakeRecordPage() {
   const waterAmount = editedWaterAmount ?? recordWaterIntake?.water_intake ?? 0;
   const { mutate: updateWaterIntake } = useRegisterWaterIntakeMutation({
     onSuccess: () => {
-      toast.success("기록을 완료했어요");
+      toast.success("물 섭취를 기록했어요");
       track(EVENT_NAME.WATER_INTAKE_RECORD_COMPLETED);
+      navigateBack();
     },
   });
   const { mutate: updateCupSizeMutation } = useRegisterWaterCupSizeMutation({
-    onSuccess: () => toast.success("컵 크기를 수정했어요"),
+    onSuccess: () => {
+      toast.success("컵 크기를 수정했어요");
+      setIsSheetOpen(false);
+    },
   });
 
   const handleUpdateWaterIntake = () => {
@@ -90,6 +94,7 @@ export default function WaterIntakeRecordPage() {
             format={{ minimumFractionDigits: 2 }}
             unit={"L"}
             inputProps={{
+              readOnly: true,
               inputMode: "decimal",
               placeholder: "0.00",
               "aria-label": "오늘의 물 섭취량 입력",
