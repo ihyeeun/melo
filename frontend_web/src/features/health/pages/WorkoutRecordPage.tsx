@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { useMemo } from "react";
 
-import Calendar from "@/features/calendar/components/Calendar";
+import RecordCalendar from "@/features/calendar/components/RecordCalendar";
 import { useGetWorkoutRecordQuery } from "@/features/health/hooks/queries/workout.query";
 import { formatWorkoutDuration } from "@/features/health/utils/workoutFormat";
 import Tile from "@/features/home/components/cards/Tile";
@@ -123,7 +123,7 @@ export default function WorkoutRecordPage() {
     <section className={`${styles.page} page`}>
       <PageHeader title="운동 기록" onBack={handleBack} />
 
-      <Calendar
+      <RecordCalendar
         selectedDate={selectedDate}
         onSelectDate={setSelectedDate}
         safeAreaTop={false}

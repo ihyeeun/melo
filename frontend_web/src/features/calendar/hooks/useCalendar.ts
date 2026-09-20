@@ -1,13 +1,7 @@
-import { addMonths, addWeeks, startOfMonth, startOfWeek, subMonths } from "date-fns";
-import { type SetStateAction, useCallback, useMemo, useState } from "react";
+import { addWeeks, startOfWeek } from "date-fns";
+import { type SetStateAction, useState } from "react";
 
-import {
-  buildMonthCalendarDays,
-  buildWeekCalendarDays,
-  getMonthDates,
-  moveNext,
-  movePrev,
-} from "@/features/calendar/utils/calendar";
+import { moveNext, movePrev } from "@/features/calendar/utils/calendar";
 import { formatDateKey, parseDateKey } from "@/shared/utils/dateFormat";
 
 import type { ViewMode } from "../types/calendar.types";
@@ -15,19 +9,15 @@ import type { ViewMode } from "../types/calendar.types";
 type UseCalendarParams = {
   initialDate?: Date;
   initialViewMode?: ViewMode;
-  recordedDates?: string[];
   selectedDate?: Date;
-};
-
-type SelectDateOptions = {
-  switchToWeek?: boolean;
+  allowFutureWeekNavigation?: boolean;
 };
 
 export function useCalendar({
   initialDate = new Date(),
   initialViewMode = "week",
-  recordedDates = [],
   selectedDate: controlledSelectedDate,
+  allowFutureWeekNavigation = true,
 }: UseCalendarParams = {}) {
   const weekStartsOn = 1 as const;
   const initialSelectedDate = controlledSelectedDate ?? initialDate;
@@ -63,43 +53,22 @@ export function useCalendar({
     });
   };
 
-  const weekDays = useMemo(() => {
-    return buildWeekCalendarDays({
-      baseDate: viewDate,
-      selectedDate,
-      recordedDates,
-      weekStartsOn,
-    });
-  }, [viewDate, selectedDate, recordedDates, weekStartsOn]);
-
-  const monthDays = useMemo(() => {
-    return buildMonthCalendarDays({
-      baseDate: viewDate,
-      selectedDate,
-      recordedDates,
-      weekStartsOn,
-    });
-  }, [viewDate, selectedDate, recordedDates, weekStartsOn]);
-
   const viewWeekStart = startOfWeek(viewDate, { weekStartsOn });
   const currentWeekStart = startOfWeek(new Date(), { weekStartsOn });
-  const canGoNextWeek = addWeeks(viewWeekStart, 1).getTime() <= currentWeekStart.getTime();
+  const canGoNextWeek =
+    allowFutureWeekNavigation || addWeeks(viewWeekStart, 1).getTime() <= currentWeekStart.getTime();
 
   const toggleViewMode = () => {
     setViewMode((prev) => (prev === "week" ? "month" : "week"));
     setViewDate(selectedDate);
   };
 
-  const selectDate = (date: Date, { switchToWeek = false }: SelectDateOptions = {}) => {
+  const selectDate = (date: Date) => {
     if (!controlledSelectedDate) {
       setInternalSelectedDate(date);
     }
 
     setViewDate(date);
-
-    if (switchToWeek) {
-      setViewMode("week");
-    }
   };
 
   const clampFutureWeekNavigationDate = (candidateDate: Date, currentDate: Date) => {
@@ -123,7 +92,7 @@ export function useCalendar({
     setViewDate((prev) => {
       const candidateDate = moveNext(prev, viewMode);
 
-      if (viewMode !== "week") return candidateDate;
+      if (viewMode !== "week" || allowFutureWeekNavigation) return candidateDate;
 
       return clampFutureWeekNavigationDate(candidateDate, prev);
     });
@@ -144,56 +113,12 @@ export function useCalendar({
     viewMode,
     selectedDate,
     viewDate,
-    weekDays,
-    monthDays,
+    setViewMode,
     canGoNextWeek,
     toggleViewMode,
     selectDate,
     goPrev,
     goNext,
     goToday,
-  };
-}
-
-type UseMonthCalendarParams = {
-  initialDate?: Date;
-  weekStartsOn?: 0 | 1;
-};
-
-export function useMonthCalendar({ initialDate, weekStartsOn = 1 }: UseMonthCalendarParams = {}) {
-  // 현재 보고 있는 월
-  const [viewDate, setViewDate] = useState(() => {
-    return startOfMonth(initialDate ?? new Date());
-  });
-
-  // 달력 칸에 표시할 전체 날짜
-  const visibleDates = useMemo(
-    () => getMonthDates(viewDate, weekStartsOn),
-    [viewDate, weekStartsOn],
-  );
-
-  const goPrevMonth = useCallback(() => {
-    setViewDate((current) => startOfMonth(subMonths(current, 1)));
-  }, []);
-
-  const goNextMonth = useCallback(() => {
-    setViewDate((current) => startOfMonth(addMonths(current, 1)));
-  }, []);
-
-  const goToday = useCallback(() => {
-    setViewDate(startOfMonth(new Date()));
-  }, []);
-
-  const goToMonth = useCallback((date: Date) => {
-    setViewDate(startOfMonth(date));
-  }, []);
-
-  return {
-    viewDate,
-    visibleDates,
-    goPrevMonth,
-    goNextMonth,
-    goToday,
-    goToMonth,
   };
 }

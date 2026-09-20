@@ -5,10 +5,14 @@ export type CalendarDay = {
   isToday: boolean;
   isSelected: boolean;
   isCurrentMonth: boolean;
-  hasRecord: boolean;
 };
 
-export const WEEKDAY_LABELS = ["월", "화", "수", "목", "금", "토", "일"];
+export type DayCellRenderProps = {
+  day: CalendarDay;
+  weekdayLabel?: string;
+  onSelect: (date: Date) => void;
+  variant?: ViewMode;
+};
 
 export const CALENDAR_VIEW_MODE = {
   MEAL_INTAKE: "intake",

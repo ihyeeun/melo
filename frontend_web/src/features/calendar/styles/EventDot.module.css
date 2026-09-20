@@ -1,0 +1,32 @@
+.root {
+  align-items: center;
+  bottom: 5.5px;
+  display: flex;
+  height: 4px;
+  justify-content: center;
+  left: 0;
+  position: absolute;
+  right: 0;
+  width: 100%;
+
+  &[data-visible="false"] {
+    visibility: hidden;
+  }
+
+  &[data-view="week"] {
+    margin-top: 2px;
+    position: static;
+  }
+
+  &[data-view="month"][data-outside="true"] .dot {
+    opacity: 0.4;
+  }
+}
+
+.dot {
+  background: var(--record-dot-color, var(--coral-400));
+  border-radius: 50%;
+  display: block;
+  height: 4px;
+  width: 4px;
+}

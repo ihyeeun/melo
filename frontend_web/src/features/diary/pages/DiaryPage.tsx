@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-import Calendar from "@/features/calendar/components/Calendar";
+import RecordCalendar from "@/features/calendar/components/RecordCalendar";
 import MealMenuPreview from "@/features/diary/components/MealMenuPreview";
 import styles from "@/features/diary/styles/DiaryPage.module.css";
 import { useGetWorkoutRecordQuery } from "@/features/health/hooks/queries/workout.query";
@@ -137,7 +137,7 @@ export default function DiaryPage() {
 
   return (
     <div className={`${styles.root} page`}>
-      <Calendar
+      <RecordCalendar
         selectedDate={selectedDate}
         onSelectDate={setSelectedDate}
         showMonthBackground={false}

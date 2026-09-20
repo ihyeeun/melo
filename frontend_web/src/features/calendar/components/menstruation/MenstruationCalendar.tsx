@@ -1,5 +1,3 @@
-import "@/features/calendar/styles/calendar.css";
-
 import type { UseQueryResult } from "@tanstack/react-query";
 
 import MenstruationDayCell from "@/features/calendar/components/menstruation/MenstruationDayCell";
@@ -30,10 +28,7 @@ type Props = {
 export default function MenstruationCalendar({ months, ...selection }: Props) {
   return (
     <section
-      className={`calendar-root ${styles.calendar}`}
-      data-view="month"
-      data-safe-area-top={false}
-      data-month-background={false}
+      className={styles.calendar}
       aria-label="생리 기록 달력"
     >
       {months.map((month) => (

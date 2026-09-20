@@ -1,13 +1,12 @@
 import EventDot from "@/features/calendar/components/EventDot";
+import styles from "@/features/calendar/styles/DayCell.module.css";
 
-import type { CalendarDay, ViewMode } from "../types/calendar.types";
+import type { DayCellRenderProps } from "../types/calendar.types";
 import { formatDayNumber } from "../utils/format";
 
-export type DayCellRenderProps = {
-  day: CalendarDay;
-  weekdayLabel?: string;
-  onSelect: (date: Date) => void;
-  variant?: ViewMode;
+type Props = DayCellRenderProps & {
+  hasRecord: boolean;
+  showMonthBackground?: boolean;
 };
 
 export default function DayCell({
@@ -15,13 +14,15 @@ export default function DayCell({
   weekdayLabel,
   onSelect,
   variant = "week",
-}: DayCellRenderProps) {
+  hasRecord,
+  showMonthBackground = false,
+}: Props) {
   return (
     <button
       type="button"
-      className="calendar-day-cell"
-      data-kind="default"
+      className={styles.root}
       data-view={variant}
+      data-month-background={showMonthBackground}
       data-selected={day.isSelected}
       data-today={day.isToday}
       data-outside={!day.isCurrentMonth}
@@ -31,14 +32,14 @@ export default function DayCell({
         month: "long",
         day: "numeric",
         weekday: "long",
-      })}${day.isToday ? ", 오늘" : ""}${!day.isCurrentMonth ? ", 이번 달 아님" : ""}${day.hasRecord ? ", 식사 기록 있음" : ""}`}
+      })}${day.isToday ? ", 오늘" : ""}${!day.isCurrentMonth ? ", 이번 달 아님" : ""}${hasRecord ? ", 식사 기록 있음" : ""}`}
     >
       {variant === "week" && weekdayLabel && (
-        <span className="calendar-day-weekday caption-m-regular">{weekdayLabel}</span>
+        <span className="caption-m-regular">{weekdayLabel}</span>
       )}
-      <div className="calendar-day-number-container">
-        <span className="calendar-day-number body-l-regular">{formatDayNumber(day.date)}</span>
-        <EventDot visible={day.hasRecord} />
+      <div className={styles.numberContainer}>
+        <span className="body-l-regular">{formatDayNumber(day.date)}</span>
+        <EventDot visible={hasRecord} variant={variant} isOutside={!day.isCurrentMonth} />
       </div>
     </button>
   );

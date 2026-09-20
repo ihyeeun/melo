@@ -13,13 +13,7 @@ import {
   subWeeks,
 } from "date-fns";
 
-import { formatDateKey } from "@/shared/utils/dateFormat";
-
 import type { CalendarDay, ViewMode } from "../types/calendar.types";
-
-export function getRecordedDateSet(recordedDates: string[] = []) {
-  return new Set(recordedDates);
-}
 
 export function getWeekDates(baseDate: Date, weekStartsOn: 0 | 1 = 1) {
   const start = startOfWeek(baseDate, { weekStartsOn });
@@ -48,25 +42,18 @@ export function getMonthDates(baseDate: Date, weekStartsOn: 0 | 1 = 1) {
 export function buildWeekCalendarDays({
   baseDate,
   selectedDate,
-  recordedDates = [],
   weekStartsOn = 1,
 }: {
   baseDate: Date;
-  selectedDate: Date;
-  recordedDates?: string[];
+  selectedDate?: Date;
   weekStartsOn?: 0 | 1;
 }): CalendarDay[] {
-  const recordedDateSet = getRecordedDateSet(recordedDates);
-
   return getWeekDates(baseDate, weekStartsOn).map((date) => {
-    const key = formatDateKey(date);
-
     return {
       date,
       isToday: isToday(date),
-      isSelected: isSameDay(date, selectedDate),
+      isSelected: selectedDate ? isSameDay(date, selectedDate) : false,
       isCurrentMonth: isSameMonth(date, baseDate),
-      hasRecord: recordedDateSet.has(key),
     };
   });
 }
@@ -74,25 +61,18 @@ export function buildWeekCalendarDays({
 export function buildMonthCalendarDays({
   baseDate,
   selectedDate,
-  recordedDates = [],
   weekStartsOn = 1,
 }: {
   baseDate: Date;
   selectedDate?: Date;
-  recordedDates?: string[];
   weekStartsOn?: 0 | 1;
 }): CalendarDay[] {
-  const recordedDateSet = getRecordedDateSet(recordedDates);
-
   return getMonthDates(baseDate, weekStartsOn).map((date) => {
-    const key = formatDateKey(date);
-
     return {
       date,
       isToday: isToday(date),
       isSelected: selectedDate ? isSameDay(date, selectedDate) : false,
       isCurrentMonth: isSameMonth(date, baseDate),
-      hasRecord: recordedDateSet.has(key),
     };
   });
 }

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 
-import Calendar from "@/features/calendar/components/Calendar";
 import MenstruationDayCell from "@/features/calendar/components/menstruation/MenstruationDayCell";
+import RecordCalendar from "@/features/calendar/components/RecordCalendar";
 import { ChatCameraUpdateRequiredModal } from "@/features/camera/components/ChatCameraUpdateRequiredModal";
 import { navigateToChatCameraIfSupported } from "@/features/camera/utils/chatCameraSupport";
 import HomeDashboardModeToggle from "@/features/home/components/HomeDashboardModeToggle";
@@ -79,7 +79,7 @@ export default function HomePage() {
   return (
     <>
       <div className={`page ${styles.pageColor}`}>
-        <Calendar
+        <RecordCalendar
           selectedDate={selectedDate}
           onSelectDate={setSelectedDate}
           onVisibleStartDateChange={setCalendarStartDate}

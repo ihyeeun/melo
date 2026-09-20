@@ -1,10 +1,9 @@
 import { Fragment, type ReactNode, useCallback } from "react";
 
-import type { DayCellRenderProps } from "@/features/calendar/components/dayCell";
-import DayCell from "@/features/calendar/components/dayCell";
+import styles from "@/features/calendar/styles/Calendar.module.css";
+import type { CalendarDay, DayCellRenderProps } from "@/features/calendar/types/calendar.types";
 
 import { useCalendarPager } from "../hooks/useCalendarPager";
-import type { CalendarDay } from "../types/calendar.types";
 import { WEEKDAY_LABELS } from "../utils/format";
 
 type Props = {
@@ -13,7 +12,7 @@ type Props = {
   onSelectDate: (date: Date) => void;
   onSwipePrev: () => void;
   onSwipeNext: () => void;
-  renderDayCell?: (props: DayCellRenderProps) => ReactNode;
+  renderDayCell: (props: DayCellRenderProps) => ReactNode;
 };
 
 export default function WeeklyCalendar({
@@ -49,12 +48,12 @@ export default function WeeklyCalendar({
   return (
     <div
       ref={viewportRef}
-      className="calendar-pager weekly-calendar"
+      className={styles.pager}
       role="group"
       aria-label="주간 달력"
       onScroll={handleScroll}
     >
-      <div className="calendar-pager-track">
+      <div className={styles.track}>
         {pages.map((days, pageIndex) => {
           const isCurrentPage = pageIndex === currentPageIndex;
           const pageKey = days[0]?.date.toISOString() ?? String(pageIndex);
@@ -62,7 +61,7 @@ export default function WeeklyCalendar({
           return (
             <div
               key={pageKey}
-              className="calendar-pager-page weekly-calendar-page"
+              className={`${styles.page} ${styles.weekGrid}`}
               aria-hidden={!isCurrentPage}
               inert={!isCurrentPage}
             >
@@ -76,7 +75,7 @@ export default function WeeklyCalendar({
 
                 return (
                   <Fragment key={day.date.toISOString()}>
-                    {renderDayCell ? renderDayCell(props) : <DayCell {...props} />}
+                    {renderDayCell(props)}
                   </Fragment>
                 );
               })}

@@ -10,22 +10,15 @@ type UseCalendarRecordedDatesQueryParams = {
   endDate: string;
 };
 
-const EMPTY_RECORDED_DATES: string[] = [];
-
 export function useCalendarRecordedDatesQuery({
   enabled,
   startDate,
   endDate,
 }: UseCalendarRecordedDatesQueryParams) {
-  const query = useQuery({
+  return useQuery({
     queryKey: queryKeys.recordedDates.range(startDate, endDate),
     queryFn: () => getMealRecordedDates({ startDate, endDate }),
     enabled: enabled && isValidDateKey(startDate) && isValidDateKey(endDate),
     staleTime: Infinity,
   });
-
-  return {
-    ...query,
-    recordedDates: query.data ?? EMPTY_RECORDED_DATES,
-  };
 }

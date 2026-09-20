@@ -1,3 +1,50 @@
+.root {
+  --day-muted-color: var(--text-disabled);
+
+  align-items: center;
+  border-radius: 16px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+
+  &[data-month-background="true"] {
+    --day-muted-color: var(--coral-300);
+  }
+
+  &[data-outside="true"] {
+    color: var(--day-muted-color);
+  }
+}
+
+/* 생리 기록 화면의 그리드가 셀 크기를 조정할 수 있도록 우선순위를 낮춘다. */
+:where(.root) {
+  &[data-view="week"] {
+    gap: 2px;
+    height: 66px;
+    width: 44px;
+  }
+
+  &[data-view="month"] {
+    height: 44px;
+    width: 43px;
+  }
+}
+
+.numberContainer {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+
+  :where(.root)[data-view="month"] & {
+    height: 100%;
+    justify-content: center;
+    position: relative;
+    width: 100%;
+  }
+}
+
 .root,
 .numberContainer {
   transition:
@@ -18,7 +65,7 @@
     border-radius: 16px;
   }
 
-  [data-month-background="true"] &[data-view="month"][data-selected="true"] .numberContainer {
+  &[data-month-background="true"][data-view="month"][data-selected="true"] .numberContainer {
     border: none;
     background-color: var(--coral-400);
     color: var(--background-default);
