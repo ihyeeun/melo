@@ -16,7 +16,6 @@ import {
   useSyncMenuDraftWithDayMeals,
 } from "@/features/meal-record/stores/menuDraft.store";
 import { getMealType, getSafeDateKey } from "@/features/meal-record/utils/mealRecord.queryParams";
-import { buildMenuDraftSignature } from "@/features/meal-record/utils/menuDraftSync";
 import { useMenuSelectionAdapter } from "@/features/menu-selection/hooks/useMenuSelectionAdapter";
 import {
   buildMenuSelectionPathContext,
@@ -51,7 +50,6 @@ import { MealMenuCard } from "@/shared/commons/card/MealMenuCard";
 import { SearchInputHeader } from "@/shared/commons/header/SearchInputHeader";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import { LoadingIndicator } from "@/shared/commons/loading/Loading";
-import { ConfirmModal } from "@/shared/commons/modals/ConfirmModal";
 import { Skeleton } from "@/shared/commons/skeleton/Skeleton";
 import { toast } from "@/shared/commons/toast/toast";
 import { FEATURE_GUARD, useIsFeatureBlocked } from "@/shared/guards/featureGuard";
@@ -89,7 +87,6 @@ export default function MealSearchPage() {
   const hasMenuSelectionRouteContext = menuSelectionRouteContext.target !== null;
   const [submittedKeyword, setSubmittedKeyword] = useState("");
   const [searchKeyword, setSearchKeyword] = useState("");
-  const [isExitConfirmOpen, setIsExitConfirmOpen] = useState(false);
   const [activePersonalMenuTab, setActivePersonalMenuTab] = useState<PersonalMenuTab>(
     PERSONAL_MENU_TAB.FREQUENTLY_RECORDED,
   );
@@ -181,30 +178,49 @@ export default function MealSearchPage() {
   const resetSearchState = () => {
     setSubmittedKeyword("");
     setSearchKeyword("");
+    setIsRecentMenuOpen(false);
+  };
+
+  const handleApplySelectedMenus = () => {
+    if (selectedCount === 0) return;
+
+    resetSearchState();
+
+    if (isFolderSearchMode) {
+      navigateBack({
+        fallbackTo: personalMenuEditFallbackPath ?? PATH.CREATE_FOLDER,
+        skipBackHandler: true,
+      });
+      return;
+    }
+
+    const nextPath = getMealRecordPath(dateKey, mealType);
+    if (isPreviousStackActivity("MealRecord")) {
+      navigateBack({ fallbackTo: nextPath, skipBackHandler: true });
+      return;
+    }
+
+    navigate(nextPath, { replace: true, animate: false });
   };
 
   const handleBackGuard = () => {
+    if (isRecentMenuOpen) {
+      setIsRecentMenuOpen(false);
+      return true;
+    }
+
     if (hasSearchKeyword) {
       resetSearchState();
       return true;
     }
 
-    if (isFolderSearchMode || isPreviousStackActivity("MealRecord")) {
-      return false;
+    if (!isFolderSearchMode && selectedCount > 0) {
+      handleApplySelectedMenus();
+      return true;
     }
 
-    // Without a record page underneath, leaving search also ends the unsaved meal draft.
-    const hasUnsavedChanges =
-      draft &&
-      buildMenuDraftSignature({
-        menus: draft.existingMenus,
-        image: draft.image,
-        mealTime: draft.mealTime,
-      }) !== (draft.serverSignature ?? buildMenuDraftSignature({ menus: [] }));
-
-    if (hasUnsavedChanges) {
-      setIsExitConfirmOpen(true);
-      return true;
+    if (isFolderSearchMode || isPreviousStackActivity("MealRecord")) {
+      return false;
     }
 
     clearDraft(draftKey);
@@ -293,31 +309,9 @@ export default function MealSearchPage() {
     navigate(getMealDetailPath(dateKey, mealType, menuId));
   };
 
-  const handleApplySelectedMenus = () => {
-    if (selectedCount === 0) return;
-
-    resetSearchState();
-
-    if (isFolderSearchMode) {
-      navigateBack({
-        fallbackTo: personalMenuEditFallbackPath ?? PATH.CREATE_FOLDER,
-        skipBackHandler: true,
-      });
-      return;
-    }
-
-    const nextPath = getMealRecordPath(dateKey, mealType);
-    if (isPreviousStackActivity("MealRecord")) {
-      navigateBack({ fallbackTo: nextPath, skipBackHandler: true });
-      return;
-    }
-
-    navigate(nextPath, { replace: true, animate: false });
-  };
-
   const handleClearKeyword = () => {
-    resetSearchState();
     searchInputRef.current?.focus();
+    resetSearchState();
   };
 
   const [isDirectInputSheetOpen, setIsDirectInputSheetOpen] = useState(false);
@@ -797,14 +791,6 @@ export default function MealSearchPage() {
     navigateBack({ fallbackTo: backFallbackPath });
   };
 
-  const handleExit = () => {
-    clearDraft(draftKey);
-    navigateBack({
-      fallbackTo: backFallbackPath,
-      skipBackHandler: true,
-    });
-  };
-
   if (!isPersonalMenuEditSearchMode && !hasDraft) {
     return (
       <section className={styles.page}>
@@ -875,16 +861,6 @@ export default function MealSearchPage() {
         onClose={handleCloseDirectInputSheet}
         onSelectNumberInput={handleNavigateNutrientAdd}
         onSelectCameraInput={handleNavigateNutrientCamera}
-      />
-
-      <ConfirmModal
-        open={isExitConfirmOpen}
-        onOpenChange={setIsExitConfirmOpen}
-        title="변경사항을 저장하지 않고 나갈까요?"
-        cancelText="나가기"
-        confirmText="계속 수정"
-        onCancel={handleExit}
-        onConfirm={() => {}}
       />
     </section>
   );
