@@ -1,3 +1,5 @@
+import type { CalendarViewMode } from "@/features/calendar/types/calendar.types";
+
 export interface NutritionLabelMenuRegisterRequestDto extends NutritionLabel {
   name: string;
   brand: string;
@@ -45,6 +47,13 @@ export interface UpsertFolderRequestDto {
   menu_ids: number[];
   menu_quantities: number[];
   menu_input_modes: Array<0 | 1>; //0: 단위, 1: 중량
+}
+/* ======
+ * 홈
+ * ====== */
+export interface MonthlyCalendarRequestDto<M extends CalendarViewMode = CalendarViewMode> {
+  date: string; // YYYY-MM
+  mode: M;
 }
 
 /* ======

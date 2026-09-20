@@ -1,3 +1,8 @@
+import {
+  CALENDAR_VIEW_MODE,
+  type CalendarViewMode,
+} from "@/features/calendar/types/calendar.types";
+
 /* ======
  * 유저 인증
  * ====== */
@@ -169,6 +174,17 @@ export interface RecentMenuResponseDto {
   menu_id: number;
   menu_name: string;
   brand?: string;
+}
+
+export type MonthlyCalendarResponseDto<M extends CalendarViewMode = CalendarViewMode> = {
+  date: string;
+} & MonthlyCalendarValueByMode[M];
+
+interface MonthlyCalendarValueByMode {
+  [CALENDAR_VIEW_MODE.MEAL_INTAKE]: { calories: number };
+  [CALENDAR_VIEW_MODE.WORKOUT_RECORD]: { burned_calories: number };
+  [CALENDAR_VIEW_MODE.BODY_WEIGHT]: { weight: number };
+  [CALENDAR_VIEW_MODE.WATER_RECORD]: { water_intake: number };
 }
 
 /* ======
