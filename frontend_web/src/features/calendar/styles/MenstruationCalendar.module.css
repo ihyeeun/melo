@@ -1,26 +1,17 @@
 .calendar {
-  display: flex;
-  flex-direction: column;
-  flex-shrink: 0;
-  padding: 80px 20px;
   width: 100%;
-  gap: 32px;
   user-select: none;
 
-  --day-cell-height: 48px;
+  --day-cell-height: 44px;
 }
 
 .month {
   flex-shrink: 0;
-}
-
-.monthTitle {
-  margin: 0;
+  padding: 20px 16px;
 }
 
 .status {
   /* 응답 상태가 바뀌어도 달력 높이를 유지한다. */
-  height: 32px;
   display: flex;
   align-items: center;
   color: var(--text-secondary);
@@ -35,13 +26,18 @@
 .grid {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
-  gap: 6px 0;
+  gap: 6px;
   text-align: center;
 }
 
+.textNavy {
+  color: var(--navy-950);
+}
+
 .weekdays {
-  height: 28px;
   align-items: center;
+  margin-top: 12px;
+  padding: 8px 0;
 }
 
 .grid {
@@ -51,7 +47,6 @@
   padding: 0;
   border: 0;
   grid-auto-rows: var(--day-cell-height);
-  row-gap: 20px;
 }
 
 .grid > button {

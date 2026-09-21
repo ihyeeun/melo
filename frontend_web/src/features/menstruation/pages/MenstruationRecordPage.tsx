@@ -12,7 +12,6 @@ import {
 } from "@/features/menstruation/utils/menstrualRecordSelection.util";
 import { Button } from "@/shared/commons/button/Button";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
-import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import { toast } from "@/shared/commons/toast/toast";
 import { navigateBack } from "@/shared/navigation/stackflowNavigation";
 
@@ -53,24 +52,22 @@ export default function MenstruationRecordPage() {
 
   return (
     <div className={`page ${styles.root}`}>
-      <PageHeader
-        title={"월경 기록"}
-        onBack={() => {
-          navigateBack();
-        }}
-      />
+      <header className={styles.header}>
+        <PageHeader
+          title={"월경 기록"}
+          onBack={() => {
+            navigateBack();
+          }}
+        />
+      </header>
 
       <div className={styles.captionSection}>
-        <p className="body-m-medium text-tertiary textCenter">
-          최근 월경 기간을 시작일~종료일까지
-          <br />
-          모두 선택해주세요
+        <p className="title-s-semi text-primary textCenter">
+          최근 월경 기간을 <br />
+          시작일~종료일까지 모두 선택해주세요
         </p>
-        <div>
-          <span className={`${styles.chip} body-s-semi`}>
-            <SystemIcon name="info-colored" mode="image" />
-            여러 기간을 기록할수록 예측이 정확해져요
-          </span>
+        <div className={styles.chip}>
+          <p className="caption-m-medium text-tertiary">여러 기간을 기록할수록 예측이 정확해져요</p>
         </div>
       </div>
 
@@ -111,7 +108,7 @@ export default function MenstruationRecordPage() {
           aria-busy={isSaving || isLoadingRecords}
           onClick={() => void handleSave()}
         >
-          {isSaving ? "저장 중…" : isLoadingRecords ? "기록 불러오는 중…" : "저장하기"}
+          {isSaving ? "저장 중…" : isLoadingRecords ? "기록 불러오는 중…" : "기록 저장하기"}
         </Button>
       </footer>
     </div>

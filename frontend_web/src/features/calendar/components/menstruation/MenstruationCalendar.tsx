@@ -27,10 +27,7 @@ type Props = {
 
 export default function MenstruationCalendar({ months, ...selection }: Props) {
   return (
-    <section
-      className={styles.calendar}
-      aria-label="생리 기록 달력"
-    >
+    <section className={styles.calendar} aria-label="생리 기록 달력">
       {months.map((month) => (
         <MenstruationMonth key={month.monthKey} {...month} {...selection} />
       ))}
@@ -52,7 +49,7 @@ function MenstruationMonth({
 
   return (
     <section className={styles.month} aria-label={label} aria-busy={query.isFetching}>
-      <h2 className={`title-m-semi ${styles.monthTitle}`}>{label}</h2>
+      <h2 className={`title-m-medium text-primary`}>{label}</h2>
 
       <div className={styles.status} aria-live="polite">
         {query.isPending && <LoadingIndicator iconSize={32} />}
@@ -71,7 +68,7 @@ function MenstruationMonth({
 
       <div className={styles.weekdays} aria-hidden="true">
         {WEEKDAY_LABELS.map((weekday) => (
-          <span key={weekday} className="caption-m-semi text-disabled">
+          <span key={weekday} className={`caption-m-semi ${styles.textNavy}`}>
             {weekday}
           </span>
         ))}
