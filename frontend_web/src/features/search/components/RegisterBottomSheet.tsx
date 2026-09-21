@@ -1,6 +1,6 @@
 import styles from "@/features/search/styles/RegisterBottomSheet.module.css";
 import BottomSheet from "@/shared/commons/bottomSheet/BottomSheet";
-import { Button } from "@/shared/commons/button/Button";
+import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 
 type DirectInputBottomSheetProps = {
   isOpen: boolean;
@@ -23,30 +23,24 @@ export default function DirectInputBottomSheet({
 }: DirectInputBottomSheetProps) {
   return (
     <BottomSheet isOpen={isOpen} onClose={onClose}>
-      <div className={styles.sheetContainer}>
-        <h2 className={`${styles.sheetTitle} title-m-semi`}>{title}</h2>
+      <main className={styles.main}>
+        <h2 className={`title-s-semi text-primary`}>{title}</h2>
         <div className={styles.sheetActions}>
-          <Button
-            variant="text"
-            size="xs"
-            fullWidth
-            onClick={onSelectNumberInput}
-          >
-            <span className={styles.sheetButtonText}>{numberInputLabel}</span>
-          </Button>
+          <button type="button" onClick={onSelectNumberInput} className={styles.button}>
+            <div className={styles.icon} aria-hidden>
+              <SystemIcon name="edit" />
+            </div>
+            <p className={`body-m-medium text-primary`}>{numberInputLabel}</p>
+          </button>
 
-          <div className="divider dividerMargin16" />
-
-          <Button
-            variant="text"
-            size="xs"
-            fullWidth
-            onClick={onSelectCameraInput}
-          >
-            <span className={styles.sheetButtonText}>{cameraInputLabel}</span>
-          </Button>
+          <button type="button" onClick={onSelectCameraInput} className={styles.button}>
+            <div className={styles.icon} aria-hidden>
+              <SystemIcon name="camera" />
+            </div>
+            <p className={`body-m-medium text-primary`}>{cameraInputLabel}</p>
+          </button>
         </div>
-      </div>
+      </main>
     </BottomSheet>
   );
 }
