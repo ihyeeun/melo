@@ -461,6 +461,8 @@ export default function WorkoutUpsertPage() {
               <InfoPopover
                 ariaLabel="소모 칼로리 계산 안내"
                 messages={CARDIO_CALORIE_INFO_MESSAGES}
+                side="bottom"
+                align="start"
               />
             }
             unit="kcal"
@@ -570,6 +572,8 @@ export default function WorkoutUpsertPage() {
               ariaLabel="소모 칼로리 계산 안내"
               messages={WEIGHT_CALORIE_INFO_MESSAGES}
               className={styles.popover}
+              side="bottom"
+              align="start"
             />
           }
           unit="kcal"
@@ -583,6 +587,8 @@ export default function WorkoutUpsertPage() {
               ariaLabel="운동 시간 계산 안내"
               messages={WEIGHT_DURATION_INFO_MESSAGES}
               className={styles.popover}
+              side="bottom"
+              align="start"
             />
           }
         >

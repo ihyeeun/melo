@@ -412,6 +412,8 @@ export function MealMenuNutrientDetail({
                         ariaLabel="영양성분 주의 안내"
                         messages={NUTRIENT_DETAIL_INFO_MESSAGES}
                         iconSize={18}
+                        align={macro.key === "carbs" ? "start" : "end"}
+                        side="bottom"
                       />
                     )}
                   </div>
