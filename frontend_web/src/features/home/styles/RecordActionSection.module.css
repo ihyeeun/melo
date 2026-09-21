@@ -51,7 +51,7 @@
 
 .mealButton:active,
 .workoutButton:active,
-.bodyLogButton:active {
+.bodyLogButton:active[data-isHealthConnected="true"] {
   background-color: var(--background-gray-1);
   transform: scale(0.995);
 }

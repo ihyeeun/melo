@@ -33,6 +33,8 @@ export default function TodayBodyLogSection({ date }: { date: string }) {
   };
 
   const openStepsEditor = () => {
+    if (nativeStepConnectionStatus === "connected") return;
+
     navigate(
       getSheetPath(PATH.HOME_STEPS_LOG_SHEET, {
         nativeStepConnectionStatus,

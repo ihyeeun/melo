@@ -8,7 +8,6 @@ import { PATH } from "@/router/path";
 import { isNativeApp, openNativeInAppBrowser } from "@/shared/api/bridge/nativeBridge";
 import BottomSheet from "@/shared/commons/bottomSheet/BottomSheet";
 import { Button } from "@/shared/commons/button/Button";
-import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import NumberField from "@/shared/commons/input/NumberField";
 import { LoadingOverlay } from "@/shared/commons/loading/Loading";
 import { toast } from "@/shared/commons/toast/toast";
@@ -151,15 +150,6 @@ export default function StepsLogBottomSheetActivity() {
                     <span className={`title-s-regular text-tertiary ${styles.stepsUnit}`}>보</span>
                   }
                 />
-
-                <Button
-                  variant="dismiss"
-                  className={styles.healthAccessNoticeButton}
-                  onClick={handleOpenHealthAccessGuide}
-                >
-                  걸음 수 연동하기
-                  <SystemIcon name="chevron-right" size={16} />
-                </Button>
               </div>
             ) : (
               <p
@@ -176,13 +166,22 @@ export default function StepsLogBottomSheetActivity() {
               </p>
             )}
           </div>
-          <div className={styles.sheetActions}>
-            {canInputSteps && (
+          {canInputSteps && (
+            <div className={styles.sheetActions}>
               <Button onClick={handleSubmit} fullWidth size="m" disabled={isManualStepsPending}>
                 기록하기
               </Button>
-            )}
-          </div>
+              <Button
+                variant="outlined"
+                size="m"
+                fullWidth
+                className={styles.healthAccessNoticeButton}
+                onClick={handleOpenHealthAccessGuide}
+              >
+                걸음 수 연동하기
+              </Button>
+            </div>
+          )}
         </div>
       </BottomSheet>
 

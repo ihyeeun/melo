@@ -128,6 +128,8 @@ export default function DiaryPage() {
   };
 
   const openStepsEditor = () => {
+    if (nativeStepConnectionStatus === "connected") return;
+
     navigate(
       getBodyLogSheetPath(PATH.HOME_STEPS_LOG_SHEET, {
         nativeStepConnectionStatus,
@@ -275,7 +277,11 @@ export default function DiaryPage() {
 
           <SectionLayout title="건강 기록">
             <div className={styles.bodyLogGroup}>
-              <Tile onClick={openStepsEditor} className={styles.bodyLogButton}>
+              <Tile
+                onClick={openStepsEditor}
+                className={styles.bodyLogButton}
+                data-isHealthConnected={nativeStepConnectionStatus === "connected"}
+              >
                 <div className={styles.bodyLogTitle}>
                   <p className="body-l-medium text-primary">걸음 수</p>
                   <SystemIcon name="plus-circle" size={18} className="text-secondary marginLeft" />

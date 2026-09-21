@@ -173,7 +173,7 @@
   font-weight: var(--fw-medium);
 }
 
-.bodyLogButton:active,
+.bodyLogButton:active[data-isHealthConnected="true"],
 .mealRecordButton:active,
 .workoutGroupButton:active {
   background-color: var(--background-gray-1);

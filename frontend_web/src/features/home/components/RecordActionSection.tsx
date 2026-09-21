@@ -73,6 +73,8 @@ export default function RecordActionSection() {
   };
 
   const openStepsEditor = () => {
+    if (nativeStepConnectionStatus === "connected") return;
+
     navigate(
       getBodyLogSheetPath(PATH.HOME_STEPS_LOG_SHEET, {
         nativeStepConnectionStatus,
@@ -142,6 +144,7 @@ export default function RecordActionSection() {
             unit="보"
             onClick={openStepsEditor}
             isPending={isBodyLogPending}
+            isHealthConnected={nativeStepConnectionStatus === "connected"}
           />
           <HealthMetricCard
             title="체중"
@@ -199,15 +202,21 @@ function HealthMetricCard({
   unit,
   onClick,
   isPending = false,
+  isHealthConnected = false,
 }: {
   title: string;
   value: number;
   unit: string;
   onClick: () => void;
   isPending?: boolean;
+  isHealthConnected?: boolean;
 }) {
   return (
-    <Tile onClick={isPending ? undefined : onClick} className={styles.bodyLogButton}>
+    <Tile
+      onClick={isPending ? undefined : onClick}
+      className={styles.bodyLogButton}
+      data-isHealthConnected={isHealthConnected}
+    >
       <div className={styles.bodyLogTitle}>
         <p className="body-l-medium text-primary">{title}</p>
         <SystemIcon name="plus-circle" size={18} className="text-secondary marginLeft" />
