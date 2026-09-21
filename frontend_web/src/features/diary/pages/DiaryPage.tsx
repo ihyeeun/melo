@@ -180,7 +180,7 @@ export default function DiaryPage() {
 
             <section className={styles.macroCard} aria-label="영양소 섭취량">
               {NUTRIENTS.map(({ key, label }) => {
-                const { current, target, progressPercent } = nutrition.nutrients[key];
+                const { current, target } = nutrition.nutrients[key];
 
                 return (
                   <div key={key} className={styles.macroItem}>
@@ -197,18 +197,24 @@ export default function DiaryPage() {
                       )}
                     </div>
                     <p className="body-s-medium text-primary">
-                      {formatDisplayNumber(current)}{" "}
+                      <span
+                        className={styles.macroWeight}
+                        data-exceeded={target > 0 && current > target}
+                      >
+                        {formatDisplayNumber(current)}
+                      </span>{" "}
                       <span className="caption-m-regular text-tertiary">
                         / {formatDisplayNumber(target)} g
                       </span>
                     </p>
                     <ScoreProgress
                       variant="navy"
-                      value={progressPercent}
+                      value={current}
+                      max={target}
                       ariaLabel={`${label} 섭취량`}
                       valueText={
                         target > 0
-                          ? `${formatDisplayNumber(current)} / ${formatDisplayNumber(target)} g`
+                          ? `${formatDisplayNumber(current)} / ${formatDisplayNumber(target)} g${current > target ? ", 목표 초과" : ""}`
                           : `${formatDisplayNumber(current)} g 섭취, 목표 미설정`
                       }
                     />

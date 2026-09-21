@@ -92,6 +92,10 @@
   margin-top: auto;
 }
 
+.macroWeight[data-exceeded="true"] {
+  color: var(--coral-600);
+}
+
 .burnedCaloriesCard {
   border-radius: 20px;
   border: 1px solid var(--border-subtle);

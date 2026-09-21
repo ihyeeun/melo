@@ -29,12 +29,13 @@ export default function ScoreProgress({
   dash = null,
   variant = "primary",
 }: ScoreProgressProps) {
-  const safeMax = Number.isFinite(max) && max > 0 ? max : 100;
-  const safeValue = Number.isFinite(value) ? value : 0;
+  const hasValidMax = Number.isFinite(max) && max > 0;
+  const safeMax = hasValidMax ? max : 100;
+  const safeValue = hasValidMax && Number.isFinite(value) ? Math.max(0, value) : 0;
+  const isExceeded = hasValidMax && safeValue > safeMax;
   const dashPosition =
     dash &&
-    Number.isFinite(max) &&
-    max > 0 &&
+    hasValidMax &&
     Number.isFinite(dash.value) &&
     dash.value >= 0 &&
     dash.value <= max
@@ -45,6 +46,7 @@ export default function ScoreProgress({
     <Progress.Root
       className={styles.Progress}
       data-variant={variant}
+      data-exceeded={isExceeded}
       value={safeValue}
       max={safeMax}
       aria-label={ariaLabel}

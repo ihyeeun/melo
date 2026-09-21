@@ -114,6 +114,9 @@ export default function PreviewTodayScoreSection({
       : 0;
   const { baseTarget, current, target } = nutritionSummary.calories;
   const showActivityBaseline = activityCalories > 0 && baseTarget > 0 && target > baseTarget;
+  const excessCalories = target > 0 ? Math.max(0, current - target) : 0;
+  const calorieExcessText =
+    excessCalories > 0 ? `${excessCalories.toLocaleString("ko-KR")} kcal 초과했어요` : null;
   const calorieValueText =
     target > 0
       ? `${current.toLocaleString("ko-KR")} / ${target.toLocaleString("ko-KR")} kcal`
@@ -194,25 +197,37 @@ export default function PreviewTodayScoreSection({
               </InfoPopover>
             )}
           </div>
-          <p>
-            <span className={`title-l-semi text-primary ${styles.currentCalorie}`}>
-              {current.toLocaleString("ko-KR")}
-            </span>{" "}
-            <span className="body-l-regular text-tertiary">
-              / {target.toLocaleString("ko-KR")} kcal
-            </span>
-          </p>
+          <div className={styles.calorieSummary}>
+            <p>
+              <span
+                className={`title-l-semi text-primary ${styles.currentCalorie}`}
+                data-exceeded={excessCalories > 0}
+              >
+                {current.toLocaleString("ko-KR")}
+              </span>{" "}
+              <span className="body-l-regular text-tertiary">
+                / {target.toLocaleString("ko-KR")} kcal
+              </span>
+            </p>
+            {calorieExcessText && (
+              <span className={`${styles.calorieExcessBubble} caption-m-medium`} aria-hidden="true">
+                {calorieExcessText}
+              </span>
+            )}
+          </div>
           <ScoreProgress
             variant="primary"
             value={target > 0 ? current : 0}
             max={target}
             dash={showActivityBaseline ? { label: "활동 전", value: baseTarget } : null}
             ariaLabel="섭취 칼로리"
-            valueText={
-              showActivityBaseline
-                ? `${calorieValueText}, 활동 전 목표 ${baseTarget.toLocaleString("ko-KR")} kcal`
-                : calorieValueText
-            }
+            valueText={[
+              calorieValueText,
+              showActivityBaseline && `활동 전 목표 ${baseTarget.toLocaleString("ko-KR")} kcal`,
+              calorieExcessText,
+            ]
+              .filter(Boolean)
+              .join(", ")}
           />
         </Tile>
 
@@ -231,7 +246,13 @@ export default function PreviewTodayScoreSection({
               )}
             </div>
             <p>
-              <span className="body-s-medium text-primary">
+              <span
+                className={`body-s-medium text-primary ${styles.macroWeight}`}
+                data-exceeded={
+                  nutritionSummary.nutrients.carbs.target > 0 &&
+                  nutritionSummary.nutrients.carbs.current > nutritionSummary.nutrients.carbs.target
+                }
+              >
                 {nutritionSummary.nutrients.carbs.current.toLocaleString("ko-KR")}
               </span>{" "}
               <span className="caption-m-regular text-tertiary">
@@ -240,13 +261,22 @@ export default function PreviewTodayScoreSection({
             </p>
             <ScoreProgress
               variant="navy"
-              value={nutritionSummary.nutrients.carbs.progressPercent}
+              value={nutritionSummary.nutrients.carbs.current}
+              max={nutritionSummary.nutrients.carbs.target}
+              ariaLabel="탄수화물 섭취량"
+              valueText={getNutrientValueText(nutritionSummary.nutrients.carbs)}
             />
           </div>
           <div className={styles.macrosItem}>
             <p className="body-s-medium text-primary">단백질</p>
             <p>
-              <span className="body-s-medium text-primary">
+              <span
+                className={`body-s-medium text-primary ${styles.macroWeight}`}
+                data-exceeded={
+                  nutritionSummary.nutrients.protein.target > 0 &&
+                  nutritionSummary.nutrients.protein.current > nutritionSummary.nutrients.protein.target
+                }
+              >
                 {nutritionSummary.nutrients.protein.current.toLocaleString("ko-KR")}
               </span>{" "}
               <span className="caption-m-regular text-tertiary">
@@ -255,20 +285,35 @@ export default function PreviewTodayScoreSection({
             </p>
             <ScoreProgress
               variant="navy"
-              value={nutritionSummary.nutrients.protein.progressPercent}
+              value={nutritionSummary.nutrients.protein.current}
+              max={nutritionSummary.nutrients.protein.target}
+              ariaLabel="단백질 섭취량"
+              valueText={getNutrientValueText(nutritionSummary.nutrients.protein)}
             />
           </div>
           <div className={styles.macrosItem}>
             <p className="body-s-medium text-primary">지방</p>
             <p>
-              <span className="body-s-medium text-primary">
+              <span
+                className={`body-s-medium text-primary ${styles.macroWeight}`}
+                data-exceeded={
+                  nutritionSummary.nutrients.fat.target > 0 &&
+                  nutritionSummary.nutrients.fat.current > nutritionSummary.nutrients.fat.target
+                }
+              >
                 {nutritionSummary.nutrients.fat.current.toLocaleString("ko-KR")}
               </span>{" "}
               <span className="caption-m-regular text-tertiary">
                 / {nutritionSummary.nutrients.fat.target.toLocaleString("ko-KR")}g
               </span>
             </p>
-            <ScoreProgress variant="navy" value={nutritionSummary.nutrients.fat.progressPercent} />
+            <ScoreProgress
+              variant="navy"
+              value={nutritionSummary.nutrients.fat.current}
+              max={nutritionSummary.nutrients.fat.target}
+              ariaLabel="지방 섭취량"
+              valueText={getNutrientValueText(nutritionSummary.nutrients.fat)}
+            />
           </div>
         </Tile>
       </section>
@@ -289,6 +334,12 @@ export default function PreviewTodayScoreSection({
       />
     </div>
   );
+}
+
+function getNutrientValueText({ current, target }: { current: number; target: number }) {
+  return target > 0
+    ? `${current.toLocaleString("ko-KR")} / ${target.toLocaleString("ko-KR")} g${current > target ? ", 목표 초과" : ""}`
+    : `${current.toLocaleString("ko-KR")} g 섭취, 목표 미설정`;
 }
 
 function getScoreCharacterSrc(score: number) {

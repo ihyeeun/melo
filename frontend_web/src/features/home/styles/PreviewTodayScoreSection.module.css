@@ -114,6 +114,43 @@
   font-weight: var(--fw-medium);
 }
 
+.currentCalorie[data-exceeded="true"],
+.macroWeight[data-exceeded="true"] {
+  color: var(--coral-600);
+}
+
+.calorieSummary {
+  align-items: flex-end;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  justify-content: space-between;
+}
+
+.calorieExcessBubble {
+  background-color: var(--gray-700);
+  border-radius: 8px;
+  color: var(--background-default);
+  margin-left: auto;
+  margin-bottom: 3px;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  padding: 4px 6px;
+  position: relative;
+  word-break: keep-all;
+}
+
+.calorieExcessBubble::after {
+  border-left: 3px solid transparent;
+  border-right: 3px solid transparent;
+  border-top: 4px solid var(--gray-700);
+  content: "";
+  left: 50%;
+  position: absolute;
+  top: 100%;
+  transform: translateX(-50%);
+}
+
 .calorieTitle {
   align-items: center;
   display: flex;

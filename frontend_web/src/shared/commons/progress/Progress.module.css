@@ -13,6 +13,14 @@
   --progress-indicator-color: var(--navy-500);
 }
 
+.Progress[data-exceeded="true"] {
+  --progress-indicator-color: var(--coral-600);
+}
+
+.Progress[data-variant="navy"][data-exceeded="true"] {
+  --progress-indicator-color: var(--navy-900);
+}
+
 .Label {
   color: var(--gray-900);
   font-size: 0.875rem;
