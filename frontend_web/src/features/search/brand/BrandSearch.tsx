@@ -116,7 +116,7 @@ export default function BrandSearch() {
   const isDirectRegisterDisabled = searchKeyword.trim().length === 0;
 
   return (
-    <section className={styles.page}>
+    <section className={`${styles.page} page`}>
       <SearchInputHeader
         value={searchKeyword}
         onValueChange={setSearchKeyword}
@@ -128,86 +128,74 @@ export default function BrandSearch() {
         onBack={handleBack}
       />
 
-      <main className={styles.main}>
-        <section className={styles.searchSection}>
-          {hasKeyword ? (
-            hasResults ? (
-              <ul className={styles.resultList}>
-                {brandResults.map((brand) => {
-                  const isSelected = selectedBrandId === brand.id;
+      <main className={`main ${styles.searchSection}`}>
+        {hasKeyword ? (
+          hasResults ? (
+            <ul className={styles.resultList}>
+              {brandResults.map((brand) => {
+                const isSelected = selectedBrandId === brand.id;
 
-                  return (
-                    <li key={brand.id}>
-                      <button
-                        type="button"
-                        className={`${styles.brandItem}`}
-                        onClick={() => handleBrandRegister(brand.name)}
-                        aria-pressed={isSelected}
-                      >
-                        <p className={`body-l-medium text-primary`}>{brand.name}</p>
-                        <div className={`${styles.icon} marginLeft`}>
-                          <SystemIcon name="arrow-insert" size={18} className="text-primary" />
-                        </div>
-                      </button>
-                    </li>
-                  );
-                })}
-              </ul>
-            ) : (
-              <div className={styles.emptyResult}>
-                {isInitialSearching ? (
-                  <LoadingIndicator iconSize={24} label="브랜드를 검색하는 중입니다." />
-                ) : (
-                  <>
-                    <img
-                      src="/icons/characters/question.png"
-                      alt=""
-                      aria-hidden="true"
-                      width={200}
-                    />
-
-                    <p className={`body-l-medium text-tertiary`}>
-                      일치하는 브랜드가 없어요
-                      <br />
-                      검색하신 <span className="text-primary">{searchKeyword}</span>(으)로 브랜드명
-                      등록을 진행할까요?
-                    </p>
-
+                return (
+                  <li key={brand.id}>
                     <button
                       type="button"
-                      className={styles.addButton}
-                      onClick={() => handleBrandRegister()}
-                      disabled={isDirectRegisterDisabled}
+                      className={`${styles.brandItem}`}
+                      onClick={() => handleBrandRegister(brand.name)}
+                      aria-pressed={isSelected}
                     >
-                      <SystemIcon name="plus-circle" size={18} />
-                      <p className="body-m-regular">브랜드 등록</p>
+                      <p className={`body-l-medium text-primary`}>{brand.name}</p>
                     </button>
-                  </>
-                )}
-              </div>
-            )
+                  </li>
+                );
+              })}
+            </ul>
           ) : (
-            <div className={styles.placeholder}>
-              <p className={`body-s-medium ${styles.placeholderText}`}>
-                찾으시는 브랜드를 검색해 주세요
-              </p>
-            </div>
-          )}
+            <div className={styles.emptyResult}>
+              {isInitialSearching ? (
+                <LoadingIndicator iconSize={24} label="브랜드를 검색하는 중입니다." />
+              ) : (
+                <>
+                  <img src="/icons/characters/question.png" alt="" aria-hidden="true" width={200} />
 
-          {hasKeyword && hasResults && (
-            <section className={styles.brandAddSection}>
-              <button
-                type="button"
-                className={styles.addButton}
-                onClick={() => handleBrandRegister()}
-                disabled={isDirectRegisterDisabled}
-              >
-                <SystemIcon name="plus-circle" size={18} />
-                <p className="body-m-regular">브랜드 등록</p>
-              </button>
-            </section>
-          )}
-        </section>
+                  <p className={`body-l-medium text-tertiary`}>
+                    일치하는 브랜드가 없어요
+                    <br />
+                    검색하신 <span className="text-primary">{searchKeyword}</span>(으)로 브랜드명
+                    등록을 진행할까요?
+                  </p>
+
+                  <button
+                    type="button"
+                    className={styles.addButton}
+                    onClick={() => handleBrandRegister()}
+                    disabled={isDirectRegisterDisabled}
+                  >
+                    <p className="body-m-regular textCenter">브랜드 직접 등록하기</p>
+                  </button>
+                </>
+              )}
+            </div>
+          )
+        ) : (
+          <div className={styles.placeholderArea}>
+            <img src="/icons/characters/search-mono.png" width={200} />
+            <p className={`body-l-medium text-tertiary`}>찾으시는 브랜드를 검색해 주세요</p>
+          </div>
+        )}
+
+        {hasKeyword && hasResults && (
+          <section className={styles.brandAddSection}>
+            <button
+              type="button"
+              className={styles.addButton}
+              onClick={() => handleBrandRegister()}
+              disabled={isDirectRegisterDisabled}
+            >
+              <SystemIcon name="plus-circle" size={18} />
+              <p className="body-m-regular">브랜드 등록</p>
+            </button>
+          </section>
+        )}
       </main>
     </section>
   );

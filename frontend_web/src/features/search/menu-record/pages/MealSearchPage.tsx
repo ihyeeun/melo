@@ -517,8 +517,10 @@ export default function MealSearchPage() {
   );
 
   const renderPersonalMenuEmptyState = (message: string) => (
-    <section className={`${styles.emptyResultContainer} ${styles.emptyResult}`}>
-      <p className="body-l-medium">{message}</p>
+    <section className={styles.searchEmptyResult}>
+      <img src="/icons/characters/question.png" alt="" aria-hidden="true" width={200} />
+
+      <p className="body-l-medium text-tertiary">{message}</p>
     </section>
   );
 
@@ -939,6 +941,17 @@ function FolderPanel({
               </button>
             </article>
           ))}
+          {folderList.length === 0 && (
+            <section className={styles.searchEmptyResult}>
+              <img src="/icons/characters/search-mono.png" alt="" aria-hidden="true" width={200} />
+
+              <p className="body-l-medium text-tertiary">
+                자주 먹는 음식을 폴더로 기록해두고
+                <br />
+                빠르게 기록해보세요!
+              </p>
+            </section>
+          )}
         </div>
       )}
     </div>
