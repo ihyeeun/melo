@@ -73,7 +73,7 @@ export default function RecordActionSection() {
   };
 
   const openStepsEditor = () => {
-    if (nativeStepConnectionStatus === "connected") return;
+    if (nativeStepConnectionStatus !== "disconnected") return;
 
     navigate(
       getBodyLogSheetPath(PATH.HOME_STEPS_LOG_SHEET, {
@@ -144,7 +144,7 @@ export default function RecordActionSection() {
             unit="보"
             onClick={openStepsEditor}
             isPending={isBodyLogPending}
-            isHealthConnected={nativeStepConnectionStatus === "connected"}
+            isHealthConnected={nativeStepConnectionStatus !== "disconnected"}
           />
           <HealthMetricCard
             title="체중"
