@@ -114,7 +114,7 @@
   font-weight: var(--fw-medium);
 }
 
-.calorieValue {
+.calorieTitle {
   align-items: center;
   display: flex;
   gap: 8px;

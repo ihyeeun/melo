@@ -112,6 +112,12 @@ export default function PreviewTodayScoreSection({
     nutritionSummary.calories.activity > 0
       ? Math.round(nutritionSummary.calories.activity)
       : 0;
+  const { baseTarget, current, target } = nutritionSummary.calories;
+  const showActivityBaseline = activityCalories > 0 && baseTarget > 0 && target > baseTarget;
+  const calorieValueText =
+    target > 0
+      ? `${current.toLocaleString("ko-KR")} / ${target.toLocaleString("ko-KR")} kcal`
+      : `${current.toLocaleString("ko-KR")} kcal 섭취, 목표 미설정`;
 
   return (
     <div className={styles.root}>
@@ -180,23 +186,34 @@ export default function PreviewTodayScoreSection({
 
       <section className={styles.nutritionSection}>
         <Tile className={styles.calorieGroup}>
-          <p className={`body-l-medium text-primary`}>칼로리</p>
-          <div className={styles.calorieValue}>
-            <p>
-              <span className={`title-l-semi text-primary ${styles.currentCalorie}`}>
-                {nutritionSummary.calories.current.toLocaleString("ko-KR")}
-              </span>{" "}
-              <span className={`body-l-regular text-tertiary`}>
-                / {nutritionSummary.calories.target.toLocaleString("ko-KR")} kcal
-              </span>
-            </p>
+          <div className={styles.calorieTitle}>
+            <p className="body-l-medium text-primary">칼로리</p>
             {activityCalories > 0 && (
               <InfoPopover ariaLabel="운동 칼로리 안내" align="start" side="bottom">
-                운동으로 {activityCalories.toLocaleString("ko-KR")}kcal 소모
+                운동으로 {activityCalories.toLocaleString("ko-KR")} kcal 소모했어요
               </InfoPopover>
             )}
           </div>
-          <ScoreProgress variant="primary" value={nutritionSummary.calories.progressPercent} />
+          <p>
+            <span className={`title-l-semi text-primary ${styles.currentCalorie}`}>
+              {current.toLocaleString("ko-KR")}
+            </span>{" "}
+            <span className="body-l-regular text-tertiary">
+              / {target.toLocaleString("ko-KR")} kcal
+            </span>
+          </p>
+          <ScoreProgress
+            variant="primary"
+            value={target > 0 ? current : 0}
+            max={target}
+            dash={showActivityBaseline ? { label: "활동 전", value: baseTarget } : null}
+            ariaLabel="섭취 칼로리"
+            valueText={
+              showActivityBaseline
+                ? `${calorieValueText}, 활동 전 목표 ${baseTarget.toLocaleString("ko-KR")} kcal`
+                : calorieValueText
+            }
+          />
         </Tile>
 
         <Tile className={styles.macrosGroup}>
