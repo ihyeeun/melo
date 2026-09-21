@@ -187,8 +187,11 @@ export default function DiaryPage() {
                     <div className={styles.macroTitle}>
                       <h3 className="body-s-medium text-primary">{label}</h3>
                       {key === "carbs" && nutrition.notices.carbsEstimatedFromSubNutrients && (
-                        <InfoPopover ariaLabel="순탄수 기준 안내">
-                          탄수화물에서 대체당과 식이섬유를 뺀 순탄수를 기준으로 탄수화물 정보를
+                        <InfoPopover ariaLabel="순탄수 기준 안내" align="start" side="bottom">
+                          탄수화물에서 대체당과 식이섬유를 뺀
+                          <br />
+                          순탄수를 기준으로 탄수화물 정보를
+                          <br />
                           제공하고 있어요
                         </InfoPopover>
                       )}
@@ -243,7 +246,9 @@ export default function DiaryPage() {
                         side="bottom"
                         align="end"
                       >
-                        평소 활동량을 고려해 목표 칼로리가 설정되어 있어요
+                        평소 활동량을 고려해
+                        <br />
+                        목표 칼로리가 설정되어 있어요
                       </InfoPopover>
                     </p>
                     <p className="body-l-medium text-secondary">

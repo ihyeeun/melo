@@ -36,7 +36,7 @@
   color: var(--background-default);
 }
 
-.arrow {
+.arrow[data-align="center"] {
   background: var(--gray-500);
   border-radius: 2px;
   height: 10px;
@@ -44,8 +44,11 @@
   width: 10px;
 }
 
-.popup[data-align="end"] {
-  border-top-right-radius: 7px;
+.popup[data-align="start"][data-side="bottom"] {
+  border-top-left-radius: 0px;
+}
+.popup[data-align="end"][data-side="bottom"] {
+  border-top-right-radius: 0;
 }
 
 .arrow[data-side="top"] {

@@ -191,7 +191,7 @@ export default function PreviewTodayScoreSection({
               </span>
             </p>
             {activityCalories > 0 && (
-              <InfoPopover ariaLabel="운동 칼로리 안내" side="bottom">
+              <InfoPopover ariaLabel="운동 칼로리 안내" align="start" side="bottom">
                 운동으로 {activityCalories.toLocaleString("ko-KR")}kcal 소모
               </InfoPopover>
             )}
@@ -204,9 +204,12 @@ export default function PreviewTodayScoreSection({
             <div className={styles.macroTitle}>
               <p className="body-s-medium text-primary">탄수화물</p>
               {nutritionSummary.notices.carbsEstimatedFromSubNutrients && (
-                <InfoPopover ariaLabel="순탄수 기준 안내">
-                  탄수화물에서 대체당과 식이섬유를 뺀 순탄수를 기준으로 탄수화물 정보를 제공하고
-                  있어요
+                <InfoPopover ariaLabel="순탄수 기준 안내" align="start" side="bottom">
+                  탄수화물에서 대체당과 식이섬유를 뺀
+                  <br />
+                  순탄수를 기준으로 탄수화물 정보를
+                  <br />
+                  제공하고 있어요
                 </InfoPopover>
               )}
             </div>
