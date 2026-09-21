@@ -7,7 +7,6 @@ import styles from "@/features/search/styles/BrandSearch.module.css";
 import { PATH } from "@/router/path";
 import type { RegisterMenuRequestDto } from "@/shared/api/types/api.dto";
 import { SearchInputHeader } from "@/shared/commons/header/SearchInputHeader";
-import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import { LoadingIndicator } from "@/shared/commons/loading/Loading";
 import { navigateBack, useLocation } from "@/shared/navigation/stackflowNavigation";
 
@@ -191,8 +190,7 @@ export default function BrandSearch() {
               onClick={() => handleBrandRegister()}
               disabled={isDirectRegisterDisabled}
             >
-              <SystemIcon name="plus-circle" size={18} />
-              <p className="body-m-regular">브랜드 등록</p>
+              <p className="body-m-regular textCenter">브랜드 직접 등록하기</p>
             </button>
           </section>
         )}
