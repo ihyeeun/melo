@@ -115,8 +115,14 @@ export default function PreviewTodayScoreSection({
   const { baseTarget, current, target } = nutritionSummary.calories;
   const showActivityBaseline = activityCalories > 0 && baseTarget > 0 && target > baseTarget;
   const excessCalories = target > 0 ? Math.max(0, current - target) : 0;
-  const calorieExcessText =
-    excessCalories > 0 ? `${excessCalories.toLocaleString("ko-KR")} kcal 초과했어요` : null;
+  // 추가 섭취 안내에는 운동으로 늘어난 목표 칼로리를 포함하지 않는다.
+  const remainingCalories = baseTarget > 0 ? Math.max(0, baseTarget - current) : 0;
+  const calorieStatusText =
+    excessCalories > 0
+      ? `${excessCalories.toLocaleString("ko-KR")} kcal 초과했어요`
+      : remainingCalories > 0
+        ? `${remainingCalories.toLocaleString("ko-KR")} kcal 더 먹을 수 있어요`
+        : null;
   const calorieValueText =
     target > 0
       ? `${current.toLocaleString("ko-KR")} / ${target.toLocaleString("ko-KR")} kcal`
@@ -209,9 +215,9 @@ export default function PreviewTodayScoreSection({
                 / {target.toLocaleString("ko-KR")} kcal
               </span>
             </p>
-            {calorieExcessText && (
-              <span className={`${styles.calorieExcessBubble} caption-m-medium`} aria-hidden="true">
-                {calorieExcessText}
+            {calorieStatusText && (
+              <span className={`${styles.calorieStatusBubble} caption-m-medium`} aria-hidden="true">
+                {calorieStatusText}
               </span>
             )}
           </div>
@@ -224,7 +230,7 @@ export default function PreviewTodayScoreSection({
             valueText={[
               calorieValueText,
               showActivityBaseline && `활동 전 목표 ${baseTarget.toLocaleString("ko-KR")} kcal`,
-              calorieExcessText,
+              calorieStatusText,
             ]
               .filter(Boolean)
               .join(", ")}
