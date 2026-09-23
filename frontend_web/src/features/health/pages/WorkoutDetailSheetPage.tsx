@@ -93,8 +93,6 @@ export default function WorkoutDetailSheetPage() {
 
     return (
       <div className={styles.sheetContainer}>
-        <h2 className={`${styles.title} title-s-semi`}>{detailWorkout.workout_name}</h2>
-
         <div className={styles.thumbnail}>
           {imageUrl ? (
             <img src={imageUrl} alt="" className={styles.thumbnailImage} />
@@ -123,7 +121,12 @@ export default function WorkoutDetailSheetPage() {
   };
 
   return (
-    <BottomSheet isOpen={isOpen} onClose={closeSheet} bottomPadding={20}>
+    <BottomSheet
+      isOpen={isOpen}
+      onClose={closeSheet}
+      bottomPadding={20}
+      title={detailWorkout?.workout_name}
+    >
       {renderContent()}
     </BottomSheet>
   );

@@ -90,15 +90,6 @@
   margin-top: 18px;
 }
 
-.editorTitle {
-  font-size: 18px;
-  font-weight: var(--fw-semibold);
-  line-height: 1.4;
-  letter-spacing: -0.025em;
-  color: var(--text-primary);
-  margin-bottom: 12px;
-}
-
 .genderGrid {
   display: grid;
   gap: 12px;

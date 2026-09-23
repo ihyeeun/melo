@@ -158,11 +158,6 @@
   padding: 0 18px;
 }
 
-.timeSheetHeader {
-  align-items: center;
-  display: flex;
-}
-
 .timePickerItem {
   color: var(--text-tertiary);
 }

@@ -173,11 +173,6 @@
   margin-right: auto;
 }
 
-.titleContainer {
-  display: flex;
-  align-items: center;
-}
-
 .stepsInputContainer {
   display: flex;
   flex-direction: column;

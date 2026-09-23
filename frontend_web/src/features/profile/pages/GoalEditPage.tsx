@@ -294,6 +294,7 @@ export default function GoalEditPage() {
       updateDraft({ birthYear: birthYearDefault });
     }
   };
+  const editorTitle = SUMMARY_FIELDS.find((field) => field.id === editingField)?.label;
   const isInstantSelectEditor =
     editingField === "gender" || editingField === "activity" || editingField === "goal";
   const hasPositiveValue = (value?: number) => value !== undefined && value > 0;
@@ -310,7 +311,6 @@ export default function GoalEditPage() {
     if (editingField === "gender") {
       return (
         <section>
-          <h2 className={styles.editorTitle}>성별</h2>
           <div className={styles.genderGrid}>
             <SelectedCard
               isSelected={sheetData.gender === 0}
@@ -335,7 +335,6 @@ export default function GoalEditPage() {
     if (editingField === "height") {
       return (
         <section>
-          <h2 className={styles.editorTitle}>키</h2>
           <EditorInput
             inputRef={editorInputRef}
             type="number"
@@ -359,8 +358,6 @@ export default function GoalEditPage() {
     if (editingField === "weight") {
       return (
         <section>
-          <h2 className={styles.editorTitle}>현재 몸무게</h2>
-
           <NumberField
             value={sheetData.weight}
             onChange={(value) => updateSheetData({ weight: value })}
@@ -400,7 +397,6 @@ export default function GoalEditPage() {
     if (editingField === "activity") {
       return (
         <section>
-          <h2 className={styles.editorTitle}>활동량</h2>
           {ACTIVITY_OPTIONS.map((activity, index) => (
             <SelectedCard
               key={activity.title}
@@ -422,7 +418,6 @@ export default function GoalEditPage() {
     if (editingField === "goal") {
       return (
         <section>
-          <h2 className={styles.editorTitle}>목표</h2>
           {GOAL_OPTIONS.map((goal, index) => (
             <SelectedCard
               key={goal.title}
@@ -443,7 +438,6 @@ export default function GoalEditPage() {
 
     return (
       <section>
-        <h2 className={styles.editorTitle}>목표 몸무게</h2>
         <EditorInput
           inputRef={editorInputRef}
           type="number"
@@ -534,7 +528,12 @@ export default function GoalEditPage() {
         </Button>
       </footer>
 
-      <BottomSheet isOpen={editingField !== null} onClose={closeEditor} disableContentDrag>
+      <BottomSheet
+        isOpen={editingField !== null}
+        onClose={closeEditor}
+        title={editorTitle}
+        disableContentDrag
+      >
         <div className={styles.sheetMain} data-editor-field={editingField ?? undefined}>
           <div className={styles.sheetContent}>{renderEditorBody()}</div>
           {!isInstantSelectEditor && (

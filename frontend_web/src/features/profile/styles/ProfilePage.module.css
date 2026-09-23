@@ -189,23 +189,14 @@
 }
 
 .sheetContainer {
-  padding: 0 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 40px;
-}
-
-.sheetContent {
-  padding: 0 4px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
+  padding: 0 18px;
 }
 
 .fieldGroup {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  margin-bottom: 40px;
 }
 
 .input {

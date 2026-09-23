@@ -110,9 +110,8 @@ export default function WeightLogBottomSheetActivity() {
 
   return (
     <>
-      <BottomSheet isOpen={isOpen} onClose={closeSheet}>
+      <BottomSheet isOpen={isOpen} onClose={closeSheet} title="오늘의 체중">
         <div className={styles.sheetContainer}>
-          <h3 className={`title-s-semi text-primary`}>오늘의 체중</h3>
           <NumberField
             value={draftWeight}
             onChange={(value) => setWeightDraft({ value })}

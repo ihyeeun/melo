@@ -680,15 +680,14 @@ export default function MealRecordPage() {
         onClose={() => setIsTimeSheetOpen(false)}
         bodyClassName={styles.timeSheetBody}
         disableContentDrag
+        title="식사 시간"
+        titleRightSlot={
+          <button type="button" onClick={handleResetTime} className="marginLeft">
+            <span className="body-l-regular text-tertiary">삭제</span>
+          </button>
+        }
       >
         <div className={styles.timeSheetContent}>
-          <div className={styles.timeSheetHeader}>
-            <h2 className="title-m-semi text-primary">식사 시간</h2>
-            <button type="button" onClick={handleResetTime} className="marginLeft">
-              <span className="body-l-regular text-tertiary">삭제</span>
-            </button>
-          </div>
-
           <ScrollWheelPicker
             height={290}
             itemHeight={67}

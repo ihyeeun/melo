@@ -227,9 +227,8 @@ export default function SteptargetCalories({ data, update }: StepComponentProps)
 
         <p className={`${styles.onboardingGoalKcalHelper} title-m-semi`}>{goalWeekMessage}</p>
       </div>
-      <BottomSheet isOpen={open} onClose={() => setOpen(false)}>
+      <BottomSheet isOpen={open} onClose={() => setOpen(false)} title="목표 칼로리">
         <div className={`${styles.onboardingGoalKcalSheet}`}>
-          <h3 className="title-m-semi">목표 칼로리</h3>
           <EditorInput
             inputRef={inputRef}
             type="number"

@@ -139,10 +139,9 @@ export default function WaterIntakeRecordPage() {
         onClose={() => {
           setIsSheetOpen(false);
         }}
+        title="컵 크기"
       >
         <section className={styles.sheetContent}>
-          <h2 className="title-s-semi text-primary">컵 크기</h2>
-
           <EditorInput
             type="number"
             inputMode="numeric"

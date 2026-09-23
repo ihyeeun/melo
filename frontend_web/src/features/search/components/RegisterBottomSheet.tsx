@@ -22,25 +22,22 @@ export default function DirectInputBottomSheet({
   cameraInputLabel = "영양성분표 촬영하기",
 }: DirectInputBottomSheetProps) {
   return (
-    <BottomSheet isOpen={isOpen} onClose={onClose}>
-      <main className={styles.main}>
-        <h2 className={`title-s-semi text-primary`}>{title}</h2>
-        <div className={styles.sheetActions}>
-          <button type="button" onClick={onSelectNumberInput} className={styles.button}>
-            <div className={styles.icon} aria-hidden>
-              <SystemIcon name="edit" />
-            </div>
-            <p className={`body-m-medium text-primary`}>{numberInputLabel}</p>
-          </button>
+    <BottomSheet isOpen={isOpen} onClose={onClose} title={title}>
+      <div className={styles.sheetActions}>
+        <button type="button" onClick={onSelectNumberInput} className={styles.button}>
+          <div className={styles.icon} aria-hidden>
+            <SystemIcon name="edit" />
+          </div>
+          <p className={`body-m-medium text-primary`}>{numberInputLabel}</p>
+        </button>
 
-          <button type="button" onClick={onSelectCameraInput} className={styles.button}>
-            <div className={styles.icon} aria-hidden>
-              <SystemIcon name="camera" />
-            </div>
-            <p className={`body-m-medium text-primary`}>{cameraInputLabel}</p>
-          </button>
-        </div>
-      </main>
+        <button type="button" onClick={onSelectCameraInput} className={styles.button}>
+          <div className={styles.icon} aria-hidden>
+            <SystemIcon name="camera" />
+          </div>
+          <p className={`body-m-medium text-primary`}>{cameraInputLabel}</p>
+        </button>
+      </div>
     </BottomSheet>
   );
 }

@@ -105,11 +105,8 @@ export default function StepsLogBottomSheetActivity() {
 
   return (
     <>
-      <BottomSheet isOpen={isOpen} onClose={closeSheet}>
+      <BottomSheet isOpen={isOpen} onClose={closeSheet} title="오늘의 걸음 수">
         <div className={styles.sheetContainer}>
-          <div className={styles.titleContainer}>
-            <p className={`title-s-semi text-primary`}>오늘의 걸음 수</p>
-          </div>
           <div className={styles.stepsFieldRow}>
             {canInputSteps ? (
               <div className={styles.stepsInputContainer}>

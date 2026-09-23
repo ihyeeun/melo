@@ -51,7 +51,8 @@ type ServingContext = {
 export type ChatMealRecordMenu = Pick<
   ChatRecommendItemResponseDto,
   "menu_id" | "menu_name" | "brand" | "unit" | "weight" | "unit_quantity" | "calories"
-> & Pick<ChatFeedbackMenuResponseDto, "estimated_quantity">;
+> &
+  Pick<ChatFeedbackMenuResponseDto, "estimated_quantity">;
 
 const MEAL_TYPE_ICON_MAP = {
   "0": "breakfast",
@@ -298,37 +299,35 @@ export function ChatMealRecordBottomSheet({
       bodyClassName={styles.sheetBody}
       positionerStyle={positionerStyle}
       modal={modal}
+      title="섭취 시간대"
     >
       <div className={styles.container}>
         <ScrollFogArea className={styles.scrollArea}>
           {dateLabel ? <p className={`title-m-semi text-primary`}>{dateLabel}</p> : null}
 
-          <section>
-            <p className={`${styles.marginBottom8px} body-l-medium text-primary`}>섭취시간대</p>
-            <div className={styles.mealTypeList}>
-              {MEAL_TYPE_OPTIONS.map((option) => {
-                const isActive = option.key === mealType;
-                const iconName = MEAL_TYPE_ICON_MAP[option.key];
+          <section className={styles.mealTypeList}>
+            {MEAL_TYPE_OPTIONS.map((option) => {
+              const isActive = option.key === mealType;
+              const iconName = MEAL_TYPE_ICON_MAP[option.key];
 
-                return (
-                  <button
-                    key={option.key}
-                    type="button"
-                    className={`${styles.mealTypeButton} ${isActive ? styles.mealTypeButtonActive : ""}`}
-                    onClick={() => handleMealTypeChange(option.key)}
-                    aria-pressed={isActive}
-                    aria-label={option.label}
+              return (
+                <button
+                  key={option.key}
+                  type="button"
+                  className={`${styles.mealTypeButton} ${isActive ? styles.mealTypeButtonActive : ""}`}
+                  onClick={() => handleMealTypeChange(option.key)}
+                  aria-pressed={isActive}
+                  aria-label={option.label}
+                >
+                  <SystemIcon name={iconName} size={24} />
+                  <span
+                    className={`${isActive ? styles.primaryText : styles.secondaryText} body-s-regular`}
                   >
-                    <SystemIcon name={iconName} size={24} />
-                    <span
-                      className={`${isActive ? styles.primaryText : styles.secondaryText} body-s-regular`}
-                    >
-                      {option.label}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
+                    {option.label}
+                  </span>
+                </button>
+              );
+            })}
           </section>
 
           <section className={styles.menuSection}>
