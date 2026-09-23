@@ -153,7 +153,11 @@ export default function WaterIntakeRecordPage() {
             placeholder="컵 용량 입력"
           />
 
-          <Button disabled={!cupAmount} onClick={() => handleUpdateCupSize(cupAmount)}>
+          <Button
+            disabled={!cupAmount}
+            onPointerDown={(e) => e.preventDefault()}
+            onClick={() => handleUpdateCupSize(cupAmount)}
+          >
             확인
           </Button>
         </section>
