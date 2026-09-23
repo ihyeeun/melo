@@ -70,6 +70,7 @@ export default function DiaryPage() {
   const workoutRecordQuery = useGetWorkoutRecordQuery(selectedDateKey);
   const workouts = workoutRecordQuery.data?.workout_list ?? [];
   const hasWorkoutRecords = workouts.length > 0;
+  const isHealthConnected = nativeStepConnectionStatus !== "disconnected";
 
   if (
     isSummaryPending ||
@@ -280,11 +281,17 @@ export default function DiaryPage() {
               <Tile
                 onClick={openStepsEditor}
                 className={styles.bodyLogButton}
-                data-isHealthConnected={nativeStepConnectionStatus !== "disconnected"}
+                data-isHealthConnected={isHealthConnected}
               >
                 <div className={styles.bodyLogTitle}>
                   <p className="body-l-medium text-primary">걸음 수</p>
-                  <SystemIcon name="plus-circle" size={18} className="text-secondary marginLeft" />
+                  {!isHealthConnected && (
+                    <SystemIcon
+                      name="plus-circle"
+                      size={18}
+                      className="text-secondary marginLeft"
+                    />
+                  )}
                 </div>
 
                 <div className={styles.bodyLogValue}>

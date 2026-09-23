@@ -47,6 +47,7 @@ export default function RecordActionSection() {
     summary: activitySummary,
     isWorkoutRecordPending,
   } = useActivityCalories(selectedDate);
+  const isHealthConnected = nativeStepConnectionStatus !== "disconnected";
 
   const hasWorkoutRecords = workoutRecords.length > 0;
   const totalWorkoutDuration = workoutRecords.reduce(
@@ -144,7 +145,7 @@ export default function RecordActionSection() {
             unit="보"
             onClick={openStepsEditor}
             isPending={isBodyLogPending}
-            isHealthConnected={nativeStepConnectionStatus !== "disconnected"}
+            isHealthConnected={isHealthConnected}
           />
           <HealthMetricCard
             title="체중"
@@ -211,6 +212,8 @@ function HealthMetricCard({
   isPending?: boolean;
   isHealthConnected?: boolean;
 }) {
+  const isNotShowIcon = isHealthConnected && title === "걸음 수";
+
   return (
     <Tile
       onClick={isPending ? undefined : onClick}
@@ -219,7 +222,9 @@ function HealthMetricCard({
     >
       <div className={styles.bodyLogTitle}>
         <p className="body-l-medium text-primary">{title}</p>
-        <SystemIcon name="plus-circle" size={18} className="text-secondary marginLeft" />
+        {!isNotShowIcon && (
+          <SystemIcon name="plus-circle" size={18} className="text-secondary marginLeft" />
+        )}
       </div>
       {isPending ? (
         <SkeletonStatus
