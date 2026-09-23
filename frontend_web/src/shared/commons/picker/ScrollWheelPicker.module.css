@@ -1,9 +1,10 @@
 .root {
   display: grid;
-  grid-template-columns: var(
-    --scroll-wheel-picker-column-template,
-    repeat(auto-fit, minmax(0, 1fr))
-  );
+  grid-template-columns: var(--scroll-wheel-picker-column-template, none);
+  grid-auto-flow: column;
+  grid-auto-columns: max-content;
+  column-gap: 28px;
+  justify-content: center;
   height: var(--scroll-wheel-picker-height);
   position: relative;
   touch-action: pan-y;

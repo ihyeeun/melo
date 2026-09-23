@@ -566,14 +566,20 @@ export default function MealRecordPage() {
   if (isSummaryReady) return <MealRecordPageSkeleton onBack={handleBack} />;
 
   return (
-    <section className={styles.page}>
-      <div className={styles.header}>
-        <PageHeader title="식사 기록 상세" onBack={handleBack} />
-      </div>
+    <section className={`${styles.page} page`}>
+      <PageHeader
+        title="식사 기록 상세"
+        onBack={handleBack}
+        rightSlot={
+          <button type="button" onClick={handleComplete}>
+            <p className="body-l-medium text-highlight">완료</p>
+          </button>
+        }
+      />
 
-      <main className={styles.content}>
+      <main className={`main ${styles.content}`}>
         <article className={styles.summaryCard}>
-          <p className="body-s-regular">{dayText} 섭취 칼로리</p>
+          <p className="body-s-regular text-secondary">{dayText} 섭취 칼로리</p>
 
           <div className={`${styles.calorieRow} textNoWrap`}>
             <span className={`title-xl-medium`}>
@@ -602,36 +608,27 @@ export default function MealRecordPage() {
           })}
         </section>
 
+        {mealImage && (
+          <article className={styles.imgContainer}>
+            <img src={mealImage} alt="식사 사진" className={styles.foodImage} />
+            <button
+              type="button"
+              className={styles.photoDeleteButton}
+              onClick={handleRemoveImage}
+              aria-label="식사 사진 삭제"
+            >
+              <SystemIcon name="exit" size={22} />
+            </button>
+          </article>
+        )}
+
         <section className={styles.menuSection}>
-          {mealImage ? (
-            <article className={styles.photoGroupCard}>
-              <div className={styles.imgContainer}>
-                <img src={mealImage} alt="식사 사진" className={styles.photoImage} />
-                <button
-                  type="button"
-                  className={styles.photoDeleteButton}
-                  onClick={handleRemoveImage}
-                  aria-label="식사 사진 삭제"
-                >
-                  <SystemIcon name="exit" size={28} />
-                </button>
-              </div>
-
-              <div className="divider" />
-            </article>
-          ) : null}
-
           {displayMenuItems.length > 0 ? (
             <div className={styles.menuList}>
-              <Button
-                variant="text"
-                size="xs"
-                className={styles.marginLeftAuto}
-                onClick={handleOpenTimeSheet}
-              >
-                <span>{formattedMealRecordTime}</span>
-                <SystemIcon name="chevron-right" size={14} />
-              </Button>
+              <button type="button" className={styles.timeEditButton} onClick={handleOpenTimeSheet}>
+                <p className="body-l-medium text-primary">{formattedMealRecordTime}</p>
+                <SystemIcon name="chevron-right" size={18} className="text-secondary marginLeft" />
+              </button>
 
               {displayMenuItems.map((menu, index) => (
                 <MealMenuCard
@@ -664,23 +661,9 @@ export default function MealRecordPage() {
         </section>
       </main>
 
-      <footer className={styles.footer}>
-        <Button onClick={handleMealSearchNavigate} variant="outlined" size="m" fullWidth>
-          추가하기
-        </Button>
-
-        <Button
-          onClick={() => {
-            void handleComplete();
-          }}
-          variant="default"
-          size="m"
-          fullWidth
-          disabled={isSavePending}
-        >
-          완료하기
-        </Button>
-      </footer>
+      <button type="button" onClick={handleMealSearchNavigate} className={styles.foodAddButton}>
+        <SystemIcon name="plus" size={28} />
+      </button>
 
       <ConfirmModal
         open={isExitConfirmOpen}
@@ -701,16 +684,16 @@ export default function MealRecordPage() {
         <div className={styles.timeSheetContent}>
           <div className={styles.timeSheetHeader}>
             <h2 className="title-m-semi text-primary">식사 시간</h2>
-            <Button onClick={handleResetTime} variant="text" size="xs">
-              삭제
-            </Button>
+            <button type="button" onClick={handleResetTime} className="marginLeft">
+              <span className="body-l-regular text-tertiary">삭제</span>
+            </button>
           </div>
 
           <ScrollWheelPicker
             height={290}
             itemHeight={67}
             classNames={{
-              item: `title-l-semi ${styles.timePickerItem}`,
+              item: `title-l-semi text-primary`,
               itemSelected: styles.timePickerItemSelected,
               highlight: styles.timePickerHighlight,
             }}
@@ -719,14 +702,21 @@ export default function MealRecordPage() {
                 key: "period",
                 value: draftMealRecordTime.period,
                 options: MEAL_RECORD_PERIOD_OPTIONS,
-                renderOption: (option) => `${option} :`,
+                renderOption: (option) => `${option}`,
                 ariaLabel: "오전 오후 선택",
               },
               {
                 key: "hour",
                 value: draftMealRecordTime.hour,
                 options: MEAL_RECORD_HOUR_OPTIONS,
+                renderOption: (option) => `${option}`,
                 ariaLabel: "시간 선택",
+              },
+              {
+                key: "",
+                value: "",
+                options: [""],
+                renderOption: () => `:`,
               },
               {
                 key: "minute",
