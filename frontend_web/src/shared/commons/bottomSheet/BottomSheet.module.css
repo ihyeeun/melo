@@ -12,7 +12,7 @@
 }
 
 .header:global(.seed-bottom-sheet__header) {
-  padding: 28px 18px 12px;
+  padding: 28px 18px 0;
   display: grid;
   grid-template-columns: 1fr 24px;
   align-items: center;
@@ -43,4 +43,5 @@
   padding-left: 0;
   padding-right: 0;
   -webkit-overflow-scrolling: touch;
+  padding-top: 12px;
 }
