@@ -570,11 +570,11 @@ export default function MealRecordPage() {
       <PageHeader
         title="식사 기록 상세"
         onBack={handleBack}
-        rightSlot={
-          <button type="button" onClick={handleComplete}>
-            <p className="body-l-medium text-highlight">완료</p>
-          </button>
-        }
+        // rightSlot={
+        //   <button type="button" onClick={handleComplete}>
+        //     <p className="body-l-medium text-highlight">완료</p>
+        //   </button>
+        // }
       />
 
       <main className={`main ${styles.content}`}>
@@ -661,9 +661,27 @@ export default function MealRecordPage() {
         </section>
       </main>
 
-      <button type="button" onClick={handleMealSearchNavigate} className={styles.foodAddButton}>
+      <footer className={`footer ${styles.footer}`}>
+        <Button onClick={handleMealSearchNavigate} variant="outlined" size="m" fullWidth>
+          추가하기
+        </Button>
+
+        <Button
+          onClick={() => {
+            void handleComplete();
+          }}
+          variant="default"
+          size="m"
+          fullWidth
+          disabled={isSavePending}
+        >
+          완료하기
+        </Button>
+      </footer>
+
+      {/* <button type="button" onClick={handleMealSearchNavigate} className={styles.foodAddButton}>
         <SystemIcon name="plus" size={28} />
-      </button>
+      </button> */}
 
       <ConfirmModal
         open={isExitConfirmOpen}

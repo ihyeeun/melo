@@ -4,7 +4,8 @@
 
 .content {
   border-top: 1px solid var(--border-subtle);
-  padding-bottom: calc(var(--safe-area-bottom) + 60px);
+  padding-top: 20px;
+  /* padding-bottom: calc(var(--safe-area-bottom) + 60px); */
 }
 
 .summaryCard {
@@ -169,4 +170,10 @@
 .timePickerHighlight {
   background: var(--background-gray-1);
   border-radius: 16px;
+}
+
+.footer {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
 }
