@@ -260,13 +260,13 @@ export default function NumberField({
             aria-label={decrementAriaLabel}
             disabled={decrementDisabled}
           >
-            {decrementIcon ?? <SystemIcon name="circle-minus" mode="image" size={24} />}
+            {decrementIcon ?? <SystemIcon name="minus-circle" mode="image" size={24} />}
           </BaseNumberField.Decrement>
         )}
         <div
           className={cx(
             unstyled ? undefined : styles.inputWrapper,
-            unstyled ? undefined : "typo-body1",
+            unstyled ? undefined : "title-m-semi",
             classNames?.inputWrapper,
           )}
         >
@@ -356,7 +356,7 @@ export default function NumberField({
             aria-label={incrementAriaLabel}
             disabled={incrementDisabled}
           >
-            {incrementIcon ?? <SystemIcon name="circle-plus" mode="image" size={24} />}
+            {incrementIcon ?? <SystemIcon name="plus-circle" mode="image" size={24} />}
           </BaseNumberField.Increment>
         )}
       </BaseNumberField.Group>

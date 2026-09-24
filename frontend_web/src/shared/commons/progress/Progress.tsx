@@ -2,71 +2,72 @@ import { Progress } from "@base-ui/react/progress";
 
 import styles from "./Progress.module.css";
 
-export type ProgressVariant = "primary-white" | "primary-gray" | "black-gray" | "danger-white";
+export type ProgressVariant = "primary" | "navy";
 
 type ProgressDash = {
-  label?: string;
+  label: string;
+  /** value, max와 같은 단위의 기준값. */
   value: number;
 };
 
 type ScoreProgressProps = {
   value: number;
   label?: string;
+  ariaLabel?: string;
+  valueText?: string;
   max?: number;
   dash?: ProgressDash | null;
   variant?: ProgressVariant;
 };
 
-function getPercent(value: number, max: number) {
-  if (!Number.isFinite(value) || !Number.isFinite(max) || max <= 0) {
-    return null;
-  }
-
-  return (value / max) * 100;
-}
-
 export default function ScoreProgress({
   value,
   label,
+  ariaLabel,
+  valueText,
   max = 100,
   dash = null,
-  variant = "primary-white",
+  variant = "primary",
 }: ScoreProgressProps) {
-  const safeMax = Number.isFinite(max) && max > 0 ? max : 100;
-  const safeValue = Number.isFinite(value) ? value : 0;
-  const dashPosition = dash ? getPercent(dash.value, safeMax) : null;
-  const visibleDash =
-    dash && dashPosition !== null && dashPosition >= 0 && dashPosition <= 100
-      ? {
-          ...dash,
-          position: Math.min(Math.max(dashPosition, 2), 100 - 2),
-        }
+  const hasValidMax = Number.isFinite(max) && max > 0;
+  const safeMax = hasValidMax ? max : 100;
+  const safeValue = hasValidMax && Number.isFinite(value) ? Math.max(0, value) : 0;
+  const isExceeded = hasValidMax && safeValue > safeMax;
+  const dashPosition =
+    dash &&
+    hasValidMax &&
+    Number.isFinite(dash.value) &&
+    dash.value >= 0 &&
+    dash.value <= max
+      ? (dash.value / max) * 100
       : null;
 
   return (
     <Progress.Root
       className={styles.Progress}
       data-variant={variant}
+      data-exceeded={isExceeded}
       value={safeValue}
       max={safeMax}
+      aria-label={ariaLabel}
+      getAriaValueText={valueText === undefined ? undefined : () => valueText}
     >
       {label && <Progress.Label className={styles.Label}>{label}</Progress.Label>}
-      <div className={styles.TrackWrap} data-has-dash={visibleDash !== null}>
+      <div className={styles.TrackWrap} data-has-dash={dashPosition !== null}>
         <Progress.Track className={styles.Track}>
           <Progress.Indicator className={styles.Indicator} />
         </Progress.Track>
-        {visibleDash ? (
+        {dash && dashPosition !== null && (
           <span
             className={styles.Dash}
-            style={{ left: `${visibleDash.position}%` }}
+            style={{ left: `${dashPosition}%` }}
+            data-align={dashPosition < 10 ? "start" : dashPosition > 90 ? "end" : "center"}
             aria-hidden="true"
           >
             <span className={styles.DashLine} />
-            {visibleDash.label ? (
-              <span className={`${styles.DashLabel} typo-caption4`}>{visibleDash.label}</span>
-            ) : null}
+            <span className={`${styles.DashLabel} body-s-medium text-secondary`}>{dash.label}</span>
           </span>
-        ) : null}
+        )}
       </div>
     </Progress.Root>
   );

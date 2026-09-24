@@ -226,7 +226,7 @@ export default function ChatCameraPage() {
 
   return (
     <section className={styles.page}>
-      <PageHeader title="사진 촬영" onBack={returnFromCameraPage} />
+      <PageHeader title={isProcessing ? "사진 분석" : "사진 촬영"} onBack={returnFromCameraPage} />
 
       {isOpeningCamera ? (
         <main className={styles.main} />

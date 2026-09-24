@@ -11,7 +11,6 @@ import { initNativeBridgeListener, initNativeClickHaptics } from "@/shared/api/b
 import { initQueryClientLifecycleSync } from "@/shared/api/queryClient";
 import { LoadingScreen } from "@/shared/commons/loading/Loading";
 import { syncFeatureGuardStateToApp } from "@/shared/guards/featureGuard";
-import { initContentInteractionGuard } from "@/shared/utils/contentInteractionGuard";
 import { initInputCharacterRestriction } from "@/shared/utils/inputCharacterRestriction";
 
 const StackflowRuntime = lazy(() =>
@@ -36,13 +35,11 @@ export default function App() {
     const cleanupNativeBridgeListener = initNativeBridgeListener();
     const cleanupNativeClickHaptics = initNativeClickHaptics();
     const cleanupQueryClientLifecycleSync = initQueryClientLifecycleSync();
-    const cleanupContentInteractionGuard = initContentInteractionGuard();
     const cleanupInputCharacterRestriction = initInputCharacterRestriction();
     syncFeatureGuardStateToApp();
 
     return () => {
       cleanupInputCharacterRestriction();
-      cleanupContentInteractionGuard();
       cleanupQueryClientLifecycleSync();
       cleanupNativeClickHaptics();
       cleanupNativeBridgeListener();
@@ -79,7 +76,7 @@ export default function App() {
 
   return (
     <div className="app-container">
-      <Suspense fallback={<LoadingScreen background="var(--bg-normal)" />}>
+      <Suspense fallback={<LoadingScreen background="var(--background-gray-1)" />}>
         <StackflowRuntime />
       </Suspense>
     </div>

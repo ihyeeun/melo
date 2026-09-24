@@ -6,14 +6,9 @@ import { useSetBrandSearchSelection } from "@/features/search/brand/stores/brand
 import styles from "@/features/search/styles/BrandSearch.module.css";
 import { PATH } from "@/router/path";
 import type { RegisterMenuRequestDto } from "@/shared/api/types/api.dto";
-import { Button } from "@/shared/commons/button/Button";
 import { SearchInputHeader } from "@/shared/commons/header/SearchInputHeader";
-import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import { LoadingIndicator } from "@/shared/commons/loading/Loading";
-import {
-  navigateBack,
-  useLocation,
-} from "@/shared/navigation/stackflowNavigation";
+import { navigateBack, useLocation } from "@/shared/navigation/stackflowNavigation";
 
 type BrandSearchResult = {
   id: string;
@@ -120,7 +115,7 @@ export default function BrandSearch() {
   const isDirectRegisterDisabled = searchKeyword.trim().length === 0;
 
   return (
-    <section className={styles.page}>
+    <section className={`${styles.page} page`}>
       <SearchInputHeader
         value={searchKeyword}
         onValueChange={setSearchKeyword}
@@ -132,78 +127,73 @@ export default function BrandSearch() {
         onBack={handleBack}
       />
 
-      <main className={styles.main}>
-        <section className={styles.searchSection}>
-          {hasKeyword ? (
-            hasResults ? (
-              <ul className={styles.resultList}>
-                {brandResults.map((brand) => {
-                  const isSelected = selectedBrandId === brand.id;
+      <main className={`main ${styles.searchSection}`}>
+        {hasKeyword ? (
+          hasResults ? (
+            <ul className={styles.resultList}>
+              {brandResults.map((brand) => {
+                const isSelected = selectedBrandId === brand.id;
 
-                  return (
-                    <li key={brand.id}>
-                      <button
-                        type="button"
-                        className={`${styles.brandItem} ${isSelected ? styles.brandItemSelected : ""}`}
-                        onClick={() => handleBrandRegister(brand.name)}
-                        aria-pressed={isSelected}
-                      >
-                        <span className={`typo-title2 ${styles.brandName}`}>{brand.name}</span>
-                      </button>
-                    </li>
-                  );
-                })}
-              </ul>
-            ) : (
-              <div className={styles.emptyResult}>
-                {isInitialSearching ? (
-                  <LoadingIndicator label="브랜드를 검색하는 중입니다." />
-                ) : (
-                  <>
-                    <p className={`typo-label4 ${styles.emptyResultSubText}`}>
-                      일치하는 브랜드가 없어요
-                      <br />
-                      브랜드를 직접 등록할 수 있어요
-                    </p>
-                    <Button
-                      variant="text"
-                      interaction={isDirectRegisterDisabled ? "disable" : "normal"}
-                      size="small"
-                      color="normal"
-                      onClick={() => handleBrandRegister()}
-                      disabled={isDirectRegisterDisabled}
+                return (
+                  <li key={brand.id}>
+                    <button
+                      type="button"
+                      className={`${styles.brandItem}`}
+                      onClick={() => handleBrandRegister(brand.name)}
+                      aria-pressed={isSelected}
                     >
-                      브랜드 직접 등록
-                      <SystemIcon name="chevron-right-thin" size={18} />
-                    </Button>
-                  </>
-                )}
-              </div>
-            )
+                      <p className={`body-l-medium text-primary`}>{brand.name}</p>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
           ) : (
-            <div className={styles.placeholder}>
-              <p className={`typo-label4 ${styles.placeholderText}`}>
-                찾으시는 브랜드를 검색해 주세요
-              </p>
-            </div>
-          )}
+            <div className={styles.emptyResult}>
+              {isInitialSearching ? (
+                <LoadingIndicator iconSize={24} label="브랜드를 검색하는 중입니다." />
+              ) : (
+                <>
+                  <img src="/icons/characters/question.png" alt="" aria-hidden="true" width={200} />
 
-          {hasKeyword && hasResults && (
-            <section className={styles.brandAddSection}>
-              <Button
-                variant="text"
-                interaction={isDirectRegisterDisabled ? "disable" : "normal"}
-                size="small"
-                color="normal"
-                onClick={() => handleBrandRegister()}
-                disabled={isDirectRegisterDisabled}
-              >
-                브랜드 직접 입력
-                <SystemIcon name="chevron-right-thin" size={18} />
-              </Button>
-            </section>
-          )}
-        </section>
+                  <p className={`body-l-medium text-tertiary`}>
+                    일치하는 브랜드가 없어요
+                    <br />
+                    검색하신 <span className="text-primary">{searchKeyword}</span>(으)로 브랜드명
+                    등록을 진행할까요?
+                  </p>
+
+                  <button
+                    type="button"
+                    className={styles.addButton}
+                    onClick={() => handleBrandRegister()}
+                    disabled={isDirectRegisterDisabled}
+                  >
+                    <p className="body-m-regular textCenter">브랜드 직접 등록하기</p>
+                  </button>
+                </>
+              )}
+            </div>
+          )
+        ) : (
+          <div className={styles.placeholderArea}>
+            <img src="/icons/characters/search-mono.png" width={200} />
+            <p className={`body-l-medium text-tertiary`}>찾으시는 브랜드를 검색해 주세요</p>
+          </div>
+        )}
+
+        {hasKeyword && hasResults && (
+          <section className={styles.brandAddSection}>
+            <button
+              type="button"
+              className={styles.addButton}
+              onClick={() => handleBrandRegister()}
+              disabled={isDirectRegisterDisabled}
+            >
+              <p className="body-m-regular textCenter">브랜드 직접 등록하기</p>
+            </button>
+          </section>
+        )}
       </main>
     </section>
   );

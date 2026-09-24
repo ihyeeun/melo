@@ -1,20 +1,18 @@
-import type { KeyboardEvent, MouseEvent } from "react";
+import type { MouseEvent } from "react";
 
 import { MENU_DATA_SOURCE, type MenuDataSource } from "@/shared/api/types/api.dto";
 import { DataSourceBadge } from "@/shared/commons/badge/DataSourceBadge";
+import { SelectedCard } from "@/shared/commons/card/SelectedCard";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
-import { formatNumberWithMaxOneDecimal } from "@/shared/utils/numberFormat";
+import { formatDisplayNumber } from "@/shared/utils/numberFormat";
 import { getServingUnitLabel } from "@/shared/utils/servingUnit";
 
 import styles from "./MealMenuCard.module.css";
 
-export type MealMenuCardIcon = "add" | "check" | "delete";
-export type MealMenuCardState = "default" | "select";
+export type MealMenuCardIcon = "add" | "minus" | "delete";
 
 type MealMenuCardProps = {
   name: string;
-  rank?: number;
-  description?: string;
   calories?: number;
   unit_quantity?: string;
   brand?: string;
@@ -22,9 +20,8 @@ type MealMenuCardProps = {
   weight?: number;
   quantity?: number;
   data_source?: MenuDataSource | number;
-  icon?: MealMenuCardIcon | null;
-  state?: MealMenuCardState;
-  hideServingInfo?: boolean;
+  icon?: MealMenuCardIcon;
+  state?: boolean;
   className?: string;
   onClick?: () => void;
   onIconClick?: () => void;
@@ -58,21 +55,23 @@ function parseBaseUnitCount(unitQuantity?: string) {
 }
 
 function getActionAriaLabel(icon: MealMenuCardIcon) {
-  if (icon === "add") return "추가";
-  if (icon === "check") return "선택 완료";
-  return "삭제";
+  if (icon === "add") return "메뉴 추가";
+  return "선택 메뉴 취소";
 }
 
-function ActionIcon({ icon }: { icon: MealMenuCardIcon }) {
-  if (icon === "add") return <SystemIcon name="circle-plus" mode="image" size={24} />;
-  if (icon === "check") return <SystemIcon name="circle-check-selected" mode="image" size={24} />;
-  return <SystemIcon name="close" size={24} />;
+function ActionIcon({ icon, isSelected }: { icon: MealMenuCardIcon; isSelected?: boolean }) {
+  if (icon === "delete") return <SystemIcon name="exit" size={18} />;
+
+  return (
+    <span className={styles.actionIcon} data-icon={isSelected ? "minus" : "add"} aria-hidden="true">
+      <SystemIcon name="minus" size={18} />
+      <SystemIcon name="minus" size={18} className={styles.actionIconVertical} />
+    </span>
+  );
 }
 
 export function MealMenuCard({
   name,
-  rank,
-  description,
   calories,
   unit_quantity,
   brand,
@@ -80,38 +79,19 @@ export function MealMenuCard({
   weight,
   quantity,
   data_source,
-  icon = "delete",
-  state = "default",
-  hideServingInfo = false,
+  icon,
+  state = false,
   className,
   onClick,
   onIconClick,
 }: MealMenuCardProps) {
-  const classes = [
-    styles.card,
-    state === "select" ? styles.selected : "",
-    onClick ? styles.clickable : "",
-    className ?? "",
-  ]
-    .filter(Boolean)
-    .join(" ");
-
-  const handleCardKeyDown = (event: KeyboardEvent<HTMLElement>) => {
-    if (!onClick) return;
-    if (event.key !== "Enter" && event.key !== " ") return;
-
-    event.preventDefault();
-    onClick();
-  };
-
   const handleIconClick = (event: MouseEvent<HTMLButtonElement>) => {
     event.stopPropagation();
     onIconClick?.();
   };
 
-  const isSelected = state === "select";
+  const isSelected = state;
   const isPersonalMenu = data_source === MENU_DATA_SOURCE.PERSONAL;
-  const shouldShowChipList = isPersonalMenu;
   const safeQuantityInput =
     typeof quantity === "number" && Number.isFinite(quantity) && quantity > 0 ? quantity : null;
   const safeWeight = toPositiveNumber(weight);
@@ -125,87 +105,43 @@ export function MealMenuCard({
   const weightUnitText = unit === 1 ? "ml" : "g";
   const servingUnitLabel = getServingUnitLabel(unit_quantity);
   const shouldShowCalories = displayedCalories !== null;
-  const shouldShowServingInfo = !hideServingInfo;
-  const shouldShowMeta = shouldShowServingInfo || shouldShowCalories;
-  const metaClassName = [
-    styles.meta,
-    !shouldShowServingInfo && shouldShowCalories ? styles.metaOnlyCalories : "",
-  ]
-    .filter(Boolean)
-    .join(" ");
-  // const servingAmountLabel =
-  //   servingUnitLabel === "인분"
-  //     ? `${formatQuantity(safeDisplayUnitCount)}${servingUnitLabel}`
-  //     : `1${servingUnitLabel}`;
 
   return (
-    <article
-      className={classes}
-      role={onClick ? "button" : undefined}
-      tabIndex={onClick ? 0 : undefined}
-      onClick={onClick}
-      onKeyDown={handleCardKeyDown}
-    >
-      <div className={styles.content}>
-        <section className={styles.header}>
-          {typeof rank === "number" && Number.isFinite(rank) ? (
-            <span className={`${styles.rankBadge} typo-caption4`}>{rank}위</span>
-          ) : null}
+    <SelectedCard isSelected={isSelected} className={`${styles.root} ${className}`}>
+      <button onClick={onClick ? () => onClick() : undefined} className={styles.contents}>
+        {isPersonalMenu && <DataSourceBadge variant="personal" active={isSelected} />}
 
-          <div className={styles.titleSection}>
-            <p className={`${styles.title} typo-title3 ellipsis`}>{name}</p>
+        <p className={`body-l-medium text-primary ellipsis`}>{name}</p>
 
-            {icon !== null && (
-              <button
-                type="button"
-                className={styles.iconButton}
-                onClick={handleIconClick}
-                disabled={!onIconClick}
-                aria-label={getActionAriaLabel(icon)}
-              >
-                <ActionIcon icon={icon} />
-              </button>
-            )}
-          </div>
-        </section>
+        {shouldShowCalories ? (
+          <p className={`${styles.meta} body-s-regular`}>
+            {brand && <span className={`ellipsis text-tertiary`}>{brand}</span>}
+            <span className={`textNoWrap text-secondary`}>
+              {formatQuantity(safeDisplayUnitCount)}
+              {servingUnitLabel} {`(${formatQuantity(resolvedConsumedWeight)}${weightUnitText})`}
+            </span>
 
-        {shouldShowMeta ? (
-          <section className={metaClassName}>
-            {shouldShowServingInfo ? (
-              <p className={styles.prouductInfo}>
-                {brand && (
-                  <span className={`${styles.brand} typo-label4`} title={brand}>
-                    {brand}
-                  </span>
-                )}
-                <span className={`${styles.unitAmount} typo-label4`}>
-                  {formatQuantity(safeDisplayUnitCount)}
-                  {servingUnitLabel}
-                </span>
-                <span
-                  className={`${styles.unitAmount} typo-label4`}
-                >{`(${formatQuantity(resolvedConsumedWeight)}${weightUnitText})`}</span>
-              </p>
-            ) : null}
-
-            {description && (
-              <p className={`typo-body3 ${styles.description} ellipsis`}>{description}</p>
-            )}
-
-            {shouldShowCalories ? (
-              <span className={`${styles.calories} textNoWrap typo-title3`}>
-                {formatNumberWithMaxOneDecimal(displayedCalories)}kcal
-              </span>
-            ) : null}
-          </section>
+            <span className={`textNoWrap text-secondary`}>
+              {formatDisplayNumber(displayedCalories)} kcal
+            </span>
+          </p>
         ) : null}
-      </div>
+      </button>
 
-      {shouldShowChipList && (
-        <div className={styles.chipList}>
-          {isPersonalMenu && <DataSourceBadge variant="personal" active={isSelected} />}
+      {icon && (
+        <div className={styles.quickAction}>
+          <button
+            type="button"
+            className={styles.iconButton}
+            onClick={handleIconClick}
+            disabled={!onIconClick}
+            aria-label={getActionAriaLabel(icon)}
+            data-selected={isSelected}
+          >
+            <ActionIcon icon={icon} isSelected={isSelected} />
+          </button>
         </div>
       )}
-    </article>
+    </SelectedCard>
   );
 }

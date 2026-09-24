@@ -1,23 +1,25 @@
-.sheetContainer {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  padding: 0 20px calc(var(--safe-area-bottom) + 20px) 20px;
-}
-
-.sheetTitle {
-  color: var(--label-normal);
-  padding-bottom: 10px;
-}
-
 .sheetActions {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  place-items: center;
+  padding: 8px 16px 0;
 }
 
-.sheetButtonText {
-  color: var(--label-normal);
-  text-align: start;
+.button {
   width: 100%;
-  padding: 0 12px;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+}
+
+.icon {
+  display: grid;
+  place-items: center;
+  width: 60px;
+  height: 60px;
+  color: var(--navy-600);
+  background-color: var(--navy-50);
+  border-radius: 50%;
 }

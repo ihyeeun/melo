@@ -1,3 +1,5 @@
+import type { CalendarViewMode } from "@/features/calendar/types/calendar.types";
+
 export interface NutritionLabelMenuRegisterRequestDto extends NutritionLabel {
   name: string;
   brand: string;
@@ -46,6 +48,13 @@ export interface UpsertFolderRequestDto {
   menu_quantities: number[];
   menu_input_modes: Array<0 | 1>; //0: 단위, 1: 중량
 }
+/* ======
+ * 홈
+ * ====== */
+export interface MonthlyCalendarRequestDto<M extends CalendarViewMode = CalendarViewMode> {
+  date: string; // YYYY-MM
+  mode: M;
+}
 
 /* ======
  * 운동
@@ -80,4 +89,30 @@ export interface WorkoutSetRequestDto {
   set_order: number;
   weight: number;
   reps: number;
+}
+
+/* ======
+ * 월경 기록
+ * ====== */
+export interface SaveMenstrualRecordsRequestDto {
+  add_ranges: MenstrualDateRangeRequestDto[];
+  remove_ranges: MenstrualDateRangeRequestDto[];
+}
+
+export interface MenstrualDateRangeRequestDto {
+  start_date: string;
+  end_date: string;
+}
+
+export interface GetMenstrualRecordsRequestDto {
+  from_date: string;
+  to_date: string;
+}
+
+/* ======
+ * 물 섭취 기록
+ * ====== */
+export interface UpsertWaterIntakeRequestDto {
+  date: string;
+  water_intake: number;
 }

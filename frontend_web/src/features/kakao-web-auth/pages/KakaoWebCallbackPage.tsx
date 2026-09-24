@@ -99,7 +99,7 @@ export default function KakaoWebCallbackPage() {
   if (errorMessage) {
     return (
       <main className={styles.container}>
-        <h1 className="textNormal">카카오 로그인 실패</h1>
+        <h1 className="text-primary">카카오 로그인 실패</h1>
         <p className={styles.description}>{errorMessage}</p>
         <div className={styles.actions}>
           <Button className={styles.actionButton} onClick={retryKakaoLogin}>

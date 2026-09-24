@@ -77,7 +77,7 @@ export default function AppInfoPage() {
       <div className={styles.phoneFrame}>
         <div className={styles.loginWrapper}>
           <section className={styles.imageSection}>
-            <img src="/login/login-logo.svg" height={70} alt="" aria-hidden="true" />
+            <img src="/login/melo-logo-black.png" height={70} alt="" aria-hidden="true" />
             <img
               src="/login/login-image.png"
               className={styles.loginImage}
@@ -88,8 +88,8 @@ export default function AppInfoPage() {
 
           <section className={styles.loginActions}>
             <div className={styles.completeCopy}>
-              {!isInstallMode && <p className="typo-title2 textNormal">회원가입이 완료됐어요</p>}
-              <p className="typo-body2 textAssistive">
+              {!isInstallMode && <p className="title-m-semi text-primary">회원가입이 완료됐어요</p>}
+              <p className="body-l-medium text-tertiary">
                 {isInstallMode ? "앱을 열거나 설치해 주세요" : "멜로에서 만나요!"}
               </p>
             </div>

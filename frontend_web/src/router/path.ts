@@ -5,7 +5,6 @@ export const PATH = {
   HOME_STEPS_LOG_SHEET: "/home/body-log/steps",
   KAKAO_WEB_LOGIN: "/auth/kakao/login",
   KAKAO_WEB_CALLBACK: "/auth/kakao/callback",
-  TODAY_MEAL_SCORE: "/home/date-meal-score",
   WORKOUT_RECORD: "/workout-record",
   WORKOUT_RECORD_EDIT: "/workout-record/edit",
   WORKOUT_DETAIL_SHEET: "/workout-record/detail",
@@ -18,11 +17,9 @@ export const PATH = {
   SETTINGS_FEEDBACK: "/settings/feedback",
   SETTINGS_SUB_CODE: "/settings/sub-code",
   APP_OPEN_SETTINGS_FEEDBACK: "/open/settings-feedback",
-  TERMS: "/terms",
   MEAL_RECORD: "/meal-record",
   MEAL_RECORD_ADD_SEARCH: "/meal-record/add/search",
   MEAL_DETAIL: "/meal/detail",
-  NUTRIENT_ADD: "/nutrient-add",
   NUTRIENT_ADD_REGISTER: "/nutrient-add/register",
   NUTRIENT_ADD_MODIFY: "/nutrient-add/modify",
   BRAND_SEARCH: "/brand-search",
@@ -56,4 +53,10 @@ export const PATH = {
 
   // ETC
   APP_INFO: "/app-info",
+
+  // Menstruation
+  MENSTRUATION_RECORD: "/menstruation/record",
+
+  // Water Intake
+  WATER_INTAKE_RECORD: "/water-intake/record",
 };

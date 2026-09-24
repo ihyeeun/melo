@@ -1,50 +1,26 @@
 .page {
-  background-color: var(--bg-normal);
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  min-height: 100dvh;
-  width: 100%;
+  background-color: var(--background-gray-2);
 }
 
 .content {
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
-  padding: 16px 20px 20px;
+  background-color: var(--background-default);
+  margin-top: 15px;
+  border-radius: 43px;
+  display: flex;
+  flex-direction: column;
 }
 
-.editHeader {
-  align-items: center;
-  display: grid;
-  gap: 8px;
-  grid-template-columns: 48px minmax(0, 1fr) 48px;
-  padding: var(--safe-area-top) 20px 0;
+.content:global(.main) {
+  --content-corner-radius: 42px;
+  --content-side-overhang: 8px;
+
+  border-radius: var(--content-corner-radius) var(--content-corner-radius) 0 0;
+  margin-inline: calc(-1 * var(--content-side-overhang));
+  overflow-x: hidden;
+  padding: 25px calc(17px + var(--content-side-overhang));
 }
 
-.editCloseButton {
-  align-items: center;
-  color: var(--label-normal);
-  display: inline-flex;
-  height: 44px;
-  justify-content: flex-start;
-  width: 44px;
-}
-
-.editHeaderTitle {
-  color: var(--label-normal);
-  margin: 0;
-  overflow: hidden;
-  text-align: center;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.editHeaderSpacer {
-  width: 48px;
-}
-
-.cardContainer {
+.summaryArea {
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -56,74 +32,102 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
-.summaryCard {
-  background-color: var(--bg-white);
-  border: 1px solid var(--border-neutral);
-  border-radius: 8px;
+.amount {
+  margin-top: 15px;
+  font-weight: var(--fw-medium);
+}
+
+.workoutListTitle {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  margin-top: 40px;
+  margin-bottom: 8px;
+}
+
+.workoutList {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  min-width: 0;
-  padding: 16px;
+  margin-bottom: calc(var(--safe-area-bottom) + 60px);
+  flex: 1;
 }
 
-.summaryTitle {
-  color: var(--label-assistive);
-}
-
-.summaryValueRow {
-  align-items: baseline;
-  color: var(--label-normal);
+.workoutCard {
+  align-items: center;
+  appearance: none;
+  background-color: var(--background-default);
+  border: 1px solid var(--border-subtle);
+  border-radius: 16px;
   display: flex;
+  gap: 12px;
+  padding: 12px 16px;
+  width: 100%;
+
+  &:active {
+    background-color: var(--background-gray-1);
+  }
+}
+
+.workoutImage {
+  border-radius: 8px;
+  overflow: hidden;
+  aspect-ratio: 1;
+  width: 66px;
+  display: grid;
+  place-items: center;
+}
+
+.thumbnailImage {
+  height: 100%;
+  object-fit: cover;
+  width: 100%;
+}
+
+.workoutInfoArea {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
   gap: 4px;
   min-width: 0;
 }
 
-.summaryValue {
-  color: var(--primary-normal);
-  min-width: 0;
+.workoutMeta > span + span::before {
+  content: "|";
+  margin: 0 4px;
+  color: var(--text-disabled);
 }
 
-.sectionHeader {
-  align-items: center;
-  color: var(--label-normal);
-  display: flex;
-  justify-content: space-between;
-  padding: 22px 0 10px;
-}
-
-.recordList {
-  display: flex;
-  flex-direction: column;
+.workoutListErrorArea,
+.workoutListEmptyArea {
+  display: grid;
+  place-items: center;
   gap: 8px;
-  padding-bottom: 12px;
 }
 
-.recordCard {
-  align-items: center;
-  appearance: none;
-  background-color: var(--bg-white);
-  border: 1px solid var(--border-neutral);
-  border-radius: 8px;
-  color: var(--label-normal);
-  cursor: pointer;
-  display: flex;
-  font: inherit;
-  gap: 12px;
-  padding: 8px;
-  text-align: left;
-  width: 100%;
-  min-height: 40px;
+.addButton {
+  display: grid;
+  place-items: center;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background-color: var(--btn-default);
+  box-shadow: var(--shadow-outer);
+  margin-left: auto;
+  color: var(--background-default);
+  position: absolute;
+  bottom: var(--safe-area-bottom);
+  right: 16px;
 }
 
+/* 운동 기록 수정 페이지 */
 .editRecordCard {
   align-items: center;
-  background-color: var(--bg-white);
-  border: 1px solid var(--border-neutral);
-  border-radius: 8px;
-  color: var(--label-normal);
+  background-color: var(--background-default);
+  border: 1px solid var(--border-subtle);
+  border-radius: 16px;
   display: flex;
-  gap: 8px;
+  gap: 12px;
   padding: 8px;
   transition:
     border-color 120ms ease,
@@ -131,11 +135,15 @@
     opacity 120ms ease,
     transform 120ms ease;
   width: 100%;
+
+  &:active {
+    background-color: var(--background-gray-1);
+  }
 }
 
 .editRecordCardDragging {
   border-color: var(--primary-normal);
-  box-shadow: var(--shadow-strong);
+  box-shadow: var(--shadow-outer);
   opacity: 0.92;
   transform: scale(0.99);
 }
@@ -150,7 +158,7 @@
   user-select: none;
   -webkit-user-select: none;
   width: 34px;
-  color: var(--interaction-alternative);
+  color: var(--gray-300);
   height: 70px;
 }
 
@@ -158,92 +166,34 @@
   cursor: grabbing;
 }
 
-.editRecordMain {
-  align-items: center;
-  color: inherit;
+.editWorkoutItem {
   display: flex;
-  flex: 1;
   gap: 12px;
+  align-items: center;
+  flex: 1;
   min-width: 0;
-  text-align: left;
 }
 
 .deleteButton {
-  align-items: center;
-  border-radius: 8px;
-  color: var(--interaction-alternative);
-  display: inline-flex;
+  display: grid;
+  place-items: center;
+  margin-left: auto;
+  color: var(--gray-300);
   flex: 0 0 auto;
-  height: 44px;
-  justify-content: center;
-  width: 44px;
+  height: 32px;
+  width: 32px;
+  border-radius: 50%;
+  background-color: var(--background-default);
+  box-shadow: var(--shadow-outer);
 }
 
 .deleteButton:disabled {
   opacity: 0.5;
 }
 
-.thumbnail {
-  align-items: center;
-  border-radius: 8px;
-  color: var(--primary-normal);
-  display: inline-flex;
-  justify-content: center;
-  overflow: hidden;
-  aspect-ratio: 1;
-  width: 70px;
-  height: 100%;
-}
-
-.thumbnailImage {
-  height: 100%;
-  object-fit: cover;
-  width: 100%;
-}
-
-.recordContent {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  gap: 4px;
-  min-width: 0;
-}
-
-.calorieText {
-  color: var(--primary-normal);
-  flex: 0 0 auto;
-}
-
-.chevronIcon {
-  color: var(--label-assistive);
-  flex: 0 0 auto;
-}
-
-.statusContainer,
-.emptyState {
-  align-items: center;
-  background-color: var(--bg-white);
-  border: 1px solid var(--border-neutral);
-  border-radius: 8px;
-  color: var(--label-normal);
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  justify-content: center;
-  min-height: 220px;
-  padding: 24px 20px;
-  text-align: center;
-}
-
-.footer {
-  padding: 0 20px;
-  padding-bottom: var(--safe-area-bottom);
-}
-
-.editFooter {
-  display: flex;
-  flex-direction: column;
+.editPageFooter {
+  background-color: var(--background-default);
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
   gap: 10px;
-  padding: 0 20px;
-  padding-bottom: var(--safe-area-bottom);
 }

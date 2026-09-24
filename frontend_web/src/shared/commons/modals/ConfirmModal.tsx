@@ -1,5 +1,6 @@
 import { AlertDialog } from "@base-ui/react/alert-dialog";
 
+import { useTabBarVisibilitySync } from "@/shared/api/bridge/useTabBarVisibilitySync";
 import { Button } from "@/shared/commons/button/Button";
 
 import { BaseAlertModal } from "./BaseAlertModal";
@@ -15,6 +16,8 @@ type ConfirmModalProps = {
   confirmText?: string;
   actionOrder?: "cancel-confirm" | "confirm-cancel";
 
+  /** 모달이 열려 있는 동안 네이티브 앱의 하단 탭바를 숨김 */
+  hideTabBar?: boolean;
   confirmDisabled?: boolean;
 
   /**
@@ -36,11 +39,14 @@ export function ConfirmModal({
   cancelText = "취소",
   confirmText = "확인",
   actionOrder = "cancel-confirm",
+  hideTabBar = false,
   confirmDisabled = false,
   closeOnConfirm = true,
   onCancel,
   onConfirm,
 }: ConfirmModalProps) {
+  useTabBarVisibilitySync(open && hideTabBar);
+
   const cancelAction = (
     <AlertDialog.Close
       key="cancel"
@@ -58,9 +64,8 @@ export function ConfirmModal({
             });
           }}
           variant="outlined"
-          interaction="normal"
-          size="normal"
-          color="primary"
+          size="s"
+          border="primary"
         >
           {cancelText}
         </Button>
@@ -79,10 +84,8 @@ export function ConfirmModal({
             props.onClick?.(e); // 닫기 동작 유지
             void onConfirm(); // 로직 실행
           }}
-          variant="filled"
-          interaction="normal"
-          size="normal"
-          color="primary"
+          variant="default"
+          size="s"
         >
           {confirmText}
         </Button>
@@ -102,10 +105,8 @@ export function ConfirmModal({
           console.error(error);
         }
       }}
-      variant="filled"
-      interaction="normal"
-      size="normal"
-      color="primary"
+      variant="default"
+      size="s"
     >
       {confirmText}
     </Button>

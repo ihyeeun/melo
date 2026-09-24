@@ -1,6 +1,6 @@
 import styles from "@/features/search/styles/RegisterBottomSheet.module.css";
 import BottomSheet from "@/shared/commons/bottomSheet/BottomSheet";
-import { Button } from "@/shared/commons/button/Button";
+import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 
 type DirectInputBottomSheetProps = {
   isOpen: boolean;
@@ -22,34 +22,21 @@ export default function DirectInputBottomSheet({
   cameraInputLabel = "영양성분표 촬영하기",
 }: DirectInputBottomSheetProps) {
   return (
-    <BottomSheet isOpen={isOpen} onClose={onClose}>
-      <div className={styles.sheetContainer}>
-        <h2 className={`${styles.sheetTitle} typo-title2`}>{title}</h2>
-        <div className={styles.sheetActions}>
-          <Button
-            variant="text"
-            interaction="normal"
-            size="large"
-            color="normal"
-            fullWidth
-            onClick={onSelectNumberInput}
-          >
-            <span className={`typo-label2 ${styles.sheetButtonText}`}>{numberInputLabel}</span>
-          </Button>
+    <BottomSheet isOpen={isOpen} onClose={onClose} title={title}>
+      <div className={styles.sheetActions}>
+        <button type="button" onClick={onSelectNumberInput} className={styles.button}>
+          <div className={styles.icon} aria-hidden>
+            <SystemIcon name="edit" />
+          </div>
+          <p className={`body-m-medium text-primary`}>{numberInputLabel}</p>
+        </button>
 
-          <div className="divider dividerMargin16" />
-
-          <Button
-            variant="text"
-            interaction="normal"
-            size="large"
-            color="normal"
-            fullWidth
-            onClick={onSelectCameraInput}
-          >
-            <span className={`typo-label2 ${styles.sheetButtonText}`}>{cameraInputLabel}</span>
-          </Button>
-        </div>
+        <button type="button" onClick={onSelectCameraInput} className={styles.button}>
+          <div className={styles.icon} aria-hidden>
+            <SystemIcon name="camera" />
+          </div>
+          <p className={`body-m-medium text-primary`}>{cameraInputLabel}</p>
+        </button>
       </div>
     </BottomSheet>
   );

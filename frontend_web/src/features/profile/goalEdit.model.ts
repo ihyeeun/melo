@@ -4,6 +4,7 @@ import {
   ONBOARDING_WEIGHT_RANGE,
 } from "@/features/onboarding/constants/inputRanges";
 import type { OnboardingData } from "@/features/onboarding/onboarding.types";
+import { getGoalWeekEstimate } from "@/features/onboarding/utils/calculateGoalWeek";
 import type { ProfileResponseDto } from "@/shared/api/types/api.response.dto";
 import { isValidBirthYear } from "@/shared/commons/picker/yearOptions";
 
@@ -25,6 +26,60 @@ export type GoalEditDraft = Pick<
 export const GOAL_CALORIES_MIN = 1;
 export const GOAL_CALORIES_MAX = 99999;
 const RATIO_TOLERANCE = 0.001;
+
+export function validateGoalCalories(
+  draft: GoalEditDraft,
+): { title: string; description?: string } | null {
+  const targetCalories = draft.target_calories;
+
+  if (targetCalories === undefined) {
+    return { title: "목표 칼로리를 입력해주세요" };
+  }
+
+  if (targetCalories === 0) {
+    return { title: "목표 칼로리는 1 이상 입력해주세요" };
+  }
+
+  if (
+    !Number.isInteger(targetCalories) ||
+    targetCalories < GOAL_CALORIES_MIN ||
+    targetCalories > GOAL_CALORIES_MAX
+  ) {
+    return { title: "목표 칼로리는 1~99999 사이로 입력해주세요" };
+  }
+
+  const estimate = getGoalWeekEstimate(draft, targetCalories);
+  if (estimate.status === "ok") return null;
+
+  if (estimate.reason === "insufficient_data") {
+    return {
+      title: "목표 달성 기간을 계산할 정보가 부족해요",
+      description: "이전 단계에서 신체 정보와 목표 몸무게를 확인해주세요.",
+    };
+  }
+
+  if (estimate.reason === "calories_too_low_for_gain") {
+    return {
+      title: "목표 체중에 비해 목표 칼로리가 너무 낮아요.",
+      description:
+        estimate.tdee === undefined
+          ? undefined
+          : `${Math.floor(estimate.tdee) + 1}kcal 이상 입력해주세요.`,
+    };
+  }
+
+  if (estimate.reason === "calories_too_high_for_loss") {
+    return {
+      title: "목표 체중에 비해 목표 칼로리가 너무 높아요.",
+      description:
+        estimate.tdee === undefined
+          ? undefined
+          : `${Math.ceil(estimate.tdee) - 1}kcal 이하로 입력해주세요.`,
+    };
+  }
+
+  return { title: "해당 칼로리로는 목표 달성이 어려워요." };
+}
 
 export function toGoalEditDraft(profile: ProfileResponseDto): GoalEditDraft {
   return {

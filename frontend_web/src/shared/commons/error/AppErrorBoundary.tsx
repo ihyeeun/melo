@@ -1,6 +1,7 @@
 import { Component, type ErrorInfo, type ReactNode } from "react";
 
 import { Button } from "@/shared/commons/button/Button";
+import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 
 import styles from "./AppErrorBoundary.module.css";
 
@@ -54,14 +55,9 @@ export class AppErrorBoundary extends Component<AppErrorBoundaryProps, AppErrorB
     return (
       <main className={styles.screen}>
         <div className={styles.content}>
-          <img
-            src="/icons/system-icons/circle-info-color.svg"
-            width={45}
-            alt=""
-            aria-hidden="true"
-          />
-          <h1 className={`${styles.title} typo-h2`}>화면을 불러오지 못했어요</h1>
-          <p className={`${styles.description} typo-body2`}>
+          <SystemIcon name="info" size={45} className={styles.errorIcon} />
+          <h1 className={`${styles.title} title-l-semi`}>화면을 불러오지 못했어요</h1>
+          <p className={`${styles.description} body-l-medium`}>
             문제가 발생했어요. 잠시 후 다시 시도해주세요.
           </p>
           {import.meta.env.DEV && detail ? <p className={styles.detail}>{detail}</p> : null}

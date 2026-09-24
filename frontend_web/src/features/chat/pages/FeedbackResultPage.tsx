@@ -33,7 +33,7 @@ import {
   trackRecommendMenuCancel,
 } from "@/shared/analytics/recommendMenuEvents";
 import { AppApiError } from "@/shared/api/apiClient";
-import { type MealType } from "@/shared/api/types/api.dto";
+import { type MealType, MENU_UNIT } from "@/shared/api/types/api.dto";
 import type {
   ChatFeedbackMenuResponseDto,
   ChatFoodImageRecognizedMenuResponseDto,
@@ -201,10 +201,7 @@ function FeedbackResultContent({
   const imageUrl = getChatItemImageUrl(chatItem);
   const recognizedFoods = getRecognizedFoods(chatItem);
   const feedbackMenuIds = useMemo(() => menus.map((menu) => menu.menu_id), [menus]);
-  const feedbackMenuIdSet = useMemo(
-    () => new Set(feedbackMenuIds),
-    [feedbackMenuIds],
-  );
+  const feedbackMenuIdSet = useMemo(() => new Set(feedbackMenuIds), [feedbackMenuIds]);
   const targetMealTime = currentMealTime;
   const mealType: MealType = getMealTypeFromChatMealTime(targetMealTime);
   const draftKey = formatMenuDraftKey(recordDateKey, mealType);
@@ -277,8 +274,8 @@ function FeedbackResultContent({
     upsertMenu({
       key: draftKey,
       id: menu.menu_id,
-      quantity: menu.weight,
-      mode: "unit",
+      quantity: menu.estimated_quantity ?? menu.weight,
+      mode: menu.estimated_quantity != null ? "weight" : "unit",
     });
   };
 
@@ -356,14 +353,21 @@ function FeedbackResultContent({
                 <li key={menu.menu_id}>
                   <MealMenuCard
                     name={menu.menu_name}
-                    calories={menu.calories}
+                    calories={menu.estimated_calories ?? menu.calories}
                     unit_quantity={menu.unit_quantity}
                     brand={menu.brand}
                     data_source={menu.data_source}
                     weight={menu.weight}
-                    unit={menu.unit}
-                    icon={isSelected ? "check" : "add"}
-                    state={isSelected ? "select" : "default"}
+                    quantity={menu.estimated_quantity ?? menu.weight}
+                    unit={
+                      menu.estimated_quantity_unit === "g"
+                        ? MENU_UNIT.GRAM
+                        : menu.estimated_quantity_unit === "ml"
+                          ? MENU_UNIT.MILLILITER
+                          : menu.unit
+                    }
+                    icon={"add"}
+                    state={isSelected}
                     onClick={
                       isDayMealsPending
                         ? undefined
@@ -381,9 +385,8 @@ function FeedbackResultContent({
       <footer className={styles.footer}>
         <Button
           fullWidth
-          variant="filled"
-          size="large"
-          color="primary"
+          variant="default"
+          size="m"
           disabled={selectedFeedbackCount === 0 || isMealRegisterPending || isDayMealsPending}
           onClick={handleSubmitMealRecord}
         >
@@ -677,10 +680,10 @@ function FoodImageFeedbackPreview({
                   } 상세 보기`}
                 >
                   <span className={styles.foodMarkerBubble}>
-                    <span className={`${styles.foodMarkerName} typo-body3`}>{marker.label}</span>
+                    <span className={`${styles.foodMarkerName} body-s-medium`}>{marker.label}</span>
                     {marker.scoreText ? (
                       <span
-                        className={`typo-body2 ${styles.foodMarkerScore} ${getScoreClass(marker.score ?? 0)}`}
+                        className={`body-l-medium ${styles.foodMarkerScore} ${getScoreClass(marker.score ?? 0)}`}
                       >
                         {marker.scoreText}
                       </span>
@@ -737,7 +740,7 @@ function FoodImageFeedbackPreview({
                           isPinClusterOpen ? "닫기" : "열기"
                         }`}
                       >
-                        <span className={`${styles.foodClusterSourcePinLabel} typo-body3`}>
+                        <span className={`${styles.foodClusterSourcePinLabel} body-s-medium`}>
                           +{cluster.markers.length}
                         </span>
                       </button>
@@ -772,10 +775,12 @@ function FoodImageFeedbackPreview({
                                   marker.scoreText ? ` ${marker.scoreText}` : ""
                                 } 상세 보기`}
                               >
-                                <span className={`${styles.foodClusterPinListNumber} typo-body3`}>
+                                <span
+                                  className={`${styles.foodClusterPinListNumber} body-s-medium`}
+                                >
                                   {marker.index + 1}
                                 </span>
-                                <span className={`${styles.foodClusterPinListName} typo-body3`}>
+                                <span className={`${styles.foodClusterPinListName} body-s-medium`}>
                                   {marker.label}
                                 </span>
                               </button>
@@ -839,7 +844,7 @@ function FoodImageFeedbackPreview({
                       marker.scoreText ? ` ${marker.scoreText}` : ""
                     } 말풍선 ${isSourceMarkerOpen ? "닫기" : "열기"}`}
                   >
-                    <span className={`${styles.foodClusterSourcePinLabel} typo-body3`}>
+                    <span className={`${styles.foodClusterSourcePinLabel} body-s-medium`}>
                       {markerNumber}
                     </span>
                   </button>
@@ -856,12 +861,12 @@ function FoodImageFeedbackPreview({
                       } 상세 보기`}
                     >
                       <span className={styles.foodMarkerBubble}>
-                        <span className={`${styles.foodMarkerName} typo-body3`}>
+                        <span className={`${styles.foodMarkerName} body-s-medium`}>
                           {marker.label}
                         </span>
                         {marker.scoreText ? (
                           <span
-                            className={`typo-body2 ${styles.foodMarkerScore} ${getScoreClass(marker.score ?? 0)}`}
+                            className={`body-l-medium ${styles.foodMarkerScore} ${getScoreClass(marker.score ?? 0)}`}
                           >
                             {marker.scoreText}
                           </span>
@@ -892,11 +897,11 @@ function FoodImageFeedbackPreview({
                       disabled={isDetailDisabled}
                       aria-label={`${menu.menu_name} ${Math.round(menu.score)}점 상세 보기`}
                     >
-                      <span className={`${styles.unpositionedMenuName} typo-body3`}>
+                      <span className={`${styles.unpositionedMenuName} body-s-medium`}>
                         {menu.menu_name}
                       </span>
                       <span
-                        className={`typo-body2 ${styles.unpositionedMenuScore} ${getScoreClass(menu.score)}`}
+                        className={`body-l-medium ${styles.unpositionedMenuScore} ${getScoreClass(menu.score)}`}
                       >
                         {Math.round(menu.score)}점
                       </span>
@@ -909,7 +914,7 @@ function FoodImageFeedbackPreview({
 
           <button
             type="button"
-            className={`${styles.unpositionedMenuToggle} typo-body3`}
+            className={`${styles.unpositionedMenuToggle} body-s-medium`}
             onClick={() => {
               setOpenSourceMarkerId(null);
               setOpenPinClusterId(null);

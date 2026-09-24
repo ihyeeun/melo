@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 
 import { useTabBarVisibilitySync } from "@/shared/api/bridge/useTabBarVisibilitySync";
 import { useBottomSheetPositionerStyle } from "@/shared/commons/bottomSheet/useBottomSheetPositionerStyle";
+import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 
 import styles from "./BottomSheet.module.css";
 
@@ -11,6 +12,7 @@ type BottomSheetProps = {
   isOpen: boolean;
   onClose: () => void;
   title?: string;
+  titleRightSlot?: ReactNode;
   className?: string;
   bodyClassName?: string;
   positionerStyle?: CSSProperties;
@@ -44,6 +46,7 @@ export default function BottomSheet({
   isOpen,
   onClose,
   title,
+  titleRightSlot,
   className,
   bodyClassName,
   positionerStyle,
@@ -114,10 +117,16 @@ export default function BottomSheet({
             className={styles.header}
             onPointerDownCapture={blurActiveElement}
           >
-            <SeedBottomSheet.Handle className={styles.handle} />
+            {title && <h2 className="title-s-semi text-primary">{title}</h2>}
+            {titleRightSlot ? (
+              titleRightSlot
+            ) : (
+              <button type="button" onClick={onClose} className="marginLeft">
+                <SystemIcon name="exit" size={24} className="text-primary" />
+              </button>
+            )}
           </SeedBottomSheet.Header>
           <SeedBottomSheet.Body className={cx(styles.body, bodyClassName)}>
-            {title && <SeedBottomSheet.Title>{title}</SeedBottomSheet.Title>}
             {children}
           </SeedBottomSheet.Body>
         </SeedBottomSheet.Content>

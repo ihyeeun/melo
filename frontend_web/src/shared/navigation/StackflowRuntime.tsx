@@ -6,6 +6,7 @@ import { LoadingScreen } from "@/shared/commons/loading/Loading";
 import { setFreeUserGuardEnabled } from "@/shared/guards/featureGuard";
 
 import {
+  consumeExpectedStackflowPopState,
   getStackflowStackComponent,
   navigateBack,
   pushStackflowPath,
@@ -17,6 +18,16 @@ import { getWebNavigationCommand, WEB_NAVIGATION_COMMAND_EVENT } from "./webNavi
 const StackComponent = getStackflowStackComponent();
 
 const PROFILE_SYNC_EXCLUDED_PATHS = new Set([PATH.ONBOARDING, PATH.APP_INFO]);
+const STACKFLOW_HISTORY_STATE_TAG = "@stackflow/plugin-history-sync";
+
+function isStackflowHistoryState(state: unknown) {
+  return (
+    typeof state === "object" &&
+    state !== null &&
+    "_TAG" in state &&
+    state._TAG === STACKFLOW_HISTORY_STATE_TAG
+  );
+}
 
 function normalizePathname(pathname: string) {
   if (pathname === "/") return pathname;
@@ -68,7 +79,14 @@ export function StackflowRuntime() {
       }, 0);
     };
 
-    const handlePopState = () => {
+    const handlePopState = (event: PopStateEvent) => {
+      // During a programmatic multi-pop, Stackflow has already applied the final stack while
+      // browser history is still visiting intermediate entries. Ignore only those expected
+      // events; user-driven popstate events still reconcile the current browser path.
+      if (isStackflowHistoryState(event.state) && consumeExpectedStackflowPopState()) {
+        return;
+      }
+
       window.setTimeout(syncStackflowWithCurrentBrowserPath, 0);
     };
 
@@ -83,7 +101,7 @@ export function StackflowRuntime() {
 
   if (!isFeatureGuardReady) {
     // 웹앱 최초 진입 시 한 번, 프로필 구독 상태 기반 가드 설정 준비될 때까지 뜨는 로딩
-    return <LoadingScreen background="var(--bg-normal)" />;
+    return <LoadingScreen background="var(--background-gray-1)" />;
   }
 
   return <StackComponent />;

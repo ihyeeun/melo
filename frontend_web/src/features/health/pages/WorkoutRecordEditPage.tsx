@@ -19,6 +19,7 @@ import {
   useWorkoutRecordEditRecords,
 } from "@/features/health/stores/workoutRecordEdit.store";
 import { formatWorkoutDuration } from "@/features/health/utils/workoutFormat";
+import Tile from "@/features/home/components/cards/Tile";
 import {
   getWorkoutRecordPath,
   getWorkoutSearchPath,
@@ -32,6 +33,7 @@ import type {
   WorkoutRecordResponseDto,
 } from "@/shared/api/types/api.response.dto";
 import { Button } from "@/shared/commons/button/Button";
+import { PageHeader } from "@/shared/commons/header/PageHeader";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import { LoadingIndicator, LoadingOverlay } from "@/shared/commons/loading/Loading";
 import { toast } from "@/shared/commons/toast/toast";
@@ -296,7 +298,7 @@ export default function WorkoutRecordEditPage() {
 
     ensureEditRecordsInitialized();
     navigate(getWorkoutUpsertPath(dateKey, workout.workout_id, { mode: "edit" }), {
-      state: { returnDepth: 1, workoutRecord: workout },
+      state: { workoutRecord: workout },
     });
   };
 
@@ -348,11 +350,10 @@ export default function WorkoutRecordEditPage() {
     if (workoutRecordQuery.isError) {
       return (
         <section className={styles.emptyState}>
-          <p className="typo-body2">{errorMessage}</p>
+          <p className="body-l-medium">{errorMessage}</p>
           <Button
             variant="text"
-            color="normal"
-            size="small"
+            size="xs"
             onClick={() => {
               void workoutRecordQuery.refetch();
             }}
@@ -366,7 +367,7 @@ export default function WorkoutRecordEditPage() {
     if (targetRecords.length === 0) {
       return (
         <section className={styles.emptyState}>
-          <p className="typo-body2">{emptyMessage}</p>
+          <p className="body-l-medium">{emptyMessage}</p>
         </section>
       );
     }
@@ -381,7 +382,7 @@ export default function WorkoutRecordEditPage() {
       "운동 기록을 불러오지 못했어요",
       "운동 기록이 없어요",
       () => (
-        <section className={styles.recordList} aria-label="운동 수정 목록">
+        <section className={styles.workoutList} aria-label="운동 수정 목록">
           {draftRecords.map((workout) => (
             <WorkoutEditCard
               key={workout.workout_id}
@@ -399,62 +400,63 @@ export default function WorkoutRecordEditPage() {
     );
 
   return (
-    <section className={styles.page}>
-      <header className={styles.editHeader}>
-        <button
-          type="button"
-          className={styles.editCloseButton}
-          onClick={closeEditMode}
-          aria-label="운동 수정 닫기"
-        >
-          <SystemIcon name="close" size={24} />
-        </button>
-        <h1 className={`${styles.editHeaderTitle} typo-title3`}>운동 수정</h1>
-        <div aria-hidden="true" className={styles.editHeaderSpacer} />
-      </header>
+    <section className={`${styles.page} page`}>
+      <PageHeader
+        title="운동 수정"
+        onBack={() => {
+          closeEditMode();
+          navigateBack();
+        }}
+      />
 
-      <main className={styles.content}>
-        <section className={styles.cardContainer}>
+      <main className={`${styles.content} main`}>
+        <section className={styles.summaryArea}>
           <div className={styles.summaryGrid} aria-label="운동 수정 요약">
-            <article className={styles.summaryCard}>
-              <span className={`${styles.summaryTitle} typo-caption3`}>총 운동 시간</span>
-              <div className={styles.summaryValueRow}>
-                <span className={`${styles.summaryValue} typo-title2`}>
-                  {formatWorkoutDuration(editSummary.duration)}
-                </span>
-              </div>
-            </article>
-            <article className={styles.summaryCard}>
-              <span className={`${styles.summaryTitle} typo-caption3`}>총 소모 칼로리</span>
-              <div className={styles.summaryValueRow}>
-                <span className={`${styles.summaryValue} typo-title2`}>
-                  {editSummary.burnedCalories.toLocaleString("ko-KR")}
-                </span>
-                <span className="typo-caption3">kcal</span>
-              </div>
-            </article>
+            <Tile>
+              <p className={`body-l-medium text-primary`}>총 운동 시간</p>
+              <p className={`${styles.amount} title-l-semi text-primary`}>
+                {formatWorkoutDuration(editSummary.duration)
+                  .split(/(시간|분)/)
+                  .map((part, index) =>
+                    part === "시간" || part === "분" ? (
+                      <span key={index} className="body-l-regular text-tertiary">
+                        {` ${part}`}
+                      </span>
+                    ) : (
+                      part
+                    ),
+                  )}
+              </p>
+            </Tile>
+            <Tile>
+              <p className={`body-l-medium text-primary`}>총 소모 칼로리</p>
+              <p className={`${styles.amount} title-l-semi text-primary`}>
+                {editSummary.burnedCalories.toLocaleString("ko-KR")}
+                <span className="body-l-regular text-tertiary"> kcal</span>
+              </p>
+            </Tile>
           </div>
         </section>
 
-        <div className={styles.sectionHeader}>
-          <p className="typo-title3">오늘 한 운동</p>
+        <div className={styles.workoutListTitle}>
+          <p className="title-s-semi text-primary">오늘 한 운동</p>
         </div>
 
         {renderEditContent()}
       </main>
 
-      <footer className={styles.editFooter}>
+      <footer className={`footer ${styles.editPageFooter}`}>
         <Button
+          size="m"
           fullWidth
           variant="outlined"
-          color="primary"
           disabled={workoutRecordQuery.isPending || workoutRecordQuery.isError || isSavePending}
           onClick={handleSearchWorkout}
         >
-          <SystemIcon name="plus" size={18} />
           운동 추가하기
         </Button>
         <Button
+          size="m"
           fullWidth
           disabled={workoutRecordQuery.isPending || workoutRecordQuery.isError || isSavePending}
           onClick={completeEditMode}
@@ -522,30 +524,32 @@ function WorkoutEditCard({
         }}
         aria-label={`${workout.workout_name} 순서 변경`}
       >
-        <SystemIcon name="grip" size={24} />
+        <SystemIcon name="drag" size={24} />
       </button>
 
-      <button type="button" className={styles.editRecordMain} onClick={onClick}>
-        <div className={styles.thumbnail}>
+      <button type="button" className={styles.editWorkoutItem} onClick={onClick}>
+        <div className={styles.workoutImage}>
           {workout.workout_image ? (
             <img src={workout.workout_image} alt="" className={styles.thumbnailImage} />
           ) : (
-            <SystemIcon name={workout.workout_type === "cardio" ? "walking" : "fire"} size={28} />
+            <SystemIcon
+              name={workout.workout_type === "cardio" ? "walking" : "fitness"}
+              size={28}
+            />
           )}
         </div>
 
-        <div className={styles.recordContent}>
-          <p className={`ellipsis typo-title4`}>{workout.workout_name}</p>
-          <p className="typo-caption4">
-            {workout.workout_type === "cardio"
-              ? `${formatWorkoutDuration(workout.workout_duration)}`
-              : `${workout.set_list?.length ?? 0}세트`}
+        <div className={styles.workoutInfoArea}>
+          <p className={`ellipsis body-l-medium text-primary`}>{workout.workout_name}</p>
+          <p className={`body-s-regular text-secondary ${styles.workoutMeta}`}>
+            <span>
+              {workout.workout_type === "cardio"
+                ? `${formatWorkoutDuration(workout.workout_duration)}`
+                : `${workout.set_list?.length ?? 0}세트`}
+            </span>
+            <span>{workout.burned_calories.toLocaleString("ko-KR")}kcal</span>
           </p>
         </div>
-
-        <span className={`${styles.calorieText} typo-label3`}>
-          {workout.burned_calories.toLocaleString("ko-KR")}kcal
-        </span>
       </button>
 
       <button
@@ -554,7 +558,7 @@ function WorkoutEditCard({
         onClick={onDelete}
         aria-label={`${workout.workout_name} 삭제`}
       >
-        <SystemIcon name="trash" size={18} />
+        <SystemIcon name="delete" size={18} />
       </button>
     </article>
   );

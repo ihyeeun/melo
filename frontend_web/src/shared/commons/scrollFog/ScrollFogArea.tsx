@@ -1,4 +1,7 @@
-import { ScrollFog as SeedScrollFog, type ScrollFogProps as SeedScrollFogProps } from "@seed-design/react";
+import {
+  ScrollFog as SeedScrollFog,
+  type ScrollFogProps as SeedScrollFogProps,
+} from "@seed-design/react";
 import {
   forwardRef,
   type Ref,
@@ -21,9 +24,7 @@ export type ScrollFogAreaProps = Omit<SeedScrollFogProps, "placement"> & {
 };
 
 const DEFAULT_PLACEMENT: ScrollFogPlacement[] = ["top", "bottom"];
-const DEFAULT_SIZES = { top: 20, bottom: 80 } satisfies NonNullable<
-  SeedScrollFogProps["sizes"]
->;
+const DEFAULT_SIZES = { top: 20, bottom: 10 } satisfies NonNullable<SeedScrollFogProps["sizes"]>;
 const SCROLL_EDGE_THRESHOLD = 1;
 
 function mergeClassNames(...classNames: Array<string | false | null | undefined>) {
@@ -52,11 +53,9 @@ function getDynamicPlacement(element: HTMLElement, placement: ScrollFogPlacement
   const isScrollableHorizontally = maxScrollLeft > SCROLL_EDGE_THRESHOLD;
   const visibility: Record<ScrollFogPlacement, boolean> = {
     top: isScrollableVertically && element.scrollTop > SCROLL_EDGE_THRESHOLD,
-    bottom:
-      isScrollableVertically && element.scrollTop < maxScrollTop - SCROLL_EDGE_THRESHOLD,
+    bottom: isScrollableVertically && element.scrollTop < maxScrollTop - SCROLL_EDGE_THRESHOLD,
     left: isScrollableHorizontally && element.scrollLeft > SCROLL_EDGE_THRESHOLD,
-    right:
-      isScrollableHorizontally && element.scrollLeft < maxScrollLeft - SCROLL_EDGE_THRESHOLD,
+    right: isScrollableHorizontally && element.scrollLeft < maxScrollLeft - SCROLL_EDGE_THRESHOLD,
   };
 
   return placement.filter((side) => visibility[side]);
@@ -131,9 +130,7 @@ export const ScrollFogArea = forwardRef<HTMLDivElement, ScrollFogAreaProps>(
       if (!element) return;
 
       const resizeObserver =
-        typeof ResizeObserver === "undefined"
-          ? null
-          : new ResizeObserver(schedulePlacementUpdate);
+        typeof ResizeObserver === "undefined" ? null : new ResizeObserver(schedulePlacementUpdate);
       const mutationObserver =
         typeof MutationObserver === "undefined"
           ? null
@@ -172,7 +169,13 @@ export const ScrollFogArea = forwardRef<HTMLDivElement, ScrollFogAreaProps>(
 
     if (!enabled) {
       return (
-        <div ref={setElementRef} className={rootClassName} onScroll={onScroll} style={style} {...props}>
+        <div
+          ref={setElementRef}
+          className={rootClassName}
+          onScroll={onScroll}
+          style={style}
+          {...props}
+        >
           {children}
         </div>
       );

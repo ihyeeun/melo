@@ -1,9 +1,10 @@
 .root {
   display: grid;
-  grid-template-columns: var(
-    --scroll-wheel-picker-column-template,
-    repeat(auto-fit, minmax(0, 1fr))
-  );
+  grid-template-columns: var(--scroll-wheel-picker-column-template, none);
+  grid-auto-flow: column;
+  grid-auto-columns: max-content;
+  column-gap: 28px;
+  justify-content: center;
   height: var(--scroll-wheel-picker-height);
   position: relative;
   touch-action: pan-y;
@@ -23,7 +24,7 @@
 .root::before {
   background: linear-gradient(
     to bottom,
-    var(--scroll-wheel-picker-fog-color, var(--bg-white)),
+    var(--scroll-wheel-picker-fog-color, var(--background-default)),
     transparent
   );
   height: var(--scroll-wheel-picker-fog-size, 80px);
@@ -33,7 +34,7 @@
 .root::after {
   background: linear-gradient(
     to top,
-    var(--scroll-wheel-picker-fog-color, var(--bg-white)),
+    var(--scroll-wheel-picker-fog-color, var(--background-default)),
     transparent
   );
   bottom: 0;
@@ -78,7 +79,7 @@
 
 .item:focus-visible {
   border-radius: 6px;
-  outline: 2px solid var(--border-primary);
+  outline: 2px solid var(--border-strong);
   outline-offset: -2px;
 }
 

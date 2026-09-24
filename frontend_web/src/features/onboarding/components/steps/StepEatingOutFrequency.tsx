@@ -9,7 +9,7 @@ export default function StepEatingOutFrequency({ data, update }: StepComponentPr
   return (
     <section className={`${styles.content} ${styles.onboardingStepReadable}`}>
       <div className={styles.onboardingTitle}>
-        <h2 className="typo-title1">
+        <h2 className="title-l-semi">
           일주일에 외식·배달을
           <br />
           몇 번 하시나요?

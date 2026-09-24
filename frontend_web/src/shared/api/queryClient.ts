@@ -70,7 +70,14 @@ function refetchActiveQueriesAfterResume(reason: string) {
   void (async () => {
     try {
       await queryClient.resumePausedMutations();
-      await queryClient.refetchQueries({ type: "active" }, { cancelRefetch: true });
+      await queryClient.refetchQueries(
+        {
+          type: "active",
+          // 변경 시에만 갱신하는 query는 복귀 시에도 유효한 캐시를 재사용한다.
+          predicate: (query) => query.meta?.refetchOnResume !== "stale" || query.isStale(),
+        },
+        { cancelRefetch: true },
+      );
     } catch (error) {
       console.error("[ReactQuery] resume refetch failed", {
         error,
