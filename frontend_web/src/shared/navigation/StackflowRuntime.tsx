@@ -21,11 +21,17 @@ const PROFILE_SYNC_EXCLUDED_PATHS = new Set([PATH.ONBOARDING, PATH.APP_INFO]);
 const STACKFLOW_HISTORY_STATE_TAG = "@stackflow/plugin-history-sync";
 
 function isStackflowHistoryState(state: unknown) {
+  if (typeof state !== "object" || state === null) {
+    return false;
+  }
+
+  const stackflowState = "usr" in state ? state.usr : state;
+
   return (
-    typeof state === "object" &&
-    state !== null &&
-    "_TAG" in state &&
-    state._TAG === STACKFLOW_HISTORY_STATE_TAG
+    typeof stackflowState === "object" &&
+    stackflowState !== null &&
+    "_TAG" in stackflowState &&
+    stackflowState._TAG === STACKFLOW_HISTORY_STATE_TAG
   );
 }
 
