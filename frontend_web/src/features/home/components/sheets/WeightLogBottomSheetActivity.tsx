@@ -46,6 +46,7 @@ export default function WeightLogBottomSheetActivity() {
   const draftWeight = weightDraft === null ? initialWeight : weightDraft.value;
   const isOpen =
     activity.transitionState === "enter-active" || activity.transitionState === "enter-done";
+  const userGoal = profile?.goal;
 
   const closeSheet = () => {
     if (!activity.isActive) return;
@@ -97,11 +98,15 @@ export default function WeightLogBottomSheetActivity() {
             });
           }
 
-          toast.success(
-            weightDiff !== null && weightDiff < 0
-              ? `${weightDiff.toFixed(1)}kg 감량했어요!`
-              : "체중이 기록되었어요",
-          );
+          let message = "체중이 기록되었어요";
+
+          if (weightDiff !== null && userGoal === 0 && weightDiff < 0)
+            message = `${weightDiff.toFixed(1)}kg 감량했어요!`;
+          else if (weightDiff !== null && userGoal === 2 && weightDiff > 0)
+            message = `+${weightDiff.toFixed(1)}kg 증량했어요!`;
+
+          toast.success(message);
+
           closeSheet();
         },
       },
