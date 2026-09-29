@@ -1,5 +1,6 @@
 import { appApiData } from "@/shared/api/apiClient";
 import type { SearchMenuRequestDto } from "@/shared/api/types/api.dto";
+import type { RegisterMenuListRequestDto } from "@/shared/api/types/api.request.dto";
 import type {
   FolderListResponseDto,
   MenuListResponseDto,
@@ -32,10 +33,18 @@ export async function getFrequentlyRecordedMenus() {
   return response;
 }
 
-export async function getRegisteredMenus() {
+export async function getRegisteredMenus({ limit, cursor, input }: RegisterMenuListRequestDto) {
+  const normalizedInput = input?.trim();
+  const body: RegisterMenuListRequestDto = {
+    limit,
+    ...(cursor === undefined ? {} : { cursor }),
+    ...(normalizedInput ? { input: normalizedInput } : {}),
+  };
+
   const response = await appApiData<MenuListResponseDto>({
     endpoint: "/home/registeredMenus",
     method: "POST",
+    body,
   });
 
   return response;

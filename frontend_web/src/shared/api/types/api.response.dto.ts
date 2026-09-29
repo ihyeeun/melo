@@ -150,6 +150,7 @@ export interface WeightStepsResponseDto {
 
 export interface MenuListResponseDto {
   menu_list: MenuSimpleResponseDto[];
+  next_cursor?: number;
 }
 
 export interface FolderListResponseDto {

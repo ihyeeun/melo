@@ -62,6 +62,7 @@ import {
 } from "@/shared/navigation/stackflowNavigation";
 
 const MENU_SEARCH_PAGE_LIMIT = 20;
+const REGISTERED_MENU_SEARCH_DEBOUNCE_MS = 300;
 const DIRECT_REGISTER_BUTTON_INTERVAL = 15;
 const PERSONAL_MENU_TAB = {
   FREQUENTLY_RECORDED: "frequently-recorded",
@@ -87,6 +88,9 @@ export default function MealSearchPage() {
   const hasMenuSelectionRouteContext = menuSelectionRouteContext.target !== null;
   const [submittedKeyword, setSubmittedKeyword] = useState("");
   const [searchKeyword, setSearchKeyword] = useState("");
+  const [registeredMenuInput, setRegisteredMenuInput] = useState("");
+  const [registeredMenuKeyword, setRegisteredMenuKeyword] = useState("");
+  const [isRegisteredMenuComposing, setIsRegisteredMenuComposing] = useState(false);
   const [activePersonalMenuTab, setActivePersonalMenuTab] = useState<PersonalMenuTab>(
     PERSONAL_MENU_TAB.FREQUENTLY_RECORDED,
   );
@@ -94,6 +98,8 @@ export default function MealSearchPage() {
 
   const searchInputRef = useRef<HTMLInputElement>(null);
   const loadMoreRef = useRef<HTMLDivElement>(null);
+  const registeredMenuInputRef = useRef<HTMLInputElement>(null);
+  const registeredLoadMoreRef = useRef<HTMLDivElement>(null);
   const personalMenuScrollRef = useRef<HTMLDivElement>(null);
   const draftKey = formatMenuDraftKey(dateKey, mealType);
   const hasSearchKeyword = searchKeyword.trim().length > 0;
@@ -108,9 +114,6 @@ export default function MealSearchPage() {
     isPersonalMenuEditSearchMode && activePersonalMenuTab === PERSONAL_MENU_TAB.FOLDER
       ? PERSONAL_MENU_TAB.FREQUENTLY_RECORDED
       : activePersonalMenuTab;
-  const shouldFetchRegisteredMenus =
-    visiblePersonalMenuTab === PERSONAL_MENU_TAB.REGISTERED && !hasSearchKeyword;
-
   const {
     data: dayMeals,
     isPending: isDayMealsPending,
@@ -119,6 +122,12 @@ export default function MealSearchPage() {
   const draft = useMenuDraftStore((store) => store.drafts[draftKey]);
   const clearDraft = useMenuDraftClear();
   const hasDraft = Boolean(draft);
+  const shouldFetchRegisteredMenus =
+    visiblePersonalMenuTab === PERSONAL_MENU_TAB.REGISTERED &&
+    !hasSearchKeyword &&
+    !isRecentMenuOpen &&
+    isTop &&
+    (isPersonalMenuEditSearchMode || hasDraft);
   const selectedCount = menuSelectionAdapter.selectedCount;
   const selectedMenuIdSet = menuSelectionAdapter.selectedMenuIdSet;
   const isFoodCameraBlocked = useIsFeatureBlocked(FEATURE_GUARD.FOOD_CAMERA);
@@ -145,9 +154,16 @@ export default function MealSearchPage() {
     data: registeredMenus,
     isPending: isRegisteredMenusPending,
     isError: isRegisteredMenusError,
+    isFetching: isRegisteredMenusFetching,
+    isFetchingNextPage: isRegisteredMenusFetchingNextPage,
+    isFetchNextPageError: isRegisteredMenusFetchNextPageError,
+    hasNextPage: hasNextRegisteredMenusPage,
+    fetchNextPage: fetchNextRegisteredMenusPage,
     refetch: refetchRegisteredMenus,
   } = useGetRegisteredMenus({
     enabled: shouldFetchRegisteredMenus,
+    input: registeredMenuKeyword,
+    limit: MENU_SEARCH_PAGE_LIMIT,
   });
   const {
     data: searchResults,
@@ -171,13 +187,18 @@ export default function MealSearchPage() {
   );
   const searchMenuList = useMenuCacheItems(searchMenuIds);
   const frequentlyRecordedMenuIds = frequentlyRecordedMenus?.menu_ids ?? [];
-  const registeredMenuIds = registeredMenus?.menu_ids ?? [];
+  const registeredMenuIds = useMemo(
+    () => [...new Set(registeredMenus?.pages.flatMap((page) => page.menu_ids) ?? [])],
+    [registeredMenus?.pages],
+  );
   const frequentlyRecordedMenuList = useMenuCacheItems(frequentlyRecordedMenuIds);
   const registeredMenuList = useMenuCacheItems(registeredMenuIds);
 
   const resetSearchState = () => {
     setSubmittedKeyword("");
     setSearchKeyword("");
+    setRegisteredMenuInput("");
+    setRegisteredMenuKeyword("");
     setIsRecentMenuOpen(false);
   };
 
@@ -214,6 +235,15 @@ export default function MealSearchPage() {
       return true;
     }
 
+    if (
+      visiblePersonalMenuTab === PERSONAL_MENU_TAB.REGISTERED &&
+      (registeredMenuInput || registeredMenuKeyword)
+    ) {
+      setRegisteredMenuInput("");
+      setRegisteredMenuKeyword("");
+      return true;
+    }
+
     if (!isFolderSearchMode && selectedCount > 0) {
       handleApplySelectedMenus();
       return true;
@@ -236,6 +266,16 @@ export default function MealSearchPage() {
     enabled: isTop && !isPersonalMenuEditSearchMode,
   });
 
+  useEffect(() => {
+    if (isRegisteredMenuComposing) return;
+
+    const timeoutId = window.setTimeout(() => {
+      setRegisteredMenuKeyword(registeredMenuInput.trim());
+    }, REGISTERED_MENU_SEARCH_DEBOUNCE_MS);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [isRegisteredMenuComposing, registeredMenuInput]);
+
   useLayoutEffect(() => {
     if (hasSearchKeyword) {
       return;
@@ -248,7 +288,7 @@ export default function MealSearchPage() {
 
     scrollElement.scrollTop = 0;
     scrollElement.scrollLeft = 0;
-  }, [hasSearchKeyword, visiblePersonalMenuTab]);
+  }, [hasSearchKeyword, isRecentMenuOpen, registeredMenuKeyword, visiblePersonalMenuTab]);
 
   useEffect(() => {
     if (
@@ -412,6 +452,45 @@ export default function MealSearchPage() {
     };
   }, [fetchNextPage, hasNextPage, isFetchingNextPage, searchMenuList.length]);
 
+  useEffect(() => {
+    const target = registeredLoadMoreRef.current;
+    const root = personalMenuScrollRef.current;
+    if (
+      !target ||
+      !root ||
+      !shouldFetchRegisteredMenus ||
+      !hasNextRegisteredMenusPage ||
+      isRegisteredMenusFetching ||
+      isRegisteredMenusError ||
+      isRegisteredMenuComposing ||
+      registeredMenuInput.trim() !== registeredMenuKeyword
+    ) {
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry?.isIntersecting) {
+          void fetchNextRegisteredMenusPage({ cancelRefetch: false });
+        }
+      },
+      { root, rootMargin: "160px 0px" },
+    );
+
+    observer.observe(target);
+    return () => observer.disconnect();
+  }, [
+    fetchNextRegisteredMenusPage,
+    hasNextRegisteredMenusPage,
+    isRegisteredMenuComposing,
+    isRegisteredMenusError,
+    isRegisteredMenusFetching,
+    registeredMenuInput,
+    registeredMenuKeyword,
+    registeredMenuList.length,
+    shouldFetchRegisteredMenus,
+  ]);
+
   const renderMenuCard = (menu: MenuSimpleResponseDto) => {
     const isSelected = selectedMenuIdSet.has(menu.id);
 
@@ -533,31 +612,118 @@ export default function MealSearchPage() {
       );
     }
 
-    if (isRegisteredMenusError) {
-      return renderPersonalMenuEmptyState("메뉴를 불러오지 못했어요");
+    if (isRegisteredMenusError && !registeredMenus) {
+      return (
+        <section className={styles.emptyResult}>
+          <p className="body-l-medium">메뉴를 불러오지 못했어요</p>
+          <Button variant="text" size="xs" onClick={() => void refetchRegisteredMenus()}>
+            다시 시도
+          </Button>
+        </section>
+      );
     }
 
     return (
       <div className={styles.compactResultList}>
-        <div className={` ${styles.marginTop}`}>
-          <button
-            type="button"
-            className={styles.addButton}
-            onClick={() => {
-              setIsDirectInputSheetOpen(true);
-            }}
-          >
-            <SystemIcon name="plus-circle" size={18} />
-            <p className="body-m-regular">영양 성분 직접 등록</p>
-          </button>
-        </div>
         {registeredMenuList.map(renderMenuCard)}
+        {isRegisteredMenusError ? (
+          <section className={styles.emptyResult}>
+            <p className="body-s-medium">
+              {isRegisteredMenusFetchNextPageError
+                ? "메뉴를 더 불러오지 못했어요"
+                : "메뉴를 새로고침하지 못했어요"}
+            </p>
+            <Button
+              variant="text"
+              size="xs"
+              disabled={isRegisteredMenusFetching}
+              onClick={() => {
+                if (isRegisteredMenusFetchNextPageError) {
+                  void fetchNextRegisteredMenusPage({ cancelRefetch: false });
+                } else {
+                  void refetchRegisteredMenus();
+                }
+              }}
+            >
+              다시 시도
+            </Button>
+          </section>
+        ) : registeredMenuList.length === 0 ? (
+          renderPersonalMenuEmptyState(
+            registeredMenuKeyword ? "검색 결과가 없어요" : "직접 등록한 메뉴가 없어요",
+          )
+        ) : null}
+        {hasNextRegisteredMenusPage ? (
+          <div ref={registeredLoadMoreRef} className={styles.loadMoreState}>
+            {isRegisteredMenusFetchingNextPage ? (
+              <LoadingIndicator iconSize={24} label="등록 메뉴를 더 불러오는 중입니다." />
+            ) : null}
+          </div>
+        ) : null}
       </div>
     );
   };
 
   const renderRegisteredPersonalMenuPanel = () => (
-    <div className={styles.personalMenuPanelContent}>{renderRegisteredFoodResult()}</div>
+    <div className={styles.personalMenuPanelContent}>
+      <div className={`${styles.searchFieldWrap} ${styles.registeredSearchField}`}>
+        <input
+          ref={registeredMenuInputRef}
+          className={`${styles.searchInput} ${styles.registeredSearchInput} body-s-medium`}
+          type="search"
+          value={registeredMenuInput}
+          placeholder="내 등록 메뉴를 검색해보세요"
+          aria-label="내 등록 메뉴 검색"
+          maxLength={300}
+          enterKeyHint="search"
+          onChange={(event) => {
+            const value = event.target.value;
+            setRegisteredMenuInput(value);
+            if (!value.trim()) setRegisteredMenuKeyword("");
+          }}
+          onCompositionStart={() => setIsRegisteredMenuComposing(true)}
+          onCompositionEnd={() => setIsRegisteredMenuComposing(false)}
+          onKeyDown={(event) => {
+            if (
+              event.key !== "Enter" ||
+              isRegisteredMenuComposing ||
+              event.nativeEvent.isComposing
+            ) {
+              return;
+            }
+
+            event.preventDefault();
+            setRegisteredMenuKeyword(event.currentTarget.value.trim());
+            event.currentTarget.blur();
+          }}
+        />
+        {registeredMenuInput ? (
+          <button
+            type="button"
+            className={styles.clearButton}
+            aria-label="내 등록 메뉴 검색어 지우기"
+            onClick={() => {
+              setRegisteredMenuInput("");
+              setRegisteredMenuKeyword("");
+              registeredMenuInputRef.current?.focus();
+            }}
+          >
+            <SystemIcon name="exit" mode="image" size={20} />
+          </button>
+        ) : null}
+      </div>
+      <button
+        type="button"
+        className={styles.addButton}
+        onClick={() => {
+          setIsDirectInputSheetOpen(true);
+        }}
+      >
+        <SystemIcon name="plus-circle" size={18} />
+        <p className="body-m-regular">영양 성분 직접 등록</p>
+      </button>
+      {renderRegisteredFoodResult()}
+    </div>
   );
 
   const renderPersonalMenuPanel = ({

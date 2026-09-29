@@ -77,6 +77,22 @@
   outline: none;
 }
 
+.registeredSearchField {
+  margin-top: 15px;
+}
+
+.registeredSearchInput {
+  padding-right: 48px;
+}
+
+.registeredSearchInput:focus-visible {
+  border-color: var(--border-strong);
+}
+
+.registeredSearchInput::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+}
+
 .clearButton {
   align-items: center;
   color: var(--gray-400);

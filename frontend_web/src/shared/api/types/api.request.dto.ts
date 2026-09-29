@@ -57,6 +57,15 @@ export interface MonthlyCalendarRequestDto<M extends CalendarViewMode = Calendar
 }
 
 /* ======
+ * 홈 / 식사 기록
+ * ====== */
+export interface RegisterMenuListRequestDto {
+  limit: number;
+  cursor?: number;
+  input?: string;
+}
+
+/* ======
  * 운동
  * ====== */
 export interface DeleteWorkoutRecordRequestDto {

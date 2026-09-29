@@ -32,6 +32,8 @@ export const menuQueryKeys = {
     [...menuQueryKeys.lists(), "search", input, limit] as const,
   frequentlyRecorded: () => [...menuQueryKeys.lists(), "frequently-recorded"] as const,
   registered: () => [...menuQueryKeys.lists(), "registered"] as const,
+  registeredList: (input: string, limit: number) =>
+    [...menuQueryKeys.registered(), input, limit] as const,
 };
 
 const MENU_DETAIL_ONLY_FIELD_KEYS = [
@@ -150,6 +152,7 @@ export function writeMenuListCache(
 
   return {
     menu_ids: getMenuIds(response.menu_list),
+    next_cursor: response.next_cursor,
   };
 }
 
