@@ -2103,6 +2103,9 @@ export default function ChatPage() {
                           }
                         />
                       ) : null}
+
+                      {chatItem.response_payload.chat_category === "inquiry" &&
+                        visibleResultCount > 0 && <InquiryCard animate={isResponseAnimating} />}
                     </div>
                   </div>
                 </section>
@@ -3605,6 +3608,31 @@ function MemuNotFoundCard({
         메뉴 입력하기
       </Button>
     </section>
+  );
+}
+
+function InquiryCard({ animate = false }: { animate?: boolean }) {
+  const navigate = useNavigate();
+
+  return (
+    <article
+      className={`${styles.menuNotFoundCard} ${animate ? styles.assistantResultCardAnimated : ""}`}
+    >
+      <img src="/icons/characters/search.png" width={48} alt="" aria-hidden="true" />
+      <p className="body-l-regular text-primary">
+        더 자세한 도움이 필요하시면
+        <br />
+        아래 버튼을 눌러주세요
+      </p>
+      <Button
+        variant="default"
+        size="xs"
+        onClick={() => navigate(PATH.SETTINGS_FEEDBACK)}
+        fullWidth
+      >
+        운영진에게 문의하기
+      </Button>
+    </article>
   );
 }
 

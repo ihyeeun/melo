@@ -196,10 +196,11 @@ export type ChatRecommendResponseDto =
   | ChatNutritionLabelFeedbackResponseDto
   | ChatNutritionLabelMenuRegisteredResponseDto
   | ChatGeneralResponseDto
-  | ChatMealRecordParseResponseDto;
+  | ChatMealRecordParseResponseDto
+  | ChatInquiryResponseDto;
 
 interface ChatResponseBaseDto {
-  chat_category: "recommendation" | "feedback" | "general" | "meal_record_parse";
+  chat_category: "recommendation" | "feedback" | "general" | "meal_record_parse" | "inquiry";
   intro_message?: string;
   image_url?: string | null;
 }
@@ -244,6 +245,10 @@ export interface ChatNutritionLabelMenuRegisteredResponseDto extends ChatRespons
   recognized_nutrition: NutritionLabelRecognitionResponseDto;
   feedback?: never;
   recognized_foods?: never;
+}
+
+export interface ChatInquiryResponseDto extends ChatResponseBaseDto {
+  chat_category: "inquiry";
 }
 
 export interface ChatNutritionLabelRegisteredMenuDto {
