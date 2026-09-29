@@ -1,5 +1,5 @@
 .page {
-  background-color: var(--background-gray-2);
+  background-color: var(--background-gray-1);
 }
 
 .content {
@@ -121,14 +121,22 @@
 }
 
 /* 운동 기록 수정 페이지 */
+.header {
+  background-color: var(--background-default);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.editContent {
+  padding: 16px;
+}
+
 .editRecordCard {
   align-items: center;
   background-color: var(--background-default);
   border: 1px solid var(--border-subtle);
   border-radius: 16px;
   display: flex;
-  gap: 12px;
-  padding: 8px;
+  padding: 12px 16px 12px 6px;
   transition:
     border-color 120ms ease,
     box-shadow 120ms ease,
@@ -137,29 +145,27 @@
   width: 100%;
 
   &:active {
-    background-color: var(--background-gray-1);
+    background-color: var(--background-gray-2);
   }
 }
 
 .editRecordCardDragging {
-  border-color: var(--primary-normal);
+  border-color: var(--border-strong);
   box-shadow: var(--shadow-outer);
   opacity: 0.92;
   transform: scale(0.99);
 }
 
 .dragHandle {
-  align-items: center;
+  align-self: stretch;
   cursor: grab;
-  display: inline-flex;
-  flex: 0 0 auto;
-  justify-content: center;
+  display: grid;
+  flex: 0 0 44px;
+  min-height: 44px;
+  place-items: center;
   touch-action: none;
   user-select: none;
   -webkit-user-select: none;
-  width: 34px;
-  color: var(--gray-300);
-  height: 70px;
 }
 
 .dragHandle:active {
@@ -175,25 +181,7 @@
 }
 
 .deleteButton {
-  display: grid;
-  place-items: center;
-  margin-left: auto;
-  color: var(--gray-300);
   flex: 0 0 auto;
-  height: 32px;
-  width: 32px;
-  border-radius: 50%;
-  background-color: var(--background-default);
-  box-shadow: var(--shadow-outer);
-}
-
-.deleteButton:disabled {
-  opacity: 0.5;
-}
-
-.editPageFooter {
-  background-color: var(--background-default);
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 10px;
+  height: 24px;
+  width: 24px;
 }

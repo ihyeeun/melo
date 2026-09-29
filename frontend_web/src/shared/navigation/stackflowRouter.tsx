@@ -821,6 +821,7 @@ function StackActivityFrame({
   const [isDragging, setIsDragging] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
   const isBottomSheetActivity = isBottomSheetActivityName(activity.name);
+  const edgeSwipeWidth = activity.name === "WorkoutRecordEdit" ? 16 : EDGE_SWIPE_WIDTH;
   const canSwipeBack =
     !isBottomSheetActivity &&
     activity.isTop &&
@@ -920,11 +921,13 @@ function StackActivityFrame({
 
   const handlePointerDown = useCallback(
     (event: ReactPointerEvent<HTMLDivElement>) => {
-      if (!canSwipeBack || isEditableElement(event.target)) return;
+      if (!canSwipeBack || event.defaultPrevented || isEditableElement(event.target)) return;
       if (event.pointerType === "mouse" && event.button !== 0) return;
-      if (event.clientX > EDGE_SWIPE_WIDTH) return;
 
       const rect = event.currentTarget.getBoundingClientRect();
+      const relativeX = event.clientX - rect.left;
+      if (relativeX < 0 || relativeX > edgeSwipeWidth) return;
+
       swipeRef.current = {
         dragging: false,
         lastTime: performance.now(),
@@ -943,7 +946,7 @@ function StackActivityFrame({
       setIsResetting(false);
       event.currentTarget.setPointerCapture(event.pointerId);
     },
-    [canSwipeBack],
+    [canSwipeBack, edgeSwipeWidth],
   );
 
   const handlePointerMove = useCallback(
@@ -1076,7 +1079,7 @@ function StackActivityFrame({
 
   const frameStyle = {
     "--stackflow-drag-x": `${dragX}px`,
-    "--stackflow-edge-swipe-width": `${EDGE_SWIPE_WIDTH}px`,
+    "--stackflow-edge-swipe-width": `${edgeSwipeWidth}px`,
     zIndex: activity.zIndex,
   } as CSSProperties;
 

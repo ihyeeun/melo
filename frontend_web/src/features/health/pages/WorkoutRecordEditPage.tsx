@@ -18,6 +18,7 @@ import {
   useWorkoutRecordEditDate,
   useWorkoutRecordEditRecords,
 } from "@/features/health/stores/workoutRecordEdit.store";
+import styles from "@/features/health/styles/WorkoutRecordPage.module.css";
 import { formatWorkoutDuration } from "@/features/health/utils/workoutFormat";
 import Tile from "@/features/home/components/cards/Tile";
 import {
@@ -43,8 +44,6 @@ import {
   useSearchParams,
 } from "@/shared/navigation/stackflowNavigation";
 import { getTodayFormatDateKey, isValidDateKey } from "@/shared/utils/dateFormat";
-
-import styles from "../styles/WorkoutRecordPage.module.css";
 
 const EMPTY_WORKOUT_RECORDS: WorkoutRecordItemResponseDto[] = [];
 
@@ -198,7 +197,8 @@ export default function WorkoutRecordEditPage() {
   const clearEditRecords = useClearWorkoutRecordEdit();
   const removeEditRecord = useRemoveWorkoutRecordEditRecord();
   const moveEditRecord = useMoveWorkoutRecordEditRecord();
-  const draggingWorkoutIdRef = useRef<number | null>(null);
+  const workoutListRef = useRef<HTMLElement | null>(null);
+  const activeDragRef = useRef<{ pointerId: number; workoutId: number } | null>(null);
   const [draggingWorkoutId, setDraggingWorkoutId] = useState<number | null>(null);
   const [isSavePending, setIsSavePending] = useState(false);
   const serverWorkouts = workoutRecordQuery.data?.workout_list ?? EMPTY_WORKOUT_RECORDS;
@@ -222,7 +222,7 @@ export default function WorkoutRecordEditPage() {
 
   const leaveEditMode = () => {
     clearEditRecords();
-    draggingWorkoutIdRef.current = null;
+    activeDragRef.current = null;
     setDraggingWorkoutId(null);
     navigateBack({ fallbackTo: getWorkoutRecordPath(dateKey) });
   };
@@ -308,28 +308,50 @@ export default function WorkoutRecordEditPage() {
     removeEditRecord(workoutId);
   };
 
-  const handleDragStart = (workoutId: number) => {
-    draggingWorkoutIdRef.current = workoutId;
+  const handleDragStart = (event: PointerEvent<HTMLButtonElement>, workoutId: number) => {
+    if (isSavePending || !event.isPrimary || event.button !== 0 || activeDragRef.current) return;
+
+    const workoutList = workoutListRef.current;
+    if (!workoutList) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+    ensureEditRecordsInitialized();
+    // Capture on the stable list; reordering can move the handle's DOM node.
+    workoutList.setPointerCapture(event.pointerId);
+    activeDragRef.current = { pointerId: event.pointerId, workoutId };
     setDraggingWorkoutId(workoutId);
   };
 
-  const handleDragMove = (clientX: number, clientY: number) => {
-    const draggingWorkoutId = draggingWorkoutIdRef.current;
-    if (draggingWorkoutId === null) return;
+  const handleDragMove = (event: PointerEvent<HTMLElement>) => {
+    const activeDrag = activeDragRef.current;
+    if (!activeDrag || activeDrag.pointerId !== event.pointerId) return;
 
-    const element = document.elementFromPoint(clientX, clientY);
+    event.preventDefault();
+    event.stopPropagation();
+
+    const element = document.elementFromPoint(event.clientX, event.clientY);
     const recordElement =
       element instanceof Element ? element.closest<HTMLElement>("[data-workout-record-id]") : null;
-    const targetWorkoutId = Number(recordElement?.dataset.workoutRecordId);
+    if (!recordElement || !event.currentTarget.contains(recordElement)) return;
+
+    const targetWorkoutId = Number(recordElement.dataset.workoutRecordId);
 
     if (!Number.isInteger(targetWorkoutId) || targetWorkoutId <= 0) return;
 
-    moveEditRecord(draggingWorkoutId, targetWorkoutId);
+    moveEditRecord(activeDrag.workoutId, targetWorkoutId);
   };
 
-  const handleDragEnd = () => {
-    draggingWorkoutIdRef.current = null;
+  const handleDragEnd = (event: PointerEvent<HTMLElement>) => {
+    if (activeDragRef.current?.pointerId !== event.pointerId) return;
+
+    event.stopPropagation();
+    activeDragRef.current = null;
     setDraggingWorkoutId(null);
+
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
   };
 
   const renderStatusContent = (
@@ -382,7 +404,15 @@ export default function WorkoutRecordEditPage() {
       "운동 기록을 불러오지 못했어요",
       "운동 기록이 없어요",
       () => (
-        <section className={styles.workoutList} aria-label="운동 수정 목록">
+        <section
+          ref={workoutListRef}
+          className={styles.workoutList}
+          aria-label="운동 수정 목록"
+          onPointerMove={handleDragMove}
+          onPointerUp={handleDragEnd}
+          onPointerCancel={handleDragEnd}
+          onLostPointerCapture={handleDragEnd}
+        >
           {draftRecords.map((workout) => (
             <WorkoutEditCard
               key={workout.workout_id}
@@ -390,9 +420,7 @@ export default function WorkoutRecordEditPage() {
               isDragging={draggingWorkoutId === workout.workout_id}
               onClick={() => handleWorkoutCardClick(workout)}
               onDelete={() => handleDeleteWorkout(workout.workout_id)}
-              onDragEnd={handleDragEnd}
-              onDragMove={handleDragMove}
-              onDragStart={() => handleDragStart(workout.workout_id)}
+              onDragStart={(event) => handleDragStart(event, workout.workout_id)}
             />
           ))}
         </section>
@@ -401,16 +429,28 @@ export default function WorkoutRecordEditPage() {
 
   return (
     <section className={`${styles.page} page`}>
-      <PageHeader
-        title="운동 수정"
-        onBack={() => {
-          closeEditMode();
-          navigateBack();
-        }}
-      />
+      <header className={styles.header}>
+        <PageHeader
+          title="운동 수정"
+          onBack={() => {
+            closeEditMode();
+            navigateBack();
+          }}
+          rightSlot={
+            <button
+              type="button"
+              onClick={completeEditMode}
+              className="body-l-medium text-highlight"
+            >
+              완료
+            </button>
+          }
+        />
+      </header>
 
-      <main className={`${styles.content} main`}>
+      <main className={`main ${styles.editContent}`}>
         <section className={styles.summaryArea}>
+          <h2 className="title-s-semi text-primary">오늘 운동 요약</h2>
           <div className={styles.summaryGrid} aria-label="운동 수정 요약">
             <Tile>
               <p className={`body-l-medium text-primary`}>총 운동 시간</p>
@@ -445,25 +485,14 @@ export default function WorkoutRecordEditPage() {
         {renderEditContent()}
       </main>
 
-      <footer className={`footer ${styles.editPageFooter}`}>
-        <Button
-          size="m"
-          fullWidth
-          variant="outlined"
-          disabled={workoutRecordQuery.isPending || workoutRecordQuery.isError || isSavePending}
-          onClick={handleSearchWorkout}
-        >
-          운동 추가하기
-        </Button>
-        <Button
-          size="m"
-          fullWidth
-          disabled={workoutRecordQuery.isPending || workoutRecordQuery.isError || isSavePending}
-          onClick={completeEditMode}
-        >
-          {isSavePending ? "저장 중" : "완료하기"}
-        </Button>
-      </footer>
+      <button
+        type="button"
+        className={styles.addButton}
+        onClick={handleSearchWorkout}
+        aria-label="운동 추가하기"
+      >
+        <SystemIcon name="plus" size={28} />
+      </button>
 
       {isSavePending ? <LoadingOverlay label="운동 기록을 저장하는 중입니다." /> : null}
     </section>
@@ -475,24 +504,14 @@ function WorkoutEditCard({
   workout,
   onClick,
   onDelete,
-  onDragEnd,
-  onDragMove,
   onDragStart,
 }: {
   isDragging: boolean;
   workout: WorkoutRecordItemResponseDto;
   onClick: () => void;
   onDelete: () => void;
-  onDragEnd: () => void;
-  onDragMove: (clientX: number, clientY: number) => void;
-  onDragStart: () => void;
+  onDragStart: (event: PointerEvent<HTMLButtonElement>) => void;
 }) {
-  const releasePointerCapture = (event: PointerEvent<HTMLButtonElement>) => {
-    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
-      event.currentTarget.releasePointerCapture(event.pointerId);
-    }
-  };
-
   return (
     <article
       className={`${styles.editRecordCard} ${isDragging ? styles.editRecordCardDragging : ""}`}
@@ -501,30 +520,10 @@ function WorkoutEditCard({
       <button
         type="button"
         className={styles.dragHandle}
-        onPointerDown={(event) => {
-          if (event.pointerType === "mouse" && event.button !== 0) return;
-
-          event.preventDefault();
-          event.currentTarget.setPointerCapture(event.pointerId);
-          onDragStart();
-        }}
-        onPointerMove={(event) => {
-          if (!event.currentTarget.hasPointerCapture(event.pointerId)) return;
-
-          event.preventDefault();
-          onDragMove(event.clientX, event.clientY);
-        }}
-        onPointerUp={(event) => {
-          releasePointerCapture(event);
-          onDragEnd();
-        }}
-        onPointerCancel={(event) => {
-          releasePointerCapture(event);
-          onDragEnd();
-        }}
+        onPointerDown={onDragStart}
         aria-label={`${workout.workout_name} 순서 변경`}
       >
-        <SystemIcon name="drag" size={24} />
+        <SystemIcon name="drag" size={24} color="text-disabled" />
       </button>
 
       <button type="button" className={styles.editWorkoutItem} onClick={onClick}>
@@ -558,7 +557,7 @@ function WorkoutEditCard({
         onClick={onDelete}
         aria-label={`${workout.workout_name} 삭제`}
       >
-        <SystemIcon name="delete" size={18} />
+        <SystemIcon name="delete" size={24} className="text-tertiary" />
       </button>
     </article>
   );
