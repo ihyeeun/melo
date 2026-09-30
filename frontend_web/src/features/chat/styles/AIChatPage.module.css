@@ -1,0 +1,120 @@
+.root {
+  background-color: var(--navy-50);
+}
+
+.header {
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.footer {
+  background: linear-gradient(180deg, var(--navy-50) 0%, var(--background-default) 30%);
+}
+.footer:has(.textInput:focus) {
+  --safe-area-bottom: 0px;
+}
+
+.textInputSection {
+  border: 1px solid var(--border-default);
+  background-color: var(--background-default);
+  border-radius: 16px;
+  padding: 10px 8px;
+  display: grid;
+  grid-template-columns: 24px 1fr 24px;
+  align-items: flex-end;
+  gap: 12px;
+  position: relative;
+}
+
+.chatActionExpendButton[data-isView="true"] {
+  transition: transform 0.2 ease;
+  transform: rotate(45deg);
+}
+
+.textInput {
+  --chat-input-line-height: calc(14px * 1.4);
+
+  line-height: var(--chat-input-line-height);
+  max-height: calc(var(--chat-input-line-height) * 5);
+
+  min-width: 0;
+  width: 100%;
+  padding: 0;
+  border: none;
+  resize: none;
+  overflow-y: auto;
+  margin-block: auto;
+}
+.textInput:focus-within {
+  outline: 0;
+}
+
+.mealRecordModeChip {
+  position: absolute;
+  transform: translateX(-50%);
+  left: 50%;
+  bottom: calc(100% + 8px);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background-color: var(--navy-200);
+  border-radius: 16px;
+  padding: 6px 12px;
+}
+.mealRecordModeChip[data-isView="false"] {
+  display: none;
+}
+
+.chatActionsSection {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  place-items: center;
+  margin-top: 12px;
+  margin-bottom: 40px;
+}
+.chatActionsSection[data-isView="false"] {
+  display: none;
+}
+
+.chatActionButton {
+  width: 100%;
+}
+
+.chatActionIcon {
+  display: grid;
+  place-items: center;
+  width: 60px;
+  height: 60px;
+  margin-inline: auto;
+  margin-bottom: 8px;
+  background-color: var(--navy-50);
+  color: var(--navy-600);
+  border-radius: 50%;
+}
+
+.chatActionButton[data-action="text-meal-record-mode"] {
+  position: relative;
+}
+.mealRecordModeBubble {
+  background-color: var(--gray-700);
+  border-radius: 8px;
+  color: var(--background-default);
+  padding: 4px 6px;
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: max-content;
+}
+.mealRecordModeBubble::before {
+  content: "";
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 3px solid transparent;
+  border-right: 3px solid transparent;
+  border-bottom: 5px solid var(--gray-700);
+}
