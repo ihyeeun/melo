@@ -6,6 +6,57 @@
   border-bottom: 1px solid var(--border-subtle);
 }
 
+/* MAIN */
+.content {
+  padding-block: 20px;
+}
+
+.conversation {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+.conversation + .conversation {
+  margin-top: 24px;
+}
+
+.dateChip {
+  margin-inline: auto;
+  width: fit-content;
+  background-color: var(--gray-400);
+  color: var(--background-default);
+  border-radius: 16px;
+  padding: 4px 12px;
+}
+
+.userSendArea {
+  margin-left: auto;
+  max-width: 88%;
+}
+
+.sendImage {
+  aspect-ratio: 1;
+  max-width: 230px;
+  border-radius: 16px;
+  object-fit: cover;
+}
+
+.textBubble {
+  padding: 8px 16px;
+  background-color: var(--background-default);
+  border: 1px solid var(--border-subtle);
+  border-radius: 16px;
+}
+
+.emptyHistorySection {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+}
+
+/* FOOTER */
 .footer {
   background: linear-gradient(180deg, var(--navy-50) 0%, var(--background-default) 30%);
 }
