@@ -4,6 +4,7 @@ import { AssistantMessageText } from "@/features/chat/components/AssistantMessag
 import { useGetChatHistoryQuery } from "@/features/chat/hooks/queries/useGetChatQuery";
 import styles from "@/features/chat/styles/AIChatPage.module.css";
 import { textSplitByLines } from "@/features/chat/utils/textdivider.util";
+import { PATH } from "@/router/path";
 import type {
   ChatHistoryItemResponseDto,
   FeedbackItemDto,
@@ -12,6 +13,7 @@ import { Button } from "@/shared/commons/button/Button";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import ArcProgress from "@/shared/commons/progress/ArcProgress";
+import { useNavigate } from "@/shared/navigation/stackflowNavigation";
 import { navigateBack } from "@/shared/navigation/stackflowNavigationController";
 import {
   formatDateDividerText,
@@ -135,6 +137,7 @@ export default function AIChatPage() {
 function ChatHistory() {
   const scrollEndRef = useRef<HTMLDivElement>(null);
   const [showScrollToBottomBtn, setShowScrollToBottomBtn] = useState<boolean>(false);
+  const navigate = useNavigate();
 
   const { data: chatHistory, isPending: isHistoryPending } = useGetChatHistoryQuery();
   const chatList = chatHistory?.chat_list ?? [];
@@ -252,6 +255,22 @@ function ChatHistory() {
               {category === "feedback" && (
                 <FeedbackCard feedbackItem={item.chat.response_payload.feedback} />
               )}
+
+              {category === "feedback" && item.chat.response_payload.recognized_nutrition && (
+                <SubActionCard
+                  text={`영양성분을 인식했어요!\n어느 브랜드의 메뉴인가요?`}
+                  action={() => {}}
+                  actionText="메뉴 입력하기"
+                />
+              )}
+
+              {category === "inquiry" && (
+                <SubActionCard
+                  text={`더 자세한 도움이 필요하시면\n아래 버튼을 눌러주세요`}
+                  action={() => navigate(PATH.SETTINGS_FEEDBACK)}
+                  actionText="운영진에게 문의하기"
+                />
+              )}
             </div>
           </section>
         );
@@ -299,7 +318,7 @@ function FeedbackCard({ feedbackItem }: { feedbackItem: FeedbackItemDto | undefi
   });
 
   return (
-    <div className={styles.feedbackSection}>
+    <div className={styles.card}>
       <section className={styles.feedbackScoreSection}>
         <ArcProgress
           value={feedbackItem.score}
@@ -377,6 +396,26 @@ function FeedbackCard({ feedbackItem }: { feedbackItem: FeedbackItemDto | undefi
           영양성분 보기
         </Button>
       </section>
+    </div>
+  );
+}
+
+function SubActionCard({
+  text,
+  action,
+  actionText,
+}: {
+  text: string;
+  action: () => void;
+  actionText: string;
+}) {
+  return (
+    <div className={styles.card} data-border="primary">
+      <img src="/icons/characters/search.png" width={48} alt="" aria-hidden="true" />
+      <p className={`body-l-regular text-primary ${styles.subCardLabel}`}>{text}</p>
+      <Button variant="default" size="xs" onClick={action} fullWidth>
+        {actionText}
+      </Button>
     </div>
   );
 }
