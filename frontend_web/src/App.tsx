@@ -30,9 +30,9 @@ export default function App() {
   const [pathname, setPathname] = useState(getCurrentPathname);
 
   useEffect(() => {
+    const cleanupNativeBridgeListener = initNativeBridgeListener();
     initAnalytics();
     track(EVENT_NAME.APP_OPEN);
-    const cleanupNativeBridgeListener = initNativeBridgeListener();
     const cleanupNativeClickHaptics = initNativeClickHaptics();
     const cleanupQueryClientLifecycleSync = initQueryClientLifecycleSync();
     const cleanupInputCharacterRestriction = initInputCharacterRestriction();
