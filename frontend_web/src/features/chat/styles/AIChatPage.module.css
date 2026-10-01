@@ -81,6 +81,19 @@
   justify-content: center;
 }
 
+.scrollToBottomButton {
+  position: fixed;
+  right: 16px;
+  bottom: calc(58px + var(--safe-area-bottom));
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background-color: var(--gray-400);
+  opacity: 0.7;
+}
+
 /* FOOTER */
 .footer {
   background: linear-gradient(180deg, var(--navy-50) 0%, var(--background-default) 30%);

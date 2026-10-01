@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useEffectEvent, useRef, useState } from "react";
 
 import { AssistantMessageText } from "@/features/chat/components/AssistantMessageText";
 import { useGetChatHistoryQuery } from "@/features/chat/hooks/queries/useGetChatQuery";
@@ -127,12 +127,42 @@ export default function AIChatPage() {
 }
 
 function ChatHistory() {
+  const scrollEndRef = useRef<HTMLDivElement>(null);
+  const [showScrollToBottomBtn, setShowScrollToBottomBtn] = useState<boolean>(false);
+
   const { data: chatHistory, isPending: isHistoryPending } = useGetChatHistoryQuery();
+  const chatList = chatHistory?.chat_list ?? [];
+  const conversation = chatsByDate(chatList);
+
+  const handleScrollToBottom = (behavior: ScrollBehavior = "smooth") => {
+    scrollEndRef.current?.scrollIntoView({ behavior });
+  };
+
+  useEffect(() => {
+    const target = scrollEndRef.current;
+    if (!target) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setShowScrollToBottomBtn(!entry.isIntersecting);
+      },
+      { threshold: 0.5 },
+    );
+
+    observer.observe(target);
+    return () => observer.disconnect();
+  }, [isHistoryPending]);
+
+  const onInitLoad = useEffectEvent(() => {
+    if (conversation.length > 0) handleScrollToBottom("auto");
+  });
+  useEffect(() => {
+    if (!isHistoryPending) {
+      onInitLoad();
+    }
+  }, [isHistoryPending]);
 
   if (isHistoryPending) return <>로딩</>;
-
-  const chatList = chatHistory?.chat_list ?? [];
-
   if (chatList.length === 0)
     return (
       <div className={`${styles.emptyHistorySection}`}>
@@ -144,8 +174,6 @@ function ChatHistory() {
         </p>
       </div>
     );
-
-  const conversation = chatsByDate(chatList);
 
   return (
     <div className={`${styles.content}`}>
@@ -173,7 +201,12 @@ function ChatHistory() {
               <div className={styles.messageArea} data-owner="user">
                 {userSendImage ? (
                   <>
-                    <img src={userSendImage} className={styles.sendImage} alt="전송된 이미지" />
+                    <img
+                      src={userSendImage}
+                      // onLoad={handleScrollToBottom}
+                      className={styles.sendImage}
+                      alt="전송된 이미지"
+                    />
                     <span
                       data-owner="user"
                       data-time={messageTime}
@@ -212,6 +245,17 @@ function ChatHistory() {
           </section>
         );
       })}
+
+      <div ref={scrollEndRef} />
+      {showScrollToBottomBtn && (
+        <button
+          type="button"
+          className={styles.scrollToBottomButton}
+          onClick={() => handleScrollToBottom()}
+        >
+          <SystemIcon name="chevron-down" size={24} className="text-white" />
+        </button>
+      )}
     </div>
   );
 }
