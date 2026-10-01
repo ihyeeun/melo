@@ -1,12 +1,19 @@
 import React, { useRef, useState } from "react";
 
+import { AssistantMessageText } from "@/features/chat/components/AssistantMessageText";
 import { useGetChatHistoryQuery } from "@/features/chat/hooks/queries/useGetChatQuery";
 import styles from "@/features/chat/styles/AIChatPage.module.css";
+import { textSplitByLines } from "@/features/chat/utils/textdivider.util";
 import type { ChatHistoryItemResponseDto } from "@/shared/api/types/api.response.dto";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import { navigateBack } from "@/shared/navigation/stackflowNavigationController";
-import { formatDateDividerText, formatDateKey, parseDate } from "@/shared/utils/dateFormat";
+import {
+  formatDateDividerText,
+  formatDateKey,
+  formatTimeText,
+  parseDate,
+} from "@/shared/utils/dateFormat";
 
 export default function AIChatPage() {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -67,7 +74,13 @@ export default function AIChatPage() {
             }}
           />
 
-          <SystemIcon name="chevron-up" size={24} />
+          <button
+            type="button"
+            data-isView={inputMessage.trim() !== ""}
+            className={styles.sendMessageButton}
+          >
+            <SystemIcon name="arrow-up" size={16} />
+          </button>
 
           <div className={styles.mealRecordModeChip} data-isView={isTextMealRecordMode}>
             <span className="body-s-medium text-primary">식사 기록 모드</span>
@@ -143,29 +156,59 @@ function ChatHistory() {
           (!prevItem?.date || formatDateKey(item.date) !== formatDateKey(prevItem.date));
         const userSendImage = item.chat.image_url;
         const userSendText = item.chat.input_text.trim();
+        const messageTime = item.chat.createdAt ? formatTimeText(item.chat.createdAt) : null;
+        const receiveMessages = textSplitByLines(item.chat.response_payload.intro_message ?? "");
 
         return (
           <section key={item.chat.id} className={styles.conversation}>
             {isShowDateChip && item.date && (
               <time className={styles.dateChip}>
-                <span className="caption-medium">{formatDateDividerText(item.date)}</span>
+                <span className="caption-m-medium text-white">
+                  {formatDateDividerText(item.date)}
+                </span>
               </time>
             )}
 
             {(userSendImage || userSendText) && (
-              <div className={styles.userSendArea}>
+              <div className={styles.messageArea} data-owner="user">
                 {userSendImage ? (
-                  <img src={userSendImage} className={styles.sendImage} alt="전송된 이미지" />
+                  <>
+                    <img src={userSendImage} className={styles.sendImage} alt="전송된 이미지" />
+                    <span
+                      data-owner="user"
+                      data-time={messageTime}
+                      className={`caption-m-regular text-tertiary ${styles.messageTime}`}
+                    />
+                  </>
                 ) : (
-                  <div className={styles.textBubble}>
-                    <p className="body-m-regular text-primary">{userSendText}</p>
-                  </div>
+                  <>
+                    <div className={styles.textBubble}>
+                      <p className="body-m-regular text-primary">{userSendText}</p>
+                      <span
+                        data-owner="user"
+                        data-time={messageTime}
+                        className={`caption-m-regular text-tertiary ${styles.messageTime}`}
+                      />
+                    </div>
+                  </>
                 )}
               </div>
             )}
 
-            {/* TODO : message time 추가 */}
-            {/* TODO : ai message 추가 */}
+            <div className={styles.messageArea} data-owner="ai">
+              {receiveMessages.map((text, index) => (
+                <div key={index} className={styles.textBubble}>
+                  <p className="body-m-regular text-primary">
+                    <AssistantMessageText text={text} />
+                  </p>
+                  <span
+                    data-owner="ai"
+                    data-time={messageTime}
+                    className={`caption-m-regular text-tertiary ${styles.messageTime}`}
+                  />
+                </div>
+              ))}
+            </div>
           </section>
         );
       })}

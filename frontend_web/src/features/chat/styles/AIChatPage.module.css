@@ -24,14 +24,25 @@
   margin-inline: auto;
   width: fit-content;
   background-color: var(--gray-400);
-  color: var(--background-default);
   border-radius: 16px;
   padding: 4px 12px;
+  display: flex;
+  align-items: center;
 }
 
-.userSendArea {
+.messageArea {
+  max-width: 80%;
+}
+.messageArea[data-owner="user"] {
   margin-left: auto;
-  max-width: 88%;
+  position: relative;
+}
+.messageArea[data-owner="ai"] {
+  margin-right: auto;
+
+  > .textBubble + .textBubble {
+    margin-top: 8px;
+  }
 }
 
 .sendImage {
@@ -46,6 +57,20 @@
   background-color: var(--background-default);
   border: 1px solid var(--border-subtle);
   border-radius: 16px;
+  position: relative;
+}
+
+.messageTime::after {
+  content: attr(data-time);
+  position: absolute;
+  bottom: 0;
+  white-space: nowrap;
+}
+.messageTime[data-owner="user"]::after {
+  right: calc(100% + 8px);
+}
+.messageTime[data-owner="ai"]::after {
+  left: calc(100% + 8px);
 }
 
 .emptyHistorySection {
@@ -97,6 +122,19 @@
 }
 .textInput:focus-within {
   outline: 0;
+}
+
+.sendMessageButton {
+  background-color: var(--navy-900);
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  color: var(--background-default);
+}
+.sendMessageButton[data-isView="false"] {
+  display: none;
 }
 
 .mealRecordModeChip {
