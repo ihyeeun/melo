@@ -6,6 +6,7 @@ import {
   patchMenuDetailCache,
 } from "@/features/meal-record/hooks/queries/menuCache";
 import { modifyNutrient, registerMenu } from "@/features/nutrient-entry/api/nutrient";
+import { isRequestAbortError } from "@/shared/api/requestCancellation";
 import type { UseMutationCallback } from "@/shared/api/types/callback.types";
 
 export function useRegisterMenuMutation(callbacks?: UseMutationCallback) {
@@ -21,6 +22,7 @@ export function useRegisterMenuMutation(callbacks?: UseMutationCallback) {
       if (callbacks?.onSuccess) callbacks.onSuccess();
     },
     onError: (error) => {
+      if (isRequestAbortError(error)) return;
       if (callbacks?.onError) callbacks.onError(error);
     },
   });
@@ -51,6 +53,7 @@ export function useModifyNutrientMutation(callbacks?: UseMutationCallback) {
     },
 
     onError: (error) => {
+      if (isRequestAbortError(error)) return;
       if (callbacks?.onError) callbacks.onError(error);
     },
   });

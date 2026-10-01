@@ -18,6 +18,7 @@ import {
 import styles from "@/features/personal-menu/folder/styles/FolderDetailPage.module.css";
 import { PATH } from "@/router/path";
 import { getFolderDetailPath, getMealSearchPath } from "@/router/pathHelpers";
+import { isRequestAbortError } from "@/shared/api/requestCancellation";
 import { type MealServingInputMode, MENU_INPUT_MODE } from "@/shared/api/types/api.dto";
 import type { MenuSimpleResponseDto } from "@/shared/api/types/api.response.dto";
 import { Button } from "@/shared/commons/button/Button";
@@ -207,6 +208,7 @@ export default function FolderDetailPage() {
       toast.success("삭제되었어요");
       navigateBack({ fallbackTo: getMealSearchPath(dateKey, mealType) });
     } catch (error) {
+      if (isRequestAbortError(error)) throw error;
       toast.warning("폴더 삭제에 실패했어요", "잠시 후 다시 시도해주세요.");
       throw error;
     }

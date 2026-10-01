@@ -6,6 +6,7 @@ import {
 } from "@/features/settings/hooks/mutations/useAccountMutation";
 import { PATH } from "@/router/path";
 import { isNativeApp, openNativeInAppBrowser } from "@/shared/api/bridge/nativeBridge";
+import { isRequestAbortError } from "@/shared/api/requestCancellation";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import { LoadingOverlay } from "@/shared/commons/loading/Loading";
@@ -125,6 +126,7 @@ export default function SettingsPage() {
           try {
             await requestLogout();
           } catch (error) {
+            if (isRequestAbortError(error)) throw error;
             toast.warning(resolveErrorMessage(error, "로그아웃에 실패했어요."));
             throw error;
           }
@@ -145,6 +147,7 @@ export default function SettingsPage() {
           try {
             await requestWithdraw();
           } catch (error) {
+            if (isRequestAbortError(error)) throw error;
             toast.warning(resolveErrorMessage(error, "탈퇴 처리에 실패했어요."));
             throw error;
           }

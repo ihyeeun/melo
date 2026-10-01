@@ -28,6 +28,7 @@ import { PATH } from "@/router/path";
 import { track } from "@/shared/analytics/analytics";
 import { EVENT_NAME } from "@/shared/analytics/analytics.constants";
 import { isNativeApp, requestAppBack } from "@/shared/api/bridge/nativeBridge";
+import { queryClient } from "@/shared/api/queryClient";
 import { LoadingScreen } from "@/shared/commons/loading/Loading";
 import {
   FEATURE_GUARD,
@@ -35,6 +36,7 @@ import {
   useIsFeatureBlocked,
 } from "@/shared/guards/featureGuard";
 
+import { screenRequestCancellationPlugin } from "./screenRequestCancellationPlugin";
 import { setStackflowNavigateBackHandler } from "./stackflowNavigationController";
 import styles from "./StackflowRuntime.module.css";
 
@@ -1120,6 +1122,7 @@ const { Stack: InternalStackflowStack, actions: stackflowActions } = stackflow({
   transitionDuration: STACK_TRANSITION_DURATION,
   activities: ACTIVITIES,
   plugins: [
+    screenRequestCancellationPlugin(queryClient),
     stackflowRendererPlugin(),
     historySyncPlugin({
       routes: ACTIVITY_ROUTES,

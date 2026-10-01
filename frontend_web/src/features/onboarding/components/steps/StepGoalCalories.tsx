@@ -7,6 +7,7 @@ import {
   getGoalWeekEstimate,
   type GoalWeekEstimateResult,
 } from "@/features/onboarding/utils/calculateGoalWeek";
+import { isRequestAbortError } from "@/shared/api/requestCancellation";
 import BottomSheet from "@/shared/commons/bottomSheet/BottomSheet";
 import { Button } from "@/shared/commons/button/Button";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
@@ -90,6 +91,7 @@ export default function SteptargetCalories({ data, update }: StepComponentProps)
     data: responseData,
   } = useTargetCaloriesMutation({
     onError: (error) => {
+      if (isRequestAbortError(error)) return;
       console.error(error);
     },
   });

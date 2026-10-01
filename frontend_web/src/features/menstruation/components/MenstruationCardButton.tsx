@@ -9,6 +9,7 @@ import { getMenstrualPhaseDayInfo } from "@/features/menstruation/utils/menstrua
 import { PATH } from "@/router/path";
 import { track } from "@/shared/analytics/analytics";
 import { EVENT_NAME } from "@/shared/analytics/analytics.constants";
+import { isRequestAbortError } from "@/shared/api/requestCancellation";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import { toast } from "@/shared/commons/toast/toast";
 import { FEATURE_GUARD, useIsFeatureBlocked } from "@/shared/guards/featureGuard";
@@ -28,6 +29,7 @@ export default function MenstruationCardButton({ phase }: { phase: MenstrualPhas
   const { mutate: requestPersonalizedManagement, isPending } =
     usePersonalizedManagementMutation({
       onError: (error) => {
+        if (isRequestAbortError(error)) return;
         toast.warning(error.message || "맞춤 관리법을 불러오지 못했어요. 다시 시도해주세요.");
       },
     });

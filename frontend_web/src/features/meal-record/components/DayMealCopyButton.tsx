@@ -1,5 +1,6 @@
 import type { ClipboardDayMeals } from "@/features/meal-record/utils/dayMealClipboard";
 import { buildDayMealClipboardText } from "@/features/meal-record/utils/dayMealClipboard";
+import { isRequestAbortError } from "@/shared/api/requestCancellation";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import { toast } from "@/shared/commons/toast/toast";
 import { copyTextToClipboard } from "@/shared/utils/clipboard";
@@ -21,7 +22,8 @@ export function DayMealCopyButton({ dayMeals }: DayMealCopyButtonProps) {
     try {
       await copyTextToClipboard(clipboardText);
       toast.success("하루 식단을 복사했어요");
-    } catch {
+    } catch (error) {
+      if (isRequestAbortError(error)) return;
       toast.error("식단을 복사하지 못했어요", "잠시 후 다시 시도해 주세요");
     }
   };

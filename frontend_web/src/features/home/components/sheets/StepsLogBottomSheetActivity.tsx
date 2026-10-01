@@ -6,6 +6,7 @@ import { useGetBodyLog } from "@/features/home/hooks/queries/useTodayRecordQuery
 import styles from "@/features/home/styles/TodayBodyLogSection.module.css";
 import { PATH } from "@/router/path";
 import { isNativeApp, openNativeInAppBrowser } from "@/shared/api/bridge/nativeBridge";
+import { isRequestAbortError } from "@/shared/api/requestCancellation";
 import BottomSheet from "@/shared/commons/bottomSheet/BottomSheet";
 import { Button } from "@/shared/commons/button/Button";
 import NumberField from "@/shared/commons/input/NumberField";
@@ -78,7 +79,8 @@ export default function StepsLogBottomSheetActivity() {
         toast.success("걸음 수가 기록되었어요");
         closeSheet();
       },
-      onError: () => {
+      onError: (error) => {
+        if (isRequestAbortError(error)) return;
         toast.error("걸음 수 기록에 실패했어요");
       },
     },

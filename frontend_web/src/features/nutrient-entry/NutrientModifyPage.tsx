@@ -29,6 +29,7 @@ import {
 } from "@/features/nutrient-entry/utils/nutrientFields";
 import { PATH } from "@/router/path";
 import { getMealDetailPath, getMealRecordPath } from "@/router/pathHelpers";
+import { isRequestAbortError } from "@/shared/api/requestCancellation";
 import {
   type MealMenuItem,
   MENU_DATA_SOURCE,
@@ -269,7 +270,8 @@ export default function NutrientModifyPage() {
             toast.success("영양 성분을 수정했어요");
             navigateToSavedMenuDetail(menuId);
           },
-          onError: () => {
+          onError: (error) => {
+            if (isRequestAbortError(error)) return;
             toast.warning("영양 성분 수정에 실패했어요");
           },
         },
@@ -288,7 +290,8 @@ export default function NutrientModifyPage() {
         toast.success("개인 메뉴로 등록했어요");
         navigateToSavedMenuDetail(createdMenuId);
       },
-      onError: () => {
+      onError: (error) => {
+        if (isRequestAbortError(error)) return;
         toast.warning("공용 데이터를 개인 데이터 등록하는데 실패했어요");
       },
     });

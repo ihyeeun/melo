@@ -18,6 +18,7 @@ import {
 import { PATH } from "@/router/path";
 import { track } from "@/shared/analytics/analytics";
 import { EVENT_NAME } from "@/shared/analytics/analytics.constants";
+import { isRequestAbortError } from "@/shared/api/requestCancellation";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import { ConfirmModal } from "@/shared/commons/modals/ConfirmModal";
 import { InfoPopover } from "@/shared/commons/popover/InfoPopover";
@@ -54,6 +55,7 @@ export default function PreviewTodayScoreSection({
   const [isAdditionalCareOpen, setIsAdditionalCareOpen] = useState<boolean>(false);
   const { mutate: requestMealFeedback, isPending: isCoachingPending } = useMealFeedbackMutation({
     onError: (error) => {
+      if (isRequestAbortError(error)) return;
       toast.warning(error.message || "식사 코칭을 불러오지 못했어요. 다시 시도해주세요.");
     },
   });
@@ -167,8 +169,8 @@ export default function PreviewTodayScoreSection({
               onClick={() => {
                 if (queryClient.isMutating({ mutationKey: ["meal-feedback"] }) > 0) return;
 
-                requestMealFeedback(selectedDateKey);
                 navigate(PATH.CHAT);
+                requestMealFeedback(selectedDateKey);
                 track(EVENT_NAME.CLICK_MEAL_FEEDBACK_AI_COACH);
               }}
             >

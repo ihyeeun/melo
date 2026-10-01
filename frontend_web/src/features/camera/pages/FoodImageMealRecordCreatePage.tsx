@@ -1,3 +1,4 @@
+import { useActivity } from "@stackflow/react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { CameraLoading } from "@/features/camera/components/CameraLoading";
@@ -29,6 +30,7 @@ import { getMealRecordPath } from "@/router/pathHelpers";
 import { track } from "@/shared/analytics/analytics";
 import { EVENT_NAME } from "@/shared/analytics/analytics.constants";
 import { requestNativeCameraCapture } from "@/shared/api/bridge/nativeBridge";
+import { captureScreenRequestScope } from "@/shared/api/screenRequests";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
 import { CheckButtonModal } from "@/shared/commons/modals/CheckButtonModal";
 import { toast } from "@/shared/commons/toast/toast";
@@ -45,6 +47,7 @@ export default function FoodCameraPage() {
   const [capturedPreviewSrc, setCapturedPreviewSrc] = useState<string | null>(null);
   const [captureErrorFeedback, setCaptureErrorFeedback] =
     useState<CameraCaptureErrorFeedback | null>(null);
+  const { id: screenId, isActive: isScreenActive } = useActivity();
   const autoTriggeredRef = useRef(false);
 
   const { mutateAsync: uploadImage } = useCreateMealRecordByFoodImageMutation();
@@ -63,6 +66,9 @@ export default function FoodCameraPage() {
 
   const handleCameraActions = useCallback(async () => {
     if (isUploading) return;
+    const screen = captureScreenRequestScope(screenId);
+    if (!screen.isActive()) return;
+    autoTriggeredRef.current = true;
     setCaptureErrorFeedback(null);
 
     let capturedImage: Awaited<ReturnType<typeof requestNativeCameraCapture>>;
@@ -72,8 +78,10 @@ export default function FoodCameraPage() {
         quality: DEFAULT_CAMERA_CAPTURE_QUALITY,
         mode: "FOOD",
       });
+      screen.assertActive();
       setIsOpeningCamera(false);
     } catch (error) {
+      if (!screen.isActive()) return;
       setIsOpeningCamera(false);
       if (isCameraCaptureCancelled(error)) {
         track(EVENT_NAME.CAMERA_CANCEL);
@@ -97,6 +105,7 @@ export default function FoodCameraPage() {
         source: "meal_record_camera",
       });
       const imageData = await uploadImage(capturedImage);
+      screen.assertActive();
 
       if (!imageData?.menu_ids?.length) {
         track(EVENT_NAME.FOOD_SCAN_FAIL, {
@@ -149,12 +158,14 @@ export default function FoodCameraPage() {
         },
       });
 
+      screen.assertActive();
       toast.success("촬영한 사진의 메뉴가 기록되었어요.");
       navigateBackToPathOrPushFromRoot({
         animate: false,
         to: getMealRecordPath(dateKey, mealType),
       });
     } catch (error) {
+      if (!screen.isActive()) return;
       if (!hasRecognitionSucceeded) {
         track(EVENT_NAME.FOOD_SCAN_FAIL, {
           reason: getAnalyticsErrorMessage(error, "음식 메뉴 분석에 실패했어요."),
@@ -176,14 +187,18 @@ export default function FoodCameraPage() {
     returnFromCameraPage,
     upsertMenu,
     uploadImage,
+    screenId,
   ]);
 
   useEffect(() => {
+    if (!isScreenActive) {
+      autoTriggeredRef.current = false;
+      return;
+    }
     if (autoTriggeredRef.current) return;
 
-    autoTriggeredRef.current = true;
     void handleCameraActions();
-  }, [handleCameraActions]);
+  }, [handleCameraActions, isScreenActive]);
 
   const handleCaptureErrorModalOpenChange = useCallback(
     (open: boolean) => {

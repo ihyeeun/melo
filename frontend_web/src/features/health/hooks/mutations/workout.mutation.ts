@@ -5,6 +5,7 @@ import {
   upsertWorkoutRecord,
 } from "@/features/health/api/health-record.api";
 import { workoutKeys } from "@/features/health/hooks/queries/workout.query";
+import { isRequestAbortError } from "@/shared/api/requestCancellation";
 import type { UpsertWorkoutRecordRequestDto } from "@/shared/api/types/api.request.dto";
 import type { UseMutationCallback } from "@/shared/api/types/callback.types";
 
@@ -22,6 +23,7 @@ export function useUpsertWorkoutRecordMutation(callback?: UseMutationCallback) {
       callback?.onSuccess?.();
     },
     onError: (error) => {
+      if (isRequestAbortError(error)) return;
       callback?.onError?.(error);
     },
   });
@@ -40,6 +42,7 @@ export function useDeleteWorkoutRecordMutation(callback?: UseMutationCallback) {
       callback?.onSuccess?.();
     },
     onError: (error) => {
+      if (isRequestAbortError(error)) return;
       callback?.onError?.(error);
     },
   });

@@ -1,3 +1,6 @@
+import { createRequestAbortError } from "@/shared/api/requestCancellation";
+import { captureScreenRequestScope } from "@/shared/api/screenRequests";
+
 import type {
   ApiRequestPayload,
   AppDeviceInfoPayload,
@@ -18,7 +21,7 @@ import type {
 type PendingRequest = {
   resolve: (value: unknown) => void;
   reject: (reason?: unknown) => void;
-  timeoutId: number | null;
+  cleanup: () => void;
 };
 
 const pendingRequests = new Map<string, PendingRequest>();
@@ -89,12 +92,14 @@ export function initNativeBridgeListener() {
 
       const parsed: AppToWebMessage = JSON.parse(rawData);
       if (typeof parsed.id !== "string") return;
+      if (parsed.type !== "API_RESPONSE" && parsed.type !== "API_ERROR") return;
 
       const pending = pendingRequests.get(parsed.id);
 
       if (!pending) return;
 
       if (parsed.type === "API_RESPONSE") {
+        pending.cleanup();
         pending.resolve(parsed.payload);
       } else {
         const payload = parsed.payload as {
@@ -102,15 +107,11 @@ export function initNativeBridgeListener() {
           statusCode?: number;
           error?: string;
         };
-        const bridgeError = new Error(payload.message ?? "앱 API 요청 실패");
+        const bridgeError = new Error(payload?.message ?? "앱 API 요청 실패");
         Object.assign(bridgeError, payload);
+        pending.cleanup();
         pending.reject(bridgeError);
       }
-
-      if (pending.timeoutId !== null) {
-        clearTimeout(pending.timeoutId);
-      }
-      pendingRequests.delete(parsed.id);
     } catch (error) {
       console.error("[Bridge] 메시지 파싱 실패", error);
     }
@@ -131,17 +132,46 @@ type SendRequestOptions = {
 
 function sendRequestToApp<T>(
   messageFactory: (id: string) => WebToAppMessage,
-  options?: SendRequestOptions,
+  options?: SendRequestOptions & { cancelNativeRequest?: boolean },
 ) {
   return new Promise<T>((resolve, reject) => {
-    const id = generateRequestId();
-    const timeoutMs = options?.timeoutMs ?? 1 * 60 * 1000;
+    const signal = options?.cancelNativeRequest ? captureScreenRequestScope().signal : undefined;
+    if (signal?.aborted) {
+      reject(createRequestAbortError());
+      return;
+    }
 
-    const timeoutId =
+    const id = generateRequestId();
+    const message = messageFactory(id);
+    const timeoutMs = options?.timeoutMs ?? 1 * 60 * 1000;
+    let timeoutId: number | null = null;
+
+    const cleanup = () => {
+      if (timeoutId !== null) window.clearTimeout(timeoutId);
+      signal?.removeEventListener("abort", onAbort);
+      pendingRequests.delete(id);
+    };
+
+    const cancel = (error: unknown) => {
+      if (!pendingRequests.has(id)) return;
+      cleanup();
+      reject(error);
+
+      if (options?.cancelNativeRequest) {
+        try {
+          postMessageToApp({ type: "API_CANCEL", id });
+        } catch {
+          // The WebView may already be gone; local cancellation is still complete.
+        }
+      }
+    };
+
+    const onAbort = () => cancel(createRequestAbortError());
+
+    timeoutId =
       timeoutMs > 0
         ? window.setTimeout(() => {
-            pendingRequests.delete(id);
-            reject({
+            cancel({
               message: "앱 응답 시간이 초과되었습니다.",
               statusCode: 408,
               error: "BRIDGE_TIMEOUT",
@@ -152,18 +182,15 @@ function sendRequestToApp<T>(
     pendingRequests.set(id, {
       resolve: resolve as (value: unknown) => void,
       reject,
-      timeoutId,
+      cleanup,
     });
 
-    const message = messageFactory(id);
+    signal?.addEventListener("abort", onAbort, { once: true });
 
     try {
       postMessageToApp(message);
     } catch (error) {
-      if (timeoutId !== null) {
-        clearTimeout(timeoutId);
-      }
-      pendingRequests.delete(id);
+      cleanup();
       reject(error);
     }
   });
@@ -176,7 +203,7 @@ export function requestToApp<T>(payload: ApiRequestPayload, options?: SendReques
       type: "API_REQUEST",
       payload,
     }),
-    options,
+    { ...options, cancelNativeRequest: true },
   );
 }
 
@@ -319,14 +346,16 @@ export function requestNativeGalleryPick(payload?: GalleryPickRequestPayload) {
   );
 }
 
-export function requestNativeImageUpload<T = unknown>(payload: ImageUploadRequestPayload) {
+export function requestNativeImageUpload<T = unknown>(
+  payload: ImageUploadRequestPayload,
+) {
   return sendRequestToApp<T>(
     (id) => ({
       id,
       type: "IMAGE_UPLOAD_REQUEST",
       payload,
     }),
-    { timeoutMs: 15 * 60 * 1000 },
+    { timeoutMs: 15 * 60 * 1000, cancelNativeRequest: true },
   );
 }
 

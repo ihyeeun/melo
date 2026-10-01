@@ -46,6 +46,7 @@ import {
   type MenuSaveAnalyticsItem,
   trackDiaryMenuSave,
 } from "@/shared/analytics/recommendMenuEvents";
+import { isRequestAbortError } from "@/shared/api/requestCancellation";
 import {
   MEAL_TYPE_OPTIONS,
   type MealServingInputMode,
@@ -524,7 +525,8 @@ export default function MealRecordPage() {
         skipBackHandler: true,
       });
       toast.success("식사 기록이 저장되었어요");
-    } catch {
+    } catch (error) {
+      if (isRequestAbortError(error)) return;
       toast.warning("식사 기록 저장에 실패했어요", "잠시 후 다시 시도해주세요.");
     }
   };

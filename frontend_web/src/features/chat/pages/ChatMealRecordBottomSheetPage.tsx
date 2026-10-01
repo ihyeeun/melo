@@ -33,6 +33,7 @@ import {
 import { toMenuDraftSeed } from "@/features/meal-record/utils/menuDraftSync";
 import { PATH } from "@/router/path";
 import { getMealSearchPath } from "@/router/pathHelpers";
+import { isRequestAbortError } from "@/shared/api/requestCancellation";
 import type { MealServingInputMode, MealTime, MealType } from "@/shared/api/types/api.dto";
 import { toast } from "@/shared/commons/toast/toast";
 import { navigateBack, useNavigate } from "@/shared/navigation/stackflowNavigation";
@@ -259,11 +260,13 @@ export default function ChatMealRecordBottomSheetPage() {
       });
       navigateBack({ fallbackTo: PATH.CHAT });
       return true;
-    } catch {
+    } catch (error) {
+      if (isRequestAbortError(error)) return false;
       if (previousMealRecord.time !== nextTime) {
         try {
           await restorePreviousMealRecord();
-        } catch {
+        } catch (error) {
+          if (isRequestAbortError(error)) return false;
           // The user-facing recovery path is to retry after the cache refetch.
         }
       }

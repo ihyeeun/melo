@@ -18,6 +18,7 @@ import {
 } from "@/features/personal-menu/folder/stores/folderDraft.store";
 import styles from "@/features/personal-menu/folder/styles/CreateFolderPage.module.css";
 import { PATH } from "@/router/path";
+import { isRequestAbortError } from "@/shared/api/requestCancellation";
 import { Button } from "@/shared/commons/button/Button";
 import { MealMenuCard } from "@/shared/commons/card/MealMenuCard";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
@@ -48,7 +49,8 @@ export default function CreateFolderPage() {
         skipBackHandler: true,
       });
     },
-    onError: () => {
+    onError: (error) => {
+      if (isRequestAbortError(error)) return;
       toast.warning("폴더 저장에 실패했어요", "잠시 후 다시 시도해주세요.");
     },
   });

@@ -28,6 +28,7 @@ import {
 } from "@/router/pathHelpers";
 import { track } from "@/shared/analytics/analytics";
 import { EVENT_NAME } from "@/shared/analytics/analytics.constants";
+import { isRequestAbortError } from "@/shared/api/requestCancellation";
 import type { UpsertWorkoutRecordRequestDto } from "@/shared/api/types/api.request.dto";
 import type {
   WorkoutRecordItemResponseDto,
@@ -271,8 +272,9 @@ export default function WorkoutRecordEditPage() {
       }
       leaveEditMode();
       toast.success("운동 기록이 저장되었어요");
-    } catch {
+    } catch (error) {
       setIsSavePending(false);
+      if (isRequestAbortError(error)) return;
       toast.warning("운동 기록 저장에 실패했어요", "잠시 후 다시 시도해주세요.");
     }
   };

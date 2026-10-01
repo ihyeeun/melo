@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { deleteFolder, upsertFolder } from "@/features/personal-menu/folder/api/folder.api";
 import { folderQueryKeys } from "@/features/personal-menu/folder/hooks/queries/folder.queryKey";
+import { isRequestAbortError } from "@/shared/api/requestCancellation";
 import type { UseMutationCallback } from "@/shared/api/types/callback.types";
 
 export function useUpsertFolderMutation(callbacks?: UseMutationCallback) {
@@ -20,6 +21,7 @@ export function useUpsertFolderMutation(callbacks?: UseMutationCallback) {
       callbacks?.onSuccess?.();
     },
     onError: (error) => {
+      if (isRequestAbortError(error)) return;
       callbacks?.onError?.(error);
     },
   });
@@ -43,6 +45,7 @@ export function useDeleteFolderMutation(callbacks?: UseMutationCallback) {
       callbacks?.onSuccess?.();
     },
     onError: (error) => {
+      if (isRequestAbortError(error)) return;
       callbacks?.onError?.(error);
     },
   });

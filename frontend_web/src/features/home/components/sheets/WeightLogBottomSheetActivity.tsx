@@ -9,6 +9,7 @@ import { useGetProfileQuery } from "@/features/profile/hooks/queries/useProfileQ
 import { PATH } from "@/router/path";
 import { track } from "@/shared/analytics/analytics";
 import { EVENT_NAME } from "@/shared/analytics/analytics.constants";
+import { isRequestAbortError } from "@/shared/api/requestCancellation";
 import BottomSheet from "@/shared/commons/bottomSheet/BottomSheet";
 import { Button } from "@/shared/commons/button/Button";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
@@ -54,7 +55,8 @@ export default function WeightLogBottomSheetActivity() {
   };
 
   const { mutate: registerWeight, isPending: isWeightPending } = useRegisterWeightMutation({
-    onError: () => {
+    onError: (error) => {
+      if (isRequestAbortError(error)) return;
       toast.error("체중 기록에 실패했어요");
     },
   });

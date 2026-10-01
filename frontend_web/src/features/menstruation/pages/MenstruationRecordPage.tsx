@@ -10,6 +10,7 @@ import {
   type MenstrualDateSelections,
   toggleMenstrualDate,
 } from "@/features/menstruation/utils/menstrualRecordSelection.util";
+import { isRequestAbortError } from "@/shared/api/requestCancellation";
 import { Button } from "@/shared/commons/button/Button";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
 import { toast } from "@/shared/commons/toast/toast";
@@ -43,7 +44,8 @@ export default function MenstruationRecordPage() {
       setSelections({});
       toast.success("저장했어요");
       navigateBack();
-    } catch {
+    } catch (error) {
+      if (isRequestAbortError(error)) return;
       toast.error("생리 기록을 저장하지 못했어요. 다시 시도해 주세요.");
     } finally {
       saveInFlightRef.current = false;

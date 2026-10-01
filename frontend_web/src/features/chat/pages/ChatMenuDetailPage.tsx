@@ -36,6 +36,7 @@ import { getMealType, getSafeDateKey } from "@/features/meal-record/utils/mealRe
 import { PATH } from "@/router/path";
 import { trackChatMenuSave } from "@/shared/analytics/recommendMenuEvents";
 import { AppApiError } from "@/shared/api/apiClient";
+import { isRequestAbortError } from "@/shared/api/requestCancellation";
 import { Button } from "@/shared/commons/button/Button";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
 import { Skeleton } from "@/shared/commons/skeleton/Skeleton";
@@ -218,6 +219,7 @@ export default function ChatMenuDetailPage() {
       });
       navigateBack({ fallbackTo: PATH.CHAT });
     } catch (error) {
+      if (isRequestAbortError(error)) return;
       toast.warning(resolveErrorMessage(error));
     }
   };

@@ -20,6 +20,7 @@ import {
 } from "@/router/pathHelpers";
 import { track } from "@/shared/analytics/analytics";
 import { EVENT_NAME } from "@/shared/analytics/analytics.constants";
+import { isRequestAbortError } from "@/shared/api/requestCancellation";
 import type { WorkoutSearchItemResponseDto } from "@/shared/api/types/api.response.dto";
 import { Button } from "@/shared/commons/button/Button";
 import { SelectedCard } from "@/shared/commons/card/SelectedCard";
@@ -80,7 +81,8 @@ export default function WorkoutSearchPage() {
   const workoutRecordQuery = useGetWorkoutRecordQuery(dateKey);
   const { mutate: deleteWorkoutRecord, isPending: isDeletePending } =
     useDeleteWorkoutRecordMutation({
-      onError: () => {
+      onError: (error) => {
+        if (isRequestAbortError(error)) return;
         toast.warning("운동 기록을 제외하지 못했어요", "잠시 후 다시 시도해주세요.");
       },
     });

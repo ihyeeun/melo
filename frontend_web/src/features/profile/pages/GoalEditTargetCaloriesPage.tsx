@@ -17,6 +17,7 @@ import {
 } from "@/features/profile/stores/goalEditFlow.store";
 import styles from "@/features/profile/styles/GoalEditPage.module.css";
 import { PATH } from "@/router/path";
+import { isRequestAbortError } from "@/shared/api/requestCancellation";
 import { Button } from "@/shared/commons/button/Button";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
 import { NumberInput } from "@/shared/commons/input/NumberInput";
@@ -113,7 +114,8 @@ export default function GoalEditTargetCaloriesPage() {
 
         updateDraft({ target_calories: Math.trunc(calories) });
       },
-      onError: () => {
+      onError: (error) => {
+        if (isRequestAbortError(error)) return;
         if (cancelled) return;
 
         toast.warning("추천 목표 칼로리를 불러오지 못했어요", "목표 칼로리를 직접 입력해주세요.");

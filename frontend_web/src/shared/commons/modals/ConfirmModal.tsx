@@ -1,6 +1,7 @@
 import { AlertDialog } from "@base-ui/react/alert-dialog";
 
 import { useTabBarVisibilitySync } from "@/shared/api/bridge/useTabBarVisibilitySync";
+import { isRequestAbortError } from "@/shared/api/requestCancellation";
 import { Button } from "@/shared/commons/button/Button";
 
 import { BaseAlertModal } from "./BaseAlertModal";
@@ -102,7 +103,7 @@ export function ConfirmModal({
           onOpenChange(false);
         } catch (error) {
           // 에러는 onConfirm 내부에서 처리하거나 여기서 처리
-          console.error(error);
+          if (!isRequestAbortError(error)) console.error(error);
         }
       }}
       variant="default"

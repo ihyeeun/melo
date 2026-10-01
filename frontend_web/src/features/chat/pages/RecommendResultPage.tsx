@@ -34,6 +34,7 @@ import {
   trackRecommendMenuCancel,
 } from "@/shared/analytics/recommendMenuEvents";
 import { AppApiError } from "@/shared/api/apiClient";
+import { isRequestAbortError } from "@/shared/api/requestCancellation";
 import { type MealType } from "@/shared/api/types/api.dto";
 import type {
   ChatHistoryItemResponseDto,
@@ -277,6 +278,7 @@ function RecommendResultContent({
       });
       navigateBack({ fallbackTo: PATH.CHAT });
     } catch (error) {
+      if (isRequestAbortError(error)) return;
       toast.warning(resolveErrorMessage(error));
     }
   };

@@ -5,6 +5,7 @@ import { useNickNameUpdateMutation } from "@/features/profile/hooks/mutations/us
 import { useGetProfileQuery } from "@/features/profile/hooks/queries/useProfileQuery";
 import styles from "@/features/profile/styles/ProfilePage.module.css";
 import { PATH } from "@/router/path";
+import { isRequestAbortError } from "@/shared/api/requestCancellation";
 import BottomSheet from "@/shared/commons/bottomSheet/BottomSheet";
 import { Button } from "@/shared/commons/button/Button";
 import { LoadingOverlay } from "@/shared/commons/loading/Loading";
@@ -51,6 +52,7 @@ export default function ProfileNicknameSheetPage() {
         closeSheet();
       },
       onError: (error) => {
+        if (isRequestAbortError(error)) return;
         if (error.statusCode === 409) {
           setNickNameErrorMessage("이미 사용 중인 닉네임이에요");
         } else {

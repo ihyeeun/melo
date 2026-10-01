@@ -34,6 +34,7 @@ import styles from "@/features/profile/styles/GoalEditPage.module.css";
 import { PATH } from "@/router/path";
 import { track } from "@/shared/analytics/analytics";
 import { EVENT_NAME } from "@/shared/analytics/analytics.constants";
+import { isRequestAbortError } from "@/shared/api/requestCancellation";
 import type {
   ProfileResponseDto,
   WeightStepsResponseDto,
@@ -125,7 +126,8 @@ export default function GoalEditNutrientPage() {
 
         updateDraft({ carbs: nutrient.carbs, protein: nutrient.protein, fat: nutrient.fat });
       },
-      onError: () => {
+      onError: (error) => {
+        if (isRequestAbortError(error)) return;
         if (cancelled) return;
 
         toast.warning("추천 비율을 불러오지 못했어요", "탄단지 비율을 직접 입력해주세요.");
@@ -197,12 +199,14 @@ export default function GoalEditNutrientPage() {
         try {
           await registerWeight({ date: today, weight: nextWeight });
         } catch (error) {
+          if (isRequestAbortError(error)) throw error;
           console.error("Failed to register updated weight", error);
 
           if (previousWeight !== undefined) {
             try {
               await updateWeight(previousWeight);
             } catch (rollbackError) {
+              if (isRequestAbortError(rollbackError)) throw rollbackError;
               console.error("Failed to rollback profile weight", rollbackError);
             }
           }
@@ -273,6 +277,7 @@ export default function GoalEditNutrientPage() {
         animate: false,
       });
     } catch (error) {
+      if (isRequestAbortError(error)) return;
       console.error(error);
       toast.warning("목표 수정에 실패했어요");
     } finally {

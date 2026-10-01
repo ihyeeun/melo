@@ -19,6 +19,7 @@ import {
 } from "@/features/search/brand/stores/brandSearchSelection.store";
 import { PATH } from "@/router/path";
 import { getPathWithMeal } from "@/router/pathHelpers";
+import { isRequestAbortError } from "@/shared/api/requestCancellation";
 import type {
   MealType,
   MenuNutrientFields,
@@ -191,7 +192,8 @@ export function NutrientRegisterFormPage({
         toast.success("메뉴가 등록되었어요");
         onRegisteredMenu?.(savedMenuId);
       },
-      onError: () => {
+      onError: (error) => {
+        if (isRequestAbortError(error)) return;
         toast.warning("등록에 실패했어요");
       },
     });

@@ -79,6 +79,8 @@ import {
 import { AppApiError } from "@/shared/api/apiClient";
 import { isNativeApp, requestNativeAppDeviceInfo } from "@/shared/api/bridge/nativeBridge";
 import type { AppDeviceInfoPayload } from "@/shared/api/bridge/nativeBridge.types";
+import { isRequestAbortError } from "@/shared/api/requestCancellation";
+import { captureScreenRequestScope } from "@/shared/api/screenRequests";
 import { MEAL_TYPE_OPTIONS, type MealTime } from "@/shared/api/types/api.dto";
 import type {
   ChatFeedbackMenuResponseDto,
@@ -446,7 +448,7 @@ function useSoftKeyboardVisible(isInputFocused: boolean, clientOsName: ClientOsN
 export default function ChatPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { isTop } = useActivity();
+  const { id: screenId, isTop } = useActivity();
   const openChatMealRecordEditSheet = useOpenChatMealRecordEditSheet();
   const todayDateKey = getTodayFormatDateKey();
   const mainRef = useRef<HTMLElement>(null);
@@ -619,6 +621,7 @@ export default function ChatPage() {
   const isAssistantPlaybackActive = assistantPlayback !== null;
   const isChatSendDisabled =
     isChatRequestPending ||
+    pendingInput !== null ||
     isAssistantPlaybackActive ||
     isMealRecordParsePending ||
     pendingMealRecordInput !== null;
@@ -1131,6 +1134,8 @@ export default function ChatPage() {
   const sendChatMessage = async (rawInput: string) => {
     const text = rawInput.trim();
     if (!text || isChatSendDisabled) return;
+    const screen = captureScreenRequestScope(screenId);
+    if (!screen.isActive()) return;
 
     if (!isCameraHintDismissed) {
       setIsCameraHintDismissed(true);
@@ -1145,28 +1150,34 @@ export default function ChatPage() {
     track(EVENT_NAME.AI_COACH_CHAT, { input_length: text.length });
 
     try {
-      const previousChatItemIds = new Set(chatList.map((chatItem) => chatItem.id));
-      const responsePayload = await sendMessageMutation({ input: text });
-      const responseChatItem = await refetchAndResolveChatHistoryItem(queryClient, {
-        match: (chatItem) =>
-          !previousChatItemIds.has(chatItem.id) && chatItem.input_text.trim() === text,
+      await screen.run(async () => {
+        const previousChatItemIds = new Set(chatList.map((chatItem) => chatItem.id));
+        const responsePayload = await sendMessageMutation({ input: text });
+        screen.assertActive();
+        const responseChatItem = await refetchAndResolveChatHistoryItem(queryClient, {
+          match: (chatItem) =>
+            !previousChatItemIds.has(chatItem.id) && chatItem.input_text.trim() === text,
+        });
+        screen.assertActive();
+
+        setPendingInput(null);
+        const playbackPromise = playAssistantResponse(responseChatItem);
+
+        track(
+          EVENT_NAME.AI_COACH_RESPONSE_SUCCESS,
+          getAiCoachResponseAnalyticsProperties(responsePayload),
+        );
+        await playbackPromise;
       });
-
-      setPendingInput(null);
-      const playbackPromise = playAssistantResponse(responseChatItem);
-
-      track(
-        EVENT_NAME.AI_COACH_RESPONSE_SUCCESS,
-        getAiCoachResponseAnalyticsProperties(responsePayload),
-      );
-      await playbackPromise;
     } catch (error) {
-      track(EVENT_NAME.AI_COACH_RESPONSE_FAIL, {
-        reason: resolveErrorMessage(error),
-      });
       assistantPlaybackRunIdRef.current += 1;
       setAssistantPlayback(null);
       setPendingInput(null);
+      if (!screen.isActive()) return;
+
+      track(EVENT_NAME.AI_COACH_RESPONSE_FAIL, {
+        reason: resolveErrorMessage(error),
+      });
       toast.warning(resolveErrorMessage(error));
       if (error instanceof ChatHistorySyncError) {
         return;
@@ -1186,6 +1197,7 @@ export default function ChatPage() {
       dayMeals?: DayMealSummary;
       staleTime?: number;
     }) => {
+      const screen = captureScreenRequestScope(screenId);
       let targetDayMeals: DayMealSummary;
 
       if (dayMeals) {
@@ -1198,9 +1210,10 @@ export default function ChatPage() {
         });
       }
 
+      screen.assertActive();
       return targetDayMeals;
     },
-    [queryClient],
+    [queryClient, screenId],
   );
 
   const registerMealRecordDraftMenus = useCallback(
@@ -1235,7 +1248,8 @@ export default function ChatPage() {
 
       try {
         targetDayMeals = await fetchTargetDayMeals({ dateKey, dayMeals, staleTime });
-      } catch {
+      } catch (error) {
+        if (isRequestAbortError(error)) throw error;
         if (shouldShowToast) {
           toast.warning("식사 기록을 등록할 수 없어요.");
         }
@@ -1305,6 +1319,7 @@ export default function ChatPage() {
         if (scrollTargetKey) {
           cancelMealRecordScroll(scrollTargetKey);
         }
+        if (isRequestAbortError(error)) throw error;
         if (shouldShowToast) {
           toast.warning(
             resolveErrorMessage(error, "식사 기록 저장에 실패했어요. 잠시 후 다시 시도해주세요."),
@@ -1406,6 +1421,7 @@ export default function ChatPage() {
       assistantPlaybackRunIdRef.current += 1;
       setAssistantPlayback(null);
       setPendingMealRecordInput(null);
+      if (isRequestAbortError(error)) return;
       toast.warning(
         resolveErrorMessage(
           error,
@@ -1763,7 +1779,8 @@ export default function ChatPage() {
 
         trackRecommendMenuCancel(mealRecordMenus);
         toast.success("식사 기록에서 메뉴를 제거했어요.");
-      } catch {
+      } catch (error) {
+        if (isRequestAbortError(error)) return;
         toast.warning("식사 기록 저장에 실패했어요. 잠시 후 다시 시도해주세요.");
       }
       return;
@@ -1785,10 +1802,11 @@ export default function ChatPage() {
       trackRecommendMenuCancel(mealRecordMenus);
       toast.success("식사 기록에서 메뉴를 제거했어요.");
       commitMealRecordScroll(scrollTargetKey);
-    } catch {
+    } catch (error) {
       cancelMealRecordScroll(
         getMealRecordTimelineItemKey(mealRecord.dateKey, previousMealRecord.time),
       );
+      if (isRequestAbortError(error)) return;
       toast.warning("식사 기록 저장에 실패했어요. 잠시 후 다시 시도해주세요.");
     }
   };
@@ -1814,7 +1832,8 @@ export default function ChatPage() {
 
       trackRecommendMenuCancel(mealRecord.menus);
       toast.success("식사 기록을 취소했어요.");
-    } catch {
+    } catch (error) {
+      if (isRequestAbortError(error)) return;
       toast.warning("식사 기록 저장에 실패했어요. 잠시 후 다시 시도해주세요.");
     }
   };

@@ -33,6 +33,7 @@ import {
   trackRecommendMenuCancel,
 } from "@/shared/analytics/recommendMenuEvents";
 import { AppApiError } from "@/shared/api/apiClient";
+import { isRequestAbortError } from "@/shared/api/requestCancellation";
 import { type MealType, MENU_UNIT } from "@/shared/api/types/api.dto";
 import type {
   ChatFeedbackMenuResponseDto,
@@ -320,6 +321,7 @@ function FeedbackResultContent({
       });
       navigateBack({ fallbackTo: PATH.CHAT });
     } catch (error) {
+      if (isRequestAbortError(error)) return;
       toast.warning(resolveErrorMessage(error));
     }
   };

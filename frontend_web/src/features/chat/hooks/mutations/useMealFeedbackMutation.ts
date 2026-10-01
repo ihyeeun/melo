@@ -6,6 +6,7 @@ import {
   getChatHistoryPlaybackBaselineIds,
   setChatHistoryPlaybackBaselineIds,
 } from "@/features/chat/utils/chatHistoryPlayback";
+import { isRequestAbortError } from "@/shared/api/requestCancellation";
 import type { UseMutationCallback } from "@/shared/api/types/callback.types";
 
 export function useMealFeedbackMutation(callbacks?: UseMutationCallback) {
@@ -29,6 +30,8 @@ export function useMealFeedbackMutation(callbacks?: UseMutationCallback) {
     },
     retry: false,
     onSuccess: () => callbacks?.onSuccess?.(),
-    onError: (error) => callbacks?.onError?.(error),
+    onError: (error) => {
+      if (!isRequestAbortError(error)) callbacks?.onError?.(error);
+    },
   });
 }

@@ -7,6 +7,7 @@ import { SubCodeInputSection } from "@/features/sub-code/components/SubCodeInput
 import { PATH } from "@/router/path";
 import { AppApiError } from "@/shared/api/apiClient";
 import { API_ERROR_MESSAGE } from "@/shared/api/apiErrorMessage";
+import { isRequestAbortError } from "@/shared/api/requestCancellation";
 import { Button } from "@/shared/commons/button/Button";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
 import { toast } from "@/shared/commons/toast/toast";
@@ -47,6 +48,7 @@ export default function SettingsSubCodePage() {
       toast.success("구독 코드가 등록되었어요");
       navigate(PATH.APP_INFO, { replace: true });
     } catch (error) {
+      if (isRequestAbortError(error)) return;
       console.error(error);
       toast.warning(resolveRegisterSubCodeErrorMessage(error));
     } finally {

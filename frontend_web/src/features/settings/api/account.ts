@@ -1,5 +1,6 @@
 import { CHAT_MEAL_RECORD_MODE_ONBOARDING_STORAGE_KEY } from "@/features/chat/constants/mealRecordModeOnboarding";
 import { appApiData } from "@/shared/api/apiClient";
+import { isRequestAbortError } from "@/shared/api/requestCancellation";
 
 export async function logout() {
   try {
@@ -9,6 +10,7 @@ export async function logout() {
       body: {},
     });
   } catch (error) {
+    if (isRequestAbortError(error)) throw error;
     console.warn("Remote signout failed. Clearing local session only.", error);
   }
 
