@@ -4,9 +4,14 @@ import { AssistantMessageText } from "@/features/chat/components/AssistantMessag
 import { useGetChatHistoryQuery } from "@/features/chat/hooks/queries/useGetChatQuery";
 import styles from "@/features/chat/styles/AIChatPage.module.css";
 import { textSplitByLines } from "@/features/chat/utils/textdivider.util";
-import type { ChatHistoryItemResponseDto } from "@/shared/api/types/api.response.dto";
+import type {
+  ChatHistoryItemResponseDto,
+  FeedbackItemDto,
+} from "@/shared/api/types/api.response.dto";
+import { Button } from "@/shared/commons/button/Button";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
+import ArcProgress from "@/shared/commons/progress/ArcProgress";
 import { navigateBack } from "@/shared/navigation/stackflowNavigationController";
 import {
   formatDateDividerText,
@@ -14,6 +19,7 @@ import {
   formatTimeText,
   parseDate,
 } from "@/shared/utils/dateFormat";
+import { convertWeightToServingCount, getServingUnitLabel } from "@/shared/utils/servingUnit";
 
 export default function AIChatPage() {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -186,6 +192,7 @@ function ChatHistory() {
         const userSendText = item.chat.input_text.trim();
         const messageTime = item.chat.createdAt ? formatTimeText(item.chat.createdAt) : null;
         const receiveMessages = textSplitByLines(item.chat.response_payload.intro_message ?? "");
+        const category = item.chat.response_payload.chat_category;
 
         return (
           <section key={item.chat.id} className={styles.conversation}>
@@ -241,6 +248,10 @@ function ChatHistory() {
                   />
                 </div>
               ))}
+
+              {category === "feedback" && (
+                <FeedbackCard feedbackItem={item.chat.response_payload.feedback} />
+              )}
             </div>
           </section>
         );
@@ -274,4 +285,98 @@ function chatsByDate(chatList: ChatHistoryItemResponseDto[]) {
 
       return a.date.getTime() - b.date.getTime() || a.chat.id - b.chat.id;
     });
+}
+
+function FeedbackCard({ feedbackItem }: { feedbackItem: FeedbackItemDto | undefined }) {
+  const [isMenuExtended, setIsMenuExtended] = useState<boolean>(false);
+
+  if (!feedbackItem) return null;
+  const isSingleMenu = feedbackItem.menus.length === 1;
+  const singleMenu = feedbackItem.menus[0];
+  const singleMenuMeta = convertWeightToServingCount({
+    baseWeight: singleMenu.weight,
+    consumedWeight: singleMenu.estimated_quantity ?? singleMenu.weight,
+  });
+
+  return (
+    <div className={styles.feedbackSection}>
+      <section className={styles.feedbackScoreSection}>
+        <ArcProgress
+          value={feedbackItem.score}
+          gradient={{ startColor: "#ff989a", endColor: "var(--coral-400)" }}
+          ariaLabel="메뉴 추천도"
+        >
+          <div className={styles.scoreLabel}>
+            <p className="title-l-semi text-primary">
+              {feedbackItem.score}
+              <span className={styles.fwRegular}>점</span>
+            </p>
+            <p className="body-s-medium text-tertiary">메뉴 추천도</p>
+          </div>
+        </ArcProgress>
+      </section>
+
+      {isSingleMenu ? (
+        <section className={styles.feedbackMenuSection}>
+          <p className="title-m-medium text-primary">{singleMenu.menu_name}</p>
+          <div className={styles.feedbackMenuMeta}>
+            <span className="body-s-regular text-primary">
+              {singleMenuMeta}
+              {getServingUnitLabel(singleMenu.unit_quantity)} ({singleMenu.estimated_quantity}
+              {singleMenu.estimated_quantity_unit})
+            </span>
+            <span className="body-l-medium text-primary marginLeft">
+              {singleMenu.estimated_calories} kcal
+            </span>
+          </div>
+        </section>
+      ) : (
+        <section className={styles.feedbackMenuSection}>
+          <p className="title-m-medium text-primary">
+            {feedbackItem.menus[0].menu_name}
+            <span> 외 {feedbackItem.menus.length - 1}개</span>
+          </p>
+
+          <button
+            type="button"
+            onClick={() => setIsMenuExtended(!isMenuExtended)}
+            className={styles.feedbackMenuMeta}
+          >
+            <span className="body-s-regular text-primary">총 칼로리</span>
+            <span className="body-l-medium text-primary marginLeft">
+              {feedbackItem.total_calories} kcal
+              <SystemIcon
+                name="chevron-down"
+                data-isExtended={isMenuExtended}
+                size={12}
+                className={`${styles.menuExtendIcon}`}
+              />
+            </span>
+          </button>
+
+          <div className={styles.feedbackMenuList} data-isExtended={isMenuExtended}>
+            {feedbackItem.menus.map((menu, index) => {
+              return (
+                <div key={index} className={styles.feedbackMenuMeta}>
+                  <span className="body-s-regular text-primary">{menu.menu_name}</span>
+                  <span className="body-s-medium text-primary marginLeft">
+                    {menu.estimated_calories} kcal
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
+      <section className={styles.feedbackActionSection}>
+        <Button size="xs" fullWidth variant="outlined" border="primary">
+          식사 기록하기
+        </Button>
+        <Button size="xs" fullWidth variant="outlined" border="secondary">
+          영양성분 보기
+        </Button>
+      </section>
+    </div>
+  );
 }
