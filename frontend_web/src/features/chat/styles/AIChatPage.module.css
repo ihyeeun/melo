@@ -112,10 +112,17 @@
   background-color: var(--background-default);
   border: 1px solid var(--border-subtle);
   border-radius: 16px;
+  min-width: 266px;
 }
 .card[data-border="primary"] {
   border-color: var(--background-selected);
   max-width: 266px;
+}
+
+.subCardLabel {
+  margin-top: 8px;
+  margin-bottom: 12px;
+  white-space: pre-line;
 }
 
 /* FOOTER */
@@ -243,4 +250,53 @@
   border-left: 3px solid transparent;
   border-right: 3px solid transparent;
   border-bottom: 5px solid var(--gray-700);
+}
+
+/* MEALRECORD CARD */
+.mealRecordMenuSection {
+  margin-top: 8px;
+  margin-bottom: 12px;
+}
+
+.mealRecordActionSection {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.menuMeta {
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.menuMetaGap {
+  margin-right: 5px;
+}
+
+.menuExtendIcon {
+  margin-left: 5px;
+}
+.menuExtendIcon[data-isExtended="true"] {
+  transform: rotate(180deg);
+}
+
+.extendMenuList {
+  margin-top: 8px;
+  padding: 16px;
+  background-color: var(--background-gray-1);
+  border-radius: 12px;
+}
+.extendMenuList[data-isExtended="false"] {
+  display: none;
+}
+
+.extendMenuList > .menuMeta {
+  align-items: start;
+}
+
+.extendMenuList > .menuMeta + .menuMeta {
+  margin-top: 8px;
+  border-top: 1px dashed var(--border-default);
+  padding-top: 8px;
 }

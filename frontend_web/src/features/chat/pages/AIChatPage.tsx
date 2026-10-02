@@ -5,6 +5,8 @@ import { useGetChatHistoryQuery } from "@/features/chat/hooks/queries/useGetChat
 import styles from "@/features/chat/styles/AIChatPage.module.css";
 import { getCurrentDateTime } from "@/features/chat/utils/date.util";
 import { textSplitByLines } from "@/features/chat/utils/textdivider.util";
+import { useDayMealsQuery } from "@/features/home/hooks/queries/useTodayRecordQuery";
+import type { MenuWithQuantity } from "@/features/home/utils/dayMealSummary";
 import { PATH } from "@/router/path";
 import { getMealRecordPath } from "@/router/pathHelpers";
 import type { ChatHistoryItemResponseDto } from "@/shared/api/types/api.response.dto";
@@ -17,8 +19,10 @@ import {
   formatDateDividerText,
   formatDateKey,
   formatTimeText,
+  getTodayFormatDateKey,
   parseDate,
 } from "@/shared/utils/dateFormat";
+import { mealTimeNumberToLabel } from "@/shared/utils/timeformat";
 
 export default function AIChatPage() {
   const navigate = useNavigate();
@@ -145,10 +149,27 @@ function ChatHistory() {
   const scrollEndRef = useRef<HTMLDivElement>(null);
   const [showScrollToBottomBtn, setShowScrollToBottomBtn] = useState<boolean>(false);
   const navigate = useNavigate();
+  const mealDate = getTodayFormatDateKey();
 
   const { data: chatHistory, isPending: isHistoryPending } = useGetChatHistoryQuery();
+  const { data: dayMeals, isPending: isMealsPending } = useDayMealsQuery(mealDate);
+
+  const timelinePending = isHistoryPending || isMealsPending;
   const chatList = chatHistory?.chat_list ?? [];
-  const conversation = chatsByDate(chatList);
+  const mealCards = ([0, 1, 2, 3, 4] as const).flatMap((time) => {
+    const menus = dayMeals?.menusByTime[time] ?? [];
+    if (menus.length === 0) return [];
+    return [
+      {
+        time,
+        menus,
+        date: parseDate(dayMeals?.mealRecordTimestampsByTime[time]?.updatedAt ?? ""),
+      },
+    ];
+  });
+  const conversation = [...chatsByDate(chatList), ...mealCards].sort(
+    (a, b) => (a.date?.getTime() ?? 0) - (b.date?.getTime() ?? 0),
+  );
 
   const handleScrollToBottom = (behavior: ScrollBehavior = "smooth") => {
     scrollEndRef.current?.scrollIntoView({ behavior });
@@ -167,19 +188,19 @@ function ChatHistory() {
 
     observer.observe(target);
     return () => observer.disconnect();
-  }, [isHistoryPending]);
+  }, [timelinePending]);
 
   const onInitLoad = useEffectEvent(() => {
     if (conversation.length > 0) handleScrollToBottom("auto");
   });
   useEffect(() => {
-    if (!isHistoryPending) {
+    if (!timelinePending) {
       onInitLoad();
     }
-  }, [isHistoryPending]);
+  }, [timelinePending]);
 
-  if (isHistoryPending) return <>로딩</>;
-  if (chatList.length === 0)
+  if (timelinePending) return <>로딩</>;
+  if (conversation.length === 0)
     return (
       <div className={`${styles.emptyHistorySection}`}>
         <img src="/icons/characters/question.png" width={200} alt="" aria-hidden="true" />
@@ -198,14 +219,18 @@ function ChatHistory() {
         const isShowDateChip =
           item.date !== null &&
           (!prevItem?.date || formatDateKey(item.date) !== formatDateKey(prevItem.date));
-        const userSendImage = item.chat.image_url;
-        const userSendText = item.chat.input_text.trim();
-        const messageTime = item.chat.createdAt ? formatTimeText(item.chat.createdAt) : null;
-        const receiveMessages = textSplitByLines(item.chat.response_payload.intro_message ?? "");
-        const category = item.chat.response_payload.chat_category;
+
+        const chat = "chat" in item ? item.chat : null;
+        const userSendImage = chat?.image_url;
+        const userSendText = chat?.input_text.trim() ?? "";
+        const messageTime = chat?.createdAt ? formatTimeText(chat.createdAt) : null;
+        const receiveMessages = textSplitByLines(chat?.response_payload.intro_message ?? "");
 
         return (
-          <section key={item.chat.id} className={styles.conversation}>
+          <section
+            key={"menus" in item ? `meal:${item.time}` : `chat:${item.chat.id}`}
+            className={styles.conversation}
+          >
             {isShowDateChip && item.date && (
               <time className={styles.dateChip}>
                 <span className="caption-m-medium text-white">
@@ -246,33 +271,40 @@ function ChatHistory() {
             )}
 
             <div className={styles.messageArea} data-owner="ai">
-              {receiveMessages.map((text, index) => (
-                <div key={index} className={styles.textBubble}>
-                  <p className="body-m-regular text-primary">
-                    <AssistantMessageText text={text} />
-                  </p>
-                  <span
-                    data-owner="ai"
-                    data-time={messageTime}
-                    className={`caption-m-regular text-tertiary ${styles.messageTime}`}
-                  />
-                </div>
-              ))}
+              {"menus" in item ? (
+                <MealRecordCard date={mealDate} mealTime={item.time} menus={item.menus} />
+              ) : (
+                <>
+                  {receiveMessages.map((text, index) => (
+                    <div key={index} className={styles.textBubble}>
+                      <p className="body-m-regular text-primary">
+                        <AssistantMessageText text={text} />
+                      </p>
+                      <span
+                        data-owner="ai"
+                        data-time={messageTime}
+                        className={`caption-m-regular text-tertiary ${styles.messageTime}`}
+                      />
+                    </div>
+                  ))}
 
-              {category === "feedback" && item.chat.response_payload.recognized_nutrition && (
-                <SubActionCard
-                  text={`영양성분을 인식했어요!\n어느 브랜드의 메뉴인가요?`}
-                  action={() => {}}
-                  actionText="메뉴 입력하기"
-                />
-              )}
+                  {item.chat.response_payload.chat_category === "feedback" &&
+                    item.chat.response_payload.recognized_nutrition && (
+                      <SubActionCard
+                        text={`영양성분을 인식했어요!\n어느 브랜드의 메뉴인가요?`}
+                        action={() => {}}
+                        actionText="메뉴 입력하기"
+                      />
+                    )}
 
-              {category === "inquiry" && (
-                <SubActionCard
-                  text={`더 자세한 도움이 필요하시면\n아래 버튼을 눌러주세요`}
-                  action={() => navigate(PATH.SETTINGS_FEEDBACK)}
-                  actionText="운영진에게 문의하기"
-                />
+                  {item.chat.response_payload.chat_category === "inquiry" && (
+                    <SubActionCard
+                      text={`더 자세한 도움이 필요하시면\n아래 버튼을 눌러주세요`}
+                      action={() => navigate(PATH.SETTINGS_FEEDBACK)}
+                      actionText="운영진에게 문의하기"
+                    />
+                  )}
+                </>
               )}
             </div>
           </section>
@@ -329,6 +361,101 @@ function SubActionCard({
       <Button variant="default" size="xs" onClick={action} fullWidth>
         {actionText}
       </Button>
+    </div>
+  );
+}
+
+function MealRecordCard({
+  date,
+  mealTime,
+  menus,
+}: {
+  date: string;
+  mealTime: number;
+  menus: MenuWithQuantity[];
+}) {
+  const firstMenu = menus[0];
+  const isSingleMenu = menus.length === 1;
+  const time = mealTimeNumberToLabel(mealTime);
+  const [isMenuExtended, setIsMenuExtended] = useState<boolean>(true);
+  const totalCalories = menus.reduce((sum, value) => sum + value.calories, 0).toLocaleString();
+  const navigate = useNavigate();
+
+  const handleToGoMealRecord = () => {
+    navigate(getMealRecordPath(date, mealTime));
+  };
+
+  return (
+    <div className={styles.card}>
+      <p className="title-m-semi text-highlight">{time} 기록 완료!</p>
+
+      <section className={styles.mealRecordMenuSection}>
+        {isSingleMenu ? (
+          <div className={styles.menuMeta}>
+            <span className="body-s-regular text-primary">{firstMenu.name}</span>
+            <span className="body-l-medium text-primary textNoWrap marginLeft">
+              {totalCalories} kcal
+            </span>
+          </div>
+        ) : (
+          <>
+            <button
+              type="button"
+              onClick={() => setIsMenuExtended(!isMenuExtended)}
+              className={styles.menuMeta}
+            >
+              <>
+                <span className="body-s-regular text-primary ellipsis">{firstMenu.name}</span>
+                <span className={`body-s-regular text-primary textNoWrap ${styles.menuMetaGap}`}>
+                  외 {menus.length - 1}개
+                </span>
+              </>
+              <span className="body-l-medium text-primary textNoWrap marginLeft">
+                {totalCalories} kcal
+                <SystemIcon
+                  name="chevron-down"
+                  data-isExtended={isMenuExtended}
+                  size={12}
+                  className={`${styles.menuExtendIcon}`}
+                />
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={handleToGoMealRecord}
+              className={styles.extendMenuList}
+              data-isExtended={isMenuExtended}
+            >
+              {menus.map((item) => {
+                return (
+                  <div className={styles.menuMeta}>
+                    <span className="body-s-regular text-secondary">{item.name}</span>
+                    <span className="body-s-medium text-primary textNoWrap marginLeft">
+                      {item.calories} kcal
+                    </span>
+                  </div>
+                );
+              })}
+            </button>
+          </>
+        )}
+      </section>
+
+      <section className={styles.mealRecordActionSection}>
+        <Button onClick={() => {}} size="xs" fullWidth variant="outlined" border="secondary">
+          기록 취소
+        </Button>
+        <Button
+          onClick={handleToGoMealRecord}
+          size="xs"
+          fullWidth
+          variant="outlined"
+          border="primary"
+        >
+          수정하기
+        </Button>
+      </section>
     </div>
   );
 }
