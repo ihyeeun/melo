@@ -1,5 +1,4 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
 
 import { useMealFeedbackMutation } from "@/features/chat/hooks/mutations/useMealFeedbackMutation";
 import { useActivityCalories } from "@/features/health/hooks/useActivityCalories";
@@ -9,7 +8,6 @@ import styles from "@/features/home/styles/PreviewTodayScoreSection.module.css";
 import type { HomeDashboardMode } from "@/features/home/types/homeDashboard.types";
 import { getDayNutritionSummary } from "@/features/home/utils/dayMealSummary";
 import MenstruationCardButton from "@/features/menstruation/components/MenstruationCardButton";
-import { menstrualApplicants } from "@/features/menstruation/constants/menstruation.constant";
 import type { MenstrualPhaseResult } from "@/features/menstruation/hooks/useMenstrualPhase";
 import {
   useGetProfileQuery,
@@ -19,8 +17,6 @@ import { PATH } from "@/router/path";
 import { track } from "@/shared/analytics/analytics";
 import { EVENT_NAME } from "@/shared/analytics/analytics.constants";
 import { isRequestAbortError } from "@/shared/api/requestCancellation";
-import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
-import { ConfirmModal } from "@/shared/commons/modals/ConfirmModal";
 import { InfoPopover } from "@/shared/commons/popover/InfoPopover";
 import ScoreProgress from "@/shared/commons/progress/Progress";
 import { Skeleton, SkeletonStatus } from "@/shared/commons/skeleton/Skeleton";
@@ -52,7 +48,6 @@ export default function PreviewTodayScoreSection({
   const isChatBlocked = useIsFeatureBlocked(FEATURE_GUARD.CHAT);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [isAdditionalCareOpen, setIsAdditionalCareOpen] = useState<boolean>(false);
   const { mutate: requestMealFeedback, isPending: isCoachingPending } = useMealFeedbackMutation({
     onError: (error) => {
       if (isRequestAbortError(error)) return;
@@ -88,11 +83,6 @@ export default function PreviewTodayScoreSection({
   if (isSummaryPending || isProfilePending || isWorkoutRecordPending || isUserGoalPending) {
     return <PreviewTodayScoreSkeleton showCoachingButton={showCoachingButton} />;
   }
-
-  const showCareTrialButton =
-    profile?.is_subscribed &&
-    !menstrualApplicants.includes(profile!.user_id) &&
-    profile.gender === 1;
 
   const nutritionSummary = getDayNutritionSummary(
     dayMeal,
@@ -178,21 +168,6 @@ export default function PreviewTodayScoreSection({
             </button>
           )}
         </article>
-      )}
-
-      {showCareTrialButton && (
-        <Tile
-          className={styles.additionalCareButton}
-          onClick={() => {
-            setIsAdditionalCareOpen(true);
-            track(EVENT_NAME.CLICK_MENSTRUAL_CARE);
-          }}
-        >
-          <p className="body-s-medium text-primary">생리 주기 케어 추가 체험 신청</p>
-          <div className={styles.additionalIcon}>
-            <SystemIcon name="arrow-insert" />
-          </div>
-        </Tile>
       )}
 
       <section className={styles.nutritionSection}>
@@ -282,7 +257,8 @@ export default function PreviewTodayScoreSection({
                 className={`body-s-medium text-primary ${styles.macroWeight}`}
                 data-exceeded={
                   nutritionSummary.nutrients.protein.target > 0 &&
-                  nutritionSummary.nutrients.protein.current > nutritionSummary.nutrients.protein.target
+                  nutritionSummary.nutrients.protein.current >
+                    nutritionSummary.nutrients.protein.target
                 }
               >
                 {nutritionSummary.nutrients.protein.current.toLocaleString("ko-KR")}
@@ -325,21 +301,6 @@ export default function PreviewTodayScoreSection({
           </div>
         </Tile>
       </section>
-
-      <ConfirmModal
-        open={isAdditionalCareOpen}
-        onOpenChange={setIsAdditionalCareOpen}
-        title="생리 주기에 맞춘 멜로 케어, 만나보세요!"
-        actionOrder="confirm-cancel"
-        hideTabBar
-        cancelText="취소"
-        confirmText="체험단 신청하기"
-        onCancel={() => {}}
-        onConfirm={() => {
-          track(EVENT_NAME.CLICK_MENSTRUAL_CARE_TRIAL_APPLY);
-          toast.success("신청 완료! 준비 마치고 곧 찾아올게요!");
-        }}
-      />
     </div>
   );
 }
