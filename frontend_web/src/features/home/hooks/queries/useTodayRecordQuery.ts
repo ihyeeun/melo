@@ -9,6 +9,7 @@ import { queryKeys } from "@/features/home/hooks/queries/todayRecord.queryKey";
 import { getProfile } from "@/features/profile/api/profile";
 import { queryKeys as profileQueryKeys } from "@/features/profile/hooks/queries/queryKey";
 import { queryClient } from "@/shared/api/queryClient";
+import { captureScreenRequestScope } from "@/shared/api/screenRequests";
 import { getTodayFormatDateKey, isValidDateKey } from "@/shared/utils/dateFormat";
 
 export function useDayMealsQuery(date: string, { enabled = true }: { enabled?: boolean } = {}) {
@@ -32,6 +33,7 @@ export function useGetBodyLog(date: string) {
 }
 
 async function initializeTodayWeight(date: string) {
+  const screen = captureScreenRequestScope();
   const bodyStats = await getTodayRecordBodyStats(date);
 
   if (bodyStats.weight !== null) {
@@ -43,6 +45,7 @@ async function initializeTodayWeight(date: string) {
     queryFn: getProfile,
     staleTime: Infinity,
   });
+  screen.assertActive();
 
   await registerWeight({ date, weight: profile.weight });
 

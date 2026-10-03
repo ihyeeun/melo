@@ -132,7 +132,7 @@ export default function TabsLayout() {
                   color={isFocused ? ACTIVE_TAB_COLOR : INACTIVE_TAB_COLOR}
                 />
                 <Typo
-                  size={isFocused ? "body-s-semi" : "body-s-regular"}
+                  size={isFocused ? "body-s-semi" : "body-s-medium"}
                   style={[
                     styles.tabLabel,
                     isFocused ? styles.tabLabelFocused : styles.tabLabelBlurred,

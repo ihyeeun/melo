@@ -18,6 +18,7 @@ import {
 } from "@/features/personal-menu/folder/stores/folderDraft.store";
 import styles from "@/features/personal-menu/folder/styles/CreateFolderPage.module.css";
 import { PATH } from "@/router/path";
+import { isRequestAbortError } from "@/shared/api/requestCancellation";
 import { Button } from "@/shared/commons/button/Button";
 import { MealMenuCard } from "@/shared/commons/card/MealMenuCard";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
@@ -48,7 +49,8 @@ export default function CreateFolderPage() {
         skipBackHandler: true,
       });
     },
-    onError: () => {
+    onError: (error) => {
+      if (isRequestAbortError(error)) return;
       toast.warning("폴더 저장에 실패했어요", "잠시 후 다시 시도해주세요.");
     },
   });
@@ -124,27 +126,32 @@ export default function CreateFolderPage() {
 
       <main className={styles.main}>
         <section className={styles.fieldSection}>
-          <label className={`typo-label2 ${styles.fieldLabel}`} htmlFor="folder-name">
+          <label className={`body-l-semi ${styles.fieldLabel}`} htmlFor="folder-name">
             폴더 이름
           </label>
           <input
             id="folder-name"
-            className={`typo-body2 ${styles.folderNameInput}`}
+            className={`body-l-medium ${styles.folderNameInput} amp-unmask`}
             value={folderName}
             onChange={(event) => setFolderName(event.target.value)}
             placeholder="폴더 이름을 입력해주세요"
             maxLength={20}
           />
-          <span className={`${styles.marginLeftAuto} typo-caption4 textAssistive`}>
+          <span className={`${styles.marginLeftAuto} caption-m-medium text-tertiary`}>
             최대 20자 이내
           </span>
         </section>
 
         <section className={styles.menuSection}>
           <div className={styles.labelRow}>
-            <h2 className={`typo-label2 ${styles.sectionTitle}`}>음식</h2>
-            <span className={`typo-label4 ${styles.menuCount}`}>{selectedMenus.length}개</span>
+            <h2 className={`body-l-semi ${styles.sectionTitle}`}>음식</h2>
+            <span className={`body-s-medium ${styles.menuCount}`}>{selectedMenus.length}개</span>
           </div>
+
+          <button type="button" className={styles.addButton} onClick={handleAddMenu}>
+            <SystemIcon name="plus-circle" size={18} />
+            <p className="body-m-regular">음식 추가</p>
+          </button>
 
           {selectedMenus.length > 0 ? (
             <div className={styles.menuList}>
@@ -166,31 +173,18 @@ export default function CreateFolderPage() {
               ))}
             </div>
           ) : (
-            <div className={`typo-body2 ${styles.emptyMenuState}`}>
+            <div className={`body-l-medium ${styles.emptyMenuState}`}>
               폴더에 담을 음식을 추가해주세요
             </div>
           )}
-
-          <Button
-            className={styles.addButton}
-            variant="outlined"
-            color="normal"
-            fullWidth
-            onClick={handleAddMenu}
-          >
-            <SystemIcon name="plus" size={16} />
-            음식 추가
-          </Button>
         </section>
       </main>
 
       <footer className={styles.footer}>
         <Button
           onClick={handleSubmit}
-          variant="filled"
-          interaction={canSubmit && !isUpsertFolderPending ? "normal" : "disable"}
-          size="large"
-          color="primary"
+          variant="default"
+          size="m"
           fullWidth
           disabled={!canSubmit || isUpsertFolderPending}
         >

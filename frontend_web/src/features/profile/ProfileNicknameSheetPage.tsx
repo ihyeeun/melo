@@ -5,6 +5,7 @@ import { useNickNameUpdateMutation } from "@/features/profile/hooks/mutations/us
 import { useGetProfileQuery } from "@/features/profile/hooks/queries/useProfileQuery";
 import styles from "@/features/profile/styles/ProfilePage.module.css";
 import { PATH } from "@/router/path";
+import { isRequestAbortError } from "@/shared/api/requestCancellation";
 import BottomSheet from "@/shared/commons/bottomSheet/BottomSheet";
 import { Button } from "@/shared/commons/button/Button";
 import { LoadingOverlay } from "@/shared/commons/loading/Loading";
@@ -51,6 +52,7 @@ export default function ProfileNicknameSheetPage() {
         closeSheet();
       },
       onError: (error) => {
+        if (isRequestAbortError(error)) return;
         if (error.statusCode === 409) {
           setNickNameErrorMessage("이미 사용 중인 닉네임이에요");
         } else {
@@ -62,42 +64,35 @@ export default function ProfileNicknameSheetPage() {
 
   return (
     <>
-      <BottomSheet isOpen={isOpen} onClose={closeSheet}>
+      <BottomSheet isOpen={isOpen} onClose={closeSheet} title="닉네임 수정하기">
         <div className={styles.sheetContainer}>
-          <section className={styles.sheetContent}>
-            <p className="typo-title2">닉네임 수정하기</p>
-            <div className={styles.fieldGroup}>
-              <input
-                placeholder="닉네임 입력"
-                value={nickName}
-                onChange={(e) => {
-                  setNickName(sanitizeNickName(e.target.value));
-                  setNickNameErrorMessage("");
-                }}
-                className={`${styles.input} typo-body3`}
-                aria-invalid={nickNameErrorMessage ? true : undefined}
-                aria-describedby={
-                  nickNameErrorMessage ? "profile-nickname-error-message" : undefined
-                }
-                ref={inputRef}
-              />
-              {nickNameErrorMessage ? (
-                <p
-                  id="profile-nickname-error-message"
-                  className={`${styles.nickNameErrorMessage} typo-body3`}
-                  role="alert"
-                >
-                  {nickNameErrorMessage}
-                </p>
-              ) : null}
-            </div>
-          </section>
+          <div className={styles.fieldGroup}>
+            <input
+              placeholder="닉네임 입력"
+              value={nickName}
+              onChange={(e) => {
+                setNickName(sanitizeNickName(e.target.value));
+                setNickNameErrorMessage("");
+              }}
+              className={`${styles.input} body-s-medium`}
+              aria-invalid={nickNameErrorMessage ? true : undefined}
+              aria-describedby={nickNameErrorMessage ? "profile-nickname-error-message" : undefined}
+              ref={inputRef}
+            />
+            {nickNameErrorMessage ? (
+              <p
+                id="profile-nickname-error-message"
+                className={`${styles.nickNameErrorMessage} body-s-medium`}
+                role="alert"
+              >
+                {nickNameErrorMessage}
+              </p>
+            ) : null}
+          </div>
 
           <Button
-            variant="filled"
-            interaction={nickName.trim() === "" ? "disable" : "normal"}
-            size="large"
-            color="primary"
+            variant="default"
+            size="m"
             fullWidth
             onClick={handleUpdateNickName}
             disabled={nickName.trim() === "" || isNickNamePending}

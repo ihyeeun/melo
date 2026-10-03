@@ -19,6 +19,7 @@ import {
   trackNutritionLabelRegisterFail,
   trackNutritionLabelRegisterSuccess,
 } from "@/shared/analytics/nutritionLabelEvents";
+import { isRequestAbortError } from "@/shared/api/requestCancellation";
 import type { NutritionLabelMenuRegisterRequestDto } from "@/shared/api/types/api.request.dto";
 import { LoadingOverlay } from "@/shared/commons/loading/Loading";
 import { toast } from "@/shared/commons/toast/toast";
@@ -77,13 +78,15 @@ export default function ChatNutritionRegisterPage() {
 
     try {
       playbackBaselineChatIds = await getChatHistoryPlaybackBaselineIds(queryClient);
-    } catch {
+    } catch (error) {
+      if (isRequestAbortError(error)) return;
       playbackBaselineChatIds = null;
     }
 
     try {
       await registerMenu({ body });
     } catch (error) {
+      if (isRequestAbortError(error)) return;
       trackNutritionLabelRegisterFail(
         getAnalyticsErrorMessage(error, "등록에 실패했어요. 잠시 후 다시 시도해주세요."),
       );
@@ -102,7 +105,8 @@ export default function ChatNutritionRegisterPage() {
       if (playbackBaselineChatIds !== null) {
         setChatHistoryPlaybackBaselineIds(queryClient, playbackBaselineChatIds);
       }
-    } catch {
+    } catch (error) {
+      if (isRequestAbortError(error)) return;
       // Cache sync is best-effort after the menu registration has already succeeded.
     }
 

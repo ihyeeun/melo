@@ -1,3 +1,8 @@
+import {
+  CALENDAR_VIEW_MODE,
+  type CalendarViewMode,
+} from "@/features/calendar/types/calendar.types";
+
 /* ======
  * 유저 인증
  * ====== */
@@ -145,6 +150,7 @@ export interface WeightStepsResponseDto {
 
 export interface MenuListResponseDto {
   menu_list: MenuSimpleResponseDto[];
+  next_cursor?: number;
 }
 
 export interface FolderListResponseDto {
@@ -165,6 +171,23 @@ export interface FolderDetailResponseDto {
   menu_input_modes: Array<0 | 1>;
 }
 
+export interface RecentMenuResponseDto {
+  menu_id: number;
+  menu_name: string;
+  brand?: string;
+}
+
+export type MonthlyCalendarResponseDto<M extends CalendarViewMode = CalendarViewMode> = {
+  date: string;
+} & MonthlyCalendarValueByMode[M];
+
+interface MonthlyCalendarValueByMode {
+  [CALENDAR_VIEW_MODE.MEAL_INTAKE]: { calories: number };
+  [CALENDAR_VIEW_MODE.WORKOUT_RECORD]: { burned_calories: number };
+  [CALENDAR_VIEW_MODE.BODY_WEIGHT]: { weight: number };
+  [CALENDAR_VIEW_MODE.WATER_RECORD]: { water_intake: number };
+}
+
 /* ======
  * 채팅
  * ====== */
@@ -174,10 +197,11 @@ export type ChatRecommendResponseDto =
   | ChatNutritionLabelFeedbackResponseDto
   | ChatNutritionLabelMenuRegisteredResponseDto
   | ChatGeneralResponseDto
-  | ChatMealRecordParseResponseDto;
+  | ChatMealRecordParseResponseDto
+  | ChatInquiryResponseDto;
 
 interface ChatResponseBaseDto {
-  chat_category: "recommendation" | "feedback" | "general" | "meal_record_parse";
+  chat_category: "recommendation" | "feedback" | "general" | "meal_record_parse" | "inquiry";
   intro_message?: string;
   image_url?: string | null;
 }
@@ -200,24 +224,6 @@ export interface ChatGeneralResponseDto extends ChatResponseBaseDto {
 
 export interface ChatMealRecordParseResponseDto extends ChatResponseBaseDto {
   chat_category: "meal_record_parse";
-  meal_record_parse?: {
-    date?: string;
-    time?: 0 | 1 | 2 | 3 | 4;
-    menu_ids: number[];
-    parsed_items: Array<{
-      name: string;
-      brand?: string;
-      category: string;
-      quantityG: number;
-    }>;
-    matched_menus: Array<{
-      menu_id: number;
-      menu_name: string;
-      quantity_g: number;
-      input_menu_name: string;
-    }>;
-    menu_quantities: number[];
-  };
 }
 
 export interface ChatNutritionLabelFeedbackResponseDto extends ChatResponseBaseDto {
@@ -240,6 +246,10 @@ export interface ChatNutritionLabelMenuRegisteredResponseDto extends ChatRespons
   recognized_nutrition: NutritionLabelRecognitionResponseDto;
   feedback?: never;
   recognized_foods?: never;
+}
+
+export interface ChatInquiryResponseDto extends ChatResponseBaseDto {
+  chat_category: "inquiry";
 }
 
 export interface ChatNutritionLabelRegisteredMenuDto {
@@ -293,6 +303,9 @@ export interface ChatFeedbackMenuResponseDto {
   score: number;
   is_appropriate: boolean;
   data_source: number;
+  estimated_quantity?: number;
+  estimated_quantity_unit?: string;
+  estimated_calories?: number;
 }
 
 export interface ChatHistoryResponseDto {
@@ -402,4 +415,25 @@ export interface WorkoutDetailResponseDto {
 
 export interface WorkoutIdResponseDto {
   workout_id: number;
+}
+
+/* ======
+ * 월경 기록
+ * ====== */
+export interface MenstrualRecordsResponseDto {
+  recorded_ranges: MenstrualDateRangeResponseDto[];
+  has_older: boolean;
+}
+
+export interface MenstrualDateRangeResponseDto {
+  start_date: string;
+  end_date: string;
+}
+
+/* ======
+ * 물 섭취 기록
+ * ====== */
+export interface WaterIntakeResponseDto {
+  cup_size: number;
+  water_intake: number;
 }

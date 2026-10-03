@@ -2,11 +2,14 @@ import type { QueryClient } from "@tanstack/react-query";
 
 import { getChatHistory } from "@/features/chat/api/chat.api";
 import { queryKeys } from "@/features/chat/hooks/queries/queryKey";
+import { isRequestAbortError } from "@/shared/api/requestCancellation";
+import { captureScreenRequestScope } from "@/shared/api/screenRequests";
 import type { ChatHistoryResponseDto } from "@/shared/api/types/api.response.dto";
 
 const chatHistoryPlaybackBaselineQueryKey = ["chat-history-playback-baseline"] as const;
 
 export async function getChatHistoryPlaybackBaselineIds(queryClient: QueryClient) {
+  const screen = captureScreenRequestScope();
   const cachedBaseline = getCachedChatHistoryIds(queryClient);
 
   try {
@@ -15,9 +18,11 @@ export async function getChatHistoryPlaybackBaselineIds(queryClient: QueryClient
       queryFn: getChatHistory,
       staleTime: 0,
     });
+    screen.assertActive();
 
     return getChatHistoryIds(chatHistory);
-  } catch {
+  } catch (error) {
+    if (isRequestAbortError(error)) throw error;
     return cachedBaseline;
   }
 }

@@ -1,3 +1,4 @@
+import { useActivity } from "@stackflow/react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useRef, useState } from "react";
 
@@ -32,6 +33,7 @@ import {
   trackNutritionLabelScanSuccess,
 } from "@/shared/analytics/nutritionLabelEvents";
 import { requestNativeCameraCapture } from "@/shared/api/bridge/nativeBridge";
+import { captureScreenRequestScope } from "@/shared/api/screenRequests";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
 import { CheckButtonModal } from "@/shared/commons/modals/CheckButtonModal";
 import {
@@ -108,6 +110,7 @@ export default function ChatCameraPage() {
   const [isChatCameraUpdateModalOpen, setIsChatCameraUpdateModalOpen] = useState(false);
   const [captureErrorFeedback, setCaptureErrorFeedback] =
     useState<CameraCaptureErrorFeedback | null>(null);
+  const { id: screenId, isActive: isScreenActive } = useActivity();
   const autoTriggeredRef = useRef(false);
   const queryClient = useQueryClient();
   const { mutateAsync: uploadFoodImage } = useCreateMealFeedbackByFoodImageMutation();
@@ -129,11 +132,15 @@ export default function ChatCameraPage() {
 
   const handleCameraActions = useCallback(async () => {
     if (isProcessing) return;
+    const screen = captureScreenRequestScope(screenId);
+    if (!screen.isActive()) return;
+    autoTriggeredRef.current = true;
     setCaptureErrorFeedback(null);
 
     let image: CapturedImage;
     try {
       const supportResult = await getChatCameraSupportResult();
+      screen.assertActive();
 
       if (!supportResult.isSupported) {
         setIsOpeningCamera(false);
@@ -148,8 +155,10 @@ export default function ChatCameraPage() {
         mode: "FOOD",
         selectableModes: ["FOOD", "NUTRITION_LABEL", "MENU_BOARD"],
       });
+      screen.assertActive();
       setIsOpeningCamera(false);
     } catch (error) {
+      if (!screen.isActive()) return;
       setIsOpeningCamera(false);
       if (isCameraCaptureCancelled(error)) {
         trackScanCancel();
@@ -171,7 +180,10 @@ export default function ChatCameraPage() {
       setIsProcessing(true);
       trackScanStart(selectedMode);
 
-      const playbackBaselineChatIds = await getChatHistoryPlaybackBaselineIds(queryClient);
+      const playbackBaselineChatIds = await screen.run(() =>
+        getChatHistoryPlaybackBaselineIds(queryClient),
+      );
+      screen.assertActive();
 
       if (selectedMode === "FOOD") {
         await uploadFoodImage(image);
@@ -180,6 +192,7 @@ export default function ChatCameraPage() {
       } else {
         await uploadMenuBoardImage(image);
       }
+      screen.assertActive();
 
       if (playbackBaselineChatIds !== null) {
         setChatHistoryPlaybackBaselineIds(queryClient, playbackBaselineChatIds);
@@ -189,6 +202,7 @@ export default function ChatCameraPage() {
 
       trackScanSuccess(selectedMode);
     } catch (error) {
+      if (!screen.isActive()) return;
       trackScanFail(selectedMode, getAnalyticsErrorMessage(error, "이미지 분석에 실패했어요."));
       setPreviewSrc(null);
       setCaptureErrorFeedback(getRecognitionErrorFeedback(selectedMode, error));
@@ -203,14 +217,18 @@ export default function ChatCameraPage() {
     uploadFoodImage,
     uploadMenuBoardImage,
     uploadNutritionLabelImage,
+    screenId,
   ]);
 
   useEffect(() => {
+    if (!isScreenActive) {
+      autoTriggeredRef.current = false;
+      return;
+    }
     if (autoTriggeredRef.current) return;
 
-    autoTriggeredRef.current = true;
     void handleCameraActions();
-  }, [handleCameraActions]);
+  }, [handleCameraActions, isScreenActive]);
 
   const handleCaptureErrorModalOpenChange = useCallback(
     (open: boolean) => {
@@ -226,7 +244,7 @@ export default function ChatCameraPage() {
 
   return (
     <section className={styles.page}>
-      <PageHeader title="사진 촬영" onBack={returnFromCameraPage} />
+      <PageHeader title={isProcessing ? "사진 분석" : "사진 촬영"} onBack={returnFromCameraPage} />
 
       {isOpeningCamera ? (
         <main className={styles.main} />

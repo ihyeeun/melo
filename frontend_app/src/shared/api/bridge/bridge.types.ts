@@ -21,6 +21,12 @@ export type BridgeApiRequestMessage = {
   context?: BridgeMessageContext;
 };
 
+export type BridgeApiCancelMessage = {
+  id: string;
+  type: "API_CANCEL";
+  context?: BridgeMessageContext;
+};
+
 export type BridgeTabSyncMessage = {
   id: string;
   type: "TAB_SYNC";
@@ -138,6 +144,7 @@ export type BridgeHealthStepsReadRequestMessage = {
 
 export type WebToAppMessage =
   | BridgeApiRequestMessage
+  | BridgeApiCancelMessage
   | BridgeTabSyncMessage
   | BridgeNavigationBackMessage
   | BridgeHapticTriggerRequestMessage

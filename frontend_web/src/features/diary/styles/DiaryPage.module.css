@@ -1,271 +1,372 @@
-.page {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  min-height: 100dvh;
-  width: 100%;
+.root {
+  background: linear-gradient(
+    180deg,
+    var(--gray-200) 0%,
+    var(--gray-200) 50%,
+    var(--background-gray-1) 90%
+  );
 }
 
-.main {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  overflow-y: auto;
+.root .scrollArea {
+  padding: 0;
 }
 
 .content {
-  background-color: var(--bg-normal);
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  padding: 20px;
-}
-
-.copyActions {
-  display: flex;
-}
-
-.copyButton {
-  gap: 4px;
-  margin-left: auto;
-}
-
-.summaryCard {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding: 24px 20px;
-  border-radius: 8px;
-  background-color: var(--bg-white);
-}
-
-.scoreCard {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  width: 100%;
-}
-
-.scoreContainer {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.scoreText {
-  align-items: center;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.calorieText {
-  align-items: center;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-}
-
-.scoreCurrent {
-  color: var(--label-primary);
-}
-
-.scoreDivider {
-  background-color: var(--gray-500);
-  height: 28px;
-  margin: 0 4px;
-  width: 1px;
-}
-
-.calorieMessage {
-  color: var(--label-alternative);
-  padding: 6px 16px;
-  background-color: var(--bg-primary-2);
-  border-radius: 100px;
-  width: fit-content;
-}
-
-.actionCardList {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.mealCard {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.mealCardEmpty {
+  --content-top-gap: 10px;
+  --card-overlap: 40px;
   position: relative;
-  border: 0;
-  background-color: var(--bg-normal);
-  padding: 16px;
-  box-shadow: none;
+  isolation: isolate;
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+  padding: var(--content-top-gap) 16px 20px;
 }
 
-.mealCardEmpty::before {
+.content::before {
   content: "";
   position: absolute;
-  inset: 0;
-  border-radius: inherit;
+  inset: calc(var(--content-top-gap) + var(--card-overlap)) 0 0;
+  border-radius: 60px 60px 0 0 / 30px 30px 0 0;
+  background: linear-gradient(180deg, var(--background-default) 0%, var(--background-gray-1) 90%);
   pointer-events: none;
-
-  --dash: 10px; /* 대시 길이 */
-  --gap: 7px; /* 대시 간격 */
-  --stroke: 1px; /* 선 두께 */
-  --color: var(--border-normal);
-
-  background:
-    repeating-linear-gradient(
-        to right,
-        var(--color) 0 var(--dash),
-        transparent var(--dash) calc(var(--dash) + var(--gap))
-      )
-      top / 100% var(--stroke) no-repeat,
-    repeating-linear-gradient(
-        to right,
-        var(--color) 0 var(--dash),
-        transparent var(--dash) calc(var(--dash) + var(--gap))
-      )
-      bottom / 100% var(--stroke) no-repeat,
-    repeating-linear-gradient(
-        to bottom,
-        var(--color) 0 var(--dash),
-        transparent var(--dash) calc(var(--dash) + var(--gap))
-      )
-      left / var(--stroke) 100% no-repeat,
-    repeating-linear-gradient(
-        to bottom,
-        var(--color) 0 var(--dash),
-        transparent var(--dash) calc(var(--dash) + var(--gap))
-      )
-      right / var(--stroke) 100% no-repeat;
+  z-index: -1;
 }
 
-.mealCardSkeletonContent {
+.nutritionSummary {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
-.mealHeader {
-  align-items: center;
-  display: flex;
-  gap: 8px;
-  justify-content: space-between;
-}
-
-.mealTitleContainer {
-  align-items: center;
-  display: flex;
-  gap: 8px;
-  flex: 1;
-}
-
-.mealIcon {
-  flex-shrink: 0;
-  height: 32px;
-  width: 32px;
-}
-
-.navigateButton {
-  align-items: center;
-  color: var(--static-black);
-  display: inline-flex;
-  justify-content: center;
-}
-
-.emptyMeta {
-  align-items: center;
-  display: inline-flex;
-  gap: 12px;
-}
-
-.emptyStatusButton {
-  align-items: center;
-  display: inline-flex;
-  gap: 6px;
-}
-
-.emptyStatusText {
-  color: var(--label-assistive);
+.mealSummaryCard,
+.macroCard {
+  background-color: var(--background-default);
+  border-radius: 20px;
+  width: 100%;
+  border: 1px solid var(--border-subtle);
+  padding: 16px 20px;
 }
 
 .mealSummaryCard {
-  background-color: var(--bg-normal);
-  border-radius: 8px;
+  box-shadow: var(--shadow-outer);
+}
+
+.calorieGauge {
+  max-width: 240px;
+  margin: -16px auto 0;
+  position: relative;
+}
+
+.calorieGaugeCharacter {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%);
+  height: auto;
+  object-fit: contain;
+  pointer-events: none;
+}
+
+.macroCard {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.macroItem {
   display: flex;
   flex-direction: column;
-  padding: 12px 16px;
+  gap: 8px;
+  min-width: 0;
+}
+
+.macroTitle {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  min-height: 28px;
+}
+
+.macroItem > p {
+  margin-top: auto;
+}
+
+.macroWeight[data-exceeded="true"] {
+  color: var(--coral-600);
+}
+
+.burnedCaloriesCard {
+  border-radius: 20px;
+  border: 1px solid var(--border-subtle);
+  background-color: var(--background-default);
+}
+
+.burnedTotalCalorie {
+  display: flex;
+  align-items: center;
+  padding: 12px 20px;
+  gap: 10px;
+}
+
+.burnedCalorieList {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.burnedCalorieItem {
+  align-items: center;
+  display: flex;
+  padding: 24px 0;
+  padding-left: 20px;
   gap: 8px;
 }
 
-.mealSummaryButton {
+.titleWithIcon {
+  display: flex;
+  align-items: center;
+  gap: 1px;
+}
+
+.burnedCalorieItem + .burnedCalorieItem {
+  border-left: 1px solid var(--border-subtle);
+}
+
+.iconBg {
+  width: 36px;
+  height: 36px;
+  background-color: var(--background-gray-1);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bodyLogGroup {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.bodyLogButton {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 125px;
+  justify-content: space-between;
+}
+
+.bodyLogTitle {
   align-items: center;
   display: flex;
-  gap: 10px;
-  justify-content: space-between;
   width: 100%;
 }
 
-.mealSummaryTitle {
+.bodyLogValue {
+  align-items: baseline;
+  display: flex;
+  gap: 2px;
+}
+
+.bodyLogValueWeight {
+  font-weight: var(--fw-medium);
+}
+
+.bodyLogButton:active[data-isHealthConnected="true"],
+.mealRecordButton:active,
+.workoutGroupButton:active {
+  background-color: var(--background-gray-1);
+  transform: scale(0.995);
+}
+
+.mealCopyButton {
+  position: absolute;
+  right: 0;
+  top: -28px;
+}
+
+.mealRecordGroup {
+  position: relative;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.mealRecordButton {
+  border-radius: 12px;
+  width: 100%;
+  border: 1px solid var(--border-subtle);
+  padding: 12px;
+  background-color: var(--background-default);
+}
+
+.mealImageBox {
+  aspect-ratio: 1;
+  border-radius: 8px;
+  color: var(--text-disabled);
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  color: var(--label-normal);
 }
 
-.mealSummaryMeta {
-  align-items: center;
-  display: inline-flex;
-  flex-shrink: 0;
-  gap: 4px;
-}
-
-.score {
-  color: var(--label-primary);
-}
-
-.mealSummaryArrow {
-  transition: transform 0.2s ease;
-  color: var(--interaction-normal);
-}
-
-.mealSummaryArrowExpanded {
-  transform: rotate(180deg);
-}
-
-.mealDetailList {
-  border-top: 1px solid var(--border-neutral);
+.aiCoachButton {
+  position: relative;
+  height: 100%;
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  list-style: none;
-  margin: 0;
-  padding: 14px 0 4px;
+  align-items: flex-start;
+  justify-content: flex-end;
+  overflow: hidden;
+  text-align: left;
 }
 
-.mealDetailItem {
-  align-items: center;
+.aiCoachArrow {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 50%;
+  box-shadow: var(--shadow-outer);
+  color: var(--text-tertiary);
+}
+
+.aiCoachCharacter {
+  width: 97px;
+  height: auto;
+  margin-left: -18px;
+  opacity: 30%;
+}
+
+.aiCoachLabel {
+  flex-shrink: 0;
+}
+
+.aiCoachButton:focus-visible {
+  outline: 2px solid var(--text-primary);
+  outline-offset: 2px;
+}
+
+.mealImageBox[data-hasMeal="true"] {
+  background-color: var(--background-selected);
+}
+
+.mealImageBox[data-hasMeal="false"] {
+  background-color: var(--background-gray-1);
+  display: grid;
+  place-items: center;
+}
+
+.mealImage {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center center;
+}
+
+.hasMealRecordSection {
+  height: 100%;
+  padding: 12px;
   display: flex;
-  gap: 8px;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.hasMealRecordSection > .mealIcon {
+  flex-shrink: 0;
+}
+
+.mealIcon {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: var(--coral-400);
+  color: var(--background-default);
+  border-radius: 100%;
+  width: 32px;
+  height: 32px;
+}
+
+.mealIcon[data-hasMeal="true"] {
+  margin-bottom: 8px;
+}
+
+.mealIcon[data-hasMeal="false"] {
+  background-color: transparent;
+  border: 1px solid var(--border-default);
+  color: var(--text-primary);
+  box-shadow: var(--shadow-outer);
+}
+
+.mealInfo {
+  display: flex;
   justify-content: space-between;
+  margin-top: 8px;
 }
 
-.textAlternative {
-  color: var(--label-alternative);
+.mealInfo > span {
+  white-space: nowrap;
 }
 
-.bodyCardList {
-  margin-bottom: var(--safe-area-bottom);
+.workoutRecordGroup {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
 }
 
-.icon {
-  margin-left: auto;
+.workoutRecordItem + .workoutRecordItem {
+  border-top: 1px solid var(--border-subtle);
 }
 
-.textPrimary {
-  color: var(--label-primary);
+.workoutRecordItem {
+  width: 100%;
+  display: flex;
+  gap: 12px;
+  padding: 6px 0;
+}
+
+.workoutImageBox {
+  width: 60px;
+  height: 60px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  color: var(--text-tertiary);
+}
+
+.workoutImage {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.workoutInfo {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+}
+
+.workoutEmptyAction {
+  display: flex;
+  align-items: center;
+}
+
+.workoutEmptyContent {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sectionGroup .titleArea {
+  margin-bottom: 8px;
 }

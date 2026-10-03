@@ -1,5 +1,7 @@
 import { resolveApiErrorMessage } from "@/shared/api/apiErrorMessage";
 import { isNativeApp, requestToApp } from "@/shared/api/bridge/nativeBridge";
+import { isRequestAbortError } from "@/shared/api/requestCancellation";
+import { captureScreenRequestScope } from "@/shared/api/screenRequests";
 import {
   type ApiFailResponse,
   type ApiResponse,
@@ -122,6 +124,7 @@ async function parseApiResponse<T>(response: Response): Promise<ApiResponse<T>> 
 }
 
 export async function appApi<T>(options: RequestOptions): Promise<ApiResponse<T>> {
+  const screen = captureScreenRequestScope();
   if (!isNativeApp()) {
     return {
       message: "앱 WebView 환경에서만 API 요청이 가능합니다.",
@@ -133,8 +136,10 @@ export async function appApi<T>(options: RequestOptions): Promise<ApiResponse<T>
   const { timeoutMs, ...payload } = options;
   try {
     const response = await requestToApp<ApiResponse<T>>(payload, { timeoutMs });
+    screen.assertActive();
     return response;
   } catch (error) {
+    if (isRequestAbortError(error)) throw error;
     return createApiFailResponseFromUnknown(error, {
       fallbackError: "APP_API_REQUEST_FAILED",
       fallbackMessage: "앱 API 요청 실패",

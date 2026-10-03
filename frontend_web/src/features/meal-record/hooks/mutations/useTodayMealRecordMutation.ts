@@ -7,6 +7,7 @@ import {
   postTodayMealRecordRegister,
 } from "@/features/meal-record/api/DayMeal";
 import { menuQueryKeys } from "@/features/meal-record/hooks/queries/menuCache";
+import { isRequestAbortError } from "@/shared/api/requestCancellation";
 import {
   type MealServingInputMode,
   type MealTime,
@@ -33,6 +34,7 @@ export function useTodayMealRecordRegisterMutation(callbacks?: UseMutationCallba
       callbacks?.onSuccess?.();
     },
     onError: async (error, variables) => {
+      if (isRequestAbortError(error)) return;
       await invalidateMealRecordRelatedQueries(queryClient, variables.date);
       callbacks?.onError?.(error);
     },
@@ -49,6 +51,7 @@ export function useTodayMealRecordDeleteMutation(callbacks?: UseMutationCallback
       callbacks?.onSuccess?.();
     },
     onError: async (error, variables) => {
+      if (isRequestAbortError(error)) return;
       await invalidateMealRecordRelatedQueries(queryClient, variables.date);
       callbacks?.onError?.(error);
     },
@@ -118,14 +121,16 @@ export function useTodayMealRecordDeleteWithRollbackMutation() {
 
         await invalidateMealRecordRelatedQueries(queryClient, dateKey);
         return DELETE_MEAL_RECORD_RESULT.DELETED;
-      } catch {
+      } catch (error) {
+        if (isRequestAbortError(error)) throw error;
         let rollbackSucceeded = true;
 
         try {
           if ((snapshot.menu_ids?.length ?? 0) > 0) {
             await postTodayMealRecordRegister(snapshot);
           }
-        } catch {
+        } catch (error) {
+          if (isRequestAbortError(error)) throw error;
           rollbackSucceeded = false;
         }
 

@@ -1,0 +1,64 @@
+.calendar {
+  width: 100%;
+  user-select: none;
+
+  --day-cell-height: 44px;
+}
+
+.month {
+  flex-shrink: 0;
+  padding: 20px 16px;
+}
+
+.status {
+  /* 응답 상태가 바뀌어도 달력 높이를 유지한다. */
+  display: flex;
+  align-items: center;
+  color: var(--text-secondary);
+}
+
+.retryButton {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.weekdays,
+.grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 6px;
+  text-align: center;
+}
+
+.textNavy {
+  color: var(--navy-950);
+}
+
+.weekdays {
+  align-items: center;
+  margin-top: 12px;
+  padding: 8px 0;
+}
+
+.grid {
+  width: 100%;
+  min-inline-size: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  grid-auto-rows: var(--day-cell-height);
+}
+
+.grid > button {
+  width: 100%;
+  min-width: 0;
+  height: 100%;
+}
+
+.grid:disabled {
+  opacity: 0.5;
+}
+
+.grid button:disabled {
+  cursor: default;
+}

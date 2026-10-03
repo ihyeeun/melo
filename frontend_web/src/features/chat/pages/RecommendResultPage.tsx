@@ -34,6 +34,7 @@ import {
   trackRecommendMenuCancel,
 } from "@/shared/analytics/recommendMenuEvents";
 import { AppApiError } from "@/shared/api/apiClient";
+import { isRequestAbortError } from "@/shared/api/requestCancellation";
 import { type MealType } from "@/shared/api/types/api.dto";
 import type {
   ChatHistoryItemResponseDto,
@@ -171,6 +172,7 @@ function RecommendResultContent({
 
     return recommendations;
   }, [recommendations, selectedFilter]);
+  const isMenuSelected = selectedRecommendationCount > 0;
 
   useSyncMenuDraftWithDayMeals({
     dateKey: recordDateKey,
@@ -276,6 +278,7 @@ function RecommendResultContent({
       });
       navigateBack({ fallbackTo: PATH.CHAT });
     } catch (error) {
+      if (isRequestAbortError(error)) return;
       toast.warning(resolveErrorMessage(error));
     }
   };
@@ -286,13 +289,18 @@ function RecommendResultContent({
 
       <section className={styles.titleSection}>
         <div className={styles.intro}>
-          <p className={`${styles.introMessage} typo-title2`}>
+          <p className={`${styles.introMessage} title-m-medium`}>
             <span className={styles.textPrimary}>{profileNickname}</span>님을 위한
             <br />
             메뉴를 추천해드려요!
           </p>
 
-          <img src="/icons/character-love.svg" className={styles.characterImage} />
+          <img
+            src="/icons/characters/menu-recommendation.png"
+            className={styles.characterImage}
+            alt=""
+            aria-hidden="true"
+          />
         </div>
         <div className={styles.filterList} aria-label="추천 결과 필터">
           {RECOMMEND_FILTER_OPTIONS.map((option) => {
@@ -302,7 +310,7 @@ function RecommendResultContent({
               <button
                 key={option.key}
                 type="button"
-                className={`${styles.filterBadge} ${isSelected ? styles.filterBadgeSelected : ""} typo-label4`}
+                className={`${styles.filterBadge} ${isSelected ? styles.filterBadgeSelected : ""} body-s-medium`}
                 aria-pressed={isSelected}
                 onClick={() => setSelectedFilter(option.key)}
               >
@@ -322,7 +330,6 @@ function RecommendResultContent({
               return (
                 <li key={item.menu_id}>
                   <MealMenuCard
-                    rank={item.rank}
                     name={item.menu_name}
                     calories={item.calories}
                     unit_quantity={item.unit_quantity}
@@ -330,8 +337,8 @@ function RecommendResultContent({
                     data_source={item.data_source}
                     weight={item.weight}
                     unit={item.unit}
-                    icon={isSelected ? "check" : "add"}
-                    state={isSelected ? "select" : "default"}
+                    icon={"add"}
+                    state={isSelected}
                     onClick={() => handleMenuClick(item.menu_id)}
                     onIconClick={isDayMealsPending ? undefined : () => handleToggleMenu(item)}
                   />
@@ -340,20 +347,21 @@ function RecommendResultContent({
             })}
           </ul>
         ) : (
-          <p className={`${styles.emptyStatus} typo-label4`}>해당하는 추천 메뉴가 없어요.</p>
+          <p className={`${styles.emptyStatus} body-s-medium`}>해당하는 추천 메뉴가 없어요.</p>
         )}
       </main>
 
       <footer className={styles.footer}>
         <Button
           fullWidth
-          variant="filled"
-          size="large"
-          color="primary"
-          disabled={selectedRecommendationCount === 0 || isMealRegisterPending || isDayMealsPending}
+          variant="default"
+          size="m"
+          disabled={!isMenuSelected || isMealRegisterPending || isDayMealsPending}
           onClick={handleSubmitMealRecord}
         >
-          {selectedRecommendationCount}개 기록하기
+          {isMenuSelected
+            ? `${selectedRecommendationCount}개 기록하기`
+            : "기록할 메뉴를 선택해주세요"}
         </Button>
       </footer>
     </section>

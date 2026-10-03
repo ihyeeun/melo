@@ -17,7 +17,7 @@
 
 .backButton {
   align-items: center;
-  color: var(--label-normal);
+  color: var(--text-primary);
   display: inline-flex;
   justify-content: flex-start;
 }
@@ -28,7 +28,7 @@
 }
 
 .title {
-  color: var(--label-normal);
+  color: var(--text-primary);
   margin: 0;
   overflow: hidden;
   text-align: center;

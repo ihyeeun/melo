@@ -1,130 +1,37 @@
-.formSection {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  min-height: 100%;
-  width: 100%;
-}
-
-.topFieldSection {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.titleRow {
-  align-items: center;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.titleText {
-  color: var(--label-normal);
-}
-
-.titleUnit {
-  color: var(--label-assistive);
-}
-
-.requiredText {
-  color: var(--status-error);
-}
-
 .weightRow {
   display: grid;
-  gap: 4px;
+  gap: 8px;
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
-.valueInput {
-  background-color: var(--bg-white);
-  border: 1px solid var(--border-neutral);
-  border-radius: 8px;
-  color: var(--label-normal);
-  padding: 10px 14px;
-  text-align: right;
+.unitButton {
+  background-color: var(--background-default);
+  border: 1px solid var(--border-default);
+  border-radius: 12px;
+  color: var(--text-primary);
+  padding: 8px 16px;
   width: 100%;
-}
+  text-align: center;
 
-.valueInput::placeholder {
-  color: var(--label-assistive);
-}
-
-.valueInput:focus {
-  /* border-color: var(--border-primary); */
-  outline: none;
-}
-
-.valueInput[type="number"] {
-  appearance: textfield;
-}
-
-.valueInput[type="number"]::-webkit-inner-spin-button,
-.valueInput[type="number"]::-webkit-outer-spin-button {
-  appearance: none;
-  margin: 0;
-}
-
-.selectTrigger {
-  align-items: center;
-  display: flex;
-  gap: 8px;
-  justify-content: flex-end;
-}
-
-.selectPositioner {
-  z-index: 1;
-  margin-top: 8px;
-}
-
-.selectPopup {
-  background-color: var(--bg-white);
-  border: 1px solid var(--border-neutral);
-  border-radius: 10px;
-  box-shadow: var(--shadow-emphasize);
-  min-width: var(--anchor-width);
-  overflow: hidden;
-  padding: 8px;
-}
-
-.selectList {
-  display: flex;
-  flex-direction: column;
-}
-
-.selectItem {
-  color: var(--label-normal);
-  cursor: pointer;
-  padding: 10px 6px;
-}
-
-.selectItem[data-highlighted] {
-  background-color: var(--bg-normal);
-  outline: none;
-}
-
-.selectItem[data-selected] {
-  color: var(--label-normal);
-}
-
-.selectIcon {
-  color: var(--label-normal);
-  align-items: center;
-  display: flex;
-  justify-content: center;
+  &[data-checked] {
+    border-color: var(--border-strong);
+    background-color: var(--background-selected);
+  }
 }
 
 .nutrientList {
+  --sub-row-gap: 16px;
+
   display: flex;
   flex-direction: column;
+  margin-top: 40px;
 }
 
 .fieldRow {
+  display: grid;
+  grid-template-columns: 1fr 166px;
+  gap: 10px;
   align-items: center;
-  display: flex;
-  gap: 12px;
-  justify-content: space-between;
 }
 
 .fieldRowMain {
@@ -132,54 +39,73 @@
 }
 
 .fieldRowSub {
-  padding: 2px 0;
+  position: relative;
+  padding-left: 20px;
 }
 
-.fieldLabel {
-  color: var(--label-normal);
-  min-width: 0;
+.fieldRowSub::before {
+  content: "";
+  position: absolute;
+  left: 4px;
+  top: calc(-1 * var(--sub-row-gap));
+  bottom: 0;
+  border-left: 1px solid var(--border-default);
+  pointer-events: none;
 }
 
-.fieldLabelMain {
-  color: var(--label-normal);
+.fieldRowSub::after {
+  content: "";
+  position: absolute;
+  left: 4px;
+  top: 50%;
+  width: 10px;
+  border-top: 1px solid var(--border-default);
+  pointer-events: none;
 }
 
-.fieldLabelSub {
-  color: var(--label-alternative);
+.fieldRowSub[data-last-sub="true"]::before {
+  bottom: 50%;
 }
 
-.unitText {
-  color: var(--label-assistive);
+.fieldRowSub + .fieldRowMain,
+.fieldRowMain + .fieldRowMain {
+  margin-top: 32px;
+}
+.fieldRowMain + .fieldRowSub,
+.fieldRowSub + .fieldRowSub {
+  margin-top: var(--sub-row-gap);
 }
 
-.nutrientInput {
-  background-color: var(--bg-white);
-  border: 1px solid var(--border-neutral);
-  border-radius: 8px;
-  color: var(--label-normal);
-  flex-shrink: 0;
-  max-width: 190px;
-  min-width: 164px;
-  padding: 10px 14px;
-  text-align: right;
-  width: 50%;
+.fieldSection {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
-.nutrientInput::placeholder {
-  color: var(--label-assistive);
+.fieldSection + .fieldSection {
+  margin-top: 20px;
 }
 
-.nutrientInput:focus {
-  /* border-color: var(--border-primary); */
-  outline: none;
+.labelArea {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+
+  > h2 > span {
+    margin-left: 4px;
+  }
 }
 
-.nutrientInput[type="number"] {
-  appearance: textfield;
+.require {
+  color: var(--coral-500);
 }
 
-.nutrientInput[type="number"]::-webkit-inner-spin-button,
-.nutrientInput[type="number"]::-webkit-outer-spin-button {
-  appearance: none;
-  margin: 0;
+.input {
+  background-color: var(--background-default);
+  border: 1px solid var(--border-default);
+  border-radius: 12px;
+  color: var(--text-primary);
+  padding: 8px 16px;
+  width: 100%;
+  text-align: end;
 }

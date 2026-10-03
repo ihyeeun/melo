@@ -1,68 +1,64 @@
 import "./Button.css";
 
 import { Button as BaseButton } from "@base-ui/react/button";
-import * as React from "react";
 
-const MODERN_VARIANT_CLASS = {
-  filled: "btn--variant-filled",
-  outlined: "btn--variant-outlined",
-  text: "btn--variant-text",
-} as const;
-
-const COLOR_CLASS = {
-  primary: "btn--color-primary",
-  normal: "btn--color-normal",
+const VARIANT_CLASS = {
+  default: "var--default",
+  disabled: "var--disabled",
+  dismiss: "var--dismiss",
+  outlined: "var--outlined",
+  text: "var--text",
 } as const;
 
 const SIZE_CLASS = {
-  small: "btn--size-small",
-  normal: "btn--size-normal",
-  large: "btn--size-large",
+  m: "size--m body-l-semi",
+  s: "size--s body-l-medium",
+  xs: "size--xs body-s-medium",
 } as const;
 
-const INTERACTION_CLASS = {
-  normal: "btn--state-default",
-  hover: "btn--state-hover",
-  focused: "btn--state-focused",
-  pressed: "btn--state-pressed",
-  disable: "btn--state-disabled",
+const OUTLINE_BORDER_CLASS = {
+  primary: "outline-border--primary",
+  secondary: "outline-border--secondary",
 } as const;
 
-type Variant = keyof typeof MODERN_VARIANT_CLASS;
-type Color = keyof typeof COLOR_CLASS;
+type Variant = keyof typeof VARIANT_CLASS;
 type Size = keyof typeof SIZE_CLASS;
-type Interaction = keyof typeof INTERACTION_CLASS;
+type OutlineBorder = keyof typeof OUTLINE_BORDER_CLASS;
 
-type Props = React.ComponentProps<typeof BaseButton> & {
-  variant?: Variant;
-  color?: Color;
+type CommonProps = Omit<React.ComponentProps<typeof BaseButton>, "color"> & {
   size?: Size;
-  interaction?: Interaction;
   fullWidth?: boolean;
 };
 
+type Props = CommonProps &
+  (
+    | {
+        variant: "outlined";
+        border?: OutlineBorder;
+      }
+    | {
+        variant?: Exclude<Variant, "outlined">;
+        border?: never;
+      }
+  );
+
 export function Button({
-  variant = "filled",
-  color,
-  size = "normal",
-  interaction,
+  variant = "default",
+  border,
+  size = "m",
   disabled,
   fullWidth = false,
   className,
   ...props
 }: Props) {
-  const resolvedInteraction = interaction ?? (disabled ? "disable" : "normal");
-  const isDisabled = disabled || resolvedInteraction === "disable";
-
+  const isDisabled = disabled || variant === "disabled";
   const classes = [
     "btn",
-    MODERN_VARIANT_CLASS[variant],
-    COLOR_CLASS[color ?? "primary"],
+    VARIANT_CLASS[isDisabled && variant !== "text" ? "disabled" : variant],
+    variant === "outlined" ? OUTLINE_BORDER_CLASS[border ?? "primary"] : "",
     SIZE_CLASS[size],
-    INTERACTION_CLASS[isDisabled ? "disable" : resolvedInteraction],
-    resolvedInteraction === "focused" && "btn--interaction-focused",
     fullWidth && "btn--full",
-    typeof className === "string" ? className : "",
+    className,
   ]
     .filter(Boolean)
     .join(" ");

@@ -1,3 +1,4 @@
+import { useActivity } from "@stackflow/react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { CameraLoading } from "@/features/camera/components/CameraLoading";
@@ -19,11 +20,13 @@ import {
   buildMenuSelectionPathContext,
   getMenuSelectionPath,
   getMenuSelectionRouteContextFromSearchParams,
+  getMenuSelectionSearchPath,
   type MenuSelectionPathParams,
 } from "@/features/menu-selection/utils/menuSelectionRoutes";
 import { PATH } from "@/router/path";
-import { getPathWithMeal } from "@/router/pathHelpers";
+import { getMealSearchPath, getPathWithMeal } from "@/router/pathHelpers";
 import { requestNativeCameraCapture } from "@/shared/api/bridge/nativeBridge";
+import { captureScreenRequestScope } from "@/shared/api/screenRequests";
 import type { MealType } from "@/shared/api/types/api.dto";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
 import { CheckButtonModal } from "@/shared/commons/modals/CheckButtonModal";
@@ -36,10 +39,8 @@ import {
 } from "@/shared/navigation/stackflowNavigation";
 
 type NutritionLabelCreateLocationState = {
-  brand?: string;
   dateKey?: string;
   mealType?: MealType;
-  name?: string;
 };
 
 export default function NutrientCameraPage() {
@@ -76,41 +77,22 @@ export default function NutrientCameraPage() {
         : null,
     [dateKey, mealType, menuSelectionRouteContext],
   );
-  const foodName = searchParams.get("name") ?? locationState.name ?? "";
-  const brandName = searchParams.get("brand") ?? locationState.brand ?? "";
+  const { id: screenId, isActive: isScreenActive } = useActivity();
   const autoTriggeredRef = useRef(false);
 
   const returnFromCameraPage = useCallback(() => {
-    const nutrientAddFallbackPath = menuSelectionContext?.target
-      ? getMenuSelectionPath({
-          path: PATH.NUTRIENT_ADD,
-          ...menuSelectionContext,
-          extraSearchParams: {
-            name: foodName,
-            brand: brandName,
-          },
-        })
-      : getPathWithMeal(PATH.NUTRIENT_ADD, dateKey, mealType);
-
     navigateBack({
-      fallbackTo: nutrientAddFallbackPath,
-      fallbackOptions: {
-        state: {
-          name: foodName,
-          brand: brandName,
-        },
-      },
+      fallbackTo: menuSelectionContext?.target
+        ? getMenuSelectionSearchPath(menuSelectionContext)
+        : getMealSearchPath(dateKey, mealType),
     });
-  }, [
-    brandName,
-    dateKey,
-    foodName,
-    mealType,
-    menuSelectionContext,
-  ]);
+  }, [dateKey, mealType, menuSelectionContext]);
 
   const handleCameraActions = useCallback(async () => {
     if (isUploading) return;
+    const screen = captureScreenRequestScope(screenId);
+    if (!screen.isActive()) return;
+    autoTriggeredRef.current = true;
     setCaptureErrorFeedback(null);
 
     let capturedImage: Awaited<ReturnType<typeof requestNativeCameraCapture>>;
@@ -120,8 +102,10 @@ export default function NutrientCameraPage() {
         quality: DEFAULT_CAMERA_CAPTURE_QUALITY,
         mode: "NUTRITION_LABEL",
       });
+      screen.assertActive();
       setIsOpeningCamera(false);
     } catch (error) {
+      if (!screen.isActive()) return;
       setIsOpeningCamera(false);
       if (isCameraCaptureCancelled(error)) {
         returnFromCameraPage();
@@ -136,6 +120,7 @@ export default function NutrientCameraPage() {
       setCapturedPreviewSrc(getCapturedImagePreviewSrc(capturedImage));
       setIsUploading(true);
       const imageData = await uploadImage(capturedImage);
+      screen.assertActive();
       const registerPath = menuSelectionContext?.target
         ? getMenuSelectionPath({
             path: PATH.NUTRIENT_ADD_REGISTER,
@@ -147,8 +132,8 @@ export default function NutrientCameraPage() {
         animate: false,
         state: {
           ...imageData, // unit, weight, calories, carbs...
-          name: foodName,
-          brand: brandName,
+          name: "",
+          brand: "",
           entrySource: "camera" as const,
           dateKey,
           mealType,
@@ -157,6 +142,7 @@ export default function NutrientCameraPage() {
 
       toast.success("영양성분표 분석이 완료되었어요.");
     } catch (error) {
+      if (!screen.isActive()) return;
       setCapturedPreviewSrc(null);
       setCaptureErrorFeedback(getRecognitionErrorFeedback("NUTRITION_LABEL", error));
     } finally {
@@ -164,22 +150,24 @@ export default function NutrientCameraPage() {
     }
   }, [
     dateKey,
-    foodName,
-    brandName,
     isUploading,
     mealType,
     menuSelectionContext,
     navigation,
     returnFromCameraPage,
     uploadImage,
+    screenId,
   ]);
 
   useEffect(() => {
+    if (!isScreenActive) {
+      autoTriggeredRef.current = false;
+      return;
+    }
     if (autoTriggeredRef.current) return;
 
-    autoTriggeredRef.current = true;
     void handleCameraActions();
-  }, [handleCameraActions]);
+  }, [handleCameraActions, isScreenActive]);
 
   const handleCaptureErrorModalOpenChange = useCallback(
     (open: boolean) => {

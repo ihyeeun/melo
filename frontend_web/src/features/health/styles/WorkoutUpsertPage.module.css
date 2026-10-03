@@ -1,193 +1,198 @@
 .page {
-  background-color: var(--bg-normal);
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  min-height: 100dvh;
-  width: 100%;
+  background-color: var(--background-gray-1);
 }
 
-.main {
-  flex: 1;
-  overflow-y: auto;
-  padding: 20px;
+.header {
+  background-color: var(--background-default);
 }
 
 .content {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
+  padding: 20px 16px;
+}
+
+.workoutTitleGroup {
+  padding-bottom: 36px;
+  border-bottom: 1px solid var(--border-default);
+  margin-bottom: 20px;
+
+  > p + p {
+    margin-top: 6px;
+  }
 }
 
 .field {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
+}
+
+.field + .field {
+  margin-top: 40px;
 }
 
 .labelRow {
   align-items: center;
   display: flex;
-  gap: 6px;
-}
-
-.label {
-  color: var(--label-normal);
 }
 
 .required {
-  color: var(--status-error);
+  color: var(--coral-500);
+  margin-left: 8px;
 }
 
-.number-field-root,
-.number-field-group {
-  min-width: 0;
-  width: 100%;
+.timeInputGroup {
+  padding: 0 20.5px;
 }
 
-.readonlyValue,
-.inputWrap {
-  align-items: center;
-  background-color: var(--bg-white);
-  border: 1px solid var(--border-neutral);
-  border-radius: 8px;
-  color: var(--label-normal);
-  display: flex;
-  min-height: 44px;
-  padding: 10px 14px;
-  width: 100%;
-  gap: 4px;
-}
-
-.inputWrap:focus-within {
-  border-color: var(--primary-normal);
-}
-
-.input {
-  background: transparent;
-  border: 0;
-  color: var(--label-normal);
-  flex: 1;
-  min-width: 0;
-  outline: none;
-  padding: 0;
-  text-align: right;
-}
-
-.input:focus,
-.input:focus-visible {
-  outline: none;
-  box-shadow: none;
-}
-
-.input::placeholder {
-  color: var(--label-assistive);
-}
-
-.input:read-only {
-  cursor: default;
-}
-
-.unit {
-  color: var(--label-normal);
-  flex-shrink: 0;
-}
-
-.segmentGroup {
+.timeQuickActionButton {
   display: grid;
-  gap: 8px;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  color: var(--text-primary);
+  background-color: var(--background-default);
+  border-radius: 50%;
+  box-shadow: var(--shadow-outer);
 }
 
-.segmentButton {
-  background-color: var(--bg-white);
-  border: 1px solid var(--border-neutral);
-  border-radius: 8px;
-  color: var(--label-normal);
-  height: 44px;
-  text-align: center;
+.timeInput {
+  background-color: transparent;
+  font-weight: var(--fw-medium);
 }
 
-.segmentButtonActive {
-  border-color: var(--primary-normal);
-  color: var(--primary-normal);
-  background-color: var(--interaction-primary);
-}
-
-.setList {
+.intensitySection {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 12px;
+}
+
+.intensityCardItem {
+  padding: 20px;
+
+  > p + p {
+    margin-top: 4px;
+  }
+}
+
+.setSection {
+  border-radius: 12px;
+  overflow: hidden;
 }
 
 .setHeader,
 .setRow {
   align-items: center;
   display: grid;
-  gap: 8px;
-  grid-template-columns: 48px minmax(0, 1fr) minmax(0, 1fr) 32px;
+  gap: 16px;
+  grid-template-columns: 54px minmax(0, 1fr) minmax(0, 1fr) 54px;
+  padding: 8px 16px;
 }
 
-.setHeaderBodyweight,
-.setRowBodyweight {
-  grid-template-columns: 48px minmax(0, 1fr) 32px;
-}
-
-.setRow {
-  box-shadow: inset 2px 0 0 var(--border-neutral);
-  transition: box-shadow 0.1s ease-in-out;
-}
-
-.setRow:focus-within {
-  box-shadow: inset 2px 0 0 var(--primary-normal);
+.setHeader[data-showWeightInput="false"],
+.setRow[data-showWeightInput="false"] {
+  grid-template-columns: 54px minmax(0, 1fr) 54px;
 }
 
 .setHeader {
-  color: var(--label-assistive);
+  background-color: var(--gray-700);
+  color: var(--background-default);
+}
+
+.setRow {
+  transition: box-shadow 0.1s ease-in-out;
+  background-color: var(--background-default);
+}
+
+.setRow + .setRow {
+  border-top: 1px solid var(--border-default);
 }
 
 .setOrder {
-  text-align: center;
-  color: var(--label-normal);
+  padding-left: 7px;
 }
 
-.iconButton {
-  align-items: center;
-  background-color: transparent;
-  border: 0;
-  color: var(--label-assistive);
-  display: inline-flex;
-  height: 32px;
-  justify-content: center;
-  padding: 0;
-  width: 32px;
-}
-
-.iconButton:disabled {
-  color: var(--label-disable);
-}
-
-.statusContainer {
-  align-items: center;
-  color: var(--label-assistive);
+.deleteButton {
   display: flex;
-  justify-content: center;
-  min-height: 240px;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 4px;
+  width: 100%;
+  height: 100%;
+  color: var(--text-secondary);
+}
+
+.deleteButton:disabled {
+  color: var(--text-disabled);
+}
+
+.setNumberField {
+  min-width: 0;
+  width: 100%;
+}
+
+.setInputArea {
+  display: grid;
+  place-items: center;
+  min-width: 0;
+  width: 100%;
+}
+
+.setInput {
+  min-width: 0;
+  max-width: 84px;
+  width: 100%;
+  padding: 6px 0;
+  text-align: center;
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+  background-color: var(--background-gray-1);
+}
+
+.plusIcon {
+  margin-right: 4px;
+}
+
+.popover {
+  margin-left: 4px;
+}
+
+.readOnlyInputArea {
+  border: 1px solid var(--border-default);
+  border-radius: 12px;
+  padding: 16px;
+  width: 100%;
+  text-align: end;
+}
+
+.editInputArea {
+  background-color: var(--background-default);
+  border: 1px solid var(--border-default);
+  border-radius: 12px;
+  padding: 16px;
+  width: 100%;
+  text-align: end;
+}
+
+.editInputArea:focus-within {
+  outline: 1px solid var(--border-strong);
+  outline-offset: 0;
+}
+
+.editInput {
+  width: calc(100% - 32px);
+  text-align: end;
+  border: none;
+  padding: 0 4px;
+}
+
+.editInput:focus,
+.editInput:focus-visible {
+  outline: none;
+  box-shadow: none;
 }
 
 .footer {
-  background-color: var(--bg-normal);
-  display: flex;
-  gap: 8px;
-  padding: 0 20px;
-  padding-bottom: var(--safe-area-bottom);
-}
-
-.textRight {
-  text-align: right;
-}
-
-.readOnlyTime {
-  padding-right: 14px;
-  margin-left: auto;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
 }

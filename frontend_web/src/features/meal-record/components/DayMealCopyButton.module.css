@@ -1,0 +1,7 @@
+.root {
+  display: flex;
+  gap: 4px;
+  color: var(--text-tertiary);
+  justify-items: center;
+  align-items: center;
+}

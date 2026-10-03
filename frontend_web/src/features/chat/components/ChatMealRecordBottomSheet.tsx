@@ -19,16 +19,19 @@ import {
   type MealType,
   MENU_UNIT,
 } from "@/shared/api/types/api.dto";
-import type { ChatRecommendItemResponseDto } from "@/shared/api/types/api.response.dto";
+import type {
+  ChatFeedbackMenuResponseDto,
+  ChatRecommendItemResponseDto,
+} from "@/shared/api/types/api.response.dto";
 import BottomSheet from "@/shared/commons/bottomSheet/BottomSheet";
 import { Button } from "@/shared/commons/button/Button";
-import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
+import { SystemIcon, type SystemIconName } from "@/shared/commons/icon/SystemIcon";
 import { KeyboardDown } from "@/shared/commons/input/KeyboardDown";
 import NumberField from "@/shared/commons/input/NumberField";
 import { ScrollFogArea } from "@/shared/commons/scrollFog";
 import { useNavigate } from "@/shared/navigation/stackflowNavigation";
 import { formatDateKeyToMonthDayWeekdayLabel } from "@/shared/utils/dateFormat";
-import { formatNumberWithMaxOneDecimal } from "@/shared/utils/numberFormat";
+import { formatDisplayNumber } from "@/shared/utils/numberFormat";
 import { getServingUnitLabel } from "@/shared/utils/servingUnit";
 
 type SelectedMenuItem = {
@@ -48,15 +51,16 @@ type ServingContext = {
 export type ChatMealRecordMenu = Pick<
   ChatRecommendItemResponseDto,
   "menu_id" | "menu_name" | "brand" | "unit" | "weight" | "unit_quantity" | "calories"
->;
+> &
+  Pick<ChatFeedbackMenuResponseDto, "estimated_quantity">;
 
 const MEAL_TYPE_ICON_MAP = {
-  "0": "/icons/breakfast.svg",
-  "1": "/icons/lunch.svg",
-  "2": "/icons/dinner.svg",
-  "3": "/icons/snack.svg",
-  "4": "/icons/pizza-icon.svg",
-} satisfies Record<MealType, string>;
+  "0": "breakfast",
+  "1": "lunch",
+  "2": "dinner",
+  "3": "snack",
+  "4": "late-snack",
+} satisfies Record<MealType, SystemIconName>;
 
 type ChatMealRecordBottomSheetProps = {
   isOpen: boolean;
@@ -295,47 +299,45 @@ export function ChatMealRecordBottomSheet({
       bodyClassName={styles.sheetBody}
       positionerStyle={positionerStyle}
       modal={modal}
+      title="섭취 시간대"
     >
       <div className={styles.container}>
         <ScrollFogArea className={styles.scrollArea}>
-          {dateLabel ? <p className={`typo-title2 textNormal`}>{dateLabel}</p> : null}
+          {dateLabel ? <p className={`title-m-semi text-primary`}>{dateLabel}</p> : null}
 
-          <section>
-            <p className={`${styles.marginBottom8px} typo-title4 textNormal`}>섭취시간대</p>
-            <div className={styles.mealTypeList}>
-              {MEAL_TYPE_OPTIONS.map((option) => {
-                const isActive = option.key === mealType;
-                const iconSrc = MEAL_TYPE_ICON_MAP[option.key];
+          <section className={styles.mealTypeList}>
+            {MEAL_TYPE_OPTIONS.map((option) => {
+              const isActive = option.key === mealType;
+              const iconName = MEAL_TYPE_ICON_MAP[option.key];
 
-                return (
-                  <button
-                    key={option.key}
-                    type="button"
-                    className={`${styles.mealTypeButton} ${isActive ? styles.mealTypeButtonActive : ""}`}
-                    onClick={() => handleMealTypeChange(option.key)}
-                    aria-pressed={isActive}
-                    aria-label={option.label}
+              return (
+                <button
+                  key={option.key}
+                  type="button"
+                  className={`${styles.mealTypeButton} ${isActive ? styles.mealTypeButtonActive : ""}`}
+                  onClick={() => handleMealTypeChange(option.key)}
+                  aria-pressed={isActive}
+                  aria-label={option.label}
+                >
+                  <SystemIcon name={iconName} size={24} />
+                  <span
+                    className={`${isActive ? styles.primaryText : styles.secondaryText} body-s-regular`}
                   >
-                    <img src={iconSrc} width={32} height={32} aria-hidden="true" />
-                    <span
-                      className={`${isActive ? styles.primaryText : styles.secondaryText} typo-label4`}
-                    >
-                      {option.label}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
+                    {option.label}
+                  </span>
+                </button>
+              );
+            })}
           </section>
 
           <section className={styles.menuSection}>
             <article className={styles.calorieTitle}>
-              <span className="typo-title4 textNormal">총 칼로리</span>
+              <span className="body-l-medium text-primary">총 칼로리</span>
               <div className={`${styles.calorieValueWrapper} textNoWrap`}>
-                <span className={`textNormal typo-title1`}>
-                  {formatNumberWithMaxOneDecimal(totalCalories)}
+                <span className={`text-primary title-l-semi`}>
+                  {formatDisplayNumber(totalCalories)}
                 </span>
-                <span className="typo-caption1">kcal</span>
+                <span className="body-l-regular">kcal</span>
               </div>
             </article>
 
@@ -358,7 +360,7 @@ export function ChatMealRecordBottomSheet({
                       onClick={() => handleNavigateMenuDetail(item.id)}
                     >
                       <div className={styles.menuName}>
-                        <p className="typo-title4">{item.recommendation.menu_name}</p>
+                        <p className="body-l-medium">{item.recommendation.menu_name}</p>
                         <button
                           type="button"
                           className={styles.menuRemoveButton}
@@ -368,12 +370,12 @@ export function ChatMealRecordBottomSheet({
                           }}
                           aria-label={`${item.recommendation.menu_name} 삭제`}
                         >
-                          <SystemIcon name="trash" size={20} />
+                          <SystemIcon name="delete" size={20} />
                         </button>
                       </div>
-                      <p className={`typo-label4 textAssistive`}>
+                      <p className={`body-s-medium text-tertiary`}>
                         {item.recommendation.brand && <span>{item.recommendation.brand} ㅣ </span>}
-                        {formatNumberWithMaxOneDecimal(itemCalories)}kcal
+                        {formatDisplayNumber(itemCalories)}kcal
                       </p>
                     </div>
 
@@ -416,7 +418,7 @@ export function ChatMealRecordBottomSheet({
                             decrement: styles.quantityNumberFieldButton,
                             increment: styles.quantityNumberFieldButton,
                             inputWrapper: styles.quantityNumberFieldInputWrapper,
-                            input: `typo-body1 ${styles.quantityNumberFieldInput}`,
+                            input: `title-m-semi ${styles.quantityNumberFieldInput}`,
                           }}
                           format={{
                             minimumFractionDigits: 0,
@@ -442,10 +444,10 @@ export function ChatMealRecordBottomSheet({
                           });
                         }}
                       >
-                        <Select.Trigger className={`${styles.unitSelectTrigger} typo-h2`}>
-                          <Select.Value className="typo-body2">{selectLabel}</Select.Value>
+                        <Select.Trigger className={`${styles.unitSelectTrigger} title-l-semi`}>
+                          <Select.Value className="body-l-medium">{selectLabel}</Select.Value>
                           <Select.Icon className={styles.selectIcon} aria-hidden>
-                            <SystemIcon name="chevron-down-thin" size={24} />
+                            <SystemIcon name="chevron-down" size={24} />
                           </Select.Icon>
                         </Select.Trigger>
 
@@ -459,13 +461,13 @@ export function ChatMealRecordBottomSheet({
                               <Select.List className={styles.selectList}>
                                 <Select.Item
                                   value="unit"
-                                  className={`${styles.selectItem} typo-body2`}
+                                  className={`${styles.selectItem} body-l-medium`}
                                 >
                                   <Select.ItemText>{unitSelectLabel}</Select.ItemText>
                                 </Select.Item>
                                 <Select.Item
                                   value="weight"
-                                  className={`${styles.selectItem} typo-body2`}
+                                  className={`${styles.selectItem} body-l-medium`}
                                 >
                                   <Select.ItemText>
                                     {item.servingContext.weightUnit}
@@ -483,8 +485,8 @@ export function ChatMealRecordBottomSheet({
 
               <Button
                 variant="outlined"
-                interaction="normal"
-                color="normal"
+                border="secondary"
+                size="s"
                 onClick={handleAddMore}
                 fullWidth
               >
@@ -497,10 +499,8 @@ export function ChatMealRecordBottomSheet({
 
         <section className={styles.actionBar}>
           <Button
-            variant="filled"
-            interaction={isSubmitPending ? "disable" : "normal"}
-            size="large"
-            color="primary"
+            variant="default"
+            size="s"
             fullWidth
             disabled={isSubmitPending}
             onClick={handleSubmit}

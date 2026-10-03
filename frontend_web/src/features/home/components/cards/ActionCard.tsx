@@ -1,6 +1,6 @@
 import type { KeyboardEvent, ReactNode } from "react";
 
-import style from "@/features/home/styles/ActionCard.module.css";
+import style from "@/features/home/styles/card.module.css";
 
 type ActionCardProps = {
   children: ReactNode;

@@ -1,3 +1,4 @@
+import { useActivity } from "@stackflow/react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useRef, useState } from "react";
 
@@ -21,6 +22,7 @@ import { PATH } from "@/router/path";
 import { track } from "@/shared/analytics/analytics";
 import { EVENT_NAME } from "@/shared/analytics/analytics.constants";
 import { requestNativeCameraCapture } from "@/shared/api/bridge/nativeBridge";
+import { captureScreenRequestScope } from "@/shared/api/screenRequests";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
 import { CheckButtonModal } from "@/shared/commons/modals/CheckButtonModal";
 import {
@@ -35,6 +37,7 @@ export default function MenuBoardCameraPage() {
   const [capturedPreviewSrc, setCapturedPreviewSrc] = useState<string | null>(null);
   const [captureErrorFeedback, setCaptureErrorFeedback] =
     useState<CameraCaptureErrorFeedback | null>(null);
+  const { id: screenId, isActive: isScreenActive } = useActivity();
   const autoTriggeredRef = useRef(false);
   const queryClient = useQueryClient();
   const { mutateAsync: uploadMenuBoardImage } = useRecommendMenusByMenuBoardImageMutation();
@@ -54,6 +57,9 @@ export default function MenuBoardCameraPage() {
 
   const handleCameraActions = useCallback(async () => {
     if (isProcessing) return;
+    const screen = captureScreenRequestScope(screenId);
+    if (!screen.isActive()) return;
+    autoTriggeredRef.current = true;
     setCaptureErrorFeedback(null);
 
     let capturedImage: Awaited<ReturnType<typeof requestNativeCameraCapture>>;
@@ -63,8 +69,10 @@ export default function MenuBoardCameraPage() {
         quality: DEFAULT_CAMERA_CAPTURE_QUALITY,
         mode: "MENU_BOARD",
       });
+      screen.assertActive();
       setIsOpeningCamera(false);
     } catch (error) {
+      if (!screen.isActive()) return;
       setIsOpeningCamera(false);
       if (isCameraCaptureCancelled(error)) {
         track(EVENT_NAME.CAMERA_CANCEL);
@@ -84,8 +92,12 @@ export default function MenuBoardCameraPage() {
       setCapturedPreviewSrc(getCapturedImagePreviewSrc(capturedImage));
       setIsProcessing(true);
       track(EVENT_NAME.OCR_SCAN_START, { source: "menu_board_camera" });
-      const playbackBaselineChatIds = await getChatHistoryPlaybackBaselineIds(queryClient);
+      const playbackBaselineChatIds = await screen.run(() =>
+        getChatHistoryPlaybackBaselineIds(queryClient),
+      );
+      screen.assertActive();
       await uploadMenuBoardImage(capturedImage);
+      screen.assertActive();
       if (playbackBaselineChatIds !== null) {
         setChatHistoryPlaybackBaselineIds(queryClient, playbackBaselineChatIds);
       }
@@ -93,6 +105,7 @@ export default function MenuBoardCameraPage() {
 
       navigateToChatAfterSuccess();
     } catch (error) {
+      if (!screen.isActive()) return;
       track(EVENT_NAME.OCR_SCAN_FAIL, {
         reason: getAnalyticsErrorMessage(error, "메뉴판 분석에 실패했어요."),
         source: "menu_board_camera",
@@ -108,14 +121,18 @@ export default function MenuBoardCameraPage() {
     queryClient,
     returnFromCameraPage,
     uploadMenuBoardImage,
+    screenId,
   ]);
 
   useEffect(() => {
+    if (!isScreenActive) {
+      autoTriggeredRef.current = false;
+      return;
+    }
     if (autoTriggeredRef.current) return;
 
-    autoTriggeredRef.current = true;
     void handleCameraActions();
-  }, [handleCameraActions]);
+  }, [handleCameraActions, isScreenActive]);
 
   const handleCaptureErrorModalOpenChange = useCallback(
     (open: boolean) => {
