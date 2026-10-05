@@ -1601,6 +1601,17 @@ export function resetStackflowWithCurrentBrowserPath({
   animate = true,
 }: { animate?: boolean } = {}) {
   const currentPath = getCurrentBrowserPath();
+  const activeActivity = getActiveActivity();
+
+  // Native tab synchronization may echo the current route with a trailing-slash
+  // difference. Recreating that activity would abort its in-flight requests.
+  if (
+    activeActivity &&
+    getComparablePath(getActivityPath(activeActivity)) === getComparablePath(currentPath)
+  ) {
+    return;
+  }
+
   const resolved = resolveActivityForPath(currentPath);
 
   replaceStackWithActivity({

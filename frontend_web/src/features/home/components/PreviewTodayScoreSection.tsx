@@ -159,8 +159,8 @@ export default function PreviewTodayScoreSection({
               onClick={() => {
                 if (queryClient.isMutating({ mutationKey: ["meal-feedback"] }) > 0) return;
 
-                navigate(PATH.CHAT);
                 requestMealFeedback(selectedDateKey);
+                navigate(PATH.CHAT);
                 track(EVENT_NAME.CLICK_MEAL_FEEDBACK_AI_COACH);
               }}
             >
