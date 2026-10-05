@@ -27,7 +27,7 @@ interface NutritionLabel {
 
 export interface RegisterMealRequestDto {
   date: string; //날짜 YYYY-MM-DD
-  time: 0 | 1 | 2 | 3 | 4; //기록 시간대 0~4
+  time: MealTime;
   meal_time?: string; //실제 식사 시간 HH:MM
   image?: string;
   menu_ids?: number[];
@@ -37,7 +37,7 @@ export interface RegisterMealRequestDto {
 
 export interface DeleteMealRequestDto {
   date: string; //날짜 YYYY-MM-DD
-  time: 0 | 1 | 2 | 3 | 4; //기록 시간대 0~4
+  time: MealTime;
   menu_id?: number;
 }
 
@@ -64,6 +64,8 @@ export interface RegisterMenuListRequestDto {
   cursor?: number;
   input?: string;
 }
+
+export type MealTime = 0 | 1 | 2 | 3 | 4;
 
 /* ======
  * 운동

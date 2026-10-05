@@ -1,25 +1,29 @@
 import React, { useEffect, useEffectEvent, useRef, useState } from "react";
 
 import { AssistantMessageText } from "@/features/chat/components/AssistantMessageText";
-import { useGetChatHistoryQuery } from "@/features/chat/hooks/queries/useGetChatQuery";
+import {
+  useGetChatHistoryQuery,
+  useRecentDayMealsQuery,
+} from "@/features/chat/hooks/queries/useGetChatQuery";
 import styles from "@/features/chat/styles/AIChatPage.module.css";
 import { getCurrentDateTime } from "@/features/chat/utils/date.util";
 import { textSplitByLines } from "@/features/chat/utils/textdivider.util";
-import { useDayMealsQuery } from "@/features/home/hooks/queries/useTodayRecordQuery";
 import type { MenuWithQuantity } from "@/features/home/utils/dayMealSummary";
+import { useTodayMealRecordDeleteMutation } from "@/features/meal-record/hooks/mutations/useTodayMealRecordMutation";
 import { PATH } from "@/router/path";
 import { getMealRecordPath } from "@/router/pathHelpers";
+import type { MealTime } from "@/shared/api/types/api.request.dto";
 import type { ChatHistoryItemResponseDto } from "@/shared/api/types/api.response.dto";
 import { Button } from "@/shared/commons/button/Button";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
+import { ConfirmModal } from "@/shared/commons/modals/ConfirmModal";
 import { useNavigate } from "@/shared/navigation/stackflowNavigation";
 import { navigateBack } from "@/shared/navigation/stackflowNavigationController";
 import {
   formatDateDividerText,
   formatDateKey,
   formatTimeText,
-  getTodayFormatDateKey,
   parseDate,
 } from "@/shared/utils/dateFormat";
 import { mealTimeNumberToLabel } from "@/shared/utils/timeformat";
@@ -149,23 +153,35 @@ function ChatHistory() {
   const scrollEndRef = useRef<HTMLDivElement>(null);
   const [showScrollToBottomBtn, setShowScrollToBottomBtn] = useState<boolean>(false);
   const navigate = useNavigate();
-  const mealDate = getTodayFormatDateKey();
 
   const { data: chatHistory, isPending: isHistoryPending } = useGetChatHistoryQuery();
-  const { data: dayMeals, isPending: isMealsPending } = useDayMealsQuery(mealDate);
+  const { data: mealRecords, isPending: isMealsPending } = useRecentDayMealsQuery();
 
   const timelinePending = isHistoryPending || isMealsPending;
   const chatList = chatHistory?.chat_list ?? [];
-  const mealCards = ([0, 1, 2, 3, 4] as const).flatMap((time) => {
-    const menus = dayMeals?.menusByTime[time] ?? [];
-    if (menus.length === 0) return [];
-    return [
-      {
-        time,
-        menus,
-        date: parseDate(dayMeals?.mealRecordTimestampsByTime[time]?.updatedAt ?? ""),
-      },
-    ];
+  const mealCards = mealRecords.flatMap((date, index) => {
+    const dayMeals = mealRecords[index].meals;
+    if (!dayMeals) return [];
+
+    return ([0, 1, 2, 3, 4] as const).flatMap((time) => {
+      const menus = dayMeals.menusByTime[time];
+      if (menus.length === 0) return [];
+      const mealRecordTime = parseDate(
+        dayMeals.mealRecordTimestampsByTime[time]?.updatedAt ??
+          dayMeals.mealRecordTimestampsByTime[time]?.createdAt ??
+          "",
+      );
+
+      return [
+        {
+          messageType: "meal" as const,
+          mealDate: date,
+          time,
+          menus,
+          date: mealRecordTime,
+        },
+      ];
+    });
   });
   const conversation = [...chatsByDate(chatList), ...mealCards].sort(
     (a, b) => (a.date?.getTime() ?? 0) - (b.date?.getTime() ?? 0),
@@ -220,10 +236,11 @@ function ChatHistory() {
           item.date !== null &&
           (!prevItem?.date || formatDateKey(item.date) !== formatDateKey(prevItem.date));
 
-        const chat = "chat" in item ? item.chat : null;
+        const messageType = item.messageType;
+        const chat = messageType === "chat" ? item.chat : null;
         const userSendImage = chat?.image_url;
         const userSendText = chat?.input_text.trim() ?? "";
-        const messageTime = chat?.createdAt ? formatTimeText(chat.createdAt) : null;
+        const messageTime = formatTimeText(item.date);
         const receiveMessages = textSplitByLines(chat?.response_payload.intro_message ?? "");
 
         return (
@@ -271,8 +288,19 @@ function ChatHistory() {
             )}
 
             <div className={styles.messageArea} data-owner="ai">
-              {"menus" in item ? (
-                <MealRecordCard date={mealDate} mealTime={item.time} menus={item.menus} />
+              {messageType === "meal" ? (
+                <>
+                  <MealRecordCard
+                    date={item.mealDate.date}
+                    mealTime={item.time}
+                    menus={item.menus}
+                  />
+                  <span
+                    data-owner="ai"
+                    data-time={messageTime}
+                    className={`caption-m-regular text-tertiary ${styles.messageTime}`}
+                  />
+                </>
               ) : (
                 <>
                   {receiveMessages.map((text, index) => (
@@ -334,7 +362,7 @@ function chatsByDate(chatList: ChatHistoryItemResponseDto[]) {
     .map((chat) => {
       const date = parseDate(chat.createdAt);
 
-      return { chat, date };
+      return { messageType: "chat" as const, chat, date };
     })
     .sort((a, b) => {
       if (!a.date && b.date) return -1;
@@ -378,11 +406,23 @@ function MealRecordCard({
   const isSingleMenu = menus.length === 1;
   const time = mealTimeNumberToLabel(mealTime);
   const [isMenuExtended, setIsMenuExtended] = useState<boolean>(true);
+  const [isMealDeleteOpen, setIsMealDeleteOpen] = useState<boolean>(false);
   const totalCalories = menus.reduce((sum, value) => sum + value.calories, 0).toLocaleString();
   const navigate = useNavigate();
 
+  const { mutateAsync: deleteMealRecordByTime, isPending: isDeleteMealPending } =
+    useTodayMealRecordDeleteMutation();
+
   const handleToGoMealRecord = () => {
     navigate(getMealRecordPath(date, mealTime));
+  };
+
+  const handleDeleteMealRecord = () => {
+    for (const menu of menus) {
+      deleteMealRecordByTime({ date, time: mealTime as MealTime, menu_id: menu.id });
+    }
+
+    setIsMealDeleteOpen(false);
   };
 
   return (
@@ -430,7 +470,9 @@ function MealRecordCard({
               {menus.map((item) => {
                 return (
                   <div className={styles.menuMeta}>
-                    <span className="body-s-regular text-secondary">{item.name}</span>
+                    <span className={`body-s-regular text-secondary ${styles.menuMetaGap}`}>
+                      {item.name}
+                    </span>
                     <span className="body-s-medium text-primary textNoWrap marginLeft">
                       {item.calories} kcal
                     </span>
@@ -443,7 +485,13 @@ function MealRecordCard({
       </section>
 
       <section className={styles.mealRecordActionSection}>
-        <Button onClick={() => {}} size="xs" fullWidth variant="outlined" border="secondary">
+        <Button
+          onClick={() => setIsMealDeleteOpen(true)}
+          size="xs"
+          fullWidth
+          variant="outlined"
+          border="secondary"
+        >
           기록 취소
         </Button>
         <Button
@@ -456,6 +504,17 @@ function MealRecordCard({
           수정하기
         </Button>
       </section>
+
+      <ConfirmModal
+        open={isMealDeleteOpen}
+        onOpenChange={setIsMealDeleteOpen}
+        title="기록을 취소할까요?"
+        description="방금 기록한 식사 내용이 삭제돼요"
+        onConfirm={handleDeleteMealRecord}
+        confirmText="취소할래요"
+        cancelText="아니요"
+        confirmDisabled={isDeleteMealPending}
+      />
     </div>
   );
 }
