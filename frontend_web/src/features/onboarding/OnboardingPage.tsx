@@ -254,10 +254,8 @@ export default function OnboardingPage() {
           onClick={next}
           disabled={!canGoNext || isSubmitting}
           fullWidth
-          variant="filled"
-          size="large"
-          color="primary"
-          interaction={canGoNext && !isSubmitting ? "normal" : "disable"}
+          variant="default"
+          size="m"
         >
           {step.nextText ?? "다음"}
         </Button>

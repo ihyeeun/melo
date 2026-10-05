@@ -23,9 +23,9 @@ export default function OnboardingOptionCard({
       aria-pressed={selected}
     >
       <div className={styles.onboardingOptionCardContent}>
-        <p className={`${styles.textNormal} typo-title3`}>{title}</p>
+        <p className={`${styles.textNormal} title-s-semi`}>{title}</p>
         {description ? (
-          <p className={`${styles.textAlternative} typo-body2`}>{description}</p>
+          <p className={`${styles.textAlternative} body-l-medium`}>{description}</p>
         ) : null}
       </div>
     </button>

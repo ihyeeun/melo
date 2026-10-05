@@ -1,30 +1,45 @@
-import { appToastManager } from "./toastManager";
+import { appToastManager, type AppToastPosition, type AppToastType } from "./toastManager";
 
 type ToastPriority = "low" | "high";
-type ToastType = "default" | "success" | "warning" | "error";
 
-type ShowToastOptions = {
+type ToastAction = {
+  label: string;
+  onClick: () => void;
+};
+
+export type ShowToastOptions = {
+  action?: ToastAction;
+  dismissible?: boolean;
   title: string;
   description?: string;
   timeout?: number;
-  type?: ToastType;
+  type?: AppToastType;
   priority?: ToastPriority;
+  position?: AppToastPosition;
 };
 
 const activeToastIdsBySignature = new Map<string, string>();
 
-function getToastSignature(type: ToastType, title: string, description?: string) {
-  return JSON.stringify([type, title, description ?? ""]);
+function getToastSignature(
+  type: AppToastType | undefined,
+  position: AppToastPosition,
+  title: string,
+  description?: string,
+) {
+  return JSON.stringify([type, position, title, description ?? ""]);
 }
 
 function show({
+  action,
+  dismissible = true,
   title,
   description,
   timeout,
-  type = "default",
+  type,
   priority = "low",
+  position = "center",
 }: ShowToastOptions) {
-  const signature = getToastSignature(type, title, description);
+  const signature = getToastSignature(type, position, title, description);
   const activeToastId = activeToastIdsBySignature.get(signature);
   if (activeToastId) {
     return activeToastId;
@@ -37,6 +52,16 @@ function show({
     timeout,
     type,
     priority,
+    actionProps: action
+      ? {
+          children: action.label,
+          onClick: action.onClick,
+        }
+      : undefined,
+    data: {
+      dismissible,
+      position,
+    },
     onRemove: () => {
       if (activeToastIdsBySignature.get(signature) === toastId) {
         activeToastIdsBySignature.delete(signature);
@@ -50,6 +75,8 @@ function show({
 
 export const toast = {
   show,
+  info: (title: string, description?: string) =>
+    show({ title, description, type: "info", timeout: 4000 }),
   success: (title: string, description?: string) =>
     show({ title, description, type: "success", timeout: 2000 }),
   warning: (title: string, description?: string) =>

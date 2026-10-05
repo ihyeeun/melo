@@ -2,6 +2,8 @@ import type { QueryClient } from "@tanstack/react-query";
 
 import { getChatHistory } from "@/features/chat/api/chat.api";
 import { queryKeys } from "@/features/chat/hooks/queries/queryKey";
+import { isRequestAbortError } from "@/shared/api/requestCancellation";
+import { captureScreenRequestScope } from "@/shared/api/screenRequests";
 import type { ChatHistoryItemResponseDto } from "@/shared/api/types/api.response.dto";
 
 type ResolveChatHistoryItemOptions = {
@@ -19,12 +21,14 @@ export async function refetchAndResolveChatHistoryItem(
   queryClient: QueryClient,
   options?: ResolveChatHistoryItemOptions,
 ) {
+  const screen = captureScreenRequestScope();
   try {
     const chatHistory = await queryClient.fetchQuery({
       queryKey: queryKeys.chatHistory,
       queryFn: getChatHistory,
       staleTime: 0,
     });
+    screen.assertActive();
     const matchedChatItems =
       options?.match === undefined
         ? chatHistory.chat_list
@@ -37,6 +41,7 @@ export async function refetchAndResolveChatHistoryItem(
 
     return chatItem;
   } catch (error) {
+    if (isRequestAbortError(error)) throw error;
     if (error instanceof ChatHistorySyncError) {
       throw error;
     }

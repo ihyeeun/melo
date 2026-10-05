@@ -34,8 +34,8 @@
 
 .typingDot {
   animation: typing-bounce 1.2s ease-in-out infinite;
-  background-color: var(--primary-strong);
-  border-radius: 999px;
+  background-color: var(--coral-500);
+  border-radius: 100px;
   height: 6px;
   width: 6px;
 }
@@ -48,61 +48,37 @@
   animation-delay: 0.3s;
 }
 
+.loadingLogo {
+  align-items: center;
+  display: inline-flex;
+  flex: 0 0 auto;
+  justify-content: center;
+  overflow: hidden;
+  pointer-events: none;
+  width: 100%;
+  height: 100%;
+}
+
+.loadingLogo svg {
+  display: block;
+  width: 100%;
+}
+
+.longWaitLogo {
+  width: 24px;
+}
+
+.longWaitLogo svg {
+  width: 24px;
+}
+
 .longWaitStatus {
   align-items: center;
   animation: long-wait-status-enter 320ms ease-out both;
-  color: var(--label-normal);
+  color: var(--text-primary);
   display: inline-flex;
-  gap: 12px;
+  gap: 8px;
   min-height: 44px;
-}
-
-.longWaitMarker {
-  --dot-gap: 5px;
-  --dot-offset: calc((8px + var(--dot-gap)) / 2);
-
-  animation: long-wait-marker-rotate 2s ease-in-out infinite;
-  display: block;
-  flex: 0 0 auto;
-  height: calc(19px + var(--dot-gap));
-  position: relative;
-  transform-origin: center;
-  width: calc(19px + var(--dot-gap));
-}
-
-.longWaitDot {
-  --dot-x: 0;
-  --dot-y: 0;
-
-  animation: long-wait-dot-spread 2s ease-in-out infinite;
-  background-color: var(--primary-strong);
-  border-radius: 999px;
-  height: 6px;
-  left: 50%;
-  position: absolute;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  width: 6px;
-}
-
-.longWaitDot:nth-child(1) {
-  --dot-x: calc(var(--dot-offset) * -1);
-  --dot-y: calc(var(--dot-offset) * -1);
-}
-
-.longWaitDot:nth-child(2) {
-  --dot-x: var(--dot-offset);
-  --dot-y: calc(var(--dot-offset) * -1);
-}
-
-.longWaitDot:nth-child(3) {
-  --dot-x: calc(var(--dot-offset) * -1);
-  --dot-y: var(--dot-offset);
-}
-
-.longWaitDot:nth-child(4) {
-  --dot-x: var(--dot-offset);
-  --dot-y: var(--dot-offset);
 }
 
 .longWaitText {
@@ -123,31 +99,6 @@
   40% {
     opacity: 1;
     transform: translateY(-4px);
-  }
-}
-
-@keyframes long-wait-marker-rotate {
-  0%,
-  34% {
-    transform: rotate(0deg);
-  }
-
-  78%,
-  100% {
-    transform: rotate(-270deg);
-  }
-}
-
-@keyframes long-wait-dot-spread {
-  0%,
-  14%,
-  100% {
-    transform: translate(-50%, -50%) translate(0, 0) scale(0.82);
-  }
-
-  34%,
-  78% {
-    transform: translate(-50%, -50%) translate(var(--dot-x), var(--dot-y)) scale(1);
   }
 }
 

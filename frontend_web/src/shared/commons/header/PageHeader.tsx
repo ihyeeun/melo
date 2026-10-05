@@ -38,9 +38,9 @@ export function PageHeader({
           disabled={!onBack}
           aria-label={backButtonAriaLabel}
         >
-          <SystemIcon name="chevron-left-normal" size={24} />
+          <SystemIcon name="chevron-left" size={24} />
         </button>
-        <h1 className={`${styles.title} typo-title3`}>{title}</h1>
+        <h1 className={`${styles.title} body-l-medium`}>{title}</h1>
         <div className={styles.rightSlot}>{rightSlot}</div>
       </div>
     </header>

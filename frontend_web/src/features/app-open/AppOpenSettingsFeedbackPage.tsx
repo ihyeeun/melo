@@ -38,12 +38,12 @@ export default function AppOpenSettingsFeedbackPage({
   return (
     <main className={styles.container}>
       <section className={styles.panel}>
-        <img src="/login/melo-logo.svg" className={styles.logo} alt="melo" />
+        <img src="/login/melo-logo.png" className={styles.logo} alt="melo" />
         <div className={styles.copy}>
-          <h1 className="typo-title1">
+          <h1 className="title-l-semi">
             {isFallback ? "멜로 앱 설치가 필요해요" : "멜로 앱으로 이동"}
           </h1>
-          <p className="typo-body2">
+          <p className="body-l-medium">
             {isFallback
               ? "앱을 설치한 뒤 다시 열면 문의 화면으로 이동해요."
               : "앱을 설치한 뒤 문의 화면을 열 수 있어요."}
@@ -52,13 +52,13 @@ export default function AppOpenSettingsFeedbackPage({
         <div className={styles.actions}>
           <Button
             fullWidth
-            size="large"
+            size="m"
             onClick={() => openAppWithFallback(SETTINGS_FEEDBACK_PATH, () => setIsFallback(true))}
           >
             앱에서 열기
           </Button>
           {installUrl ? (
-            <a className={`${styles.linkButton} typo-body2`} href={installUrl}>
+            <a className={`${styles.linkButton} body-l-medium`} href={installUrl}>
               앱 설치하기
             </a>
           ) : null}

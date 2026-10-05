@@ -3,6 +3,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { registerStep, registerWeight } from "@/features/home/api/todayRecord.api";
 import { queryKeys as homeQueryKeys } from "@/features/home/hooks/queries/todayRecord.queryKey";
 import { updateWeight } from "@/features/profile/api/profile";
+import { isRequestAbortError } from "@/shared/api/requestCancellation";
 import type { WeightStepsResponseDto } from "@/shared/api/types/api.response.dto";
 import type { UseMutationCallback } from "@/shared/api/types/callback.types";
 import { getTodayFormatDateKey } from "@/shared/utils/dateFormat";
@@ -20,7 +21,8 @@ export function useRegisterWeightMutation(callbacks?: UseMutationCallback) {
 
       try {
         return await updateWeight(weight);
-      } catch {
+      } catch (error) {
+        if (isRequestAbortError(error)) throw error;
         return undefined;
       }
     },
@@ -34,7 +36,9 @@ export function useRegisterWeightMutation(callbacks?: UseMutationCallback) {
       );
       callbacks?.onSuccess?.();
     },
-    onError: (error) => callbacks?.onError?.(error),
+    onError: (error) => {
+      if (!isRequestAbortError(error)) callbacks?.onError?.(error);
+    },
   });
 }
 
@@ -53,6 +57,8 @@ export function useRegisterStepsMutation(callbacks?: UseMutationCallback) {
       );
       callbacks?.onSuccess?.();
     },
-    onError: (error) => callbacks?.onError?.(error),
+    onError: (error) => {
+      if (!isRequestAbortError(error)) callbacks?.onError?.(error);
+    },
   });
 }

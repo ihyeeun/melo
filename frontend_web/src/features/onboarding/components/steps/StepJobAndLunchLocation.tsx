@@ -17,7 +17,7 @@ export default function StepJobAndLunchLocation({ data, update }: StepComponentP
   return (
     <section className={`${styles.content} ${styles.onboardingStepReadable}`}>
       <div className={styles.onboardingTitle}>
-        <h2 className="typo-title1">하는 일이 무엇인가요?</h2>
+        <h2 className="title-l-semi">하는 일이 무엇인가요?</h2>
       </div>
 
       <div className={styles.onboardingChipGroup}>
@@ -37,7 +37,7 @@ export default function StepJobAndLunchLocation({ data, update }: StepComponentP
               aria-pressed={selected}
               onClick={() => update({ job_type: index })}
             >
-              <span className="typo-title3">{label}</span>
+              <span className="title-s-semi">{label}</span>
             </button>
           );
         })}
@@ -46,7 +46,7 @@ export default function StepJobAndLunchLocation({ data, update }: StepComponentP
       {data.job_type === 0 && (
         <section>
           <div className={styles.onboardingTitle}>
-            <h2 className="typo-title1">주로 어디서 점심을 드시나요?</h2>
+            <h2 className="title-l-semi">주로 어디서 점심을 드시나요?</h2>
           </div>
 
           <div className={styles.onboardingOptionList}>

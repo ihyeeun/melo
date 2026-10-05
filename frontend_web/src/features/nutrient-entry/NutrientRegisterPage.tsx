@@ -7,6 +7,7 @@ import {
   getMenuSelectionMenuDetailPath,
   getMenuSelectionRouteContextFromSearchParams,
   getMenuSelectionSearchPath,
+  MENU_SELECTION_TARGET,
   type MenuSelectionPathParams,
 } from "@/features/menu-selection/utils/menuSelectionRoutes";
 import {
@@ -14,9 +15,9 @@ import {
   type NutrientRegisterFormState,
 } from "@/features/nutrient-entry/components/NutrientRegisterFormPage";
 import { PATH } from "@/router/path";
-import { getMealDetailPath, getPathWithMeal } from "@/router/pathHelpers";
+import { getMealDetailPath, getMealSearchPath } from "@/router/pathHelpers";
 import {
-  navigateBackAndPush,
+  navigateBackToPathAndPushFromRoot,
   useLocation,
   useNavigate,
   useSearchParams,
@@ -42,8 +43,7 @@ export default function NutrientRegisterPage() {
     : null;
   const backFallbackPath = menuSelectionContext?.target
     ? getMenuSelectionSearchPath(menuSelectionContext)
-    : getPathWithMeal(PATH.MEAL_RECORD_ADD_SEARCH, dateKey, mealType);
-  const shouldRemoveCameraEntryScreens = locationState.entrySource === "camera";
+    : getMealSearchPath(dateKey, mealType);
 
   const getRegisteredMenuDetailPath = (savedMenuId: number) => {
     if (menuSelectionContext?.target) {
@@ -67,10 +67,10 @@ export default function NutrientRegisterPage() {
       onRegisteredMenu={(savedMenuId) => {
         const registeredMenuDetailPath = getRegisteredMenuDetailPath(savedMenuId);
 
-        if (shouldRemoveCameraEntryScreens) {
-          navigateBackAndPush({
-            count: 2,
+        if (menuSelectionContext?.target !== MENU_SELECTION_TARGET.FOLDER) {
+          navigateBackToPathAndPushFromRoot({
             animate: false,
+            backTo: backFallbackPath,
             to: registeredMenuDetailPath,
           });
           return;

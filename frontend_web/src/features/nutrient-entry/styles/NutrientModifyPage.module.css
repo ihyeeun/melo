@@ -1,53 +1,36 @@
 .page {
-  background-color: var(--bg-normal);
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  min-height: 100dvh;
-  width: 100%;
-}
-
-.main {
-  flex: 1;
-  overflow-y: auto;
-  padding: 20px;
+  background-color: var(--background-gray-1);
 }
 
 .content {
   display: flex;
   flex-direction: column;
-  gap: 20px;
-}
-
-.topSection {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.nutrientSection {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-}
-
-.nutrientHeader {
-  align-items: center;
-  display: flex;
-  justify-content: space-between;
   padding-top: 20px;
 }
 
-.nutrientFormWrap {
+.menuNameGroup {
   display: flex;
-  flex: 1;
+  flex-direction: column;
+  gap: 6px;
 }
 
-.footer {
-  padding: 0 20px;
-  padding-bottom: var(--safe-area-bottom);
+.formClearActionArea {
+  padding-top: 48px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border-default);
 }
 
-.textNormal {
-  color: var(--label-normal);
+.formClearActionArea + .formSection {
+  margin-top: 20px;
+}
+
+.formSection {
+  padding-bottom: 48px;
+}
+
+.clearIcon {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: auto;
 }

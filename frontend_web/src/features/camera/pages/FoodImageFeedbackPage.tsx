@@ -1,3 +1,4 @@
+import { useActivity } from "@stackflow/react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useRef, useState } from "react";
 
@@ -21,6 +22,7 @@ import { PATH } from "@/router/path";
 import { track } from "@/shared/analytics/analytics";
 import { EVENT_NAME } from "@/shared/analytics/analytics.constants";
 import { requestNativeCameraCapture } from "@/shared/api/bridge/nativeBridge";
+import { captureScreenRequestScope } from "@/shared/api/screenRequests";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
 import { CheckButtonModal } from "@/shared/commons/modals/CheckButtonModal";
 import {
@@ -38,6 +40,7 @@ export default function ChatFoodCameraPage() {
   const queryClient = useQueryClient();
   const { mutateAsync: uploadFoodImage } = useCreateMealFeedbackByFoodImageMutation();
 
+  const { id: screenId, isActive: isScreenActive } = useActivity();
   const autoTriggeredRef = useRef(false);
 
   const navigateToChatAfterSuccess = useCallback(() => {
@@ -51,6 +54,9 @@ export default function ChatFoodCameraPage() {
 
   const handleCameraActions = useCallback(async () => {
     if (isProcessing) return;
+    const screen = captureScreenRequestScope(screenId);
+    if (!screen.isActive()) return;
+    autoTriggeredRef.current = true;
     setCaptureErrorFeedback(null);
 
     let image: Awaited<ReturnType<typeof requestNativeCameraCapture>>;
@@ -61,8 +67,10 @@ export default function ChatFoodCameraPage() {
         quality: DEFAULT_CAMERA_CAPTURE_QUALITY,
         mode: "FOOD",
       });
+      screen.assertActive();
       setIsOpeningCamera(false);
     } catch (error) {
+      if (!screen.isActive()) return;
       setIsOpeningCamera(false);
       if (isCameraCaptureCancelled(error)) {
         track(EVENT_NAME.CAMERA_CANCEL);
@@ -83,8 +91,12 @@ export default function ChatFoodCameraPage() {
       setPreviewSrc(getCapturedImagePreviewSrc(image)); // 이미지 미리보기 설정
       setIsProcessing(true);
       track(EVENT_NAME.FOOD_SCAN_START, { source: "chat_food_camera" });
-      const playbackBaselineChatIds = await getChatHistoryPlaybackBaselineIds(queryClient);
+      const playbackBaselineChatIds = await screen.run(() =>
+        getChatHistoryPlaybackBaselineIds(queryClient),
+      );
+      screen.assertActive();
       await uploadFoodImage(image);
+      screen.assertActive();
       if (playbackBaselineChatIds !== null) {
         setChatHistoryPlaybackBaselineIds(queryClient, playbackBaselineChatIds);
       }
@@ -92,6 +104,7 @@ export default function ChatFoodCameraPage() {
 
       navigateToChatAfterSuccess();
     } catch (error) {
+      if (!screen.isActive()) return;
       track(EVENT_NAME.FOOD_SCAN_FAIL, {
         reason: getAnalyticsErrorMessage(error, "음식 메뉴 분석에 실패했어요."),
         source: "chat_food_camera",
@@ -101,14 +114,17 @@ export default function ChatFoodCameraPage() {
     } finally {
       setIsProcessing(false);
     }
-  }, [isProcessing, navigateToChatAfterSuccess, queryClient, uploadFoodImage]);
+  }, [isProcessing, navigateToChatAfterSuccess, queryClient, screenId, uploadFoodImage]);
 
   useEffect(() => {
+    if (!isScreenActive) {
+      autoTriggeredRef.current = false;
+      return;
+    }
     if (autoTriggeredRef.current) return;
 
-    autoTriggeredRef.current = true;
     void handleCameraActions();
-  }, [handleCameraActions]);
+  }, [handleCameraActions, isScreenActive]);
 
   const handleCaptureErrorModalOpenChange = useCallback(
     (open: boolean) => {

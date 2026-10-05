@@ -34,10 +34,10 @@ export function BaseAlertModal({
           initialFocus={focusPopupOnOpen ? popupRef : undefined}
         >
           <div className="modal-surface">
-            <AlertDialog.Title className="typo-title2">{title}</AlertDialog.Title>
+            <AlertDialog.Title className={`title-s-semi text-primary`}>{title}</AlertDialog.Title>
 
             {description ? (
-              <AlertDialog.Description className="typo-body2 modal-description">
+              <AlertDialog.Description className="body-l-regular text-secondary modal-description">
                 {description}
               </AlertDialog.Description>
             ) : null}

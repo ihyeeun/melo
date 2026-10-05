@@ -1,3 +1,6 @@
+import { isToday } from "date-fns";
+
+import styles from "@/features/calendar/styles/CalendarHeader.module.css";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 
 import type { ViewMode } from "../types/calendar.types";
@@ -22,55 +25,67 @@ export default function CalendarHeader({
   onNext,
   onToday,
 }: Props) {
-  const weekTitle = formatCalendarHeader(selectedDate, "week");
+  const weekTitle = isToday(selectedDate) ? "오늘" : formatCalendarHeader(selectedDate, "week");
   const monthTitle = formatCalendarHeader(viewDate, "month");
 
+  const isMonthView = viewMode === "month";
+
   return (
-    <div className="calendar-header">
-      <div className="calendar-header-top">
-        <div className="calendar-header-left">
+    <div className={styles.root} data-view={viewMode}>
+      <div className={styles.top}>
+        <div className={styles.left}>
           <button
             type="button"
-            className="calendar-title-button"
+            className={styles.titleButton}
             onClick={onToggleViewMode}
-            aria-label={viewMode === "week" ? "월 달력 펼치기" : "주 달력 접기"}
+            aria-expanded={isMonthView}
+            aria-label={isMonthView ? "주 달력 접기" : "월 달력 펼치기"}
           >
-            <span className="calendar-title-text typo-title3">
-              {viewMode === "week" ? weekTitle : "월간"}
+            <span className={styles.titleViewport}>
+              <span key={viewMode} className={`${styles.titleText} title-s-semi`}>
+                {isMonthView ? "월간 달력" : weekTitle}
+              </span>
             </span>
-            <SystemIcon
-              name="chevron-down-normal"
-              size={24}
-              className={`calendar-title-icon ${viewMode === "month" ? "is-open" : ""}`}
-            />
+            <SystemIcon name="chevron-down" size={12} className={styles.titleIcon} />
           </button>
         </div>
-
-        {viewMode === "month" && (
-          <div className="calendar-header-right">
-            <button
-              type="button"
-              className="calendar-today-button typo-label3"
-              onClick={onToday}
-              aria-label="오늘 날짜로 이동"
-            >
-              오늘
-            </button>
-          </div>
-        )}
       </div>
 
-      {viewMode === "month" && (
-        <div className="calendar-month-title">
-          <button type="button" className="calendar-nav-button" onClick={onPrev} aria-label="이전">
-            <SystemIcon name="chevron-left-normal" size={24} />
-          </button>
-          <p className="calendar-month-title-text typo-title3">{monthTitle}</p>
-          <button type="button" className="calendar-nav-button" onClick={onNext} aria-label="다음">
-            <SystemIcon name="chevron-right-normal" size={24} />
-          </button>
+      <div className={styles.monthTitleWrapper} aria-hidden={!isMonthView}>
+        <div className={styles.monthTitleClip}>
+          <div className={styles.monthTitle}>
+            <button
+              type="button"
+              className={styles.navButton}
+              onClick={onPrev}
+              aria-label="이전 달"
+              tabIndex={isMonthView ? 0 : -1}
+            >
+              <SystemIcon name="arrow-filled-left" size={24} />
+            </button>
+            <p className={`${styles.monthTitleText} title-m-semi`}>{monthTitle}</p>
+            <button
+              type="button"
+              className={styles.navButton}
+              onClick={onNext}
+              aria-label="다음 달"
+              tabIndex={isMonthView ? 0 : -1}
+            >
+              <SystemIcon name="arrow-filled-right" size={24} />
+            </button>
+          </div>
         </div>
-      )}
+        {isMonthView ? (
+          <button
+            type="button"
+            className={`${styles.todayAction} body-l-medium text-secondary`}
+            onClick={onToday}
+            aria-label="오늘 날짜로 이동"
+          >
+            오늘
+          </button>
+        ) : null}
+      </div>
     </div>
   );
 }

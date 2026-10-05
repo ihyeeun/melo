@@ -35,10 +35,10 @@ export function NumberInput({
   inputRef,
 }: Props) {
   return (
-    <div className={`${styles.inputBox} typo-h1`}>
+    <div className={`${styles.inputBox} title-xl-medium`}>
       <Input
         ref={inputRef}
-        className={`${styles.input} typo-h1`}
+        className={`${styles.input} title-xl-medium`}
         type="number"
         inputMode={inputMode}
         value={value ?? ""}

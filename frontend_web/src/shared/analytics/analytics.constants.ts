@@ -1,5 +1,6 @@
 export const EVENT_NAME = {
   APP_OPEN: "app_open",
+  VITE_PRELOAD_ERROR: "vite_preload_error",
   SCREEN_VIEW: "screen_view",
 
   CAMERA_CANCEL: "camera_cancel",
@@ -35,6 +36,13 @@ export const EVENT_NAME = {
   BODY_WEIGHT_RECORDED: "body_weight_recorded",
 
   WORKOUT_RECORD_COMPLETED: "workout_record_completed",
+
+  CLICK_MENSTRUAL_DASHBOARD: "click_menstrual_dashboard",
+
+  CLICK_MY_MANAGEMENT_AI_COACH: "click_my_management_ai_coach",
+  CLICK_MEAL_FEEDBACK_AI_COACH: "click_meal_feedback_ai_coach",
+
+  WATER_INTAKE_RECORD_COMPLETED: "water_intake_recorded",
 } as const;
 
 export type AnalyticsEventName = (typeof EVENT_NAME)[keyof typeof EVENT_NAME];

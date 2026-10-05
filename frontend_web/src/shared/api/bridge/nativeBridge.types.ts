@@ -20,6 +20,12 @@ export type WebToAppApiRequestMessage = {
   context?: BridgeMessageContext;
 };
 
+export type WebToAppApiCancelMessage = {
+  id: string;
+  type: "API_CANCEL";
+  context?: BridgeMessageContext;
+};
+
 export type WebToAppTabSyncMessage = {
   id: string;
   type: "TAB_SYNC";
@@ -150,6 +156,7 @@ export type WebToAppInAppBrowserOpenMessage = {
 
 export type WebToAppMessage =
   | WebToAppApiRequestMessage
+  | WebToAppApiCancelMessage
   | WebToAppTabSyncMessage
   | WebToAppNavigationBackMessage
   | WebToAppHapticTriggerRequestMessage

@@ -1,4 +1,5 @@
 import { handleWebMessage } from "@/src/shared/api/bridge/handleWebMessage";
+import { createBridgeRequestRegistry } from "@/src/shared/api/bridge/bridgeRequestRegistry";
 import { subscribeAuthExpired } from "@/src/shared/auth/authSessionEvents";
 import {
   type AppTabName,
@@ -366,6 +367,7 @@ export default function AppWebViewScreen({
   onFeatureGuardEnabledChange,
 }: AppWebViewScreenProps) {
   const webViewRef = useRef<WebView>(null);
+  const [apiRequests] = useState(createBridgeRequestRegistry);
   const appStateRef = useRef(AppState.currentState);
   const initialTabUrlRef = useRef<string | null>(null);
   const canGoBackRef = useRef(false);
@@ -591,6 +593,12 @@ export default function AppWebViewScreen({
     };
   }, [applyTabBarVisibility, isTabWebView]);
 
+  useEffect(() => () => apiRequests.cancelAll(), [apiRequests]);
+
+  const onLoadStart = useCallback(() => {
+    apiRequests.cancelAll();
+  }, [apiRequests]);
+
   const onMessage = useCallback(
     (event: WebViewMessageEvent) => {
       const messageUrl = event.nativeEvent.url?.trim();
@@ -642,11 +650,12 @@ export default function AppWebViewScreen({
         // no-op
       }
 
-      handleWebMessage(event, webViewRef);
+      void handleWebMessage(event, webViewRef, apiRequests);
     },
     [
       canSyncAfterInitialLoad,
       currentTab,
+      apiRequests,
       isTabWebView,
       onFeatureGuardEnabledChange,
       rememberTabWebHref,
@@ -736,6 +745,7 @@ export default function AppWebViewScreen({
   }, []);
 
   const retryWebViewLoad = useCallback(() => {
+    apiRequests.cancelAll();
     hasWebViewLoadErrorRef.current = false;
     didLoadOnceRef.current = false;
     latestWebPathRef.current = null;
@@ -743,7 +753,7 @@ export default function AppWebViewScreen({
     setWebViewLoadError(null);
     setIsInitialWebViewLoading(true);
     setWebViewKey((key) => key + 1);
-  }, [isTabWebView, normalizedTabPath]);
+  }, [apiRequests, isTabWebView, normalizedTabPath]);
 
   const openExternalUrl = useCallback(async (targetUrl: string) => {
     try {
@@ -813,6 +823,7 @@ export default function AppWebViewScreen({
         source={webViewSource}
         injectedJavaScriptBeforeContentLoaded={injectedScriptBeforeContentLoaded}
         onMessage={onMessage}
+        onLoadStart={onLoadStart}
         onLoadProgress={onLoadProgress}
         onLoadEnd={onLoadEnd}
         onError={onLoadError}

@@ -5,6 +5,7 @@ import {
   registerMenuByNutritionLabelImageFeedback,
   sendMessage,
 } from "@/features/chat/api/chat.api";
+import { isRequestAbortError } from "@/shared/api/requestCancellation";
 import type { UseMutationCallback } from "@/shared/api/types/callback.types";
 
 type UseSendMessageMutationOptions = UseMutationCallback;
@@ -16,6 +17,7 @@ export function useSendMessageMutation(options?: UseSendMessageMutationOptions) 
       if (options?.onSuccess) options.onSuccess();
     },
     onError: (error) => {
+      if (isRequestAbortError(error)) return;
       if (options?.onError) options.onError(error);
     },
   });
@@ -30,6 +32,7 @@ export function useRegisterMenuByNutritionLabelImageMutation(
       if (options?.onSuccess) options.onSuccess();
     },
     onError: (error) => {
+      if (isRequestAbortError(error)) return;
       if (options?.onError) options.onError(error);
     },
   });
@@ -42,6 +45,7 @@ export function useParseMenusFromTextMutation(options?: UseSendMessageMutationOp
       if (options?.onSuccess) options.onSuccess();
     },
     onError: (error) => {
+      if (isRequestAbortError(error)) return;
       if (options?.onError) options.onError(error);
     },
   });

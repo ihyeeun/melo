@@ -1,6 +1,8 @@
 import { AppApiError, toAppApiError } from "@/shared/api/apiClient";
 import { requestNativeImageUpload } from "@/shared/api/bridge/nativeBridge";
 import type { ImageUploadRequestPayload } from "@/shared/api/bridge/nativeBridge.types";
+import { isRequestAbortError } from "@/shared/api/requestCancellation";
+import { captureScreenRequestScope } from "@/shared/api/screenRequests";
 import type {
   ChatFeedbackResponseDto,
   ChatNutritionLabelFeedbackResponseDto,
@@ -11,7 +13,6 @@ import type {
 import { type ApiResponse, isApiSuccess } from "@/shared/api/types/apiResponse.types";
 
 const END_POINT = {
-  IMAGE_UPLOAD: "/home/uploadMealImage",
   FOOD_ANALYSIS: "/home/recognizeFoodImage",
   NUTRIENT_RECOGNITION: "/home/recognizeNutritionLabel",
   MENU_BOARD_ANALYSIS: "/chat/menu-board",
@@ -32,8 +33,10 @@ async function requestNativeImageUploadData<T>(
   payload: ImageUploadRequestPayload,
   fallbackMessage: string,
 ) {
+  const screen = captureScreenRequestScope();
   try {
     const response = await requestNativeImageUpload<ApiResponse<T>>(payload);
+    screen.assertActive();
 
     if (!isApiSuccess(response)) {
       throw new AppApiError(response);
@@ -41,6 +44,7 @@ async function requestNativeImageUploadData<T>(
 
     return response.data;
   } catch (error) {
+    if (isRequestAbortError(error)) throw error;
     throw toAppApiError(error, fallbackMessage, "IMAGE_UPLOAD_REQUEST_FAILED");
   }
 }
@@ -109,7 +113,9 @@ export async function uploadChatFoodImageFeedback(image: CapturedImage) {
   );
 }
 
-export async function uploadChatNutritionLabelImageFeedback(image: CapturedImage) {
+export async function uploadChatNutritionLabelImageFeedback(
+  image: CapturedImage,
+) {
   return requestNativeImageUploadData<ChatNutritionLabelFeedbackResponseDto>(
     {
       endpoint: END_POINT.CHAT_NUTRITION_LABEL_FEEDBACK,

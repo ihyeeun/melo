@@ -1,4 +1,4 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { type QueryClient, useMutation, useQueryClient } from "@tanstack/react-query";
 
 import {
   uploadCapturedImageToServer,
@@ -8,110 +8,56 @@ import {
   uploadNutritionLabelImage,
 } from "@/features/camera/api/uploadCapturedImage.api";
 import { refetchAndResolveChatHistoryItem } from "@/features/chat/hooks/queries/chatHistoryCache";
-import type { UseMutationCallback } from "@/shared/api/types/callback.types";
+import { captureScreenRequestScope } from "@/shared/api/screenRequests";
 
-export function useCreateMealRecordByFoodImageMutation(callbacks?: UseMutationCallback) {
+type CapturedImage = Parameters<typeof uploadCapturedImageToServer>[0];
+
+function useImageAnalysisMutation<T>(
+  analyze: (image: CapturedImage) => Promise<T>,
+) {
   return useMutation({
-    mutationFn: uploadCapturedImageToServer,
-    onSuccess: () => {
-      if (callbacks?.onSuccess) {
-        callbacks.onSuccess();
-      }
-    },
-    onError: (error) => {
-      if (callbacks?.onError) {
-        callbacks.onError(error);
-      }
-    },
+    mutationFn: (image: CapturedImage) =>
+      captureScreenRequestScope().run(() => analyze(image)),
   });
 }
 
-export function useCreateMenuByNutritionLabelImageMutation(callbacks?: UseMutationCallback) {
-  return useMutation({
-    mutationFn: uploadNutritionLabelImage,
-    onSuccess: () => {
-      if (callbacks?.onSuccess) {
-        callbacks.onSuccess();
-      }
-    },
-    onError: (error) => {
-      if (callbacks?.onError) {
-        callbacks.onError(error);
-      }
-    },
-  });
+async function analyzeAndSyncChat(
+  analyze: (image: CapturedImage) => Promise<unknown>,
+  image: CapturedImage,
+  queryClient: QueryClient,
+) {
+  const screen = captureScreenRequestScope();
+  await analyze(image);
+  screen.assertActive();
+  const chatItem = await refetchAndResolveChatHistoryItem(queryClient);
+  return { chatItem };
 }
 
-export function useRecommendMenusByMenuBoardImageMutation(callbacks?: UseMutationCallback) {
+export function useCreateMealRecordByFoodImageMutation() {
+  return useImageAnalysisMutation(uploadCapturedImageToServer);
+}
+
+export function useCreateMenuByNutritionLabelImageMutation() {
+  return useImageAnalysisMutation(uploadNutritionLabelImage);
+}
+
+export function useRecommendMenusByMenuBoardImageMutation() {
   const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async (image: Parameters<typeof uploadMenuBoardImage>[0]) => {
-      await uploadMenuBoardImage(image);
-      const chatItem = await refetchAndResolveChatHistoryItem(queryClient);
-
-      return {
-        chatItem,
-      };
-    },
-    onSuccess: () => {
-      if (callbacks?.onSuccess) {
-        callbacks.onSuccess();
-      }
-    },
-    onError: (error) => {
-      if (callbacks?.onError) {
-        callbacks.onError(error);
-      }
-    },
-  });
+  return useImageAnalysisMutation(
+    (image) => analyzeAndSyncChat(uploadMenuBoardImage, image, queryClient),
+  );
 }
 
-export function useCreateMealFeedbackByFoodImageMutation(callbacks?: UseMutationCallback) {
+export function useCreateMealFeedbackByFoodImageMutation() {
   const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (image: Parameters<typeof uploadChatFoodImageFeedback>[0]) => {
-      await uploadChatFoodImageFeedback(image);
-      const chatItem = await refetchAndResolveChatHistoryItem(queryClient);
-
-      return {
-        chatItem,
-      };
-    },
-    onSuccess: () => {
-      if (callbacks?.onSuccess) {
-        callbacks.onSuccess();
-      }
-    },
-    onError: (error) => {
-      if (callbacks?.onError) {
-        callbacks.onError(error);
-      }
-    },
-  });
+  return useImageAnalysisMutation(
+    (image) => analyzeAndSyncChat(uploadChatFoodImageFeedback, image, queryClient),
+  );
 }
 
-export function useGetFeedbackByNutritionLabelImageMutation(callbacks?: UseMutationCallback) {
+export function useGetFeedbackByNutritionLabelImageMutation() {
   const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (image: Parameters<typeof uploadChatFoodImageFeedback>[0]) => {
-      await uploadChatNutritionLabelImageFeedback(image);
-      const chatItem = await refetchAndResolveChatHistoryItem(queryClient);
-
-      return {
-        chatItem,
-      };
-    },
-    onSuccess: () => {
-      if (callbacks?.onSuccess) {
-        callbacks.onSuccess();
-      }
-    },
-    onError: (error) => {
-      if (callbacks?.onError) {
-        callbacks.onError(error);
-      }
-    },
-  });
+  return useImageAnalysisMutation(
+    (image) => analyzeAndSyncChat(uploadChatNutritionLabelImageFeedback, image, queryClient),
+  );
 }

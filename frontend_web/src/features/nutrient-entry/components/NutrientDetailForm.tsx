@@ -1,11 +1,10 @@
-import { Select } from "@base-ui/react";
-import type { FocusEventHandler, InputHTMLAttributes } from "react";
+import { Radio, RadioGroup } from "@base-ui/react";
+import type { FocusEventHandler, InputHTMLAttributes, ReactNode } from "react";
 import { useState } from "react";
 
 import { NUTRIENT_FORM_CONFIG } from "@/features/nutrient-entry/constants/nutrientDetailForm";
 import styles from "@/features/nutrient-entry/styles/NutrientDetailForm.module.css";
 import type { MenuNutrientFields, MenuUnit } from "@/shared/api/types/api.dto";
-import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 
 type Props = {
   totalWeight?: number;
@@ -135,19 +134,12 @@ export function NutrientDetailForm({
   weightUnit,
   onWeightUnitChange,
 }: Props) {
-  const selectedWeightUnitLabel =
-    WEIGHT_UNIT_OPTIONS.find((option) => option.value === weightUnit)?.label ?? "g";
-
   return (
-    <section className={styles.formSection}>
-      <div className={styles.topFieldSection}>
-        <div className={styles.titleRow}>
-          <p className={`typo-title4 ${styles.titleText}`}>총 용량</p>
-          <p className={`typo-body3 ${styles.requiredText}`}>* 필수로 작성해주세요</p>
-        </div>
+    <>
+      <FieldSection label="총 용량">
         <div className={styles.weightRow}>
           <SingleDecimalInput
-            className={`typo-body3 ${styles.valueInput}`}
+            className={`body-l-regular ${styles.input} amp-unmask`}
             placeholder="0"
             aria-label="총 용량 입력"
             value={totalWeight}
@@ -156,54 +148,30 @@ export function NutrientDetailForm({
             min={0}
           />
 
-          <Select.Root
+          <RadioGroup<MenuUnit>
+            className={styles.weightRow}
+            aria-label="용량 단위"
             value={weightUnit}
-            onValueChange={(nextValue) => {
-              if (nextValue === 0 || nextValue === 1) {
-                onWeightUnitChange(nextValue);
-              }
-            }}
+            onValueChange={onWeightUnitChange}
           >
-            <Select.Trigger
-              className={`typo-body2 ${styles.valueInput} ${styles.selectTrigger}`}
-              aria-label="중량 단위 선택"
-            >
-              <Select.Value>{selectedWeightUnitLabel}</Select.Value>
-              <Select.Icon className={styles.selectIcon} aria-hidden>
-                <SystemIcon name="chevron-down-normal" size={20} />
-              </Select.Icon>
-            </Select.Trigger>
-
-            <Select.Portal>
-              <Select.Positioner className={styles.selectPositioner} side="bottom" align="end">
-                <Select.Popup className={styles.selectPopup}>
-                  <Select.List className={styles.selectList}>
-                    {WEIGHT_UNIT_OPTIONS.map((option) => (
-                      <Select.Item
-                        key={option.value}
-                        value={option.value}
-                        className={`typo-body2 ${styles.selectItem}`}
-                      >
-                        <Select.ItemText>{option.label}</Select.ItemText>
-                      </Select.Item>
-                    ))}
-                  </Select.List>
-                </Select.Popup>
-              </Select.Positioner>
-            </Select.Portal>
-          </Select.Root>
+            {WEIGHT_UNIT_OPTIONS.map((option) => (
+              <Radio.Root
+                key={option.value}
+                value={option.value}
+                nativeButton
+                render={<button type="button" />}
+                className={`body-l-regular ${styles.unitButton}`}
+              >
+                {option.label}
+              </Radio.Root>
+            ))}
+          </RadioGroup>
         </div>
-      </div>
+      </FieldSection>
 
-      <div className={styles.topFieldSection}>
-        <div className={styles.titleRow}>
-          <p className={`typo-title4 ${styles.titleText}`}>
-            총 칼로리 <span className={`typo-caption3 ${styles.titleUnit} textNoWrap`}>(kcal)</span>
-          </p>
-          <p className={`typo-body3 ${styles.requiredText}`}>* 필수로 작성해주세요</p>
-        </div>
+      <FieldSection label="총 칼로리" description="(kcal)">
         <SingleDecimalInput
-          className={`typo-body3 ${styles.valueInput}`}
+          className={`body-l-regular ${styles.input} amp-unmask`}
           placeholder="0"
           aria-label="총 칼로리 입력"
           value={totalCalories}
@@ -211,51 +179,71 @@ export function NutrientDetailForm({
           max={MAX_INPUT_VALUE}
           min={0}
         />
-      </div>
+      </FieldSection>
 
       <section id="nutrientDetailForm" className={styles.nutrientList}>
         {NUTRIENT_FORM_CONFIG.map((field, index) => {
-          const prevField = NUTRIENT_FORM_CONFIG[index - 1];
-          const shouldRenderDivider = index > 0 && prevField?.group !== field.group;
           const fieldValue = form?.[field.key];
           const isMainField = field.variant === "main";
+          const nextField = NUTRIENT_FORM_CONFIG[index + 1];
+          const isLastSubField =
+            !isMainField &&
+            (nextField?.variant !== "sub" || nextField?.group !== field.group);
 
           return (
-            <div key={field.key}>
-              {shouldRenderDivider && <div className="divider dividerMargin16" />}
-
-              <div
-                className={cx(
-                  styles.fieldRow,
-                  isMainField ? styles.fieldRowMain : styles.fieldRowSub,
-                )}
-              >
-                <p
-                  className={cx(
-                    isMainField ? "typo-title4" : "typo-body3",
-                    styles.fieldLabel,
-                    isMainField ? styles.fieldLabelMain : styles.fieldLabelSub,
-                  )}
-                >
-                  {field.label}
-                  <span className={`typo-label3 ${styles.unitText}`}> ({field.unit})</span>
-                </p>
-                <SingleDecimalInput
-                  className={`typo-body3 ${styles.nutrientInput}`}
-                  value={fieldValue}
-                  onValueChange={(nextValue) => {
-                    onFieldChange(field.key, nextValue === undefined ? "" : String(nextValue));
-                  }}
-                  aria-label={`${field.label} 입력`}
-                  placeholder="0"
-                  max={MAX_INPUT_VALUE}
-                  min={0}
-                />
-              </div>
+            <div
+              key={field.key}
+              data-last-sub={isLastSubField ? "true" : undefined}
+              className={cx(
+                styles.fieldRow,
+                isMainField ? styles.fieldRowMain : styles.fieldRowSub,
+              )}
+            >
+              <p className={`body-l-medium text-secondary`}>
+                {field.label}
+                <span className={`body-s-regular text-tertiary`}> ({field.unit})</span>
+              </p>
+              <SingleDecimalInput
+                className={`body-l-regular ${styles.input} amp-unmask`}
+                value={fieldValue}
+                onValueChange={(nextValue) => {
+                  onFieldChange(field.key, nextValue === undefined ? "" : String(nextValue));
+                }}
+                aria-label={`${field.label} 입력`}
+                placeholder="0"
+                max={MAX_INPUT_VALUE}
+                min={0}
+              />
             </div>
           );
         })}
       </section>
-    </section>
+    </>
+  );
+}
+
+function FieldSection({
+  label,
+  description,
+  require = true,
+  children,
+}: {
+  label: string;
+  description?: string;
+  require?: boolean;
+  children: ReactNode;
+}) {
+  return (
+    <div className={styles.fieldSection}>
+      <div className={styles.labelArea}>
+        <h2 className="title-s-semi text-primary">
+          {label}
+          {description && <span className="body-l-regular text-tertiary">{description}</span>}
+        </h2>
+        {require && <p className={`caption-m-medium ${styles.require}`}>* 필수로 입력해주세요</p>}
+      </div>
+
+      {children}
+    </div>
   );
 }
