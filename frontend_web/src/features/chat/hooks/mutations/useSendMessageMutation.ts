@@ -1,4 +1,4 @@
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useMutationState } from "@tanstack/react-query";
 
 import {
   parseMenusFromText,
@@ -8,10 +8,14 @@ import {
 import { isRequestAbortError } from "@/shared/api/requestCancellation";
 import type { UseMutationCallback } from "@/shared/api/types/callback.types";
 
-type UseSendMessageMutationOptions = UseMutationCallback;
+const chatMutationKeys = {
+  all: ["chat"] as const,
+  message: () => [...chatMutationKeys.all, "message"] as const,
+};
 
-export function useSendMessageMutation(options?: UseSendMessageMutationOptions) {
+export function useSendMessageMutation(options?: UseMutationCallback) {
   return useMutation({
+    mutationKey: chatMutationKeys.message(),
     mutationFn: sendMessage,
     onSuccess: () => {
       if (options?.onSuccess) options.onSuccess();
@@ -23,9 +27,7 @@ export function useSendMessageMutation(options?: UseSendMessageMutationOptions) 
   });
 }
 
-export function useRegisterMenuByNutritionLabelImageMutation(
-  options?: UseSendMessageMutationOptions,
-) {
+export function useRegisterMenuByNutritionLabelImageMutation(options?: UseMutationCallback) {
   return useMutation({
     mutationFn: registerMenuByNutritionLabelImageFeedback,
     onSuccess: () => {
@@ -38,7 +40,7 @@ export function useRegisterMenuByNutritionLabelImageMutation(
   });
 }
 
-export function useParseMenusFromTextMutation(options?: UseSendMessageMutationOptions) {
+export function useParseMenusFromTextMutation(options?: UseMutationCallback) {
   return useMutation({
     mutationFn: parseMenusFromText,
     onSuccess: () => {
@@ -49,4 +51,30 @@ export function useParseMenusFromTextMutation(options?: UseSendMessageMutationOp
       if (options?.onError) options.onError(error);
     },
   });
+}
+
+export function usePendingSendMessages() {
+  const sendingMessage = useMutationState({
+    filters: {
+      mutationKey: chatMutationKeys.message(),
+      exact: true,
+      status: "pending",
+    },
+    select: (mutation) => {
+      const value = mutation.state.variables as {
+        input: string;
+      };
+      return {
+        messageType: "pending" as const,
+        key: `send:${mutation.mutationId}`,
+        inputText: value.input,
+        submittedAt: mutation.state.submittedAt,
+      };
+    },
+  });
+
+  return sendingMessage.map(({ submittedAt, ...message }) => ({
+    ...message,
+    date: new Date(submittedAt),
+  }));
 }

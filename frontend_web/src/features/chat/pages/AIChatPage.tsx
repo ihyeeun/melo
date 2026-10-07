@@ -1,6 +1,11 @@
 import React, { useEffect, useEffectEvent, useRef, useState } from "react";
 
 import { AssistantMessageText } from "@/features/chat/components/AssistantMessageText";
+import { AssistantPendingMessage } from "@/features/chat/components/AssistantPendingMessage";
+import {
+  usePendingSendMessages,
+  useSendMessageMutation,
+} from "@/features/chat/hooks/mutations/useSendMessageMutation";
 import {
   useGetChatHistoryQuery,
   useRecentDayMealsQuery,
@@ -18,6 +23,7 @@ import { Button } from "@/shared/commons/button/Button";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import { ConfirmModal } from "@/shared/commons/modals/ConfirmModal";
+import { toast } from "@/shared/commons/toast/toast";
 import { useNavigate } from "@/shared/navigation/stackflowNavigation";
 import { navigateBack } from "@/shared/navigation/stackflowNavigationController";
 import {
@@ -36,6 +42,8 @@ export default function AIChatPage() {
   const [isTextMealRecordMode, setIsTextMealRecordMode] = useState<boolean>(false);
   const [inputMessage, setInputMessage] = useState<string>("");
 
+  const { mutate: sendMessage, isPending: isSendMessagePending } = useSendMessageMutation();
+
   const handleTextMealRecordAction = () => {
     const nextMode = !isTextMealRecordMode;
     setIsTextMealRecordMode(nextMode);
@@ -51,6 +59,22 @@ export default function AIChatPage() {
   const handleGoToMealRecord = () => {
     const { dateKey, mealTime } = getCurrentDateTime();
     navigate(getMealRecordPath(dateKey, mealTime));
+  };
+  const handleSendMessage = () => {
+    const formattedMessage = inputMessage.trim();
+    if (!formattedMessage) return;
+
+    sendMessage(
+      { input: formattedMessage },
+      {
+        onSuccess: () => {
+          setInputMessage("");
+        },
+        onError: () => {
+          toast.error("연결이 일시적으로 불안정해요. 다시 시도해주세요.");
+        },
+      },
+    );
   };
 
   return (
@@ -90,10 +114,12 @@ export default function AIChatPage() {
               textarea.style.height = "auto";
               textarea.style.height = `${textarea.scrollHeight}px`;
             }}
+            disabled={isSendMessagePending}
           />
 
           <button
             type="button"
+            onClick={handleSendMessage}
             data-isView={inputMessage.trim() !== ""}
             className={styles.sendMessageButton}
           >
@@ -156,6 +182,7 @@ function ChatHistory() {
 
   const { data: chatHistory, isPending: isHistoryPending } = useGetChatHistoryQuery();
   const { data: mealRecords, isPending: isMealsPending } = useRecentDayMealsQuery();
+  const sendingMessage = usePendingSendMessages();
 
   const timelinePending = isHistoryPending || isMealsPending;
   const chatList = chatHistory?.chat_list ?? [];
@@ -183,9 +210,11 @@ function ChatHistory() {
       ];
     });
   });
-  const conversation = [...chatsByDate(chatList), ...mealCards].sort(
+  const timeline = [...chatsByDate(chatList), ...mealCards].sort(
     (a, b) => (a.date?.getTime() ?? 0) - (b.date?.getTime() ?? 0),
   );
+
+  const displayTimeline = [...timeline, ...sendingMessage];
 
   const handleScrollToBottom = (behavior: ScrollBehavior = "smooth") => {
     scrollEndRef.current?.scrollIntoView({ behavior });
@@ -207,7 +236,7 @@ function ChatHistory() {
   }, [timelinePending]);
 
   const onInitLoad = useEffectEvent(() => {
-    if (conversation.length > 0) handleScrollToBottom("auto");
+    if (timeline.length > 0) handleScrollToBottom("auto");
   });
   useEffect(() => {
     if (!timelinePending) {
@@ -216,7 +245,7 @@ function ChatHistory() {
   }, [timelinePending]);
 
   if (timelinePending) return <>로딩</>;
-  if (conversation.length === 0)
+  if (timeline.length === 0)
     return (
       <div className={`${styles.emptyHistorySection}`}>
         <img src="/icons/characters/question.png" width={200} alt="" aria-hidden="true" />
@@ -230,8 +259,8 @@ function ChatHistory() {
 
   return (
     <div className={`${styles.content}`}>
-      {conversation.map((item, index) => {
-        const prevItem = conversation[index - 1];
+      {displayTimeline.map((item, index) => {
+        const prevItem = displayTimeline[index - 1];
         const isShowDateChip =
           item.date !== null &&
           (!prevItem?.date || formatDateKey(item.date) !== formatDateKey(prevItem.date));
@@ -239,15 +268,13 @@ function ChatHistory() {
         const messageType = item.messageType;
         const chat = messageType === "chat" ? item.chat : null;
         const userSendImage = chat?.image_url;
-        const userSendText = chat?.input_text.trim() ?? "";
+        const userSendText =
+          item.messageType === "pending" ? item.inputText : (chat?.input_text ?? "");
         const messageTime = formatTimeText(item.date);
         const receiveMessages = textSplitByLines(chat?.response_payload.intro_message ?? "");
 
         return (
-          <section
-            key={"menus" in item ? `meal:${item.time}` : `chat:${item.chat.id}`}
-            className={styles.conversation}
-          >
+          <section className={styles.conversation}>
             {isShowDateChip && item.date && (
               <time className={styles.dateChip}>
                 <span className="caption-m-medium text-white">
@@ -288,7 +315,7 @@ function ChatHistory() {
             )}
 
             <div className={styles.messageArea} data-owner="ai">
-              {messageType === "meal" ? (
+              {messageType === "meal" && (
                 <>
                   <MealRecordCard
                     date={item.mealDate.date}
@@ -301,7 +328,9 @@ function ChatHistory() {
                     className={`caption-m-regular text-tertiary ${styles.messageTime}`}
                   />
                 </>
-              ) : (
+              )}
+
+              {messageType === "chat" && (
                 <>
                   {receiveMessages.map((text, index) => (
                     <div key={index} className={styles.textBubble}>
@@ -334,6 +363,8 @@ function ChatHistory() {
                   )}
                 </>
               )}
+
+              {messageType === "pending" && <AssistantPendingMessage />}
             </div>
           </section>
         );
