@@ -249,6 +249,14 @@ function ChatHistory({
   const navigate = useNavigate();
 
   const sendingMessage = usePendingSendMessages();
+  const pendingMessageKey = sendingMessage[0]?.key;
+  const scrollToBottom = useEffectEvent(onScrollToBottomAction);
+
+  useLayoutEffect(() => {
+    if (!pendingMessageKey) return;
+
+    scrollToBottom();
+  }, [pendingMessageKey]);
 
   const [initChatIds] = useState(() => new Set(history.map((chat) => chat.id)));
   const prevChatIds = sendingMessage[0]?.previousChatIds;
@@ -299,6 +307,12 @@ function ChatHistory({
     );
 
   return displayTimeline.map((item, index) => {
+    const itemKey =
+      item.messageType === "chat"
+        ? `chat:${item.chat.id}`
+        : item.messageType === "meal"
+          ? `meal:${item.mealDate.date}:${item.time}`
+          : item.key;
     const prevItem = displayTimeline[index - 1];
     const isShowDateChip =
       item.date !== null &&
@@ -311,7 +325,7 @@ function ChatHistory({
     const messageTime = formatTimeText(item.date);
 
     return (
-      <section className={styles.conversation}>
+      <section key={itemKey} className={styles.conversation}>
         {isShowDateChip && item.date && (
           <time className={styles.dateChip}>
             <span className="caption-m-medium text-white">{formatDateDividerText(item.date)}</span>
