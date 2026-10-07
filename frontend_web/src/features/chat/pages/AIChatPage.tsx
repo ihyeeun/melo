@@ -1,4 +1,11 @@
-import React, { useEffect, useEffectEvent, useRef, useState } from "react";
+import React, {
+  type ReactNode,
+  useEffect,
+  useEffectEvent,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 
 import { AssistantMessageText } from "@/features/chat/components/AssistantMessageText";
 import { AssistantPendingMessage } from "@/features/chat/components/AssistantPendingMessage";
@@ -18,7 +25,10 @@ import { useTodayMealRecordDeleteMutation } from "@/features/meal-record/hooks/m
 import { PATH } from "@/router/path";
 import { getMealRecordPath } from "@/router/pathHelpers";
 import type { MealTime } from "@/shared/api/types/api.request.dto";
-import type { ChatHistoryItemResponseDto } from "@/shared/api/types/api.response.dto";
+import type {
+  ChatHistoryItemResponseDto,
+  ChatRecommendResponseDto,
+} from "@/shared/api/types/api.response.dto";
 import { Button } from "@/shared/commons/button/Button";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
@@ -37,12 +47,18 @@ import { mealTimeNumberToLabel } from "@/shared/utils/timeformat";
 export default function AIChatPage() {
   const navigate = useNavigate();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const scrollEndRef = useRef<HTMLDivElement>(null);
 
   const [isShowChatActions, setIsShowChatActions] = useState<boolean>(true);
   const [isTextMealRecordMode, setIsTextMealRecordMode] = useState<boolean>(false);
   const [inputMessage, setInputMessage] = useState<string>("");
+  const [showScrollToBottomBtn, setShowScrollToBottomBtn] = useState<boolean>(false);
 
+  const historyQuery = useGetChatHistoryQuery();
+  const mealsQuery = useRecentDayMealsQuery();
   const { mutate: sendMessage, isPending: isSendMessagePending } = useSendMessageMutation();
+
+  const isTimelinePending = historyQuery.isPending || mealsQuery.isPending;
 
   const handleTextMealRecordAction = () => {
     const nextMode = !isTextMealRecordMode;
@@ -52,6 +68,9 @@ export default function AIChatPage() {
       setIsShowChatActions(false);
       textareaRef.current?.focus();
     }
+  };
+  const handleScrollToBottom = (behavior: ScrollBehavior = "smooth") => {
+    scrollEndRef.current?.scrollIntoView({ behavior });
   };
   const handleChangeMessage = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInputMessage(e.target.value);
@@ -77,14 +96,56 @@ export default function AIChatPage() {
     );
   };
 
+  useEffect(() => {
+    const target = scrollEndRef.current;
+    if (!target) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setShowScrollToBottomBtn(!entry.isIntersecting);
+      },
+      { threshold: 0.5 },
+    );
+
+    observer.observe(target);
+    return () => observer.disconnect();
+  }, [isTimelinePending]);
+
+  useEffect(() => {
+    if (!isTimelinePending) {
+      handleScrollToBottom("auto");
+    }
+  }, [isTimelinePending]);
+
   return (
     <div className={`page ${styles.root}`}>
       <header className={styles.header}>
         <PageHeader onBack={() => navigateBack()} />
       </header>
 
-      <main className="main" onClick={() => setIsShowChatActions(false)}>
-        <ChatHistory />
+      <main className={`main ${styles.content}`} onClick={() => setIsShowChatActions(false)}>
+        {!isTimelinePending && (
+          <ChatHistory
+            history={historyQuery.data?.chat_list ?? []}
+            mealRecords={mealsQuery.data}
+            onScrollToBottomAction={() => handleScrollToBottom("auto")}
+          />
+        )}
+
+        <div ref={scrollEndRef} />
+        <div className={styles.scrollBottomAnchor}>
+          <button
+            type="button"
+            className={styles.scrollToBottomButton}
+            data-visible={showScrollToBottomBtn}
+            onClick={(event) => {
+              event.stopPropagation();
+              handleScrollToBottom();
+            }}
+          >
+            <SystemIcon name="chevron-down" size={24} className="text-white" />
+          </button>
+        </div>
       </main>
 
       <footer className={`footer ${styles.footer}`}>
@@ -122,6 +183,7 @@ export default function AIChatPage() {
             onClick={handleSendMessage}
             data-isView={inputMessage.trim() !== ""}
             className={styles.sendMessageButton}
+            disabled={isSendMessagePending}
           >
             <SystemIcon name="arrow-up" size={16} />
           </button>
@@ -175,17 +237,25 @@ export default function AIChatPage() {
   );
 }
 
-function ChatHistory() {
-  const scrollEndRef = useRef<HTMLDivElement>(null);
-  const [showScrollToBottomBtn, setShowScrollToBottomBtn] = useState<boolean>(false);
+function ChatHistory({
+  history,
+  mealRecords,
+  onScrollToBottomAction,
+}: {
+  history: ChatHistoryItemResponseDto[];
+  mealRecords: ReturnType<typeof useRecentDayMealsQuery>["data"];
+  onScrollToBottomAction: () => void;
+}) {
   const navigate = useNavigate();
 
-  const { data: chatHistory, isPending: isHistoryPending } = useGetChatHistoryQuery();
-  const { data: mealRecords, isPending: isMealsPending } = useRecentDayMealsQuery();
   const sendingMessage = usePendingSendMessages();
 
-  const timelinePending = isHistoryPending || isMealsPending;
-  const chatList = chatHistory?.chat_list ?? [];
+  const [initChatIds] = useState(() => new Set(history.map((chat) => chat.id)));
+  const prevChatIds = sendingMessage[0]?.previousChatIds;
+  const visibleChatList = prevChatIds
+    ? history.filter((chat) => prevChatIds.includes(chat.id))
+    : history;
+
   const mealCards = mealRecords.flatMap((date, index) => {
     const dayMeals = mealRecords[index].meals;
     if (!dayMeals) return [];
@@ -210,42 +280,13 @@ function ChatHistory() {
       ];
     });
   });
-  const timeline = [...chatsByDate(chatList), ...mealCards].sort(
+  const timeline = [...chatsByDate(visibleChatList), ...mealCards].sort(
     (a, b) => (a.date?.getTime() ?? 0) - (b.date?.getTime() ?? 0),
   );
 
   const displayTimeline = [...timeline, ...sendingMessage];
 
-  const handleScrollToBottom = (behavior: ScrollBehavior = "smooth") => {
-    scrollEndRef.current?.scrollIntoView({ behavior });
-  };
-
-  useEffect(() => {
-    const target = scrollEndRef.current;
-    if (!target) return;
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        setShowScrollToBottomBtn(!entry.isIntersecting);
-      },
-      { threshold: 0.5 },
-    );
-
-    observer.observe(target);
-    return () => observer.disconnect();
-  }, [timelinePending]);
-
-  const onInitLoad = useEffectEvent(() => {
-    if (timeline.length > 0) handleScrollToBottom("auto");
-  });
-  useEffect(() => {
-    if (!timelinePending) {
-      onInitLoad();
-    }
-  }, [timelinePending]);
-
-  if (timelinePending) return <>로딩</>;
-  if (timeline.length === 0)
+  if (displayTimeline.length === 0)
     return (
       <div className={`${styles.emptyHistorySection}`}>
         <img src="/icons/characters/question.png" width={200} alt="" aria-hidden="true" />
@@ -257,135 +298,100 @@ function ChatHistory() {
       </div>
     );
 
-  return (
-    <div className={`${styles.content}`}>
-      {displayTimeline.map((item, index) => {
-        const prevItem = displayTimeline[index - 1];
-        const isShowDateChip =
-          item.date !== null &&
-          (!prevItem?.date || formatDateKey(item.date) !== formatDateKey(prevItem.date));
+  return displayTimeline.map((item, index) => {
+    const prevItem = displayTimeline[index - 1];
+    const isShowDateChip =
+      item.date !== null &&
+      (!prevItem?.date || formatDateKey(item.date) !== formatDateKey(prevItem.date));
 
-        const messageType = item.messageType;
-        const chat = messageType === "chat" ? item.chat : null;
-        const userSendImage = chat?.image_url;
-        const userSendText =
-          item.messageType === "pending" ? item.inputText : (chat?.input_text ?? "");
-        const messageTime = formatTimeText(item.date);
-        const receiveMessages = textSplitByLines(chat?.response_payload.intro_message ?? "");
+    const messageType = item.messageType;
+    const chat = messageType === "chat" ? item.chat : null;
+    const userSendImage = chat?.image_url;
+    const userSendText = item.messageType === "pending" ? item.inputText : (chat?.input_text ?? "");
+    const messageTime = formatTimeText(item.date);
 
-        return (
-          <section className={styles.conversation}>
-            {isShowDateChip && item.date && (
-              <time className={styles.dateChip}>
-                <span className="caption-m-medium text-white">
-                  {formatDateDividerText(item.date)}
-                </span>
-              </time>
-            )}
+    return (
+      <section className={styles.conversation}>
+        {isShowDateChip && item.date && (
+          <time className={styles.dateChip}>
+            <span className="caption-m-medium text-white">{formatDateDividerText(item.date)}</span>
+          </time>
+        )}
 
-            {(userSendImage || userSendText) && (
-              <div className={styles.messageArea} data-owner="user">
-                {userSendImage ? (
-                  <>
-                    <img
-                      src={userSendImage}
-                      onLoad={() => handleScrollToBottom()}
-                      className={styles.sendImage}
-                      alt="전송된 이미지"
-                    />
-                    <span
-                      data-owner="user"
-                      data-time={messageTime}
-                      className={`caption-m-regular text-tertiary ${styles.messageTime}`}
-                    />
-                  </>
-                ) : (
-                  <>
-                    <div className={styles.textBubble}>
-                      <p className="body-m-regular text-primary">{userSendText}</p>
-                      <span
-                        data-owner="user"
-                        data-time={messageTime}
-                        className={`caption-m-regular text-tertiary ${styles.messageTime}`}
-                      />
-                    </div>
-                  </>
-                )}
-              </div>
-            )}
-
-            <div className={styles.messageArea} data-owner="ai">
-              {messageType === "meal" && (
-                <>
-                  <MealRecordCard
-                    date={item.mealDate.date}
-                    mealTime={item.time}
-                    menus={item.menus}
-                  />
+        {(userSendImage || userSendText) && (
+          <div className={styles.messageArea} data-owner="user">
+            {userSendImage ? (
+              <>
+                <img
+                  src={userSendImage}
+                  onLoad={onScrollToBottomAction}
+                  className={styles.sendImage}
+                  alt="전송된 이미지"
+                />
+                <span
+                  data-owner="user"
+                  data-time={messageTime}
+                  className={`caption-m-regular text-tertiary ${styles.messageTime}`}
+                />
+              </>
+            ) : (
+              <>
+                <div className={styles.textBubble}>
+                  <p className="body-m-regular text-primary">{userSendText}</p>
                   <span
-                    data-owner="ai"
+                    data-owner="user"
                     data-time={messageTime}
                     className={`caption-m-regular text-tertiary ${styles.messageTime}`}
                   />
-                </>
+                </div>
+              </>
+            )}
+          </div>
+        )}
+
+        <div className={styles.messageArea} data-owner="ai">
+          {messageType === "meal" && (
+            <>
+              <MealRecordCard date={item.mealDate.date} mealTime={item.time} menus={item.menus} />
+              <span
+                data-owner="ai"
+                data-time={messageTime}
+                className={`caption-m-regular text-tertiary ${styles.messageTime}`}
+              />
+            </>
+          )}
+
+          {messageType === "chat" && (
+            <StreamBubble
+              response={item.chat.response_payload}
+              messageTime={messageTime}
+              animate={!initChatIds.has(item.chat.id)}
+              onReveal={onScrollToBottomAction}
+            >
+              {item.chat.response_payload.chat_category === "feedback" &&
+                item.chat.response_payload.recognized_nutrition && (
+                  <SubActionCard
+                    text={`영양성분을 인식했어요!\n어느 브랜드의 메뉴인가요?`}
+                    action={() => {}}
+                    actionText="메뉴 입력하기"
+                  />
+                )}
+
+              {item.chat.response_payload.chat_category === "inquiry" && (
+                <SubActionCard
+                  text={`더 자세한 도움이 필요하시면\n아래 버튼을 눌러주세요`}
+                  action={() => navigate(PATH.SETTINGS_FEEDBACK)}
+                  actionText="운영진에게 문의하기"
+                />
               )}
+            </StreamBubble>
+          )}
 
-              {messageType === "chat" && (
-                <>
-                  {receiveMessages.map((text, index) => (
-                    <div key={index} className={styles.textBubble}>
-                      <p className="body-m-regular text-primary">
-                        <AssistantMessageText text={text} />
-                      </p>
-                      <span
-                        data-owner="ai"
-                        data-time={messageTime}
-                        className={`caption-m-regular text-tertiary ${styles.messageTime}`}
-                      />
-                    </div>
-                  ))}
-
-                  {item.chat.response_payload.chat_category === "feedback" &&
-                    item.chat.response_payload.recognized_nutrition && (
-                      <SubActionCard
-                        text={`영양성분을 인식했어요!\n어느 브랜드의 메뉴인가요?`}
-                        action={() => {}}
-                        actionText="메뉴 입력하기"
-                      />
-                    )}
-
-                  {item.chat.response_payload.chat_category === "inquiry" && (
-                    <SubActionCard
-                      text={`더 자세한 도움이 필요하시면\n아래 버튼을 눌러주세요`}
-                      action={() => navigate(PATH.SETTINGS_FEEDBACK)}
-                      actionText="운영진에게 문의하기"
-                    />
-                  )}
-                </>
-              )}
-
-              {messageType === "pending" && <AssistantPendingMessage />}
-            </div>
-          </section>
-        );
-      })}
-
-      <div ref={scrollEndRef} />
-      <div className={styles.scrollBottomAnchor}>
-        <button
-          type="button"
-          className={styles.scrollToBottomButton}
-          data-visible={showScrollToBottomBtn}
-          onClick={(event) => {
-            event.stopPropagation();
-            handleScrollToBottom();
-          }}
-        >
-          <SystemIcon name="chevron-down" size={24} className="text-white" />
-        </button>
-      </div>
-    </div>
-  );
+          {messageType === "pending" && <AssistantPendingMessage />}
+        </div>
+      </section>
+    );
+  });
 }
 
 function chatsByDate(chatList: ChatHistoryItemResponseDto[]) {
@@ -547,5 +553,62 @@ function MealRecordCard({
         confirmDisabled={isDeleteMealPending}
       />
     </div>
+  );
+}
+
+export function StreamBubble({
+  response,
+  messageTime,
+  animate,
+  onReveal,
+  children,
+}: {
+  response: ChatRecommendResponseDto;
+  messageTime: string;
+  animate: boolean;
+  onReveal: () => void;
+  children?: ReactNode;
+}) {
+  const messages = textSplitByLines(response.intro_message ?? "");
+
+  const [visibleCount, setVisibleCount] = useState(1);
+
+  const count = animate ? visibleCount : messages.length;
+  const isComplete = count >= messages.length;
+
+  const notifyReveal = useEffectEvent(onReveal);
+
+  useEffect(() => {
+    if (!animate || isComplete) return;
+
+    const timerId = window.setTimeout(() => {
+      setVisibleCount((current) => current + 1);
+    }, 1000);
+
+    return () => window.clearTimeout(timerId);
+  }, [animate, isComplete, visibleCount]);
+
+  useLayoutEffect(() => {
+    if (animate) notifyReveal();
+  }, [animate, visibleCount]);
+
+  return (
+    <>
+      {messages.slice(0, count).map((text, index) => (
+        <div key={index} className={`${styles.textBubble} ${animate ? styles.bubbleEnter : ""}`}>
+          <p className="body-m-regular text-primary">
+            <AssistantMessageText text={text} />
+          </p>
+
+          <span
+            data-owner="ai"
+            data-time={messageTime}
+            className={`caption-m-regular text-tertiary ${styles.messageTime}`}
+          />
+        </div>
+      ))}
+
+      {isComplete && children}
+    </>
   );
 }
