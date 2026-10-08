@@ -34,7 +34,8 @@ import { PageHeader } from "@/shared/commons/header/PageHeader";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import { ConfirmModal } from "@/shared/commons/modals/ConfirmModal";
 import { toast } from "@/shared/commons/toast/toast";
-import { useNavigate } from "@/shared/navigation/stackflowNavigation";
+import { MEAL_TIMES } from "@/shared/constants/meal.constants";
+import { useLocation, useNavigate } from "@/shared/navigation/stackflowNavigation";
 import { navigateBack } from "@/shared/navigation/stackflowNavigationController";
 import {
   formatDateDividerText,
@@ -197,7 +198,11 @@ export default function AIChatPage() {
         </section>
 
         <section className={styles.chatActionsSection} data-isView={isShowChatActions}>
-          <button type="button" className={styles.chatActionButton}>
+          <button
+            type="button"
+            onClick={() => navigate(PATH.CHAT_CAMERA)}
+            className={styles.chatActionButton}
+          >
             <div className={styles.chatActionIcon}>
               <SystemIcon name="camera" size={24} />
             </div>
@@ -247,6 +252,10 @@ function ChatHistory({
   onScrollToBottomAction: () => void;
 }) {
   const navigate = useNavigate();
+
+  const { state: streamChatId } = useLocation<{
+    streamChatId?: number;
+  }>();
 
   const sendingMessage = usePendingSendMessages();
   const pendingMessageKey = sendingMessage[0]?.key;
@@ -379,7 +388,9 @@ function ChatHistory({
             <StreamBubble
               response={item.chat.response_payload}
               messageTime={messageTime}
-              animate={!initChatIds.has(item.chat.id)}
+              animate={
+                !initChatIds.has(item.chat.id) || item.chat.id === streamChatId?.streamChatId
+              }
               onReveal={onScrollToBottomAction}
             >
               {item.chat.response_payload.chat_category === "feedback" &&
@@ -624,5 +635,43 @@ export function StreamBubble({
 
       {isComplete && children}
     </>
+  );
+}
+
+export function MealTimeSelectCard() {
+  const { mealTime: currentTime } = getCurrentDateTime();
+  const [mealTime, setMealTime] = useState<string>(currentTime);
+
+  return (
+    <div className={`${styles.card} ${styles.mealTimeSelectCard}`}>
+      <p className="title-m-medium text-primary">어떤 식사로 기록할까요?</p>
+
+      <div className={styles.mealTimeChipList}>
+        {MEAL_TIMES.map(({ type, label, icon }) => {
+          return (
+            <button
+              type="button"
+              className={styles.mealTimeChip}
+              data-isSelected={mealTime === type}
+              onClick={() => {
+                setMealTime(type);
+              }}
+            >
+              <SystemIcon name={icon} size={18} className="text-highlight" />
+              <span className="body-xs-regular text-primary">{label}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      <div className={styles.mealTimeActionsSection}>
+        <Button size="xs" fullWidth variant="outlined" border="secondary">
+          기록 안할래요
+        </Button>
+        <Button size="xs" fullWidth variant="outlined" border="primary">
+          확인
+        </Button>
+      </div>
+    </div>
   );
 }

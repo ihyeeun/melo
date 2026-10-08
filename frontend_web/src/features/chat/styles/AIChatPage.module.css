@@ -326,3 +326,44 @@
     animation: none;
   }
 }
+
+/* MEAL TIME SELECT */
+.mealTimeSelectCard {
+  max-width: 266px;
+  position: relative;
+}
+
+.mealTimeSelectCard::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: calc(100% + 8px);
+}
+
+.mealTimeChipList {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-block: 20px;
+}
+
+.mealTimeChip {
+  display: flex;
+  padding: 8px 12px;
+  gap: 6px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border-default);
+  border-radius: 12px;
+  background-color: transparent;
+}
+.mealTimeChip[data-isSelected="true"] {
+  border-color: var(--border-strong);
+  background-color: var(--background-selected);
+}
+
+.mealTimeActionsSection {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}

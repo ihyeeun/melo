@@ -1,5 +1,4 @@
 import { useActivity } from "@stackflow/react";
-import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { CameraLoading } from "@/features/camera/components/CameraLoading";
@@ -7,7 +6,6 @@ import { ChatCameraUpdateRequiredModal } from "@/features/camera/components/Chat
 import {
   useCreateMealFeedbackByFoodImageMutation,
   useGetFeedbackByNutritionLabelImageMutation,
-  useRecommendMenusByMenuBoardImageMutation,
 } from "@/features/camera/hooks/mutations/useImageRecognitionMutation";
 import styles from "@/features/camera/styles/CameraPage.module.css";
 import {
@@ -20,10 +18,6 @@ import {
   isCameraCaptureCancelled,
 } from "@/features/camera/utils/cameraCapture";
 import { getChatCameraSupportResult } from "@/features/camera/utils/chatCameraSupport";
-import {
-  getChatHistoryPlaybackBaselineIds,
-  setChatHistoryPlaybackBaselineIds,
-} from "@/features/chat/utils/chatHistoryPlayback";
 import { PATH } from "@/router/path";
 import { track } from "@/shared/analytics/analytics";
 import { EVENT_NAME } from "@/shared/analytics/analytics.constants";
@@ -45,17 +39,16 @@ import {
 const CHAT_CAMERA_SOURCE = {
   FOOD: "chat_food_camera",
   NUTRITION_LABEL: "chat_nutrition_camera",
-  MENU_BOARD: "chat_camera_menu_board",
+  // MENU_BOARD: "chat_camera_menu_board",
 } as const;
 
 const CHAT_CAMERA_LOADING_DESCRIPTION = {
   FOOD: "음식을 분석 중이에요",
   NUTRITION_LABEL: "영양 성분을 확인하고 있어요",
-  MENU_BOARD: "메뉴판을 분석 중이에요",
 } as const;
 
 function resolveChatCameraMode(mode: string | null | undefined) {
-  if (mode === "NUTRITION_LABEL" || mode === "MENU_BOARD") return mode;
+  if (mode === "NUTRITION_LABEL") return mode;
   return "FOOD";
 }
 
@@ -112,22 +105,31 @@ export default function ChatCameraPage() {
     useState<CameraCaptureErrorFeedback | null>(null);
   const { id: screenId, isActive: isScreenActive } = useActivity();
   const autoTriggeredRef = useRef(false);
-  const queryClient = useQueryClient();
-  const { mutateAsync: uploadFoodImage } = useCreateMealFeedbackByFoodImageMutation();
-  const { mutateAsync: uploadMenuBoardImage } = useRecommendMenusByMenuBoardImageMutation();
-  const { mutateAsync: uploadNutritionLabelImage } = useGetFeedbackByNutritionLabelImageMutation();
+  const { mutateAsync: uploadFoodImage } = useCreateMealFeedbackByFoodImageMutation({
+    onSuccess: (streamChatId) => {
+      navigateToChatAfterSuccess(streamChatId);
+    },
+  });
+  const { mutateAsync: uploadNutritionLabelImage } = useGetFeedbackByNutritionLabelImageMutation({
+    onSuccess: (streamChatId) => {
+      navigateToChatAfterSuccess(streamChatId);
+    },
+  });
 
   const returnFromCameraPage = useCallback(() => {
     navigateBack({ fallbackTo: PATH.CHAT });
   }, []);
 
-  const navigateToChatAfterSuccess = useCallback(() => {
+  const navigateToChatAfterSuccess = useCallback((streamChatId?: number) => {
     if (isPreviousStackActivity("Chat")) {
       navigateBack({ fallbackTo: PATH.CHAT });
       return;
     }
 
-    navigate(PATH.CHAT, { replace: true });
+    navigate(PATH.CHAT, {
+      replace: true,
+      state: { streamChatId },
+    });
   }, []);
 
   const handleCameraActions = useCallback(async () => {
@@ -153,7 +155,7 @@ export default function ChatCameraPage() {
       image = await requestNativeCameraCapture({
         quality: DEFAULT_CAMERA_CAPTURE_QUALITY,
         mode: "FOOD",
-        selectableModes: ["FOOD", "NUTRITION_LABEL", "MENU_BOARD"],
+        selectableModes: ["FOOD", "NUTRITION_LABEL"],
       });
       screen.assertActive();
       setIsOpeningCamera(false);
@@ -180,25 +182,11 @@ export default function ChatCameraPage() {
       setIsProcessing(true);
       trackScanStart(selectedMode);
 
-      const playbackBaselineChatIds = await screen.run(() =>
-        getChatHistoryPlaybackBaselineIds(queryClient),
-      );
-      screen.assertActive();
-
       if (selectedMode === "FOOD") {
         await uploadFoodImage(image);
       } else if (selectedMode === "NUTRITION_LABEL") {
         await uploadNutritionLabelImage(image);
-      } else {
-        await uploadMenuBoardImage(image);
       }
-      screen.assertActive();
-
-      if (playbackBaselineChatIds !== null) {
-        setChatHistoryPlaybackBaselineIds(queryClient, playbackBaselineChatIds);
-      }
-
-      navigateToChatAfterSuccess();
 
       trackScanSuccess(selectedMode);
     } catch (error) {
@@ -209,16 +197,7 @@ export default function ChatCameraPage() {
     } finally {
       setIsProcessing(false);
     }
-  }, [
-    isProcessing,
-    navigateToChatAfterSuccess,
-    queryClient,
-    returnFromCameraPage,
-    uploadFoodImage,
-    uploadMenuBoardImage,
-    uploadNutritionLabelImage,
-    screenId,
-  ]);
+  }, [isProcessing, returnFromCameraPage, uploadFoodImage, uploadNutritionLabelImage]);
 
   useEffect(() => {
     if (!isScreenActive) {
