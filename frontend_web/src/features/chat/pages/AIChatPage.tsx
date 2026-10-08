@@ -32,6 +32,7 @@ import {
   useMenuDraftUpsert,
   useSyncMenuDraftWithDayMeals,
 } from "@/features/meal-record/stores/menuDraft.store";
+import { getMenuSelectionMenuDetailPath } from "@/features/menu-selection/utils/menuSelectionRoutes";
 import { PATH } from "@/router/path";
 import { getMealRecordPath } from "@/router/pathHelpers";
 import type { MealType } from "@/shared/api/types/api.dto";
@@ -412,13 +413,39 @@ function ChatHistory({
               }
               onReveal={onScrollToBottomAction}
             >
-              {chatItem?.chat_category === "feedback" && chatItem.recognized_nutrition && (
-                <SubActionCard
-                  text={`영양성분을 인식했어요!\n어느 브랜드의 메뉴인가요?`}
-                  action={() => {}}
-                  actionText="메뉴 입력하기"
-                />
-              )}
+              {chatItem?.chat_category === "feedback" &&
+                chatItem.recognized_nutrition &&
+                ("registered_menu" in chatItem && chatItem.registered_menu ? (
+                  <SubActionCard
+                    text={`${chatItem.registered_menu.menu_name} 메뉴 등록 완료!\n등록한 영양정보를 확인해 보세요.`}
+                    action={() => {
+                      const registeredMenu = chatItem.registered_menu;
+                      if (!registeredMenu) return;
+
+                      const { dateKey, mealTime } = getCurrentDateTime();
+
+                      navigate(
+                        getMenuSelectionMenuDetailPath({
+                          menuId: registeredMenu.menu_id,
+                          dateKey,
+                          mealType: mealTime,
+                          returnPath: PATH.CHAT,
+                        }),
+                      );
+                    }}
+                    actionText="등록한 메뉴 보기"
+                  />
+                ) : (
+                  <SubActionCard
+                    text={`영양성분을 인식했어요!\n어느 브랜드의 메뉴인가요?`}
+                    action={() => {
+                      navigate(PATH.CHAT_NUTRITION_REGISTER, {
+                        state: chatItem.recognized_nutrition,
+                      });
+                    }}
+                    actionText="메뉴 입력하기"
+                  />
+                ))}
 
               {chatItem?.chat_category === "inquiry" && (
                 <SubActionCard

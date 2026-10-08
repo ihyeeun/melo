@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 
+import { useDayMealsQuery } from "@/features/home/hooks/queries/useTodayRecordQuery";
 import {
   MealMenuNutrientDetail,
   type MealMenuNutrientSelection,
@@ -7,7 +8,10 @@ import {
 import { MealMenuNutrientDetailSkeleton } from "@/features/meal-record/components/MealMenuNutrientDetailSkeleton";
 import { useMealDeleteMutation } from "@/features/meal-record/hooks/mutations/useMealDetailMutation";
 import { useMealDetailQuery } from "@/features/meal-record/hooks/queries/useMealDetailQuery";
-import { useMenuDraftUpsertPreviews } from "@/features/meal-record/stores/menuDraft.store";
+import {
+  useMenuDraftUpsertPreviews,
+  useSyncMenuDraftWithDayMeals,
+} from "@/features/meal-record/stores/menuDraft.store";
 import styles from "@/features/meal-record/styles/MealDetailPage.module.css";
 import { getMealType, getSafeDateKey } from "@/features/meal-record/utils/mealRecord.queryParams";
 import { useMenuSelectionAdapter } from "@/features/menu-selection/hooks/useMenuSelectionAdapter";
@@ -144,6 +148,18 @@ export default function MealDetailPage() {
 
     return menuSelectionAdapter.selectedMenuIdSet.has(menuId);
   }, [menuId, menuSelectionAdapter.selectedMenuIdSet]);
+  const isFromChat =
+    menuSelectionTarget === MENU_SELECTION_TARGET.MEAL_RECORD &&
+    menuSelectionRouteContext.returnPath === PATH.CHAT;
+
+  const { data: dayMeals } = useDayMealsQuery(isFromChat ? dateKey : "");
+
+  useSyncMenuDraftWithDayMeals({
+    dateKey,
+    mealType,
+    dayMeals,
+    enabled: isFromChat,
+  });
 
   useEffect(() => {
     // 이미 draft에 담긴 메뉴를 수정한 경우, "담기"를 다시 누르지 않아도 preview를 최신 데이터로 동기화한다.
@@ -180,6 +196,8 @@ export default function MealDetailPage() {
       toast.warning("입력값을 다시 확인해주세요");
       return;
     }
+
+    if (isFromChat && !dayMeals) return;
 
     const nextMenuId = selection.menu.id;
     const replacementSourceMenuIdCandidate = menuSelectionAdapter.sourceMenuId;
@@ -219,6 +237,13 @@ export default function MealDetailPage() {
         menuQuantity: selection.quantity,
         menuInputMode: selection.mode,
       });
+    }
+
+    if (isFromChat) {
+      navigate(getMealRecordPath(dateKey, mealType), {
+        replace: true,
+      });
+      return;
     }
 
     navigateBack({
