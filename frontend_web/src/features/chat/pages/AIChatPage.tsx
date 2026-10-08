@@ -20,12 +20,24 @@ import {
 import styles from "@/features/chat/styles/AIChatPage.module.css";
 import { getCurrentDateTime } from "@/features/chat/utils/date.util";
 import { textSplitByLines } from "@/features/chat/utils/textdivider.util";
+import { useDayMealsQuery } from "@/features/home/hooks/queries/useTodayRecordQuery";
 import type { MenuWithQuantity } from "@/features/home/utils/dayMealSummary";
-import { useTodayMealRecordDeleteMutation } from "@/features/meal-record/hooks/mutations/useTodayMealRecordMutation";
+import {
+  useTodayMealRecordDeleteMutation,
+  useTodayMealRecordRegisterMutation,
+} from "@/features/meal-record/hooks/mutations/useTodayMealRecordMutation";
+import {
+  formatMenuDraftKey,
+  useMenuDraftBuildRegisterRequest,
+  useMenuDraftUpsert,
+  useSyncMenuDraftWithDayMeals,
+} from "@/features/meal-record/stores/menuDraft.store";
 import { PATH } from "@/router/path";
 import { getMealRecordPath } from "@/router/pathHelpers";
+import type { MealType } from "@/shared/api/types/api.dto";
 import type { MealTime } from "@/shared/api/types/api.request.dto";
 import type {
+  ChatFeedbackMenuResponseDto,
   ChatHistoryItemResponseDto,
   ChatRecommendResponseDto,
 } from "@/shared/api/types/api.response.dto";
@@ -129,7 +141,7 @@ export default function AIChatPage() {
           <ChatHistory
             history={historyQuery.data?.chat_list ?? []}
             mealRecords={mealsQuery.data}
-            onScrollToBottomAction={() => handleScrollToBottom("auto")}
+            onScrollToBottomAction={handleScrollToBottom}
           />
         )}
 
@@ -249,30 +261,22 @@ function ChatHistory({
 }: {
   history: ChatHistoryItemResponseDto[];
   mealRecords: ReturnType<typeof useRecentDayMealsQuery>["data"];
-  onScrollToBottomAction: () => void;
+  onScrollToBottomAction: (behavior?: ScrollBehavior) => void;
 }) {
   const navigate = useNavigate();
-
-  const { state: streamChatId } = useLocation<{
+  const { state: chatNavigationState } = useLocation<{
     streamChatId?: number;
   }>();
-
   const sendingMessage = usePendingSendMessages();
-  const pendingMessageKey = sendingMessage[0]?.key;
-  const scrollToBottom = useEffectEvent(onScrollToBottomAction);
-
-  useLayoutEffect(() => {
-    if (!pendingMessageKey) return;
-
-    scrollToBottom();
-  }, [pendingMessageKey]);
 
   const [initChatIds] = useState(() => new Set(history.map((chat) => chat.id)));
+  const [closedMealTimeChatId, SetClosedMealTimeChatId] = useState<number | null>(null);
+
+  const pendingMessageKey = sendingMessage[0]?.key;
   const prevChatIds = sendingMessage[0]?.previousChatIds;
   const visibleChatList = prevChatIds
     ? history.filter((chat) => prevChatIds.includes(chat.id))
     : history;
-
   const mealCards = mealRecords.flatMap((date, index) => {
     const dayMeals = mealRecords[index].meals;
     if (!dayMeals) return [];
@@ -300,8 +304,19 @@ function ChatHistory({
   const timeline = [...chatsByDate(visibleChatList), ...mealCards].sort(
     (a, b) => (a.date?.getTime() ?? 0) - (b.date?.getTime() ?? 0),
   );
-
   const displayTimeline = [...timeline, ...sendingMessage];
+  const latestChatId = chatsByDate(history).at(-1)?.chat.id;
+  const isLatestChatNew =
+    latestChatId !== undefined &&
+    (!initChatIds.has(latestChatId) || latestChatId === chatNavigationState?.streamChatId);
+  const newChatId = isLatestChatNew ? latestChatId : null;
+
+  const scrollToBottom = useEffectEvent(onScrollToBottomAction);
+  useLayoutEffect(() => {
+    if (!pendingMessageKey) return;
+
+    scrollToBottom();
+  }, [pendingMessageKey]);
 
   if (displayTimeline.length === 0)
     return (
@@ -332,6 +347,10 @@ function ChatHistory({
     const userSendImage = chat?.image_url;
     const userSendText = item.messageType === "pending" ? item.inputText : (chat?.input_text ?? "");
     const messageTime = formatTimeText(item.date);
+    const chatItem = chat?.response_payload;
+
+    const isNewResponse = chat !== null && chat.id === newChatId;
+    const isMealTimeCardClosed = chat !== null && chat.id === closedMealTimeChatId;
 
     return (
       <section key={itemKey} className={styles.conversation}>
@@ -347,7 +366,7 @@ function ChatHistory({
               <>
                 <img
                   src={userSendImage}
-                  onLoad={onScrollToBottomAction}
+                  onLoad={() => onScrollToBottomAction("auto")}
                   className={styles.sendImage}
                   alt="전송된 이미지"
                 />
@@ -389,26 +408,39 @@ function ChatHistory({
               response={item.chat.response_payload}
               messageTime={messageTime}
               animate={
-                !initChatIds.has(item.chat.id) || item.chat.id === streamChatId?.streamChatId
+                !initChatIds.has(item.chat.id) || item.chat.id === chatNavigationState?.streamChatId
               }
               onReveal={onScrollToBottomAction}
             >
-              {item.chat.response_payload.chat_category === "feedback" &&
-                item.chat.response_payload.recognized_nutrition && (
-                  <SubActionCard
-                    text={`영양성분을 인식했어요!\n어느 브랜드의 메뉴인가요?`}
-                    action={() => {}}
-                    actionText="메뉴 입력하기"
-                  />
-                )}
+              {chatItem?.chat_category === "feedback" && chatItem.recognized_nutrition && (
+                <SubActionCard
+                  text={`영양성분을 인식했어요!\n어느 브랜드의 메뉴인가요?`}
+                  action={() => {}}
+                  actionText="메뉴 입력하기"
+                />
+              )}
 
-              {item.chat.response_payload.chat_category === "inquiry" && (
+              {chatItem?.chat_category === "inquiry" && (
                 <SubActionCard
                   text={`더 자세한 도움이 필요하시면\n아래 버튼을 눌러주세요`}
                   action={() => navigate(PATH.SETTINGS_FEEDBACK)}
                   actionText="운영진에게 문의하기"
                 />
               )}
+
+              {isNewResponse &&
+                !isMealTimeCardClosed &&
+                chatItem?.chat_category === "feedback" &&
+                chatItem.feedback?.menus && (
+                  <MealTimeSelectCard
+                    key="meal-time-selected"
+                    onDismiss={() => {
+                      SetClosedMealTimeChatId(item.chat.id);
+                    }}
+                    menus={chatItem.feedback.menus}
+                    imageUrl={chatItem.image_url}
+                  />
+                )}
             </StreamBubble>
           )}
 
@@ -581,7 +613,7 @@ function MealRecordCard({
   );
 }
 
-export function StreamBubble({
+function StreamBubble({
   response,
   messageTime,
   animate,
@@ -595,11 +627,14 @@ export function StreamBubble({
   children?: ReactNode;
 }) {
   const messages = textSplitByLines(response.intro_message ?? "");
+  const cards = React.Children.toArray(children);
 
   const [visibleCount, setVisibleCount] = useState(1);
 
-  const count = animate ? visibleCount : messages.length;
-  const isComplete = count >= messages.length;
+  const totalCount = messages.length + cards.length;
+  const count = animate ? visibleCount : totalCount;
+  const visibleCardCount = Math.max(0, count - messages.length);
+  const isComplete = count >= totalCount;
 
   const notifyReveal = useEffectEvent(onReveal);
 
@@ -633,14 +668,68 @@ export function StreamBubble({
         </div>
       ))}
 
-      {isComplete && children}
+      {cards.slice(0, visibleCardCount).map((card, index) => (
+        <div
+          key={React.isValidElement(card) ? card.key : `card-${index}`}
+          className={animate ? styles.bubbleEnter : undefined}
+        >
+          {card}
+        </div>
+      ))}
     </>
   );
 }
 
-export function MealTimeSelectCard() {
-  const { mealTime: currentTime } = getCurrentDateTime();
-  const [mealTime, setMealTime] = useState<string>(currentTime);
+function MealTimeSelectCard({
+  onDismiss,
+  menus,
+  imageUrl,
+}: {
+  onDismiss: () => void;
+  menus: ChatFeedbackMenuResponseDto[];
+  imageUrl?: string | null;
+}) {
+  const { dateKey, mealTime: currentTime } = getCurrentDateTime();
+  const [mealTime, setMealTime] = useState<MealType>(currentTime);
+
+  const { data: dayMeals } = useDayMealsQuery(dateKey);
+  const { mutate: registerMeal, isPending: isMealSaving } = useTodayMealRecordRegisterMutation({
+    onSuccess: onDismiss,
+    onError: () => {
+      // 식사 기록을 저장하지 못했어요
+    },
+  });
+
+  useSyncMenuDraftWithDayMeals({
+    dateKey,
+    mealType: mealTime,
+    dayMeals,
+  });
+  const upsertMenu = useMenuDraftUpsert();
+  const buildRegisterRequest = useMenuDraftBuildRegisterRequest();
+
+  const handleMealRecord = () => {
+    if (isMealSaving || !dayMeals || menus.length === 0) return;
+
+    const draftKey = formatMenuDraftKey(dateKey, mealTime);
+
+    menus.forEach((menu) => {
+      upsertMenu({
+        key: draftKey,
+        id: menu.menu_id,
+        quantity: menu.estimated_quantity ?? menu.weight,
+        mode: "weight",
+      });
+    });
+
+    const request = buildRegisterRequest({
+      dateKey,
+      mealType: mealTime,
+      fallbackImage: imageUrl,
+    });
+
+    registerMeal(request);
+  };
 
   return (
     <div className={`${styles.card} ${styles.mealTimeSelectCard}`}>
@@ -665,10 +754,10 @@ export function MealTimeSelectCard() {
       </div>
 
       <div className={styles.mealTimeActionsSection}>
-        <Button size="xs" fullWidth variant="outlined" border="secondary">
+        <Button size="xs" fullWidth variant="outlined" border="secondary" onClick={onDismiss}>
           기록 안할래요
         </Button>
-        <Button size="xs" fullWidth variant="outlined" border="primary">
+        <Button size="xs" fullWidth variant="outlined" border="primary" onClick={handleMealRecord}>
           확인
         </Button>
       </div>
