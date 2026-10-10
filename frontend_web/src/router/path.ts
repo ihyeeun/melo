@@ -28,6 +28,7 @@ export const PATH = {
 
   // Chat
   CHAT: "/chat",
+  AI_CHAT: "/chat",
   CHAT_MEAL_RECORD_SHEET: "/chat/meal-record-sheet",
   CHAT_NUTRITION_REGISTER: "/chat/nutrition-register",
   CHAT_NUTRITION_DETAIL: "/chat/nutrition-detail",

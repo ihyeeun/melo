@@ -215,6 +215,7 @@ export interface ChatFeedbackResponseDto extends ChatResponseBaseDto {
   chat_category: "feedback";
   feedback?: FeedbackItemDto;
   recognized_foods?: ChatFoodImageRecognizedMenuResponseDto[];
+  recognized_nutrition?: NutritionLabelRecognitionResponseDto;
 }
 
 export interface ChatGeneralResponseDto extends ChatResponseBaseDto {
@@ -236,6 +237,7 @@ export interface ChatNutritionLabelFeedbackResponseDto extends ChatResponseBaseD
   recognized_foods?: never;
 }
 
+// TODO 없애야할 interface
 export interface ChatNutritionLabelMenuRegisteredResponseDto extends ChatResponseBaseDto {
   chat_category: "feedback";
   action: "nutrition_label_menu_registered";

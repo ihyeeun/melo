@@ -164,9 +164,9 @@ const GoalEditTargetCaloriesPage = createLazyActivity(
 const GoalEditNutrientPage = createLazyActivity(
   () => import("@/features/profile/pages/GoalEditNutrientPage"),
 );
-const ChatPage = createGuardedLazyActivity(
+const AIChatPage = createGuardedLazyActivity(
   FEATURE_GUARD.CHAT,
-  () => import("@/features/chat/pages/ChatPage"),
+  () => import("@/features/chat/pages/AIChatPage"),
 );
 const ChatNutritionRegisterPage = createGuardedLazyActivity(
   FEATURE_GUARD.CHAT,
@@ -233,7 +233,7 @@ const ACTIVITIES = {
   NutrientAddRegister: NutrientRegisterPage,
   NutrientAddModify: NutrientModifyPage,
   BrandSearch,
-  Chat: ChatPage,
+  Chat: AIChatPage,
   ChatMealRecordSheet: ChatMealRecordBottomSheetActivity,
   ChatNutritionRegister: ChatNutritionRegisterPage,
   ChatNutritionDetail: ChatNutritionDetailActivity,
@@ -279,7 +279,7 @@ const ACTIVITY_ROUTES: Record<keyof typeof ACTIVITIES, RoutePath> = {
   NutrientAddRegister: PATH.NUTRIENT_ADD_REGISTER,
   NutrientAddModify: PATH.NUTRIENT_ADD_MODIFY,
   BrandSearch: PATH.BRAND_SEARCH,
-  Chat: PATH.CHAT,
+  Chat: PATH.AI_CHAT,
   ChatMealRecordSheet: PATH.CHAT_MEAL_RECORD_SHEET,
   ChatNutritionRegister: PATH.CHAT_NUTRITION_REGISTER,
   ChatNutritionDetail: PATH.CHAT_NUTRITION_DETAIL,
@@ -303,7 +303,6 @@ const BOTTOM_SHEET_ACTIVITY_NAMES = new Set<ActivityName>([
   "HomeWeightLogSheet",
   "HomeStepsLogSheet",
   "ProfileNicknameSheet",
-  "ChatMealRecordSheet",
   "WorkoutDetailSheet",
 ]);
 

@@ -47,10 +47,13 @@
 }
 
 .sendImage {
+  display: block;
+  width: 230px;
+  max-width: 100%;
   aspect-ratio: 1;
-  max-width: 230px;
   border-radius: 16px;
   object-fit: cover;
+  background-color: var(--gray-100);
 }
 
 .textBubble {
