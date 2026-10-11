@@ -8,7 +8,8 @@
 
 /* MAIN */
 .content {
-  padding-block: 20px;
+  padding-top: 20px;
+  padding-bottom: 45px;
   position: relative;
 }
 
@@ -96,7 +97,7 @@
 .scrollToBottomButton {
   position: absolute;
   right: 0;
-  bottom: 0;
+  bottom: -25px;
   display: grid;
   place-items: center;
   width: 36px;

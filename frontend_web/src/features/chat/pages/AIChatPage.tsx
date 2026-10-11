@@ -1,4 +1,5 @@
 import { useActivity } from "@stackflow/react";
+import { useIsMutating } from "@tanstack/react-query";
 import React, {
   type ReactNode,
   useCallback,
@@ -12,7 +13,10 @@ import React, {
 import { AssistantMessageText } from "@/features/chat/components/AssistantMessageText";
 import { AssistantPendingMessage } from "@/features/chat/components/AssistantPendingMessage";
 import { ImageAnalysisFlow } from "@/features/chat/components/ImageAnalysisFlow";
+import { useRegisterChatMealMutation } from "@/features/chat/hooks/mutations/useRegisterMeal.mutation";
 import {
+  chatMutationKeys,
+  useParseMenusFromTextMutation,
   usePendingSendMessages,
   useSendMessageMutation,
 } from "@/features/chat/hooks/mutations/useSendMessageMutation";
@@ -29,6 +33,7 @@ import { useTodayMealRecordDeleteMutation } from "@/features/meal-record/hooks/m
 import { getMenuSelectionMenuDetailPath } from "@/features/menu-selection/utils/menuSelectionRoutes";
 import { PATH } from "@/router/path";
 import { getMealRecordPath } from "@/router/pathHelpers";
+import { captureScreenRequestScope } from "@/shared/api/screenRequests";
 import type { MealType } from "@/shared/api/types/api.dto";
 import type { MealTime } from "@/shared/api/types/api.request.dto";
 import type {
@@ -41,7 +46,7 @@ import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import { ConfirmModal } from "@/shared/commons/modals/ConfirmModal";
 import { toast } from "@/shared/commons/toast/toast";
 import { MEAL_TIMES } from "@/shared/constants/meal.constants";
-import { useLocation, useNavigate } from "@/shared/navigation/stackflowNavigation";
+import { useNavigate } from "@/shared/navigation/stackflowNavigation";
 import { navigateBack } from "@/shared/navigation/stackflowNavigationController";
 import {
   formatDateDividerText,
@@ -59,7 +64,7 @@ interface ResponseWait {
 
 export default function AIChatPage() {
   const navigate = useNavigate();
-  const { isActive } = useActivity();
+  const { id: screenId, isActive } = useActivity();
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const scrollEndRef = useRef<HTMLDivElement>(null);
@@ -74,10 +79,17 @@ export default function AIChatPage() {
 
   const historyQuery = useGetChatHistoryQuery();
   const mealsQuery = useRecentDayMealsQuery();
-  const { mutate: sendMessage, isPending: isSendMessagePending } = useSendMessageMutation();
+  const { mutate: sendMessage } = useSendMessageMutation();
+  const {
+    mutate: sendTextMealRecord,
+    data: textMealData,
+    reset: resetSendTextMeal,
+  } = useParseMenusFromTextMutation();
+  const { mutate: registerMeal, isPending: isSavingMeal } = useRegisterChatMealMutation();
+  const isChatRequestPending = useIsMutating({ mutationKey: chatMutationKeys.all }) > 0;
 
   const isTimelinePending = historyQuery.isPending || mealsQuery.isPending;
-  const isChatBusy = isSendMessagePending || cameraImage !== null;
+  const isChatBusy = isChatRequestPending || cameraImage !== null;
 
   const handleTextMealRecordAction = () => {
     const nextMode = !isTextMealRecordMode;
@@ -102,6 +114,19 @@ export default function AIChatPage() {
     const formattedMessage = inputMessage.trim();
     if (!formattedMessage) return;
 
+    if (isTextMealRecordMode) {
+      sendTextMealRecord(
+        { input: formattedMessage },
+        {
+          onSuccess: () => {
+            setIsTextMealRecordMode(false);
+            setInputMessage("");
+          },
+        },
+      );
+      return;
+    }
+
     sendMessage(
       { input: formattedMessage },
       {
@@ -125,6 +150,33 @@ export default function AIChatPage() {
       });
     });
   }, []);
+  const handleMealRecordByText = (mealTime: MealType) => {
+    if (!textMealData || isSavingMeal || !isActive) return;
+
+    const screen = captureScreenRequestScope(screenId);
+    if (!screen.isActive()) return;
+
+    const { dateKey: currentDate } = getCurrentDateTime();
+
+    registerMeal(
+      {
+        dateKey: textMealData.date ?? currentDate,
+        mealTime,
+        menus: textMealData.menu_ids.map((id, index) => ({
+          id,
+          quantity: textMealData.menu_quantities[index],
+          mode: "weight" as const,
+        })),
+        screen,
+      },
+      {
+        onSuccess: () => {
+          if (!screen.isActive()) return;
+          resetSendTextMeal();
+        },
+      },
+    );
+  };
 
   useEffect(() => {
     const target = scrollEndRef.current;
@@ -145,7 +197,11 @@ export default function AIChatPage() {
     if (!isActive || isTimelinePending) return;
 
     handleScrollToBottom("auto");
-  }, [isActive, isTimelinePending, cameraImage?.id]);
+  }, [isActive, isTimelinePending, cameraImage?.id, textMealData?.chat_id, isSavingMeal]);
+
+  if (isChatBusy && isShowChatActions) {
+    setIsShowChatActions(false);
+  }
 
   return (
     <div className={`page ${styles.root}`}>
@@ -169,6 +225,24 @@ export default function AIChatPage() {
             enabled={historyQuery.isSuccess && !isTimelinePending}
             waitForResponse={waitForResponse}
           />
+        )}
+
+        {textMealData && (
+          <section key={textMealData.chat_id} className={styles.conversation}>
+            <div className={styles.messageArea} data-owner="ai">
+              {isSavingMeal ? (
+                <AssistantPendingMessage />
+              ) : (
+                <MealTimeSelectCard
+                  initMealTime={
+                    String(textMealData.time ?? getCurrentDateTime().mealTime) as MealType
+                  }
+                  onConfirm={handleMealRecordByText}
+                  onDismiss={resetSendTextMeal}
+                />
+              )}
+            </div>
+          </section>
         )}
 
         <div ref={scrollEndRef} />
@@ -244,10 +318,7 @@ export default function AIChatPage() {
           </div>
         </section>
 
-        <section
-          className={styles.chatActionsSection}
-          data-isView={isShowChatActions && !isChatBusy}
-        >
+        <section className={styles.chatActionsSection} data-isView={isShowChatActions}>
           <button
             type="button"
             onClick={() => navigate(PATH.CHAT_CAMERA)}
@@ -304,13 +375,9 @@ function ChatHistory({
   responseWait: ResponseWait | null;
 }) {
   const navigate = useNavigate();
-  const { state: chatNavigationState } = useLocation<{
-    streamChatId?: number;
-  }>();
   const sendingMessage = usePendingSendMessages();
 
   const [initChatIds] = useState(() => new Set(history.map((chat) => chat.id)));
-  // const [closedMealTimeChatId, SetClosedMealTimeChatId] = useState<number | null>(null);
 
   const pendingMessageKey = sendingMessage[0]?.key;
   const prevChatIds = sendingMessage[0]?.previousChatIds;
@@ -439,9 +506,7 @@ function ChatHistory({
             <StreamBubble
               response={item.chat.response_payload}
               messageTime={messageTime}
-              animate={
-                !initChatIds.has(item.chat.id) || item.chat.id === chatNavigationState?.streamChatId
-              }
+              animate={!initChatIds.has(item.chat.id)}
               onReveal={onScrollToBottomAction}
               onComplete={responseWait?.chatId === item.chat.id ? responseWait.finish : undefined}
             >

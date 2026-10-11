@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { getMealFeedback } from "@/features/chat/api/chat.api";
+import { chatMutationKeys } from "@/features/chat/hooks/mutations/useSendMessageMutation";
 import { refetchAndResolveChatHistoryItem } from "@/features/chat/hooks/queries/chatHistoryCache";
 import {
   getChatHistoryPlaybackBaselineIds,
@@ -13,7 +14,7 @@ export function useMealFeedbackMutation(callbacks?: UseMutationCallback) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationKey: ["meal-feedback"],
+    mutationKey: chatMutationKeys.mealFeedback(),
     mutationFn: async (date: string) => {
       // 새 답변이 기존 기록에 포함되지 않도록 생성 요청 전에 기준 ID를 확보한다.
       const baselineIds = await getChatHistoryPlaybackBaselineIds(queryClient);

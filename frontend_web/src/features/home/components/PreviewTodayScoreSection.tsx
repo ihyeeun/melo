@@ -1,6 +1,7 @@
 import { useQueryClient } from "@tanstack/react-query";
 
 import { useMealFeedbackMutation } from "@/features/chat/hooks/mutations/useMealFeedbackMutation";
+import { chatMutationKeys } from "@/features/chat/hooks/mutations/useSendMessageMutation";
 import { useActivityCalories } from "@/features/health/hooks/useActivityCalories";
 import Tile from "@/features/home/components/cards/Tile";
 import { useDayMealsQuery } from "@/features/home/hooks/queries/useTodayRecordQuery";
@@ -157,10 +158,11 @@ export default function PreviewTodayScoreSection({
               disabled={isCoachingPending}
               aria-busy={isCoachingPending}
               onClick={() => {
-                if (queryClient.isMutating({ mutationKey: ["meal-feedback"] }) > 0) return;
+                if (queryClient.isMutating({ mutationKey: chatMutationKeys.mealFeedback() }) > 0)
+                  return;
 
+                navigate(PATH.AI_CHAT);
                 requestMealFeedback(selectedDateKey);
-                navigate(PATH.CHAT);
                 track(EVENT_NAME.CLICK_MEAL_FEEDBACK_AI_COACH);
               }}
             >

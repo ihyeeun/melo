@@ -48,31 +48,24 @@ export function useRecommendMenusByMenuBoardImageMutation() {
   );
 }
 
-type ImageFeedbackCallbacks = Omit<UseMutationCallback, "onSuccess"> & {
-  onSuccess?: (streamChatId?: number) => void;
-};
-
-export function useCreateMealFeedbackByFoodImageMutation(callbacks?: ImageFeedbackCallbacks) {
+export function useCreateMealFeedbackByFoodImageMutation(callbacks?: UseMutationCallback) {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: uploadChatFoodImageFeedback,
 
     onSuccess: async () => {
-      let streamChatId: number | undefined;
       try {
-        const history = await queryClient.fetchQuery({
+        await queryClient.fetchQuery({
           queryKey: queryKeys.chatHistory,
           queryFn: getChatHistory,
           staleTime: 0,
         });
-
-        streamChatId = history.chat_list[0].id;
       } catch {
         //
       }
 
-      callbacks?.onSuccess?.(streamChatId);
+      callbacks?.onSuccess?.();
     },
 
     onError: (error) => {
@@ -81,27 +74,24 @@ export function useCreateMealFeedbackByFoodImageMutation(callbacks?: ImageFeedba
   });
 }
 
-export function useGetFeedbackByNutritionLabelImageMutation(callbacks?: ImageFeedbackCallbacks) {
+export function useGetFeedbackByNutritionLabelImageMutation(callbacks?: UseMutationCallback) {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: uploadChatNutritionLabelImageFeedback,
 
     onSuccess: async () => {
-      let streamChatId: number | undefined;
       try {
-        const history = await queryClient.fetchQuery({
+        await queryClient.fetchQuery({
           queryKey: queryKeys.chatHistory,
           queryFn: getChatHistory,
           staleTime: 0,
         });
-
-        streamChatId = history.chat_list[0].id;
       } catch {
         //
       }
 
-      callbacks?.onSuccess?.(streamChatId);
+      callbacks?.onSuccess?.();
     },
 
     onError: (error) => {

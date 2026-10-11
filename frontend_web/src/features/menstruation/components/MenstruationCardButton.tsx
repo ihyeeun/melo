@@ -2,6 +2,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { isToday } from "date-fns";
 
 import { usePersonalizedManagementMutation } from "@/features/chat/hooks/mutations/usePersonalizedManagementMutation";
+import { chatMutationKeys } from "@/features/chat/hooks/mutations/useSendMessageMutation";
 import { HOME_MENSTRUAL_STATUS_VIEW } from "@/features/menstruation/constants/menstruation.constant";
 import type { MenstrualPhaseResult } from "@/features/menstruation/hooks/useMenstrualPhase";
 import styles from "@/features/menstruation/styles/MenstruationCardButton.module.css";
@@ -26,13 +27,12 @@ export default function MenstruationCardButton({ phase }: { phase: MenstrualPhas
   const showChatButton = isSelectedDateToday && !isFreeBlocked;
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { mutate: requestPersonalizedManagement, isPending } =
-    usePersonalizedManagementMutation({
-      onError: (error) => {
-        if (isRequestAbortError(error)) return;
-        toast.warning(error.message || "맞춤 관리법을 불러오지 못했어요. 다시 시도해주세요.");
-      },
-    });
+  const { mutate: requestPersonalizedManagement, isPending } = usePersonalizedManagementMutation({
+    onError: (error) => {
+      if (isRequestAbortError(error)) return;
+      toast.warning(error.message || "맞춤 관리법을 불러오지 못했어요. 다시 시도해주세요.");
+    },
+  });
   const homeContent = menstrualStatus
     ? HOME_MENSTRUAL_STATUS_VIEW[menstrualStatus]
     : HOME_MENSTRUAL_STATUS_VIEW["undefined"];
@@ -134,10 +134,10 @@ export default function MenstruationCardButton({ phase }: { phase: MenstrualPhas
           disabled={isLoading || isPending}
           aria-busy={isPending}
           onClick={() => {
-            if (queryClient.isMutating({ mutationKey: ["personalized-management"] }) > 0) return;
+            if (queryClient.isMutating({ mutationKey: chatMutationKeys.management() }) > 0) return;
 
+            navigate(PATH.AI_CHAT);
             requestPersonalizedManagement();
-            navigate(PATH.CHAT);
             track(EVENT_NAME.CLICK_MY_MANAGEMENT_AI_COACH);
           }}
         >

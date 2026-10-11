@@ -1407,7 +1407,7 @@ export default function ChatPage() {
 
     try {
       const previousChatItemIds = new Set(chatList.map((chatItem) => chatItem.id));
-      const parseResponse = await parseMenusFromTextMutation({ text });
+      const parseResponse = await parseMenusFromTextMutation({ input: text });
       const isRegistered = await registerMealRecordParseResponse(parseResponse);
 
       await refetchMealRecordParseChatHistory({ previousChatItemIds, text });

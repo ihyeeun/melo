@@ -57,11 +57,11 @@ export async function registerMenuByNutritionLabelImageFeedback({
   return response;
 }
 
-export async function parseMenusFromText({ text }: { text: string }) {
+export async function parseMenusFromText({ input }: { input: string }) {
   const response = await appApiData<ChatMealRecordParseResponseDto>({
     endpoint: "/chat/meal-record/parse",
     method: "POST",
-    body: { text },
+    body: { text: input },
   });
 
   return response;

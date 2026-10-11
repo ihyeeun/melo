@@ -11,9 +11,11 @@ import { isRequestAbortError } from "@/shared/api/requestCancellation";
 import type { ChatHistoryResponseDto } from "@/shared/api/types/api.response.dto";
 import type { UseMutationCallback } from "@/shared/api/types/callback.types";
 
-const chatMutationKeys = {
+export const chatMutationKeys = {
   all: ["chat"] as const,
   message: () => [...chatMutationKeys.all, "message"] as const,
+  mealFeedback: () => [...chatMutationKeys.all, "meal-feedback"] as const,
+  management: () => [...chatMutationKeys.all, "personalized-management"] as const,
 };
 
 interface SendContext {
@@ -65,9 +67,27 @@ export function useRegisterMenuByNutritionLabelImageMutation(options?: UseMutati
 }
 
 export function useParseMenusFromTextMutation(options?: UseMutationCallback) {
+  const queryClient = useQueryClient();
   return useMutation({
+    mutationKey: chatMutationKeys.message(),
     mutationFn: parseMenusFromText,
-    onSuccess: () => {
+    onMutate: (): SendContext => {
+      const history = queryClient.getQueryData<ChatHistoryResponseDto>(queryKeys.chatHistory);
+
+      return {
+        previousChatIds: history?.chat_list.map((chat) => chat.id) ?? [],
+      };
+    },
+    onSuccess: async () => {
+      try {
+        await queryClient.fetchQuery({
+          queryKey: queryKeys.chatHistory,
+          queryFn: getChatHistory,
+          staleTime: 0,
+        });
+      } catch {
+        //
+      }
       if (options?.onSuccess) options.onSuccess();
     },
     onError: (error) => {
@@ -80,21 +100,18 @@ export function useParseMenusFromTextMutation(options?: UseMutationCallback) {
 export function usePendingSendMessages() {
   const sendingMessage = useMutationState({
     filters: {
-      mutationKey: chatMutationKeys.message(),
-      exact: true,
+      mutationKey: chatMutationKeys.all,
       status: "pending",
     },
     select: (mutation) => {
-      const value = mutation.state.variables as {
-        input: string;
-      };
+      const inputText = (mutation.state.variables as { input?: string } | undefined)?.input ?? "";
 
       const context = mutation.state.context as SendContext | undefined;
 
       return {
         messageType: "pending" as const,
         key: `send:${mutation.mutationId}`,
-        inputText: value.input,
+        inputText,
         submittedAt: mutation.state.submittedAt,
         previousChatIds: context?.previousChatIds,
       };
