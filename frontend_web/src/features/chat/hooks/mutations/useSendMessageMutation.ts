@@ -1,5 +1,6 @@
 import { useMutation, useMutationState, useQueryClient } from "@tanstack/react-query";
 
+import { getAnalyticsErrorMessage } from "@/features/camera/utils/cameraCapture";
 import {
   getChatHistory,
   parseMenusFromText,
@@ -7,6 +8,8 @@ import {
   sendMessage,
 } from "@/features/chat/api/chat.api";
 import { queryKeys } from "@/features/chat/hooks/queries/queryKey";
+import { track } from "@/shared/analytics/analytics";
+import { EVENT_NAME } from "@/shared/analytics/analytics.constants";
 import { isRequestAbortError } from "@/shared/api/requestCancellation";
 import type { ChatHistoryResponseDto } from "@/shared/api/types/api.response.dto";
 import type { UseMutationCallback } from "@/shared/api/types/callback.types";
@@ -27,14 +30,20 @@ export function useSendMessageMutation(options?: UseMutationCallback) {
   return useMutation({
     mutationKey: chatMutationKeys.message(),
     mutationFn: sendMessage,
-    onMutate: (): SendContext => {
+    onMutate: (variables): SendContext => {
+      track(EVENT_NAME.AI_COACH_CHAT, {
+        input_length: variables.input.length,
+      });
+
       const history = queryClient.getQueryData<ChatHistoryResponseDto>(queryKeys.chatHistory);
 
       return {
         previousChatIds: history?.chat_list.map((chat) => chat.id) ?? [],
       };
     },
-    onSuccess: async () => {
+    onSuccess: async (response) => {
+      const res = response.intro_message;
+      track(EVENT_NAME.AI_COACH_RESPONSE_SUCCESS, { message: res });
       try {
         await queryClient.fetchQuery({
           queryKey: queryKeys.chatHistory,
@@ -48,6 +57,9 @@ export function useSendMessageMutation(options?: UseMutationCallback) {
     },
     onError: (error) => {
       if (isRequestAbortError(error)) return;
+      track(EVENT_NAME.AI_COACH_RESPONSE_FAIL, {
+        reason: getAnalyticsErrorMessage(error, "AI 응답 실패"),
+      });
       if (options?.onError) options.onError(error);
     },
   });
@@ -57,10 +69,15 @@ export function useRegisterMenuByNutritionLabelImageMutation(options?: UseMutati
   return useMutation({
     mutationFn: registerMenuByNutritionLabelImageFeedback,
     onSuccess: () => {
+      track(EVENT_NAME.LABEL_REGISTER_SUCCESS, { source: "chat_tab" });
       if (options?.onSuccess) options.onSuccess();
     },
     onError: (error) => {
       if (isRequestAbortError(error)) return;
+      track(EVENT_NAME.LABEL_REGISTER_FAIL, {
+        source: "chat_tab",
+        reason: getAnalyticsErrorMessage(error, "영양성분표 기반 메뉴 등록 실패"),
+      });
       if (options?.onError) options.onError(error);
     },
   });
