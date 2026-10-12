@@ -2,7 +2,7 @@ import { getMealDetail } from "@/features/meal-record/api/mealDetail";
 import {
   type MenuSaveAnalyticsItem,
   trackDiaryMenuSave,
-} from "@/shared/analytics/recommendMenuEvents";
+} from "@/shared/analytics/menuSaveEvent.util";
 
 async function getMenuNamesById(menuIds: number[]) {
   const uniqueMenuIds = [...new Set(menuIds)];

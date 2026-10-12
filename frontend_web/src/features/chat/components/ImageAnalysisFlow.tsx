@@ -13,6 +13,7 @@ import { MealTimeSelectCard } from "@/features/chat/pages/AIChatPage";
 import { useClearImage, useGetImage } from "@/features/chat/stores/camera.store";
 import styles from "@/features/chat/styles/AIChatPage.module.css";
 import { getCurrentDateTime } from "@/features/chat/utils/date.util";
+import { trackScanMenuSave } from "@/shared/analytics/menuSaveEvent.util";
 import { isRequestAbortError } from "@/shared/api/requestCancellation";
 import { captureScreenRequestScope, type ScreenRequestScope } from "@/shared/api/screenRequests";
 import type { MealType } from "@/shared/api/types/api.dto";
@@ -134,6 +135,13 @@ export function ImageAnalysisFlow({
             screen,
           });
 
+          trackScanMenuSave({
+            menus:
+              result.feedback?.menus.map(({ menu_id, menu_name }) => ({ menu_id, menu_name })) ??
+              [],
+            scanType: "photo",
+            source: "chat_tab",
+          });
           screen.assertActive();
         }
 

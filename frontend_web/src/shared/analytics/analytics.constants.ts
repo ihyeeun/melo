@@ -27,6 +27,7 @@ export const EVENT_NAME = {
   RECOMMEND_MENU_SAVE: "chat_menu_save",
   CHAT_TEXT_MENU_SAVE: "menu_save_text",
   DIARY_MENU_SAVE: "menu_save_manual",
+  MENU_SAVE_BY_SCAN: "menu_save_scan",
 
   USER_PROFILE_UPDATED: "user_profile_updated",
 

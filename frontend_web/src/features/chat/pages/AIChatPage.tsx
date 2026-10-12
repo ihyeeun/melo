@@ -33,7 +33,7 @@ import { useTodayMealRecordDeleteMutation } from "@/features/meal-record/hooks/m
 import { getMenuSelectionMenuDetailPath } from "@/features/menu-selection/utils/menuSelectionRoutes";
 import { PATH } from "@/router/path";
 import { getMealRecordPath } from "@/router/pathHelpers";
-import { trackChatTextMenuSave } from "@/shared/analytics/recommendMenuEvents";
+import { trackChatTextMenuSave } from "@/shared/analytics/menuSaveEvent.util";
 import { captureScreenRequestScope } from "@/shared/api/screenRequests";
 import type { MealType } from "@/shared/api/types/api.dto";
 import type { MealTime } from "@/shared/api/types/api.request.dto";

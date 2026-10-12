@@ -45,7 +45,7 @@ import { getMealDetailPath, getMealRecordPath, getMealSearchPath } from "@/route
 import {
   type MenuSaveAnalyticsItem,
   trackDiaryMenuSave,
-} from "@/shared/analytics/recommendMenuEvents";
+} from "@/shared/analytics/menuSaveEvent.util";
 import { isRequestAbortError } from "@/shared/api/requestCancellation";
 import {
   MEAL_TYPE_OPTIONS,
