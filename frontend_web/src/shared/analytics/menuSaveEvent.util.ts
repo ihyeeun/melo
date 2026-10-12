@@ -53,10 +53,12 @@ export function trackScanMenuSave({
   scanType,
   source,
 }: {
-  menus: MenuSaveAnalyticsItem[];
+  menus: MenuSaveAnalyticsItem[] | undefined;
   scanType: "photo" | "barcode";
   source: "home_tab" | "chat_tab";
 }) {
+  if (!menus) return;
+
   trackMenuArrayEvent({
     eventName: EVENT_NAME.MENU_SAVE_BY_SCAN,
     menus,

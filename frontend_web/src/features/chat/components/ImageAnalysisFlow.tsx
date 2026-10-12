@@ -3,7 +3,10 @@ import { QueryClient, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 
 import { MODE } from "@/features/camera/constants/camera.constant";
-import { getCapturedImagePreviewSrc } from "@/features/camera/utils/cameraCapture";
+import {
+  getAnalyticsErrorMessage,
+  getCapturedImagePreviewSrc,
+} from "@/features/camera/utils/cameraCapture";
 import { getChatHistory } from "@/features/chat/api/chat.api";
 import { AssistantPendingMessage } from "@/features/chat/components/AssistantPendingMessage";
 import { useImageAnalysisMutation } from "@/features/chat/hooks/mutations/useImageAnalysis.mutation";
@@ -13,6 +16,8 @@ import { MealTimeSelectCard } from "@/features/chat/pages/AIChatPage";
 import { useClearImage, useGetImage } from "@/features/chat/stores/camera.store";
 import styles from "@/features/chat/styles/AIChatPage.module.css";
 import { getCurrentDateTime } from "@/features/chat/utils/date.util";
+import { track } from "@/shared/analytics/analytics";
+import { EVENT_NAME } from "@/shared/analytics/analytics.constants";
 import { trackScanMenuSave } from "@/shared/analytics/menuSaveEvent.util";
 import { isRequestAbortError } from "@/shared/api/requestCancellation";
 import { captureScreenRequestScope, type ScreenRequestScope } from "@/shared/api/screenRequests";
@@ -55,11 +60,32 @@ export function ImageAnalysisFlow({
     isPending: analyzePending,
     isSuccess: analysisSuccess,
   } = useImageAnalysisMutation({
+    onSuccess: () => {
+      // 분석 성공
+      if (mode === "FOOD") {
+        track(EVENT_NAME.FOOD_SCAN_SUCCESS, { source: "chat_food_camera" });
+      } else if (mode === "NUTRITION_LABEL") {
+        track(EVENT_NAME.LABEL_SCAN_SUCCESS, { source: "chat_nutrition_camera" });
+      }
+    },
     onError: (error) => {
       // 분석 실패
       if (isRequestAbortError(error)) {
-        if (!getImage) return;
-        clearImage(getImage.id);
+        if (getImage) {
+          clearImage(getImage.id);
+        }
+        return;
+      }
+      if (mode === "FOOD") {
+        track(EVENT_NAME.FOOD_SCAN_FAIL, {
+          reason: getAnalyticsErrorMessage(error, "음식 메뉴 분석 실패"),
+          source: "chat_food_camera",
+        });
+      } else if (mode === "NUTRITION_LABEL") {
+        track(EVENT_NAME.LABEL_SCAN_FAIL, {
+          reason: getAnalyticsErrorMessage(error, "영양성분표 이미지 분석 실패"),
+          source: "chat_nutrition_camera",
+        });
       }
     },
   });

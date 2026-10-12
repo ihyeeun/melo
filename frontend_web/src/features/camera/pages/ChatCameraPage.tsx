@@ -7,6 +7,7 @@ import styles from "@/features/camera/styles/CameraPage.module.css";
 import {
   type CameraCaptureErrorFeedback,
   DEFAULT_CAMERA_CAPTURE_QUALITY,
+  getAnalyticsErrorMessage,
   getCameraCaptureErrorFeedback,
   getRecognitionErrorFeedback,
   isCameraCaptureCancelled,
@@ -14,6 +15,8 @@ import {
 import { getChatCameraSupportResult } from "@/features/camera/utils/chatCameraSupport";
 import { useSetImage } from "@/features/chat/stores/camera.store";
 import { PATH } from "@/router/path";
+import { track } from "@/shared/analytics/analytics";
+import { EVENT_NAME } from "@/shared/analytics/analytics.constants";
 import { requestNativeCameraCapture } from "@/shared/api/bridge/nativeBridge";
 import { captureScreenRequestScope } from "@/shared/api/screenRequests";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
@@ -76,6 +79,7 @@ export default function ChatCameraPage() {
         return;
       }
 
+      track(EVENT_NAME.CAMERA_START, { source: "chat_tab" });
       image = await requestNativeCameraCapture({
         quality: DEFAULT_CAMERA_CAPTURE_QUALITY,
         mode: MODE.FOOD,
@@ -85,9 +89,15 @@ export default function ChatCameraPage() {
     } catch (error) {
       if (!screen.isActive()) return;
       if (isCameraCaptureCancelled(error)) {
+        track(EVENT_NAME.CAMERA_CANCEL, { source: "chat_tab" });
         returnFromCameraPage();
         return;
       }
+
+      track(EVENT_NAME.CAMERA_FAIL, {
+        reason: getAnalyticsErrorMessage(error, "카메라 실행 또는 촬영에 실패했어요."),
+        source: "chat_tab",
+      });
 
       setCaptureErrorFeedback(getCameraCaptureErrorFeedback(error));
       return;

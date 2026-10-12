@@ -3,7 +3,9 @@ export const EVENT_NAME = {
   VITE_PRELOAD_ERROR: "vite_preload_error",
   SCREEN_VIEW: "screen_view",
 
+  CAMERA_START: "camera_start",
   CAMERA_CANCEL: "camera_cancel",
+  CAMERA_FAIL: "camera_fail",
 
   OCR_SCAN_START: "ocr_scan_start",
   OCR_SCAN_SUCCESS: "ocr_scan_success",
