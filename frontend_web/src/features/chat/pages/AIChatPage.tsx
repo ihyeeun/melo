@@ -33,6 +33,7 @@ import { useTodayMealRecordDeleteMutation } from "@/features/meal-record/hooks/m
 import { getMenuSelectionMenuDetailPath } from "@/features/menu-selection/utils/menuSelectionRoutes";
 import { PATH } from "@/router/path";
 import { getMealRecordPath } from "@/router/pathHelpers";
+import { trackChatTextMenuSave } from "@/shared/analytics/recommendMenuEvents";
 import { captureScreenRequestScope } from "@/shared/api/screenRequests";
 import type { MealType } from "@/shared/api/types/api.dto";
 import type { MealTime } from "@/shared/api/types/api.request.dto";
@@ -157,14 +158,19 @@ export default function AIChatPage() {
     if (!screen.isActive()) return;
 
     const { dateKey: currentDate } = getCurrentDateTime();
+    const parseMenus = textMealData.menu_ids.map((id, index) => ({
+      menu_id: id,
+      menu_name: textMealData.menu_names[index],
+      menu_weight: textMealData.menu_quantities[index],
+    }));
 
     registerMeal(
       {
         dateKey: textMealData.date ?? currentDate,
         mealTime,
-        menus: textMealData.menu_ids.map((id, index) => ({
+        menus: parseMenus.map(({ menu_id: id, menu_weight: quantity }) => ({
           id,
-          quantity: textMealData.menu_quantities[index],
+          quantity,
           mode: "weight" as const,
         })),
         screen,
@@ -172,6 +178,7 @@ export default function AIChatPage() {
       {
         onSuccess: () => {
           if (!screen.isActive()) return;
+          trackChatTextMenuSave(parseMenus);
           resetSendTextMeal();
         },
       },

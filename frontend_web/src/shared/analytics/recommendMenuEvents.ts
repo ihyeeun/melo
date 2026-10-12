@@ -1,11 +1,6 @@
 import { track } from "@/shared/analytics/analytics";
 import { EVENT_NAME } from "@/shared/analytics/analytics.constants";
 
-export type RecommendMenuAnalyticsItem = {
-  menu_id: number;
-  menu_name: string;
-};
-
 export type MenuSaveAnalyticsItem = {
   menu_id: number;
   menu_name?: string;
@@ -26,13 +21,13 @@ function trackMenuArrayEvent(
   eventName:
     | typeof EVENT_NAME.CHAT_TEXT_MENU_SAVE
     | typeof EVENT_NAME.RECOMMEND_MENU_SAVE
-    | typeof EVENT_NAME.RECOMMEND_MENU_CANCEL
     | typeof EVENT_NAME.DIARY_MENU_SAVE,
   menus: MenuSaveAnalyticsItem[],
+  source?: string,
 ) {
   if (menus.length === 0) return;
 
-  track(eventName, { menus: menus.map(getMenuAnalyticsProperties) });
+  track(eventName, { menus: menus.map(getMenuAnalyticsProperties), source: source });
 }
 
 export function trackChatMenuSave(menus: MenuSaveAnalyticsItem[]) {
@@ -40,13 +35,9 @@ export function trackChatMenuSave(menus: MenuSaveAnalyticsItem[]) {
 }
 
 export function trackChatTextMenuSave(menus: MenuSaveAnalyticsItem[]) {
-  trackMenuArrayEvent(EVENT_NAME.CHAT_TEXT_MENU_SAVE, menus);
+  trackMenuArrayEvent(EVENT_NAME.CHAT_TEXT_MENU_SAVE, menus, "chat_tab");
 }
 
 export function trackDiaryMenuSave(menus: MenuSaveAnalyticsItem[]) {
   trackMenuArrayEvent(EVENT_NAME.DIARY_MENU_SAVE, menus);
-}
-
-export function trackRecommendMenuCancel(menus: RecommendMenuAnalyticsItem[]) {
-  trackMenuArrayEvent(EVENT_NAME.RECOMMEND_MENU_CANCEL, menus);
 }

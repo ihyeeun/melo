@@ -225,6 +225,13 @@ export interface ChatGeneralResponseDto extends ChatResponseBaseDto {
 
 export interface ChatMealRecordParseResponseDto extends ChatResponseBaseDto {
   chat_category: "meal_record_parse";
+  meal_record_parse: {
+    menu_ids: number[];
+    menu_names: string[];
+    menu_quantities: number[];
+    date?: string;
+    time?: number;
+  };
 }
 
 export interface ChatNutritionLabelFeedbackResponseDto extends ChatResponseBaseDto {
@@ -331,6 +338,7 @@ export interface ChatHistoryItemResponseDto {
 export interface ChatMealRecordParseResponseDto {
   chat_id: number;
   menu_ids: number[];
+  menu_names: string[];
   menu_quantities: number[];
   time?: 0 | 1 | 2 | 3 | 4;
   date?: string;
