@@ -115,13 +115,17 @@ export default function AIChatPage() {
     const formattedMessage = inputMessage.trim();
     if (!formattedMessage) return;
 
+    setInputMessage("");
+
     if (isTextMealRecordMode) {
       sendTextMealRecord(
         { input: formattedMessage },
         {
           onSuccess: () => {
             setIsTextMealRecordMode(false);
-            setInputMessage("");
+          },
+          onError: () => {
+            setInputMessage(formattedMessage);
           },
         },
       );
@@ -131,10 +135,8 @@ export default function AIChatPage() {
     sendMessage(
       { input: formattedMessage },
       {
-        onSuccess: () => {
-          setInputMessage("");
-        },
         onError: () => {
+          setInputMessage(formattedMessage);
           toast.error("연결이 일시적으로 불안정해요. 다시 시도해주세요.");
         },
       },
