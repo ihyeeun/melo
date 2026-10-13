@@ -22,6 +22,7 @@ import { trackScanMenuSave } from "@/shared/analytics/menuSaveEvent.util";
 import { isRequestAbortError } from "@/shared/api/requestCancellation";
 import { captureScreenRequestScope, type ScreenRequestScope } from "@/shared/api/screenRequests";
 import type { MealType } from "@/shared/api/types/api.dto";
+import { toast } from "@/shared/commons/toast/toast";
 
 interface MealTimeDecision {
   status: "waiting" | "confirmed" | "skipped";
@@ -76,16 +77,35 @@ export function ImageAnalysisFlow({
         }
         return;
       }
+
+      const errorMessage = getAnalyticsErrorMessage(error, "");
+
       if (mode === "FOOD") {
         track(EVENT_NAME.FOOD_SCAN_FAIL, {
-          reason: getAnalyticsErrorMessage(error, "음식 메뉴 분석 실패"),
+          reason: errorMessage || "음식 메뉴 분석 실패",
           source: "chat_food_camera",
         });
       } else if (mode === "NUTRITION_LABEL") {
         track(EVENT_NAME.LABEL_SCAN_FAIL, {
-          reason: getAnalyticsErrorMessage(error, "영양성분표 이미지 분석 실패"),
+          reason: errorMessage || "영양성분표 이미지 분석 실패",
           source: "chat_nutrition_camera",
         });
+      }
+
+      const retryMessage =
+        mode === "FOOD" ? "음식이 잘 보이도록 다시 촬영해 주세요" : "선명하게 다시 촬영해 주세요";
+
+      toast.show({
+        type: "error",
+        title: errorMessage,
+        description: retryMessage,
+        timeout: 0,
+        dismissible: true,
+        position: "bottom",
+      });
+
+      if (getImage) {
+        clearImage(getImage.id);
       }
     },
   });
