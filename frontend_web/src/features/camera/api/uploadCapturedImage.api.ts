@@ -6,7 +6,6 @@ import { captureScreenRequestScope } from "@/shared/api/screenRequests";
 import type {
   ChatFeedbackResponseDto,
   ChatNutritionLabelFeedbackResponseDto,
-  ChatRecommendationResponseDto,
   FoodImageRecognitionResponseDto,
   NutritionLabelRecognitionResponseDto,
 } from "@/shared/api/types/api.response.dto";
@@ -81,22 +80,6 @@ export async function uploadNutritionLabelImage(capturedImage: CapturedImage) {
   );
 }
 
-export async function uploadMenuBoardImage(capturedImage: CapturedImage) {
-  return requestNativeImageUploadData<ChatRecommendationResponseDto>(
-    {
-      endpoint: END_POINT.MENU_BOARD_ANALYSIS,
-      fileUri: capturedImage.uri,
-      fileName: capturedImage.fileName,
-      width: capturedImage.width,
-      height: capturedImage.height,
-      mimeType: capturedImage.mimeType,
-      fieldName: "image",
-      method: "POST",
-    },
-    "메뉴판 분석 실패",
-  );
-}
-
 export async function uploadChatFoodImageFeedback(image: CapturedImage) {
   return requestNativeImageUploadData<ChatFeedbackResponseDto>(
     {
@@ -113,9 +96,7 @@ export async function uploadChatFoodImageFeedback(image: CapturedImage) {
   );
 }
 
-export async function uploadChatNutritionLabelImageFeedback(
-  image: CapturedImage,
-) {
+export async function uploadChatNutritionLabelImageFeedback(image: CapturedImage) {
   return requestNativeImageUploadData<ChatNutritionLabelFeedbackResponseDto>(
     {
       endpoint: END_POINT.CHAT_NUTRITION_LABEL_FEEDBACK,

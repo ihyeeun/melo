@@ -1,7 +1,9 @@
 import { useQueryClient } from "@tanstack/react-query";
 
-import { useMealFeedbackMutation } from "@/features/chat/hooks/mutations/useMealFeedbackMutation";
-import { chatMutationKeys } from "@/features/chat/hooks/mutations/useSendMessageMutation";
+import {
+  chatMutationKeys,
+  useMealFeedbackMutation,
+} from "@/features/chat/hooks/mutations/useSendMessageMutation";
 import { useActivityCalories } from "@/features/health/hooks/useActivityCalories";
 import Tile from "@/features/home/components/cards/Tile";
 import { useDayMealsQuery } from "@/features/home/hooks/queries/useTodayRecordQuery";

@@ -3,6 +3,8 @@ import { useMutation, useMutationState, useQueryClient } from "@tanstack/react-q
 import { getAnalyticsErrorMessage } from "@/features/camera/utils/cameraCapture";
 import {
   getChatHistory,
+  getMealFeedback,
+  getPersonalizedManagement,
   parseMenusFromText,
   registerMenuByNutritionLabelImageFeedback,
   sendMessage,
@@ -139,4 +141,67 @@ export function usePendingSendMessages() {
     ...message,
     date: new Date(submittedAt),
   }));
+}
+
+export function useMealFeedbackMutation(options?: UseMutationCallback) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationKey: chatMutationKeys.mealFeedback(),
+    mutationFn: getMealFeedback,
+    onMutate: () => {
+      const history = queryClient.getQueryData<ChatHistoryResponseDto>(queryKeys.chatHistory);
+
+      return {
+        previousChatIds: history?.chat_list.map((chat) => chat.id) ?? [],
+      };
+    },
+    onSuccess: async () => {
+      try {
+        await queryClient.fetchQuery({
+          queryKey: queryKeys.chatHistory,
+          queryFn: getChatHistory,
+          staleTime: 0,
+        });
+      } catch {
+        //
+      }
+      if (options?.onSuccess) options.onSuccess();
+    },
+    onError: (error) => {
+      if (isRequestAbortError(error)) return;
+      if (options?.onError) options.onError(error);
+    },
+  });
+}
+
+export function usePersonalizedManagementMutation(options?: UseMutationCallback) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationKey: chatMutationKeys.management(),
+    mutationFn: getPersonalizedManagement,
+    onMutate: () => {
+      const history = queryClient.getQueryData<ChatHistoryResponseDto>(queryKeys.chatHistory);
+
+      return {
+        previousChatIds: history?.chat_list.map((chat) => chat.id) ?? [],
+      };
+    },
+    onSuccess: async () => {
+      try {
+        await queryClient.fetchQuery({
+          queryKey: queryKeys.chatHistory,
+          queryFn: getChatHistory,
+          staleTime: 0,
+        });
+      } catch {
+        //
+      }
+      if (options?.onSuccess) options.onSuccess();
+    },
+    onError: (error) => {
+      if (isRequestAbortError(error)) return;
+      if (options?.onError) options.onError(error);
+    },
+  });
 }

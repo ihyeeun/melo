@@ -27,7 +27,7 @@ export default function HomePage() {
   const setSelectedDate = useSetSelectedDate();
   const selectedDate = parseDateKey(selectedDateKey);
   const navigate = useNavigate();
-  const isAiCameraBlocked = useIsFeatureBlocked(FEATURE_GUARD.MENU_BOARD_CAMERA);
+  const isAiCameraBlocked = useIsFeatureBlocked(FEATURE_GUARD.FOOD_CAMERA);
   const [chatCameraUpdateUrl, setChatCameraUpdateUrl] = useState<string | null>(null);
   const [isChatCameraUpdateModalOpen, setIsChatCameraUpdateModalOpen] = useState(false);
   const [mode, setMode] = useState<HomeDashboardMode>("daily");
