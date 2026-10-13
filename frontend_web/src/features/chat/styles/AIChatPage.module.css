@@ -141,15 +141,19 @@
   border: 1px solid var(--border-default);
   background-color: var(--background-default);
   border-radius: 16px;
-  padding: 10px 8px;
   display: grid;
-  grid-template-columns: 24px 1fr 24px;
-  align-items: flex-end;
+  grid-template-columns: 32px 1fr 32px;
   gap: 12px;
+  align-items: flex-end;
   position: relative;
 }
 
-.chatActionExpendButton[data-isView="true"] {
+.chatActionExpendButton {
+  padding-block: 10px;
+  padding-left: 8px;
+}
+
+.chatActionExpendButtonIcon[data-isView="true"] {
   transition: transform 0.2 ease;
   transform: rotate(45deg);
 }
@@ -173,6 +177,11 @@
 }
 
 .sendMessageButton {
+  padding-block: 10px;
+  padding-right: 8px;
+}
+
+.sendMessageButtonIcon {
   background-color: var(--navy-900);
   border-radius: 50%;
   width: 24px;

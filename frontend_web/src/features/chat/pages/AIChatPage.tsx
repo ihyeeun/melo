@@ -465,10 +465,14 @@ export default function AIChatPage() {
             type="button"
             onClick={() => setIsShowChatActions(!isShowChatActions)}
             className={styles.chatActionExpendButton}
-            data-isView={isShowChatActions}
             disabled={isChatBusy}
           >
-            <SystemIcon name="plus-circle" size={24} className={`text-tertiary`} />
+            <SystemIcon
+              name="plus-circle"
+              size={24}
+              data-isView={isShowChatActions}
+              className={`text-tertiary ${styles.chatActionExpendButtonIcon}`}
+            />
           </button>
 
           <textarea
@@ -505,7 +509,9 @@ export default function AIChatPage() {
             className={styles.sendMessageButton}
             disabled={isChatBusy}
           >
-            <SystemIcon name="arrow-up" size={16} />
+            <div className={styles.sendMessageButtonIcon}>
+              <SystemIcon name="arrow-up" size={16} />
+            </div>
           </button>
 
           <div className={styles.mealRecordModeChip} data-isView={isTextMealRecordMode}>
