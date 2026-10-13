@@ -13,6 +13,7 @@ import React, {
 import { AssistantMessageText } from "@/features/chat/components/AssistantMessageText";
 import { AssistantPendingMessage } from "@/features/chat/components/AssistantPendingMessage";
 import { ImageAnalysisFlow } from "@/features/chat/components/ImageAnalysisFlow";
+import { CHAT_MEAL_RECORD_MODE_ONBOARDING_STORAGE_KEY } from "@/features/chat/constants/mealRecordModeOnboarding";
 import { useRegisterChatMealMutation } from "@/features/chat/hooks/mutations/useRegisterMeal.mutation";
 import {
   chatMutationKeys,
@@ -509,9 +510,7 @@ export default function AIChatPage() {
             </div>
             <p className="body-xs-regular text-primary textCenter">식사기록 모드</p>
 
-            <span className={`${styles.mealRecordModeBubble} caption-m-medium`} aria-hidden="true">
-              채팅에 식사 내용을 보내서 간단하게 기록해요
-            </span>
+            {isShowChatActions && <TextMealRecordCoachMark />}
           </button>
 
           <button
@@ -1048,4 +1047,32 @@ function getTypingKeyword(text: string) {
     .filter(Boolean);
 
   return parts.at(-1) ?? "";
+}
+
+function TextMealRecordCoachMark() {
+  const [shouldShow] = useState(() => {
+    try {
+      return window.localStorage.getItem(CHAT_MEAL_RECORD_MODE_ONBOARDING_STORAGE_KEY) !== "seen";
+    } catch {
+      return true;
+    }
+  });
+
+  useEffect(() => {
+    if (!shouldShow) return;
+
+    try {
+      window.localStorage.setItem(CHAT_MEAL_RECORD_MODE_ONBOARDING_STORAGE_KEY, "seen");
+    } catch {
+      // 저장소를 사용할 수 없어도 화면 동작은 유지합니다.
+    }
+  }, [shouldShow]);
+
+  if (!shouldShow) return null;
+
+  return (
+    <span className={`${styles.mealRecordModeBubble} caption-m-medium`} aria-hidden="true">
+      채팅에 식사 내용을 보내서 간단하게 기록해요
+    </span>
+  );
 }
