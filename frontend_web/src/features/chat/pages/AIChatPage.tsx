@@ -17,8 +17,10 @@ import { CHAT_MEAL_RECORD_MODE_ONBOARDING_STORAGE_KEY } from "@/features/chat/co
 import { useRegisterChatMealMutation } from "@/features/chat/hooks/mutations/useRegisterMeal.mutation";
 import {
   chatMutationKeys,
+  useMealFeedbackMutation,
   useParseMenusFromTextMutation,
   usePendingSendMessages,
+  usePersonalizedManagementMutation,
   useSendMessageMutation,
 } from "@/features/chat/hooks/mutations/useSendMessageMutation";
 import {
@@ -51,7 +53,7 @@ import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import { ConfirmModal } from "@/shared/commons/modals/ConfirmModal";
 import { toast } from "@/shared/commons/toast/toast";
 import { MEAL_TIMES } from "@/shared/constants/meal.constants";
-import { useNavigate } from "@/shared/navigation/stackflowNavigation";
+import { useLocation, useNavigate } from "@/shared/navigation/stackflowNavigation";
 import { navigateBack } from "@/shared/navigation/stackflowNavigationController";
 import {
   formatDateDividerText,
@@ -67,12 +69,16 @@ interface ResponseWait {
   finish: () => void;
 }
 
+type ChatEntryRequest = { type: "meal-feedback"; dateKey: string } | { type: "management" };
+
 export default function AIChatPage() {
   const navigate = useNavigate();
   const { id: screenId, isActive } = useActivity();
+  const { state: entryRequest } = useLocation<ChatEntryRequest>();
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const scrollEndRef = useRef<HTMLDivElement>(null);
+  const hasRequestedRef = useRef(false);
 
   const cameraImage = useGetImage();
 
@@ -94,6 +100,8 @@ export default function AIChatPage() {
   } = useParseMenusFromTextMutation();
   const { mutate: registerMeal, isPending: isSavingMeal } = useRegisterChatMealMutation();
   const isChatRequestPending = useIsMutating({ mutationKey: chatMutationKeys.all }) > 0;
+  const { mutate: requestMealFeedback } = useMealFeedbackMutation();
+  const { mutate: requestPersonalizedManagement } = usePersonalizedManagementMutation();
 
   const isTimelinePending = historyQuery.isPending || mealsQuery.isPending;
   const isChatBusy = isChatRequestPending || cameraImage !== null;
@@ -314,6 +322,27 @@ export default function AIChatPage() {
     observer.observe(target);
     return () => observer.disconnect();
   }, [isTimelinePending]);
+
+  useEffect(() => {
+    if (!isActive || !entryRequest) return;
+    if (!historyQuery.isSuccess || isTimelinePending) return;
+
+    if (hasRequestedRef.current) return;
+    hasRequestedRef.current = true;
+
+    if (entryRequest.type === "meal-feedback") {
+      requestMealFeedback(entryRequest.dateKey);
+    } else {
+      requestPersonalizedManagement();
+    }
+  }, [
+    isActive,
+    entryRequest,
+    historyQuery.isSuccess,
+    isTimelinePending,
+    requestMealFeedback,
+    requestPersonalizedManagement,
+  ]);
 
   useLayoutEffect(() => {
     if (isTimelinePending) return;

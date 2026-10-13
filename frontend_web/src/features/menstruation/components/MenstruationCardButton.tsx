@@ -1,10 +1,5 @@
-import { useQueryClient } from "@tanstack/react-query";
 import { isToday } from "date-fns";
 
-import {
-  chatMutationKeys,
-  usePersonalizedManagementMutation,
-} from "@/features/chat/hooks/mutations/useSendMessageMutation";
 import { HOME_MENSTRUAL_STATUS_VIEW } from "@/features/menstruation/constants/menstruation.constant";
 import type { MenstrualPhaseResult } from "@/features/menstruation/hooks/useMenstrualPhase";
 import styles from "@/features/menstruation/styles/MenstruationCardButton.module.css";
@@ -12,9 +7,7 @@ import { getMenstrualPhaseDayInfo } from "@/features/menstruation/utils/menstrua
 import { PATH } from "@/router/path";
 import { track } from "@/shared/analytics/analytics";
 import { EVENT_NAME } from "@/shared/analytics/analytics.constants";
-import { isRequestAbortError } from "@/shared/api/requestCancellation";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
-import { toast } from "@/shared/commons/toast/toast";
 import { FEATURE_GUARD, useIsFeatureBlocked } from "@/shared/guards/featureGuard";
 import { useNavigate } from "@/shared/navigation/stackflowNavigation";
 import { useSelectedDateKey } from "@/shared/stores/selectedDate.store";
@@ -28,13 +21,6 @@ export default function MenstruationCardButton({ phase }: { phase: MenstrualPhas
   const isFreeBlocked = useIsFeatureBlocked(FEATURE_GUARD.CHAT);
   const showChatButton = isSelectedDateToday && !isFreeBlocked;
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
-  const { mutate: requestPersonalizedManagement, isPending } = usePersonalizedManagementMutation({
-    onError: (error) => {
-      if (isRequestAbortError(error)) return;
-      toast.warning(error.message || "맞춤 관리법을 불러오지 못했어요. 다시 시도해주세요.");
-    },
-  });
   const homeContent = menstrualStatus
     ? HOME_MENSTRUAL_STATUS_VIEW[menstrualStatus]
     : HOME_MENSTRUAL_STATUS_VIEW["undefined"];
@@ -133,13 +119,8 @@ export default function MenstruationCardButton({ phase }: { phase: MenstrualPhas
         <button
           type="button"
           className={`${styles.chatActionButton} body-s-medium text-primary textCenter`}
-          disabled={isLoading || isPending}
-          aria-busy={isPending}
           onClick={() => {
-            if (queryClient.isMutating({ mutationKey: chatMutationKeys.management() }) > 0) return;
-
-            navigate(PATH.AI_CHAT);
-            requestPersonalizedManagement();
+            navigate(PATH.AI_CHAT, { state: { type: "management" } });
             track(EVENT_NAME.CLICK_MY_MANAGEMENT_AI_COACH);
           }}
         >
