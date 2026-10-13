@@ -315,10 +315,10 @@ export default function AIChatPage() {
   }, [isTimelinePending]);
 
   useLayoutEffect(() => {
-    if (!isActive || isTimelinePending) return;
+    if (isTimelinePending) return;
 
     handleScrollToBottom("auto");
-  }, [isActive, isTimelinePending, cameraImage?.id, mealTimeCard?.chatId, isSavingMeal]);
+  }, [isTimelinePending, cameraImage?.id, mealTimeCard?.chatId, isSavingMeal]);
 
   if (isChatBusy && isShowChatActions) {
     setIsShowChatActions(false);
