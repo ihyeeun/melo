@@ -256,6 +256,30 @@
   border-bottom: 5px solid var(--gray-700);
 }
 
+.autoCompleteList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: none;
+  position: absolute;
+  left: 50%;
+  right: 0;
+  bottom: calc(100% + 4px);
+  transform: translateX(-50%);
+  z-index: 1;
+  width: calc(100% - 72px);
+  background-color: var(--background-default);
+  border-radius: 12px;
+  box-shadow: var(--shadow-outer);
+}
+.textInputSection:focus-within .autoCompleteList {
+  display: block;
+}
+
+.autoCompleteItemButton {
+  padding: 12px;
+}
+
 /* MEAL RECORD CARD */
 .mealRecordMenuSection {
   margin-top: 8px;

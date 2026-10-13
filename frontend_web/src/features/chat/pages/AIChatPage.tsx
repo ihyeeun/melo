@@ -23,7 +23,9 @@ import {
 import {
   useGetChatHistoryQuery,
   useRecentDayMealsQuery,
+  useSearchMenuQuery,
 } from "@/features/chat/hooks/queries/useGetChatQuery";
+import { useDebounceValue } from "@/features/chat/hooks/useDebounceValue";
 import { useGetImage } from "@/features/chat/stores/camera.store";
 import styles from "@/features/chat/styles/AIChatPage.module.css";
 import { getCurrentDateTime } from "@/features/chat/utils/date.util";
@@ -77,6 +79,7 @@ export default function AIChatPage() {
   const [inputMessage, setInputMessage] = useState<string>("");
   const [showScrollToBottomBtn, setShowScrollToBottomBtn] = useState<boolean>(false);
   const [responseWait, setResponseWait] = useState<ResponseWait | null>(null);
+  const [typingKeyword, setTypingKeyword] = useState("");
 
   const historyQuery = useGetChatHistoryQuery();
   const mealsQuery = useRecentDayMealsQuery();
@@ -91,6 +94,16 @@ export default function AIChatPage() {
 
   const isTimelinePending = historyQuery.isPending || mealsQuery.isPending;
   const isChatBusy = isChatRequestPending || cameraImage !== null;
+  const debouncedKeyword = useDebounceValue(typingKeyword, 300);
+  const canAutoCompleteKeyword =
+    isTextMealRecordMode &&
+    !isChatBusy &&
+    inputMessage.trim() !== "" &&
+    typingKeyword === debouncedKeyword;
+  const { data: suggestionsResponse } = useSearchMenuQuery(debouncedKeyword, {
+    enabled: canAutoCompleteKeyword,
+  });
+  const suggestionsMenuNames = canAutoCompleteKeyword ? (suggestionsResponse?.name ?? []) : [];
 
   const handleTextMealRecordAction = () => {
     const nextMode = !isTextMealRecordMode;
@@ -105,7 +118,10 @@ export default function AIChatPage() {
     scrollEndRef.current?.scrollIntoView({ behavior });
   };
   const handleChangeMessage = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setInputMessage(e.target.value);
+    const text = e.target.value;
+
+    setInputMessage(text);
+    setTypingKeyword(getTypingKeyword(text));
   };
   const handleGoToMealRecord = () => {
     const { dateKey, mealTime } = getCurrentDateTime();
@@ -185,6 +201,27 @@ export default function AIChatPage() {
         },
       },
     );
+  };
+  const handleAutoCompleteKeywords = (suggestionKeyword: string) => {
+    const keyword = getTypingKeyword(inputMessage);
+    if (!keyword) return;
+
+    const index = inputMessage.lastIndexOf(keyword);
+    if (index === -1) return;
+
+    const nextMessage =
+      inputMessage.slice(0, index) + suggestionKeyword + inputMessage.slice(index + keyword.length);
+
+    setInputMessage(nextMessage);
+    setTypingKeyword("");
+
+    textareaRef.current?.focus({ preventScroll: true });
+
+    requestAnimationFrame(() => {
+      const cursorPosition = index + suggestionKeyword.length;
+
+      textareaRef.current?.setSelectionRange(cursorPosition, cursorPosition);
+    });
   };
 
   useEffect(() => {
@@ -272,6 +309,32 @@ export default function AIChatPage() {
 
       <footer className={`footer ${styles.footer}`}>
         <section className={styles.textInputSection}>
+          {suggestionsMenuNames.length > 0 && (
+            <ul className={styles.autoCompleteList} aria-label="입력어 자동 완성 추천 목록">
+              {suggestionsMenuNames.map((menuName) => (
+                <li key={menuName}>
+                  <button
+                    type="button"
+                    className={`${styles.autoCompleteItemButton} body-s-medium text-primary`}
+                    onPointerDown={(event) => {
+                      if (!event.isPrimary || event.button !== 0) return;
+
+                      event.preventDefault();
+                      handleAutoCompleteKeywords(menuName);
+                    }}
+                    onClick={(event) => {
+                      if (event.detail === 0) {
+                        handleAutoCompleteKeywords(menuName);
+                      }
+                    }}
+                  >
+                    {menuName}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+
           <button
             type="button"
             onClick={() => setIsShowChatActions(!isShowChatActions)}
@@ -877,4 +940,13 @@ export function MealTimeSelectCard({
       </div>
     </div>
   );
+}
+
+function getTypingKeyword(text: string) {
+  const parts = text
+    .trimEnd()
+    .split(/[\s,，.、/]+/)
+    .filter(Boolean);
+
+  return parts.at(-1) ?? "";
 }
