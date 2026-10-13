@@ -35,7 +35,8 @@ import { useTodayMealRecordDeleteMutation } from "@/features/meal-record/hooks/m
 import { getMenuSelectionMenuDetailPath } from "@/features/menu-selection/utils/menuSelectionRoutes";
 import { PATH } from "@/router/path";
 import { getMealRecordPath } from "@/router/pathHelpers";
-import { trackChatTextMenuSave } from "@/shared/analytics/menuSaveEvent.util";
+import { trackChatTextMenuSave, trackScanMenuSave } from "@/shared/analytics/menuSaveEvent.util";
+import { isRequestAbortError } from "@/shared/api/requestCancellation";
 import { captureScreenRequestScope } from "@/shared/api/screenRequests";
 import type { MealType } from "@/shared/api/types/api.dto";
 import type { MealTime } from "@/shared/api/types/api.request.dto";
@@ -80,6 +81,7 @@ export default function AIChatPage() {
   const [showScrollToBottomBtn, setShowScrollToBottomBtn] = useState<boolean>(false);
   const [responseWait, setResponseWait] = useState<ResponseWait | null>(null);
   const [typingKeyword, setTypingKeyword] = useState("");
+  const [nutritionMealChatId, setNutritionMealChatId] = useState<number | null>(null);
 
   const historyQuery = useGetChatHistoryQuery();
   const mealsQuery = useRecentDayMealsQuery();
@@ -104,6 +106,26 @@ export default function AIChatPage() {
     enabled: canAutoCompleteKeyword,
   });
   const suggestionsMenuNames = canAutoCompleteKeyword ? (suggestionsResponse?.name ?? []) : [];
+  const nutritionResponse = historyQuery.data?.chat_list.find(
+    (chat) => chat.id === nutritionMealChatId,
+  )?.response_payload;
+  const nutritionRegisteredMenu =
+    nutritionResponse && "registered_menu" in nutritionResponse
+      ? nutritionResponse.registered_menu
+      : null;
+  const mealTimeCard = textMealData
+    ? {
+        source: "text" as const,
+        chatId: textMealData.chat_id,
+        initMealTime: String(textMealData.time ?? getCurrentDateTime().mealTime) as MealType,
+      }
+    : nutritionMealChatId !== null && nutritionRegisteredMenu
+      ? {
+          source: "nutrition" as const,
+          chatId: nutritionMealChatId,
+          initMealTime: getCurrentDateTime().mealTime,
+        }
+      : null;
 
   const handleTextMealRecordAction = () => {
     const nextMode = !isTextMealRecordMode;
@@ -139,6 +161,7 @@ export default function AIChatPage() {
         {
           onSuccess: () => {
             setIsTextMealRecordMode(false);
+            setNutritionMealChatId(null);
           },
           onError: () => {
             setInputMessage(formattedMessage);
@@ -169,38 +192,87 @@ export default function AIChatPage() {
       });
     });
   }, []);
-  const handleMealRecordByText = (mealTime: MealType) => {
-    if (!textMealData || isSavingMeal || !isActive) return;
+  const handleMealRecord = ({
+    mealTime,
+    source,
+  }: {
+    mealTime: MealType;
+    source: "text" | "nutrition";
+  }) => {
+    if (isSavingMeal || !isActive) return;
 
     const screen = captureScreenRequestScope(screenId);
     if (!screen.isActive()) return;
 
     const { dateKey: currentDate } = getCurrentDateTime();
-    const parseMenus = textMealData.menu_ids.map((id, index) => ({
-      menu_id: id,
-      menu_name: textMealData.menu_names[index],
-      menu_weight: textMealData.menu_quantities[index],
-    }));
 
-    registerMeal(
-      {
+    let request: Parameters<typeof registerMeal>[0];
+    let onSaved: () => void;
+
+    if (source === "text") {
+      if (!textMealData) return;
+
+      const parseMenus = textMealData.menu_ids.map((id, index) => ({
+        menu_id: id,
+        menu_name: textMealData.menu_names[index],
+        menu_weight: textMealData.menu_quantities[index],
+      }));
+
+      request = {
         dateKey: textMealData.date ?? currentDate,
         mealTime,
-        menus: parseMenus.map(({ menu_id: id, menu_weight: quantity }) => ({
-          id,
-          quantity,
+        menus: parseMenus.map(({ menu_id, menu_weight }) => ({
+          id: menu_id,
+          quantity: menu_weight,
           mode: "weight" as const,
         })),
         screen,
+      };
+      onSaved = () => {
+        trackChatTextMenuSave(parseMenus);
+        resetSendTextMeal();
+      };
+    } else {
+      if (nutritionMealChatId === null || !nutritionRegisteredMenu) return;
+
+      request = {
+        dateKey: currentDate,
+        mealTime,
+        menus: [
+          {
+            id: nutritionRegisteredMenu?.menu_id,
+            quantity: nutritionRegisteredMenu?.registered_nutrition.weight,
+            mode: "weight",
+          },
+        ],
+        screen,
+      };
+      onSaved = () => {
+        trackScanMenuSave({
+          menus: [
+            {
+              menu_id: nutritionRegisteredMenu.menu_id,
+              menu_name: nutritionRegisteredMenu.menu_name,
+            },
+          ],
+          scanType: "photo",
+          source: "chat_tab",
+        });
+        closeMealTimeCard(nutritionMealChatId);
+      };
+    }
+
+    registerMeal(request, {
+      onSuccess: () => {
+        if (!screen.isActive()) return;
+        onSaved();
       },
-      {
-        onSuccess: () => {
-          if (!screen.isActive()) return;
-          trackChatTextMenuSave(parseMenus);
-          resetSendTextMeal();
-        },
+      onError: (error) => {
+        if (isRequestAbortError(error) || !screen.isActive()) return;
+
+        toast.error("식사 기록을 저장하지 못했어요. 다시 시도해주세요.");
       },
-    );
+    });
   };
   const handleAutoCompleteKeywords = (suggestionKeyword: string) => {
     const keyword = getTypingKeyword(inputMessage);
@@ -223,6 +295,9 @@ export default function AIChatPage() {
       textareaRef.current?.setSelectionRange(cursorPosition, cursorPosition);
     });
   };
+  const closeMealTimeCard = (chatId: number) => {
+    setNutritionMealChatId((current) => (current === chatId ? null : current));
+  };
 
   useEffect(() => {
     const target = scrollEndRef.current;
@@ -243,7 +318,7 @@ export default function AIChatPage() {
     if (!isActive || isTimelinePending) return;
 
     handleScrollToBottom("auto");
-  }, [isActive, isTimelinePending, cameraImage?.id, textMealData?.chat_id, isSavingMeal]);
+  }, [isActive, isTimelinePending, cameraImage?.id, mealTimeCard?.chatId, isSavingMeal]);
 
   if (isChatBusy && isShowChatActions) {
     setIsShowChatActions(false);
@@ -270,23 +345,44 @@ export default function AIChatPage() {
             key={cameraImage.id}
             enabled={historyQuery.isSuccess && !isTimelinePending}
             waitForResponse={waitForResponse}
+            onNutritionAnalyzed={(chatId) => {
+              resetSendTextMeal();
+              setNutritionMealChatId(chatId);
+            }}
           />
         )}
 
-        {textMealData && (
-          <section key={textMealData.chat_id} className={styles.conversation}>
+        {mealTimeCard && (
+          <section
+            key={`${mealTimeCard.source}-${mealTimeCard.chatId}`}
+            className={styles.conversation}
+          >
             <div className={styles.messageArea} data-owner="ai">
-              {isSavingMeal ? (
-                <AssistantPendingMessage />
-              ) : (
-                <MealTimeSelectCard
-                  initMealTime={
-                    String(textMealData.time ?? getCurrentDateTime().mealTime) as MealType
+              <MealTimeSelectCard
+                initMealTime={mealTimeCard.initMealTime}
+                disabled={isSavingMeal}
+                onConfirm={(mealTime) => {
+                  handleMealRecord({
+                    mealTime,
+                    source: mealTimeCard.source,
+                  });
+                }}
+                onDismiss={() => {
+                  if (mealTimeCard.source === "text") {
+                    resetSendTextMeal();
+                  } else {
+                    closeMealTimeCard(mealTimeCard.chatId);
                   }
-                  onConfirm={handleMealRecordByText}
-                  onDismiss={resetSendTextMeal}
-                />
-              )}
+                }}
+              />
+            </div>
+          </section>
+        )}
+
+        {isSavingMeal && (
+          <section className={styles.conversation}>
+            <div className={styles.messageArea} data-owner="ai">
+              <AssistantPendingMessage />
             </div>
           </section>
         )}
@@ -895,10 +991,12 @@ export function MealTimeSelectCard({
   initMealTime,
   onConfirm,
   onDismiss,
+  disabled = false,
 }: {
   initMealTime: MealType;
   onConfirm: (mealTime: MealType) => void;
   onDismiss: () => void;
+  disabled?: boolean;
 }) {
   const [mealTime, setMealTime] = useState<MealType>(initMealTime);
 
@@ -934,6 +1032,7 @@ export function MealTimeSelectCard({
           variant="outlined"
           border="primary"
           onClick={() => onConfirm(mealTime)}
+          disabled={disabled}
         >
           확인
         </Button>
