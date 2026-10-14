@@ -12,6 +12,7 @@ import { clearTokens } from "@/features/auth/store/tokenStore";
 import { apiClient } from "@/src/shared/api/apiClient";
 import { emitAuthExpired } from "@/src/shared/auth/authSessionEvents";
 import { isAppTabName } from "@/src/shared/navigation/appTabNavigation";
+import { createPreviewThumbnail } from "@/src/shared/native/imagePreview";
 import {
   isNativeHapticType,
   triggerNativeHaptic,
@@ -184,20 +185,6 @@ async function normalizeCapturedImageSource(source: CapturedImageSource) {
     previewMimeType: source.previewMimeType ?? null,
     mode: source.mode ?? null,
   };
-}
-
-function normalizeImagePickerAsset(asset: ImagePicker.ImagePickerAsset) {
-  return normalizeCapturedImageSource({
-    uri: asset.uri,
-    width: asset.width,
-    height: asset.height,
-    fileName: asset.fileName,
-    fileSize: asset.fileSize,
-    mimeType: asset.mimeType,
-    base64: asset.base64,
-    previewBase64: null,
-    previewMimeType: null,
-  });
 }
 
 function assertRelativeEndpoint(endpoint: string) {
@@ -430,7 +417,14 @@ async function pickPhotoFromGallery(payload?: BridgeGalleryPickRequestPayload) {
     throw new BridgeHandledError("선택한 사진을 가져오지 못했어요.", 500, "GALLERY_PICK_FAILED");
   }
 
-  return await normalizeImagePickerAsset(asset);
+  const image = await normalizeCapturedImageSource(asset);
+  const preview = await createPreviewThumbnail(image.uri, image.width, image.height);
+
+  return {
+    ...image,
+    previewBase64: preview?.base64 ?? null,
+    previewMimeType: preview?.mimeType ?? null,
+  };
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

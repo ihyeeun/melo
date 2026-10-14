@@ -1,6 +1,5 @@
 import { useIsFocused } from "@react-navigation/native";
 import { router } from "expo-router";
-import { manipulateAsync, SaveFormat } from "expo-image-manipulator";
 import * as ImagePicker from "expo-image-picker";
 import * as SecureStore from "expo-secure-store";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -28,6 +27,7 @@ import type {
   BridgeCameraCaptureMode,
   BridgeCameraCaptureRequestPayload,
 } from "@/src/shared/api/bridge/bridge.types";
+import { createPreviewThumbnail } from "@/src/shared/native/imagePreview";
 import { semantic } from "@/src/shared/styles";
 import { LoadingOverlay, Typo } from "@/src/shared/ui";
 
@@ -36,10 +36,6 @@ type CameraPermissionStatus = Awaited<ReturnType<typeof Camera.getCameraPermissi
 
 const DEFAULT_CAPTURE_MODE: CameraCaptureMode = "NUTRITION_LABEL";
 const CAMERA_ONBOARDING_DONE_VALUE = "done";
-const PREVIEW_THUMBNAIL_MAX_DIMENSION = 720;
-const PREVIEW_THUMBNAIL_QUALITY = 0.82;
-const PREVIEW_THUMBNAIL_PRIMARY_FORMAT = SaveFormat.WEBP;
-const PREVIEW_THUMBNAIL_FALLBACK_FORMAT = SaveFormat.JPEG;
 const CAMERA_TOP_BAR_CONTENT_HEIGHT = 58;
 const CAMERA_CAPTURE_MODES: CameraCaptureMode[] = [
   "NUTRITION_LABEL",
@@ -47,12 +43,6 @@ const CAMERA_CAPTURE_MODES: CameraCaptureMode[] = [
   "FOOD",
   "GENERAL",
 ];
-
-type ImageManipulationActions = NonNullable<Parameters<typeof manipulateAsync>[1]>;
-type PreviewThumbnail = {
-  base64: string;
-  mimeType: string;
-};
 
 const SYSTEM_ICON_IMAGES = {
   close: require("@/assets/design-update/system-icons/exit.png"),
@@ -147,71 +137,6 @@ function resolveFileNameFromUri(uri: string) {
   const fileName = segments[segments.length - 1];
   if (!fileName) return null;
   return fileName;
-}
-
-function getPreviewThumbnailMimeType(format: SaveFormat) {
-  return format === SaveFormat.WEBP ? "image/webp" : "image/jpeg";
-}
-
-function getPreviewThumbnailActions(width: number, height: number): ImageManipulationActions {
-  if (
-    !Number.isFinite(width) ||
-    !Number.isFinite(height) ||
-    width <= 0 ||
-    height <= 0 ||
-    Math.max(width, height) <= PREVIEW_THUMBNAIL_MAX_DIMENSION
-  ) {
-    return [];
-  }
-
-  return width >= height
-    ? [{ resize: { width: PREVIEW_THUMBNAIL_MAX_DIMENSION } }]
-    : [{ resize: { height: PREVIEW_THUMBNAIL_MAX_DIMENSION } }];
-}
-
-async function createPreviewThumbnailWithFormat(
-  uri: string,
-  width: number,
-  height: number,
-  format: SaveFormat,
-): Promise<PreviewThumbnail | null> {
-  const thumbnail = await manipulateAsync(uri, getPreviewThumbnailActions(width, height), {
-    base64: true,
-    compress: PREVIEW_THUMBNAIL_QUALITY,
-    format,
-  });
-
-  if (!thumbnail.base64) return null;
-
-  return {
-    base64: thumbnail.base64,
-    mimeType: getPreviewThumbnailMimeType(format),
-  };
-}
-
-async function createPreviewThumbnail(uri: string, width: number, height: number) {
-  try {
-    const thumbnail = await createPreviewThumbnailWithFormat(
-      uri,
-      width,
-      height,
-      PREVIEW_THUMBNAIL_PRIMARY_FORMAT,
-    );
-    if (thumbnail) return thumbnail;
-  } catch {
-    // Some older devices may fail WebP encoding. JPEG is the stable fallback.
-  }
-
-  try {
-    return await createPreviewThumbnailWithFormat(
-      uri,
-      width,
-      height,
-      PREVIEW_THUMBNAIL_FALLBACK_FORMAT,
-    );
-  } catch {
-    return null;
-  }
 }
 
 function getCameraOnboardingStorageKey(mode: CameraCaptureMode) {
