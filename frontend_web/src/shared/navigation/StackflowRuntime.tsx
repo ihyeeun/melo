@@ -19,8 +19,7 @@ import { getWebNavigationCommand, WEB_NAVIGATION_COMMAND_EVENT } from "./webNavi
 
 const StackComponent = getStackflowStackComponent();
 
-// [] hides both optional tabs. The app owns their display order.
-const WEB_OPTIONAL_TABS: readonly OptionalTabName[] = ["diary", "restaurant"];
+const WEB_OPTIONAL_TABS: readonly OptionalTabName[] = ["restaurant"];
 
 const PROFILE_SYNC_EXCLUDED_PATHS = new Set([PATH.ONBOARDING, PATH.APP_INFO]);
 const STACKFLOW_HISTORY_STATE_TAG = "@stackflow/plugin-history-sync";

@@ -3,6 +3,10 @@ export const EVENT_NAME = {
   VITE_PRELOAD_ERROR: "vite_preload_error",
   SCREEN_VIEW: "screen_view",
 
+  RESTAURANT_TAB_ENTER: "restaurant_tab",
+  RESTAURANT_SEARCH_FOCUS: "restaurant_search_focus",
+  RESTAURANT_CARD_CLICK: "restaurant_card_click",
+
   CAMERA_START: "camera_start",
   CAMERA_CANCEL: "camera_cancel",
   CAMERA_FAIL: "camera_fail",

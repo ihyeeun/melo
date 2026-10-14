@@ -25,8 +25,7 @@ import HomeStepsLogSheet from "@/features/home/components/sheets/StepsLogBottomS
 import HomeWeightLogSheet from "@/features/home/components/sheets/WeightLogBottomSheetActivity";
 import ProfileNicknameSheetPage from "@/features/profile/ProfileNicknameSheetPage";
 import { PATH } from "@/router/path";
-import { track } from "@/shared/analytics/analytics";
-import { EVENT_NAME } from "@/shared/analytics/analytics.constants";
+import { trackScreenView } from "@/shared/analytics/screenViewEvents";
 import { isNativeApp, requestAppBack } from "@/shared/api/bridge/nativeBridge";
 import { queryClient } from "@/shared/api/queryClient";
 import { LoadingScreen } from "@/shared/commons/loading/Loading";
@@ -99,6 +98,9 @@ type SwipeBackTransitionRequester = (options: SwipeBackTransitionOptions) => boo
 const HomePage = createLazyActivity(() => import("@/features/home/pages/HomePage"));
 const RestaurantPage = createLazyActivity(
   () => import("@/features/restaurant/pages/RestaurantPage"),
+);
+const RestaurantDetailPage = createLazyActivity(
+  () => import("@/features/restaurant/pages/RestaurantDetailPage"),
 );
 const WorkoutRecordPage = createLazyActivity(
   () => import("@/features/health/pages/WorkoutRecordPage"),
@@ -217,6 +219,7 @@ const ACTIVITIES = {
   ChatNutritionRegister: ChatNutritionRegisterPage,
   Diary: DiaryPage,
   Restaurant: RestaurantPage,
+  RestaurantDetail: RestaurantDetailPage,
   GoalEdit: GoalEditPage,
   GoalEditTargetCalories: GoalEditTargetCaloriesPage,
   GoalEditNutrient: GoalEditNutrientPage,
@@ -257,6 +260,7 @@ const ACTIVITY_ROUTES: Record<keyof typeof ACTIVITIES, RoutePath> = {
   ChatNutritionRegister: PATH.CHAT_NUTRITION_REGISTER,
   Diary: PATH.DIARY,
   Restaurant: PATH.RESTAURANT,
+  RestaurantDetail: PATH.RESTAURANT_DETAIL,
   GoalEdit: PATH.GOAL_EDIT,
   GoalEditTargetCalories: PATH.GOAL_EDIT_TARGET_CALORIES,
   GoalEditNutrient: PATH.GOAL_EDIT_NUTRIENT,
@@ -288,7 +292,6 @@ const SWIPE_VERTICAL_CANCEL_RATIO = 2.4;
 
 const activityNavigationStateMap = new Map<string, unknown>();
 const stackflowBackHandlerMap = new Map<string, StackflowBackHandler>();
-let lastScreenViewKey: string | null = null;
 let pruneActivityNavigationStateTimeoutId: number | null = null;
 let programmaticPopStateTimeoutId: number | null = null;
 let pendingProgrammaticPopStateCount = 0;
@@ -875,17 +878,11 @@ function StackActivityFrame({
       return;
     }
 
-    const path = getActivityPath(activity);
-    const screenViewKey = `${activity.id}:${path}`;
-    if (lastScreenViewKey === screenViewKey) {
-      return;
-    }
-
-    lastScreenViewKey = screenViewKey;
-    track(EVENT_NAME.SCREEN_VIEW, {
-      screen_name: activity.name,
-      path,
-      stack_depth: getBackStackDepth(stackflowActions.getStack()),
+    trackScreenView({
+      activityId: activity.id,
+      screenName: activity.name,
+      path: getActivityPath(activity),
+      stackDepth: getBackStackDepth(stackflowActions.getStack()),
     });
   }, [activity]);
 

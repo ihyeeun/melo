@@ -49,6 +49,7 @@ import { FloatingCameraButton } from "@/shared/commons/button/FloatingCameraButt
 import { MealMenuCard } from "@/shared/commons/card/MealMenuCard";
 import { SearchInputHeader } from "@/shared/commons/header/SearchInputHeader";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
+import { SearchInput } from "@/shared/commons/input/SearchInput";
 import { LoadingIndicator } from "@/shared/commons/loading/Loading";
 import { Skeleton } from "@/shared/commons/skeleton/Skeleton";
 import { toast } from "@/shared/commons/toast/toast";
@@ -62,7 +63,6 @@ import {
 } from "@/shared/navigation/stackflowNavigation";
 
 const MENU_SEARCH_PAGE_LIMIT = 20;
-const REGISTERED_MENU_SEARCH_DEBOUNCE_MS = 300;
 const DIRECT_REGISTER_BUTTON_INTERVAL = 15;
 const PERSONAL_MENU_TAB = {
   FREQUENTLY_RECORDED: "frequently-recorded",
@@ -98,7 +98,6 @@ export default function MealSearchPage() {
 
   const searchInputRef = useRef<HTMLInputElement>(null);
   const loadMoreRef = useRef<HTMLDivElement>(null);
-  const registeredMenuInputRef = useRef<HTMLInputElement>(null);
   const registeredLoadMoreRef = useRef<HTMLDivElement>(null);
   const personalMenuScrollRef = useRef<HTMLDivElement>(null);
   const draftKey = formatMenuDraftKey(dateKey, mealType);
@@ -265,16 +264,6 @@ export default function MealSearchPage() {
     dayMeals,
     enabled: isTop && !isPersonalMenuEditSearchMode,
   });
-
-  useEffect(() => {
-    if (isRegisteredMenuComposing) return;
-
-    const timeoutId = window.setTimeout(() => {
-      setRegisteredMenuKeyword(registeredMenuInput.trim());
-    }, REGISTERED_MENU_SEARCH_DEBOUNCE_MS);
-
-    return () => window.clearTimeout(timeoutId);
-  }, [isRegisteredMenuComposing, registeredMenuInput]);
 
   useLayoutEffect(() => {
     if (hasSearchKeyword) {
@@ -667,50 +656,20 @@ export default function MealSearchPage() {
   const renderRegisteredPersonalMenuPanel = () => (
     <div className={styles.personalMenuPanelContent}>
       <div className={`${styles.searchFieldWrap} ${styles.registeredSearchField}`}>
-        <input
-          ref={registeredMenuInputRef}
-          className={`${styles.searchInput} ${styles.registeredSearchInput} body-s-medium`}
-          type="search"
+        <SearchInput
           value={registeredMenuInput}
-          placeholder="내 등록 메뉴를 검색해보세요"
-          aria-label="내 등록 메뉴 검색"
-          maxLength={300}
-          enterKeyHint="search"
-          onChange={(event) => {
-            const value = event.target.value;
+          onValueChange={(value) => {
             setRegisteredMenuInput(value);
-            if (!value.trim()) setRegisteredMenuKeyword("");
-          }}
-          onCompositionStart={() => setIsRegisteredMenuComposing(true)}
-          onCompositionEnd={() => setIsRegisteredMenuComposing(false)}
-          onKeyDown={(event) => {
-            if (
-              event.key !== "Enter" ||
-              isRegisteredMenuComposing ||
-              event.nativeEvent.isComposing
-            ) {
-              return;
-            }
-
-            event.preventDefault();
-            setRegisteredMenuKeyword(event.currentTarget.value.trim());
-            event.currentTarget.blur();
-          }}
-        />
-        {registeredMenuInput ? (
-          <button
-            type="button"
-            className={styles.clearButton}
-            aria-label="내 등록 메뉴 검색어 지우기"
-            onClick={() => {
-              setRegisteredMenuInput("");
+            if (!value.trim()) {
               setRegisteredMenuKeyword("");
-              registeredMenuInputRef.current?.focus();
-            }}
-          >
-            <SystemIcon name="exit" mode="image" size={20} />
-          </button>
-        ) : null}
+            }
+          }}
+          onEnter={(value) => {
+            setRegisteredMenuKeyword(value.trim());
+          }}
+          onCompositionChange={setIsRegisteredMenuComposing}
+          placeholder="내 등록 메뉴를 검색해보세요"
+        />
       </div>
       <button
         type="button"

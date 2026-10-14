@@ -127,3 +127,17 @@ export interface UpsertWaterIntakeRequestDto {
   date: string;
   water_intake: number;
 }
+
+/* ======
+ * 식당
+ * ====== */
+export interface RestaurantSearchRequestDto {
+  input: string;
+  limit: number;
+  cursor?: number;
+}
+
+export interface RestaurantDetailRequestDto {
+  restaurant_id: number;
+  filter?: "균형" | "저칼로리" | "단백질";
+}

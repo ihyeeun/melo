@@ -111,6 +111,7 @@ export default function BottomSheet({
         <SeedBottomSheet.Content
           className={styles.sheetContent}
           style={contentStyle}
+          aria-label={title}
           aria-describedby={undefined}
         >
           <SeedBottomSheet.Header
@@ -121,7 +122,7 @@ export default function BottomSheet({
             {titleRightSlot ? (
               titleRightSlot
             ) : (
-              <button type="button" onClick={onClose} className="marginLeft">
+              <button type="button" onClick={onClose} className="marginLeft" aria-label="닫기">
                 <SystemIcon name="exit" size={24} className="text-primary" />
               </button>
             )}
