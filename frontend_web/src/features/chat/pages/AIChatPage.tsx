@@ -582,10 +582,7 @@ function ChatHistory({
   const [initChatIds] = useState(() => new Set(history.map((chat) => chat.id)));
 
   const pendingMessageKey = sendingMessage[0]?.key;
-  const prevChatIds = sendingMessage[0]?.previousChatIds;
-  const visibleChatList = prevChatIds
-    ? history.filter((chat) => prevChatIds.includes(chat.id))
-    : history;
+  const visibleChatList = sendingMessage[0]?.previousChats ?? history;
   const mealCards = mealRecords.flatMap((date, index) => {
     const dayMeals = mealRecords[index].meals;
     if (!dayMeals) return [];

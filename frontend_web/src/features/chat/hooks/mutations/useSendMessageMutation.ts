@@ -24,7 +24,7 @@ export const chatMutationKeys = {
 };
 
 interface SendContext {
-  previousChatIds: number[];
+  previousChats: ChatHistoryResponseDto["chat_list"];
 }
 
 export function useSendMessageMutation(options?: UseMutationCallback) {
@@ -40,7 +40,7 @@ export function useSendMessageMutation(options?: UseMutationCallback) {
       const history = queryClient.getQueryData<ChatHistoryResponseDto>(queryKeys.chatHistory);
 
       return {
-        previousChatIds: history?.chat_list.map((chat) => chat.id) ?? [],
+        previousChats: history?.chat_list ?? [],
       };
     },
     onSuccess: async (response) => {
@@ -94,7 +94,7 @@ export function useParseMenusFromTextMutation(options?: UseMutationCallback) {
       const history = queryClient.getQueryData<ChatHistoryResponseDto>(queryKeys.chatHistory);
 
       return {
-        previousChatIds: history?.chat_list.map((chat) => chat.id) ?? [],
+        previousChats: history?.chat_list ?? [],
       };
     },
     onSuccess: async () => {
@@ -132,7 +132,7 @@ export function usePendingSendMessages() {
         key: `send:${mutation.mutationId}`,
         inputText,
         submittedAt: mutation.state.submittedAt,
-        previousChatIds: context?.previousChatIds,
+        previousChats: context?.previousChats,
       };
     },
   });
@@ -149,11 +149,11 @@ export function useMealFeedbackMutation(options?: UseMutationCallback) {
   return useMutation({
     mutationKey: chatMutationKeys.mealFeedback(),
     mutationFn: getMealFeedback,
-    onMutate: () => {
+    onMutate: (): SendContext => {
       const history = queryClient.getQueryData<ChatHistoryResponseDto>(queryKeys.chatHistory);
 
       return {
-        previousChatIds: history?.chat_list.map((chat) => chat.id) ?? [],
+        previousChats: history?.chat_list ?? [],
       };
     },
     onSuccess: async () => {
@@ -180,11 +180,11 @@ export function usePersonalizedManagementMutation(options?: UseMutationCallback)
   return useMutation({
     mutationKey: chatMutationKeys.management(),
     mutationFn: getPersonalizedManagement,
-    onMutate: () => {
+    onMutate: (): SendContext => {
       const history = queryClient.getQueryData<ChatHistoryResponseDto>(queryKeys.chatHistory);
 
       return {
-        previousChatIds: history?.chat_list.map((chat) => chat.id) ?? [],
+        previousChats: history?.chat_list ?? [],
       };
     },
     onSuccess: async () => {
