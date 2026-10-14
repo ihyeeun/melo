@@ -1,9 +1,9 @@
-export type AppTabName = "home" | "chat" | "diary" | "restaurant" | "profile";
+export type AppTabName = "home" | "chat" | "diary" | "restaurant" | "analysis" | "profile";
 export type NativeTabHistoryAction = "push" | "replace";
 export type WebTabStackAction = "push" | "reset";
 type TabBackBehavior = "animated-pop" | "none";
 
-const OPTIONAL_TABS = ["diary", "restaurant"] as const;
+const OPTIONAL_TABS = ["diary", "restaurant", "analysis"] as const;
 export type OptionalTabName = (typeof OPTIONAL_TABS)[number];
 const DEFAULT_OPTIONAL_TABS: readonly OptionalTabName[] = ["diary"];
 
@@ -29,6 +29,7 @@ export const TAB_PATH_MAP: Record<AppTabName, string> = {
   chat: "/chat",
   diary: "/diary",
   restaurant: "/restaurant",
+  analysis: "/personal-analysis",
   profile: "/profile",
 };
 
@@ -56,6 +57,11 @@ export const TAB_NAVIGATION_POLICY: Record<
     back: "none",
   },
   restaurant: {
+    nativeHistory: "replace",
+    webStack: "reset",
+    back: "none",
+  },
+  analysis: {
     nativeHistory: "replace",
     webStack: "reset",
     back: "none",

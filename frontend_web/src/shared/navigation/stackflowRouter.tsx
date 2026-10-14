@@ -97,7 +97,9 @@ type SwipeBackTransitionOptions = {
 type SwipeBackTransitionRequester = (options: SwipeBackTransitionOptions) => boolean;
 
 const HomePage = createLazyActivity(() => import("@/features/home/pages/HomePage"));
-const RestaurantPage = createLazyActivity(() => import("@/features/restaurant/pages/RestaurantPage"));
+const RestaurantPage = createLazyActivity(
+  () => import("@/features/restaurant/pages/RestaurantPage"),
+);
 const WorkoutRecordPage = createLazyActivity(
   () => import("@/features/health/pages/WorkoutRecordPage"),
 );
@@ -181,6 +183,9 @@ const MenstruationPage = createLazyActivity(
 const WaterIntakeRecordPage = createLazyActivity(
   () => import("@/features/water-intake/pages/WaterIntakeRecordPage"),
 );
+const PersonalAnalysisPage = createLazyActivity(
+  () => import("@/features/personal-analysis/pages/PersonalAnalysisPage"),
+);
 
 const ACTIVITIES = {
   Home: HomePage,
@@ -219,6 +224,7 @@ const ACTIVITIES = {
   AppInfo: AppInfoPage,
   Menstruation: MenstruationPage,
   WaterIntakeRecordPage,
+  PersonalAnalysisPage,
 };
 
 const ACTIVITY_ROUTES: Record<keyof typeof ACTIVITIES, RoutePath> = {
@@ -258,6 +264,7 @@ const ACTIVITY_ROUTES: Record<keyof typeof ACTIVITIES, RoutePath> = {
   AppInfo: PATH.APP_INFO,
   Menstruation: PATH.MENSTRUATION_RECORD,
   WaterIntakeRecordPage: PATH.WATER_INTAKE_RECORD,
+  PersonalAnalysisPage: PATH.PERSONAL_ANALYSIS,
 };
 
 type ActivityName = keyof typeof ACTIVITY_ROUTES;

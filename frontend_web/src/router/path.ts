@@ -33,7 +33,12 @@ export const PATH = {
 
   //Diary
   DIARY: "/diary",
+
+  // 식당
   RESTAURANT: "/restaurant",
+
+  // 개인 분석
+  PERSONAL_ANALYSIS: "/personal-analysis",
 
   // Profile
   GOAL_EDIT: "/profile/goal-edit",

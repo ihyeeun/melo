@@ -1,8 +1,8 @@
 import type { ApiResponse } from "@/shared/api/types/apiResponse.types";
 
 export type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
-export type AppTabName = "home" | "chat" | "diary" | "restaurant" | "profile";
-export type OptionalTabName = Extract<AppTabName, "diary" | "restaurant">;
+export type AppTabName = "home" | "chat" | "diary" | "restaurant" | "analysis" | "profile";
+export type OptionalTabName = Extract<AppTabName, "diary" | "restaurant" | "analysis">;
 export type BridgeMessageContext = {
   href?: string;
 };

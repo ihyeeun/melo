@@ -15,11 +15,12 @@ import { router, Slot, useSegments } from "expo-router";
 import { Pressable, StyleSheet, View } from "react-native";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import HomeIcon from "../../assets/design-update/tab-icons/home.svg";
-import ChatIcon from "../../assets/design-update/tab-icons/chat.svg";
-import DiaryIcon from "../../assets/design-update/tab-icons/diary.svg";
-import UserIcon from "../../assets/design-update/tab-icons/user.svg";
-import RestaurantIcon from "../../assets/design-update/tab-icons/restaurant.svg";
+import HomeIcon from "@/assets/design-update/tab-icons/home.svg";
+import ChatIcon from "@/assets/design-update/tab-icons/chat.svg";
+import DiaryIcon from "@/assets/design-update/tab-icons/diary.svg";
+import UserIcon from "@/assets/design-update/tab-icons/user.svg";
+import RestaurantIcon from "@/assets/design-update/tab-icons/restaurant.svg";
+import AnalysisIcon from "@/assets/design-update/tab-icons/analysis.svg";
 import { Typo } from "@/src/shared/ui";
 import { semantic, colors } from "@/src/shared/styles";
 
@@ -27,6 +28,7 @@ const TAB_ITEMS = [
   { tab: "home", label: "홈", Icon: HomeIcon },
   { tab: "chat", label: "AI 코치", Icon: ChatIcon },
   { tab: "diary", label: "다이어리", Icon: DiaryIcon },
+  { tab: "analysis", label: "분석", Icon: AnalysisIcon },
   { tab: "restaurant", label: "식당", Icon: RestaurantIcon },
   { tab: "profile", label: "프로필", Icon: UserIcon },
 ] as const;
@@ -75,7 +77,8 @@ export default function TabsLayout() {
   const insets = useSafeAreaInsets();
   const tabBarBottomPadding = Math.max(insets.bottom, 4);
   const visibleTabItems = useMemo(
-    () => TAB_ITEMS.filter((item) => isAppTabVisible(item.tab, optionalTabs, isFreeUserGuardEnabled)),
+    () =>
+      TAB_ITEMS.filter((item) => isAppTabVisible(item.tab, optionalTabs, isFreeUserGuardEnabled)),
     [isFreeUserGuardEnabled, optionalTabs],
   );
   const shouldHideTabBar = isTabBarHidden || currentTab === "chat";
