@@ -1,8 +1,8 @@
 import type { HealthStepsRequestPayload } from "@/features/health/types/healthSteps.types";
 import type { NativeHapticType } from "@/src/shared/native/haptics";
+import type { AppTabName } from "@/src/shared/navigation/appTabNavigation";
 
 export type BridgeHttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
-export type BridgeTabName = "home" | "chat" | "diary" | "profile";
 export type BridgeMessageContext = {
   href?: string;
 };
@@ -31,7 +31,7 @@ export type BridgeTabSyncMessage = {
   id: string;
   type: "TAB_SYNC";
   payload: {
-    tab: BridgeTabName;
+    tab: AppTabName;
   };
   context?: BridgeMessageContext;
 };

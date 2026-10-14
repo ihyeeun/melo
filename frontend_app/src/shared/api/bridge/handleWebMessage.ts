@@ -11,6 +11,7 @@ import { BackHandler, Platform } from "react-native";
 import { clearTokens } from "@/features/auth/store/tokenStore";
 import { apiClient } from "@/src/shared/api/apiClient";
 import { emitAuthExpired } from "@/src/shared/auth/authSessionEvents";
+import { isAppTabName } from "@/src/shared/navigation/appTabNavigation";
 import {
   isNativeHapticType,
   triggerNativeHaptic,
@@ -557,12 +558,7 @@ function isWebToAppMessage(value: unknown): value is WebToAppMessage {
   if (value.type === "TAB_SYNC") {
     if (!isRecord(value.payload)) return false;
 
-    return (
-      value.payload.tab === "home" ||
-      value.payload.tab === "chat" ||
-      value.payload.tab === "diary" ||
-      value.payload.tab === "profile"
-    );
+    return isAppTabName(value.payload.tab);
   }
 
   if (value.type === "NAVIGATION_BACK") {

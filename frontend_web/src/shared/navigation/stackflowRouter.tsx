@@ -97,6 +97,7 @@ type SwipeBackTransitionOptions = {
 type SwipeBackTransitionRequester = (options: SwipeBackTransitionOptions) => boolean;
 
 const HomePage = createLazyActivity(() => import("@/features/home/pages/HomePage"));
+const RestaurantPage = createLazyActivity(() => import("@/features/restaurant/pages/RestaurantPage"));
 const WorkoutRecordPage = createLazyActivity(
   () => import("@/features/health/pages/WorkoutRecordPage"),
 );
@@ -210,6 +211,7 @@ const ACTIVITIES = {
   Chat: AIChatPage,
   ChatNutritionRegister: ChatNutritionRegisterPage,
   Diary: DiaryPage,
+  Restaurant: RestaurantPage,
   GoalEdit: GoalEditPage,
   GoalEditTargetCalories: GoalEditTargetCaloriesPage,
   GoalEditNutrient: GoalEditNutrientPage,
@@ -248,6 +250,7 @@ const ACTIVITY_ROUTES: Record<keyof typeof ACTIVITIES, RoutePath> = {
   Chat: PATH.AI_CHAT,
   ChatNutritionRegister: PATH.CHAT_NUTRITION_REGISTER,
   Diary: PATH.DIARY,
+  Restaurant: PATH.RESTAURANT,
   GoalEdit: PATH.GOAL_EDIT,
   GoalEditTargetCalories: PATH.GOAL_EDIT_TARGET_CALORIES,
   GoalEditNutrient: PATH.GOAL_EDIT_NUTRIENT,

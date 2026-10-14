@@ -3,10 +3,12 @@ import { createBridgeRequestRegistry } from "@/src/shared/api/bridge/bridgeReque
 import { subscribeAuthExpired } from "@/src/shared/auth/authSessionEvents";
 import {
   type AppTabName,
+  type OptionalTabName,
   getNativeTabHistoryAction,
   getTabRoute,
   getWebTabStackAction,
   isAppTabName,
+  normalizeOptionalTabs,
   resolveTabFromPath,
   shouldUseNativeBackOnTabExit,
 } from "@/src/shared/navigation/appTabNavigation";
@@ -67,6 +69,7 @@ type AppWebViewScreenProps = {
   chatBackRequestKey?: number;
   onTabBarVisibilityChange?: (hidden: boolean) => void;
   onFeatureGuardEnabledChange?: (enabled: boolean) => void;
+  onOptionalTabsChange?: (tabs: OptionalTabName[] | null) => void;
 };
 
 type WebViewOpenWindowEvent = Parameters<NonNullable<WebViewProps["onOpenWindow"]>>[0];
@@ -188,12 +191,12 @@ const pathChangeBridgeScript = `
     if (window.__RN_PATH_BRIDGE__) return;
     window.__RN_PATH_BRIDGE__ = true;
 
-    const emitPath = function () {
+    const emitPath = function (documentStarted) {
       if (!window.ReactNativeWebView) return;
       window.ReactNativeWebView.postMessage(
         JSON.stringify({
           type: "WEB_PATH_CHANGE",
-          payload: { href: window.location.href }
+          payload: { href: window.location.href, documentStarted: documentStarted === true }
         })
       );
     };
@@ -211,7 +214,7 @@ const pathChangeBridgeScript = `
     wrapHistoryMethod("replaceState");
 
     window.addEventListener("popstate", emitPath);
-    emitPath();
+    emitPath(true);
   })();
 `;
 
@@ -365,6 +368,7 @@ export default function AppWebViewScreen({
   chatBackRequestKey,
   onTabBarVisibilityChange,
   onFeatureGuardEnabledChange,
+  onOptionalTabsChange,
 }: AppWebViewScreenProps) {
   const webViewRef = useRef<WebView>(null);
   const [apiRequests] = useState(createBridgeRequestRegistry);
@@ -409,16 +413,9 @@ export default function AppWebViewScreen({
     (hide: boolean) => {
       if (!isTabWebView) return;
 
-      if (onTabBarVisibilityChange) {
-        onTabBarVisibilityChange(hide);
-        return;
-      }
-
-      navigation.setOptions({
-        tabBarStyle: hide ? { display: "none" } : undefined,
-      });
+      onTabBarVisibilityChange?.(hide);
     },
-    [isTabWebView, navigation, onTabBarVisibilityChange],
+    [isTabWebView, onTabBarVisibilityChange],
   );
 
   const syncTabBarVisibility = useCallback(
@@ -596,8 +593,10 @@ export default function AppWebViewScreen({
   useEffect(() => () => apiRequests.cancelAll(), [apiRequests]);
 
   const onLoadStart = useCallback(() => {
-    apiRequests.cancelAll();
-  }, [apiRequests]);
+    // Android also emits onLoadStart for SPA history changes. Tab WebViews
+    // report actual document starts through the injected path bridge instead.
+    if (!isTabWebView) apiRequests.cancelAll();
+  }, [apiRequests, isTabWebView]);
 
   const onMessage = useCallback(
     (event: WebViewMessageEvent) => {
@@ -610,15 +609,35 @@ export default function AppWebViewScreen({
       try {
         const rawData = JSON.parse(event.nativeEvent.data) as {
           type?: string;
-          payload?: { href?: string; enabled?: boolean; isHidden?: boolean; tab?: unknown };
+          payload?: {
+            href?: string;
+            enabled?: boolean;
+            isHidden?: boolean;
+            tab?: unknown;
+            optionalTabs?: unknown;
+            documentStarted?: boolean;
+          };
           context?: { href?: string };
         };
+
+        if (rawData.type === "TAB_CONFIG_SET") {
+          if (!isTabWebView) return;
+
+          const optionalTabs = normalizeOptionalTabs(rawData.payload?.optionalTabs);
+          if (optionalTabs !== null) onOptionalTabsChange?.(optionalTabs);
+          return;
+        }
 
         if (typeof rawData.context?.href === "string") {
           rememberTabWebHref(rawData.context.href);
         }
 
         if (rawData.type === "WEB_PATH_CHANGE" && typeof rawData.payload?.href === "string") {
+          if (rawData.payload.documentStarted === true) {
+            apiRequests.cancelAll();
+            didLoadOnceRef.current = false;
+            onOptionalTabsChange?.(null);
+          }
           rememberTabWebHref(rawData.payload.href);
           if (canSyncAfterInitialLoad()) {
             syncTabStateFromUrl(rawData.payload.href);
@@ -658,6 +677,7 @@ export default function AppWebViewScreen({
       apiRequests,
       isTabWebView,
       onFeatureGuardEnabledChange,
+      onOptionalTabsChange,
       rememberTabWebHref,
       syncTabBarVisibility,
       syncTabStateFromUrl,

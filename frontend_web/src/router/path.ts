@@ -33,6 +33,7 @@ export const PATH = {
 
   //Diary
   DIARY: "/diary",
+  RESTAURANT: "/restaurant",
 
   // Profile
   GOAL_EDIT: "/profile/goal-edit",
