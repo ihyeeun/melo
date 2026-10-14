@@ -872,7 +872,7 @@ function MealRecordCard({
             >
               {menus.map((item) => {
                 return (
-                  <div className={styles.menuMeta}>
+                  <div key={item.id} className={styles.menuMeta}>
                     <span className={`body-s-regular text-secondary ${styles.menuMetaGap}`}>
                       {item.name}
                     </span>
@@ -1040,6 +1040,7 @@ export function MealTimeSelectCard({
           return (
             <button
               type="button"
+              key={label}
               className={styles.mealTimeChip}
               data-isSelected={mealTime === type}
               onClick={() => {
