@@ -145,10 +145,6 @@ const SettingsPage = createLazyActivity(() => import("@/features/settings/Settin
 const SettingsSubCodePage = createLazyActivity(
   () => import("@/features/settings/SettingsSubCodePage"),
 );
-const MenuBoardCameraPage = createGuardedLazyActivity(
-  FEATURE_GUARD.MENU_BOARD_CAMERA,
-  () => import("@/features/camera/pages/MenuBoardImageRecommendationPage"),
-);
 const NutrientCameraPage = createLazyActivity(
   () => import("@/features/camera/pages/NutritionLabelCreatePage"),
 );
@@ -164,39 +160,18 @@ const GoalEditTargetCaloriesPage = createLazyActivity(
 const GoalEditNutrientPage = createLazyActivity(
   () => import("@/features/profile/pages/GoalEditNutrientPage"),
 );
-const ChatPage = createGuardedLazyActivity(
+const AIChatPage = createGuardedLazyActivity(
   FEATURE_GUARD.CHAT,
-  () => import("@/features/chat/pages/ChatPage"),
+  () => import("@/features/chat/pages/AIChatPage"),
 );
 const ChatNutritionRegisterPage = createGuardedLazyActivity(
   FEATURE_GUARD.CHAT,
   () => import("@/features/chat/pages/ChatNutritionRegisterPage"),
 );
-const ChatMealRecordBottomSheetActivity = createGuardedLazyActivity(
-  FEATURE_GUARD.CHAT,
-  () => import("@/features/chat/pages/ChatMealRecordBottomSheetPage"),
-);
-const ChatNutritionDetailActivity = createGuardedLazyActivity(
-  FEATURE_GUARD.CHAT,
-  () => import("@/features/chat/pages/ChatMenuDetailPage"),
-);
 const DiaryPage = createLazyActivity(() => import("@/features/diary/pages/DiaryPage"));
-const RecommendResultPage = createLazyActivity(
-  () => import("@/features/chat/pages/RecommendResultPage"),
-);
-const ChatMenuDetailPage = createLazyActivity(
-  () => import("@/features/chat/pages/ChatMenuDetailPage"),
-);
-const FeedbackResultPage = createLazyActivity(
-  () => import("@/features/chat/pages/FeedbackResultPage"),
-);
 const ChatCameraPage = createGuardedLazyActivity(
   FEATURE_GUARD.FOOD_CAMERA,
   () => import("@/features/camera/pages/ChatCameraPage"),
-);
-const ChatFoodCameraPage = createGuardedLazyActivity(
-  FEATURE_GUARD.FOOD_CAMERA,
-  () => import("@/features/camera/pages/FoodImageFeedbackPage"),
 );
 const AppInfoPage = createLazyActivity(() => import("@/features/kakao-web-auth/pages/AppInfoPage"));
 const MenstruationPage = createLazyActivity(
@@ -227,26 +202,18 @@ const ACTIVITIES = {
   MealDetail: MealDetailPage,
   CreateFolder: CreateFolderPage,
   FolderDetail: FolderDetailPage,
-  MenuBoardCamera: MenuBoardCameraPage,
   FoodCamera: FoodCameraPage,
   NutrientCamera: NutrientCameraPage,
   NutrientAddRegister: NutrientRegisterPage,
   NutrientAddModify: NutrientModifyPage,
   BrandSearch,
-  Chat: ChatPage,
-  ChatMealRecordSheet: ChatMealRecordBottomSheetActivity,
+  Chat: AIChatPage,
   ChatNutritionRegister: ChatNutritionRegisterPage,
-  ChatNutritionDetail: ChatNutritionDetailActivity,
-  RecommendResult: RecommendResultPage,
-  RecommendDetail: ChatMenuDetailPage,
   Diary: DiaryPage,
   GoalEdit: GoalEditPage,
   GoalEditTargetCalories: GoalEditTargetCaloriesPage,
   GoalEditNutrient: GoalEditNutrientPage,
-  FeedbackResult: FeedbackResultPage,
-  FeedbackDetail: ChatMenuDetailPage,
   ChatCamera: ChatCameraPage,
-  ChatFoodCamera: ChatFoodCameraPage,
   AppInfo: AppInfoPage,
   Menstruation: MenstruationPage,
   WaterIntakeRecordPage,
@@ -273,26 +240,18 @@ const ACTIVITY_ROUTES: Record<keyof typeof ACTIVITIES, RoutePath> = {
   MealDetail: PATH.MEAL_DETAIL,
   CreateFolder: PATH.CREATE_FOLDER,
   FolderDetail: PATH.FOLDER_DETAIL,
-  MenuBoardCamera: PATH.MENU_BOARD_CAMERA,
   FoodCamera: PATH.FOOD_CAMERA,
   NutrientCamera: PATH.NUTRIENT_CAMERA,
   NutrientAddRegister: PATH.NUTRIENT_ADD_REGISTER,
   NutrientAddModify: PATH.NUTRIENT_ADD_MODIFY,
   BrandSearch: PATH.BRAND_SEARCH,
-  Chat: PATH.CHAT,
-  ChatMealRecordSheet: PATH.CHAT_MEAL_RECORD_SHEET,
+  Chat: PATH.AI_CHAT,
   ChatNutritionRegister: PATH.CHAT_NUTRITION_REGISTER,
-  ChatNutritionDetail: PATH.CHAT_NUTRITION_DETAIL,
-  RecommendResult: PATH.RECOMMEND_RESULT,
-  RecommendDetail: PATH.RECOMMEND_DETAIL,
   Diary: PATH.DIARY,
   GoalEdit: PATH.GOAL_EDIT,
   GoalEditTargetCalories: PATH.GOAL_EDIT_TARGET_CALORIES,
   GoalEditNutrient: PATH.GOAL_EDIT_NUTRIENT,
-  FeedbackResult: PATH.FEEDBACK_RESULT,
-  FeedbackDetail: PATH.FEEDBACK_DETAIL,
   ChatCamera: PATH.CHAT_CAMERA,
-  ChatFoodCamera: PATH.CHAT_FOOD_CAMERA,
   AppInfo: PATH.APP_INFO,
   Menstruation: PATH.MENSTRUATION_RECORD,
   WaterIntakeRecordPage: PATH.WATER_INTAKE_RECORD,
@@ -303,7 +262,6 @@ const BOTTOM_SHEET_ACTIVITY_NAMES = new Set<ActivityName>([
   "HomeWeightLogSheet",
   "HomeStepsLogSheet",
   "ProfileNicknameSheet",
-  "ChatMealRecordSheet",
   "WorkoutDetailSheet",
 ]);
 

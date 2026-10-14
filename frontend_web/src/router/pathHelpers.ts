@@ -14,7 +14,9 @@ function buildPathQuery(dateKey: string, mealType: MealType, menuId?: number) {
   return params.toString();
 }
 
-export function getMealRecordPath(dateKey: string, mealType: MealType) {
+export function getMealRecordPath(dateKey: string, mealType: MealType | number) {
+  if (typeof mealType === "number") mealType = String(mealType) as MealType;
+
   return `${PATH.MEAL_RECORD}?${buildPathQuery(dateKey, mealType)}`;
 }
 

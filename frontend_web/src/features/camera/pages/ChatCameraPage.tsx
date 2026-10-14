@@ -1,140 +1,70 @@
 import { useActivity } from "@stackflow/react";
-import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { CameraLoading } from "@/features/camera/components/CameraLoading";
 import { ChatCameraUpdateRequiredModal } from "@/features/camera/components/ChatCameraUpdateRequiredModal";
-import {
-  useCreateMealFeedbackByFoodImageMutation,
-  useGetFeedbackByNutritionLabelImageMutation,
-  useRecommendMenusByMenuBoardImageMutation,
-} from "@/features/camera/hooks/mutations/useImageRecognitionMutation";
+import { MODE } from "@/features/camera/constants/camera.constant";
 import styles from "@/features/camera/styles/CameraPage.module.css";
 import {
   type CameraCaptureErrorFeedback,
   DEFAULT_CAMERA_CAPTURE_QUALITY,
   getAnalyticsErrorMessage,
   getCameraCaptureErrorFeedback,
-  getCapturedImagePreviewSrc,
   getRecognitionErrorFeedback,
   isCameraCaptureCancelled,
 } from "@/features/camera/utils/cameraCapture";
 import { getChatCameraSupportResult } from "@/features/camera/utils/chatCameraSupport";
-import {
-  getChatHistoryPlaybackBaselineIds,
-  setChatHistoryPlaybackBaselineIds,
-} from "@/features/chat/utils/chatHistoryPlayback";
+import { useSetImage } from "@/features/chat/stores/camera.store";
 import { PATH } from "@/router/path";
 import { track } from "@/shared/analytics/analytics";
 import { EVENT_NAME } from "@/shared/analytics/analytics.constants";
-import {
-  trackNutritionLabelScanFail,
-  trackNutritionLabelScanStart,
-  trackNutritionLabelScanSuccess,
-} from "@/shared/analytics/nutritionLabelEvents";
 import { requestNativeCameraCapture } from "@/shared/api/bridge/nativeBridge";
 import { captureScreenRequestScope } from "@/shared/api/screenRequests";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
 import { CheckButtonModal } from "@/shared/commons/modals/CheckButtonModal";
 import {
   isPreviousStackActivity,
-  navigate,
   navigateBack,
+  useNavigate,
 } from "@/shared/navigation/stackflowNavigation";
 
-const CHAT_CAMERA_SOURCE = {
-  FOOD: "chat_food_camera",
-  NUTRITION_LABEL: "chat_nutrition_camera",
-  MENU_BOARD: "chat_camera_menu_board",
-} as const;
-
-const CHAT_CAMERA_LOADING_DESCRIPTION = {
-  FOOD: "음식을 분석 중이에요",
-  NUTRITION_LABEL: "영양 성분을 확인하고 있어요",
-  MENU_BOARD: "메뉴판을 분석 중이에요",
-} as const;
-
 function resolveChatCameraMode(mode: string | null | undefined) {
-  if (mode === "NUTRITION_LABEL" || mode === "MENU_BOARD") return mode;
-  return "FOOD";
+  if (mode === MODE.NUTRITION) return mode;
+  return MODE.FOOD;
 }
 
-type ChatCameraMode = keyof typeof CHAT_CAMERA_LOADING_DESCRIPTION;
-
-function trackScanStart(mode: ChatCameraMode) {
-  if (mode === "NUTRITION_LABEL") {
-    trackNutritionLabelScanStart({ source: CHAT_CAMERA_SOURCE[mode] });
-    return;
-  }
-
-  track(mode === "FOOD" ? EVENT_NAME.FOOD_SCAN_START : EVENT_NAME.OCR_SCAN_START, {
-    source: CHAT_CAMERA_SOURCE[mode],
-  });
-}
-
-function trackScanSuccess(mode: ChatCameraMode) {
-  if (mode === "NUTRITION_LABEL") {
-    trackNutritionLabelScanSuccess({ source: CHAT_CAMERA_SOURCE[mode] });
-    return;
-  }
-
-  track(mode === "FOOD" ? EVENT_NAME.FOOD_SCAN_SUCCESS : EVENT_NAME.OCR_SCAN_SUCCESS, {
-    source: CHAT_CAMERA_SOURCE[mode],
-  });
-}
-
-function trackScanCancel() {
-  track(EVENT_NAME.CAMERA_CANCEL);
-}
-
-function trackScanFail(mode: ChatCameraMode, reason: string) {
-  if (mode === "NUTRITION_LABEL") {
-    trackNutritionLabelScanFail(reason, { source: CHAT_CAMERA_SOURCE[mode] });
-    return;
-  }
-
-  track(mode === "FOOD" ? EVENT_NAME.FOOD_SCAN_FAIL : EVENT_NAME.OCR_SCAN_FAIL, {
-    reason,
-    source: CHAT_CAMERA_SOURCE[mode],
-  });
+interface CameraUpdateNotice {
+  updateUrl: string | null;
 }
 
 export default function ChatCameraPage() {
-  const [isOpeningCamera, setIsOpeningCamera] = useState(true);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [previewSrc, setPreviewSrc] = useState<string | null>(null);
-  const [loadingDescription, setLoadingDescription] = useState<string>(
-    CHAT_CAMERA_LOADING_DESCRIPTION.FOOD,
-  );
-  const [chatCameraUpdateUrl, setChatCameraUpdateUrl] = useState<string | null>(null);
-  const [isChatCameraUpdateModalOpen, setIsChatCameraUpdateModalOpen] = useState(false);
+  const navigate = useNavigate();
+  const setImage = useSetImage();
+
+  const [updateNotice, setUpdateNotice] = useState<CameraUpdateNotice | null>(null);
   const [captureErrorFeedback, setCaptureErrorFeedback] =
     useState<CameraCaptureErrorFeedback | null>(null);
   const { id: screenId, isActive: isScreenActive } = useActivity();
-  const autoTriggeredRef = useRef(false);
-  const queryClient = useQueryClient();
-  const { mutateAsync: uploadFoodImage } = useCreateMealFeedbackByFoodImageMutation();
-  const { mutateAsync: uploadMenuBoardImage } = useRecommendMenusByMenuBoardImageMutation();
-  const { mutateAsync: uploadNutritionLabelImage } = useGetFeedbackByNutritionLabelImageMutation();
+  const hasAutoOpenedCameraRef = useRef(false);
 
   const returnFromCameraPage = useCallback(() => {
     navigateBack({ fallbackTo: PATH.CHAT });
   }, []);
 
-  const navigateToChatAfterSuccess = useCallback(() => {
+  const moveToChat = useCallback(() => {
     if (isPreviousStackActivity("Chat")) {
-      navigateBack({ fallbackTo: PATH.CHAT });
+      navigateBack({ fallbackTo: PATH.AI_CHAT });
       return;
     }
 
-    navigate(PATH.CHAT, { replace: true });
-  }, []);
+    navigate(PATH.AI_CHAT, {
+      replace: true,
+    });
+  }, [navigate]);
 
   const handleCameraActions = useCallback(async () => {
-    if (isProcessing) return;
     const screen = captureScreenRequestScope(screenId);
     if (!screen.isActive()) return;
-    autoTriggeredRef.current = true;
+    hasAutoOpenedCameraRef.current = true;
     setCaptureErrorFeedback(null);
 
     let image: CapturedImage;
@@ -143,31 +73,32 @@ export default function ChatCameraPage() {
       screen.assertActive();
 
       if (!supportResult.isSupported) {
-        setIsOpeningCamera(false);
-        setChatCameraUpdateUrl(supportResult.updateUrl);
-        setIsChatCameraUpdateModalOpen(true);
+        setUpdateNotice({
+          updateUrl: supportResult.updateUrl,
+        });
         return;
       }
 
-      setIsOpeningCamera(true);
+      track(EVENT_NAME.CAMERA_START, { source: "chat_tab" });
       image = await requestNativeCameraCapture({
         quality: DEFAULT_CAMERA_CAPTURE_QUALITY,
-        mode: "FOOD",
-        selectableModes: ["FOOD", "NUTRITION_LABEL", "MENU_BOARD"],
+        mode: MODE.FOOD,
+        selectableModes: [MODE.FOOD, MODE.NUTRITION],
       });
       screen.assertActive();
-      setIsOpeningCamera(false);
     } catch (error) {
       if (!screen.isActive()) return;
-      setIsOpeningCamera(false);
       if (isCameraCaptureCancelled(error)) {
-        trackScanCancel();
+        track(EVENT_NAME.CAMERA_CANCEL, { source: "chat_tab" });
         returnFromCameraPage();
         return;
       }
 
-      trackScanFail("FOOD", getAnalyticsErrorMessage(error, "카메라를 실행하지 못했어요"));
-      setPreviewSrc(null);
+      track(EVENT_NAME.CAMERA_FAIL, {
+        reason: getAnalyticsErrorMessage(error, "카메라 실행 또는 촬영에 실패했어요."),
+        source: "chat_tab",
+      });
+
       setCaptureErrorFeedback(getCameraCaptureErrorFeedback(error));
       return;
     }
@@ -175,57 +106,20 @@ export default function ChatCameraPage() {
     const selectedMode = resolveChatCameraMode(image.mode);
 
     try {
-      setPreviewSrc(getCapturedImagePreviewSrc(image));
-      setLoadingDescription(CHAT_CAMERA_LOADING_DESCRIPTION[selectedMode]);
-      setIsProcessing(true);
-      trackScanStart(selectedMode);
-
-      const playbackBaselineChatIds = await screen.run(() =>
-        getChatHistoryPlaybackBaselineIds(queryClient),
-      );
-      screen.assertActive();
-
-      if (selectedMode === "FOOD") {
-        await uploadFoodImage(image);
-      } else if (selectedMode === "NUTRITION_LABEL") {
-        await uploadNutritionLabelImage(image);
-      } else {
-        await uploadMenuBoardImage(image);
-      }
-      screen.assertActive();
-
-      if (playbackBaselineChatIds !== null) {
-        setChatHistoryPlaybackBaselineIds(queryClient, playbackBaselineChatIds);
-      }
-
-      navigateToChatAfterSuccess();
-
-      trackScanSuccess(selectedMode);
+      setImage(image);
+      moveToChat();
     } catch (error) {
       if (!screen.isActive()) return;
-      trackScanFail(selectedMode, getAnalyticsErrorMessage(error, "이미지 분석에 실패했어요."));
-      setPreviewSrc(null);
       setCaptureErrorFeedback(getRecognitionErrorFeedback(selectedMode, error));
-    } finally {
-      setIsProcessing(false);
     }
-  }, [
-    isProcessing,
-    navigateToChatAfterSuccess,
-    queryClient,
-    returnFromCameraPage,
-    uploadFoodImage,
-    uploadMenuBoardImage,
-    uploadNutritionLabelImage,
-    screenId,
-  ]);
+  }, [returnFromCameraPage, screenId, setImage, moveToChat]);
 
   useEffect(() => {
     if (!isScreenActive) {
-      autoTriggeredRef.current = false;
+      hasAutoOpenedCameraRef.current = false;
       return;
     }
-    if (autoTriggeredRef.current) return;
+    if (hasAutoOpenedCameraRef.current) return;
 
     void handleCameraActions();
   }, [handleCameraActions, isScreenActive]);
@@ -244,15 +138,9 @@ export default function ChatCameraPage() {
 
   return (
     <section className={styles.page}>
-      <PageHeader title={isProcessing ? "사진 분석" : "사진 촬영"} onBack={returnFromCameraPage} />
+      <PageHeader title={"사진 촬영"} onBack={returnFromCameraPage} />
 
-      {isOpeningCamera ? (
-        <main className={styles.main} />
-      ) : isProcessing ? (
-        <CameraLoading description={loadingDescription} previewSrc={previewSrc} />
-      ) : (
-        <main className={styles.main} />
-      )}
+      <main className={styles.main} />
 
       <CheckButtonModal
         open={captureErrorFeedback !== null}
@@ -261,14 +149,13 @@ export default function ChatCameraPage() {
         description={captureErrorFeedback?.description}
       />
       <ChatCameraUpdateRequiredModal
-        open={isChatCameraUpdateModalOpen}
-        updateUrl={chatCameraUpdateUrl}
+        open={updateNotice !== null}
+        updateUrl={updateNotice?.updateUrl ?? null}
         onOpenChange={(open) => {
-          setIsChatCameraUpdateModalOpen(open);
+          if (open) return;
 
-          if (!open) {
-            returnFromCameraPage();
-          }
+          setUpdateNotice(null);
+          returnFromCameraPage();
         }}
       />
     </section>

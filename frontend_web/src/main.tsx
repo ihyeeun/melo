@@ -28,7 +28,7 @@ function renderApp() {
         <VitePreloadErrorToastBridge />
         <AppToastViewport />
       </Toast.Provider>
-      <ReactQueryDevtools />
+      <ReactQueryDevtools buttonPosition="top-right" />
     </QueryClientProvider>,
   );
 }

@@ -215,6 +215,7 @@ export interface ChatFeedbackResponseDto extends ChatResponseBaseDto {
   chat_category: "feedback";
   feedback?: FeedbackItemDto;
   recognized_foods?: ChatFoodImageRecognizedMenuResponseDto[];
+  recognized_nutrition?: NutritionLabelRecognitionResponseDto;
 }
 
 export interface ChatGeneralResponseDto extends ChatResponseBaseDto {
@@ -224,6 +225,13 @@ export interface ChatGeneralResponseDto extends ChatResponseBaseDto {
 
 export interface ChatMealRecordParseResponseDto extends ChatResponseBaseDto {
   chat_category: "meal_record_parse";
+  meal_record_parse: {
+    menu_ids: number[];
+    menu_names: string[];
+    menu_quantities: number[];
+    date?: string;
+    time?: number;
+  };
 }
 
 export interface ChatNutritionLabelFeedbackResponseDto extends ChatResponseBaseDto {
@@ -236,6 +244,7 @@ export interface ChatNutritionLabelFeedbackResponseDto extends ChatResponseBaseD
   recognized_foods?: never;
 }
 
+// TODO 없애야할 interface
 export interface ChatNutritionLabelMenuRegisteredResponseDto extends ChatResponseBaseDto {
   chat_category: "feedback";
   action: "nutrition_label_menu_registered";
@@ -329,6 +338,7 @@ export interface ChatHistoryItemResponseDto {
 export interface ChatMealRecordParseResponseDto {
   chat_id: number;
   menu_ids: number[];
+  menu_names: string[];
   menu_quantities: number[];
   time?: 0 | 1 | 2 | 3 | 4;
   date?: string;

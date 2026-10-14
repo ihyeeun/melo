@@ -1,6 +1,3 @@
-import { useQueryClient } from "@tanstack/react-query";
-
-import { useMealFeedbackMutation } from "@/features/chat/hooks/mutations/useMealFeedbackMutation";
 import { useActivityCalories } from "@/features/health/hooks/useActivityCalories";
 import Tile from "@/features/home/components/cards/Tile";
 import { useDayMealsQuery } from "@/features/home/hooks/queries/useTodayRecordQuery";
@@ -16,11 +13,9 @@ import {
 import { PATH } from "@/router/path";
 import { track } from "@/shared/analytics/analytics";
 import { EVENT_NAME } from "@/shared/analytics/analytics.constants";
-import { isRequestAbortError } from "@/shared/api/requestCancellation";
 import { InfoPopover } from "@/shared/commons/popover/InfoPopover";
 import ScoreProgress from "@/shared/commons/progress/Progress";
 import { Skeleton, SkeletonStatus } from "@/shared/commons/skeleton/Skeleton";
-import { toast } from "@/shared/commons/toast/toast";
 import { FEATURE_GUARD, useIsFeatureBlocked } from "@/shared/guards/featureGuard";
 import { useNavigate } from "@/shared/navigation/stackflowNavigation";
 import { useSelectedDateKey } from "@/shared/stores/selectedDate.store";
@@ -47,13 +42,6 @@ export default function PreviewTodayScoreSection({
   const selectedDate = parseDateKey(selectedDateKey);
   const isChatBlocked = useIsFeatureBlocked(FEATURE_GUARD.CHAT);
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
-  const { mutate: requestMealFeedback, isPending: isCoachingPending } = useMealFeedbackMutation({
-    onError: (error) => {
-      if (isRequestAbortError(error)) return;
-      toast.warning(error.message || "식사 코칭을 불러오지 못했어요. 다시 시도해주세요.");
-    },
-  });
   const coachingLabel =
     selectedDateKey === getTodayFormatDateKey()
       ? "오늘의 식사 코칭 받기"
@@ -154,13 +142,10 @@ export default function PreviewTodayScoreSection({
             <button
               type="button"
               className={`${styles.coachingActionButton} body-s-medium text-primary textCenter`}
-              disabled={isCoachingPending}
-              aria-busy={isCoachingPending}
               onClick={() => {
-                if (queryClient.isMutating({ mutationKey: ["meal-feedback"] }) > 0) return;
-
-                requestMealFeedback(selectedDateKey);
-                navigate(PATH.CHAT);
+                navigate(PATH.AI_CHAT, {
+                  state: { type: "meal-feedback", dateKey: selectedDateKey },
+                });
                 track(EVENT_NAME.CLICK_MEAL_FEEDBACK_AI_COACH);
               }}
             >

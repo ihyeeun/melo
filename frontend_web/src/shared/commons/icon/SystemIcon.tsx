@@ -45,6 +45,7 @@ const SYSTEM_ICON_SRC = {
   steps: "/icons/system-icons/steps.svg",
   refresh: "/icons/system-icons/refresh.svg",
   bubble: "/icons/system-icons/bubble.svg",
+  "arrow-up": "/icons/system-icons/arrow-up.svg",
 } as const;
 
 export type SystemIconName = keyof typeof SYSTEM_ICON_SRC;

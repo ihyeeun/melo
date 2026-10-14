@@ -3,7 +3,9 @@ export const EVENT_NAME = {
   VITE_PRELOAD_ERROR: "vite_preload_error",
   SCREEN_VIEW: "screen_view",
 
+  CAMERA_START: "camera_start",
   CAMERA_CANCEL: "camera_cancel",
+  CAMERA_FAIL: "camera_fail",
 
   OCR_SCAN_START: "ocr_scan_start",
   OCR_SCAN_SUCCESS: "ocr_scan_success",
@@ -25,9 +27,9 @@ export const EVENT_NAME = {
   AI_COACH_RESPONSE_FAIL: "ai_coach_response_fail",
 
   RECOMMEND_MENU_SAVE: "chat_menu_save",
-  CHAT_TEXT_MENU_SAVE: "chat_text_menu_save",
-  RECOMMEND_MENU_CANCEL: "chat_menu_cancel",
-  DIARY_MENU_SAVE: "manual_menu_save",
+  CHAT_TEXT_MENU_SAVE: "menu_save_text",
+  DIARY_MENU_SAVE: "menu_save_manual",
+  MENU_SAVE_BY_SCAN: "menu_save_scan",
 
   USER_PROFILE_UPDATED: "user_profile_updated",
 

@@ -28,13 +28,8 @@ export const PATH = {
 
   // Chat
   CHAT: "/chat",
-  CHAT_MEAL_RECORD_SHEET: "/chat/meal-record-sheet",
+  AI_CHAT: "/chat",
   CHAT_NUTRITION_REGISTER: "/chat/nutrition-register",
-  CHAT_NUTRITION_DETAIL: "/chat/nutrition-detail",
-  RECOMMEND_RESULT: "/recommend-result",
-  RECOMMEND_DETAIL: "/recommend-detail",
-  FEEDBACK_RESULT: "/feedback-result",
-  FEEDBACK_DETAIL: "/feedback-detail",
 
   //Diary
   DIARY: "/diary",
@@ -45,11 +40,9 @@ export const PATH = {
   GOAL_EDIT_NUTRIENT: "/profile/goal-edit/nutrient",
 
   // Camera
-  MENU_BOARD_CAMERA: "/meal-record/add/menu-board-camera",
   FOOD_CAMERA: "/meal-record/add/food-camera",
   NUTRIENT_CAMERA: "/nutrient-camera",
   CHAT_CAMERA: "/chat-camera",
-  CHAT_FOOD_CAMERA: "/chat-food-camera",
 
   // ETC
   APP_INFO: "/app-info",

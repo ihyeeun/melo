@@ -16,7 +16,6 @@ import {
   getRecognitionErrorFeedback,
   isCameraCaptureCancelled,
 } from "@/features/camera/utils/cameraCapture";
-import { trackDiaryMenuSaveByMenuIds } from "@/features/camera/utils/diaryMenuSaveAnalytics";
 import {
   MAX_MEAL_RECORD_MENUS,
   MEAL_RECORD_MENU_LIMIT_MESSAGE,
@@ -32,6 +31,7 @@ import { PATH } from "@/router/path";
 import { getMealRecordPath } from "@/router/pathHelpers";
 import { track } from "@/shared/analytics/analytics";
 import { EVENT_NAME } from "@/shared/analytics/analytics.constants";
+import { trackScanMenuSave } from "@/shared/analytics/menuSaveEvent.util";
 import {
   trackNutritionLabelScanFail,
   trackNutritionLabelScanStart,
@@ -112,10 +112,6 @@ export default function MealRecordCreatePage() {
       let hasRecognitionSucceeded = false;
 
       try {
-        track(EVENT_NAME.FOOD_SCAN_START, {
-          source: "meal_record_camera",
-        });
-
         const imageData = await uploadFoodImage(capturedImage);
         screen.assertActive();
 
@@ -191,7 +187,11 @@ export default function MealRecordCreatePage() {
 
         await mealRegisterAsync(registerRequest, {
           onSuccess: () => {
-            void trackDiaryMenuSaveByMenuIds(registerRequest.menu_ids ?? []);
+            trackScanMenuSave({
+              menus: registerRequest.menu_ids?.map((id) => ({ menu_id: id })),
+              source: "home_tab",
+              scanType: "photo",
+            });
           },
         });
 
@@ -274,6 +274,7 @@ export default function MealRecordCreatePage() {
     let capturedImage: CapturedImage;
     try {
       setIsOpeningCamera(true);
+      track(EVENT_NAME.CAMERA_START, { source: "home_tab" });
       capturedImage = await requestNativeCameraCapture({
         quality: DEFAULT_CAMERA_CAPTURE_QUALITY,
         mode: "FOOD",
@@ -285,13 +286,13 @@ export default function MealRecordCreatePage() {
       if (!screen.isActive()) return;
       setIsOpeningCamera(false);
       if (isCameraCaptureCancelled(error)) {
-        track(EVENT_NAME.CAMERA_CANCEL);
+        track(EVENT_NAME.CAMERA_CANCEL, { source: "home_tab" });
         returnFromCameraPage();
         return;
       }
       track(EVENT_NAME.FOOD_SCAN_FAIL, {
         reason: getAnalyticsErrorMessage(error, "카메라를 실행하지 못했어요"),
-        source: "meal_record_camera",
+        source: "home_tab",
       });
       setCapturedPreviewSrc(null);
       setCaptureErrorFeedback(getCameraCaptureErrorFeedback(error));

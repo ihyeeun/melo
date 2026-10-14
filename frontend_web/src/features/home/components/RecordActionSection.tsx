@@ -14,18 +14,11 @@ import { getMealRecordPath, getMealSearchPath, getWorkoutRecordPath } from "@/ro
 import type { MealType } from "@/shared/api/types/api.dto";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import { Skeleton, SkeletonStatus } from "@/shared/commons/skeleton/Skeleton";
+import { MEAL_TIMES } from "@/shared/constants/meal.constants";
 import { useNavigate } from "@/shared/navigation/stackflowNavigation";
 import { useSelectedDateKey } from "@/shared/stores/selectedDate.store";
 import { getTodayFormatDateKey, isFutureDateKey } from "@/shared/utils/dateFormat";
 import { formatDisplayNumber } from "@/shared/utils/numberFormat";
-
-const MEAL_TYPES = [
-  { type: "0", label: "아침", icon: "breakfast" },
-  { type: "1", label: "점심", icon: "lunch" },
-  { type: "2", label: "저녁", icon: "dinner" },
-  { type: "3", label: "간식", icon: "snack" },
-  { type: "4", label: "야식", icon: "late-snack" },
-] as const;
 
 export default function RecordActionSection() {
   const selectedDate = useSelectedDateKey();
@@ -95,7 +88,7 @@ export default function RecordActionSection() {
           <MealRecordSkeleton />
         ) : (
           <ul className={styles.mealsArea}>
-            {MEAL_TYPES.map(({ type, label, icon }) => {
+            {MEAL_TIMES.map(({ type, label, icon }) => {
               const menus = dayMeals?.menusByTime[type] ?? [];
               const hasMenus = menus.length > 0;
               const calories = dayMeals?.caloriesByTime[type] ?? 0;
@@ -250,7 +243,7 @@ function MealRecordSkeleton() {
   return (
     <SkeletonStatus label="식단 기록을 불러오는 중입니다.">
       <ul className={styles.mealsArea}>
-        {MEAL_TYPES.map(({ type }) => (
+        {MEAL_TIMES.map(({ type }) => (
           <li key={type} className={styles.mealItem}>
             <div className={`${styles.mealButton} ${styles.mealSkeletonButton}`}>
               <div className={styles.mealTitleArea}>

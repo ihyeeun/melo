@@ -1,3 +1,4 @@
+import { useActivity } from "@stackflow/react";
 import {
   addDays,
   addMonths,
@@ -61,6 +62,7 @@ export default function RecordCalendar({
     selectedDate: controlledSelectedDate,
     allowFutureWeekNavigation: false,
   });
+  const { isActive } = useActivity();
 
   const recordedDateRange = useMemo(() => {
     const monthStart = startOfMonth(viewDate);
@@ -75,7 +77,7 @@ export default function RecordCalendar({
   }, [viewDate]);
 
   const { data: fetchedRecordedDates } = useCalendarRecordedDatesQuery({
-    enabled: showRecordedDots,
+    enabled: showRecordedDots && isActive,
     startDate: recordedDateRange.startDate,
     endDate: recordedDateRange.endDate,
   });
@@ -128,7 +130,10 @@ export default function RecordCalendar({
           return renderDayCell ? (
             renderDayCell(dayCellProps)
           ) : (
-            <DayCell {...dayCellProps} hasRecord={recordedDateSet.has(formatDateKey(props.day.date))} />
+            <DayCell
+              {...dayCellProps}
+              hasRecord={recordedDateSet.has(formatDateKey(props.day.date))}
+            />
           );
         }}
       />
