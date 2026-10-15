@@ -2,6 +2,8 @@ import { useEffect } from "react";
 
 import { useGetProfileQuery } from "@/features/profile/hooks/queries/useProfileQuery";
 import { PATH } from "@/router/path";
+import { syncAppOptionalTabs } from "@/shared/api/bridge/nativeBridge";
+import type { OptionalTabName } from "@/shared/api/bridge/nativeBridge.types";
 import { LoadingScreen } from "@/shared/commons/loading/Loading";
 import { setFreeUserGuardEnabled } from "@/shared/guards/featureGuard";
 
@@ -16,6 +18,8 @@ import {
 import { getWebNavigationCommand, WEB_NAVIGATION_COMMAND_EVENT } from "./webNavigationCommand";
 
 const StackComponent = getStackflowStackComponent();
+
+const WEB_OPTIONAL_TABS: readonly OptionalTabName[] = ["restaurant"];
 
 const PROFILE_SYNC_EXCLUDED_PATHS = new Set([PATH.ONBOARDING, PATH.APP_INFO]);
 const STACKFLOW_HISTORY_STATE_TAG = "@stackflow/plugin-history-sync";
@@ -98,6 +102,13 @@ export function StackflowRuntime() {
 
     window.addEventListener(WEB_NAVIGATION_COMMAND_EVENT, handleWebNavigationCommand);
     window.addEventListener("popstate", handlePopState);
+
+    // A full WebView reload can change browser history before this lazy runtime
+    // mounts (for example, returning from a removed tab to home).
+    syncStackflowWithCurrentBrowserPath({ animate: false });
+
+    // Install navigation listeners before a hidden tab can redirect to home.
+    syncAppOptionalTabs(WEB_OPTIONAL_TABS);
 
     return () => {
       window.removeEventListener(WEB_NAVIGATION_COMMAND_EVENT, handleWebNavigationCommand);

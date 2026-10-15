@@ -447,3 +447,34 @@ export interface WaterIntakeResponseDto {
   cup_size: number;
   water_intake: number;
 }
+
+/* ======
+ * 식당 탭
+ * ====== */
+export interface RestaurantSearchResponseDto {
+  restaurant_list: RestaurantSummaryResponseDto[];
+  next_cursor?: number;
+}
+
+export interface RestaurantSummaryResponseDto {
+  restaurant_id: number;
+  restaurant_name: string;
+  category?: string;
+}
+
+export interface RestaurantDetailResponseDto {
+  restaurant_name: string;
+  menu_list: RestaurantMenuResponseDto[];
+}
+
+export interface RestaurantMenuResponseDto {
+  menu_id: number;
+  menu_name: string;
+  calories: number;
+  carbs?: number;
+  protein?: number;
+  fat?: number;
+  unit: number;
+  weight: number;
+  unit_quantity: string;
+}

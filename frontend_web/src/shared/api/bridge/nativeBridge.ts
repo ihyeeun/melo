@@ -15,6 +15,7 @@ import type {
   HealthStepsReadRequestPayload,
   ImageUploadRequestPayload,
   InAppBrowserOpenResponsePayload,
+  OptionalTabName,
   WebToAppMessage,
 } from "./nativeBridge.types";
 
@@ -216,6 +217,16 @@ export function syncAppTab(tab: AppTabName) {
     payload: {
       tab,
     },
+  });
+}
+
+export function syncAppOptionalTabs(optionalTabs: readonly OptionalTabName[]) {
+  if (!isNativeApp()) return;
+
+  postMessageToApp({
+    id: generateRequestId(),
+    type: "TAB_CONFIG_SET",
+    payload: { optionalTabs },
   });
 }
 

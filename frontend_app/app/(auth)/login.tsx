@@ -35,11 +35,6 @@ export default function LoginPage() {
     <SafeAreaView style={styles.container}>
       <View style={styles.hero}>
         <Image source={MeloLogo} style={styles.meloIcon} resizeMode="contain" />
-        <Typo color="tertiary" size="body-m-medium">
-          건강한 식사를 넘어,
-          {"\n"}
-          여성의 건강을 이해하는 AI 헬스케어
-        </Typo>
         <Image source={LoginImage} style={styles.loginImage} resizeMode="contain" />
       </View>
       <View style={styles.bottom}>

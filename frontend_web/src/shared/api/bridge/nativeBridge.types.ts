@@ -1,7 +1,8 @@
 import type { ApiResponse } from "@/shared/api/types/apiResponse.types";
 
 export type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
-export type AppTabName = "home" | "chat" | "diary" | "profile";
+export type AppTabName = "home" | "chat" | "diary" | "restaurant" | "analysis" | "profile";
+export type OptionalTabName = Extract<AppTabName, "diary" | "restaurant" | "analysis">;
 export type BridgeMessageContext = {
   href?: string;
 };
@@ -33,6 +34,15 @@ export type WebToAppTabSyncMessage = {
     tab: AppTabName;
   };
   context?: BridgeMessageContext;
+};
+
+export type WebToAppTabConfigSetMessage = {
+  id: string;
+  type: "TAB_CONFIG_SET";
+  context?: BridgeMessageContext;
+  payload: {
+    optionalTabs: readonly OptionalTabName[];
+  };
 };
 
 export type WebToAppNavigationBackMessage = {
@@ -158,6 +168,7 @@ export type WebToAppMessage =
   | WebToAppApiRequestMessage
   | WebToAppApiCancelMessage
   | WebToAppTabSyncMessage
+  | WebToAppTabConfigSetMessage
   | WebToAppNavigationBackMessage
   | WebToAppHapticTriggerRequestMessage
   | WebToAppAppDeviceInfoRequestMessage
