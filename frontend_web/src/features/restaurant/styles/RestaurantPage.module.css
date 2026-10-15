@@ -129,6 +129,8 @@
   margin-bottom: 16px;
   border-radius: 16px;
   background: var(--background-selected);
+  border: 1px solid var(--coral-100);
+  box-shadow: var(--shadow-outer);
 }
 
 .bannerText {
@@ -153,21 +155,25 @@
   border-radius: 16px;
   background: var(--best-background);
   color: var(--navy-900);
+  border: 1px solid var(--best-border);
 }
 
 .bestCard[data-tone="balanced"] {
   --best-background: #fff3e3;
   --best-icon-background: #ffe5c2;
+  --best-border: #e8cead;
 }
 
 .bestCard[data-tone="light"] {
   --best-background: #edf7ee;
   --best-icon-background: #d6efd8;
+  --best-border: #c5ddc8;
 }
 
 .bestCard[data-tone="protein"] {
   --best-background: #f3edfb;
   --best-icon-background: #e8dcf8;
+  --best-border: #d8caea;
 }
 
 .bestIcon {
