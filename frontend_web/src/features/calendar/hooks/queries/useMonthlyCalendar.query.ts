@@ -5,13 +5,14 @@ import { calendarKeys } from "@/features/calendar/hooks/queries/calendar.queryKe
 import type { CalendarViewMode } from "@/features/calendar/types/calendar.types";
 import type { MonthlyCalendarRequestDto } from "@/shared/api/types/api.request.dto";
 
-export function useGetMonthlyCalendarQuery<M extends CalendarViewMode>({
-  date,
-  mode,
-}: MonthlyCalendarRequestDto<M>) {
+export function useGetMonthlyCalendarQuery<M extends CalendarViewMode>(
+  { date, mode }: MonthlyCalendarRequestDto<M>,
+  { enabled = true }: { enabled?: boolean } = {},
+) {
   return useQuery({
     queryKey: calendarKeys.monthly.month({ date, mode }),
     queryFn: () => getMonthlyCalendarMode({ date, mode }),
+    enabled,
     staleTime: Infinity,
   });
 }

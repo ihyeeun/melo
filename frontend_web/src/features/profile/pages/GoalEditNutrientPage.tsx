@@ -1,6 +1,7 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
 
+import { calendarKeys } from "@/features/calendar/hooks/queries/calendar.queryKey";
 import { registerWeight } from "@/features/home/api/todayRecord.api";
 import { queryKeys as homeQueryKeys } from "@/features/home/hooks/queries/todayRecord.queryKey";
 import { useRecommendNutrientMutation } from "@/features/onboarding/hooks/mutations/useRecommendMutation";
@@ -221,6 +222,9 @@ export default function GoalEditNutrientPage() {
             steps: previous?.steps ?? 0,
           }),
         );
+        await queryClient.invalidateQueries({
+          queryKey: calendarKeys.monthly.month({ date: today.slice(0, 7), mode: "weight" }),
+        });
 
         return updatedProfile;
       });

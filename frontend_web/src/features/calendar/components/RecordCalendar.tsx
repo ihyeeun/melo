@@ -1,3 +1,5 @@
+import { Toggle } from "@base-ui/react/toggle";
+import { ToggleGroup } from "@base-ui/react/toggle-group";
 import { useActivity } from "@stackflow/react";
 import {
   addDays,
@@ -8,13 +10,21 @@ import {
   startOfWeek,
   subMonths,
 } from "date-fns";
-import { type ReactNode, useMemo } from "react";
+import { type ReactNode, useMemo, useState } from "react";
 
 import Calendar from "@/features/calendar/components/Calendar";
 import CalendarHeader from "@/features/calendar/components/CalendarHeader";
 import DayCell from "@/features/calendar/components/dayCell";
+import { useGetMonthlyCalendarQuery } from "@/features/calendar/hooks/queries/useMonthlyCalendar.query";
 import styles from "@/features/calendar/styles/RecordCalendar.module.css";
-import type { DayCellRenderProps } from "@/features/calendar/types/calendar.types";
+import type {
+  CalendarViewMode,
+  DayCellRenderProps,
+} from "@/features/calendar/types/calendar.types";
+import {
+  formatMonthlyCalendarRecord,
+  MONTHLY_RECORD_MODES,
+} from "@/features/calendar/utils/monthlyCalendar";
 import { formatDateKey } from "@/shared/utils/dateFormat";
 
 import { useCalendarRecordedDatesQuery } from "../hooks/queries/useCalendarRecordedDatesQuery";
@@ -31,6 +41,7 @@ type Props = {
   selectedDate?: Date;
   showMonthBackground?: boolean;
   showRecordedDots?: boolean;
+  initialRecordMode?: CalendarViewMode;
   renderDayCell?: (props: RecordDayCellRenderProps) => ReactNode;
 };
 
@@ -44,8 +55,10 @@ export default function RecordCalendar({
   selectedDate: controlledSelectedDate,
   showMonthBackground = true,
   showRecordedDots = true,
+  initialRecordMode = "intake",
   renderDayCell,
 }: Props) {
+  const [recordMode, setRecordMode] = useState<CalendarViewMode>(initialRecordMode);
   const {
     viewMode,
     selectedDate,
@@ -63,10 +76,20 @@ export default function RecordCalendar({
     allowFutureWeekNavigation: false,
   });
   const { isActive } = useActivity();
+  const showMonthlyRecords = viewMode === "month" && !renderDayCell;
+  const monthlyQuery = useGetMonthlyCalendarQuery(
+    { date: formatDateKey(viewDate).slice(0, 7), mode: recordMode },
+    { enabled: showMonthlyRecords && isActive },
+  );
+  const monthlyRecords = useMemo(
+    () => new Map(monthlyQuery.data?.map((record) => [record.date, record])),
+    [monthlyQuery.data],
+  );
+  const recordTypeLabel = MONTHLY_RECORD_MODES.find((option) => option.value === recordMode)?.label;
 
   const recordedDateRange = useMemo(() => {
     const monthStart = startOfMonth(viewDate);
-    // 주·월 전환 시 같은 조회 결과를 사용하고, 인접 월의 바깥 날짜 칸까지 포함한다.
+    // 주간 스와이프 시 인접 월의 식사 기록 점도 함께 표시한다.
     const firstDate = startOfWeek(subMonths(monthStart, 1), { weekStartsOn: 1 });
     const lastDate = endOfWeek(endOfMonth(addMonths(monthStart, 1)), { weekStartsOn: 1 });
 
@@ -77,7 +100,7 @@ export default function RecordCalendar({
   }, [viewDate]);
 
   const { data: fetchedRecordedDates } = useCalendarRecordedDatesQuery({
-    enabled: showRecordedDots && isActive,
+    enabled: showRecordedDots && isActive && viewMode === "week",
     startDate: recordedDateRange.startDate,
     endDate: recordedDateRange.endDate,
   });
@@ -95,6 +118,7 @@ export default function RecordCalendar({
 
   const handleGoToday = () => {
     const today = goToday();
+    setViewMode("week");
     onSelectDate?.(today);
   };
 
@@ -115,6 +139,36 @@ export default function RecordCalendar({
         onToday={handleGoToday}
       />
 
+      {showMonthlyRecords && (
+        <>
+          <ToggleGroup
+            className={styles.recordModes}
+            aria-label="월간 기록 항목"
+            value={[recordMode]}
+            onValueChange={(values) => {
+              if (values[0]) setRecordMode(values[0]);
+            }}
+          >
+            {MONTHLY_RECORD_MODES.map(({ value, label }) => (
+              <Toggle key={value} value={value} className={`${styles.recordMode} body-s-medium`}>
+                {label}
+              </Toggle>
+            ))}
+          </ToggleGroup>
+          {monthlyQuery.isError ? (
+            <button
+              type="button"
+              onClick={() => void monthlyQuery.refetch()}
+              className={`${styles.status} caption-m-regular text-secondary`}
+              role="alert"
+            >
+              <p>월간 기록을 불러오지 못했어요</p>
+              <p>다시 시도</p>
+            </button>
+          ) : null}
+        </>
+      )}
+
       <Calendar
         viewMode={viewMode}
         viewDate={viewDate}
@@ -126,13 +180,22 @@ export default function RecordCalendar({
         onRenderedStartDateChange={onVisibleStartDateChange}
         renderDayCell={(props) => {
           const dayCellProps = { ...props, showMonthBackground };
+          const dateKey = formatDateKey(props.day.date);
+          const recordLabel =
+            showMonthlyRecords && props.day.isCurrentMonth
+              ? formatMonthlyCalendarRecord(monthlyRecords.get(dateKey), recordMode)
+              : undefined;
 
           return renderDayCell ? (
             renderDayCell(dayCellProps)
           ) : (
             <DayCell
               {...dayCellProps}
-              hasRecord={recordedDateSet.has(formatDateKey(props.day.date))}
+              hasRecord={
+                showMonthlyRecords ? recordLabel !== undefined : recordedDateSet.has(dateKey)
+              }
+              recordLabel={recordLabel}
+              recordTypeLabel={showMonthlyRecords ? recordTypeLabel : undefined}
             />
           );
         }}

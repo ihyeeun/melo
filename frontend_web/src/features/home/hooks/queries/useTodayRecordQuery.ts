@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 
+import { calendarKeys } from "@/features/calendar/hooks/queries/calendar.queryKey";
 import {
   getTodayMealRecordMenus,
   getTodayRecordBodyStats,
@@ -48,6 +49,9 @@ async function initializeTodayWeight(date: string) {
   screen.assertActive();
 
   await registerWeight({ date, weight: profile.weight });
+  await queryClient.invalidateQueries({
+    queryKey: calendarKeys.monthly.month({ date: date.slice(0, 7), mode: "weight" }),
+  });
 
   return {
     ...bodyStats,

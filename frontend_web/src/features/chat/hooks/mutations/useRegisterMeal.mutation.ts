@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-import { queryKeys as calendarQueryKeys } from "@/features/calendar/hooks/queries/calendar.queryKey";
+import { calendarKeys, queryKeys as calendarQueryKeys } from "@/features/calendar/hooks/queries/calendar.queryKey";
 import { getTodayMealRecordMenus } from "@/features/home/api/todayRecord.api";
 import { queryKeys as homeQueryKeys } from "@/features/home/hooks/queries/todayRecord.queryKey";
 import { postTodayMealRecordRegister } from "@/features/meal-record/api/DayMeal";
@@ -96,6 +96,9 @@ export function useRegisterChatMealMutation() {
         // 달력의 식사 기록 표시 갱신
         queryClient.invalidateQueries({
           queryKey: calendarQueryKeys.recordedDates.all,
+        }),
+        queryClient.invalidateQueries({
+          queryKey: calendarKeys.monthly.month({ date: dateKey.slice(0, 7), mode: "intake" }),
         }),
       ]);
     },

@@ -8,11 +8,20 @@
     padding-top: var(--safe-area-top);
   }
 
+  &[data-view="month"] {
+    min-height: 0;
+    overflow-y: auto;
+
+    & > * {
+      flex-shrink: 0;
+    }
+  }
+
   &[data-view="month"][data-month-background="true"] {
     background: linear-gradient(180deg, var(--coral-300) -90px, var(--background-selected) 90%);
     border-radius: 0 0 20px 20px;
     isolation: isolate;
-    overflow: hidden;
+    overflow-x: hidden;
     position: relative;
 
     &::before,
@@ -45,4 +54,30 @@
       z-index: 1;
     }
   }
+}
+
+.recordModes {
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+  padding: 0 16px 18px;
+}
+
+.recordMode {
+  flex-shrink: 0;
+  padding: 6px 12px;
+  border-radius: 16px;
+  background-color: var(--background-default);
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+
+.recordMode[data-pressed] {
+  background-color: var(--navy-900);
+  color: var(--background-default);
+}
+
+.status {
+  text-align: center;
+  padding-bottom: 12px;
 }

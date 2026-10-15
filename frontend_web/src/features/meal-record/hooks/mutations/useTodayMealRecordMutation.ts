@@ -1,6 +1,6 @@
 import { type QueryClient, useMutation, useQueryClient } from "@tanstack/react-query";
 
-import { queryKeys as calendarQueryKeys } from "@/features/calendar/hooks/queries/calendar.queryKey";
+import { calendarKeys, queryKeys as calendarQueryKeys } from "@/features/calendar/hooks/queries/calendar.queryKey";
 import { queryKeys } from "@/features/home/hooks/queries/todayRecord.queryKey";
 import {
   deleteTodayMealRecord,
@@ -20,6 +20,9 @@ function invalidateMealRecordRelatedQueries(queryClient: QueryClient, date: stri
   return Promise.all([
     queryClient.invalidateQueries({ queryKey: queryKeys.dayMeals.byDate(date) }),
     queryClient.invalidateQueries({ queryKey: calendarQueryKeys.recordedDates.all }),
+    queryClient.invalidateQueries({
+      queryKey: calendarKeys.monthly.month({ date: date.slice(0, 7), mode: "intake" }),
+    }),
     queryClient.invalidateQueries({ queryKey: menuQueryKeys.frequentlyRecorded() }),
   ]);
 }
