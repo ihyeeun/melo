@@ -182,10 +182,10 @@ export type MonthlyCalendarResponseDto<M extends CalendarViewMode = CalendarView
 } & MonthlyCalendarValueByMode[M];
 
 interface MonthlyCalendarValueByMode {
-  [CALENDAR_VIEW_MODE.MEAL_INTAKE]: { calories: number };
-  [CALENDAR_VIEW_MODE.WORKOUT_RECORD]: { burned_calories: number };
-  [CALENDAR_VIEW_MODE.BODY_WEIGHT]: { weight: number };
-  [CALENDAR_VIEW_MODE.WATER_RECORD]: { water_intake: number };
+  [CALENDAR_VIEW_MODE.MEAL_INTAKE]: { calories?: number };
+  [CALENDAR_VIEW_MODE.WORKOUT_RECORD]: { burned_calories?: number };
+  [CALENDAR_VIEW_MODE.BODY_WEIGHT]: { weight?: number };
+  [CALENDAR_VIEW_MODE.WATER_RECORD]: { water_intake?: number };
 }
 
 /* ======

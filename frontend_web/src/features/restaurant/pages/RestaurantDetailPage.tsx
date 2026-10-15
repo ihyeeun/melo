@@ -55,7 +55,7 @@ export default function RestaurantDetailPage() {
   );
 
   return (
-    <section className={`page ${styles.page}`}>
+    <section className={`page`}>
       <PageHeader
         title={restaurantName}
         onBack={() => navigateBack({ fallbackTo: PATH.RESTAURANT })}

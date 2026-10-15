@@ -129,6 +129,7 @@ export default function WorkoutRecordPage() {
         safeAreaTop={false}
         showMonthBackground={false}
         showRecordedDots={false}
+        initialRecordMode="workout"
       />
 
       <main className={`${styles.content} main`}>

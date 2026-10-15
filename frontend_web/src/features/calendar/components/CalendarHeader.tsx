@@ -39,7 +39,7 @@ export default function CalendarHeader({
             className={styles.titleButton}
             onClick={onToggleViewMode}
             aria-expanded={isMonthView}
-            aria-label={isMonthView ? "주 달력 접기" : "월 달력 펼치기"}
+            aria-label={isMonthView ? "월 달력 접기" : "월 달력 펼치기"}
           >
             <span className={styles.titleViewport}>
               <span key={viewMode} className={`${styles.titleText} title-s-semi`}>
@@ -75,7 +75,7 @@ export default function CalendarHeader({
             </button>
           </div>
         </div>
-        {isMonthView ? (
+        {isMonthView && (
           <button
             type="button"
             className={`${styles.todayAction} body-l-medium text-secondary`}
@@ -84,7 +84,7 @@ export default function CalendarHeader({
           >
             오늘
           </button>
-        ) : null}
+        )}
       </div>
     </div>
   );

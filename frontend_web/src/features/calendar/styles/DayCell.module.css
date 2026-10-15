@@ -22,6 +22,10 @@
     background-color: rgba(255, 244, 241, 50%);
   }
 
+  &[data-view="month"][data-has-record="true"][data-outside="false"] {
+    background-color: rgba(255, 255, 255, 90%);
+  }
+
   &[data-view="month"][data-today="true"] {
     border: 1.5px solid var(--coral-300);
     background-color: rgba(255, 255, 255, 70%);
@@ -52,6 +56,23 @@
   }
 }
 
+.cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  width: 100%;
+  height: 60px;
+}
+
+.recordValue {
+  height: 100%;
+  max-width: 100%;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
 :where(.root) {
   &[data-view="week"] {
     gap: 2px;
@@ -61,7 +82,7 @@
 
   &[data-view="month"] {
     height: 44px;
-    width: 43px;
+    width: min(100%, 43px);
   }
 }
 
@@ -72,7 +93,8 @@
 
   :where(.root)[data-view="month"] & {
     height: 100%;
-    justify-content: center;
+    padding-top: 9px;
+    /* justify-content: center; */
     position: relative;
     width: 100%;
   }

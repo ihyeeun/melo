@@ -7,6 +7,8 @@ import { formatDayNumber } from "../utils/format";
 type Props = DayCellRenderProps & {
   hasRecord: boolean;
   showMonthBackground?: boolean;
+  recordLabel?: string;
+  recordTypeLabel?: string;
 };
 
 export default function DayCell({
@@ -16,8 +18,10 @@ export default function DayCell({
   variant = "week",
   hasRecord,
   showMonthBackground = false,
+  recordLabel,
+  recordTypeLabel = "식사",
 }: Props) {
-  return (
+  const button = (
     <button
       type="button"
       className={styles.root}
@@ -26,13 +30,14 @@ export default function DayCell({
       data-selected={day.isSelected}
       data-today={day.isToday}
       data-outside={!day.isCurrentMonth}
+      data-has-record={hasRecord}
       onClick={() => onSelect(day.date)}
       aria-pressed={day.isSelected}
       aria-label={`${day.date.toLocaleDateString("ko-KR", {
         month: "long",
         day: "numeric",
         weekday: "long",
-      })}${day.isToday ? ", 오늘" : ""}${!day.isCurrentMonth ? ", 이번 달 아님" : ""}${hasRecord ? ", 식사 기록 있음" : ""}`}
+      })}${day.isToday ? ", 오늘" : ""}${!day.isCurrentMonth ? ", 이번 달 아님" : ""}${hasRecord ? `, ${recordTypeLabel} 기록 있음${recordLabel ? `, ${recordLabel}` : ""}` : ""}`}
     >
       {variant === "week" && weekdayLabel && (
         <span className="caption-m-regular">{weekdayLabel}</span>
@@ -42,5 +47,16 @@ export default function DayCell({
         <EventDot visible={hasRecord} variant={variant} isOutside={!day.isCurrentMonth} />
       </div>
     </button>
+  );
+
+  return variant === "month" ? (
+    <div className={styles.cell}>
+      {button}
+      <span className={`${styles.recordValue} caption-s-medium text-tertiary`} aria-hidden="true">
+        {recordLabel}
+      </span>
+    </div>
+  ) : (
+    button
   );
 }

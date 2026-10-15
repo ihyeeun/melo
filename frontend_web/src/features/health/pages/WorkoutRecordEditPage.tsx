@@ -2,6 +2,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import type { PointerEvent, ReactNode } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
+import { calendarKeys } from "@/features/calendar/hooks/queries/calendar.queryKey";
 import {
   deleteTodayWorkoutRecord,
   upsertWorkoutRecord,
@@ -276,6 +277,10 @@ export default function WorkoutRecordEditPage() {
       setIsSavePending(false);
       if (isRequestAbortError(error)) return;
       toast.warning("운동 기록 저장에 실패했어요", "잠시 후 다시 시도해주세요.");
+    } finally {
+      await queryClient.invalidateQueries({
+        queryKey: calendarKeys.monthly.month({ date: dateKey.slice(0, 7), mode: "workout" }),
+      });
     }
   };
 

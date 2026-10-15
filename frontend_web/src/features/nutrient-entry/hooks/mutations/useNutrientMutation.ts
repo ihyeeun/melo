@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
+import { calendarKeys } from "@/features/calendar/hooks/queries/calendar.queryKey";
 import { queryKeys } from "@/features/home/hooks/queries/todayRecord.queryKey";
 import {
   menuQueryKeys,
@@ -49,6 +50,7 @@ export function useModifyNutrientMutation(callbacks?: UseMutationCallback) {
         queryKey: queryKeys.dayMeals.all,
         refetchType: "active",
       });
+      await queryClient.invalidateQueries({ queryKey: calendarKeys.monthly.mode("intake") });
       if (callbacks?.onSuccess) callbacks.onSuccess();
     },
 

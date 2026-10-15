@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
+import { calendarKeys } from "@/features/calendar/hooks/queries/calendar.queryKey";
 import { registerStep, registerWeight } from "@/features/home/api/todayRecord.api";
 import { queryKeys as homeQueryKeys } from "@/features/home/hooks/queries/todayRecord.queryKey";
 import { updateWeight } from "@/features/profile/api/profile";
@@ -26,7 +27,7 @@ export function useRegisterWeightMutation(callbacks?: UseMutationCallback) {
         return undefined;
       }
     },
-    onSuccess: (_, { date, weight }) => {
+    onSuccess: async (_, { date, weight }) => {
       queryClient.setQueryData<WeightStepsResponseDto>(
         homeQueryKeys.bodyStats(date),
         (previous) => ({
@@ -34,6 +35,9 @@ export function useRegisterWeightMutation(callbacks?: UseMutationCallback) {
           steps: previous?.steps ?? null,
         }),
       );
+      await queryClient.invalidateQueries({
+        queryKey: calendarKeys.monthly.month({ date: date.slice(0, 7), mode: "weight" }),
+      });
       callbacks?.onSuccess?.();
     },
     onError: (error) => {
