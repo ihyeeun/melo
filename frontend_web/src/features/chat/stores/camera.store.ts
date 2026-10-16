@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { combine } from "zustand/middleware";
 
+import type { ChatGalleryMode } from "@/features/chat/types/camera.type";
 import type { CameraCaptureResponsePayload } from "@/shared/api/bridge/nativeBridge.types";
 
 interface ChatCameraState {
@@ -18,11 +19,20 @@ const initState: ChatCameraState = {
 
 const useChatCameraStore = create(
   combine(initState, (set, get) => ({
-    setCapture: (image: CameraCaptureResponsePayload) => {
+    setCapture: ({
+      image,
+      mode,
+    }: {
+      image: CameraCaptureResponsePayload;
+      mode?: ChatGalleryMode;
+    }) => {
       set((state) => ({
         capture: {
           id: state.nextId,
-          image,
+          image: {
+            ...image,
+            mode: mode ?? image.mode,
+          },
         },
         nextId: state.nextId + 1,
       }));

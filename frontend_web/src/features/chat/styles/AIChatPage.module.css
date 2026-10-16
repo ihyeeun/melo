@@ -212,7 +212,7 @@
 
 .chatActionsSection {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 12px;
   place-items: center;
   margin-top: 12px;
@@ -287,6 +287,20 @@
 
 .autoCompleteItemButton {
   padding: 12px;
+}
+
+.galleryMenu {
+  background-color: var(--background-default);
+  border-radius: 12px;
+  box-shadow: var(--shadow-outer);
+  width: max-content;
+  max-width: calc(100vw - 32px);
+  min-width: 178px;
+}
+
+.galleryMenuItem {
+  padding: 12px;
+  cursor: pointer;
 }
 
 /* MEAL RECORD CARD */

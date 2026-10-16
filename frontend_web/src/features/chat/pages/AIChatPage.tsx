@@ -1,3 +1,4 @@
+import { Menu } from "@base-ui/react";
 import { useActivity } from "@stackflow/react";
 import { useIsMutating } from "@tanstack/react-query";
 import React, {
@@ -10,6 +11,8 @@ import React, {
   useState,
 } from "react";
 
+import { MODE } from "@/features/camera/constants/camera.constant";
+import { getAnalyticsErrorMessage } from "@/features/camera/utils/cameraCapture";
 import { AssistantMessageText } from "@/features/chat/components/AssistantMessageText";
 import { AssistantPendingMessage } from "@/features/chat/components/AssistantPendingMessage";
 import { ImageAnalysisFlow } from "@/features/chat/components/ImageAnalysisFlow";
@@ -29,8 +32,9 @@ import {
   useSearchMenuQuery,
 } from "@/features/chat/hooks/queries/useGetChatQuery";
 import { useDebounceValue } from "@/features/chat/hooks/useDebounceValue";
-import { useGetImage } from "@/features/chat/stores/camera.store";
+import { useGetImage, useSetImage } from "@/features/chat/stores/camera.store";
 import styles from "@/features/chat/styles/AIChatPage.module.css";
+import type { ChatGalleryMode } from "@/features/chat/types/camera.type";
 import { getCurrentDateTime } from "@/features/chat/utils/date.util";
 import { textSplitByLines } from "@/features/chat/utils/textdivider.util";
 import type { MenuWithQuantity } from "@/features/home/utils/dayMealSummary";
@@ -39,6 +43,7 @@ import { getMenuSelectionMenuDetailPath } from "@/features/menu-selection/utils/
 import { PATH } from "@/router/path";
 import { getMealRecordPath } from "@/router/pathHelpers";
 import { trackChatTextMenuSave, trackScanMenuSave } from "@/shared/analytics/menuSaveEvent.util";
+import { requestNativeGalleryPick } from "@/shared/api/bridge/nativeBridge";
 import { isRequestAbortError } from "@/shared/api/requestCancellation";
 import { captureScreenRequestScope } from "@/shared/api/screenRequests";
 import type { MealType } from "@/shared/api/types/api.dto";
@@ -81,6 +86,7 @@ export default function AIChatPage() {
   const hasRequestedRef = useRef(false);
 
   const cameraImage = useGetImage();
+  const setImage = useSetImage();
 
   const [isShowChatActions, setIsShowChatActions] = useState<boolean>(true);
   const [isTextMealRecordMode, setIsTextMealRecordMode] = useState<boolean>(false);
@@ -89,6 +95,7 @@ export default function AIChatPage() {
   const [responseWait, setResponseWait] = useState<ResponseWait | null>(null);
   const [typingKeyword, setTypingKeyword] = useState("");
   const [nutritionMealChatId, setNutritionMealChatId] = useState<number | null>(null);
+  const [isPickingImage, setIsPickingImage] = useState(false);
 
   const historyQuery = useGetChatHistoryQuery();
   const mealsQuery = useRecentDayMealsQuery();
@@ -307,6 +314,37 @@ export default function AIChatPage() {
   const closeMealTimeCard = (chatId: number) => {
     setNutritionMealChatId((current) => (current === chatId ? null : current));
   };
+  const handlePickGalleryImage = async (mode: ChatGalleryMode) => {
+    if (isPickingImage || isChatBusy || !isActive) return;
+
+    const screen = captureScreenRequestScope(screenId);
+    if (!screen.isActive()) return;
+
+    setIsPickingImage(true);
+
+    try {
+      const image = await requestNativeGalleryPick();
+
+      screen.assertActive();
+
+      setImage({ image, mode });
+    } catch (error) {
+      if (isRequestAbortError(error) || !screen.isActive()) return;
+
+      const errorCode =
+        typeof error === "object" && error !== null && "error" in error ? error.error : undefined;
+
+      if (errorCode === "GALLERY_PICK_CANCELLED") return;
+
+      toast.error(
+        errorCode === "GALLERY_PERMISSION_DENIED"
+          ? "사진 접근 권한이 필요해요. 설정에서 권한을 허용해 주세요."
+          : getAnalyticsErrorMessage(error, "사진을 가져오지 못했어요. 다시 선택해 주세요."),
+      );
+    } finally {
+      setIsPickingImage(false);
+    }
+  };
 
   useEffect(() => {
     const target = scrollEndRef.current;
@@ -523,6 +561,38 @@ export default function AIChatPage() {
         </section>
 
         <section className={styles.chatActionsSection} data-isView={isShowChatActions}>
+          <Menu.Root>
+            <Menu.Trigger type="button" className={styles.chatActionButton}>
+              <div className={styles.chatActionIcon}>
+                <SystemIcon name="photo-library" size={24} />
+              </div>
+              <p className="body-xs-regular text-primary textCenter">사진</p>
+            </Menu.Trigger>
+
+            <Menu.Portal>
+              <Menu.Positioner side="top" align="start" sideOffset={8}>
+                <Menu.Popup className={`${styles.galleryMenu} body-s-medium text-primary`}>
+                  <Menu.Item
+                    onClick={() => {
+                      void handlePickGalleryImage(MODE.FOOD);
+                    }}
+                    className={styles.galleryMenuItem}
+                  >
+                    음식 사진 업로드
+                  </Menu.Item>
+                  <Menu.Item
+                    onClick={() => {
+                      void handlePickGalleryImage(MODE.NUTRITION);
+                    }}
+                    className={styles.galleryMenuItem}
+                  >
+                    영양성분표 사진 업로드
+                  </Menu.Item>
+                </Menu.Popup>
+              </Menu.Positioner>
+            </Menu.Portal>
+          </Menu.Root>
+
           <button
             type="button"
             onClick={() => navigate(PATH.CHAT_CAMERA)}
