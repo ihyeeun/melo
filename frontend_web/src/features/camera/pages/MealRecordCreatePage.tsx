@@ -2,6 +2,7 @@ import { useActivity } from "@stackflow/react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { CameraLoading } from "@/features/camera/components/CameraLoading";
+import { MODE } from "@/features/camera/constants/camera.constant";
 import {
   useCreateMealRecordByFoodImageMutation,
   useCreateMenuByNutritionLabelImageMutation,
@@ -23,6 +24,7 @@ import {
 import { useTodayMealRecordRegisterMutation } from "@/features/meal-record/hooks/mutations/useTodayMealRecordMutation";
 import {
   formatMenuDraftKey,
+  type MenuDraftType,
   useMenuDraftPrepareRegisterRequest,
   useMenuDraftStore,
 } from "@/features/meal-record/stores/menuDraft.store";
@@ -56,16 +58,13 @@ const MEAL_RECORD_CAMERA_LOADING_DESCRIPTION = {
 
 const MEAL_RECORD_NUTRITION_LABEL_SCAN_SOURCE = "diary_nutrition_camera";
 
-type MealRecordCameraMode = keyof typeof MEAL_RECORD_CAMERA_LOADING_DESCRIPTION;
 type CapturedImage = Awaited<ReturnType<typeof requestNativeCameraCapture>>;
-
-function resolveMealRecordCameraMode(mode: CapturedImage["mode"]): MealRecordCameraMode {
-  return mode === "NUTRITION_LABEL" ? "NUTRITION_LABEL" : "FOOD";
-}
 
 export default function MealRecordCreatePage() {
   const navigate = useNavigate();
+  const { id: screenId, isActive: isScreenActive } = useActivity();
   const [searchParams] = useSearchParams();
+
   const [isOpeningCamera, setIsOpeningCamera] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
   const [capturedPreviewSrc, setCapturedPreviewSrc] = useState<string | null>(null);
@@ -74,7 +73,7 @@ export default function MealRecordCreatePage() {
   );
   const [captureErrorFeedback, setCaptureErrorFeedback] =
     useState<CameraCaptureErrorFeedback | null>(null);
-  const { id: screenId, isActive: isScreenActive } = useActivity();
+
   const autoTriggeredRef = useRef(false);
 
   const { mutateAsync: uploadFoodImage } = useCreateMealRecordByFoodImageMutation();
@@ -124,24 +123,26 @@ export default function MealRecordCreatePage() {
           setCaptureErrorFeedback(getRecognitionErrorFeedback("FOOD"));
           return;
         }
-        const recognizedMenus = imageData.menu_ids.map((id, idx) => {
-          const quantity = imageData.menu_quantities[idx];
+        const currentDraft = useMenuDraftStore.getState().drafts[draftKey];
+        const menusById = new Map<number, MenuDraftType>(
+          (currentDraft?.existingMenus ?? []).map((menu) => [menu.id, menu]),
+        );
+
+        for (const [index, id] of imageData.menu_ids.entries()) {
+          const quantity = imageData.menu_quantities[index];
 
           if (typeof quantity !== "number" || !Number.isFinite(quantity) || quantity <= 0) {
-            return null;
+            throw new Error("음식 메뉴 분석에 실패했어요.");
           }
 
-          return { id, quantity };
-        });
+          const previous = menusById.get(id);
 
-        if (recognizedMenus.some((menu) => menu === null)) {
-          track(EVENT_NAME.FOOD_SCAN_FAIL, {
-            reason: "음식 메뉴 분석에 실패했어요.",
-            source: "meal_record_camera",
+          menusById.set(id, {
+            ...previous,
+            id,
+            quantity,
+            name: imageData.menu_names[index]?.trim() || previous?.name,
           });
-          setCapturedPreviewSrc(null);
-          setCaptureErrorFeedback(getRecognitionErrorFeedback("FOOD"));
-          return;
         }
 
         hasRecognitionSucceeded = true;
@@ -149,28 +150,7 @@ export default function MealRecordCreatePage() {
           source: "meal_record_camera",
         });
 
-        const currentMenus = useMenuDraftStore.getState().drafts[draftKey]?.existingMenus ?? [];
-        const nextMenus = recognizedMenus.reduce<typeof currentMenus>(
-          (menus, recognizedMenu) => {
-            if (!recognizedMenu) {
-              return menus;
-            }
-
-            const { id, quantity } = recognizedMenu;
-            const existingIndex = menus.findIndex((menu) => menu.id === id);
-
-            if (existingIndex < 0) {
-              return [...menus, { id, quantity }];
-            }
-
-            return menus.map((menu, index) =>
-              index === existingIndex ? { ...menu, quantity } : menu,
-            );
-          },
-          [...currentMenus],
-        );
-
-        if (nextMenus.length > MAX_MEAL_RECORD_MENUS) {
+        if (menusById.size > MAX_MEAL_RECORD_MENUS) {
           toast.warning(MEAL_RECORD_MENU_LIMIT_MESSAGE);
           setCapturedPreviewSrc(null);
           setIsUploading(false);
@@ -181,14 +161,17 @@ export default function MealRecordCreatePage() {
         const registerRequest = prepareRegisterRequest({
           dateKey,
           mealType,
-          menus: nextMenus,
+          menus: Array.from(menusById.values()),
           image: imageData.image_url,
         });
 
         await mealRegisterAsync(registerRequest, {
           onSuccess: () => {
             trackScanMenuSave({
-              menus: registerRequest.menu_ids?.map((id) => ({ menu_id: id })),
+              menus: registerRequest.menu_ids?.map((id) => ({
+                menu_id: id,
+                menu_name: menusById.get(id)?.name,
+              })),
               source: "home_tab",
               scanType: "photo",
             });
@@ -277,8 +260,8 @@ export default function MealRecordCreatePage() {
       track(EVENT_NAME.CAMERA_START, { source: "home_tab" });
       capturedImage = await requestNativeCameraCapture({
         quality: DEFAULT_CAMERA_CAPTURE_QUALITY,
-        mode: "FOOD",
-        selectableModes: ["FOOD", "NUTRITION_LABEL"],
+        mode: MODE.FOOD,
+        selectableModes: [MODE.FOOD, MODE.NUTRITION],
       });
       screen.assertActive();
       setIsOpeningCamera(false);
@@ -299,14 +282,18 @@ export default function MealRecordCreatePage() {
       return;
     }
 
-    const selectedMode = resolveMealRecordCameraMode(capturedImage.mode);
+    const selectedMode = capturedImage.mode;
+
+    if (selectedMode !== MODE.FOOD && selectedMode !== MODE.NUTRITION) {
+      return;
+    }
 
     setCapturedPreviewSrc(getCapturedImagePreviewSrc(capturedImage));
     setLoadingDescription(MEAL_RECORD_CAMERA_LOADING_DESCRIPTION[selectedMode]);
     setIsUploading(true);
 
     try {
-      if (selectedMode === "NUTRITION_LABEL") {
+      if (selectedMode === MODE.NUTRITION) {
         await handleNutritionLabelImage(capturedImage, screen);
         return;
       }

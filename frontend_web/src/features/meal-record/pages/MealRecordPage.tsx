@@ -39,6 +39,7 @@ import {
   buildMenuDraftSignature,
   normalizeServingInputMode,
   toMenuDraftSeed,
+  updateMenuDraftNames,
 } from "@/features/meal-record/utils/menuDraftSync";
 import { PATH } from "@/router/path";
 import { getMealDetailPath, getMealRecordPath, getMealSearchPath } from "@/router/pathHelpers";
@@ -257,7 +258,7 @@ export default function MealRecordPage() {
     replaceDraft({
       key: draftKey,
       existingMenuCount: currentSeedMenus.length,
-      menus: transferState.menus,
+      menus: updateMenuDraftNames(transferState.menus, currentSeedMenus),
       image: currentMenus.imagesByTime[mealType],
       mealTime: currentMenus.mealRecordMealTimesByTime[mealType],
       serverSignature: currentServerSignature,
@@ -454,13 +455,16 @@ export default function MealRecordPage() {
 
     const type = String(request.time) as MealType;
     const draftByType = allDrafts[formatMenuDraftKey(dateKey, type)];
-    const currentMenuNameById = new Map(
-      currentMenus.menusByTime[request.time].map((menu) => [menu.id, menu.name]),
+    const menuNameById = new Map(
+      (draftByType?.existingMenus ?? currentMenus.menusByTime[request.time]).map((menu) => [
+        menu.id,
+        menu.name,
+      ]),
     );
 
     return requestMenuIds.map((menuId) => ({
       menu_id: menuId,
-      menu_name: currentMenuNameById.get(menuId) ?? draftByType?.previewsById[menuId]?.name,
+      menu_name: menuNameById.get(menuId),
     }));
   };
 
