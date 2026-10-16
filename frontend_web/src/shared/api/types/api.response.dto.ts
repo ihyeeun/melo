@@ -120,6 +120,7 @@ export interface NutritionLabelRecognitionResponseDto {
 
 export interface FoodImageRecognitionResponseDto {
   menu_ids: number[];
+  menu_names: string[];
   menu_quantities: number[];
   image_url: string;
 }
@@ -471,9 +472,11 @@ export interface RestaurantMenuResponseDto {
   menu_id: number;
   menu_name: string;
   calories: number;
-  carbs?: number;
+  sugars?: number;
+  // carbs?: number;
   protein?: number;
-  fat?: number;
+  sat_fat?: number;
+  // fat?: number;
   unit: number;
   weight: number;
   unit_quantity: string;

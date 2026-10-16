@@ -5,9 +5,9 @@ import { formatDisplayNumber } from "@/shared/utils/numberFormat";
 import { convertUnitNumToString } from "@/shared/utils/servingUnit";
 
 const NUTRIENTS = [
-  { key: "carbs", label: "탄수화물" },
+  { key: "sugars", label: "당류" },
   { key: "protein", label: "단백질" },
-  { key: "fat", label: "지방" },
+  { key: "sat_fat", label: "포화지방" },
 ] as const;
 
 type Props = {

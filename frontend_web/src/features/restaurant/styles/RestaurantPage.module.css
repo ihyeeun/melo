@@ -184,7 +184,7 @@
   background-color: var(--background-default);
   border: 1px solid var(--border-subtle);
   border-radius: 16px;
-  padding: 20px 16px;
+  padding: 20px 16px 8px;
   border-bottom: 1px solid var(--border-subtle);
 }
 
@@ -228,6 +228,7 @@
 
 .nutrientItem {
   padding-top: 6px;
+  padding-bottom: 8px;
 }
 
 .nutrientItem > p + p {
