@@ -9,10 +9,8 @@ import PreviewTodayScoreSection from "@/features/home/components/PreviewTodaySco
 import RecordActionSection from "@/features/home/components/RecordActionSection";
 import styles from "@/features/home/styles/HomePage.module.css";
 import type { HomeDashboardMode } from "@/features/home/types/homeDashboard.types";
-import { menstrualApplicants } from "@/features/menstruation/constants/menstruation.constant";
 import { useMenstrualPhase } from "@/features/menstruation/hooks/useMenstrualPhase";
 import { getMenstrualCalendarStatus } from "@/features/menstruation/utils/menstrualPhaseDatesCalculation.util";
-import { useGetProfileQuery } from "@/features/profile/hooks/queries/useProfileQuery";
 import { track } from "@/shared/analytics/analytics";
 import { EVENT_NAME } from "@/shared/analytics/analytics.constants";
 import { FloatingCameraButton } from "@/shared/commons/button/FloatingCameraButton";
@@ -44,11 +42,6 @@ export default function HomePage() {
       behavior: "smooth",
     });
   };
-  const { data: profile, isPending: isProfilePending } = useGetProfileQuery();
-  const freeUser = !profile?.is_subscribed;
-  const canDashboardMode =
-    (freeUser || menstrualApplicants.includes(profile!.user_id) || profile.role === "ADMIN") &&
-    !isProfilePending;
 
   useEffect(() => {
     if (mode !== "menstruation" || menstrualPhase.isLoading || !pendingMenstrualEntryRef.current) {
@@ -100,14 +93,12 @@ export default function HomePage() {
               : undefined
           }
         />
-        {canDashboardMode && (
-          <HomeDashboardModeToggle
-            className={styles.modeToggle}
-            value={mode}
-            onChange={handleModeChange}
-            onClick={scrollToTop}
-          />
-        )}
+        <HomeDashboardModeToggle
+          className={styles.modeToggle}
+          value={mode}
+          onChange={handleModeChange}
+          onClick={scrollToTop}
+        />
         <ScrollFogArea role="main" ref={contentRef} className={`main ${styles.content}`}>
           <PreviewTodayScoreSection homeMode={mode} menstrualPhase={menstrualPhase} />
           <RecordActionSection />
