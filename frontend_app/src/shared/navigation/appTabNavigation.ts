@@ -5,7 +5,7 @@ type TabBackBehavior = "animated-pop" | "none";
 
 const OPTIONAL_TABS = ["diary", "restaurant", "analysis"] as const;
 export type OptionalTabName = (typeof OPTIONAL_TABS)[number];
-const DEFAULT_OPTIONAL_TABS: readonly OptionalTabName[] = ["diary"];
+const DEFAULT_OPTIONAL_TABS: readonly OptionalTabName[] = [];
 
 export function normalizeOptionalTabs(value: unknown): OptionalTabName[] | null {
   if (!Array.isArray(value) || !value.every((tab) => typeof tab === "string")) return null;
