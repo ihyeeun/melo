@@ -120,13 +120,6 @@ function getSelectableCameraModes(payload?: BridgeCameraCaptureRequestPayload) {
   return uniqueModes.length > 0 ? uniqueModes : [DEFAULT_CAPTURE_MODE];
 }
 
-function mapQualityPrioritization(quality?: number): "speed" | "balanced" | "quality" {
-  if (quality === undefined) return "balanced";
-  if (quality >= 0.9) return "quality";
-  if (quality <= 0.4) return "speed";
-  return "balanced";
-}
-
 function resolvePhotoUri(path: string) {
   return path.startsWith("file://") ? path : `file://${path}`;
 }
@@ -259,10 +252,6 @@ export default function CameraCaptureScreen() {
   );
   const [isCameraOnboardingVisible, setIsCameraOnboardingVisible] = useState(false);
   const [isCameraOnboardingResolved, setIsCameraOnboardingResolved] = useState(false);
-  const photoQualityBalance = useMemo(
-    () => mapQualityPrioritization(capturePayload?.quality),
-    [capturePayload?.quality],
-  );
   const device = useCameraDevice("back");
 
   useEffect(() => {
@@ -458,6 +447,8 @@ export default function CameraCaptureScreen() {
       !cameraRef.current ||
       isProcessing ||
       isProcessingRef.current ||
+      didRequestCloseRef.current ||
+      !hasPendingCameraCaptureSession() ||
       !isCameraInitialized ||
       !isFocused
     )
@@ -675,7 +666,7 @@ export default function CameraCaptureScreen() {
         isActive={isFocused && !isPickingGallery && !isResolvingCapturedPhoto}
         photo={true}
         audio={false}
-        photoQualityBalance={photoQualityBalance}
+        photoQualityBalance="balanced"
         onInitialized={() => {
           setIsCameraInitialized(true);
         }}
@@ -768,6 +759,7 @@ export default function CameraCaptureScreen() {
               </Pressable>
               <Pressable
                 style={[styles.cameraShutterButton, isCaptureDisabled && styles.disabledControl]}
+                onPressIn={Platform.OS === "android" ? handleCapturePress : undefined}
                 onPress={handleCapturePress}
                 disabled={isCaptureDisabled}
                 accessibilityRole="button"
