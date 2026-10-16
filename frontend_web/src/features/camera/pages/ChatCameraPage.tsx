@@ -6,7 +6,6 @@ import { MODE } from "@/features/camera/constants/camera.constant";
 import styles from "@/features/camera/styles/CameraPage.module.css";
 import {
   type CameraCaptureErrorFeedback,
-  DEFAULT_CAMERA_CAPTURE_QUALITY,
   getAnalyticsErrorMessage,
   getCameraCaptureErrorFeedback,
   getRecognitionErrorFeedback,
@@ -81,7 +80,6 @@ export default function ChatCameraPage() {
 
       track(EVENT_NAME.CAMERA_START, { source: "chat_tab" });
       image = await requestNativeCameraCapture({
-        quality: DEFAULT_CAMERA_CAPTURE_QUALITY,
         mode: MODE.FOOD,
         selectableModes: [MODE.FOOD, MODE.NUTRITION],
       });

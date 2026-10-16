@@ -106,7 +106,6 @@ export type WebToAppTabBarVisibilitySyncMessage = {
 export type CameraCaptureMode = "NUTRITION_LABEL" | "MENU_BOARD" | "FOOD" | "GENERAL";
 
 export type CameraCaptureRequestPayload = {
-  quality?: number;
   mode?: CameraCaptureMode;
   selectableModes?: CameraCaptureMode[];
 };

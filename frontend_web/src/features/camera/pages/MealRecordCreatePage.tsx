@@ -10,7 +10,6 @@ import {
 import styles from "@/features/camera/styles/CameraPage.module.css";
 import {
   type CameraCaptureErrorFeedback,
-  DEFAULT_CAMERA_CAPTURE_QUALITY,
   getAnalyticsErrorMessage,
   getCameraCaptureErrorFeedback,
   getCapturedImagePreviewSrc,
@@ -259,7 +258,6 @@ export default function MealRecordCreatePage() {
       setIsOpeningCamera(true);
       track(EVENT_NAME.CAMERA_START, { source: "home_tab" });
       capturedImage = await requestNativeCameraCapture({
-        quality: DEFAULT_CAMERA_CAPTURE_QUALITY,
         mode: MODE.FOOD,
         selectableModes: [MODE.FOOD, MODE.NUTRITION],
       });

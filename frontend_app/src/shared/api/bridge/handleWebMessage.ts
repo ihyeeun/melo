@@ -574,10 +574,6 @@ function isWebToAppMessage(value: unknown): value is WebToAppMessage {
     if (value.payload === undefined) return true;
     if (!isRecord(value.payload)) return false;
 
-    const isValidQuality =
-      value.payload.quality === undefined || typeof value.payload.quality === "number";
-    if (!isValidQuality) return false;
-
     const isValidMode =
       value.payload.mode === undefined || isBridgeCameraCaptureMode(value.payload.mode);
     if (!isValidMode) return false;

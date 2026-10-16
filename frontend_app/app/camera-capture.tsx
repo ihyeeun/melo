@@ -536,7 +536,7 @@ export default function CameraCaptureScreen() {
       }
 
       const result = await ImagePicker.launchImageLibraryAsync({
-        quality: capturePayload?.quality ?? 1,
+        quality: 1,
         allowsEditing: false,
         allowsMultipleSelection: false,
         exif: false,
@@ -592,7 +592,7 @@ export default function CameraCaptureScreen() {
       isProcessingRef.current = false;
       setIsPickingGallery(false);
     }
-  }, [captureMode, capturePayload?.quality, handleOpenSettingsPress, isProcessing]);
+  }, [captureMode, handleOpenSettingsPress, isProcessing]);
 
   const isCameraOnboardingPending =
     cameraPermissionStatus === "granted" &&

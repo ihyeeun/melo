@@ -6,7 +6,6 @@ import { useCreateMenuByNutritionLabelImageMutation } from "@/features/camera/ho
 import styles from "@/features/camera/styles/CameraPage.module.css";
 import {
   type CameraCaptureErrorFeedback,
-  DEFAULT_CAMERA_CAPTURE_QUALITY,
   getCameraCaptureErrorFeedback,
   getCapturedImagePreviewSrc,
   getRecognitionErrorFeedback,
@@ -99,7 +98,6 @@ export default function NutrientCameraPage() {
     try {
       setIsOpeningCamera(true);
       capturedImage = await requestNativeCameraCapture({
-        quality: DEFAULT_CAMERA_CAPTURE_QUALITY,
         mode: "NUTRITION_LABEL",
       });
       screen.assertActive();
