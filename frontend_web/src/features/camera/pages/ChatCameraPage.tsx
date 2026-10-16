@@ -106,7 +106,10 @@ export default function ChatCameraPage() {
     const selectedMode = resolveChatCameraMode(image.mode);
 
     try {
-      setImage(image);
+      setImage({
+        image,
+        mode: selectedMode,
+      });
       moveToChat();
     } catch (error) {
       if (!screen.isActive()) return;
