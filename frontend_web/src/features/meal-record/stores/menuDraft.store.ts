@@ -7,7 +7,11 @@ import {
   getCurrentMealRecordTime,
   normalizeMealRecordTime,
 } from "@/features/meal-record/utils/mealRecordTime";
-import { buildMenuDraftSignature, toMenuDraftSeed } from "@/features/meal-record/utils/menuDraftSync";
+import {
+  buildMenuDraftSignature,
+  toMenuDraftSeed,
+  updateMenuDraftNames,
+} from "@/features/meal-record/utils/menuDraftSync";
 import {
   type MealServingInputMode,
   type MealTime,
@@ -24,6 +28,7 @@ export function formatMenuDraftKey(date: string, mealType: MealType): MenuDraftK
 
 export type MenuDraftType = {
   id: number;
+  name?: string;
   quantity: number;
   mode?: MealServingInputMode;
 };
@@ -65,6 +70,7 @@ type ReplaceDraftParams = {
 type UpsertMenuParams = {
   key: MenuDraftKey;
   id: number;
+  name?: string;
   quantity: number;
   mode?: MealServingInputMode;
 };
@@ -168,21 +174,23 @@ export function mergeMenuDraftMenus({
   candidateIds?: number[];
 }) {
   const candidateIdSet = new Set(candidateIds);
-  const menuById = new Map<number, MenuDraftType>();
-
-  baseMenus
-    .filter((menu) => !candidateIdSet.has(menu.id))
-    .forEach((menu) => {
-      menuById.set(menu.id, menu);
-    });
+  const menuById = new Map<number, MenuDraftType>(baseMenus.map((menu) => [menu.id, menu]));
 
   overrideMenus.forEach((menu) => {
+    const name = menu.name?.trim() || menuById.get(menu.id)?.name;
+    if (candidateIdSet.delete(menu.id)) {
+      menuById.delete(menu.id);
+    }
+
     menuById.set(menu.id, {
       id: menu.id,
+      name,
       quantity: menu.quantity,
       mode: normalizeInputMode(menu.mode),
     });
   });
+
+  candidateIdSet.forEach((id) => menuById.delete(id));
 
   return [...menuById.values()];
 }
@@ -273,6 +281,7 @@ export const useMenuDraftStore = create<MenuDraftStoreState>()(
               [key]: {
                 ...prev,
                 existingMenuCount: Math.max(prev.existingMenuCount, safeCount),
+                existingMenus: updateMenuDraftNames(prev.existingMenus, seedMenus ?? []),
                 image: prev.image !== undefined ? prev.image : normalizedImage,
                 mealTime: prev.mealTime ?? normalizedMealTime ?? undefined,
                 serverSignature: serverSignature ?? prev.serverSignature,
@@ -303,7 +312,7 @@ export const useMenuDraftStore = create<MenuDraftStoreState>()(
         });
       },
 
-      upsertMenu: ({ key, id, quantity, mode }) => {
+      upsertMenu: ({ key, id, name, quantity, mode }) => {
         set((state) => {
           const draft = state.drafts[key] ?? INIT_DRAFT;
           const safeQuantity =
@@ -311,14 +320,28 @@ export const useMenuDraftStore = create<MenuDraftStoreState>()(
               ? Math.round(quantity * 10) / 10
               : 1;
           const normalizedMode = normalizeInputMode(mode);
+          const normalizedName = name?.trim() || undefined;
 
           const existingIndex = draft.existingMenus.findIndex((menu) => menu.id === id);
           const nextMenus =
             existingIndex < 0
-              ? [...draft.existingMenus, { id, quantity: safeQuantity, mode: normalizedMode }]
+              ? [
+                  ...draft.existingMenus,
+                  {
+                    id,
+                    name: normalizedName ?? draft.previewsById[id]?.name,
+                    quantity: safeQuantity,
+                    mode: normalizedMode,
+                  },
+                ]
               : draft.existingMenus.map((menu, index) =>
                   index === existingIndex
-                    ? { ...menu, quantity: safeQuantity, mode: normalizedMode ?? menu.mode }
+                    ? {
+                        ...menu,
+                        name: normalizedName ?? menu.name ?? draft.previewsById[id]?.name,
+                        quantity: safeQuantity,
+                        mode: normalizedMode ?? menu.mode,
+                      }
                     : menu,
                 );
 
@@ -442,22 +465,20 @@ export const useMenuDraftStore = create<MenuDraftStoreState>()(
             return state;
           }
 
+          const validPreviews = previews.filter(
+            (preview) =>
+              preview &&
+              typeof preview === "object" &&
+              typeof preview.id === "number" &&
+              Number.isInteger(preview.id) &&
+              preview.id > 0,
+          );
+          if (validPreviews.length === 0) return state;
+
           const draft = state.drafts[key] ?? INIT_DRAFT;
           const nextPreviews = { ...draft.previewsById };
 
-          previews.forEach((preview) => {
-            if (!preview || typeof preview !== "object") {
-              return;
-            }
-
-            if (
-              typeof preview.id !== "number" ||
-              !Number.isInteger(preview.id) ||
-              preview.id <= 0
-            ) {
-              return;
-            }
-
+          validPreviews.forEach((preview) => {
             nextPreviews[preview.id] = preview;
           });
 
@@ -466,6 +487,7 @@ export const useMenuDraftStore = create<MenuDraftStoreState>()(
               ...state.drafts,
               [key]: {
                 ...draft,
+                existingMenus: updateMenuDraftNames(draft.existingMenus, validPreviews),
                 previewsById: nextPreviews,
               },
             },

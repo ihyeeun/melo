@@ -7,7 +7,7 @@ export default function StepGoal({ data, update }: StepComponentProps) {
   return (
     <section className={`${styles.content} ${styles.onboardingStepReadable}`}>
       <div className={styles.onboardingTitle}>
-        <h2 className="typo-title1">이루고 싶은 목표가 무엇인가요?</h2>
+        <h2 className="title-l-semi">이루고 싶은 목표가 무엇인가요?</h2>
       </div>
 
       <div className={styles.onboardingOptionList}>

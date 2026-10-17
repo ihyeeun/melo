@@ -133,12 +133,11 @@ function NativeSettingsFeedbackPage() {
           </div>
         ) : isProfileError || !tallyFormUrl ? (
           <div className={styles.formState}>
-            <p className={`${styles.formStateText} typo-body3`}>사용자 정보를 불러오지 못했어요</p>
+            <p className={`${styles.formStateText} body-s-medium`}>사용자 정보를 불러오지 못했어요</p>
             <Button
               onClick={() => void refetchProfile()}
               disabled={isProfileRefetching}
-              interaction={isProfileRefetching ? "disable" : "normal"}
-              size="small"
+              size="xs"
             >
               다시 시도
             </Button>

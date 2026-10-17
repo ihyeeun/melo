@@ -1,12 +1,7 @@
-import { startOfWeek, subWeeks } from "date-fns";
-import { useEffect, useMemo, useState } from "react";
+import { addWeeks, startOfWeek } from "date-fns";
+import { type SetStateAction, useState } from "react";
 
-import {
-  buildMonthCalendarDays,
-  buildWeekCalendarDays,
-  moveNext,
-  movePrev,
-} from "@/features/calendar/utils/calendar";
+import { moveNext, movePrev } from "@/features/calendar/utils/calendar";
 import { formatDateKey, parseDateKey } from "@/shared/utils/dateFormat";
 
 import type { ViewMode } from "../types/calendar.types";
@@ -14,19 +9,15 @@ import type { ViewMode } from "../types/calendar.types";
 type UseCalendarParams = {
   initialDate?: Date;
   initialViewMode?: ViewMode;
-  recordedDates?: string[];
   selectedDate?: Date;
-};
-
-type SelectDateOptions = {
-  switchToWeek?: boolean;
+  allowFutureWeekNavigation?: boolean;
 };
 
 export function useCalendar({
   initialDate = new Date(),
   initialViewMode = "week",
-  recordedDates = [],
   selectedDate: controlledSelectedDate,
+  allowFutureWeekNavigation = true,
 }: UseCalendarParams = {}) {
   const weekStartsOn = 1 as const;
   const initialSelectedDate = controlledSelectedDate ?? initialDate;
@@ -35,62 +26,56 @@ export function useCalendar({
     : null;
   const [viewMode, setViewMode] = useState<ViewMode>(initialViewMode);
   const [internalSelectedDate, setInternalSelectedDate] = useState(initialSelectedDate);
-  const [viewDate, setViewDate] = useState(initialSelectedDate);
+  const [viewDateState, setViewDateState] = useState({
+    date: initialSelectedDate,
+    controlledSelectedDateKey,
+  });
   const selectedDate = controlledSelectedDate ?? internalSelectedDate;
+  const hasControlledDateChanged =
+    controlledSelectedDateKey !== null &&
+    controlledSelectedDateKey !== viewDateState.controlledSelectedDateKey;
+  const viewDate = hasControlledDateChanged
+    ? parseDateKey(controlledSelectedDateKey)
+    : viewDateState.date;
 
-  useEffect(() => {
-    if (!controlledSelectedDateKey) {
-      return;
-    }
+  const setViewDate = (nextDate: SetStateAction<Date>) => {
+    setViewDateState((previousState) => {
+      const currentDate =
+        controlledSelectedDateKey !== null &&
+        controlledSelectedDateKey !== previousState.controlledSelectedDateKey
+          ? parseDateKey(controlledSelectedDateKey)
+          : previousState.date;
 
-    setViewDate(parseDateKey(controlledSelectedDateKey));
-  }, [controlledSelectedDateKey]);
-
-  const weekDays = useMemo(() => {
-    return buildWeekCalendarDays({
-      baseDate: viewDate,
-      selectedDate,
-      recordedDates,
-      weekStartsOn,
+      return {
+        date: typeof nextDate === "function" ? nextDate(currentDate) : nextDate,
+        controlledSelectedDateKey,
+      };
     });
-  }, [viewDate, selectedDate, recordedDates, weekStartsOn]);
+  };
 
-  const monthDays = useMemo(() => {
-    return buildMonthCalendarDays({
-      baseDate: viewDate,
-      selectedDate,
-      recordedDates,
-      weekStartsOn,
-    });
-  }, [viewDate, selectedDate, recordedDates, weekStartsOn]);
+  const viewWeekStart = startOfWeek(viewDate, { weekStartsOn });
+  const currentWeekStart = startOfWeek(new Date(), { weekStartsOn });
+  const canGoNextWeek =
+    allowFutureWeekNavigation || addWeeks(viewWeekStart, 1).getTime() <= currentWeekStart.getTime();
 
   const toggleViewMode = () => {
     setViewMode((prev) => (prev === "week" ? "month" : "week"));
     setViewDate(selectedDate);
   };
 
-  const selectDate = (date: Date, { switchToWeek = false }: SelectDateOptions = {}) => {
+  const selectDate = (date: Date) => {
     if (!controlledSelectedDate) {
       setInternalSelectedDate(date);
     }
 
     setViewDate(date);
-
-    if (switchToWeek) {
-      setViewMode("week");
-    }
   };
 
-  const clampWeekNavigationDate = (candidateDate: Date, currentDate: Date) => {
+  const clampFutureWeekNavigationDate = (candidateDate: Date, currentDate: Date) => {
     const candidateWeekStart = startOfWeek(candidateDate, { weekStartsOn });
     const currentWeekStart = startOfWeek(new Date(), { weekStartsOn });
-    const previousWeekStart = subWeeks(currentWeekStart, 1);
-    const candidateTime = candidateWeekStart.getTime();
 
-    if (
-      candidateTime < previousWeekStart.getTime() ||
-      candidateTime > currentWeekStart.getTime()
-    ) {
+    if (candidateWeekStart.getTime() > currentWeekStart.getTime()) {
       return currentDate;
     }
 
@@ -99,11 +84,7 @@ export function useCalendar({
 
   const goPrev = () => {
     setViewDate((prev) => {
-      const candidateDate = movePrev(prev, viewMode);
-
-      if (viewMode !== "week") return candidateDate;
-
-      return clampWeekNavigationDate(candidateDate, prev);
+      return movePrev(prev, viewMode);
     });
   };
 
@@ -111,9 +92,9 @@ export function useCalendar({
     setViewDate((prev) => {
       const candidateDate = moveNext(prev, viewMode);
 
-      if (viewMode !== "week") return candidateDate;
+      if (viewMode !== "week" || allowFutureWeekNavigation) return candidateDate;
 
-      return clampWeekNavigationDate(candidateDate, prev);
+      return clampFutureWeekNavigationDate(candidateDate, prev);
     });
   };
 
@@ -132,8 +113,8 @@ export function useCalendar({
     viewMode,
     selectedDate,
     viewDate,
-    weekDays,
-    monthDays,
+    setViewMode,
+    canGoNextWeek,
     toggleViewMode,
     selectDate,
     goPrev,

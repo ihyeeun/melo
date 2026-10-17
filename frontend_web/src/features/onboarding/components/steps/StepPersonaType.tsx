@@ -13,7 +13,7 @@ export default function StepPersonaType({ data, update }: StepComponentProps) {
   return (
     <section className={`${styles.content} ${styles.onboardingStepReadable}`}>
       <div className={styles.onboardingTitle}>
-        <h2 className="typo-title1">
+        <h2 className="title-l-semi">
           건강하게 먹으려 할 때,
           <br />
           가장 자주 하는 행동은 무엇인가요?

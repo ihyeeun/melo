@@ -1,0 +1,46 @@
+.root {
+  align-items: center;
+  display: inline-flex;
+  flex: 0 0 auto;
+  justify-content: center;
+  overflow: hidden;
+  pointer-events: none;
+  position: relative;
+}
+
+.root svg {
+  display: block;
+  height: 100%;
+  width: 100%;
+}
+
+.fallback {
+  animation: loading-fallback-pulse 0.8s ease-in-out infinite alternate;
+  background-color: var(--primary-normal);
+  border-radius: 50%;
+  height: 30%;
+  position: absolute;
+  width: 30%;
+}
+
+.root[data-loaded="true"] .fallback {
+  display: none;
+}
+
+@keyframes loading-fallback-pulse {
+  from {
+    opacity: 0.45;
+    transform: scale(0.8);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fallback {
+    animation: none;
+  }
+}

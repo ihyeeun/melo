@@ -1,5 +1,5 @@
 .stackRoot {
-  background: var(--bg-normal, #fff);
+  background: var(--background-gray-1, #fff);
   height: 100%;
   isolation: isolate;
   overflow: hidden;
@@ -9,7 +9,7 @@
 }
 
 .activityFrame {
-  background: var(--bg-normal, #fff);
+  background: var(--background-gray-1, #fff);
   height: 100%;
   inset: 0;
   overflow-x: hidden;

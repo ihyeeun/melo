@@ -1,5 +1,5 @@
 .page {
-  background-color: var(--bg-normal);
+  background-color: var(--background-gray-1);
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -20,7 +20,7 @@
 }
 
 .summarySection {
-  background-color: var(--bg-primary-2);
+  background-color: var(--coral-100);
   border-radius: 8px;
   display: flex;
   flex-direction: column;
@@ -37,11 +37,11 @@
 }
 
 .brandText {
-  color: var(--label-alternative);
+  color: var(--text-secondary);
 }
 
 .foodNameText {
-  color: var(--label-normal);
+  color: var(--text-primary);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -57,14 +57,14 @@
 .calorieInput {
   background-color: transparent;
   border: 0;
-  color: var(--label-normal);
+  color: var(--text-primary);
   padding: 0;
   text-align: right;
   width: 140px;
 }
 
 .calorieInput::placeholder {
-  color: var(--label-normal);
+  color: var(--text-primary);
 }
 
 .calorieInput:focus {
@@ -72,7 +72,7 @@
 }
 
 .calorieUnit {
-  color: var(--label-normal);
+  color: var(--text-primary);
 }
 
 .macroRow {
@@ -82,8 +82,8 @@
 }
 
 .macroItem {
-  background-color: var(--bg-white);
-  border: 1px solid var(--border-neutral);
+  background-color: var(--background-default);
+  border: 1px solid var(--border-subtle);
   border-radius: 8px;
   display: flex;
   flex-direction: column;
@@ -91,7 +91,7 @@
 }
 
 .macroLabel {
-  color: var(--label-alternative);
+  color: var(--text-secondary);
 }
 
 .macroInputWrap {
@@ -103,14 +103,14 @@
 
 .macroInput {
   border: 0;
-  color: var(--label-primary);
+  color: var(--primary-normal);
   padding: 0;
   text-align: right;
   width: 100%;
 }
 
 .macroInput::placeholder {
-  color: var(--label-primary);
+  color: var(--primary-normal);
 }
 
 .macroInput:focus {
@@ -118,7 +118,7 @@
 }
 
 .macroUnitText {
-  color: var(--label-primary);
+  color: var(--primary-normal);
 }
 
 .detailSection {
@@ -146,18 +146,18 @@
 }
 
 .detailLabelMain {
-  color: var(--label-normal);
+  color: var(--text-primary);
 }
 
 .detailLabelSub {
-  color: var(--label-alternative);
+  color: var(--text-secondary);
   padding-left: 4px;
 }
 
 .detailInputWrap {
   align-items: baseline;
-  background-color: var(--bg-white);
-  border: 1px solid var(--border-neutral);
+  background-color: var(--background-default);
+  border: 1px solid var(--border-subtle);
   border-radius: 8px;
   display: inline-flex;
   gap: 4px;
@@ -172,12 +172,12 @@
 }
 
 .detailInput:focus {
-  border-color: var(--border-primary);
+  border-color: var(--border-strong);
   outline: none;
 }
 
 .detailInput::placeholder {
-  color: var(--label-assistive);
+  color: var(--text-tertiary);
 }
 
 .unitText {
@@ -197,8 +197,8 @@
 }
 
 .TabsList {
-  background-color: var(--bg-white);
-  border: 1px solid var(--border-neutral);
+  background-color: var(--background-default);
+  border: 1px solid var(--border-subtle);
   border-radius: 8px;
   display: grid;
   gap: auto;
@@ -207,19 +207,19 @@
 }
 
 .TabsTab {
-  background: var(--bg-white);
+  background: var(--background-default);
   border-radius: 6px;
-  color: var(--label-assistive);
-  font-size: var(--fs-16);
+  color: var(--text-tertiary);
+  font-size: 16px;
   font-weight: var(--fw-semibold);
-  letter-spacing: var(--letter-spacing-tight);
-  line-height: var(--line-height-145);
+  letter-spacing: -0.04em;
+  line-height: 1.45;
   padding: 14px 8px;
   text-align: center;
 
   &[data-active] {
-    background: var(--interaction-primary);
-    color: var(--label-primary);
+    background: var(--background-selected);
+    color: var(--primary-normal);
   }
 }
 
@@ -228,8 +228,8 @@
 }
 
 .FieldGroup {
-  background-color: var(--bg-white);
-  border: 1px solid var(--border-neutral);
+  background-color: var(--background-default);
+  border: 1px solid var(--border-subtle);
   border-radius: 8px;
   display: flex;
   gap: 10px;
@@ -247,7 +247,7 @@
 }
 
 .FieldInput::placeholder {
-  color: var(--label-assistive);
+  color: var(--text-tertiary);
 }
 
 .FieldInput:focus {

@@ -4,6 +4,7 @@ import {
   fetchRecommendtargetCalories,
   postRecommendNutrient,
 } from "@/features/onboarding/api/recommend";
+import { isRequestAbortError } from "@/shared/api/requestCancellation";
 import type { UseMutationCallback } from "@/shared/api/types/callback.types";
 
 export function useTargetCaloriesMutation(callbacks?: UseMutationCallback) {
@@ -13,6 +14,7 @@ export function useTargetCaloriesMutation(callbacks?: UseMutationCallback) {
       return data;
     },
     onError: (error) => {
+      if (isRequestAbortError(error)) return;
       callbacks?.onError?.(error);
     },
   });
@@ -25,6 +27,7 @@ export function useRecommendNutrientMutation(callbacks?: UseMutationCallback) {
       return data;
     },
     onError: (error) => {
+      if (isRequestAbortError(error)) return;
       callbacks?.onError?.(error);
     },
   });

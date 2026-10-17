@@ -1,12 +1,13 @@
 import { type QueryClient, useMutation, useQueryClient } from "@tanstack/react-query";
 
-import { queryKeys as calendarQueryKeys } from "@/features/calendar/hooks/queries/calendar.queryKey";
+import { calendarKeys, queryKeys as calendarQueryKeys } from "@/features/calendar/hooks/queries/calendar.queryKey";
 import { queryKeys } from "@/features/home/hooks/queries/todayRecord.queryKey";
 import {
   deleteTodayMealRecord,
   postTodayMealRecordRegister,
 } from "@/features/meal-record/api/DayMeal";
 import { menuQueryKeys } from "@/features/meal-record/hooks/queries/menuCache";
+import { isRequestAbortError } from "@/shared/api/requestCancellation";
 import {
   type MealServingInputMode,
   type MealTime,
@@ -19,6 +20,9 @@ function invalidateMealRecordRelatedQueries(queryClient: QueryClient, date: stri
   return Promise.all([
     queryClient.invalidateQueries({ queryKey: queryKeys.dayMeals.byDate(date) }),
     queryClient.invalidateQueries({ queryKey: calendarQueryKeys.recordedDates.all }),
+    queryClient.invalidateQueries({
+      queryKey: calendarKeys.monthly.month({ date: date.slice(0, 7), mode: "intake" }),
+    }),
     queryClient.invalidateQueries({ queryKey: menuQueryKeys.frequentlyRecorded() }),
   ]);
 }
@@ -33,6 +37,7 @@ export function useTodayMealRecordRegisterMutation(callbacks?: UseMutationCallba
       callbacks?.onSuccess?.();
     },
     onError: async (error, variables) => {
+      if (isRequestAbortError(error)) return;
       await invalidateMealRecordRelatedQueries(queryClient, variables.date);
       callbacks?.onError?.(error);
     },
@@ -49,6 +54,7 @@ export function useTodayMealRecordDeleteMutation(callbacks?: UseMutationCallback
       callbacks?.onSuccess?.();
     },
     onError: async (error, variables) => {
+      if (isRequestAbortError(error)) return;
       await invalidateMealRecordRelatedQueries(queryClient, variables.date);
       callbacks?.onError?.(error);
     },
@@ -118,14 +124,16 @@ export function useTodayMealRecordDeleteWithRollbackMutation() {
 
         await invalidateMealRecordRelatedQueries(queryClient, dateKey);
         return DELETE_MEAL_RECORD_RESULT.DELETED;
-      } catch {
+      } catch (error) {
+        if (isRequestAbortError(error)) throw error;
         let rollbackSucceeded = true;
 
         try {
           if ((snapshot.menu_ids?.length ?? 0) > 0) {
             await postTodayMealRecordRegister(snapshot);
           }
-        } catch {
+        } catch (error) {
+          if (isRequestAbortError(error)) throw error;
           rollbackSucceeded = false;
         }
 

@@ -1,5 +1,6 @@
 import { loadRefreshToken } from "@/features/auth/store/tokenStore";
 import { apiClient } from "@/src/shared/api/apiClient";
+import { CanceledError } from "axios";
 import type { BridgeRequestPayload } from "./bridge.types";
 
 const SIGN_OUT_ENDPOINT = "/commonAuth/signout";
@@ -33,17 +34,20 @@ async function resolveRequestBody(payload: BridgeRequestPayload) {
   };
 }
 
-export async function requestFromWeb(payload: BridgeRequestPayload) {
+export async function requestFromWeb(payload: BridgeRequestPayload, signal?: AbortSignal) {
+  if (signal?.aborted) throw new CanceledError();
   const { endpoint, method, params } = payload;
 
   assertAllowedBridgeRequest(endpoint, method);
   const body = await resolveRequestBody(payload);
+  if (signal?.aborted) throw new CanceledError();
 
   const response = await apiClient.request({
     url: endpoint,
     method,
     params,
     data: body,
+    signal,
   });
 
   return response.data;

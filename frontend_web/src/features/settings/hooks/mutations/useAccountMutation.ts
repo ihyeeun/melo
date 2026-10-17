@@ -3,6 +3,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { logout, withdraw } from "@/features/settings/api/account";
 import { resetAnalyticsIdentity } from "@/shared/analytics/analytics";
+import { isRequestAbortError } from "@/shared/api/requestCancellation";
 import type { UseMutationCallback } from "@/shared/api/types/callback.types";
 
 const TARGETS_STORAGE_KEY = "targets";
@@ -36,6 +37,7 @@ export function useLogoutMutation(callbacks?: UseMutationCallback) {
       callbacks?.onSuccess?.();
     },
     onError: (error) => {
+      if (isRequestAbortError(error)) return;
       callbacks?.onError?.(error);
     },
   });
@@ -51,6 +53,7 @@ export function useWithdrawMutation(callbacks?: UseMutationCallback) {
       callbacks?.onSuccess?.();
     },
     onError: (error) => {
+      if (isRequestAbortError(error)) return;
       callbacks?.onError?.(error);
     },
   });

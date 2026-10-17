@@ -1,33 +1,40 @@
 import React from "react";
-import { StyleSheet, View, Image } from "react-native";
+import { Image, Linking, StyleSheet, View } from "react-native";
 import { KakaoLoginButton } from "@/features/auth/components/KakaoLoginButton";
 import { AppleLoginButton } from "@/features/auth/components/AppleLoginButton";
 import { router } from "expo-router";
+import * as WebBrowser from "expo-web-browser";
 import { semantic } from "@/src/shared/styles";
 import { Typo } from "@/src/shared/ui";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const MeloLogo = require("@/assets/design-update/melo-logo-black.png");
 const LoginImage = require("@/assets/design-update/login-image.png");
+const TERMS_AND_PRIVACY_POLICY_URL =
+  "https://third-princess-d57.notion.site/termsofuseandprivacypolicy";
 
 export default function LoginPage() {
   const startAppleLogin = React.useCallback(() => {
     router.push("/appleLogin");
   }, []);
 
-  const openTermsPage = React.useCallback(() => {
-    router.push("/(auth)/terms");
+  const openTermsAndPrivacyPolicy = React.useCallback(() => {
+    void WebBrowser.openBrowserAsync(TERMS_AND_PRIVACY_POLICY_URL).catch(async (error) => {
+      try {
+        const canOpen = await Linking.canOpenURL(TERMS_AND_PRIVACY_POLICY_URL);
+        if (!canOpen) return;
+
+        await Linking.openURL(TERMS_AND_PRIVACY_POLICY_URL);
+      } catch (fallbackError) {
+        console.warn("Failed to open terms in the external browser", fallbackError);
+      }
+    });
   }, []);
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.hero}>
         <Image source={MeloLogo} style={styles.meloIcon} resizeMode="contain" />
-        <Typo color="tertiary" size="body-m-medium">
-          건강한 식사를 넘어,
-          {"\n"}
-          여성의 건강을 이해하는 AI 헬스케어
-        </Typo>
         <Image source={LoginImage} style={styles.loginImage} resizeMode="contain" />
       </View>
       <View style={styles.bottom}>
@@ -39,7 +46,7 @@ export default function LoginPage() {
         <Typo
           color="tertiary"
           size="caption-m-regular"
-          onPress={openTermsPage}
+          onPress={openTermsAndPrivacyPolicy}
           style={styles.textCenter}
         >
           회원가입함으로써 멜로의

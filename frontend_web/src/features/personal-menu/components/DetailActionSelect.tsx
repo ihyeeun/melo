@@ -50,7 +50,7 @@ export function DetailActionSelect({
       disabled={disabled}
       modal={false}
     >
-      <Select.Trigger className={`${styles.trigger} typo-label3`} aria-label={`메뉴`}>
+      <Select.Trigger className={`${styles.trigger} body-m-regular`} aria-label={`메뉴`}>
         <Select.Icon className={styles.icon} aria-hidden>
           <SystemIcon name="kebab" size={18} />
         </Select.Icon>
@@ -66,7 +66,7 @@ export function DetailActionSelect({
                   value={option.value}
                   className={`${styles.item} ${
                     option.variant === "danger" ? styles.dangerItem : ""
-                  } typo-body2`}
+                  } body-l-medium`}
                 >
                   <Select.ItemText>{option.label}</Select.ItemText>
                 </Select.Item>

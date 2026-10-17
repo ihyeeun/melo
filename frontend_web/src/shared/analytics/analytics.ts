@@ -7,6 +7,8 @@ import {
   type AnalyticsUserProperties,
   buildAnalyticsUserProperties,
 } from "@/shared/analytics/analyticsUserProperties";
+import { isNativeApp, requestNativeAppDeviceInfo } from "@/shared/api/bridge/nativeBridge";
+import type { AppDeviceInfoPayload } from "@/shared/api/bridge/nativeBridge.types";
 import type { ProfileResponseDto } from "@/shared/api/types/api.response.dto";
 
 type AnalyticsProperties = Record<string, unknown>;
@@ -26,6 +28,8 @@ const sessionReplayTracking = sessionReplayPlugin({
 let initialized = false;
 let analyticsUnavailable = false;
 let analyticsInitRequested = false;
+let appDeviceInfoReady = false;
+let appDeviceInfo: AppDeviceInfoPayload | null = null;
 let currentUserRole: ProfileResponseDto["role"] | undefined;
 let identifiedUserPropertiesKey: string | null = null;
 let currentUserId: string | null = null;
@@ -93,7 +97,17 @@ function sendTrack(eventName: AnalyticsEventName, properties?: AnalyticsProperti
   const nickname = currentUserProperties.nickname;
   const eventProperties = nickname ? { ...(properties ?? {}), nickname } : properties;
 
-  amplitude.track(eventName, eventProperties);
+  amplitude.track(
+    eventName,
+    eventProperties,
+    appDeviceInfo
+      ? {
+          app_version: appDeviceInfo.appVersion,
+          os_name: appDeviceInfo.osName === "ios" ? "iOS" : "Android",
+          os_version: appDeviceInfo.osVersion ?? undefined,
+        }
+      : undefined,
+  );
 }
 
 function flushPendingEvents() {
@@ -104,7 +118,7 @@ function flushPendingEvents() {
 
 function initializeAnalyticsIfReady() {
   if (initialized || analyticsUnavailable || !analyticsInitRequested) return;
-  if (currentUserRole === undefined) return;
+  if (currentUserRole === undefined || !appDeviceInfoReady) return;
 
   const apiKey = getAmplitudeApiKey(currentUserRole);
   if (!apiKey) {
@@ -131,8 +145,27 @@ function initializeAnalyticsIfReady() {
 }
 
 export function initAnalytics() {
+  if (analyticsInitRequested) return;
+
   analyticsInitRequested = true;
-  initializeAnalyticsIfReady();
+
+  if (!isNativeApp()) {
+    appDeviceInfoReady = true;
+    initializeAnalyticsIfReady();
+    return;
+  }
+
+  void requestNativeAppDeviceInfo()
+    .then((info) => {
+      appDeviceInfo = info;
+    })
+    .catch(() => {
+      // Older apps may not support this bridge request; keep tracking their events.
+    })
+    .finally(() => {
+      appDeviceInfoReady = true;
+      initializeAnalyticsIfReady();
+    });
 }
 
 export function identifyAnalyticsUser(source: ProfileResponseDto) {
