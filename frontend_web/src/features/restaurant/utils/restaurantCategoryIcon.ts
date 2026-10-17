@@ -15,6 +15,7 @@ const RESTAURANT_CATEGORY_APPEARANCES = new Map<string, RestaurantCategoryAppear
   ["피자", { emoji: "🍕", backgroundColor: "var(--coral-100)" }],
   ["카페", { emoji: "☕", backgroundColor: "#efe5de" }],
   ["베이커리", { emoji: "🥐", backgroundColor: "#f3edfb" }],
+  ["도시락", { emoji: "🍱", backgroundColor: "#edf4fb" }],
 ]);
 
 export function getRestaurantCategoryAppearance(
