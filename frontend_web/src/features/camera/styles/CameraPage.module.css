@@ -18,32 +18,23 @@
 
 .mainLoading {
   align-items: center;
+  justify-content: center;
   display: flex;
   flex: 1;
   flex-direction: column;
   text-align: center;
-  padding-top: 20px;
-}
-
-.loadingContent {
-  align-items: center;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  justify-content: flex-start;
-  width: 80%;
+  gap: 15px;
 }
 
 .previewFrame {
-  border: 1px solid var(--border-subtle);
-  border-radius: 12px;
-  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+  border-radius: 20px;
   isolation: isolate;
   overflow: hidden;
   position: relative;
-  width: min(85%, 320px);
+  width: min(calc(100% - 50px), 320px);
   aspect-ratio: 3 / 4;
   flex-shrink: 0;
+  background-color: var(--text-disabled);
 }
 
 .previewImage {
