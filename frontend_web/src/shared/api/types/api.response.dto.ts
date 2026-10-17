@@ -478,6 +478,6 @@ export interface RestaurantMenuResponseDto {
   sat_fat?: number;
   // fat?: number;
   unit: number;
-  weight: number;
+  weight?: number;
   unit_quantity: string;
 }

@@ -55,7 +55,7 @@ export default function RestaurantMenuList({ menus, isPending, isError }: Props)
               <p className="caption-m-regular text-secondary">
                 {menu.unit_quantity &&
                   (/^\d/.test(menu.unit_quantity) ? menu.unit_quantity : `1${menu.unit_quantity}`)}
-                {` (${formatDisplayNumber(menu.weight)}${convertUnitNumToString(menu.unit)})`}
+                {` (${menu.weight ? formatDisplayNumber(menu.weight) : ""}${convertUnitNumToString(menu.unit)})`}
               </p>
             </div>
             <p className="body-l-medium textNoWrap">
@@ -68,7 +68,7 @@ export default function RestaurantMenuList({ menus, isPending, isError }: Props)
                 <p className="caption-m-regular text-tertiary textCenter">{label}</p>
                 <p className="body-s-regular text-primary textCenter">
                   {menu[key] == null ? (
-                    <span className="text-tertiary">0</span>
+                    <span className="text-tertiary">-</span>
                   ) : (
                     `${formatDisplayNumber(menu[key])} g`
                   )}
