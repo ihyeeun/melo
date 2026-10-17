@@ -142,15 +142,15 @@
   background-color: var(--background-default);
   border-radius: 16px;
   display: grid;
-  grid-template-columns: 32px 1fr 32px;
-  gap: 12px;
+  grid-template-columns: 40px 1fr 32px;
+  gap: 4px;
   align-items: flex-end;
   position: relative;
 }
 
 .chatActionExpendButton {
   padding-block: 10px;
-  padding-left: 8px;
+  padding-inline: 8px;
 }
 
 .chatActionExpendButtonIcon[data-isView="true"] {

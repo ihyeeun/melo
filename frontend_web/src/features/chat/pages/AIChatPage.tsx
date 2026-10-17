@@ -554,7 +554,17 @@ export default function AIChatPage() {
 
           <div className={styles.mealRecordModeChip} data-isView={isTextMealRecordMode}>
             <span className="body-s-medium text-primary">식사 기록 모드</span>
-            <button type="button" onClick={() => setIsTextMealRecordMode(false)}>
+            <button
+              type="button"
+              onPointerDown={(event) => {
+                if (!event.isPrimary) return;
+                event.preventDefault();
+                setIsTextMealRecordMode(false);
+              }}
+              onClick={(event) => {
+                if (event.detail === 0) setIsTextMealRecordMode(false);
+              }}
+            >
               <SystemIcon name="exit" size={16} className="text-primary" />
             </button>
           </div>
