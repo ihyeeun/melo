@@ -501,7 +501,14 @@ export default function AIChatPage() {
 
           <button
             type="button"
-            onClick={() => setIsShowChatActions(!isShowChatActions)}
+            onPointerDown={(event) => {
+              if (!event.isPrimary) return;
+              event.preventDefault();
+            }}
+            onClick={() => {
+              if (!isShowChatActions) textareaRef.current?.blur();
+              setIsShowChatActions((prev) => !prev);
+            }}
             className={styles.chatActionExpendButton}
             disabled={isChatBusy}
           >
