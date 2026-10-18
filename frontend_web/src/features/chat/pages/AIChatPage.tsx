@@ -922,7 +922,9 @@ function MealRecordCard({
       <section className={styles.mealRecordMenuSection}>
         {isSingleMenu ? (
           <div className={styles.menuMeta}>
-            <span className="body-s-regular text-primary">{firstMenu.name}</span>
+            <span className={`body-s-regular text-primary ${styles.menuMetaGap}`}>
+              {firstMenu.name}
+            </span>
             <span className="body-l-medium text-primary textNoWrap marginLeft">
               {totalCalories} kcal
             </span>
