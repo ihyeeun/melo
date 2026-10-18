@@ -1,6 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-import { calendarKeys, queryKeys as calendarQueryKeys } from "@/features/calendar/hooks/queries/calendar.queryKey";
 import { getTodayMealRecordMenus } from "@/features/home/api/todayRecord.api";
 import { queryKeys as homeQueryKeys } from "@/features/home/hooks/queries/todayRecord.queryKey";
 import { postTodayMealRecordRegister } from "@/features/meal-record/api/DayMeal";
@@ -8,6 +7,7 @@ import {
   MAX_MEAL_RECORD_MENUS,
   MEAL_RECORD_MENU_LIMIT_MESSAGE,
 } from "@/features/meal-record/constants/menu.constants";
+import { invalidateMealRecordRelatedQueries } from "@/features/meal-record/hooks/mutations/useTodayMealRecordMutation";
 import { mergeMenuDraftMenus } from "@/features/meal-record/stores/menuDraft.store";
 import { getCurrentMealRecordTime } from "@/features/meal-record/utils/mealRecordTime";
 import { toMenuDraftSeed } from "@/features/meal-record/utils/menuDraftSync";
@@ -86,21 +86,7 @@ export function useRegisterChatMealMutation() {
     retry: false,
 
     onSuccess: async (_response, { dateKey }) => {
-      await Promise.all([
-        // 저장한 날짜의 식사 기록 갱신
-        queryClient.invalidateQueries({
-          queryKey: homeQueryKeys.dayMeals.byDate(dateKey),
-          exact: true,
-        }),
-
-        // 달력의 식사 기록 표시 갱신
-        queryClient.invalidateQueries({
-          queryKey: calendarQueryKeys.recordedDates.all,
-        }),
-        queryClient.invalidateQueries({
-          queryKey: calendarKeys.monthly.month({ date: dateKey.slice(0, 7), mode: "intake" }),
-        }),
-      ]);
+      await invalidateMealRecordRelatedQueries(queryClient, dateKey);
     },
 
     onError: async (error, { dateKey }) => {
