@@ -22,8 +22,9 @@ export function useRestaurantSearchQuery(input: string) {
 
 export function useRestaurantDetailQuery({ restaurant_id, filter }: RestaurantDetailRequestDto) {
   return useQuery({
-    queryKey: restaurantKeys.detail(filter),
+    queryKey: restaurantKeys.detail(restaurant_id, filter),
     queryFn: () => getRestaurantDetail({ restaurant_id, ...(filter ? { filter } : {}) }),
     enabled: Number.isSafeInteger(restaurant_id) && restaurant_id > 0,
+    staleTime: Infinity,
   });
 }
