@@ -5,6 +5,7 @@ import { LineChart } from "@/features/personal-analysis/components/LineChart";
 import { usePersonalAnalysisByModeQuery } from "@/features/personal-analysis/hooks/queries/usePersonalAnalysis.query";
 import styles from "@/features/personal-analysis/styles/PersonalAnalysisPage.module.css";
 import { Button } from "@/shared/commons/button/Button";
+import { Skeleton } from "@/shared/commons/skeleton/Skeleton";
 import {
   formatDateKey,
   formatDotDate,
@@ -47,15 +48,16 @@ export default function PersonalAnalysisPage() {
 
 function DeficitCard({ date }: { date: string }) {
   const mode = "deficit";
+  const title = "칼로리 적자";
   const { data: deficit, isPending, isError } = usePersonalAnalysisByModeQuery({ date, mode });
 
-  if (isPending) return <p>불러오는 중...</p>;
+  if (isPending) return <SkeletonChart title={title} />;
   if (isError) return <p>데이터를 불러오지 못했어요.</p>;
 
   return (
     <section className={styles.analysisSection}>
       <div className={styles.titleGroup}>
-        <h3 className="title-m-semi text-primary">칼로리 적자</h3>
+        <h3 className="title-m-semi text-primary">{title}</h3>
         <p className="body-s-regular text-primary">섭취한 칼로리와 소모한 칼로리의 차이예요.</p>
       </div>
       <div className={styles.graphArea}>
@@ -66,6 +68,7 @@ function DeficitCard({ date }: { date: string }) {
 }
 function IntakeCard({ date }: { date: string }) {
   const mode = "intake";
+  const title = "섭취 칼로리";
   const { data: intake, isPending, isError } = usePersonalAnalysisByModeQuery({ date, mode });
 
   const averageKcal = intake
@@ -74,13 +77,13 @@ function IntakeCard({ date }: { date: string }) {
       )
     : 0;
 
-  if (isPending) return <p>불러오는 중...</p>;
+  if (isPending) return <SkeletonChart title={title} />;
   if (isError) return <p>데이터를 불러오지 못했어요.</p>;
 
   return (
     <section className={styles.analysisSection}>
       <div className={styles.titleGroup}>
-        <h3 className="title-m-semi text-primary">섭취 칼로리</h3>
+        <h3 className="title-m-semi text-primary">{title}</h3>
         <p className="body-s-regular text-primary">하루 평균 {averageKcal}kcal 섭취했어요.</p>
       </div>
       <div className={styles.graphArea}>
@@ -91,6 +94,7 @@ function IntakeCard({ date }: { date: string }) {
 }
 function BurnedCard({ date }: { date: string }) {
   const mode = "burned";
+  const title = "소모 칼로리";
   const { data: burned, isPending, isError } = usePersonalAnalysisByModeQuery({ date, mode });
 
   const averageBurned = burned
@@ -99,13 +103,13 @@ function BurnedCard({ date }: { date: string }) {
       )
     : 0;
 
-  if (isPending) return <p>불러오는 중...</p>;
+  if (isPending) return <SkeletonChart title={title} />;
   if (isError) return <p>데이터를 불러오지 못했어요.</p>;
 
   return (
     <section className={styles.analysisSection}>
       <div className={styles.titleGroup}>
-        <h3 className="title-m-semi text-primary">소모 칼로리</h3>
+        <h3 className="title-m-semi text-primary">{title}</h3>
         <p className="body-s-regular text-primary">하루 평균 {averageBurned}kcal 소모했어요.</p>
       </div>
       <div className={styles.graphArea}>
@@ -116,21 +120,38 @@ function BurnedCard({ date }: { date: string }) {
 }
 function WeightCard({ date }: { date: string }) {
   const mode = "weight";
+  const title = "체중 변화";
   const { data: bodyWeight, isPending, isError } = usePersonalAnalysisByModeQuery({ date, mode });
 
   const recentBodyWeight = bodyWeight?.at(-1)?.weight;
 
-  if (isPending) return <p>불러오는 중...</p>;
+  if (isPending) return <SkeletonChart title={title} />;
   if (isError) return <p>데이터를 불러오지 못했어요.</p>;
 
   return (
     <section className={styles.analysisSection}>
       <div className={styles.titleGroup}>
-        <h3 className="title-m-semi text-primary">체중 변화</h3>
+        <h3 className="title-m-semi text-primary">{title}</h3>
         <p className="body-s-regular text-primary">최근 체중은 {recentBodyWeight}kg이에요.</p>
       </div>
       <div className={styles.graphArea}>
         <LineChart<typeof mode> chartData={bodyWeight ?? []} valueKey="weight" />
+      </div>
+    </section>
+  );
+}
+
+function SkeletonChart({ title }: { title: string }) {
+  return (
+    <section className={styles.analysisSection}>
+      <div className={styles.titleGroup}>
+        <h3 className="title-m-semi text-primary">{title}</h3>
+        <p>
+          <Skeleton width={230} height={20} />
+        </p>
+      </div>
+      <div className={styles.graphArea}>
+        <Skeleton width="100%" height="100%" />
       </div>
     </section>
   );
