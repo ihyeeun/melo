@@ -1,0 +1,12 @@
+.chartSection :global(.recharts-surface):focus:not(:focus-visible),
+.chartSection :global(.recharts-surface *):focus:not(:focus-visible) {
+  outline: none;
+}
+
+.tooltip {
+  width: fit-content;
+  padding: 4px 6px;
+  background-color: var(--text-secondary);
+  color: var(--background-default);
+  border-radius: 8px;
+}

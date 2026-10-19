@@ -481,3 +481,31 @@ export interface RestaurantMenuResponseDto {
   weight?: number;
   unit_quantity: string;
 }
+
+/* ======
+ * 분석 탭
+ * ====== */
+interface RecentAnalysisBase {
+  date: string;
+}
+interface IntakeAnalysis extends RecentAnalysisBase {
+  intake_calories: number; //하루 섭취 칼로리
+}
+interface WeightAnalysis extends RecentAnalysisBase {
+  weight: number; //기록 체중
+}
+interface BurnedAnalysis extends RecentAnalysisBase {
+  total_burned_calories: number; //걸음과 운동을 합산한 하루 총 소모 칼로리
+  steps_burned_calories: number; //기록된 걸음 수를 기준으로 추정한 소모 칼로리
+  workout_burned_calories: number; //기록된 운동으로 소모한 칼로리
+}
+interface DeficitAnalysis extends RecentAnalysisBase {
+  calorie_deficit: number; //섭취 칼로리 -(기초대사량 + 걸음, 운동으로 소모한 칼로리)
+}
+
+export interface RecentAnalysisResponseDto {
+  intake: IntakeAnalysis;
+  weight: WeightAnalysis;
+  burned: BurnedAnalysis;
+  deficit: DeficitAnalysis;
+}

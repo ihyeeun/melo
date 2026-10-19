@@ -141,3 +141,13 @@ export interface RestaurantDetailRequestDto {
   restaurant_id: number;
   filter?: "균형" | "저칼로리" | "단백질";
 }
+
+/* ======
+ * 분석 탭
+ * ====== */
+
+export type RecentAnalysisMode = "intake" | "weight" | "burned" | "deficit";
+export interface RecentAnalysisRequestDto<M extends RecentAnalysisMode = RecentAnalysisMode> {
+  date: string;
+  mode: M;
+}
