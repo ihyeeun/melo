@@ -38,7 +38,13 @@ export default function PersonalAnalysisPage() {
         <IntakeCard date={today} />
         <BurnedCard date={today} />
         <WeightCard date={today} />
-        <Button variant="outlined" border="primary" fullWidth className={styles.coachButton}>
+        <Button
+          onClick={() => {}}
+          variant="outlined"
+          border="primary"
+          fullWidth
+          className={styles.coachButton}
+        >
           AI 코치에게 내 관리 패턴 분석받기
         </Button>
       </main>
@@ -54,15 +60,26 @@ function DeficitCard({ date }: { date: string }) {
   if (isPending) return <SkeletonChart title={title} />;
   if (isError) return <p>데이터를 불러오지 못했어요.</p>;
 
+  const isEmpty = (deficit?.length ?? 0) === 0;
+
   return (
     <section className={styles.analysisSection}>
-      <div className={styles.titleGroup}>
-        <h3 className="title-m-semi text-primary">{title}</h3>
-        <p className="body-s-regular text-primary">섭취한 칼로리와 소모한 칼로리의 차이예요.</p>
+      <div data-isEmpty={isEmpty} className={styles.blur}>
+        <div className={styles.titleGroup}>
+          <h3 className="title-m-semi text-primary">{title}</h3>
+          <p className="body-s-regular text-primary">섭취한 칼로리와 소모한 칼로리의 차이예요.</p>
+        </div>
+        <div className={styles.graphArea}>
+          <LineChart<typeof mode> chartData={deficit} valueKey="calorie_deficit" />
+        </div>
       </div>
-      <div className={styles.graphArea}>
-        <LineChart<typeof mode> chartData={deficit ?? []} valueKey="calorie_deficit" />
-      </div>
+      {isEmpty && (
+        <div className={styles.emptyOverlay} role="status">
+          <p className={`body-l-medium text-secondary ${styles.emptyText}`}>
+            최근 30일 내 기록이 없습니다
+          </p>
+        </div>
+      )}
     </section>
   );
 }
@@ -71,24 +88,36 @@ function IntakeCard({ date }: { date: string }) {
   const title = "섭취 칼로리";
   const { data: intake, isPending, isError } = usePersonalAnalysisByModeQuery({ date, mode });
 
-  const averageKcal = intake
-    ? formatDisplayNumber(
-        intake.reduce((sum, value) => sum + value.intake_calories, 0) / intake.length,
-      )
-    : 0;
+  const averageKcal =
+    intake && intake.length > 0
+      ? formatDisplayNumber(
+          intake.reduce((sum, value) => sum + value.intake_calories, 0) / intake.length,
+        )
+      : 0;
 
   if (isPending) return <SkeletonChart title={title} />;
   if (isError) return <p>데이터를 불러오지 못했어요.</p>;
 
+  const isEmpty = (intake?.length ?? 0) === 0;
+
   return (
     <section className={styles.analysisSection}>
-      <div className={styles.titleGroup}>
-        <h3 className="title-m-semi text-primary">{title}</h3>
-        <p className="body-s-regular text-primary">하루 평균 {averageKcal}kcal 섭취했어요.</p>
+      <div data-isEmpty={isEmpty} className={styles.blur}>
+        <div className={styles.titleGroup}>
+          <h3 className="title-m-semi text-primary">{title}</h3>
+          <p className="body-s-regular text-primary">하루 평균 {averageKcal}kcal 섭취했어요.</p>
+        </div>
+        <div className={styles.graphArea}>
+          <LineChart<typeof mode> chartData={intake} valueKey="intake_calories" />
+        </div>
       </div>
-      <div className={styles.graphArea}>
-        <LineChart<typeof mode> chartData={intake ?? []} valueKey="intake_calories" />
-      </div>
+      {isEmpty && (
+        <div className={styles.emptyOverlay} role="status">
+          <p className={`body-l-medium text-secondary ${styles.emptyText}`}>
+            최근 30일 내 기록이 없습니다
+          </p>
+        </div>
+      )}
     </section>
   );
 }
@@ -97,24 +126,36 @@ function BurnedCard({ date }: { date: string }) {
   const title = "소모 칼로리";
   const { data: burned, isPending, isError } = usePersonalAnalysisByModeQuery({ date, mode });
 
-  const averageBurned = burned
-    ? formatDisplayNumber(
-        burned.reduce((sum, value) => sum + value.total_burned_calories, 0) / burned.length,
-      )
-    : 0;
+  const averageBurned =
+    burned && burned.length > 0
+      ? formatDisplayNumber(
+          burned.reduce((sum, value) => sum + value.total_burned_calories, 0) / burned.length,
+        )
+      : 0;
 
   if (isPending) return <SkeletonChart title={title} />;
   if (isError) return <p>데이터를 불러오지 못했어요.</p>;
 
+  const isEmpty = (burned?.length ?? 0) === 0;
+
   return (
     <section className={styles.analysisSection}>
-      <div className={styles.titleGroup}>
-        <h3 className="title-m-semi text-primary">{title}</h3>
-        <p className="body-s-regular text-primary">하루 평균 {averageBurned}kcal 소모했어요.</p>
+      <div data-isEmpty={isEmpty} className={styles.blur}>
+        <div className={styles.titleGroup}>
+          <h3 className="title-m-semi text-primary">{title}</h3>
+          <p className="body-s-regular text-primary">하루 평균 {averageBurned}kcal 소모했어요.</p>
+        </div>
+        <div className={styles.graphArea}>
+          <LineChart<typeof mode> chartData={burned} valueKey="total_burned_calories" />
+        </div>
       </div>
-      <div className={styles.graphArea}>
-        <LineChart<typeof mode> chartData={burned ?? []} valueKey="total_burned_calories" />
-      </div>
+      {isEmpty && (
+        <div className={styles.emptyOverlay} role="status">
+          <p className={`body-l-medium text-secondary ${styles.emptyText}`}>
+            최근 30일 내 기록이 없습니다
+          </p>
+        </div>
+      )}
     </section>
   );
 }
@@ -128,15 +169,26 @@ function WeightCard({ date }: { date: string }) {
   if (isPending) return <SkeletonChart title={title} />;
   if (isError) return <p>데이터를 불러오지 못했어요.</p>;
 
+  const isEmpty = (bodyWeight?.length ?? 0) === 0;
+
   return (
     <section className={styles.analysisSection}>
-      <div className={styles.titleGroup}>
-        <h3 className="title-m-semi text-primary">{title}</h3>
-        <p className="body-s-regular text-primary">최근 체중은 {recentBodyWeight}kg이에요.</p>
+      <div data-isEmpty={isEmpty} className={styles.blur}>
+        <div className={styles.titleGroup}>
+          <h3 className="title-m-semi text-primary">{title}</h3>
+          <p className="body-s-regular text-primary">최근 체중은 {recentBodyWeight}kg이에요.</p>
+        </div>
+        <div className={styles.graphArea}>
+          <LineChart<typeof mode> chartData={bodyWeight} valueKey="weight" />
+        </div>
       </div>
-      <div className={styles.graphArea}>
-        <LineChart<typeof mode> chartData={bodyWeight ?? []} valueKey="weight" />
-      </div>
+      {isEmpty && (
+        <div className={styles.emptyOverlay} role="status">
+          <p className={`body-l-medium text-secondary ${styles.emptyText}`}>
+            최근 30일 내 기록이 없습니다
+          </p>
+        </div>
+      )}
     </section>
   );
 }

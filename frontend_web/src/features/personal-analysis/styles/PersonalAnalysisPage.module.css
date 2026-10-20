@@ -25,6 +25,7 @@
   background-color: transparent;
   border: 1px solid var(--border-default);
   border-radius: 20px;
+  position: relative;
 }
 
 .analysisSection + .analysisSection {
@@ -48,4 +49,24 @@
 
 .coachButton {
   margin-top: 24px;
+}
+
+.blur[data-isEmpty="true"] {
+  filter: blur(2px);
+}
+.emptyOverlay {
+  text-align: center;
+  position: absolute;
+  display: grid;
+  place-items: center;
+  inset: 0;
+  background-color: rgb(255 255 255 / 70%);
+  border-radius: 20px;
+  padding-top: 10px;
+}
+.emptyText {
+  padding: 4px 8px;
+  border-radius: 14px;
+  background-color: rgba(119, 125, 136, 0.3);
+  opacity: 70%;
 }

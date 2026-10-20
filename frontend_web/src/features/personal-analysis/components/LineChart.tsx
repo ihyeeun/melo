@@ -20,7 +20,7 @@ interface chartProps<M extends RecentAnalysisMode> {
 }
 
 export function LineChart<M extends RecentAnalysisMode>({ chartData, valueKey }: chartProps<M>) {
-  if (chartData.length === 0) return <p>아직 기록이 없어요.</p>;
+  if (chartData.length === 0) return <EmptyChartPreview />;
 
   const dataByDate = new Map(chartData.map((item) => [item.date, item]));
 
@@ -29,10 +29,15 @@ export function LineChart<M extends RecentAnalysisMode>({ chartData, valueKey }:
     end: parseDateKey(chartData[chartData.length - 1].date),
   });
 
-  const dailyData = days.map((day) => {
+  const dailyData = days.map((day, dayIndex) => {
     const date = formatDateKey(day);
 
-    return dataByDate.get(date) ?? { date, [valueKey]: null };
+    const record = dataByDate.get(date) ?? { date, [valueKey]: null };
+
+    return {
+      ...record,
+      dayIndex,
+    };
   });
 
   const ticks = dailyData.filter((_, index) => index % 7 === 0).map((item) => item.date);
@@ -122,5 +127,74 @@ function ActivePoint({ cx, cy }: ActiveDotProps) {
 
       <circle cx={cx} cy={cy} r={4} fill="var(--navy-700)" />
     </g>
+  );
+}
+
+const EMPTY_CHART_DATA = [
+  -150, -150, -150, -150, -150, -150, -150, -150, -150, -180, -170, -210, -180, -210, -240, -270,
+  -310, -280, -320, -370, -520, -440, -370, -340, -370, -240, -150, -70, -20, 70,
+].map((value, index) => ({
+  index,
+  value,
+}));
+
+const PREVIEW_LABELS: Record<number, string> = {
+  0: "8.18",
+  7: "8.25",
+  14: "9.1",
+  21: "9.8",
+  28: "9.15",
+};
+
+function EmptyChartPreview() {
+  return (
+    <div aria-hidden="true" style={{ height: "100%", pointerEvents: "none" }}>
+      <ResponsiveContainer width="100%" height="100%">
+        <RechartsLineChart data={EMPTY_CHART_DATA} accessibilityLayer={false}>
+          <XAxis
+            type="number"
+            dataKey="index"
+            domain={[0, 29]}
+            ticks={[0, 7, 14, 21, 28]}
+            interval={0}
+            tickFormatter={(index: number) => PREVIEW_LABELS[index] ?? ""}
+            tick={{
+              className: "caption-s-medium",
+              fill: "var(--text-tertiary)",
+            }}
+            tickLine={false}
+            axisLine={{ stroke: "var(--coral-900)" }}
+            height="auto"
+          />
+
+          <YAxis
+            domain={[-750, 250]}
+            ticks={[-750, -500, -250, 0, 250]}
+            reversed
+            tick={{
+              className: "caption-s-medium",
+              fill: "var(--text-tertiary)",
+            }}
+            tickLine={false}
+            axisLine={false}
+            width="auto"
+          />
+
+          <Line
+            type="linear"
+            dataKey="value"
+            stroke="var(--coral-300)"
+            strokeWidth={1}
+            dot={{
+              r: 2,
+              fill: "var(--coral-500)",
+              stroke: "none",
+            }}
+            activeDot={false}
+            isAnimationActive={false}
+          />
+        </RechartsLineChart>
+      </ResponsiveContainer>
+    </div>
   );
 }
