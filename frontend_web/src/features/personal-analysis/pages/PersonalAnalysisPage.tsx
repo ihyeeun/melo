@@ -1,3 +1,4 @@
+import { Tabs } from "@base-ui/react";
 import { subDays } from "date-fns";
 import { useState } from "react";
 
@@ -5,6 +6,7 @@ import { LineChart } from "@/features/personal-analysis/components/LineChart";
 import { usePersonalAnalysisByModeQuery } from "@/features/personal-analysis/hooks/queries/usePersonalAnalysis.query";
 import styles from "@/features/personal-analysis/styles/PersonalAnalysisPage.module.css";
 import { Button } from "@/shared/commons/button/Button";
+import { InfoPopover } from "@/shared/commons/popover/InfoPopover";
 import { Skeleton } from "@/shared/commons/skeleton/Skeleton";
 import {
   formatDateKey,
@@ -66,7 +68,12 @@ function DeficitCard({ date }: { date: string }) {
     <section className={styles.analysisSection}>
       <div data-isEmpty={isEmpty} className={styles.blur}>
         <div className={styles.titleGroup}>
-          <h3 className="title-m-semi text-primary">{title}</h3>
+          <div className={styles.titlePopover}>
+            <h3 className="title-m-semi text-primary">{title}</h3>
+            <InfoPopover iconSize={18} align="start">
+              기초대사량을 포함한 <br />총 소모 칼로리를 기준으로 계산해요
+            </InfoPopover>
+          </div>
           <p className="body-s-regular text-primary">섭취한 칼로리와 소모한 칼로리의 차이예요.</p>
         </div>
         <div className={styles.graphArea}>
@@ -121,6 +128,12 @@ function IntakeCard({ date }: { date: string }) {
     </section>
   );
 }
+
+const TABS = [
+  { value: "total_burned_calories", label: "총합" },
+  { value: "steps_burned_calories", label: "걸음" },
+  { value: "workout_burned_calories", label: "운동" },
+];
 function BurnedCard({ date }: { date: string }) {
   const mode = "burned";
   const title = "소모 칼로리";
@@ -145,9 +158,20 @@ function BurnedCard({ date }: { date: string }) {
           <h3 className="title-m-semi text-primary">{title}</h3>
           <p className="body-s-regular text-primary">하루 평균 {averageBurned}kcal 소모했어요.</p>
         </div>
-        <div className={styles.graphArea}>
-          <LineChart<typeof mode> chartData={burned} valueKey="total_burned_calories" />
-        </div>
+        <Tabs.Root defaultValue="total_burned_calories">
+          <Tabs.List className={styles.tabList}>
+            {TABS.map((tab) => (
+              <Tabs.Tab value={tab.value} className={`${styles.tabItem} body-s-medium`}>
+                {tab.label}
+              </Tabs.Tab>
+            ))}
+          </Tabs.List>
+          {TABS.map((tab) => (
+            <Tabs.Panel key={tab.value} value={tab.value} className={styles.graphArea}>
+              <LineChart<typeof mode> chartData={burned} valueKey={tab.value} />
+            </Tabs.Panel>
+          ))}
+        </Tabs.Root>
       </div>
       {isEmpty && (
         <div className={styles.emptyOverlay} role="status">
@@ -198,9 +222,7 @@ function SkeletonChart({ title }: { title: string }) {
     <section className={styles.analysisSection}>
       <div className={styles.titleGroup}>
         <h3 className="title-m-semi text-primary">{title}</h3>
-        <p>
-          <Skeleton width={230} height={20} />
-        </p>
+        <Skeleton width={230} height={20} />
       </div>
       <div className={styles.graphArea}>
         <Skeleton width="100%" height="100%" />
