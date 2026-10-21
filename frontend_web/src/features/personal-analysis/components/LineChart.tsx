@@ -12,6 +12,7 @@ import {
 } from "recharts";
 import { type ActiveDotProps, usePlotArea } from "recharts";
 
+import { MenstrualPhaseBackground } from "@/features/personal-analysis/components/MenstrualPhaseBackground";
 import styles from "@/features/personal-analysis/styles/LineChart.module.css";
 import type { RecentAnalysisMode } from "@/shared/api/types/api.request.dto";
 import type { RecentAnalysisResponseDto } from "@/shared/api/types/api.response.dto";
@@ -48,6 +49,7 @@ export function LineChart<M extends RecentAnalysisMode>({ chartData, valueKey }:
   return (
     <ResponsiveContainer width="100%" height="100%" className={styles.chartSection}>
       <RechartsLineChart data={dailyData}>
+        <MenstrualPhaseBackground data={dailyData} />
         <XAxis
           dataKey="date"
           ticks={ticks}
