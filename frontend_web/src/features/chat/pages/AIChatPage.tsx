@@ -20,6 +20,7 @@ import { CHAT_MEAL_RECORD_MODE_ONBOARDING_STORAGE_KEY } from "@/features/chat/co
 import { useRegisterChatMealMutation } from "@/features/chat/hooks/mutations/useRegisterMeal.mutation";
 import {
   chatMutationKeys,
+  useManagementPatternAnalysisMutation,
   useMealFeedbackMutation,
   useParseMenusFromTextMutation,
   usePendingSendMessages,
@@ -74,7 +75,10 @@ interface ResponseWait {
   finish: () => void;
 }
 
-type ChatEntryRequest = { type: "meal-feedback"; dateKey: string } | { type: "management" };
+type ChatEntryRequest =
+  | { type: "meal-feedback"; dateKey: string }
+  | { type: "management" }
+  | { type: "management-pattern-analysis" };
 
 export default function AIChatPage() {
   const navigate = useNavigate();
@@ -109,6 +113,7 @@ export default function AIChatPage() {
   const isChatRequestPending = useIsMutating({ mutationKey: chatMutationKeys.all }) > 0;
   const { mutate: requestMealFeedback } = useMealFeedbackMutation();
   const { mutate: requestPersonalizedManagement } = usePersonalizedManagementMutation();
+  const { mutate: requestPatternAnalysis } = useManagementPatternAnalysisMutation();
 
   const isTimelinePending = historyQuery.isPending || mealsQuery.isPending;
   const isChatBusy = isChatRequestPending || cameraImage !== null;
@@ -368,10 +373,16 @@ export default function AIChatPage() {
     if (hasRequestedRef.current) return;
     hasRequestedRef.current = true;
 
-    if (entryRequest.type === "meal-feedback") {
-      requestMealFeedback(entryRequest.dateKey);
-    } else {
-      requestPersonalizedManagement();
+    switch (entryRequest.type) {
+      case "meal-feedback":
+        requestMealFeedback(entryRequest.dateKey);
+        break;
+      case "management":
+        requestPersonalizedManagement();
+        break;
+      case "management-pattern-analysis":
+        requestPatternAnalysis();
+        break;
     }
   }, [
     isActive,
@@ -380,6 +391,7 @@ export default function AIChatPage() {
     isTimelinePending,
     requestMealFeedback,
     requestPersonalizedManagement,
+    requestPatternAnalysis,
   ]);
 
   useLayoutEffect(() => {

@@ -5,9 +5,12 @@ import { useState } from "react";
 import { LineChart } from "@/features/personal-analysis/components/LineChart";
 import { usePersonalAnalysisByModeQuery } from "@/features/personal-analysis/hooks/queries/usePersonalAnalysis.query";
 import styles from "@/features/personal-analysis/styles/PersonalAnalysisPage.module.css";
+import { PATH } from "@/router/path";
 import { Button } from "@/shared/commons/button/Button";
 import { InfoPopover } from "@/shared/commons/popover/InfoPopover";
 import { Skeleton } from "@/shared/commons/skeleton/Skeleton";
+import { isFreeUserGuardEnabled } from "@/shared/guards/featureGuard";
+import { navigate } from "@/shared/navigation/stackflowNavigation";
 import {
   formatDateKey,
   formatDotDate,
@@ -17,6 +20,7 @@ import {
 import { formatDisplayNumber } from "@/shared/utils/numberFormat";
 
 export default function PersonalAnalysisPage() {
+  const isFree = isFreeUserGuardEnabled();
   const today = getTodayFormatDateKey();
   const [standardDate] = useState(today);
 
@@ -40,15 +44,19 @@ export default function PersonalAnalysisPage() {
         <IntakeCard date={today} />
         <BurnedCard date={today} />
         <WeightCard date={today} />
-        <Button
-          onClick={() => {}}
-          variant="outlined"
-          border="primary"
-          fullWidth
-          className={styles.coachButton}
-        >
-          AI 코치에게 내 관리 패턴 분석받기
-        </Button>
+        {!isFree && (
+          <Button
+            onClick={() => {
+              navigate(PATH.AI_CHAT, { state: { type: "management-pattern-analysis" } });
+            }}
+            variant="outlined"
+            border="primary"
+            fullWidth
+            className={styles.coachButton}
+          >
+            AI 코치에게 내 관리 패턴 분석받기
+          </Button>
+        )}
       </main>
     </div>
   );
