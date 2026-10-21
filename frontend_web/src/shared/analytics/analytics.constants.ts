@@ -47,6 +47,7 @@ export const EVENT_NAME = {
 
   CLICK_MY_MANAGEMENT_AI_COACH: "click_my_management_ai_coach",
   CLICK_MEAL_FEEDBACK_AI_COACH: "click_meal_feedback_ai_coach",
+  CLICK_MANAGEMENT_PATTERN_ANALYSIS: "click_management_pattern_analysis",
 
   WATER_INTAKE_RECORD_COMPLETED: "water_intake_recorded",
 } as const;

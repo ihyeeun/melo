@@ -7,6 +7,8 @@ import { LineChart } from "@/features/personal-analysis/components/LineChart";
 import { usePersonalAnalysisByModeQuery } from "@/features/personal-analysis/hooks/queries/usePersonalAnalysis.query";
 import styles from "@/features/personal-analysis/styles/PersonalAnalysisPage.module.css";
 import { PATH } from "@/router/path";
+import { track } from "@/shared/analytics/analytics";
+import { EVENT_NAME } from "@/shared/analytics/analytics.constants";
 import type { RecentAnalysisMode } from "@/shared/api/types/api.request.dto";
 import type { RecentAnalysisResponseDto } from "@/shared/api/types/api.response.dto";
 import { Button } from "@/shared/commons/button/Button";
@@ -63,6 +65,7 @@ export default function PersonalAnalysisPage() {
             disabled={!hasAnalysisData}
             onClick={() => {
               navigate(PATH.AI_CHAT, { state: { type: "management-pattern-analysis" } });
+              track(EVENT_NAME.CLICK_MANAGEMENT_PATTERN_ANALYSIS);
             }}
             variant={!hasAnalysisData ? "disabled" : "outlined"}
             fullWidth
