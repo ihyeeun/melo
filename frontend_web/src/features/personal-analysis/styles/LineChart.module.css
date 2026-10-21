@@ -4,9 +4,24 @@
 }
 
 .tooltip {
+  position: relative;
   width: fit-content;
+  transform: translate(-50%, calc(-100% - 10px));
+  white-space: nowrap;
   padding: 4px 6px;
   background-color: var(--text-secondary);
   color: var(--background-default);
   border-radius: 8px;
+}
+
+.tooltip::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  transform: translateX(-50%);
+  border-inline: 3px solid transparent;
+  border-top: 3px solid var(--text-secondary);
 }

@@ -4,6 +4,9 @@ import {
   LineChart as RechartsLineChart,
   ResponsiveContainer,
   Tooltip,
+  useActiveTooltipCoordinate,
+  useActiveTooltipDataPoints,
+  useYAxisScale,
   XAxis,
   YAxis,
 } from "recharts";
@@ -75,18 +78,7 @@ export function LineChart<M extends RecentAnalysisMode>({ chartData, valueKey }:
           padding={{ top: 12, bottom: 12 }}
         />
 
-        <Tooltip
-          content={({ active, payload }) => {
-            if (!active) return;
-
-            const value = payload.find((item) => item.dataKey === valueKey)?.value ?? 0;
-            const unit = valueKey === "weight" ? "kg" : "kcal";
-            const displayLabel = `${value} ${unit}`;
-
-            return <div className={`caption-m-medium ${styles.tooltip}`}>{displayLabel}</div>;
-          }}
-          cursor={false}
-        />
+        <PointTooltip valueKey={valueKey} />
 
         <Line
           type="linear"
@@ -99,6 +91,30 @@ export function LineChart<M extends RecentAnalysisMode>({ chartData, valueKey }:
         />
       </RechartsLineChart>
     </ResponsiveContainer>
+  );
+}
+
+function PointTooltip({ valueKey }: { valueKey: string }) {
+  const coordinate = useActiveTooltipCoordinate();
+  const [point] = useActiveTooltipDataPoints<Record<string, unknown>>() ?? [];
+  const yScale = useYAxisScale();
+  const value = point?.[valueKey];
+  const y = typeof value === "number" ? yScale?.(value) : undefined;
+
+  return (
+    <Tooltip
+      position={coordinate && y !== undefined ? { x: coordinate.x, y } : undefined}
+      isAnimationActive={false}
+      content={({ active }) => {
+        if (!active || typeof value !== "number" || y === undefined) return null;
+
+        const unit = valueKey === "weight" ? "kg" : "kcal";
+        const displayLabel = `${value} ${unit}`;
+
+        return <div className={`caption-m-medium ${styles.tooltip}`}>{displayLabel}</div>;
+      }}
+      cursor={false}
+    />
   );
 }
 
