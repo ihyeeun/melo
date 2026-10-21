@@ -1,18 +1,26 @@
 import { eachDayOfInterval } from "date-fns";
+import { createPortal } from "react-dom";
 import {
+  type CartesianTickItem,
   Line,
   LineChart as RechartsLineChart,
   ResponsiveContainer,
+  Text,
   Tooltip,
   useActiveTooltipCoordinate,
   useActiveTooltipDataPoints,
   useYAxisScale,
+  useYAxisTicks,
   XAxis,
   YAxis,
 } from "recharts";
 import { type ActiveDotProps, usePlotArea } from "recharts";
 
 import { MenstrualPhaseBackground } from "@/features/personal-analysis/components/MenstrualPhaseBackground";
+import {
+  type ChartViewport,
+  ZoomableChart,
+} from "@/features/personal-analysis/components/ZoomableChart";
 import styles from "@/features/personal-analysis/styles/LineChart.module.css";
 import type { RecentAnalysisMode } from "@/shared/api/types/api.request.dto";
 import type { RecentAnalysisResponseDto } from "@/shared/api/types/api.response.dto";
@@ -22,6 +30,9 @@ interface chartProps<M extends RecentAnalysisMode> {
   chartData: RecentAnalysisResponseDto[M][];
   valueKey: string;
 }
+
+const Y_AXIS_TICK_GAP = 8;
+const formatYAxisTick = (value: number) => String(Number(value.toFixed(1)));
 
 export function LineChart<M extends RecentAnalysisMode>({ chartData, valueKey }: chartProps<M>) {
   if (chartData.length === 0) return <EmptyChartPreview />;
@@ -44,71 +55,120 @@ export function LineChart<M extends RecentAnalysisMode>({ chartData, valueKey }:
     };
   });
 
-  const ticks = dailyData.filter((_, index) => index % 7 === 0).map((item) => item.date);
-
   return (
-    <ResponsiveContainer width="100%" height="100%" className={styles.chartSection}>
-      <RechartsLineChart data={dailyData}>
-        <MenstrualPhaseBackground data={dailyData} />
-        <XAxis
-          dataKey="date"
-          ticks={ticks}
-          interval={0}
-          tickFormatter={(date: string) => date.slice(5).replace("-", ".")}
-          tick={{
-            className: "caption-s-medium",
-            fill: "var(--text-tertiary)",
-          }}
-          axisLine={{ stroke: "var(--coral-900)", strokeWidth: "1" }}
-          tickLine={false}
-          height={"auto"}
-          padding={{ left: 12, right: 12 }}
-        />
+    <ZoomableChart
+      key={`${valueKey}:${dailyData[0].date}:${dailyData[dailyData.length - 1].date}`}
+      dayCount={dailyData.length}
+    >
+      {(viewport) => (
+        <ResponsiveContainer width="100%" height="100%" className={styles.chartSection}>
+          <RechartsLineChart data={dailyData}>
+            <MenstrualPhaseBackground data={dailyData} />
+            <XAxis
+              dataKey="date"
+              ticks={dailyData
+                .filter((_, index) => index % Math.max(1, Math.ceil(7 / viewport.zoom)) === 0)
+                .map((item) => item.date)}
+              interval={0}
+              tickFormatter={(date: string) => date.slice(5).replace("-", ".")}
+              tick={{
+                className: "caption-s-medium",
+                fill: "var(--text-tertiary)",
+              }}
+              axisLine={{ stroke: "var(--coral-900)", strokeWidth: "1" }}
+              tickLine={false}
+              height={"auto"}
+              padding={{ left: 12, right: 12 }}
+            />
 
-        <YAxis
-          domain={["auto", "auto"]}
-          reversed={valueKey === "calorie_deficit"}
-          tickFormatter={(value: number) => String(Number(value.toFixed(1)))}
-          tick={{
-            className: "caption-s-medium",
-            fill: "var(--text-tertiary)",
-          }}
-          axisLine={false}
-          tickLine={false}
-          tickCount={5}
-          width={"auto"}
-          padding={{ top: 12, bottom: 12 }}
-        />
+            <YAxis
+              domain={["auto", "auto"]}
+              reversed={valueKey === "calorie_deficit"}
+              tickFormatter={formatYAxisTick}
+              tick={{
+                className: "caption-s-medium",
+                fill: "var(--text-tertiary)",
+                opacity: viewport.overlayPortal ? 0 : 1,
+              }}
+              axisLine={false}
+              tickLine={false}
+              tickSize={0}
+              tickMargin={Y_AXIS_TICK_GAP}
+              tickCount={5}
+              width={"auto"}
+              padding={{ top: 12, bottom: 12 }}
+            />
 
-        <PointTooltip valueKey={valueKey} />
+            <FixedYAxis portal={viewport.overlayPortal} />
+            <PointTooltip valueKey={valueKey} viewport={viewport} />
 
-        <Line
-          type="linear"
-          dataKey={valueKey}
-          connectNulls
-          strokeWidth={1}
-          stroke="var(--coral-300)"
-          dot={{ r: 2, fill: "var(--coral-500)", stroke: "none" }}
-          activeDot={(props) => <ActivePoint {...props} />}
-        />
-      </RechartsLineChart>
-    </ResponsiveContainer>
+            <Line
+              type="linear"
+              dataKey={valueKey}
+              connectNulls
+              strokeWidth={1}
+              stroke="var(--coral-300)"
+              dot={{ r: 2, fill: "var(--coral-500)", stroke: "none" }}
+              activeDot={(props) => <ActivePoint {...props} />}
+              isAnimationActive={false}
+            />
+          </RechartsLineChart>
+        </ResponsiveContainer>
+      )}
+    </ZoomableChart>
   );
 }
 
-function PointTooltip({ valueKey }: { valueKey: string }) {
+function FixedYAxis({ portal }: { portal: HTMLDivElement | null }) {
+  const plot = usePlotArea();
+  const ticks = useYAxisTicks();
+
+  if (!portal || !plot || !ticks) return null;
+
+  return createPortal(
+    <svg className={styles.fixedYAxis} width={plot.x} height="100%" aria-hidden="true">
+      {ticks.map(({ value, coordinate, tickCoord }: CartesianTickItem) => (
+        <Text
+          key={value}
+          x={plot.x - Y_AXIS_TICK_GAP}
+          y={tickCoord ?? coordinate}
+          textAnchor="end"
+          verticalAnchor="middle"
+          className="caption-s-medium"
+          fill="var(--text-tertiary)"
+        >
+          {formatYAxisTick(value)}
+        </Text>
+      ))}
+    </svg>,
+    portal,
+  );
+}
+
+function PointTooltip({ valueKey, viewport }: { valueKey: string; viewport: ChartViewport }) {
   const coordinate = useActiveTooltipCoordinate();
   const [point] = useActiveTooltipDataPoints<Record<string, unknown>>() ?? [];
   const yScale = useYAxisScale();
+  const plot = usePlotArea();
   const value = point?.[valueKey];
+  const x = coordinate ? coordinate.x - viewport.scrollLeft : undefined;
   const y = typeof value === "number" ? yScale?.(value) : undefined;
 
   return (
     <Tooltip
-      position={coordinate && y !== undefined ? { x: coordinate.x, y } : undefined}
+      portal={viewport.overlayPortal}
+      wrapperStyle={{
+        position: "absolute",
+        top: 0,
+        left: 0,
+        transform: `translate(${x ?? 0}px, ${y ?? 0}px)`,
+        pointerEvents: "none",
+        zIndex: 2,
+      }}
       isAnimationActive={false}
       content={({ active }) => {
-        if (!active || typeof value !== "number" || y === undefined) return null;
+        if (!active || typeof value !== "number" || x === undefined || y === undefined) return null;
+        if (x < (plot?.x ?? 0) || x > viewport.width) return null;
 
         const unit = valueKey === "weight" ? "kg" : "kcal";
         const displayLabel = `${value} ${unit}`;
