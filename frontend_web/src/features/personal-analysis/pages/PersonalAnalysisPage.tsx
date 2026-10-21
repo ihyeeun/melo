@@ -1,4 +1,5 @@
 import { Tabs } from "@base-ui/react";
+import type { UseQueryResult } from "@tanstack/react-query";
 import { subDays } from "date-fns";
 import { useState } from "react";
 
@@ -6,6 +7,8 @@ import { LineChart } from "@/features/personal-analysis/components/LineChart";
 import { usePersonalAnalysisByModeQuery } from "@/features/personal-analysis/hooks/queries/usePersonalAnalysis.query";
 import styles from "@/features/personal-analysis/styles/PersonalAnalysisPage.module.css";
 import { PATH } from "@/router/path";
+import type { RecentAnalysisMode } from "@/shared/api/types/api.request.dto";
+import type { RecentAnalysisResponseDto } from "@/shared/api/types/api.response.dto";
 import { Button } from "@/shared/commons/button/Button";
 import { InfoPopover } from "@/shared/commons/popover/InfoPopover";
 import { Skeleton } from "@/shared/commons/skeleton/Skeleton";
@@ -19,10 +22,21 @@ import {
 } from "@/shared/utils/dateFormat";
 import { formatDisplayNumber } from "@/shared/utils/numberFormat";
 
+type AnalysisCardProps<M extends RecentAnalysisMode> = {
+  query: UseQueryResult<RecentAnalysisResponseDto[M][]>;
+};
+
 export default function PersonalAnalysisPage() {
   const isFree = isFreeUserGuardEnabled();
   const today = getTodayFormatDateKey();
   const [standardDate] = useState(today);
+  const deficitQuery = usePersonalAnalysisByModeQuery({ date: today, mode: "deficit" });
+  const intakeQuery = usePersonalAnalysisByModeQuery({ date: today, mode: "intake" });
+  const burnedQuery = usePersonalAnalysisByModeQuery({ date: today, mode: "burned" });
+  const weightQuery = usePersonalAnalysisByModeQuery({ date: today, mode: "weight" });
+  const hasAnalysisData = [deficitQuery, intakeQuery, burnedQuery, weightQuery].some(
+    (query) => query.isSuccess && query.data.length > 0,
+  );
 
   const startDate = formatDotDate(formatDateKey(subDays(parseDateKey(standardDate), 30)));
   const endDate = formatDotDate(standardDate);
@@ -40,17 +54,17 @@ export default function PersonalAnalysisPage() {
       </div>
 
       <main className={`main ${styles.content}`}>
-        <DeficitCard date={today} />
-        <IntakeCard date={today} />
-        <BurnedCard date={today} />
-        <WeightCard date={today} />
+        <DeficitCard query={deficitQuery} />
+        <IntakeCard query={intakeQuery} />
+        <BurnedCard query={burnedQuery} />
+        <WeightCard query={weightQuery} />
         {!isFree && (
           <Button
+            disabled={!hasAnalysisData}
             onClick={() => {
               navigate(PATH.AI_CHAT, { state: { type: "management-pattern-analysis" } });
             }}
-            variant="outlined"
-            border="primary"
+            variant={!hasAnalysisData ? "disabled" : "outlined"}
             fullWidth
             className={styles.coachButton}
           >
@@ -62,10 +76,9 @@ export default function PersonalAnalysisPage() {
   );
 }
 
-function DeficitCard({ date }: { date: string }) {
-  const mode = "deficit";
+function DeficitCard({ query }: AnalysisCardProps<"deficit">) {
   const title = "칼로리 적자";
-  const { data: deficit, isPending, isError } = usePersonalAnalysisByModeQuery({ date, mode });
+  const { data: deficit, isPending, isError } = query;
 
   if (isPending) return <SkeletonChart title={title} />;
   if (isError) return <p>데이터를 불러오지 못했어요.</p>;
@@ -85,7 +98,7 @@ function DeficitCard({ date }: { date: string }) {
           <p className="body-s-regular text-primary">섭취한 칼로리와 소모한 칼로리의 차이예요.</p>
         </div>
         <div className={styles.graphArea}>
-          <LineChart<typeof mode> chartData={deficit} valueKey="calorie_deficit" />
+          <LineChart<"deficit"> chartData={deficit} valueKey="calorie_deficit" />
         </div>
       </div>
       {isEmpty && (
@@ -98,10 +111,9 @@ function DeficitCard({ date }: { date: string }) {
     </section>
   );
 }
-function IntakeCard({ date }: { date: string }) {
-  const mode = "intake";
+function IntakeCard({ query }: AnalysisCardProps<"intake">) {
   const title = "섭취 칼로리";
-  const { data: intake, isPending, isError } = usePersonalAnalysisByModeQuery({ date, mode });
+  const { data: intake, isPending, isError } = query;
 
   const averageKcal =
     intake && intake.length > 0
@@ -123,7 +135,7 @@ function IntakeCard({ date }: { date: string }) {
           <p className="body-s-regular text-primary">하루 평균 {averageKcal}kcal 섭취했어요.</p>
         </div>
         <div className={styles.graphArea}>
-          <LineChart<typeof mode> chartData={intake} valueKey="intake_calories" />
+          <LineChart<"intake"> chartData={intake} valueKey="intake_calories" />
         </div>
       </div>
       {isEmpty && (
@@ -142,10 +154,9 @@ const TABS = [
   { value: "steps_burned_calories", label: "걸음" },
   { value: "workout_burned_calories", label: "운동" },
 ];
-function BurnedCard({ date }: { date: string }) {
-  const mode = "burned";
+function BurnedCard({ query }: AnalysisCardProps<"burned">) {
   const title = "소모 칼로리";
-  const { data: burned, isPending, isError } = usePersonalAnalysisByModeQuery({ date, mode });
+  const { data: burned, isPending, isError } = query;
 
   const averageBurned =
     burned && burned.length > 0
@@ -176,7 +187,7 @@ function BurnedCard({ date }: { date: string }) {
           </Tabs.List>
           {TABS.map((tab) => (
             <Tabs.Panel key={tab.value} value={tab.value} className={styles.graphArea}>
-              <LineChart<typeof mode> chartData={burned} valueKey={tab.value} />
+              <LineChart<"burned"> chartData={burned} valueKey={tab.value} />
             </Tabs.Panel>
           ))}
         </Tabs.Root>
@@ -191,10 +202,9 @@ function BurnedCard({ date }: { date: string }) {
     </section>
   );
 }
-function WeightCard({ date }: { date: string }) {
-  const mode = "weight";
+function WeightCard({ query }: AnalysisCardProps<"weight">) {
   const title = "체중 변화";
-  const { data: bodyWeight, isPending, isError } = usePersonalAnalysisByModeQuery({ date, mode });
+  const { data: bodyWeight, isPending, isError } = query;
 
   const recentBodyWeight = bodyWeight?.at(-1)?.weight;
 
@@ -211,7 +221,7 @@ function WeightCard({ date }: { date: string }) {
           <p className="body-s-regular text-primary">최근 체중은 {recentBodyWeight}kg이에요.</p>
         </div>
         <div className={styles.graphArea}>
-          <LineChart<typeof mode> chartData={bodyWeight} valueKey="weight" />
+          <LineChart<"weight"> chartData={bodyWeight} valueKey="weight" />
         </div>
       </div>
       {isEmpty && (
