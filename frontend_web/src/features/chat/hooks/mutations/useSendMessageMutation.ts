@@ -3,6 +3,7 @@ import { useMutation, useMutationState, useQueryClient } from "@tanstack/react-q
 import { getAnalyticsErrorMessage } from "@/features/camera/utils/cameraCapture";
 import {
   getChatHistory,
+  getManagementPatternAnalysis,
   getMealFeedback,
   getPersonalizedManagement,
   parseMenusFromText,
@@ -21,6 +22,7 @@ export const chatMutationKeys = {
   message: () => [...chatMutationKeys.all, "message"] as const,
   mealFeedback: () => [...chatMutationKeys.all, "meal-feedback"] as const,
   management: () => [...chatMutationKeys.all, "personalized-management"] as const,
+  patternAnalysis: () => [...chatMutationKeys.all, "management-pattern-analysis"] as const,
 };
 
 interface SendContext {
@@ -180,6 +182,37 @@ export function usePersonalizedManagementMutation(options?: UseMutationCallback)
   return useMutation({
     mutationKey: chatMutationKeys.management(),
     mutationFn: getPersonalizedManagement,
+    onMutate: (): SendContext => {
+      const history = queryClient.getQueryData<ChatHistoryResponseDto>(queryKeys.chatHistory);
+
+      return {
+        previousChats: history?.chat_list ?? [],
+      };
+    },
+    onSuccess: async () => {
+      try {
+        await queryClient.fetchQuery({
+          queryKey: queryKeys.chatHistory,
+          queryFn: getChatHistory,
+          staleTime: 0,
+        });
+      } catch {
+        //
+      }
+      if (options?.onSuccess) options.onSuccess();
+    },
+    onError: (error) => {
+      if (isRequestAbortError(error)) return;
+      if (options?.onError) options.onError(error);
+    },
+  });
+}
+
+export function useManagementPatternAnalysisMutation(options?: UseMutationCallback) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationKey: chatMutationKeys.patternAnalysis(),
+    mutationFn: getManagementPatternAnalysis,
     onMutate: (): SendContext => {
       const history = queryClient.getQueryData<ChatHistoryResponseDto>(queryKeys.chatHistory);
 

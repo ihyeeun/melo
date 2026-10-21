@@ -76,3 +76,11 @@ export async function searchMenu({ text }: { text: string }) {
 
   return response;
 }
+
+export async function getManagementPatternAnalysis() {
+  return appApiData<ChatRecommendResponseDto>({
+    endpoint: "/chat/management-pattern-analysis",
+    method: "POST",
+    timeoutMs: 5 * 60 * 1000,
+  });
+}
