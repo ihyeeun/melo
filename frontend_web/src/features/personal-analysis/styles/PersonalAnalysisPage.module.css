@@ -16,6 +16,7 @@
 }
 
 .content {
+  overflow-x: hidden;
   background-color: var(--background-default);
   padding-block: 20px;
   border-radius: 42px 42px 0 0;

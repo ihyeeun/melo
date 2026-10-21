@@ -1,4 +1,4 @@
-import { eachDayOfInterval } from "date-fns";
+import { eachDayOfInterval, format } from "date-fns";
 import { createPortal } from "react-dom";
 import {
   type CartesianTickItem,
@@ -70,7 +70,7 @@ export function LineChart<M extends RecentAnalysisMode>({ chartData, valueKey }:
                 .filter((_, index) => index % Math.max(1, Math.ceil(7 / viewport.zoom)) === 0)
                 .map((item) => item.date)}
               interval={0}
-              tickFormatter={(date: string) => date.slice(5).replace("-", ".")}
+              tickFormatter={(date: string) => format(parseDateKey(date), "M.d")}
               tick={{
                 className: "caption-s-medium",
                 fill: "var(--text-tertiary)",
