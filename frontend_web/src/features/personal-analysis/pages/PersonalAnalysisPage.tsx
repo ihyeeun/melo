@@ -50,9 +50,10 @@ export default function PersonalAnalysisPage() {
       </header>
 
       <div className={styles.dateSelectedSection}>
-        <p className="body-xs-regular text-tertiary">
+        <span className="body-s-medium text-primary">최근 30일</span>
+        <span className="body-xs-regular text-tertiary">
           {startDate} ~ {endDate}
-        </p>
+        </span>
       </div>
 
       <main className={`main ${styles.content}`}>
