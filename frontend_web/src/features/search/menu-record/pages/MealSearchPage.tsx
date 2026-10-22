@@ -102,6 +102,7 @@ export default function MealSearchPage() {
   const personalMenuScrollRef = useRef<HTMLDivElement>(null);
   const draftKey = formatMenuDraftKey(dateKey, mealType);
   const hasSearchKeyword = searchKeyword.trim().length > 0;
+  const isRecentMenuVisible = isRecentMenuOpen && !hasSearchKeyword;
   const menuSelectionAdapter = useMenuSelectionAdapter({
     mealRecordDateKey: dateKey,
     mealRecordMealType: mealType,
@@ -224,8 +225,9 @@ export default function MealSearchPage() {
   };
 
   const handleBackGuard = () => {
-    if (isRecentMenuOpen) {
+    if (isRecentMenuVisible) {
       setIsRecentMenuOpen(false);
+      searchInputRef.current?.blur();
       return true;
     }
 
@@ -954,7 +956,7 @@ export default function MealSearchPage() {
       <main className={`${styles.main} ${hasSearchKeyword ? styles.searchMain : ""}`}>
         {hasSearchKeyword ? (
           <div className={styles.searchContent}>{renderSearchContent()}</div>
-        ) : isRecentMenuOpen ? (
+        ) : isRecentMenuVisible ? (
           renderRecentRecordMenuContent()
         ) : (
           renderPersonalMenuTabs()
