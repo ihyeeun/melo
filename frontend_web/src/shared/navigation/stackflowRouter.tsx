@@ -974,7 +974,12 @@ function StackActivityFrame({
       setIsDragging(false);
 
       if (shouldPop) {
-        pendingSwipeBackTransitionOptionsRef.current = null;
+        if (runActiveBackHandler(false)) {
+          snapBackSwipe();
+          return;
+        }
+
+        pendingSwipeBackTransitionOptionsRef.current = { skipBackHandler: true };
         setDragX(swipe.width);
         setIsSwipeCompleting(true);
         return;
