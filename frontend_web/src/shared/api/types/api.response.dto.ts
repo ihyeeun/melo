@@ -356,7 +356,7 @@ export interface ProfileResponseDto {
   user_id: number;
   nickname: string;
   name?: string; //소셜 프로필명
-  role: string; //USER, ADMIN
+  role: string; //USER, ADMIN, TESTER
   is_subscribed: boolean;
   gender: number;
   birthYear: number;

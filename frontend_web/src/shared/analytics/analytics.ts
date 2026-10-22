@@ -18,7 +18,7 @@ type PendingEvent = {
 };
 
 const ANALYTICS_USER_ID_PREFIX = "melo_user_";
-const ADMIN_ROLE = "ADMIN";
+const USER_ROLE = "USER";
 
 const sessionReplayTracking = sessionReplayPlugin({
   forceSessionTracking: true,
@@ -54,7 +54,7 @@ function getAnalyticsUserId(userId: number | string) {
 }
 
 function getAmplitudeApiKey(userRole: ProfileResponseDto["role"]) {
-  if (userRole === ADMIN_ROLE) {
+  if (userRole !== USER_ROLE) {
     return import.meta.env.VITE_DEV_AMPLITUDE_API_KEY;
   }
 
