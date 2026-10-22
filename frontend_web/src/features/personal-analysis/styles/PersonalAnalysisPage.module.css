@@ -47,10 +47,6 @@
   margin-bottom: 16px;
 }
 
-.coachButton {
-  margin-top: 24px;
-}
-
 .blur[data-isEmpty="true"] {
   filter: blur(2px);
 }
@@ -100,4 +96,9 @@
   display: flex;
   align-items: center;
   gap: 4px;
+}
+
+.footer {
+  background-color: var(--background-default);
+  padding-inline: 16px;
 }

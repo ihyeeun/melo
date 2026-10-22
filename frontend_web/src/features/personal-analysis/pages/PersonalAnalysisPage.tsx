@@ -1,11 +1,10 @@
 import { Tabs } from "@base-ui/react";
 import type { UseQueryResult } from "@tanstack/react-query";
-import { subDays } from "date-fns";
-import { useState } from "react";
 
 import { LineChart } from "@/features/personal-analysis/components/LineChart";
 import { usePersonalAnalysisByModeQuery } from "@/features/personal-analysis/hooks/queries/usePersonalAnalysis.query";
 import styles from "@/features/personal-analysis/styles/PersonalAnalysisPage.module.css";
+import { getAnalysisRange } from "@/features/personal-analysis/utils/analysisRange.util";
 import { PATH } from "@/router/path";
 import { track } from "@/shared/analytics/analytics";
 import { EVENT_NAME } from "@/shared/analytics/analytics.constants";
@@ -13,15 +12,11 @@ import type { RecentAnalysisMode } from "@/shared/api/types/api.request.dto";
 import type { RecentAnalysisResponseDto } from "@/shared/api/types/api.response.dto";
 import { Button } from "@/shared/commons/button/Button";
 import { InfoPopover } from "@/shared/commons/popover/InfoPopover";
+import { ScrollFogArea } from "@/shared/commons/scrollFog";
 import { Skeleton } from "@/shared/commons/skeleton/Skeleton";
 import { isFreeUserGuardEnabled } from "@/shared/guards/featureGuard";
 import { navigate } from "@/shared/navigation/stackflowNavigation";
-import {
-  formatDateKey,
-  formatDotDate,
-  getTodayFormatDateKey,
-  parseDateKey,
-} from "@/shared/utils/dateFormat";
+import { formatDotDate, getTodayFormatDateKey } from "@/shared/utils/dateFormat";
 import { formatDisplayNumber } from "@/shared/utils/numberFormat";
 
 type AnalysisCardProps<M extends RecentAnalysisMode> = {
@@ -31,7 +26,6 @@ type AnalysisCardProps<M extends RecentAnalysisMode> = {
 export default function PersonalAnalysisPage() {
   const isFree = isFreeUserGuardEnabled();
   const today = getTodayFormatDateKey();
-  const [standardDate] = useState(today);
   const deficitQuery = usePersonalAnalysisByModeQuery({ date: today, mode: "deficit" });
   const intakeQuery = usePersonalAnalysisByModeQuery({ date: today, mode: "intake" });
   const burnedQuery = usePersonalAnalysisByModeQuery({ date: today, mode: "burned" });
@@ -40,8 +34,9 @@ export default function PersonalAnalysisPage() {
     (query) => query.isSuccess && query.data.length > 0,
   );
 
-  const startDate = formatDotDate(formatDateKey(subDays(parseDateKey(standardDate), 30)));
-  const endDate = formatDotDate(standardDate);
+  const range = getAnalysisRange(today);
+  const startDate = formatDotDate(range.start);
+  const endDate = formatDotDate(range.end);
 
   return (
     <div className={`page ${styles.root}`}>
@@ -56,11 +51,14 @@ export default function PersonalAnalysisPage() {
         </span>
       </div>
 
-      <main className={`main ${styles.content}`}>
+      <ScrollFogArea className={`main ${styles.content}`}>
         <DeficitCard query={deficitQuery} />
         <IntakeCard query={intakeQuery} />
         <BurnedCard query={burnedQuery} />
         <WeightCard query={weightQuery} />
+      </ScrollFogArea>
+
+      <footer className={styles.footer}>
         {!isFree && (
           <Button
             disabled={!hasAnalysisData}
@@ -75,7 +73,7 @@ export default function PersonalAnalysisPage() {
             AI 코치에게 내 관리 패턴 분석받기
           </Button>
         )}
-      </main>
+      </footer>
     </div>
   );
 }
@@ -99,7 +97,7 @@ function DeficitCard({ query }: AnalysisCardProps<"deficit">) {
               기초대사량을 포함한 <br />총 소모 칼로리를 기준으로 계산해요
             </InfoPopover>
           </div>
-          <p className="body-s-regular text-primary">섭취한 칼로리와 소모한 칼로리의 차이예요.</p>
+          <p className="body-s-regular text-primary">섭취한 칼로리와 소모한 칼로리의 차이예요</p>
         </div>
         <div className={styles.graphArea}>
           <LineChart<"deficit"> chartData={deficit} valueKey="calorie_deficit" />
@@ -136,7 +134,7 @@ function IntakeCard({ query }: AnalysisCardProps<"intake">) {
       <div data-isEmpty={isEmpty} className={styles.blur}>
         <div className={styles.titleGroup}>
           <h3 className="title-m-semi text-primary">{title}</h3>
-          <p className="body-s-regular text-primary">하루 평균 {averageKcal}kcal 섭취했어요.</p>
+          <p className="body-s-regular text-primary">하루 평균 {averageKcal}kcal 섭취했어요</p>
         </div>
         <div className={styles.graphArea}>
           <LineChart<"intake"> chartData={intake} valueKey="intake_calories" />
@@ -179,7 +177,7 @@ function BurnedCard({ query }: AnalysisCardProps<"burned">) {
       <div data-isEmpty={isEmpty} className={styles.blur}>
         <div className={styles.titleGroup}>
           <h3 className="title-m-semi text-primary">{title}</h3>
-          <p className="body-s-regular text-primary">하루 평균 {averageBurned}kcal 소모했어요.</p>
+          <p className="body-s-regular text-primary">하루 평균 {averageBurned}kcal 소모했어요</p>
         </div>
         <Tabs.Root defaultValue="total_burned_calories">
           <Tabs.List className={styles.tabList}>
@@ -222,7 +220,7 @@ function WeightCard({ query }: AnalysisCardProps<"weight">) {
       <div data-isEmpty={isEmpty} className={styles.blur}>
         <div className={styles.titleGroup}>
           <h3 className="title-m-semi text-primary">{title}</h3>
-          <p className="body-s-regular text-primary">최근 체중은 {recentBodyWeight}kg이에요.</p>
+          <p className="body-s-regular text-primary">최근 체중은 {recentBodyWeight}kg이에요</p>
         </div>
         <div className={styles.graphArea}>
           <LineChart<"weight"> chartData={bodyWeight} valueKey="weight" />

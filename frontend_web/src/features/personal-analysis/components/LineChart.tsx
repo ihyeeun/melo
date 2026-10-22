@@ -22,9 +22,10 @@ import {
   ZoomableChart,
 } from "@/features/personal-analysis/components/ZoomableChart";
 import styles from "@/features/personal-analysis/styles/LineChart.module.css";
+import { getAnalysisRange } from "@/features/personal-analysis/utils/analysisRange.util";
 import type { RecentAnalysisMode } from "@/shared/api/types/api.request.dto";
 import type { RecentAnalysisResponseDto } from "@/shared/api/types/api.response.dto";
-import { formatDateKey, parseDateKey } from "@/shared/utils/dateFormat";
+import { formatDateKey, getTodayFormatDateKey, parseDateKey } from "@/shared/utils/dateFormat";
 
 interface chartProps<M extends RecentAnalysisMode> {
   chartData: RecentAnalysisResponseDto[M][];
@@ -39,9 +40,10 @@ export function LineChart<M extends RecentAnalysisMode>({ chartData, valueKey }:
 
   const dataByDate = new Map(chartData.map((item) => [item.date, item]));
 
+  const range = getAnalysisRange(getTodayFormatDateKey());
   const days = eachDayOfInterval({
-    start: parseDateKey(chartData[0].date),
-    end: parseDateKey(chartData[chartData.length - 1].date),
+    start: parseDateKey(range.start),
+    end: parseDateKey(range.end),
   });
 
   const dailyData = days.map((day, dayIndex) => {
