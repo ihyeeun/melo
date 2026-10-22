@@ -18,7 +18,7 @@
 .content {
   overflow-x: hidden;
   background-color: var(--background-default);
-  padding-block: 20px;
+  padding-top: 20px;
   border-radius: 42px 42px 0 0;
 }
 
@@ -98,7 +98,16 @@
   gap: 4px;
 }
 
-.footer {
+.actionAnchor {
+  position: sticky;
+  width: 100%;
+  bottom: 10px;
+  z-index: 1;
+  padding-top: 80px;
+}
+
+.coachButton {
+  position: absolute;
+  bottom: 0;
   background-color: var(--background-default);
-  padding-inline: 16px;
 }

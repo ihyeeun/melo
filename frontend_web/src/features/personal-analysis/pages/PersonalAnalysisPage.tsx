@@ -56,24 +56,23 @@ export default function PersonalAnalysisPage() {
         <IntakeCard query={intakeQuery} />
         <BurnedCard query={burnedQuery} />
         <WeightCard query={weightQuery} />
+        <div className={styles.actionAnchor}>
+          {!isFree && (
+            <Button
+              disabled={!hasAnalysisData}
+              onClick={() => {
+                navigate(PATH.AI_CHAT, { state: { type: "management-pattern-analysis" } });
+                track(EVENT_NAME.CLICK_MANAGEMENT_PATTERN_ANALYSIS);
+              }}
+              variant={!hasAnalysisData ? "disabled" : "outlined"}
+              fullWidth
+              className={styles.coachButton}
+            >
+              AI 코치에게 내 관리 패턴 분석받기
+            </Button>
+          )}
+        </div>
       </ScrollFogArea>
-
-      <footer className={styles.footer}>
-        {!isFree && (
-          <Button
-            disabled={!hasAnalysisData}
-            onClick={() => {
-              navigate(PATH.AI_CHAT, { state: { type: "management-pattern-analysis" } });
-              track(EVENT_NAME.CLICK_MANAGEMENT_PATTERN_ANALYSIS);
-            }}
-            variant={!hasAnalysisData ? "disabled" : "outlined"}
-            fullWidth
-            className={styles.coachButton}
-          >
-            AI 코치에게 내 관리 패턴 분석받기
-          </Button>
-        )}
-      </footer>
     </div>
   );
 }
