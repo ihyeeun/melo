@@ -604,7 +604,7 @@ export default function WorkoutUpsertPage() {
   };
 
   return (
-    <form className={`${styles.page} page`} onSubmit={handleSubmit}>
+    <form className={`${styles.page} page`} noValidate onSubmit={handleSubmit}>
       <header className={styles.header}>
         <PageHeader title="운동 추가" onBack={handleBack} />
       </header>
