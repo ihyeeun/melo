@@ -26,6 +26,23 @@ export async function sendMessage({ input }: { input: string }) {
   return response;
 }
 
+export async function getPersonalizedManagement() {
+  return appApiData<ChatRecommendResponseDto>({
+    endpoint: "/chat/personalized-management",
+    method: "POST",
+    timeoutMs: 5 * 60 * 1000,
+  });
+}
+
+export async function getMealFeedback(date: string) {
+  return appApiData<ChatRecommendResponseDto>({
+    endpoint: "/chat/meal-feedback",
+    method: "POST",
+    body: { date },
+    timeoutMs: 5 * 60 * 1000,
+  });
+}
+
 export async function registerMenuByNutritionLabelImageFeedback({
   body,
 }: {
@@ -40,11 +57,11 @@ export async function registerMenuByNutritionLabelImageFeedback({
   return response;
 }
 
-export async function parseMenusFromText({ text }: { text: string }) {
+export async function parseMenusFromText({ input }: { input: string }) {
   const response = await appApiData<ChatMealRecordParseResponseDto>({
     endpoint: "/chat/meal-record/parse",
     method: "POST",
-    body: { text },
+    body: { text: input },
   });
 
   return response;
@@ -58,4 +75,12 @@ export async function searchMenu({ text }: { text: string }) {
   });
 
   return response;
+}
+
+export async function getManagementPatternAnalysis() {
+  return appApiData<ChatRecommendResponseDto>({
+    endpoint: "/chat/management-pattern-analysis",
+    method: "POST",
+    timeoutMs: 5 * 60 * 1000,
+  });
 }

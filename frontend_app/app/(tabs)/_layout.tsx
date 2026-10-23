@@ -1,10 +1,12 @@
 import AppWebViewScreen from "@/src/screens/AppWebviewScreen";
 import {
   type AppTabName,
+  type OptionalTabName,
   getNativeTabHistoryAction,
   getTabPath,
   getTabRoute,
   isAppTabName,
+  isAppTabVisible,
   shouldEnableTabBackGesture,
 } from "@/src/shared/navigation/appTabNavigation";
 import { useEdgeSwipeBack } from "@/src/shared/navigation/useEdgeSwipeBack";
@@ -13,10 +15,12 @@ import { router, Slot, useSegments } from "expo-router";
 import { Pressable, StyleSheet, View } from "react-native";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import HomeIcon from "../../assets/design-update/tab-icons/home.svg";
-import ChatIcon from "../../assets/design-update/tab-icons/chat.svg";
-import DiaryIcon from "../../assets/design-update/tab-icons/diary.svg";
-import UserIcon from "../../assets/design-update/tab-icons/user.svg";
+import HomeIcon from "@/assets/design-update/tab-icons/home.svg";
+import ChatIcon from "@/assets/design-update/tab-icons/chat.svg";
+import DiaryIcon from "@/assets/design-update/tab-icons/diary.svg";
+import UserIcon from "@/assets/design-update/tab-icons/user.svg";
+import RestaurantIcon from "@/assets/design-update/tab-icons/restaurant.svg";
+import AnalysisIcon from "@/assets/design-update/tab-icons/analysis.svg";
 import { Typo } from "@/src/shared/ui";
 import { semantic, colors } from "@/src/shared/styles";
 
@@ -24,6 +28,8 @@ const TAB_ITEMS = [
   { tab: "home", label: "홈", Icon: HomeIcon },
   { tab: "chat", label: "AI 코치", Icon: ChatIcon },
   { tab: "diary", label: "다이어리", Icon: DiaryIcon },
+  { tab: "analysis", label: "분석", Icon: AnalysisIcon },
+  { tab: "restaurant", label: "식당", Icon: RestaurantIcon },
   { tab: "profile", label: "프로필", Icon: UserIcon },
 ] as const;
 
@@ -67,11 +73,13 @@ export default function TabsLayout() {
   const [isTabBarHidden, setIsTabBarHidden] = useState(false);
   const [chatBackRequestKey, setChatBackRequestKey] = useState(0);
   const [isFreeUserGuardEnabled, setIsFreeUserGuardEnabled] = useState(FREE_USER_GUARD_ENABLED);
+  const [optionalTabs, setOptionalTabs] = useState<OptionalTabName[] | null>(null);
   const insets = useSafeAreaInsets();
   const tabBarBottomPadding = Math.max(insets.bottom, 4);
   const visibleTabItems = useMemo(
-    () => (isFreeUserGuardEnabled ? TAB_ITEMS.filter((item) => item.tab !== "chat") : TAB_ITEMS),
-    [isFreeUserGuardEnabled],
+    () =>
+      TAB_ITEMS.filter((item) => isAppTabVisible(item.tab, optionalTabs, isFreeUserGuardEnabled)),
+    [isFreeUserGuardEnabled, optionalTabs],
   );
   const shouldHideTabBar = isTabBarHidden || currentTab === "chat";
   const shouldEnableChatBackSwipe = shouldEnableTabBackGesture(currentTab) && !isTabBarHidden;
@@ -84,10 +92,10 @@ export default function TabsLayout() {
   });
 
   useEffect(() => {
-    if (!isFreeUserGuardEnabled || currentTab !== "chat") return;
+    if (visibleTabItems.some((item) => item.tab === currentTab)) return;
 
     router.replace(getTabRoute("home"));
-  }, [currentTab, isFreeUserGuardEnabled]);
+  }, [currentTab, visibleTabItems]);
 
   return (
     <View style={styles.container}>
@@ -98,6 +106,7 @@ export default function TabsLayout() {
           chatBackRequestKey={chatBackRequestKey}
           onTabBarVisibilityChange={setIsTabBarHidden}
           onFeatureGuardEnabledChange={setIsFreeUserGuardEnabled}
+          onOptionalTabsChange={setOptionalTabs}
         />
       </View>
 
@@ -132,7 +141,7 @@ export default function TabsLayout() {
                   color={isFocused ? ACTIVE_TAB_COLOR : INACTIVE_TAB_COLOR}
                 />
                 <Typo
-                  size={isFocused ? "body-s-semi" : "body-s-regular"}
+                  size={isFocused ? "body-s-semi" : "body-s-medium"}
                   style={[
                     styles.tabLabel,
                     isFocused ? styles.tabLabelFocused : styles.tabLabelBlurred,

@@ -1,8 +1,8 @@
 import type { HealthStepsRequestPayload } from "@/features/health/types/healthSteps.types";
 import type { NativeHapticType } from "@/src/shared/native/haptics";
+import type { AppTabName } from "@/src/shared/navigation/appTabNavigation";
 
 export type BridgeHttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
-export type BridgeTabName = "home" | "chat" | "diary" | "profile";
 export type BridgeMessageContext = {
   href?: string;
 };
@@ -21,11 +21,17 @@ export type BridgeApiRequestMessage = {
   context?: BridgeMessageContext;
 };
 
+export type BridgeApiCancelMessage = {
+  id: string;
+  type: "API_CANCEL";
+  context?: BridgeMessageContext;
+};
+
 export type BridgeTabSyncMessage = {
   id: string;
   type: "TAB_SYNC";
   payload: {
-    tab: BridgeTabName;
+    tab: AppTabName;
   };
   context?: BridgeMessageContext;
 };
@@ -63,7 +69,6 @@ export type BridgeAppDeviceInfoRequestMessage = {
 export type BridgeCameraCaptureMode = "NUTRITION_LABEL" | "MENU_BOARD" | "FOOD" | "GENERAL";
 
 export type BridgeCameraCaptureRequestPayload = {
-  quality?: number;
   mode?: BridgeCameraCaptureMode;
   selectableModes?: BridgeCameraCaptureMode[];
 };
@@ -138,6 +143,7 @@ export type BridgeHealthStepsReadRequestMessage = {
 
 export type WebToAppMessage =
   | BridgeApiRequestMessage
+  | BridgeApiCancelMessage
   | BridgeTabSyncMessage
   | BridgeNavigationBackMessage
   | BridgeHapticTriggerRequestMessage

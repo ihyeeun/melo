@@ -4,9 +4,7 @@ import { useDayMealsQuery } from "@/features/home/hooks/queries/useTodayRecordQu
 import { useMenuCacheItems } from "@/features/meal-record/hooks/queries/menuCache";
 import { useSyncMenuDraftWithDayMeals } from "@/features/meal-record/stores/menuDraft.store";
 import { getMealType, getSafeDateKey } from "@/features/meal-record/utils/mealRecord.queryParams";
-import {
-  useMenuSelectionAdapter,
-} from "@/features/menu-selection/hooks/useMenuSelectionAdapter";
+import { useMenuSelectionAdapter } from "@/features/menu-selection/hooks/useMenuSelectionAdapter";
 import {
   getMenuSelectionMenuDetailPath,
   MENU_SELECTION_TARGET,
@@ -20,12 +18,12 @@ import {
 import styles from "@/features/personal-menu/folder/styles/FolderDetailPage.module.css";
 import { PATH } from "@/router/path";
 import { getFolderDetailPath, getMealSearchPath } from "@/router/pathHelpers";
+import { isRequestAbortError } from "@/shared/api/requestCancellation";
 import { type MealServingInputMode, MENU_INPUT_MODE } from "@/shared/api/types/api.dto";
 import type { MenuSimpleResponseDto } from "@/shared/api/types/api.response.dto";
 import { Button } from "@/shared/commons/button/Button";
 import { MealMenuCard } from "@/shared/commons/card/MealMenuCard";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
-import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import { LoadingIndicator, LoadingOverlay } from "@/shared/commons/loading/Loading";
 import { ConfirmModal } from "@/shared/commons/modals/ConfirmModal";
 import { toast } from "@/shared/commons/toast/toast";
@@ -209,6 +207,7 @@ export default function FolderDetailPage() {
       toast.success("삭제되었어요");
       navigateBack({ fallbackTo: getMealSearchPath(dateKey, mealType) });
     } catch (error) {
+      if (isRequestAbortError(error)) throw error;
       toast.warning("폴더 삭제에 실패했어요", "잠시 후 다시 시도해주세요.");
       throw error;
     }
@@ -318,13 +317,11 @@ export default function FolderDetailPage() {
 
     if (isFolderError || !folderDetail) {
       return (
-        <section className={styles.stateContainer}>
-          <p className="typo-body2">폴더를 불러오지 못했어요</p>
+        <section>
+          <p className="body-l-medium">폴더를 불러오지 못했어요</p>
           <Button
             variant="text"
-            interaction="normal"
-            size="small"
-            color="normal"
+            size="xs"
             onClick={() => {
               void refetchFolderDetail();
             }}
@@ -337,29 +334,24 @@ export default function FolderDetailPage() {
 
     if (folderMenus.length === 0) {
       return (
-        <section className={styles.stateContainer}>
-          <p className="typo-body2">폴더에 담긴 음식이 없어요</p>
+        <section>
+          <p className="body-l-medium">폴더에 담긴 음식이 없어요</p>
         </section>
       );
     }
 
     return (
-      <section className={styles.menuSection}>
+      <>
         <div className={styles.menuSectionHeader}>
-          <div className={styles.menuTitleGroup}>
-            <span className={`typo-label4 ${styles.menuCount}`}>{folderMenus.length}개</span>
-          </div>
+          <span className={`body-s-medium text-primary`}>{folderMenus.length}개</span>
 
-          <Button
-            className={styles.bulkActionButton}
-            variant="text"
-            color={areAllFolderMenusSelected ? "normal" : "primary"}
-            size="small"
+          <button
+            type="button"
             onClick={handleToggleAllFolderMenus}
+            className={`body-s-medium marginLeft ${areAllFolderMenusSelected ? "text-highlight" : "text-tertiary"}`}
           >
-            <SystemIcon name={areAllFolderMenusSelected ? "minus" : "plus"} size={14} />
-            {areAllFolderMenusSelected ? "선택 해제" : "전체 선택"}
-          </Button>
+            {areAllFolderMenusSelected ? "전체 해제" : "전체 선택"}
+          </button>
         </div>
 
         <div className={styles.menuList}>
@@ -377,8 +369,8 @@ export default function FolderDetailPage() {
                 weight={folderMenu.menu.weight}
                 unit={folderMenu.menu.unit}
                 quantity={folderMenu.quantity}
-                icon={isSelected ? "check" : "add"}
-                state={isSelected ? "select" : "default"}
+                icon={"add"}
+                state={isSelected}
                 onClick={() => handleMenuDetailOpen(folderMenu)}
                 onIconClick={() => {
                   handleToggleMenuSelection(folderMenu);
@@ -387,12 +379,12 @@ export default function FolderDetailPage() {
             );
           })}
         </div>
-      </section>
+      </>
     );
   };
 
   return (
-    <section className={styles.page}>
+    <section className={`page ${styles.root}`}>
       <PageHeader
         title={folderDetail?.folder_name ?? "폴더"}
         onBack={handleBack}
@@ -405,17 +397,16 @@ export default function FolderDetailPage() {
             />
           ) : null
         }
+        className={styles.header}
       />
 
-      <main className={styles.main}>{renderContent()}</main>
+      <main className={`main`}>{renderContent()}</main>
 
-      <footer className={styles.footer}>
+      <footer className={`footer`}>
         <Button
           onClick={handleApplySelectedMenus}
-          variant="filled"
-          interaction={selectedCount > 0 ? "normal" : "disable"}
-          size="large"
-          color="primary"
+          variant="default"
+          size="m"
           fullWidth
           disabled={selectedCount === 0}
         >

@@ -1,5 +1,5 @@
 .root {
-  background-color: var(--bg-white);
+  background-color: var(--background-default);
   width: 100%;
 }
 
@@ -17,7 +17,7 @@
 
 .backButton {
   align-items: center;
-  color: var(--label-normal);
+  color: var(--text-primary);
   display: inline-flex;
   justify-content: flex-start;
 }
@@ -33,10 +33,10 @@
 }
 
 .input {
-  background-color: var(--bg-normal);
-  border: 1px solid var(--border-neutral);
+  background-color: var(--background-gray-1);
+  border: 1px solid var(--border-subtle);
   border-radius: 8px;
-  color: var(--label-normal);
+  color: var(--text-primary);
   width: 100%;
   padding: 10px 14px;
 }
@@ -46,7 +46,7 @@
 }
 
 .input::placeholder {
-  color: var(--label-assistive);
+  color: var(--text-tertiary);
 }
 
 .input::-webkit-search-cancel-button,

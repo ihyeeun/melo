@@ -180,6 +180,7 @@ export function useMenuSelectionAdapter({
     upsertMealRecordSelectedMenu({
       key: mealRecordDraftKey,
       id: viewMenu.id,
+      name: viewMenu.name,
       quantity: normalizedMenuQuantity,
       mode: menuInputMode,
     });

@@ -42,7 +42,7 @@ export function KeyboardDown({
       onPointerDown={handlePointerDown}
       onClick={onClick}
     >
-      <SystemIcon name="chevron-down-thin" size={24} />
+      <SystemIcon name="chevron-down" size={24} />
     </button>
   );
 }

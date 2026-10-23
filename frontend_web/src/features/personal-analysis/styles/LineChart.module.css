@@ -1,0 +1,61 @@
+.zoomRoot {
+  position: relative;
+  height: 100%;
+  min-width: 0;
+}
+
+.zoomViewport {
+  height: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--coral-300) transparent;
+}
+
+.zoomViewport:focus-visible {
+  outline: 2px solid var(--coral-400);
+  outline-offset: 2px;
+}
+
+.zoomContent {
+  width: 100%;
+  height: 100%;
+}
+
+.fixedYAxis {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1;
+  background-color: var(--background-default);
+  pointer-events: none;
+}
+
+.chartSection :global(.recharts-surface):focus:not(:focus-visible),
+.chartSection :global(.recharts-surface *):focus:not(:focus-visible) {
+  outline: none;
+}
+
+.tooltip {
+  position: relative;
+  width: fit-content;
+  transform: translate(-50%, calc(-100% - 10px));
+  white-space: nowrap;
+  padding: 4px 6px;
+  background-color: var(--text-secondary);
+  color: var(--background-default);
+  border-radius: 8px;
+}
+
+.tooltip::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  transform: translateX(-50%);
+  border-inline: 3px solid transparent;
+  border-top: 3px solid var(--text-secondary);
+}

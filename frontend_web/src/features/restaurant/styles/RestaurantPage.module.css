@@ -1,0 +1,240 @@
+.root {
+  background: var(--background-default);
+}
+
+.searchSection {
+  padding-inline: 16px;
+}
+
+.content {
+  padding: 10px 16px;
+}
+
+.restaurantList,
+.menuList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.restaurantList,
+.bestCards {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.restaurantCard {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 20px 16px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 16px;
+  box-shadow: var(--shadow-outer);
+}
+
+.restaurantIcon,
+.bestIcon {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--background-selected);
+  font-size: 20px;
+}
+
+.restaurantInfo {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  overflow-wrap: anywhere;
+}
+
+.category {
+  padding: 4px 6px;
+  border-radius: 8px;
+  border: 1px solid var(--border-subtle);
+}
+
+.state {
+  text-align: center;
+}
+
+.state button {
+  padding: 0 20px;
+}
+
+.loadMore {
+  display: grid;
+  place-items: center;
+  min-height: 24px;
+}
+
+.tabs {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  flex-direction: column;
+}
+
+.tabList {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  position: relative;
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.tab {
+  height: 44px;
+  text-align: center;
+  color: var(--text-tertiary);
+}
+
+.tab[data-active] {
+  color: var(--primary-normal);
+}
+
+.tabIndicator {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 2px;
+  width: var(--active-tab-width);
+  transform: translateX(var(--active-tab-left));
+  background: var(--primary-normal);
+}
+
+.panel {
+  padding: 16px 20px calc(var(--safe-area-bottom) + 20px);
+}
+
+.panel[hidden] {
+  display: none;
+}
+
+.banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 16px;
+  margin-bottom: 16px;
+  border-radius: 16px;
+  background: var(--background-selected);
+  border: 1px solid var(--coral-100);
+  box-shadow: var(--shadow-outer);
+}
+
+.bannerText {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.banner img {
+  width: 28%;
+  max-width: 100px;
+  height: auto;
+  flex-shrink: 0;
+}
+
+.bestCard {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 20px 16px;
+  border-radius: 16px;
+  background: var(--best-background);
+  color: var(--navy-900);
+  border: 1px solid var(--best-border);
+}
+
+.bestCard[data-tone="balanced"] {
+  --best-background: #fff3e3;
+  --best-icon-background: #ffe5c2;
+  --best-border: #e8cead;
+}
+
+.bestCard[data-tone="light"] {
+  --best-background: #edf7ee;
+  --best-icon-background: #d6efd8;
+  --best-border: #c5ddc8;
+}
+
+.bestCard[data-tone="protein"] {
+  --best-background: #f3edfb;
+  --best-icon-background: #e8dcf8;
+  --best-border: #d8caea;
+}
+
+.bestIcon {
+  background: var(--best-icon-background);
+}
+
+.menuCard {
+  background-color: var(--background-default);
+  border: 1px solid var(--border-subtle);
+  border-radius: 16px;
+  padding: 20px 16px 8px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.menuCard + .menuCard {
+  margin-top: 8px;
+}
+
+.menuHeading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 4px;
+}
+
+.menuHeading h3 {
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+
+.menuMeta {
+  padding-bottom: 8px;
+}
+
+.menuMeta > h3 + p {
+  margin-top: 4px;
+}
+
+.menuHeading + .nutrients {
+  border-top: 1px solid var(--border-subtle);
+}
+
+.nutrients {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.nutrientItem + .nutrientItem {
+  border-left: 1px solid var(--border-subtle);
+}
+
+.nutrientItem {
+  padding-top: 6px;
+  padding-bottom: 8px;
+}
+
+.nutrientItem > p + p {
+  margin-top: 4px;
+}
+
+.sheetBody:global(.seed-bottom-sheet__body) {
+  padding: 12px 20px 20px;
+}

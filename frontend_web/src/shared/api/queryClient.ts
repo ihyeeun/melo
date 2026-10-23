@@ -7,6 +7,7 @@ import {
 } from "@tanstack/react-query";
 
 import { AppApiError } from "@/shared/api/apiClient";
+import { isRequestAbortError } from "@/shared/api/requestCancellation";
 
 const NON_RETRYABLE_API_STATUS_CODES = new Set([401, 403, 408, 500, 502, 503, 504]);
 const NON_RETRYABLE_API_ERROR_CODES = new Set(["NETWORK_ERROR", "REQUEST_TIMEOUT"]);
@@ -16,6 +17,7 @@ const RESUME_REFETCH_DEBOUNCE_MS = 1000;
 let lastResumeRefetchAt = 0;
 
 function shouldRetryQuery(failureCount: number, error: unknown) {
+  if (isRequestAbortError(error)) return false;
   if (error instanceof AppApiError) {
     return (
       !NON_RETRYABLE_API_STATUS_CODES.has(error.statusCode) &&
@@ -30,6 +32,7 @@ function shouldRetryQuery(failureCount: number, error: unknown) {
 export const queryClient = new QueryClient({
   queryCache: new QueryCache({
     onError: (error, query) => {
+      if (isRequestAbortError(error)) return;
       console.error("[ReactQuery] query failed", {
         error,
         queryKey: query.queryKey,
@@ -38,6 +41,11 @@ export const queryClient = new QueryClient({
   }),
   mutationCache: new MutationCache({
     onError: (error, _variables, _context, mutation) => {
+      if (isRequestAbortError(error)) {
+        // A cancelled write may already have reached the server; re-read on the next visit.
+        void queryClient.invalidateQueries({ refetchType: "none" });
+        return;
+      }
       console.error("[ReactQuery] mutation failed", {
         error,
         mutationKey: mutation.options.mutationKey,
@@ -70,7 +78,14 @@ function refetchActiveQueriesAfterResume(reason: string) {
   void (async () => {
     try {
       await queryClient.resumePausedMutations();
-      await queryClient.refetchQueries({ type: "active" }, { cancelRefetch: true });
+      await queryClient.refetchQueries(
+        {
+          type: "active",
+          // 변경 시에만 갱신하는 query는 복귀 시에도 유효한 캐시를 재사용한다.
+          predicate: (query) => query.meta?.refetchOnResume !== "stale" || query.isStale(),
+        },
+        { cancelRefetch: true },
+      );
     } catch (error) {
       console.error("[ReactQuery] resume refetch failed", {
         error,

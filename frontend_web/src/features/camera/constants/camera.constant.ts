@@ -1,0 +1,6 @@
+export const MODE = {
+  FOOD: "FOOD",
+  NUTRITION: "NUTRITION_LABEL",
+  MENU_BOARD: "MENU_BOARD",
+  GENERAL: "GENERAL",
+} as const;

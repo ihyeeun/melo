@@ -1,6 +1,6 @@
 import type { RefObject } from "react";
 import type { WebView, WebViewMessageEvent } from "react-native-webview";
-import { isAxiosError } from "axios";
+import { CanceledError, isAxiosError, isCancel } from "axios";
 import Constants from "expo-constants";
 import { router } from "expo-router";
 import * as FileSystem from "expo-file-system/legacy";
@@ -11,6 +11,8 @@ import { BackHandler, Platform } from "react-native";
 import { clearTokens } from "@/features/auth/store/tokenStore";
 import { apiClient } from "@/src/shared/api/apiClient";
 import { emitAuthExpired } from "@/src/shared/auth/authSessionEvents";
+import { isAppTabName } from "@/src/shared/navigation/appTabNavigation";
+import { createPreviewThumbnail } from "@/src/shared/native/imagePreview";
 import {
   isNativeHapticType,
   triggerNativeHaptic,
@@ -28,6 +30,7 @@ import type {
 } from "./bridge.types";
 import { sendToWeb } from "./sendToWeb";
 import { requestFromWeb } from "./requestFromWeb";
+import type { BridgeRequestRegistry } from "./bridgeRequestRegistry";
 import {
   getHealthPermissionStatus,
   readStepCountRecords,
@@ -182,20 +185,6 @@ async function normalizeCapturedImageSource(source: CapturedImageSource) {
     previewMimeType: source.previewMimeType ?? null,
     mode: source.mode ?? null,
   };
-}
-
-function normalizeImagePickerAsset(asset: ImagePicker.ImagePickerAsset) {
-  return normalizeCapturedImageSource({
-    uri: asset.uri,
-    width: asset.width,
-    height: asset.height,
-    fileName: asset.fileName,
-    fileSize: asset.fileSize,
-    mimeType: asset.mimeType,
-    base64: asset.base64,
-    previewBase64: null,
-    previewMimeType: null,
-  });
 }
 
 function assertRelativeEndpoint(endpoint: string) {
@@ -358,9 +347,12 @@ function resolveUploadFieldName(payloadFieldName?: string) {
   return normalized;
 }
 
-async function uploadImageToServer(payload: BridgeImageUploadRequestPayload) {
+async function uploadImageToServer(payload: BridgeImageUploadRequestPayload, signal: AbortSignal) {
+  if (signal.aborted) throw new CanceledError();
   assertRelativeEndpoint(payload.endpoint);
   const normalizedImage = await normalizeUploadImageSource(payload);
+  // Image preparation itself is not abortable; never upload its result after cancellation.
+  if (signal.aborted) throw new CanceledError();
   const fieldName = resolveUploadFieldName(payload.fieldName);
   const method = payload.method ?? "POST";
 
@@ -383,6 +375,7 @@ async function uploadImageToServer(payload: BridgeImageUploadRequestPayload) {
     method,
     params: payload.params,
     data: formData,
+    signal,
     headers: {
       "Content-Type": "multipart/form-data",
     },
@@ -424,7 +417,14 @@ async function pickPhotoFromGallery(payload?: BridgeGalleryPickRequestPayload) {
     throw new BridgeHandledError("선택한 사진을 가져오지 못했어요.", 500, "GALLERY_PICK_FAILED");
   }
 
-  return await normalizeImagePickerAsset(asset);
+  const image = await normalizeCapturedImageSource(asset);
+  const preview = await createPreviewThumbnail(image.uri, image.width, image.height);
+
+  return {
+    ...image,
+    previewBase64: preview?.base64 ?? null,
+    previewMimeType: preview?.mimeType ?? null,
+  };
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -540,6 +540,8 @@ function isWebToAppMessage(value: unknown): value is WebToAppMessage {
   if (!isRecord(value)) return false;
   if (typeof value.id !== "string") return false;
 
+  if (value.type === "API_CANCEL") return true;
+
   if (value.type === "API_REQUEST") {
     if (!isRecord(value.payload)) return false;
     if (typeof value.payload.endpoint !== "string") return false;
@@ -550,12 +552,7 @@ function isWebToAppMessage(value: unknown): value is WebToAppMessage {
   if (value.type === "TAB_SYNC") {
     if (!isRecord(value.payload)) return false;
 
-    return (
-      value.payload.tab === "home" ||
-      value.payload.tab === "chat" ||
-      value.payload.tab === "diary" ||
-      value.payload.tab === "profile"
-    );
+    return isAppTabName(value.payload.tab);
   }
 
   if (value.type === "NAVIGATION_BACK") {
@@ -576,10 +573,6 @@ function isWebToAppMessage(value: unknown): value is WebToAppMessage {
   if (value.type === "CAMERA_CAPTURE_REQUEST") {
     if (value.payload === undefined) return true;
     if (!isRecord(value.payload)) return false;
-
-    const isValidQuality =
-      value.payload.quality === undefined || typeof value.payload.quality === "number";
-    if (!isValidQuality) return false;
 
     const isValidMode =
       value.payload.mode === undefined || isBridgeCameraCaptureMode(value.payload.mode);
@@ -670,6 +663,7 @@ function isWebToAppMessage(value: unknown): value is WebToAppMessage {
 export async function handleWebMessage(
   event: WebViewMessageEvent,
   webViewRef: RefObject<WebView | null>,
+  apiRequests: BridgeRequestRegistry,
 ) {
   let requestId = "unknown";
   let currentEndpoint: string | null = null;
@@ -679,6 +673,11 @@ export async function handleWebMessage(
     if (!isWebToAppMessage(rawMessage)) return;
     const message = rawMessage;
     requestId = message.id;
+
+    if (message.type === "API_CANCEL") {
+      apiRequests.cancel(requestId);
+      return;
+    }
 
     if (message.type === "TAB_SYNC") {
       router.replace(`/(tabs)/${message.payload.tab}`);
@@ -732,14 +731,37 @@ export async function handleWebMessage(
       return;
     }
 
-    if (message.type === "IMAGE_UPLOAD_REQUEST") {
-      const result = await uploadImageToServer(message.payload);
+    if (message.type === "API_REQUEST" || message.type === "IMAGE_UPLOAD_REQUEST") {
+      currentEndpoint = message.type === "API_REQUEST" ? message.payload.endpoint : null;
+      const shouldEndSession = currentEndpoint !== null && shouldTerminateSession(currentEndpoint);
+      const controller = apiRequests.start(requestId);
+      try {
+        const result = message.type === "API_REQUEST"
+          ? await requestFromWeb(message.payload, controller.signal)
+          : await uploadImageToServer(message.payload, controller.signal);
+        if (controller.signal.aborted) return;
 
-      sendToWeb(webViewRef, {
-        id: requestId,
-        type: "API_RESPONSE",
-        payload: result,
-      });
+        if (shouldEndSession) {
+          await clearTokens();
+        }
+
+        if (!controller.signal.aborted) {
+          sendToWeb(webViewRef, {
+            id: requestId,
+            type: "API_RESPONSE",
+            payload: result,
+          });
+        }
+
+        // Finish local sign-out once its successful response has been accepted.
+        if (shouldEndSession) {
+          emitAuthExpired();
+        }
+      } catch (error) {
+        if (!controller.signal.aborted && !isCancel(error)) throw error;
+      } finally {
+        apiRequests.finish(requestId, controller);
+      }
       return;
     }
 
@@ -785,24 +807,6 @@ export async function handleWebMessage(
         payload: result,
       });
       return;
-    }
-
-    currentEndpoint = message.payload.endpoint;
-    const shouldEndSession = shouldTerminateSession(currentEndpoint);
-    const result = await requestFromWeb(message.payload);
-
-    if (shouldEndSession) {
-      await clearTokens();
-    }
-
-    sendToWeb(webViewRef, {
-      id: requestId,
-      type: "API_RESPONSE",
-      payload: result,
-    });
-
-    if (shouldEndSession) {
-      emitAuthExpired();
     }
   } catch (error) {
     const shouldClearLocalSession = shouldClearLocalSessionOnFailure(currentEndpoint);

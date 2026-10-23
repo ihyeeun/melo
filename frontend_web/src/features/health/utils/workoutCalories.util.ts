@@ -22,11 +22,60 @@ function isValidNumber(value: number | undefined): value is number {
 
 export function isBodyweightWorkout(
   workout: Pick<WorkoutDetailResponseDto, "equipment_category" | "workout_type"> | undefined,
-) {
+): boolean {
   return (
     workout?.workout_type === "weight" &&
     workout.equipment_category === BODYWEIGHT_EQUIPMENT_CATEGORY
   );
+}
+
+export function calculateWorkoutCalories({
+  draft,
+  workout,
+  profile,
+}: {
+  draft: WorkoutRecordDraft;
+  workout: WorkoutDetailResponseDto;
+  profile: ProfileResponseDto;
+}): number {
+  let activeValue = 0;
+  let restValue = 0;
+
+  // 1. 유산소 운동
+  if (workout.workout_type === "cardio") {
+    const activeMet = getCardioMet(draft.intensity);
+    const activeTimeMin = draft.workout_duration;
+
+    if (!activeMet || !activeTimeMin) return 0;
+
+    activeValue = (activeMet - 1) * activeTimeMin;
+
+    const restMet = 0;
+    restValue = restMet;
+  }
+
+  // 2. 근력 운동
+  else if (workout.workout_type === "weight") {
+    const sets = getWorkoutSetListFromDraft(draft, {
+      defaultWeight: isBodyweightWorkout(workout) ? 0 : undefined,
+    });
+
+    if (!sets || sets.length === 0) return 0;
+
+    const times = calculateWeightWorkoutTimes(sets);
+
+    const activeMet = workout.met;
+    if (!activeMet || !times?.activeTime) return 0;
+
+    activeValue = (activeMet - 1) * times.activeTime;
+
+    const restMet = 1.2;
+    restValue = (restMet - 1) * times.restTime;
+  }
+
+  const workoutCalorie = ((activeValue + restValue) * 3.5 * profile.weight) / 200;
+
+  return workoutCalorie;
 }
 
 export function getWorkoutSetListFromDraft(
@@ -55,51 +104,13 @@ export function getWorkoutSetListFromDraft(
 }
 
 export function calculateWeightWorkoutDuration(sets: WorkoutSetRequestDto[]) {
-  if (sets.length === 0) return undefined;
+  const times = calculateWeightWorkoutTimes(sets);
 
-  const totalReps = sets.reduce((acc, set) => acc + set.reps, 0);
-  if (totalReps === 0) return undefined;
+  if (!times) return;
 
-  const durationMinutes = (totalReps * 3 + (sets.length - 1) * 90) / 60;
+  const totalTime = times.activeTime + times.restTime;
 
-  return Math.max(1, Math.round(durationMinutes));
-}
-
-export function calculateCaloriesBurned({
-  draft,
-  workout,
-  profile,
-}: {
-  draft: WorkoutRecordDraft;
-  workout: WorkoutDetailResponseDto;
-  profile: ProfileResponseDto;
-}) {
-  const burnedCalories = 3.5 * (profile.weight / 200);
-
-  if (workout.workout_type === "cardio") {
-    const workoutTime = draft.workout_duration;
-
-    // 유산소인 경우에는 운동시간을 받아야해
-    if (!isValidNumber(workoutTime) || workoutTime === 0) return;
-
-    const met = getCardioMet(draft.intensity);
-    if (!met) return;
-
-    return burnedCalories * met * workoutTime;
-  }
-
-  if (workout.workout_type === "weight") {
-    const sets = getWorkoutSetListFromDraft(draft, {
-      defaultWeight: isBodyweightWorkout(workout) ? 0 : undefined,
-    });
-
-    // 무산소인 경우에는 운동시간이 필요없음
-    if (!sets || sets.length === 0) return;
-    const weightWorkoutTime = calculateWeightWorkoutDuration(sets);
-    if (!weightWorkoutTime) return;
-
-    return burnedCalories * (workout.met ?? 2.5) * weightWorkoutTime;
-  }
+  return Math.max(1, Math.round(totalTime));
 }
 
 function getCardioMet(intensity?: 0 | 1 | 2) {
@@ -113,4 +124,25 @@ function getCardioMet(intensity?: 0 | 1 | 2) {
     default:
       return undefined;
   }
+}
+
+function calculateWeightWorkoutTimes(sets: WorkoutSetRequestDto[]) {
+  const REP_SEC = 3;
+  const REST_SEC = 90;
+
+  if (sets.length === 0) return;
+
+  const activeSec = sets.reduce((totalSec, set) => {
+    return totalSec + set.reps * REP_SEC;
+  }, 0);
+
+  const restSec = (sets.length - 1) * REST_SEC;
+
+  const activeTime = activeSec / 60;
+  const restTime = restSec / 60;
+
+  return {
+    activeTime,
+    restTime,
+  };
 }

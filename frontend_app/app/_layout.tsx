@@ -1,5 +1,6 @@
 import { loadAccessToken } from "@/features/auth/store/tokenStore";
 import { subscribeAuthExpired } from "@/src/shared/auth/authSessionEvents";
+import { semantic } from "@/src/shared/styles";
 import { pretendardFonts } from "@/src/shared/styles/fonts";
 import { useFonts } from "expo-font";
 import { router, Stack, useSegments } from "expo-router";
@@ -93,7 +94,7 @@ export default function RootLayout() {
       </Stack>
       {shouldShowBootOverlay ? (
         <View style={styles.bootOverlay}>
-          <ActivityIndicator size="small" color="#ff8000" />
+          <ActivityIndicator size="small" color={semantic.primary.normal} />
         </View>
       ) : null}
     </View>

@@ -107,7 +107,7 @@ export function buildAnalyticsUserProperties(
 ): AnalyticsUserProperties {
   const nickname = source.nickname?.trim();
   const targetRatio = source.target_ratio;
-  const isTestUser = typeof source.role === "string" ? source.role === "ADMIN" : undefined;
+  const isTestUser = source.role !== "USER";
   const isSubscribed = source.is_subscribed;
   const gender = getIndexedValue(GENDER_VALUES, source.gender);
   const birthYear = getFiniteNumber(source.birthYear);

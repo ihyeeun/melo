@@ -3,15 +3,9 @@ import { useQueryClient } from "@tanstack/react-query";
 import { getAnalyticsErrorMessage } from "@/features/camera/utils/cameraCapture";
 import { useRegisterMenuByNutritionLabelImageMutation } from "@/features/chat/hooks/mutations/useSendMessageMutation";
 import { queryKeys as chatQueryKeys } from "@/features/chat/hooks/queries/queryKey";
-import {
-  getChatHistoryPlaybackBaselineIds,
-  setChatHistoryPlaybackBaselineIds,
-} from "@/features/chat/utils/chatHistoryPlayback";
-import { getMealTypeFromCurrentTime } from "@/features/chat/utils/chatMeal";
-import { getSafeChatId } from "@/features/chat/utils/recommendNavigation";
+import { getCurrentDateTime } from "@/features/chat/utils/date.util";
 import {
   NutrientRegisterFormPage,
-  type NutrientRegisterFormState,
   type NutrientRegisterSubmitPayload,
 } from "@/features/nutrient-entry/components/NutrientRegisterFormPage";
 import { PATH } from "@/router/path";
@@ -19,44 +13,22 @@ import {
   trackNutritionLabelRegisterFail,
   trackNutritionLabelRegisterSuccess,
 } from "@/shared/analytics/nutritionLabelEvents";
+import { isRequestAbortError } from "@/shared/api/requestCancellation";
 import type { NutritionLabelMenuRegisterRequestDto } from "@/shared/api/types/api.request.dto";
+import type { NutritionLabelRecognitionResponseDto } from "@/shared/api/types/api.response.dto";
 import { LoadingOverlay } from "@/shared/commons/loading/Loading";
 import { toast } from "@/shared/commons/toast/toast";
-import {
-  navigateBack,
-  useLocation,
-  useSearchParams,
-} from "@/shared/navigation/stackflowNavigation";
-import { getTodayFormatDateKey } from "@/shared/utils/dateFormat";
-
-type ChatNutritionRegisterState = Partial<NutritionLabelMenuRegisterRequestDto> & {
-  chatId?: number;
-} & NutrientRegisterFormState;
+import { navigateBack, useLocation } from "@/shared/navigation/stackflowNavigation";
 
 const MAX_INPUT_LENGTH = 300;
 
-function getChatNutritionRegisterPath(chatId: number | null) {
-  if (chatId === null) {
-    return PATH.CHAT_NUTRITION_REGISTER;
-  }
-
-  const params = new URLSearchParams({
-    chatId: String(chatId),
-  });
-
-  return `${PATH.CHAT_NUTRITION_REGISTER}?${params.toString()}`;
-}
-
 export default function ChatNutritionRegisterPage() {
   const queryClient = useQueryClient();
-  const location = useLocation();
-  const [searchParams] = useSearchParams();
-  const locationState = (location.state ?? {}) as ChatNutritionRegisterState;
-  const chatId = getSafeChatId(searchParams.get("chatId")) ?? locationState.chatId ?? null;
-  const dateKey = getTodayFormatDateKey();
-  const mealType = getMealTypeFromCurrentTime(new Date());
+  const { state } = useLocation<NutritionLabelRecognitionResponseDto>();
   const { mutateAsync: registerMenu, isPending: isSubmitting } =
     useRegisterMenuByNutritionLabelImageMutation();
+
+  const { dateKey, mealTime } = getCurrentDateTime();
 
   const handleSubmit = async (form: NutrientRegisterSubmitPayload) => {
     if (isSubmitting) {
@@ -71,19 +43,10 @@ export default function ChatNutritionRegisterPage() {
       return;
     }
 
-    let playbackBaselineChatIds: Awaited<
-      ReturnType<typeof getChatHistoryPlaybackBaselineIds>
-    > = null;
-
-    try {
-      playbackBaselineChatIds = await getChatHistoryPlaybackBaselineIds(queryClient);
-    } catch {
-      playbackBaselineChatIds = null;
-    }
-
     try {
       await registerMenu({ body });
     } catch (error) {
+      if (isRequestAbortError(error)) return;
       trackNutritionLabelRegisterFail(
         getAnalyticsErrorMessage(error, "등록에 실패했어요. 잠시 후 다시 시도해주세요."),
       );
@@ -98,11 +61,8 @@ export default function ChatNutritionRegisterPage() {
         queryKey: chatQueryKeys.chatHistory,
         type: "all",
       });
-
-      if (playbackBaselineChatIds !== null) {
-        setChatHistoryPlaybackBaselineIds(queryClient, playbackBaselineChatIds);
-      }
-    } catch {
+    } catch (error) {
+      if (isRequestAbortError(error)) return;
       // Cache sync is best-effort after the menu registration has already succeeded.
     }
 
@@ -115,14 +75,13 @@ export default function ChatNutritionRegisterPage() {
       <NutrientRegisterFormPage
         appendMealQueryToBrandSearchReturn={false}
         backFallbackPath={PATH.CHAT}
-        brandSearchReturnPath={getChatNutritionRegisterPath(chatId)}
         dateKey={dateKey}
+        mealType={mealTime}
         initialState={{
-          ...locationState,
-          chatId: chatId ?? undefined,
+          ...(state ?? {}),
+          unit: state?.unit === 1 ? 1 : 0,
         }}
         isSubmitPending={isSubmitting}
-        mealType={mealType}
         onSubmit={handleSubmit}
       />
 

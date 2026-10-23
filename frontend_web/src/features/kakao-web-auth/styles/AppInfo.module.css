@@ -1,6 +1,6 @@
 .container {
   align-items: center;
-  background: var(--bg-white);
+  background: var(--background-default);
   display: flex;
   flex-direction: column;
   gap: 18px;
@@ -12,7 +12,7 @@
 }
 
 .description {
-  color: var(--label-assistive);
+  color: var(--text-tertiary);
   max-width: 320px;
 }
 
@@ -34,7 +34,7 @@
 
 .loginContainer {
   align-items: stretch;
-  background: var(--bg-normal);
+  background: var(--background-gray-1);
   display: flex;
   justify-content: center;
   min-height: 100dvh;
@@ -43,7 +43,7 @@
 }
 
 .phoneFrame {
-  background: var(--bg-white);
+  background: var(--background-default);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   display: flex;
   flex-direction: column;
@@ -99,7 +99,7 @@
   align-items: center;
   background: #fee500;
   border-radius: 4px;
-  color: var(--label-normal);
+  color: var(--text-primary);
   display: flex;
   gap: 8px;
   height: 45px;
@@ -109,12 +109,12 @@
 }
 
 .loginFooter {
-  color: var(--label-assistive);
+  color: var(--text-tertiary);
   text-align: center;
 }
 
 .storeLinkButton {
-  color: var(--label-assistive);
+  color: var(--text-tertiary);
   text-align: center;
   text-decoration: underline;
   text-underline-offset: 3px;
@@ -122,7 +122,7 @@
 
 @media (width <= 480px) {
   .loginContainer {
-    background: var(--bg-white);
+    background: var(--background-default);
   }
 
   .phoneFrame {
@@ -131,7 +131,7 @@
 }
 
 .link {
-  color: var(--label-assistive);
+  color: var(--text-tertiary);
   text-decoration: underline;
   text-underline-offset: 2px;
   word-break: break-all;
