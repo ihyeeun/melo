@@ -18,7 +18,6 @@ const SYSTEM_ICON_SRC = {
   fitness: "/icons/system-icons/fitness.svg",
   humidity: "/icons/system-icons/humidity.svg",
   info: "/icons/system-icons/info.svg",
-  kebab: "/icons/system-icons/kebab.svg",
   breakfast: "/icons/system-icons/light-mode.svg",
   lunch: "/icons/system-icons/lunch-dining.svg",
   dinner: "/icons/system-icons/local-bar.svg",

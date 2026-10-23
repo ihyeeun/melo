@@ -121,39 +121,44 @@ export default function CreateFolderPage() {
   };
 
   return (
-    <section className={styles.page}>
-      <PageHeader title={isEditMode ? "폴더 수정" : "새 폴더 만들기"} onBack={handleBack} />
+    <section className={`page ${styles.root}`}>
+      <PageHeader
+        title={isEditMode ? "폴더 수정" : "새 폴더 만들기"}
+        onBack={handleBack}
+        className={styles.header}
+      />
 
-      <main className={styles.main}>
-        <section className={styles.fieldSection}>
-          <label className={`body-l-semi ${styles.fieldLabel}`} htmlFor="folder-name">
+      <main className={`main ${styles.content}`}>
+        <div className={styles.titleGroup}>
+          <label className={`body-l-semi text-primary`} htmlFor="folder-name">
             폴더 이름
           </label>
-          <input
-            id="folder-name"
-            className={`body-l-medium ${styles.folderNameInput} amp-unmask`}
-            value={folderName}
-            onChange={(event) => setFolderName(event.target.value)}
-            placeholder="폴더 이름을 입력해주세요"
-            maxLength={20}
-          />
-          <span className={`${styles.marginLeftAuto} caption-m-medium text-tertiary`}>
-            최대 20자 이내
-          </span>
-        </section>
+          <span className={`caption-m-medium text-tertiary marginLeft`}>최대 20자 이내</span>
+        </div>
+
+        <input
+          id="folder-name"
+          className={`body-l-regular ${styles.folderNameInput} amp-unmask`}
+          value={folderName}
+          onChange={(event) => setFolderName(event.target.value)}
+          placeholder="폴더 이름을 입력해주세요"
+          maxLength={20}
+        />
 
         <section className={styles.menuSection}>
-          <div className={styles.labelRow}>
-            <h2 className={`body-l-semi ${styles.sectionTitle}`}>음식</h2>
-            <span className={`body-s-medium ${styles.menuCount}`}>{selectedMenus.length}개</span>
+          <div className={styles.titleGroup}>
+            <h2 className={`title-s-semi ${styles.sectionTitle}`}>음식</h2>
+            <span className={`caption-m-medium text-tertiary marginLeft`}>
+              {selectedMenus.length}개
+            </span>
           </div>
 
           <button type="button" className={styles.addButton} onClick={handleAddMenu}>
             <SystemIcon name="plus-circle" size={18} />
-            <p className="body-m-regular">음식 추가</p>
+            <p className="body-m-regular text-tertiary">음식 추가</p>
           </button>
 
-          {selectedMenus.length > 0 ? (
+          {selectedMenus.length > 0 && (
             <div className={styles.menuList}>
               {selectedMenus.map(({ requestMenu, viewMenu }) => (
                 <MealMenuCard
@@ -172,15 +177,11 @@ export default function CreateFolderPage() {
                 />
               ))}
             </div>
-          ) : (
-            <div className={`body-l-medium ${styles.emptyMenuState}`}>
-              폴더에 담을 음식을 추가해주세요
-            </div>
           )}
         </section>
       </main>
 
-      <footer className={styles.footer}>
+      <footer className={`footer`}>
         <Button
           onClick={handleSubmit}
           variant="default"

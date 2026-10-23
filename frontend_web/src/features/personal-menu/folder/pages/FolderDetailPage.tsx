@@ -24,7 +24,6 @@ import type { MenuSimpleResponseDto } from "@/shared/api/types/api.response.dto"
 import { Button } from "@/shared/commons/button/Button";
 import { MealMenuCard } from "@/shared/commons/card/MealMenuCard";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
-import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import { LoadingIndicator, LoadingOverlay } from "@/shared/commons/loading/Loading";
 import { ConfirmModal } from "@/shared/commons/modals/ConfirmModal";
 import { toast } from "@/shared/commons/toast/toast";
@@ -318,7 +317,7 @@ export default function FolderDetailPage() {
 
     if (isFolderError || !folderDetail) {
       return (
-        <section className={styles.stateContainer}>
+        <section>
           <p className="body-l-medium">폴더를 불러오지 못했어요</p>
           <Button
             variant="text"
@@ -335,28 +334,24 @@ export default function FolderDetailPage() {
 
     if (folderMenus.length === 0) {
       return (
-        <section className={styles.stateContainer}>
+        <section>
           <p className="body-l-medium">폴더에 담긴 음식이 없어요</p>
         </section>
       );
     }
 
     return (
-      <section className={styles.menuSection}>
+      <>
         <div className={styles.menuSectionHeader}>
-          <div className={styles.menuTitleGroup}>
-            <span className={`body-s-medium ${styles.menuCount}`}>{folderMenus.length}개</span>
-          </div>
+          <span className={`body-s-medium text-primary`}>{folderMenus.length}개</span>
 
-          <Button
-            className={styles.bulkActionButton}
-            variant="text"
-            size="xs"
+          <button
+            type="button"
             onClick={handleToggleAllFolderMenus}
+            className={`body-s-medium marginLeft ${areAllFolderMenusSelected ? "text-highlight" : "text-tertiary"}`}
           >
-            <SystemIcon name={areAllFolderMenusSelected ? "minus" : "plus"} size={14} />
-            {areAllFolderMenusSelected ? "선택 해제" : "전체 선택"}
-          </Button>
+            {areAllFolderMenusSelected ? "전체 해제" : "전체 선택"}
+          </button>
         </div>
 
         <div className={styles.menuList}>
@@ -384,12 +379,12 @@ export default function FolderDetailPage() {
             );
           })}
         </div>
-      </section>
+      </>
     );
   };
 
   return (
-    <section className={styles.page}>
+    <section className={`page ${styles.root}`}>
       <PageHeader
         title={folderDetail?.folder_name ?? "폴더"}
         onBack={handleBack}
@@ -402,11 +397,12 @@ export default function FolderDetailPage() {
             />
           ) : null
         }
+        className={styles.header}
       />
 
-      <main className={styles.main}>{renderContent()}</main>
+      <main className={`main`}>{renderContent()}</main>
 
-      <footer className={styles.footer}>
+      <footer className={`footer`}>
         <Button
           onClick={handleApplySelectedMenus}
           variant="default"

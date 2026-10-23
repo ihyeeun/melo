@@ -1,9 +1,8 @@
 import { Select } from "@base-ui/react";
 import { useState } from "react";
 
+import styles from "@/features/personal-menu/folder/styles/FolderDetailPage.module.css";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
-
-import styles from "./DetailActionSelect.module.css";
 
 type DetailActionValue = "edit" | "delete";
 
@@ -50,25 +49,21 @@ export function DetailActionSelect({
       disabled={disabled}
       modal={false}
     >
-      <Select.Trigger className={`${styles.trigger} body-m-regular`} aria-label={`메뉴`}>
-        <Select.Icon className={styles.icon} aria-hidden>
-          <SystemIcon name="kebab" size={18} />
-        </Select.Icon>
+      <Select.Trigger className={`${styles.trigger}`} aria-label={`메뉴`}>
+        <SystemIcon name="more-horiz" size={24} className="text-secondary" />
       </Select.Trigger>
 
       <Select.Portal>
-        <Select.Positioner className={styles.positioner} side="bottom" align="end">
+        <Select.Positioner side="bottom" align="end" sideOffset={14}>
           <Select.Popup className={styles.popup}>
-            <Select.List className={styles.list}>
+            <Select.List>
               {DETAIL_ACTION_OPTIONS.map((option) => (
-                <Select.Item
-                  key={option.value}
-                  value={option.value}
-                  className={`${styles.item} ${
-                    option.variant === "danger" ? styles.dangerItem : ""
-                  } body-l-medium`}
-                >
-                  <Select.ItemText>{option.label}</Select.ItemText>
+                <Select.Item key={option.value} value={option.value} className={`${styles.item}`}>
+                  <Select.ItemText
+                    className={`body-s-medium ${option.value === "delete" ? styles.danger : "text-secondary"}`}
+                  >
+                    {option.label}
+                  </Select.ItemText>
                 </Select.Item>
               ))}
             </Select.List>
