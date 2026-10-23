@@ -1156,18 +1156,17 @@ export function MealTimeSelectCard({
       </div>
 
       <div className={styles.mealTimeActionsSection}>
-        <Button size="xs" fullWidth variant="outlined" border="secondary" onClick={onDismiss}>
-          기록 안할래요
-        </Button>
         <Button
           size="xs"
           fullWidth
-          variant="outlined"
-          border="primary"
+          variant={mealTime ? "default" : "outlined"}
           onClick={() => onConfirm(mealTime)}
           disabled={disabled}
         >
           확인
+        </Button>
+        <Button size="xs" fullWidth variant="outlined" border="secondary" onClick={onDismiss}>
+          기록 안 할래요
         </Button>
       </div>
     </div>

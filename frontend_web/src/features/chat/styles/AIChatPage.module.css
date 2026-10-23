@@ -395,7 +395,8 @@
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 8px;
-  margin-block: 20px;
+  margin-top: 20px;
+  margin-bottom: 16px;
 }
 
 .mealTimeChip {
@@ -414,7 +415,7 @@
 }
 
 .mealTimeActionsSection {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  display: flex;
+  flex-direction: column;
   gap: 8px;
 }
