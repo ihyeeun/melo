@@ -5,7 +5,6 @@ export const PATH = {
   HOME_STEPS_LOG_SHEET: "/home/body-log/steps",
   KAKAO_WEB_LOGIN: "/auth/kakao/login",
   KAKAO_WEB_CALLBACK: "/auth/kakao/callback",
-  TODAY_MEAL_SCORE: "/home/date-meal-score",
   WORKOUT_RECORD: "/workout-record",
   WORKOUT_RECORD_EDIT: "/workout-record/edit",
   WORKOUT_DETAIL_SHEET: "/workout-record/detail",
@@ -18,11 +17,9 @@ export const PATH = {
   SETTINGS_FEEDBACK: "/settings/feedback",
   SETTINGS_SUB_CODE: "/settings/sub-code",
   APP_OPEN_SETTINGS_FEEDBACK: "/open/settings-feedback",
-  TERMS: "/terms",
   MEAL_RECORD: "/meal-record",
   MEAL_RECORD_ADD_SEARCH: "/meal-record/add/search",
   MEAL_DETAIL: "/meal/detail",
-  NUTRIENT_ADD: "/nutrient-add",
   NUTRIENT_ADD_REGISTER: "/nutrient-add/register",
   NUTRIENT_ADD_MODIFY: "/nutrient-add/modify",
   BRAND_SEARCH: "/brand-search",
@@ -31,16 +28,18 @@ export const PATH = {
 
   // Chat
   CHAT: "/chat",
-  CHAT_MEAL_RECORD_SHEET: "/chat/meal-record-sheet",
+  AI_CHAT: "/chat",
   CHAT_NUTRITION_REGISTER: "/chat/nutrition-register",
-  CHAT_NUTRITION_DETAIL: "/chat/nutrition-detail",
-  RECOMMEND_RESULT: "/recommend-result",
-  RECOMMEND_DETAIL: "/recommend-detail",
-  FEEDBACK_RESULT: "/feedback-result",
-  FEEDBACK_DETAIL: "/feedback-detail",
 
   //Diary
   DIARY: "/diary",
+
+  // 식당
+  RESTAURANT: "/restaurant",
+  RESTAURANT_DETAIL: "/restaurant/detail",
+
+  // 개인 분석
+  PERSONAL_ANALYSIS: "/personal-analysis",
 
   // Profile
   GOAL_EDIT: "/profile/goal-edit",
@@ -48,12 +47,16 @@ export const PATH = {
   GOAL_EDIT_NUTRIENT: "/profile/goal-edit/nutrient",
 
   // Camera
-  MENU_BOARD_CAMERA: "/meal-record/add/menu-board-camera",
   FOOD_CAMERA: "/meal-record/add/food-camera",
   NUTRIENT_CAMERA: "/nutrient-camera",
   CHAT_CAMERA: "/chat-camera",
-  CHAT_FOOD_CAMERA: "/chat-food-camera",
 
   // ETC
   APP_INFO: "/app-info",
+
+  // Menstruation
+  MENSTRUATION_RECORD: "/menstruation/record",
+
+  // Water Intake
+  WATER_INTAKE_RECORD: "/water-intake/record",
 };

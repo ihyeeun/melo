@@ -1,5 +1,5 @@
 .page {
-  background-color: var(--bg-white);
+  background-color: var(--background-default);
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -22,7 +22,7 @@
 }
 
 .formStateText {
-  color: var(--label-alternative);
+  color: var(--text-secondary);
   margin: 0;
 }
 
@@ -34,7 +34,7 @@
 }
 
 .formFrame {
-  background: var(--bg-white);
+  background: var(--background-default);
   border: 0;
   display: block;
   height: 100%;
@@ -43,7 +43,7 @@
 
 .formFrameLoading {
   align-items: center;
-  background: var(--bg-white);
+  background: var(--background-default);
   display: flex;
   inset: 0;
   justify-content: center;

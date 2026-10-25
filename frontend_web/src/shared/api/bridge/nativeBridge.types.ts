@@ -1,7 +1,8 @@
 import type { ApiResponse } from "@/shared/api/types/apiResponse.types";
 
 export type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
-export type AppTabName = "home" | "chat" | "diary" | "profile";
+export type AppTabName = "home" | "chat" | "diary" | "restaurant" | "analysis" | "profile";
+export type OptionalTabName = Extract<AppTabName, "diary" | "restaurant" | "analysis">;
 export type BridgeMessageContext = {
   href?: string;
 };
@@ -20,6 +21,12 @@ export type WebToAppApiRequestMessage = {
   context?: BridgeMessageContext;
 };
 
+export type WebToAppApiCancelMessage = {
+  id: string;
+  type: "API_CANCEL";
+  context?: BridgeMessageContext;
+};
+
 export type WebToAppTabSyncMessage = {
   id: string;
   type: "TAB_SYNC";
@@ -27,6 +34,15 @@ export type WebToAppTabSyncMessage = {
     tab: AppTabName;
   };
   context?: BridgeMessageContext;
+};
+
+export type WebToAppTabConfigSetMessage = {
+  id: string;
+  type: "TAB_CONFIG_SET";
+  context?: BridgeMessageContext;
+  payload: {
+    optionalTabs: readonly OptionalTabName[];
+  };
 };
 
 export type WebToAppNavigationBackMessage = {
@@ -90,7 +106,6 @@ export type WebToAppTabBarVisibilitySyncMessage = {
 export type CameraCaptureMode = "NUTRITION_LABEL" | "MENU_BOARD" | "FOOD" | "GENERAL";
 
 export type CameraCaptureRequestPayload = {
-  quality?: number;
   mode?: CameraCaptureMode;
   selectableModes?: CameraCaptureMode[];
 };
@@ -150,7 +165,9 @@ export type WebToAppInAppBrowserOpenMessage = {
 
 export type WebToAppMessage =
   | WebToAppApiRequestMessage
+  | WebToAppApiCancelMessage
   | WebToAppTabSyncMessage
+  | WebToAppTabConfigSetMessage
   | WebToAppNavigationBackMessage
   | WebToAppHapticTriggerRequestMessage
   | WebToAppAppDeviceInfoRequestMessage

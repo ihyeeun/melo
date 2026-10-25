@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
 
-import { getProfile } from "@/features/profile/api/profile";
+import { getProfile, getUserGoalSnapshot } from "@/features/profile/api/profile";
 import { queryKeys } from "@/features/profile/hooks/queries/queryKey";
 import { identifyAnalyticsUser } from "@/shared/analytics/analytics";
 import { useSetTargets } from "@/shared/stores/targetNutrient.store";
@@ -35,4 +35,14 @@ export function useGetProfileQuery(options?: UseGetProfileQueryOptions) {
   }, [query.data, setTargets, shouldSyncProfileSideEffects]);
 
   return query;
+}
+
+export function useGoalSnapshotByDateQuery(dateKey: string) {
+  const response = useQuery({
+    queryKey: queryKeys.snapshot.snapshot(dateKey),
+    queryFn: () => getUserGoalSnapshot(dateKey),
+    staleTime: 1000 * 60 * 10,
+  });
+
+  return response;
 }

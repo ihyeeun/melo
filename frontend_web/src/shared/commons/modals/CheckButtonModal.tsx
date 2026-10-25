@@ -32,10 +32,7 @@ export function CheckButtonModal({
         render={(props) => (
           <Button
             {...props}
-            variant="filled"
-            color="primary"
-            size="normal"
-            interaction="normal"
+            size="m"
             disabled={confirmDisabled}
             onClick={(e) => {
               onConfirm?.();

@@ -1,8 +1,10 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
+import { calendarKeys } from "@/features/calendar/hooks/queries/calendar.queryKey";
 import { registerStep, registerWeight } from "@/features/home/api/todayRecord.api";
 import { queryKeys as homeQueryKeys } from "@/features/home/hooks/queries/todayRecord.queryKey";
 import { updateWeight } from "@/features/profile/api/profile";
+import { isRequestAbortError } from "@/shared/api/requestCancellation";
 import type { WeightStepsResponseDto } from "@/shared/api/types/api.response.dto";
 import type { UseMutationCallback } from "@/shared/api/types/callback.types";
 import { getTodayFormatDateKey } from "@/shared/utils/dateFormat";
@@ -20,11 +22,12 @@ export function useRegisterWeightMutation(callbacks?: UseMutationCallback) {
 
       try {
         return await updateWeight(weight);
-      } catch {
+      } catch (error) {
+        if (isRequestAbortError(error)) throw error;
         return undefined;
       }
     },
-    onSuccess: (_, { date, weight }) => {
+    onSuccess: async (_, { date, weight }) => {
       queryClient.setQueryData<WeightStepsResponseDto>(
         homeQueryKeys.bodyStats(date),
         (previous) => ({
@@ -32,9 +35,14 @@ export function useRegisterWeightMutation(callbacks?: UseMutationCallback) {
           steps: previous?.steps ?? null,
         }),
       );
+      await queryClient.invalidateQueries({
+        queryKey: calendarKeys.monthly.month({ date: date.slice(0, 7), mode: "weight" }),
+      });
       callbacks?.onSuccess?.();
     },
-    onError: (error) => callbacks?.onError?.(error),
+    onError: (error) => {
+      if (!isRequestAbortError(error)) callbacks?.onError?.(error);
+    },
   });
 }
 
@@ -53,6 +61,8 @@ export function useRegisterStepsMutation(callbacks?: UseMutationCallback) {
       );
       callbacks?.onSuccess?.();
     },
-    onError: (error) => callbacks?.onError?.(error),
+    onError: (error) => {
+      if (!isRequestAbortError(error)) callbacks?.onError?.(error);
+    },
   });
 }

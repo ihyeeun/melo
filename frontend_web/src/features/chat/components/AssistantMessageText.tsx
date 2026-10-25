@@ -4,8 +4,14 @@ type AssistantMessageTextProps = {
   text: string;
 };
 
+const MARKDOWN_HEADING_PATTERN = /^#{1,6}[ \t]+/;
+
 export function AssistantMessageText({ text }: AssistantMessageTextProps) {
-  return <>{formatBoldText(text)}</>;
+  const headingMatch = text.match(MARKDOWN_HEADING_PATTERN);
+  const content = headingMatch ? text.slice(headingMatch[0].length) : text;
+  const formattedText = formatBoldText(content);
+
+  return headingMatch ? <strong>{formattedText}</strong> : <>{formattedText}</>;
 }
 
 function formatBoldText(text: string): ReactNode[] {

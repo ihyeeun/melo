@@ -1,3 +1,5 @@
+import type { CalendarViewMode } from "@/features/calendar/types/calendar.types";
+
 export interface NutritionLabelMenuRegisterRequestDto extends NutritionLabel {
   name: string;
   brand: string;
@@ -25,7 +27,7 @@ interface NutritionLabel {
 
 export interface RegisterMealRequestDto {
   date: string; //날짜 YYYY-MM-DD
-  time: 0 | 1 | 2 | 3 | 4; //기록 시간대 0~4
+  time: MealTime;
   meal_time?: string; //실제 식사 시간 HH:MM
   image?: string;
   menu_ids?: number[];
@@ -35,7 +37,7 @@ export interface RegisterMealRequestDto {
 
 export interface DeleteMealRequestDto {
   date: string; //날짜 YYYY-MM-DD
-  time: 0 | 1 | 2 | 3 | 4; //기록 시간대 0~4
+  time: MealTime;
   menu_id?: number;
 }
 
@@ -46,6 +48,24 @@ export interface UpsertFolderRequestDto {
   menu_quantities: number[];
   menu_input_modes: Array<0 | 1>; //0: 단위, 1: 중량
 }
+/* ======
+ * 홈
+ * ====== */
+export interface MonthlyCalendarRequestDto<M extends CalendarViewMode = CalendarViewMode> {
+  date: string; // YYYY-MM
+  mode: M;
+}
+
+/* ======
+ * 홈 / 식사 기록
+ * ====== */
+export interface RegisterMenuListRequestDto {
+  limit: number;
+  cursor?: number;
+  input?: string;
+}
+
+export type MealTime = 0 | 1 | 2 | 3 | 4;
 
 /* ======
  * 운동
@@ -80,4 +100,54 @@ export interface WorkoutSetRequestDto {
   set_order: number;
   weight: number;
   reps: number;
+}
+
+/* ======
+ * 월경 기록
+ * ====== */
+export interface SaveMenstrualRecordsRequestDto {
+  add_ranges: MenstrualDateRangeRequestDto[];
+  remove_ranges: MenstrualDateRangeRequestDto[];
+}
+
+export interface MenstrualDateRangeRequestDto {
+  start_date: string;
+  end_date: string;
+}
+
+export interface GetMenstrualRecordsRequestDto {
+  from_date: string;
+  to_date: string;
+}
+
+/* ======
+ * 물 섭취 기록
+ * ====== */
+export interface UpsertWaterIntakeRequestDto {
+  date: string;
+  water_intake: number;
+}
+
+/* ======
+ * 식당
+ * ====== */
+export interface RestaurantSearchRequestDto {
+  input: string;
+  limit: number;
+  cursor?: number;
+}
+
+export interface RestaurantDetailRequestDto {
+  restaurant_id: number;
+  filter?: "균형" | "저칼로리" | "단백질";
+}
+
+/* ======
+ * 분석 탭
+ * ====== */
+
+export type RecentAnalysisMode = "intake" | "weight" | "burned" | "deficit";
+export interface RecentAnalysisRequestDto<M extends RecentAnalysisMode = RecentAnalysisMode> {
+  date: string;
+  mode: M;
 }

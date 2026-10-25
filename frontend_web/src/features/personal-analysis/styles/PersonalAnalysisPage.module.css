@@ -1,0 +1,113 @@
+.root {
+  background-color: var(--background-gray-1);
+}
+
+.header {
+  margin-top: var(--safe-area-top);
+  padding: 14px 16px;
+}
+
+.dateSelectedSection {
+  padding-inline: 16px;
+  margin-bottom: 12px;
+  display: flex;
+  gap: 13px;
+  align-items: center;
+}
+
+.content {
+  overflow-x: hidden;
+  background-color: var(--background-default);
+  padding-top: 20px;
+  border-radius: 42px 42px 0 0;
+}
+
+.analysisSection {
+  background-color: transparent;
+  border: 1px solid var(--border-default);
+  border-radius: 20px;
+  position: relative;
+}
+
+.analysisSection + .analysisSection {
+  margin-top: 20px;
+}
+
+.titleGroup {
+  padding-inline: 4px;
+  margin: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.graphArea {
+  height: 173px;
+  padding-inline: 12px;
+  margin-bottom: 16px;
+}
+
+.blur[data-isEmpty="true"] {
+  filter: blur(2px);
+}
+.emptyOverlay {
+  text-align: center;
+  position: absolute;
+  display: grid;
+  place-items: center;
+  inset: 0;
+  background-color: rgb(255 255 255 / 70%);
+  border-radius: 20px;
+  padding-top: 10px;
+}
+.emptyText {
+  padding: 4px 8px;
+  border-radius: 14px;
+  background-color: rgba(119, 125, 136, 0.3);
+  opacity: 70%;
+}
+
+.tabList {
+  margin-inline: 12px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+  padding: 2px 4px;
+  border: 1px solid var(--border-default);
+  border-radius: 16px;
+  place-items: center;
+  margin-bottom: 20px;
+}
+
+.tabItem {
+  border-radius: 12px;
+  padding: 6px 10px;
+  background-color: transparent;
+  color: var(--text-secondary);
+  width: 100%;
+  text-align: center;
+}
+.tabItem[data-active] {
+  background-color: var(--gray-600);
+  color: var(--background-default);
+}
+
+.titlePopover {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.actionAnchor {
+  position: sticky;
+  width: 100%;
+  bottom: 10px;
+  z-index: 1;
+  padding-top: 80px;
+}
+
+.coachButton {
+  position: absolute;
+  bottom: 0;
+  background-color: var(--background-default);
+}

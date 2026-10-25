@@ -180,7 +180,7 @@ function XAxisTick({ payload, x = 0, y = 0 }: AxisTickProps) {
     : [rawValue, ""];
   const isTodayTick = statusLabel.trim() === "오늘";
   const tickClassName =
-    `${styles.xAxisTick} ${isTodayTick ? styles.xAxisTickToday : ""} typo-caption4`.trim();
+    `${styles.xAxisTick} ${isTodayTick ? styles.xAxisTickToday : ""} caption-m-medium`.trim();
 
   return (
     <text className={tickClassName} textAnchor="middle" x={x} y={y + 12}>
@@ -201,7 +201,7 @@ function YAxisTick({
   y = 0,
 }: AxisTickProps & { fractionDigits: number }) {
   return (
-    <text className={`${styles.yAxisTick} typo-caption4`} textAnchor="end" x={x} y={y}>
+    <text className={`${styles.yAxisTick} caption-m-medium`} textAnchor="end" x={x} y={y}>
       {formatAxisTick(payload?.value, fractionDigits)}
     </text>
   );
@@ -345,7 +345,7 @@ export default function WeeklyRecordChart({
               activeDot={{
                 fill: "var(--chart-target)",
                 r: ACTIVE_DOT_RADIUS,
-                stroke: "var(--bg-white)",
+                stroke: "var(--background-default)",
                 strokeWidth: 1,
               }}
               connectNulls
@@ -364,7 +364,7 @@ export default function WeeklyRecordChart({
             activeDot={{
               fill: "var(--chart-current)",
               r: ACTIVE_DOT_RADIUS,
-              stroke: "var(--bg-white)",
+              stroke: "var(--background-default)",
               strokeWidth: 1,
             }}
             dataKey="value"

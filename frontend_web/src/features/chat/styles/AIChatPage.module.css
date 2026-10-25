@@ -1,0 +1,421 @@
+.root {
+  background-color: var(--navy-50);
+}
+
+.header {
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+/* MAIN */
+.content {
+  padding-top: 20px;
+  padding-bottom: 45px;
+  position: relative;
+}
+
+.conversation {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+.conversation + .conversation {
+  margin-top: 24px;
+}
+
+.dateChip {
+  margin-inline: auto;
+  width: fit-content;
+  background-color: var(--gray-400);
+  border-radius: 16px;
+  padding: 4px 12px;
+  display: flex;
+  align-items: center;
+}
+
+.messageArea {
+  max-width: 80%;
+  position: relative;
+}
+.messageArea[data-owner="user"] {
+  margin-left: auto;
+}
+.messageArea[data-owner="ai"] {
+  margin-right: auto;
+
+  > div + div {
+    margin-top: 8px;
+  }
+}
+
+.sendImage {
+  display: block;
+  width: 230px;
+  max-width: 100%;
+  aspect-ratio: 1;
+  border-radius: 16px;
+  object-fit: cover;
+  background-color: var(--gray-100);
+}
+
+.textBubble {
+  padding: 8px 16px;
+  background-color: var(--background-default);
+  border: 1px solid var(--border-subtle);
+  border-radius: 16px;
+  position: relative;
+}
+
+.messageTime::after {
+  content: attr(data-time);
+  position: absolute;
+  bottom: 0;
+  white-space: nowrap;
+}
+.messageTime[data-owner="user"]::after {
+  right: calc(100% + 8px);
+}
+.messageTime[data-owner="ai"]::after {
+  left: calc(100% + 8px);
+}
+
+.emptyHistorySection {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+}
+
+.scrollBottomAnchor {
+  position: sticky;
+  width: 100%;
+  height: 0;
+  bottom: 0;
+  z-index: 1;
+}
+
+.scrollToBottomButton {
+  position: absolute;
+  right: 0;
+  bottom: -25px;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background-color: var(--gray-400);
+  opacity: 0.7;
+}
+.scrollToBottomButton[data-visible="false"] {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.card {
+  padding: 16px;
+  background-color: var(--background-default);
+  border: 1px solid var(--border-subtle);
+  border-radius: 16px;
+  min-width: 266px;
+}
+.card[data-border="primary"] {
+  border-color: var(--background-selected);
+  max-width: 266px;
+}
+
+.subCardLabel {
+  margin-top: 8px;
+  margin-bottom: 12px;
+  white-space: pre-line;
+}
+
+/* FOOTER */
+.footer {
+  background: linear-gradient(180deg, var(--navy-50) 0%, var(--background-default) 30%);
+}
+.footer:has(.textInput:focus) {
+  --safe-area-bottom: 0px;
+}
+
+.textInputSection {
+  border: 1px solid var(--border-default);
+  background-color: var(--background-default);
+  border-radius: 16px;
+  display: grid;
+  grid-template-columns: 40px 1fr 32px;
+  gap: 4px;
+  align-items: flex-end;
+  position: relative;
+}
+
+.chatActionExpendButton {
+  padding-block: 10px;
+  padding-inline: 8px;
+}
+
+.chatActionExpendButtonIcon[data-isView="true"] {
+  transition: transform 0.2 ease;
+  transform: rotate(45deg);
+}
+
+.textInput {
+  --chat-input-line-height: calc(14px * 1.4);
+
+  line-height: var(--chat-input-line-height);
+  max-height: calc(var(--chat-input-line-height) * 5);
+
+  min-width: 0;
+  width: 100%;
+  padding: 0;
+  border: none;
+  resize: none;
+  overflow-y: auto;
+  margin-block: auto;
+}
+.textInput:focus-within {
+  outline: 0;
+}
+
+.sendMessageButton {
+  padding-block: 10px;
+  padding-right: 8px;
+}
+
+.sendMessageButtonIcon {
+  background-color: var(--navy-900);
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  color: var(--background-default);
+}
+.sendMessageButton[data-isView="false"] {
+  display: none;
+}
+
+.mealRecordModeChip {
+  position: absolute;
+  transform: translateX(-50%);
+  left: 50%;
+  bottom: calc(100% + 8px);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background-color: var(--navy-200);
+  border-radius: 16px;
+  padding: 6px 12px;
+}
+.mealRecordModeChip[data-isView="false"] {
+  display: none;
+}
+
+.chatActionsSection {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  place-items: center;
+  margin-top: 12px;
+  margin-bottom: 40px;
+}
+.chatActionsSection[data-isView="false"] {
+  display: none;
+}
+
+.chatActionButton {
+  width: 100%;
+}
+
+.chatActionIcon {
+  display: grid;
+  place-items: center;
+  width: 60px;
+  height: 60px;
+  margin-inline: auto;
+  margin-bottom: 8px;
+  background-color: var(--navy-50);
+  color: var(--navy-600);
+  border-radius: 50%;
+}
+
+.chatActionButton[data-action="text-meal-record-mode"] {
+  position: relative;
+}
+.mealRecordModeBubble {
+  background-color: var(--gray-700);
+  border-radius: 8px;
+  color: var(--background-default);
+  padding: 4px 6px;
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: max-content;
+}
+.mealRecordModeBubble::before {
+  content: "";
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 3px solid transparent;
+  border-right: 3px solid transparent;
+  border-bottom: 5px solid var(--gray-700);
+}
+
+.autoCompleteList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: none;
+  position: absolute;
+  left: 50%;
+  right: 0;
+  bottom: calc(100% + 4px);
+  transform: translateX(-50%);
+  z-index: 1;
+  width: calc(100% - 72px);
+  background-color: var(--background-default);
+  border-radius: 12px;
+  box-shadow: var(--shadow-outer);
+}
+.textInputSection:focus-within .autoCompleteList {
+  display: block;
+}
+
+.autoCompleteItemButton {
+  padding: 12px;
+}
+
+.galleryMenu {
+  background-color: var(--background-default);
+  border-radius: 12px;
+  box-shadow: var(--shadow-outer);
+  width: max-content;
+  max-width: calc(100vw - 32px);
+  min-width: 178px;
+}
+
+.galleryMenuItem {
+  padding: 12px;
+  cursor: pointer;
+}
+
+/* MEAL RECORD CARD */
+.mealRecordMenuSection {
+  margin-top: 8px;
+  margin-bottom: 12px;
+}
+
+.mealRecordActionSection {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.menuMeta {
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.menuMetaGap {
+  margin-right: 5px;
+}
+
+.menuExtendIcon {
+  margin-left: 5px;
+}
+.menuExtendIcon[data-isExtended="true"] {
+  transform: rotate(180deg);
+}
+
+.extendMenuList {
+  width: 100%;
+  margin-top: 8px;
+  padding: 16px;
+  background-color: var(--background-gray-1);
+  border-radius: 12px;
+}
+.extendMenuList[data-isExtended="false"] {
+  display: none;
+}
+
+.extendMenuList > .menuMeta {
+  align-items: start;
+}
+
+.extendMenuList > .menuMeta + .menuMeta {
+  margin-top: 8px;
+  border-top: 1px dashed var(--border-default);
+  padding-top: 8px;
+}
+
+/* Stream Bubble */
+.bubbleEnter {
+  animation: bubble-enter 360ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  transform-origin: left bottom;
+  will-change: opacity, transform;
+}
+
+@keyframes bubble-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bubbleEnter {
+    animation: none;
+  }
+}
+
+/* MEAL TIME SELECT */
+.mealTimeSelectCard {
+  max-width: 266px;
+  position: relative;
+}
+
+.mealTimeSelectCard::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: calc(100% + 8px);
+}
+
+.mealTimeChipList {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-top: 20px;
+  margin-bottom: 16px;
+}
+
+.mealTimeChip {
+  display: flex;
+  padding: 8px 12px;
+  gap: 6px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border-default);
+  border-radius: 12px;
+  background-color: transparent;
+}
+.mealTimeChip[data-isSelected="true"] {
+  border-color: var(--border-strong);
+  background-color: var(--background-selected);
+}
+
+.mealTimeActionsSection {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}

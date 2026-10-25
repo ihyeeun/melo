@@ -2,6 +2,15 @@
   align-items: center;
   display: flex;
   justify-content: flex-end;
+  background-color: var(--background-default);
+  border: 1px solid var(--border-default);
+  border-radius: 16px;
+  padding: 12px 20px;
+}
+
+.inputBox:focus-within {
+  outline: 1px solid var(--border-strong);
+  offset: 0;
 }
 
 .inputBox input {
@@ -14,7 +23,7 @@
 }
 
 input::placeholder {
-  color: var(--label-assistive);
+  color: var(--text-disabled);
 }
 
 /* Chrome / Safari / Edge spinner 제거 */
@@ -25,12 +34,12 @@ input::placeholder {
 }
 
 .unit {
-  color: var(--label-assistive);
+  color: var(--text-disabled);
   flex-shrink: 0;
   white-space: nowrap;
   margin-left: 6px;
 }
 
 .inputBox:has(input:not(:placeholder-shown)) .unit {
-  color: var(--label-normal);
+  color: var(--text-primary);
 }

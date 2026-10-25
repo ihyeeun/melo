@@ -1,11 +1,13 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
+import { calendarKeys } from "@/features/calendar/hooks/queries/calendar.queryKey";
 import { queryKeys } from "@/features/home/hooks/queries/todayRecord.queryKey";
 import {
   menuQueryKeys,
   patchMenuDetailCache,
 } from "@/features/meal-record/hooks/queries/menuCache";
 import { modifyNutrient, registerMenu } from "@/features/nutrient-entry/api/nutrient";
+import { isRequestAbortError } from "@/shared/api/requestCancellation";
 import type { UseMutationCallback } from "@/shared/api/types/callback.types";
 
 export function useRegisterMenuMutation(callbacks?: UseMutationCallback) {
@@ -21,6 +23,7 @@ export function useRegisterMenuMutation(callbacks?: UseMutationCallback) {
       if (callbacks?.onSuccess) callbacks.onSuccess();
     },
     onError: (error) => {
+      if (isRequestAbortError(error)) return;
       if (callbacks?.onError) callbacks.onError(error);
     },
   });
@@ -47,10 +50,12 @@ export function useModifyNutrientMutation(callbacks?: UseMutationCallback) {
         queryKey: queryKeys.dayMeals.all,
         refetchType: "active",
       });
+      await queryClient.invalidateQueries({ queryKey: calendarKeys.monthly.mode("intake") });
       if (callbacks?.onSuccess) callbacks.onSuccess();
     },
 
     onError: (error) => {
+      if (isRequestAbortError(error)) return;
       if (callbacks?.onError) callbacks.onError(error);
     },
   });

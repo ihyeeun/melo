@@ -18,6 +18,7 @@ import {
 } from "@/features/personal-menu/folder/stores/folderDraft.store";
 import styles from "@/features/personal-menu/folder/styles/CreateFolderPage.module.css";
 import { PATH } from "@/router/path";
+import { isRequestAbortError } from "@/shared/api/requestCancellation";
 import { Button } from "@/shared/commons/button/Button";
 import { MealMenuCard } from "@/shared/commons/card/MealMenuCard";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
@@ -48,7 +49,8 @@ export default function CreateFolderPage() {
         skipBackHandler: true,
       });
     },
-    onError: () => {
+    onError: (error) => {
+      if (isRequestAbortError(error)) return;
       toast.warning("폴더 저장에 실패했어요", "잠시 후 다시 시도해주세요.");
     },
   });
@@ -119,34 +121,44 @@ export default function CreateFolderPage() {
   };
 
   return (
-    <section className={styles.page}>
-      <PageHeader title={isEditMode ? "폴더 수정" : "새 폴더 만들기"} onBack={handleBack} />
+    <section className={`page ${styles.root}`}>
+      <PageHeader
+        title={isEditMode ? "폴더 수정" : "새 폴더 만들기"}
+        onBack={handleBack}
+        className={styles.header}
+      />
 
-      <main className={styles.main}>
-        <section className={styles.fieldSection}>
-          <label className={`typo-label2 ${styles.fieldLabel}`} htmlFor="folder-name">
+      <main className={`main ${styles.content}`}>
+        <div className={styles.titleGroup}>
+          <label className={`body-l-semi text-primary`} htmlFor="folder-name">
             폴더 이름
           </label>
-          <input
-            id="folder-name"
-            className={`typo-body2 ${styles.folderNameInput}`}
-            value={folderName}
-            onChange={(event) => setFolderName(event.target.value)}
-            placeholder="폴더 이름을 입력해주세요"
-            maxLength={20}
-          />
-          <span className={`${styles.marginLeftAuto} typo-caption4 textAssistive`}>
-            최대 20자 이내
-          </span>
-        </section>
+          <span className={`caption-m-medium text-tertiary marginLeft`}>최대 20자 이내</span>
+        </div>
+
+        <input
+          id="folder-name"
+          className={`body-l-regular ${styles.folderNameInput} amp-unmask`}
+          value={folderName}
+          onChange={(event) => setFolderName(event.target.value)}
+          placeholder="폴더 이름을 입력해주세요"
+          maxLength={20}
+        />
 
         <section className={styles.menuSection}>
-          <div className={styles.labelRow}>
-            <h2 className={`typo-label2 ${styles.sectionTitle}`}>음식</h2>
-            <span className={`typo-label4 ${styles.menuCount}`}>{selectedMenus.length}개</span>
+          <div className={styles.titleGroup}>
+            <h2 className={`title-s-semi ${styles.sectionTitle}`}>음식</h2>
+            <span className={`caption-m-medium text-tertiary marginLeft`}>
+              {selectedMenus.length}개
+            </span>
           </div>
 
-          {selectedMenus.length > 0 ? (
+          <button type="button" className={styles.addButton} onClick={handleAddMenu}>
+            <SystemIcon name="plus-circle" size={18} />
+            <p className="body-m-regular text-tertiary">음식 추가</p>
+          </button>
+
+          {selectedMenus.length > 0 && (
             <div className={styles.menuList}>
               {selectedMenus.map(({ requestMenu, viewMenu }) => (
                 <MealMenuCard
@@ -165,32 +177,15 @@ export default function CreateFolderPage() {
                 />
               ))}
             </div>
-          ) : (
-            <div className={`typo-body2 ${styles.emptyMenuState}`}>
-              폴더에 담을 음식을 추가해주세요
-            </div>
           )}
-
-          <Button
-            className={styles.addButton}
-            variant="outlined"
-            color="normal"
-            fullWidth
-            onClick={handleAddMenu}
-          >
-            <SystemIcon name="plus" size={16} />
-            음식 추가
-          </Button>
         </section>
       </main>
 
-      <footer className={styles.footer}>
+      <footer className={`footer`}>
         <Button
           onClick={handleSubmit}
-          variant="filled"
-          interaction={canSubmit && !isUpsertFolderPending ? "normal" : "disable"}
-          size="large"
-          color="primary"
+          variant="default"
+          size="m"
           fullWidth
           disabled={!canSubmit || isUpsertFolderPending}
         >

@@ -1,17 +1,17 @@
 import { AppApiError, toAppApiError } from "@/shared/api/apiClient";
 import { requestNativeImageUpload } from "@/shared/api/bridge/nativeBridge";
 import type { ImageUploadRequestPayload } from "@/shared/api/bridge/nativeBridge.types";
+import { isRequestAbortError } from "@/shared/api/requestCancellation";
+import { captureScreenRequestScope } from "@/shared/api/screenRequests";
 import type {
   ChatFeedbackResponseDto,
   ChatNutritionLabelFeedbackResponseDto,
-  ChatRecommendationResponseDto,
   FoodImageRecognitionResponseDto,
   NutritionLabelRecognitionResponseDto,
 } from "@/shared/api/types/api.response.dto";
 import { type ApiResponse, isApiSuccess } from "@/shared/api/types/apiResponse.types";
 
 const END_POINT = {
-  IMAGE_UPLOAD: "/home/uploadMealImage",
   FOOD_ANALYSIS: "/home/recognizeFoodImage",
   NUTRIENT_RECOGNITION: "/home/recognizeNutritionLabel",
   MENU_BOARD_ANALYSIS: "/chat/menu-board",
@@ -32,8 +32,10 @@ async function requestNativeImageUploadData<T>(
   payload: ImageUploadRequestPayload,
   fallbackMessage: string,
 ) {
+  const screen = captureScreenRequestScope();
   try {
     const response = await requestNativeImageUpload<ApiResponse<T>>(payload);
+    screen.assertActive();
 
     if (!isApiSuccess(response)) {
       throw new AppApiError(response);
@@ -41,6 +43,7 @@ async function requestNativeImageUploadData<T>(
 
     return response.data;
   } catch (error) {
+    if (isRequestAbortError(error)) throw error;
     throw toAppApiError(error, fallbackMessage, "IMAGE_UPLOAD_REQUEST_FAILED");
   }
 }
@@ -74,22 +77,6 @@ export async function uploadNutritionLabelImage(capturedImage: CapturedImage) {
       method: "POST",
     },
     "영양성분표 이미지 분석 실패",
-  );
-}
-
-export async function uploadMenuBoardImage(capturedImage: CapturedImage) {
-  return requestNativeImageUploadData<ChatRecommendationResponseDto>(
-    {
-      endpoint: END_POINT.MENU_BOARD_ANALYSIS,
-      fileUri: capturedImage.uri,
-      fileName: capturedImage.fileName,
-      width: capturedImage.width,
-      height: capturedImage.height,
-      mimeType: capturedImage.mimeType,
-      fieldName: "image",
-      method: "POST",
-    },
-    "메뉴판 분석 실패",
   );
 }
 

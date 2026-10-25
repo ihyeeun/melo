@@ -1,128 +1,75 @@
-import "@/features/calendar/styles/calendar.css";
+import { addMonths, addWeeks, subMonths, subWeeks } from "date-fns";
+import { type ReactNode, useEffect, useMemo } from "react";
 
-import { addMonths, startOfMonth } from "date-fns";
-import { useMemo } from "react";
-
-import CalendarHeader from "@/features/calendar/components/CalendarHeader";
+import CalendarDayButton from "@/features/calendar/components/CalendarDayButton";
 import MonthlyCalendar from "@/features/calendar/components/MonthlyCalendar";
 import WeeklyCalendar from "@/features/calendar/components/WeeklyCalendar";
+import styles from "@/features/calendar/styles/Calendar.module.css";
+import type { DayCellRenderProps, ViewMode } from "@/features/calendar/types/calendar.types";
+import { buildMonthCalendarDays, buildWeekCalendarDays } from "@/features/calendar/utils/calendar";
 import { formatDateKey } from "@/shared/utils/dateFormat";
 
-import { useCalendarRecordedDatesQuery } from "../hooks/queries/useCalendarRecordedDatesQuery";
-import { useCalendar } from "../hooks/useCalendar";
-import { buildMonthCalendarDays } from "../utils/calendar";
-
-export type CalendarVariant = "primary" | "normal";
-
-type Props = {
-  initialDate?: Date;
-  recordedDates?: string[];
-  onSelectDate?: (date: Date) => void;
+export type CalendarProps = {
+  viewMode: ViewMode;
+  viewDate: Date;
   selectedDate?: Date;
-  showRecordedDots?: boolean;
-  variant?: CalendarVariant;
+  onSelectDate: (date: Date) => void;
+  onPrev: () => void;
+  onNext: () => void;
+  canGoNext?: boolean;
+  className?: string;
+  renderDayCell?: (props: DayCellRenderProps) => ReactNode;
+  /** 현재 페이지뿐 아니라 스와이프용 이전 페이지까지 포함한 첫 날짜. */
+  onRenderedStartDateChange?: (dateKey: string) => void;
 };
 
-const EMPTY_RECORDED_DATES: string[] = [];
-
+/** 날짜 배치와 스와이프만 담당한다. 조회·헤더·선택 후 화면 전환은 사용처에서 연결한다. */
 export default function Calendar({
-  initialDate,
-  recordedDates: fallbackRecordedDates = EMPTY_RECORDED_DATES,
+  viewMode,
+  viewDate,
+  selectedDate,
   onSelectDate,
-  selectedDate: controlledSelectedDate,
-  showRecordedDots = true,
-  variant = "primary",
-}: Props) {
-  const {
-    viewMode,
-    selectedDate,
-    viewDate,
-    weekDays,
-    monthDays,
-    toggleViewMode,
-    selectDate,
-    goPrev,
-    goNext,
-    goToday,
-  } = useCalendar({
-    initialDate,
-    initialViewMode: "week",
-    recordedDates: showRecordedDots ? fallbackRecordedDates : EMPTY_RECORDED_DATES,
-    selectedDate: controlledSelectedDate,
-  });
+  onPrev,
+  onNext,
+  canGoNext = true,
+  className,
+  renderDayCell = (props) => <CalendarDayButton {...props} />,
+  onRenderedStartDateChange,
+}: CalendarProps) {
+  const pages = useMemo(() => {
+    const previousDate = viewMode === "month" ? subMonths(viewDate, 1) : subWeeks(viewDate, 1);
+    const baseDates = [previousDate, viewDate];
 
-  const monthDateRange = useMemo(() => {
-    const startDate = startOfMonth(viewDate);
-    const endDate = addMonths(startDate, 1);
+    if (canGoNext) {
+      baseDates.push(viewMode === "month" ? addMonths(viewDate, 1) : addWeeks(viewDate, 1));
+    }
 
-    return {
-      startDate: formatDateKey(startDate),
-      endDate: formatDateKey(endDate),
-    };
-  }, [viewDate]);
+    const buildDays = viewMode === "month" ? buildMonthCalendarDays : buildWeekCalendarDays;
 
-  const { recordedDates } = useCalendarRecordedDatesQuery({
-    enabled: showRecordedDots && viewMode === "month",
-    startDate: monthDateRange.startDate,
-    endDate: monthDateRange.endDate,
-  });
+    return baseDates.map((baseDate) => buildDays({ baseDate, selectedDate, weekStartsOn: 1 }));
+  }, [canGoNext, selectedDate, viewDate, viewMode]);
 
-  const displayedMonthDays = useMemo(() => {
-    if (!showRecordedDots) return monthDays;
-    if (recordedDates.length === 0) return monthDays;
+  const renderedStartDate = pages[0]?.[0]?.date;
+  const renderedStartDateKey = renderedStartDate ? formatDateKey(renderedStartDate) : null;
 
-    return buildMonthCalendarDays({
-      baseDate: viewDate,
-      selectedDate,
-      recordedDates,
-      weekStartsOn: 1,
-    });
-  }, [monthDays, recordedDates, selectedDate, showRecordedDots, viewDate]);
+  useEffect(() => {
+    if (renderedStartDateKey) {
+      onRenderedStartDateChange?.(renderedStartDateKey);
+    }
+  }, [onRenderedStartDateChange, renderedStartDateKey]);
 
-  const handleSelectDateInWeek = (date: Date) => {
-    selectDate(date);
-    onSelectDate?.(date);
-  };
-
-  const handleSelectDateInMonth = (date: Date) => {
-    selectDate(date, { switchToWeek: true });
-    onSelectDate?.(date);
-  };
-
-  const handleGoToday = () => {
-    const today = goToday();
-    onSelectDate?.(today);
+  const pageProps = {
+    pages,
+    currentPageIndex: 1,
+    onSelectDate,
+    onSwipePrev: onPrev,
+    onSwipeNext: onNext,
+    renderDayCell,
   };
 
   return (
-    <section className={`calendar-root calendar-root--${variant}`}>
-      <CalendarHeader
-        viewMode={viewMode}
-        viewDate={viewDate}
-        selectedDate={selectedDate}
-        onToggleViewMode={toggleViewMode}
-        onPrev={goPrev}
-        onNext={goNext}
-        onToday={handleGoToday}
-      />
-
-      <div className="calendar-body">
-        {viewMode === "week" ? (
-          <WeeklyCalendar
-            days={weekDays}
-            onSelectDate={handleSelectDateInWeek}
-            onSwipePrev={goPrev}
-            onSwipeNext={goNext}
-          />
-        ) : (
-          <MonthlyCalendar
-            days={displayedMonthDays}
-            onSelectDate={handleSelectDateInMonth}
-            onSwipePrev={goPrev}
-            onSwipeNext={goNext}
-          />
-        )}
-      </div>
-    </section>
+    <div className={[styles.root, className].filter(Boolean).join(" ")}>
+      {viewMode === "month" ? <MonthlyCalendar {...pageProps} /> : <WeeklyCalendar {...pageProps} />}
+    </div>
   );
 }

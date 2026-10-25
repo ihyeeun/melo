@@ -1,0 +1,27 @@
+.root {
+  flex-shrink: 0;
+  width: min(260px, 100%);
+  margin: 0 auto;
+}
+
+.glass {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.water {
+  /* 두 물결끼리만 색을 혼합해요. */
+  isolation: isolate;
+}
+
+.frontWave {
+  mix-blend-mode: multiply;
+}
+
+.outline {
+  fill: var(--background-default);
+  stroke: var(--border-subtle);
+  stroke-width: 0.5px;
+}

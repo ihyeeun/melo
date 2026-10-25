@@ -1,16 +1,16 @@
 export const colors = {
   coral: {
-    50: "#fff4f1",
-    100: "#ffe7e1",
-    200: "#ffd2c7",
-    300: "#ffb3a0",
-    400: "#ff8465",
-    500: "#f8623b",
-    600: "#df5222",
-    700: "#c13714",
-    800: "#a03014",
-    900: "#842e18",
-    950: "#481407",
+    50: "#FFF4ED",
+    100: "#FFE6D4",
+    200: "#FFC9A9",
+    300: "#FDA87B",
+    400: "#FF9861",
+    500: "#ED8240",
+    600: "#CF5C27",
+    700: "#AC4622",
+    800: "#893923",
+    900: "#6F311F",
+    950: "#3C170E",
   },
 
   navy: {
@@ -45,7 +45,7 @@ export const colors = {
 export const semantic = {
   background: {
     default: "#fff",
-    selected: colors.coral[50],
+    selected: colors.coral[100],
     gray_1: colors.gray[50],
     gray_2: colors.gray[100],
     dark: colors.gray[950],
@@ -56,6 +56,7 @@ export const semantic = {
     secondary: colors.gray[700],
     tertiary: colors.gray[500],
     disabled: colors.gray[400],
+    white: "#fff",
     accent: colors.gray[950],
   },
 

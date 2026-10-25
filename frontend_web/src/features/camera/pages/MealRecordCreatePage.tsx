@@ -1,6 +1,8 @@
+import { useActivity } from "@stackflow/react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { CameraLoading } from "@/features/camera/components/CameraLoading";
+import { MODE } from "@/features/camera/constants/camera.constant";
 import {
   useCreateMealRecordByFoodImageMutation,
   useCreateMenuByNutritionLabelImageMutation,
@@ -8,14 +10,12 @@ import {
 import styles from "@/features/camera/styles/CameraPage.module.css";
 import {
   type CameraCaptureErrorFeedback,
-  DEFAULT_CAMERA_CAPTURE_QUALITY,
   getAnalyticsErrorMessage,
   getCameraCaptureErrorFeedback,
   getCapturedImagePreviewSrc,
   getRecognitionErrorFeedback,
   isCameraCaptureCancelled,
 } from "@/features/camera/utils/cameraCapture";
-import { trackDiaryMenuSaveByMenuIds } from "@/features/camera/utils/diaryMenuSaveAnalytics";
 import {
   MAX_MEAL_RECORD_MENUS,
   MEAL_RECORD_MENU_LIMIT_MESSAGE,
@@ -23,6 +23,7 @@ import {
 import { useTodayMealRecordRegisterMutation } from "@/features/meal-record/hooks/mutations/useTodayMealRecordMutation";
 import {
   formatMenuDraftKey,
+  type MenuDraftType,
   useMenuDraftPrepareRegisterRequest,
   useMenuDraftStore,
 } from "@/features/meal-record/stores/menuDraft.store";
@@ -31,17 +32,20 @@ import { PATH } from "@/router/path";
 import { getMealRecordPath } from "@/router/pathHelpers";
 import { track } from "@/shared/analytics/analytics";
 import { EVENT_NAME } from "@/shared/analytics/analytics.constants";
+import { trackScanMenuSave } from "@/shared/analytics/menuSaveEvent.util";
 import {
   trackNutritionLabelScanFail,
   trackNutritionLabelScanStart,
   trackNutritionLabelScanSuccess,
 } from "@/shared/analytics/nutritionLabelEvents";
 import { requestNativeCameraCapture } from "@/shared/api/bridge/nativeBridge";
+import { captureScreenRequestScope, type ScreenRequestScope } from "@/shared/api/screenRequests";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
 import { CheckButtonModal } from "@/shared/commons/modals/CheckButtonModal";
 import { toast } from "@/shared/commons/toast/toast";
 import {
   navigateBack,
+  navigateBackToPathOrPushFromRoot,
   useNavigate,
   useSearchParams,
 } from "@/shared/navigation/stackflowNavigation";
@@ -53,16 +57,13 @@ const MEAL_RECORD_CAMERA_LOADING_DESCRIPTION = {
 
 const MEAL_RECORD_NUTRITION_LABEL_SCAN_SOURCE = "diary_nutrition_camera";
 
-type MealRecordCameraMode = keyof typeof MEAL_RECORD_CAMERA_LOADING_DESCRIPTION;
 type CapturedImage = Awaited<ReturnType<typeof requestNativeCameraCapture>>;
-
-function resolveMealRecordCameraMode(mode: CapturedImage["mode"]): MealRecordCameraMode {
-  return mode === "NUTRITION_LABEL" ? "NUTRITION_LABEL" : "FOOD";
-}
 
 export default function MealRecordCreatePage() {
   const navigate = useNavigate();
+  const { id: screenId, isActive: isScreenActive } = useActivity();
   const [searchParams] = useSearchParams();
+
   const [isOpeningCamera, setIsOpeningCamera] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
   const [capturedPreviewSrc, setCapturedPreviewSrc] = useState<string | null>(null);
@@ -71,11 +72,11 @@ export default function MealRecordCreatePage() {
   );
   const [captureErrorFeedback, setCaptureErrorFeedback] =
     useState<CameraCaptureErrorFeedback | null>(null);
+
   const autoTriggeredRef = useRef(false);
 
   const { mutateAsync: uploadFoodImage } = useCreateMealRecordByFoodImageMutation();
-  const { mutateAsync: uploadNutritionLabelImage } =
-    useCreateMenuByNutritionLabelImageMutation();
+  const { mutateAsync: uploadNutritionLabelImage } = useCreateMenuByNutritionLabelImageMutation();
   const { mutateAsync: mealRegisterAsync } = useTodayMealRecordRegisterMutation();
 
   const dateKey = getSafeDateKey(searchParams.get("date"));
@@ -105,15 +106,12 @@ export default function MealRecordCreatePage() {
   }, [searchParams]);
 
   const handleFoodImage = useCallback(
-    async (capturedImage: CapturedImage) => {
+    async (capturedImage: CapturedImage, screen: ScreenRequestScope) => {
       let hasRecognitionSucceeded = false;
 
       try {
-        track(EVENT_NAME.FOOD_SCAN_START, {
-          source: "meal_record_camera",
-        });
-
         const imageData = await uploadFoodImage(capturedImage);
+        screen.assertActive();
 
         if (!imageData?.menu_ids?.length) {
           track(EVENT_NAME.FOOD_SCAN_FAIL, {
@@ -124,24 +122,26 @@ export default function MealRecordCreatePage() {
           setCaptureErrorFeedback(getRecognitionErrorFeedback("FOOD"));
           return;
         }
-        const recognizedMenus = imageData.menu_ids.map((id, idx) => {
-          const quantity = imageData.menu_quantities[idx];
+        const currentDraft = useMenuDraftStore.getState().drafts[draftKey];
+        const menusById = new Map<number, MenuDraftType>(
+          (currentDraft?.existingMenus ?? []).map((menu) => [menu.id, menu]),
+        );
+
+        for (const [index, id] of imageData.menu_ids.entries()) {
+          const quantity = imageData.menu_quantities[index];
 
           if (typeof quantity !== "number" || !Number.isFinite(quantity) || quantity <= 0) {
-            return null;
+            throw new Error("음식 메뉴 분석에 실패했어요.");
           }
 
-          return { id, quantity };
-        });
+          const previous = menusById.get(id);
 
-        if (recognizedMenus.some((menu) => menu === null)) {
-          track(EVENT_NAME.FOOD_SCAN_FAIL, {
-            reason: "음식 메뉴 분석에 실패했어요.",
-            source: "meal_record_camera",
+          menusById.set(id, {
+            ...previous,
+            id,
+            quantity,
+            name: imageData.menu_names[index]?.trim() || previous?.name,
           });
-          setCapturedPreviewSrc(null);
-          setCaptureErrorFeedback(getRecognitionErrorFeedback("FOOD"));
-          return;
         }
 
         hasRecognitionSucceeded = true;
@@ -149,28 +149,7 @@ export default function MealRecordCreatePage() {
           source: "meal_record_camera",
         });
 
-        const currentMenus = useMenuDraftStore.getState().drafts[draftKey]?.existingMenus ?? [];
-        const nextMenus = recognizedMenus.reduce<typeof currentMenus>(
-          (menus, recognizedMenu) => {
-            if (!recognizedMenu) {
-              return menus;
-            }
-
-            const { id, quantity } = recognizedMenu;
-            const existingIndex = menus.findIndex((menu) => menu.id === id);
-
-            if (existingIndex < 0) {
-              return [...menus, { id, quantity }];
-            }
-
-            return menus.map((menu, index) =>
-              index === existingIndex ? { ...menu, quantity } : menu,
-            );
-          },
-          [...currentMenus],
-        );
-
-        if (nextMenus.length > MAX_MEAL_RECORD_MENUS) {
+        if (menusById.size > MAX_MEAL_RECORD_MENUS) {
           toast.warning(MEAL_RECORD_MENU_LIMIT_MESSAGE);
           setCapturedPreviewSrc(null);
           setIsUploading(false);
@@ -181,19 +160,31 @@ export default function MealRecordCreatePage() {
         const registerRequest = prepareRegisterRequest({
           dateKey,
           mealType,
-          menus: nextMenus,
+          menus: Array.from(menusById.values()),
           image: imageData.image_url,
         });
 
         await mealRegisterAsync(registerRequest, {
           onSuccess: () => {
-            void trackDiaryMenuSaveByMenuIds(registerRequest.menu_ids ?? []);
+            trackScanMenuSave({
+              menus: registerRequest.menu_ids?.map((id) => ({
+                menu_id: id,
+                menu_name: menusById.get(id)?.name,
+              })),
+              source: "home_tab",
+              scanType: "photo",
+            });
           },
         });
 
+        screen.assertActive();
         toast.success("촬영한 사진의 메뉴가 기록되었어요.");
-        navigate(getMealRecordPath(dateKey, mealType), { replace: true });
+        navigateBackToPathOrPushFromRoot({
+          animate: false,
+          to: getMealRecordPath(dateKey, mealType),
+        });
       } catch (error) {
+        if (!screen.isActive()) return;
         if (!hasRecognitionSucceeded) {
           track(EVENT_NAME.FOOD_SCAN_FAIL, {
             reason: getAnalyticsErrorMessage(error, "음식 메뉴 분석에 실패했어요."),
@@ -209,7 +200,6 @@ export default function MealRecordCreatePage() {
       draftKey,
       mealRegisterAsync,
       mealType,
-      navigate,
       prepareRegisterRequest,
       returnFromCameraPage,
       uploadFoodImage,
@@ -217,13 +207,15 @@ export default function MealRecordCreatePage() {
   );
 
   const handleNutritionLabelImage = useCallback(
-    async (capturedImage: CapturedImage) => {
+    async (capturedImage: CapturedImage, screen: ScreenRequestScope) => {
       trackNutritionLabelScanStart({ source: MEAL_RECORD_NUTRITION_LABEL_SCAN_SOURCE });
 
       let imageData: Awaited<ReturnType<typeof uploadNutritionLabelImage>>;
       try {
         imageData = await uploadNutritionLabelImage(capturedImage);
+        screen.assertActive();
       } catch (error) {
+        if (!screen.isActive()) return;
         trackNutritionLabelScanFail(
           getAnalyticsErrorMessage(error, "영양성분표 분석에 실패했어요."),
           { source: MEAL_RECORD_NUTRITION_LABEL_SCAN_SOURCE },
@@ -256,57 +248,69 @@ export default function MealRecordCreatePage() {
 
   const handleCameraActions = useCallback(async () => {
     if (isUploading) return;
+    const screen = captureScreenRequestScope(screenId);
+    if (!screen.isActive()) return;
+    autoTriggeredRef.current = true;
     setCaptureErrorFeedback(null);
 
     let capturedImage: CapturedImage;
     try {
       setIsOpeningCamera(true);
+      track(EVENT_NAME.CAMERA_START, { source: "home_tab" });
       capturedImage = await requestNativeCameraCapture({
-        quality: DEFAULT_CAMERA_CAPTURE_QUALITY,
-        mode: "FOOD",
-        selectableModes: ["FOOD", "NUTRITION_LABEL"],
+        mode: MODE.FOOD,
+        selectableModes: [MODE.FOOD, MODE.NUTRITION],
       });
+      screen.assertActive();
       setIsOpeningCamera(false);
     } catch (error) {
+      if (!screen.isActive()) return;
       setIsOpeningCamera(false);
       if (isCameraCaptureCancelled(error)) {
-        track(EVENT_NAME.CAMERA_CANCEL);
+        track(EVENT_NAME.CAMERA_CANCEL, { source: "home_tab" });
         returnFromCameraPage();
         return;
       }
       track(EVENT_NAME.FOOD_SCAN_FAIL, {
         reason: getAnalyticsErrorMessage(error, "카메라를 실행하지 못했어요"),
-        source: "meal_record_camera",
+        source: "home_tab",
       });
       setCapturedPreviewSrc(null);
       setCaptureErrorFeedback(getCameraCaptureErrorFeedback(error));
       return;
     }
 
-    const selectedMode = resolveMealRecordCameraMode(capturedImage.mode);
+    const selectedMode = capturedImage.mode;
+
+    if (selectedMode !== MODE.FOOD && selectedMode !== MODE.NUTRITION) {
+      return;
+    }
 
     setCapturedPreviewSrc(getCapturedImagePreviewSrc(capturedImage));
     setLoadingDescription(MEAL_RECORD_CAMERA_LOADING_DESCRIPTION[selectedMode]);
     setIsUploading(true);
 
     try {
-      if (selectedMode === "NUTRITION_LABEL") {
-        await handleNutritionLabelImage(capturedImage);
+      if (selectedMode === MODE.NUTRITION) {
+        await handleNutritionLabelImage(capturedImage, screen);
         return;
       }
 
-      await handleFoodImage(capturedImage);
+      await handleFoodImage(capturedImage, screen);
     } finally {
       setIsUploading(false);
     }
-  }, [handleFoodImage, handleNutritionLabelImage, isUploading, returnFromCameraPage]);
+  }, [handleFoodImage, handleNutritionLabelImage, isUploading, returnFromCameraPage, screenId]);
 
   useEffect(() => {
+    if (!isScreenActive) {
+      autoTriggeredRef.current = false;
+      return;
+    }
     if (autoTriggeredRef.current) return;
 
-    autoTriggeredRef.current = true;
     void handleCameraActions();
-  }, [handleCameraActions]);
+  }, [handleCameraActions, isScreenActive]);
 
   const handleCaptureErrorModalOpenChange = useCallback(
     (open: boolean) => {
@@ -322,7 +326,7 @@ export default function MealRecordCreatePage() {
 
   return (
     <section className={styles.page}>
-      <PageHeader title="사진 촬영" onBack={returnFromCameraPage} />
+      <PageHeader title={isUploading ? "사진 분석" : "사진 촬영"} onBack={returnFromCameraPage} />
 
       {isOpeningCamera ? (
         <main className={styles.main} />

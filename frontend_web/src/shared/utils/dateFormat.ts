@@ -1,3 +1,5 @@
+import { format } from "date-fns";
+
 // Date를 YYYY-MM-DD 형태의 문자열로 변경
 export function formatDateKey(date: Date) {
   const year = date.getFullYear();
@@ -69,4 +71,9 @@ export function formatDateKeyToMonthDayWeekdayLabel(dateKey: string) {
   const weekday = date.toLocaleDateString("ko-KR", { weekday: "long" });
 
   return `${month}월 ${day}일 ${weekday}`;
+}
+
+/** YYYY.MM.DD 로 변환하는 함수 */
+export function formatDotDate(dateKey: string) {
+  return format(dateKey, "yyyy.MM.dd");
 }
