@@ -129,6 +129,7 @@ export default function WorkoutRecordPage() {
         safeAreaTop={false}
         showMonthBackground={false}
         showRecordedDots={false}
+        showRecordModes={false}
         initialRecordMode="workout"
       />
 

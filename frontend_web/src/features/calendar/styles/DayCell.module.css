@@ -57,17 +57,16 @@
 }
 
 .cell {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  display: grid;
+  grid-template-rows: 1fr 12px;
+  place-items: center;
   gap: 4px;
   min-width: 0;
   width: 100%;
-  height: 60px;
+  height: 100%;
 }
 
 .recordValue {
-  height: 100%;
   max-width: 100%;
   text-align: center;
   overflow-wrap: anywhere;
@@ -93,8 +92,8 @@
 
   :where(.root)[data-view="month"] & {
     height: 100%;
-    padding-top: 9px;
-    /* justify-content: center; */
+    /* padding-top: 9px; */
+    justify-content: center;
     position: relative;
     width: 100%;
   }

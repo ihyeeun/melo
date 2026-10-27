@@ -10,12 +10,13 @@ import {
   startOfWeek,
   subMonths,
 } from "date-fns";
-import { type ReactNode, useMemo, useState } from "react";
+import { type ReactNode, useMemo, useRef, useState } from "react";
 
 import Calendar from "@/features/calendar/components/Calendar";
 import CalendarHeader from "@/features/calendar/components/CalendarHeader";
 import DayCell from "@/features/calendar/components/dayCell";
 import { useGetMonthlyCalendarQuery } from "@/features/calendar/hooks/queries/useMonthlyCalendar.query";
+import { useOutsideInteraction } from "@/features/calendar/hooks/useOutsideInteraction";
 import styles from "@/features/calendar/styles/RecordCalendar.module.css";
 import type {
   CalendarViewMode,
@@ -41,11 +42,14 @@ type Props = {
   selectedDate?: Date;
   showMonthBackground?: boolean;
   showRecordedDots?: boolean;
+  showRecordModes?: boolean;
   initialRecordMode?: CalendarViewMode;
   renderDayCell?: (props: RecordDayCellRenderProps) => ReactNode;
 };
 
 const EMPTY_RECORDED_DATES: string[] = [];
+/** 이 속성이 붙은 요소는 달력 바깥에 있어도 월간 보기를 접지 않는다. */
+const KEEP_CALENDAR_OPEN_SELECTOR = "[data-keep-calendar-open]";
 
 /** 기존 기록 화면의 조회·디자인·주간 전환 정책을 조합한다. */
 export default function RecordCalendar({
@@ -55,6 +59,7 @@ export default function RecordCalendar({
   selectedDate: controlledSelectedDate,
   showMonthBackground = true,
   showRecordedDots = true,
+  showRecordModes = true,
   initialRecordMode = "intake",
   renderDayCell,
 }: Props) {
@@ -76,6 +81,7 @@ export default function RecordCalendar({
     allowFutureWeekNavigation: false,
   });
   const { isActive } = useActivity();
+  const rootRef = useRef<HTMLElement>(null);
   const showMonthlyRecords = viewMode === "month" && !renderDayCell;
   const monthlyQuery = useGetMonthlyCalendarQuery(
     { date: formatDateKey(viewDate).slice(0, 7), mode: recordMode },
@@ -110,6 +116,16 @@ export default function RecordCalendar({
 
   const recordedDateSet = useMemo(() => new Set(recordedDates), [recordedDates]);
 
+  // 월간 보기에서 달력 바깥을 탭·스크롤하면 선택한 날짜의 주간 보기로 접는다.
+  useOutsideInteraction(rootRef, {
+    enabled: viewMode === "month" && isActive,
+    ignoreSelector: KEEP_CALENDAR_OPEN_SELECTOR,
+    onInteraction: () => {
+      selectDate(selectedDate);
+      setViewMode("week");
+    },
+  });
+
   const handleSelectDate = (date: Date) => {
     selectDate(date);
     setViewMode("week");
@@ -124,6 +140,7 @@ export default function RecordCalendar({
 
   return (
     <section
+      ref={rootRef}
       className={styles.root}
       data-view={viewMode}
       data-safe-area-top={safeAreaTop}
@@ -141,20 +158,22 @@ export default function RecordCalendar({
 
       {showMonthlyRecords && (
         <>
-          <ToggleGroup
-            className={styles.recordModes}
-            aria-label="월간 기록 항목"
-            value={[recordMode]}
-            onValueChange={(values) => {
-              if (values[0]) setRecordMode(values[0]);
-            }}
-          >
-            {MONTHLY_RECORD_MODES.map(({ value, label }) => (
-              <Toggle key={value} value={value} className={`${styles.recordMode} body-s-medium`}>
-                {label}
-              </Toggle>
-            ))}
-          </ToggleGroup>
+          {showRecordModes && (
+            <ToggleGroup
+              className={styles.recordModes}
+              aria-label="월간 기록 항목"
+              value={[recordMode]}
+              onValueChange={(values) => {
+                if (values[0]) setRecordMode(values[0]);
+              }}
+            >
+              {MONTHLY_RECORD_MODES.map(({ value, label }) => (
+                <Toggle key={value} value={value} className={`${styles.recordMode} body-s-medium`}>
+                  {label}
+                </Toggle>
+              ))}
+            </ToggleGroup>
+          )}
           {monthlyQuery.isError ? (
             <button
               type="button"
