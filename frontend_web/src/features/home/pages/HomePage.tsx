@@ -93,12 +93,13 @@ export default function HomePage() {
               : undefined
           }
         />
-        <HomeDashboardModeToggle
-          className={styles.modeToggle}
-          value={mode}
-          onChange={handleModeChange}
-          onClick={scrollToTop}
-        />
+        <div className={styles.modeToggle} data-keep-calendar-open>
+          <HomeDashboardModeToggle
+            value={mode}
+            onChange={handleModeChange}
+            onClick={scrollToTop}
+          />
+        </div>
         <ScrollFogArea role="main" ref={contentRef} className={`main ${styles.content}`}>
           <PreviewTodayScoreSection homeMode={mode} menstrualPhase={menstrualPhase} />
           <RecordActionSection />
