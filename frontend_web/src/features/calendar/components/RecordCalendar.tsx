@@ -42,6 +42,7 @@ type Props = {
   selectedDate?: Date;
   showMonthBackground?: boolean;
   showRecordedDots?: boolean;
+  showRecordModes?: boolean;
   initialRecordMode?: CalendarViewMode;
   renderDayCell?: (props: RecordDayCellRenderProps) => ReactNode;
 };
@@ -58,6 +59,7 @@ export default function RecordCalendar({
   selectedDate: controlledSelectedDate,
   showMonthBackground = true,
   showRecordedDots = true,
+  showRecordModes = true,
   initialRecordMode = "intake",
   renderDayCell,
 }: Props) {
@@ -156,20 +158,22 @@ export default function RecordCalendar({
 
       {showMonthlyRecords && (
         <>
-          <ToggleGroup
-            className={styles.recordModes}
-            aria-label="월간 기록 항목"
-            value={[recordMode]}
-            onValueChange={(values) => {
-              if (values[0]) setRecordMode(values[0]);
-            }}
-          >
-            {MONTHLY_RECORD_MODES.map(({ value, label }) => (
-              <Toggle key={value} value={value} className={`${styles.recordMode} body-s-medium`}>
-                {label}
-              </Toggle>
-            ))}
-          </ToggleGroup>
+          {showRecordModes && (
+            <ToggleGroup
+              className={styles.recordModes}
+              aria-label="월간 기록 항목"
+              value={[recordMode]}
+              onValueChange={(values) => {
+                if (values[0]) setRecordMode(values[0]);
+              }}
+            >
+              {MONTHLY_RECORD_MODES.map(({ value, label }) => (
+                <Toggle key={value} value={value} className={`${styles.recordMode} body-s-medium`}>
+                  {label}
+                </Toggle>
+              ))}
+            </ToggleGroup>
+          )}
           {monthlyQuery.isError ? (
             <button
               type="button"
