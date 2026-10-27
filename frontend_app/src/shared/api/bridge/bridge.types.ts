@@ -141,6 +141,12 @@ export type BridgeHealthStepsReadRequestMessage = {
   context?: BridgeMessageContext;
 };
 
+export type BridgeLocationRequestMessage = {
+  id: string;
+  type: "LOCATION_REQUEST";
+  context?: BridgeMessageContext;
+};
+
 export type WebToAppMessage =
   | BridgeApiRequestMessage
   | BridgeApiCancelMessage
@@ -154,7 +160,8 @@ export type WebToAppMessage =
   | BridgeInAppBrowserOpenRequestMessage
   | BridgeHealthPermissionStatusRequestMessage
   | BridgeHealthPermissionRequestMessage
-  | BridgeHealthStepsReadRequestMessage;
+  | BridgeHealthStepsReadRequestMessage
+  | BridgeLocationRequestMessage;
 
 export type BridgeErrorPayload = {
   message: string;

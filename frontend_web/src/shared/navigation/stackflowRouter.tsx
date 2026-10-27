@@ -188,6 +188,7 @@ const WaterIntakeRecordPage = createLazyActivity(
 const PersonalAnalysisPage = createLazyActivity(
   () => import("@/features/personal-analysis/pages/PersonalAnalysisPage"),
 );
+const MapPage = createLazyActivity(() => import("@/features/restaurant/pages/MapPage"));
 
 const ACTIVITIES = {
   Home: HomePage,
@@ -228,6 +229,7 @@ const ACTIVITIES = {
   Menstruation: MenstruationPage,
   WaterIntakeRecordPage,
   PersonalAnalysisPage,
+  MapPage,
 };
 
 const ACTIVITY_ROUTES: Record<keyof typeof ACTIVITIES, RoutePath> = {
@@ -269,6 +271,7 @@ const ACTIVITY_ROUTES: Record<keyof typeof ACTIVITIES, RoutePath> = {
   Menstruation: PATH.MENSTRUATION_RECORD,
   WaterIntakeRecordPage: PATH.WATER_INTAKE_RECORD,
   PersonalAnalysisPage: PATH.PERSONAL_ANALYSIS,
+  MapPage: PATH.MAP,
 };
 
 type ActivityName = keyof typeof ACTIVITY_ROUTES;

@@ -17,6 +17,7 @@ import {
   isNativeHapticType,
   triggerNativeHaptic,
 } from "@/src/shared/native/haptics";
+import { getCurrentLocation } from "@/src/shared/native/location";
 import { BridgeHandledError, isBridgeHandledError } from "./bridgeError";
 import { beginCameraCaptureSession } from "./cameraCaptureSession";
 import type {
@@ -646,7 +647,8 @@ function isWebToAppMessage(value: unknown): value is WebToAppMessage {
 
   if (
     value.type === "HEALTH_PERMISSION_STATUS_REQUEST" ||
-    value.type === "HEALTH_PERMISSION_REQUEST"
+    value.type === "HEALTH_PERMISSION_REQUEST" ||
+    value.type === "LOCATION_REQUEST"
   ) {
     return true;
   }
@@ -800,6 +802,17 @@ export async function handleWebMessage(
 
     if (message.type === "HEALTH_STEPS_READ_REQUEST") {
       const result = await readStepCountRecords(message.payload);
+
+      sendToWeb(webViewRef, {
+        id: requestId,
+        type: "API_RESPONSE",
+        payload: result,
+      });
+      return;
+    }
+
+    if (message.type === "LOCATION_REQUEST") {
+      const result = await getCurrentLocation();
 
       sendToWeb(webViewRef, {
         id: requestId,
