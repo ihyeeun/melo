@@ -1,4 +1,3 @@
-import EventDot from "@/features/calendar/components/EventDot";
 import styles from "@/features/calendar/styles/DayCell.module.css";
 
 import type { DayCellRenderProps } from "../types/calendar.types";
@@ -44,7 +43,7 @@ export default function DayCell({
       )}
       <div className={styles.numberContainer}>
         <span className="body-l-regular">{formatDayNumber(day.date)}</span>
-        <EventDot visible={hasRecord} variant={variant} isOutside={!day.isCurrentMonth} />
+        {/* <EventDot visible={hasRecord} variant={variant} isOutside={!day.isCurrentMonth} /> */}
       </div>
     </button>
   );

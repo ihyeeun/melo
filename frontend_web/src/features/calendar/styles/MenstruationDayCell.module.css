@@ -59,13 +59,12 @@
   }
 
   &[data-view="week"][data-selected="true"],
-  &[data-view="month"][data-selected="true"] .numberContainer {
+  &[data-view="month"][data-selected="true"] {
     background-color: rgba(255, 255, 255, 70%);
     color: var(--text-primary);
-    border-radius: 16px;
   }
 
-  &[data-month-background="true"][data-view="month"][data-selected="true"] .numberContainer {
+  &[data-month-background="true"][data-view="month"][data-selected="true"] {
     border: none;
     background-color: var(--coral-400);
     color: var(--background-default);
@@ -77,32 +76,29 @@
     background-color: rgba(255, 255, 255, 70%);
   }
 
-  &[data-view="month"][data-selected="true"] .numberContainer {
+  &[data-view="month"][data-selected="true"] {
     border: 2px solid var(--coral-400);
   }
 
   &[data-view="week"][data-menstruation="menstrual_recorded"],
-  &[data-view="month"][data-menstruation="menstrual_recorded"] .numberContainer {
+  &[data-view="month"][data-menstruation="menstrual_recorded"] {
     background-color: var(--coral-100);
     color: var(--text-secondary);
-    border-radius: 16px;
     mix-blend-mode: multiply;
   }
 
   &[data-view="month"][data-menstruation="menstrual_recorded"] {
     background-color: var(--coral-100);
-    border-radius: 16px;
   }
 
   &[data-view="week"][data-menstruation="next_predicted"],
-  &[data-view="month"][data-menstruation="next_predicted"] .numberContainer {
+  &[data-view="month"][data-menstruation="next_predicted"] {
     border: 1px dashed var(--border-strong);
     color: var(--text-secondary);
-    border-radius: 16px;
   }
 
   &[data-view="week"][data-selected="true"][data-menstruation="next_predicted"],
-  &[data-view="month"][data-selected="true"][data-menstruation="next_predicted"] .numberContainer {
+  &[data-view="month"][data-selected="true"][data-menstruation="next_predicted"] {
     background-color: var(--coral-50);
   }
 
@@ -113,34 +109,22 @@
 
   &[data-view="month"][data-selection-mode="multiple"] {
     background-color: transparent;
-    border-radius: 0;
 
-    .numberContainer {
-      width: min(40px, 100%);
-      height: auto;
-      aspect-ratio: 1;
-      border: 0;
-      border-radius: 16px;
-      background-color: transparent;
-      color: var(--text-secondary);
-      mix-blend-mode: normal;
-    }
-
-    &[data-today="true"] .numberContainer {
+    &[data-today="true"] {
       background-color: var(--navy-800);
       color: var(--background-default);
     }
 
-    &[data-future="true"][data-selected="false"] .numberContainer {
+    &[data-future="true"][data-selected="false"] {
       color: var(--text-disabled);
     }
 
-    &[data-selected="true"] .numberContainer {
+    &[data-selected="true"] {
       background-color: var(--coral-400);
       color: var(--background-default);
     }
 
-    &[data-selected="true"][data-today="true"] .numberContainer {
+    &[data-selected="true"][data-today="true"] {
       box-shadow: 0 0 0 1.5px var(--navy-800);
       border: 1.5px solid var(--navy-800);
     }
