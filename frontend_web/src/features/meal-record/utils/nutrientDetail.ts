@@ -72,11 +72,11 @@ export function scaleNutrientValue(value: number | null | undefined, scaleFactor
     return null;
   }
 
-  return roundDecimal(value * scaleFactor);
+  return roundDecimal(value * scaleFactor, 1);
 }
 
 export function scaleRequiredValue(value: number, scaleFactor: number) {
-  return roundDecimal(value * scaleFactor);
+  return roundDecimal(value * scaleFactor, 1);
 }
 
 export function formatNutrientValue(value: number | null | undefined) {
