@@ -14,6 +14,7 @@ import {
 } from "@/features/meal-record/stores/menuDraft.store";
 import styles from "@/features/meal-record/styles/MealDetailPage.module.css";
 import { getMealType, getSafeDateKey } from "@/features/meal-record/utils/mealRecord.queryParams";
+import { toNullableNumber } from "@/features/meal-record/utils/nutrientDetail";
 import { useMenuSelectionAdapter } from "@/features/menu-selection/hooks/useMenuSelectionAdapter";
 import {
   buildMenuSelectionPathContext,
@@ -318,7 +319,16 @@ export default function MealDetailPage() {
         mealType,
       };
 
-    moveToNutrientModify(selection?.menu ?? meal, {
+    const menuToModify = selection
+      ? {
+          ...selection.menu,
+          carbs: toNullableNumber(meal.carbs) === null ? meal.carbs : selection.menu.carbs,
+          protein: toNullableNumber(meal.protein) === null ? meal.protein : selection.menu.protein,
+          fat: toNullableNumber(meal.fat) === null ? meal.fat : selection.menu.fat,
+        }
+      : meal;
+
+    moveToNutrientModify(menuToModify, {
       ...replacementMenuSelectionContext,
       sourceMenuId: menuId,
     });
