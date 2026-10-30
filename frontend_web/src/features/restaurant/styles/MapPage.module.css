@@ -1,24 +1,33 @@
-.mapSection {
-  position: relative; /* 안내 문구를 지도 위에 띄우는 기준 */
+.map {
+  position: relative;
   flex: 1;
   min-height: 0;
 }
 
-.map {
+.baseMap {
   width: 100%;
   height: 100%;
-  isolation: isolate; /* 카카오 지도 내부 요소가 안내 문구 위로 올라오지 않게 묶어둔다 */
+  isolation: isolate;
+}
+
+.errorSection {
+  height: 100%;
+  display: grid;
+  place-items: center;
+}
+
+.mapControlSection {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  padding: calc(var(--safe-area-top) + 16px) 16px 16px;
+  pointer-events: none;
 }
 
 .locationBadge {
-  position: absolute;
-  top: 12px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 1;
   margin: 0;
   padding: 8px 14px;
-  border-radius: 999px;
+  border-radius: 100px;
   background: var(--background-default);
   box-shadow: var(--shadow-outer);
   white-space: nowrap;

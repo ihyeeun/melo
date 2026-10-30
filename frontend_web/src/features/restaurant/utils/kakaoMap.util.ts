@@ -25,7 +25,7 @@ export function loadKakaoMapSdk() {
     script.onerror = () => {
       sdkLoadPromise = null;
       script.remove();
-      reject(new Error("카카오 지도 SDK를 불러오지 못했습니다."));
+      reject(new Error("지도를 불러오지 못했습니다."));
     };
     document.head.appendChild(script);
   });
