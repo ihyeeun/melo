@@ -1,0 +1,19 @@
+.positioner {
+  pointer-events: none;
+}
+
+.content {
+  height: 100%;
+  pointer-events: auto;
+  padding-top: 36px;
+  padding-inline: 16px;
+}
+
+.content[data-expanded="true"] {
+  height: calc(100% - var(--safe-area-top));
+}
+
+.body {
+  margin: 0;
+  padding: 0;
+}

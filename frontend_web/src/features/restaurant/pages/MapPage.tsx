@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 
+import MapBottomSheet from "@/features/restaurant/components/map/MapBottomSheet";
 import styles from "@/features/restaurant/styles/MapPage.module.css";
 import {
   type CurrentLocationResult,
@@ -78,6 +79,8 @@ export default function MapPage() {
           </p>
         )}
       </section>
+
+      <MapBottomSheet></MapBottomSheet>
     </div>
   );
 }
