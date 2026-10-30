@@ -63,6 +63,9 @@
   border: 1px solid var(--border-subtle);
   border-radius: 16px;
   position: relative;
+  -webkit-touch-callout: default;
+  -webkit-user-select: text;
+  user-select: text;
 }
 
 .messageTime::after {
