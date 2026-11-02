@@ -66,6 +66,12 @@ export type BridgeAppDeviceInfoRequestMessage = {
   context?: BridgeMessageContext;
 };
 
+export type BridgeAppUpdateApplyRequestMessage = {
+  id: string;
+  type: "APP_UPDATE_APPLY_REQUEST";
+  context?: BridgeMessageContext;
+};
+
 export type BridgeCameraCaptureMode = "NUTRITION_LABEL" | "MENU_BOARD" | "FOOD" | "GENERAL";
 
 export type BridgeCameraCaptureRequestPayload = {
@@ -154,6 +160,7 @@ export type WebToAppMessage =
   | BridgeNavigationBackMessage
   | BridgeHapticTriggerRequestMessage
   | BridgeAppDeviceInfoRequestMessage
+  | BridgeAppUpdateApplyRequestMessage
   | BridgeCameraCaptureRequestMessage
   | BridgeGalleryPickRequestMessage
   | BridgeImageUploadRequestMessage

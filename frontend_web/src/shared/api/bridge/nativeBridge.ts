@@ -332,6 +332,15 @@ export function requestNativeAppDeviceInfo() {
   }));
 }
 
+export function requestNativeAppUpdateApply() {
+  if (!isNativeApp()) return;
+
+  postMessageToApp({
+    id: generateRequestId(),
+    type: "APP_UPDATE_APPLY_REQUEST",
+  });
+}
+
 export function requestNativeCameraCapture(payload?: CameraCaptureRequestPayload) {
   return sendRequestToApp<CameraCaptureResponsePayload>(
     (id) => ({

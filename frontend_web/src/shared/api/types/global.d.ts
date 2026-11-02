@@ -11,5 +11,6 @@ declare global {
     ReactNativeWebView?: {
       postMessage: (message: string) => void;
     };
+    __MELO_APP_UPDATE_READY__?: boolean;
   }
 }

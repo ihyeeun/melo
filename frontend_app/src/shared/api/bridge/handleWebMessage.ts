@@ -6,6 +6,7 @@ import { router } from "expo-router";
 import * as FileSystem from "expo-file-system/legacy";
 import { manipulateAsync, SaveFormat } from "expo-image-manipulator";
 import * as ImagePicker from "expo-image-picker";
+import * as Updates from "expo-updates";
 import * as WebBrowser from "expo-web-browser";
 import { BackHandler, Platform } from "react-native";
 import { clearTokens } from "@/features/auth/store/tokenStore";
@@ -567,7 +568,7 @@ function isWebToAppMessage(value: unknown): value is WebToAppMessage {
     return value.payload.type === undefined || isNativeHapticType(value.payload.type);
   }
 
-  if (value.type === "APP_DEVICE_INFO_REQUEST") {
+  if (value.type === "APP_DEVICE_INFO_REQUEST" || value.type === "APP_UPDATE_APPLY_REQUEST") {
     return true;
   }
 
@@ -708,6 +709,11 @@ export async function handleWebMessage(
         type: "API_RESPONSE",
         payload: result,
       });
+      return;
+    }
+
+    if (message.type === "APP_UPDATE_APPLY_REQUEST") {
+      await Updates.reloadAsync();
       return;
     }
 

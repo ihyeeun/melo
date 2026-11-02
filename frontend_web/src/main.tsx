@@ -10,6 +10,7 @@ import { createRoot } from "react-dom/client";
 
 import { enableMocking } from "@/mocks/enableMocking";
 import { queryClient } from "@/shared/api/queryClient";
+import { AppUpdateToastBridge } from "@/shared/app-update/AppUpdateToastBridge";
 import { initVitePreloadErrorListener } from "@/shared/app-update/vitePreloadError";
 import { VitePreloadErrorToastBridge } from "@/shared/app-update/VitePreloadErrorToastBridge";
 import { AppErrorBoundary } from "@/shared/commons/error/AppErrorBoundary";
@@ -26,6 +27,7 @@ function renderApp() {
           <App />
         </AppErrorBoundary>
         <VitePreloadErrorToastBridge />
+        <AppUpdateToastBridge />
         <AppToastViewport />
       </Toast.Provider>
       <ReactQueryDevtools buttonPosition="top-right" />

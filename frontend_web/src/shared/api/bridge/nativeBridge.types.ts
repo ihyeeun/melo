@@ -85,6 +85,12 @@ export type WebToAppAppDeviceInfoRequestMessage = {
   context?: BridgeMessageContext;
 };
 
+export type WebToAppAppUpdateApplyRequestMessage = {
+  id: string;
+  type: "APP_UPDATE_APPLY_REQUEST";
+  context?: BridgeMessageContext;
+};
+
 export type WebToAppFeatureGuardSyncMessage = {
   id: string;
   type: "FEATURE_GUARD_SYNC";
@@ -182,6 +188,7 @@ export type WebToAppMessage =
   | WebToAppNavigationBackMessage
   | WebToAppHapticTriggerRequestMessage
   | WebToAppAppDeviceInfoRequestMessage
+  | WebToAppAppUpdateApplyRequestMessage
   | WebToAppFeatureGuardSyncMessage
   | WebToAppTabBarVisibilitySyncMessage
   | WebToAppCameraCaptureMessage
