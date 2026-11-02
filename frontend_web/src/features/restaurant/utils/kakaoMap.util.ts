@@ -1,19 +1,50 @@
+export type KakaoMap = {
+  setCenter: (position: unknown) => void;
+};
+
+export type KakaoPlace = {
+  id: string;
+  place_name: string;
+  category_name: string;
+  x: string;
+  y: string;
+  distance: string;
+};
+
 declare global {
   interface Window {
     kakao: {
       maps: {
         load: (callback: () => void) => void;
         LatLng: new (lat: number, lng: number) => unknown;
-        Map: new (
-          container: HTMLElement,
-          options: { center: unknown; level?: number },
-        ) => { setCenter: (position: unknown) => void };
+        Map: new (container: HTMLElement, options: { center: unknown; level?: number }) => KakaoMap;
+        services: {
+          Places: new () => {
+            categorySearch: (
+              categoryCode: string,
+              callback: (
+                result: KakaoPlace[],
+                status: string,
+                pagination: { hasNextPage: boolean },
+              ) => void,
+              options?: {
+                location?: unknown;
+                radius?: number;
+                sort?: string;
+                size?: number;
+                page?: number;
+              },
+            ) => void;
+          };
+          Status: { OK: string; ZERO_RESULT: string };
+          SortBy: { DISTANCE: string };
+        };
       };
     };
   }
 }
 
-const SDK_URL = `//dapi.kakao.com/v2/maps/sdk.js?appkey=${import.meta.env.VITE_KAKAO_MAP_KEY}&autoload=false`;
+const SDK_URL = `//dapi.kakao.com/v2/maps/sdk.js?appkey=${import.meta.env.VITE_KAKAO_MAP_KEY}&autoload=false&libraries=services`;
 
 let sdkLoadPromise: Promise<void> | null = null;
 

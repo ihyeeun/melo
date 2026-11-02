@@ -25,10 +25,25 @@
 }
 
 .locationBadge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   margin: 0;
   padding: 8px 14px;
   border-radius: 100px;
   background: var(--background-default);
   box-shadow: var(--shadow-outer);
+}
+
+.locationBadge > p {
+  flex: 1;
+  min-width: 0;
+}
+
+/* 컨트롤 영역은 지도 터치를 통과시키므로(pointer-events: none) 버튼만 다시 눌리게 한다. */
+.retryButton {
+  flex-shrink: 0;
+  pointer-events: auto;
+  color: var(--primary-normal);
   white-space: nowrap;
 }

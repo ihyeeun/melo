@@ -1,0 +1,28 @@
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border-subtle);
+  overflow-wrap: anywhere;
+}
+
+.state {
+  display: grid;
+  place-items: center;
+  padding: 24px 0;
+  text-align: center;
+}
+
+.loadMore {
+  display: grid;
+  place-items: center;
+  min-height: 24px;
+  padding: 12px 0;
+}

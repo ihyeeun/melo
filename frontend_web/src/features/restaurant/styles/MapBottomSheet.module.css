@@ -13,7 +13,16 @@
   height: calc(100% - var(--safe-area-top));
 }
 
-.body {
+/* 목록은 시트 안에서 스크롤한다. Seed 기본값(min-height 등)보다 우선하도록 클래스를 겹쳐 쓴다. */
+.body:global(.seed-bottom-sheet__body) {
+  flex: 1;
+  min-height: 0;
   margin: 0;
   padding: 0;
+  overflow-y: hidden;
+  overscroll-behavior: contain;
+}
+
+.content[data-expanded="true"] .body:global(.seed-bottom-sheet__body) {
+  overflow-y: auto;
 }
