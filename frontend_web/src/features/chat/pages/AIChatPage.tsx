@@ -404,6 +404,10 @@ export default function AIChatPage() {
     setIsShowChatActions(false);
   }
 
+  if (cameraImage && isTextMealRecordMode) {
+    setIsTextMealRecordMode(false);
+  }
+
   return (
     <div className={`page ${styles.root}`}>
       <header className={styles.header}>
