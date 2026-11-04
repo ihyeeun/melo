@@ -32,10 +32,12 @@ interface MealTimeDecision {
 export function ImageAnalysisFlow({
   enabled,
   waitForResponse,
+  onAnalysisStart,
   onNutritionAnalyzed,
 }: {
   enabled?: boolean;
   waitForResponse: (chatId: number) => Promise<void>;
+  onAnalysisStart: () => void;
   onNutritionAnalyzed: (chatId: number) => void;
 }) {
   const { id: screenId, isActive } = useActivity();
@@ -126,8 +128,9 @@ export function ImageAnalysisFlow({
 
     hasStartedRef.current = true;
 
+    onAnalysisStart();
     analyzeImage({ image: getImage.image, screen });
-  }, [enabled, isActive, screenId, getImage, clearImage, analyzeImage]);
+  }, [enabled, isActive, screenId, getImage, clearImage, analyzeImage, onAnalysisStart]);
 
   useEffect(() => {
     if (!isActive || !getImage) return;
