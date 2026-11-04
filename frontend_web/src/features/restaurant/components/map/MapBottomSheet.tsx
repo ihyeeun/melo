@@ -4,7 +4,7 @@ import { type ReactNode, useState } from "react";
 import styles from "@/features/restaurant/styles/MapBottomSheet.module.css";
 
 const SNAP_POINTS = ["36px", 0.5, 1];
-const DEFAULT_SNAP_POINT = 0.5;
+export const DEFAULT_SNAP_POINT = 0.5;
 
 type MapBottomSheetProps = {
   children?: ReactNode;

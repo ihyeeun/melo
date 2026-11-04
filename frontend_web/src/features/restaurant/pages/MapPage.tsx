@@ -2,11 +2,15 @@ import { useEffect, useRef, useState } from "react";
 
 import MapBottomSheet from "@/features/restaurant/components/map/MapBottomSheet";
 import NearbyRestaurantList from "@/features/restaurant/components/map/NearbyRestaurantList";
+import MyLocationMarker from "@/features/restaurant/components/markers/MyLocationMarker";
+import NearbyRestaurantMarkers from "@/features/restaurant/components/markers/NearbyRestaurantMarkers";
 import { useCurrentLocation } from "@/features/restaurant/hooks/useCurrentLocation";
 import styles from "@/features/restaurant/styles/MapPage.module.css";
 import { type KakaoMap, loadKakaoMapSdk } from "@/features/restaurant/utils/kakaoMap.util";
 
 const DEFAULT_CENTER = { lat: 37.5665, lng: 126.978 };
+// 목록과 마커가 같은 쿼리를 보도록 한 곳에서 정한다.
+const CATEGORY = "RESTAURANT";
 
 const LOCATION_MESSAGE = {
   locating: "현재 위치를 찾는 중이에요",
@@ -20,6 +24,8 @@ export default function MapPage() {
   const [isMapError, setIsMapError] = useState(false);
   // 지도와 위치는 각자 요청한다. 위치가 늦어도 지도는 기다리지 않는다.
   const { center, status, retry } = useCurrentLocation(DEFAULT_CENTER);
+  // center는 실패하면 기본 위치가 되므로, 실제 위치를 받았을 때만 내 위치로 표시한다.
+  const myLocation = status === "success" ? center : null;
 
   useEffect(() => {
     let cancelled = false;
@@ -45,12 +51,6 @@ export default function MapPage() {
       cancelled = true;
     };
   }, []);
-
-  // 지도와 위치 중 늦게 준비되는 쪽에 맞춰 옮긴다. 다시 찾기에 성공했을 때도 여기서 옮긴다.
-  useEffect(() => {
-    if (!map || !center) return;
-    map.setCenter(new window.kakao.maps.LatLng(center.lat, center.lng));
-  }, [map, center]);
 
   return (
     <div className={`page ${styles.map}`}>
@@ -81,8 +81,11 @@ export default function MapPage() {
         )}
       </section>
 
+      {map && <NearbyRestaurantMarkers map={map} category={CATEGORY} center={center} />}
+      {map && myLocation && <MyLocationMarker map={map} position={myLocation} />}
+
       <MapBottomSheet>
-        <NearbyRestaurantList category="RESTAURANT" center={center} />
+        <NearbyRestaurantList category={CATEGORY} center={center} />
       </MapBottomSheet>
     </div>
   );
