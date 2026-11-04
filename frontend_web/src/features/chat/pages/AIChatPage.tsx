@@ -170,22 +170,44 @@ export default function AIChatPage() {
     const { dateKey, mealTime } = getCurrentDateTime();
     navigate(getMealRecordPath(dateKey, mealTime));
   };
+  // 새 흐름이 시작되면 이전 흐름의 식사 시간 카드를 닫습니다.
+  const closePendingMealCards = () => {
+    resetSendTextMeal();
+    setNutritionMealChatId(null);
+  };
+  const handleImageAnalysisStart = () => {
+    closePendingMealCards();
+    setIsTextMealRecordMode(false);
+  };
   const handleSendMessage = () => {
     const formattedMessage = inputMessage.trim();
     if (!formattedMessage) return;
 
     setInputMessage("");
+    closePendingMealCards();
 
     if (isTextMealRecordMode) {
       sendTextMealRecord(
         { input: formattedMessage },
         {
-          onSuccess: () => {
+          onSuccess: ({ menu_ids }) => {
+            if (menu_ids.length === 0) {
+              resetSendTextMeal();
+              toast.show({
+                type: "warning",
+                title: `방금 보낸 메시지로\n기록할 메뉴를 찾지 못했어요`,
+                timeout: 0,
+                priority: "high",
+              });
+              return;
+            }
             setIsTextMealRecordMode(false);
-            setNutritionMealChatId(null);
           },
-          onError: () => {
+          onError: (error) => {
             setInputMessage(formattedMessage);
+            if (isRequestAbortError(error)) return;
+
+            toast.error("연결이 일시적으로 불안정해요. 다시 시도해주세요.");
           },
         },
       );
@@ -195,8 +217,10 @@ export default function AIChatPage() {
     sendMessage(
       { input: formattedMessage },
       {
-        onError: () => {
+        onError: (error) => {
           setInputMessage(formattedMessage);
+          if (isRequestAbortError(error)) return;
+
           toast.error("연결이 일시적으로 불안정해요. 다시 시도해주세요.");
         },
       },
@@ -404,10 +428,6 @@ export default function AIChatPage() {
     setIsShowChatActions(false);
   }
 
-  if (cameraImage && isTextMealRecordMode) {
-    setIsTextMealRecordMode(false);
-  }
-
   return (
     <div className={`page ${styles.root}`}>
       <header className={styles.header}>
@@ -429,10 +449,8 @@ export default function AIChatPage() {
             key={cameraImage.id}
             enabled={historyQuery.isSuccess && !isTimelinePending}
             waitForResponse={waitForResponse}
-            onNutritionAnalyzed={(chatId) => {
-              resetSendTextMeal();
-              setNutritionMealChatId(chatId);
-            }}
+            onAnalysisStart={handleImageAnalysisStart}
+            onNutritionAnalyzed={setNutritionMealChatId}
           />
         )}
 
