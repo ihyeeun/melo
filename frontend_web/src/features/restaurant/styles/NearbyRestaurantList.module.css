@@ -16,8 +16,11 @@
 .state {
   display: grid;
   place-items: center;
-  padding: 24px 0;
+  margin-top: 8px;
+  padding-block: 24px;
   text-align: center;
+  background-color: var(--background-gray-1);
+  border-radius: 12px;
 }
 
 .loadMore {

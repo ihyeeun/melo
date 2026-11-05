@@ -10,7 +10,8 @@ interface Props {
   onClear?: () => void;
   // 입력이 멈추거나 Enter를 눌렀을 때 호출된다.
   onEnter?: (value: string) => void;
-  debounceMs?: number;
+  // null이면 입력이 멈춰도 호출하지 않고 Enter를 눌렀을 때만 호출한다.
+  debounceMs?: number | null;
   placeholder?: string;
   inputClassName?: string;
   maxLength?: number;
@@ -48,7 +49,7 @@ export function SearchInput({
     if (value !== initialValueRef.current) {
       hasValueChangedRef.current = true;
     }
-    if (!hasValueChangedRef.current || !onEnterRef.current) return;
+    if (debounceMs === null || !hasValueChangedRef.current || !onEnterRef.current) return;
 
     // SearchInputHeader처럼 조합 종료를 기다리지 않고 입력이 멈추면 검색한다.
     // 모바일 입력기는 키보드를 닫기 전까지 조합 상태를 유지할 수 있다.

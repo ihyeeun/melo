@@ -9,8 +9,9 @@
   padding-inline: 16px;
 }
 
+/* 다 펼쳐도 상태바와 검색창이 가려지지 않게 위쪽을 비워 둔다. */
 .content[data-expanded="true"] {
-  height: calc(100% - var(--safe-area-top));
+  height: calc(100% - var(--safe-area-top) - 64px);
 }
 
 /* 목록은 시트 안에서 스크롤한다. Seed 기본값(min-height 등)보다 우선하도록 클래스를 겹쳐 쓴다. */

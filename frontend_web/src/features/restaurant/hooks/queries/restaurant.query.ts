@@ -26,11 +26,16 @@ export function useRestaurantSearchQuery(input: string) {
 }
 
 // center가 정해지기 전(위치를 찾는 중)에는 검색하지 않는다.
-export function useNearbyRestaurantsQuery(category: NearbyCategory, center: LatLng | null) {
+// keyword가 비어 있으면 주변 식당을, 있으면 검색 결과를 가져온다.
+export function useNearbyRestaurantsQuery(
+  category: NearbyCategory,
+  center: LatLng | null,
+  keyword: string,
+) {
   return useInfiniteQuery({
-    queryKey: restaurantKeys.nearby(category, center),
+    queryKey: restaurantKeys.nearby(category, center, keyword),
     queryFn: center
-      ? ({ pageParam }) => searchNearbyRestaurants(category, center, pageParam)
+      ? ({ pageParam }) => searchNearbyRestaurants(category, center, pageParam, keyword)
       : skipToken,
     initialPageParam: 1,
     getNextPageParam: (lastPage) => lastPage.nextPage,

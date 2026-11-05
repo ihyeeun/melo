@@ -17,6 +17,21 @@ export type KakaoPlace = {
   distance: string;
 };
 
+export type KakaoPlacesCallback = (
+  places: KakaoPlace[],
+  status: string,
+  pagination: { hasNextPage: boolean },
+) => void;
+
+type KakaoPlacesOptions = {
+  location?: unknown;
+  radius?: number;
+  sort?: string;
+  size?: number;
+  page?: number;
+  category_group_code?: string;
+};
+
 declare global {
   interface Window {
     kakao: {
@@ -40,18 +55,13 @@ declare global {
           Places: new () => {
             categorySearch: (
               categoryCode: string,
-              callback: (
-                result: KakaoPlace[],
-                status: string,
-                pagination: { hasNextPage: boolean },
-              ) => void,
-              options?: {
-                location?: unknown;
-                radius?: number;
-                sort?: string;
-                size?: number;
-                page?: number;
-              },
+              callback: KakaoPlacesCallback,
+              options?: KakaoPlacesOptions,
+            ) => void;
+            keywordSearch: (
+              keyword: string,
+              callback: KakaoPlacesCallback,
+              options?: KakaoPlacesOptions,
             ) => void;
           };
           Status: { OK: string; ZERO_RESULT: string };

@@ -24,6 +24,15 @@
   pointer-events: none;
 }
 
+/* 컨트롤 영역은 지도 터치를 통과시키므로(pointer-events: none) 검색창은 다시 눌리게 한다. */
+.searchBar {
+  margin-bottom: 8px;
+  border-radius: 12px;
+  background: var(--background-default);
+  box-shadow: var(--shadow-outer);
+  pointer-events: auto;
+}
+
 .locationBadge {
   display: flex;
   align-items: center;

@@ -1,18 +1,27 @@
 import { BottomSheet as SeedBottomSheet } from "@seed-design/react";
-import { type ReactNode, useState } from "react";
+import type { ReactNode } from "react";
 
 import styles from "@/features/restaurant/styles/MapBottomSheet.module.css";
 
 const SNAP_POINTS = ["36px", 0.5, 1];
 export const DEFAULT_SNAP_POINT = 0.5;
 
+export type SheetSnapPoint = number | string | null;
+
 type MapBottomSheetProps = {
+  snapPoint: SheetSnapPoint;
+  onSnapPointChange: (snapPoint: SheetSnapPoint) => void;
+  // 값이 바뀌면 시트 내용을 다시 그려 스크롤을 맨 위로 되돌린다.
+  scrollResetKey: string;
   children?: ReactNode;
 };
 
-export default function MapBottomSheet({ children }: MapBottomSheetProps) {
-  const [snapPoint, setSnapPoint] = useState<number | string | null>(DEFAULT_SNAP_POINT);
-
+export default function MapBottomSheet({
+  snapPoint,
+  onSnapPointChange,
+  scrollResetKey,
+  children,
+}: MapBottomSheetProps) {
   return (
     <SeedBottomSheet.Root
       open
@@ -20,7 +29,7 @@ export default function MapBottomSheet({ children }: MapBottomSheetProps) {
       dismissible={false}
       snapPoints={SNAP_POINTS}
       activeSnapPoint={snapPoint}
-      setActiveSnapPoint={setSnapPoint}
+      setActiveSnapPoint={onSnapPointChange}
       autoFocus={false}
       repositionInputs={false}
     >
@@ -32,7 +41,9 @@ export default function MapBottomSheet({ children }: MapBottomSheetProps) {
           data-expanded={snapPoint === 1}
         >
           <SeedBottomSheet.Handle />
-          <SeedBottomSheet.Body className={styles.body}>{children}</SeedBottomSheet.Body>
+          <SeedBottomSheet.Body key={scrollResetKey} className={styles.body}>
+            {children}
+          </SeedBottomSheet.Body>
         </SeedBottomSheet.Content>
       </SeedBottomSheet.Positioner>
     </SeedBottomSheet.Root>
