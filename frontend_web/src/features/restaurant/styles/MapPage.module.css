@@ -33,6 +33,21 @@
   pointer-events: auto;
 }
 
+.mapActions {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.mapActionButton {
+  padding: 8px 14px;
+  border-radius: 100px;
+  background: var(--background-default);
+  box-shadow: var(--shadow-outer);
+  pointer-events: auto;
+  white-space: nowrap;
+}
+
 .locationBadge {
   display: flex;
   align-items: center;

@@ -1,6 +1,6 @@
 export type KakaoMap = {
   setCenter: (position: unknown) => void;
-  setBounds: (bounds: unknown, top: number, right: number, bottom: number, left: number) => void;
+  getCenter: () => { getLat: () => number; getLng: () => number };
 };
 
 // 지도 위에 올린 객체. setMap(null)로 지운다.
@@ -37,8 +37,11 @@ declare global {
     kakao: {
       maps: {
         load: (callback: () => void) => void;
+        event: {
+          addListener: (target: KakaoMap, type: string, handler: () => void) => void;
+          removeListener: (target: KakaoMap, type: string, handler: () => void) => void;
+        };
         LatLng: new (lat: number, lng: number) => unknown;
-        LatLngBounds: new () => { extend: (position: unknown) => void };
         Map: new (container: HTMLElement, options: { center: unknown; level?: number }) => KakaoMap;
         Marker: new (options: {
           map: KakaoMap;

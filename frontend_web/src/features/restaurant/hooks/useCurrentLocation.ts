@@ -10,6 +10,8 @@ import {
 // 다시 찾는 동안에는 이전 기준점을 유지해서 목록이 비지 않게 한다.
 export function useCurrentLocation(fallback: LatLng) {
   const [result, setResult] = useState<CurrentLocationResult | null>(null);
+  // 다시 찾다 실패해도 기준점이 fallback으로 튀지 않게 마지막으로 받은 위치를 둔다.
+  const [myLocation, setMyLocation] = useState<LatLng | null>(null);
   const [isLocating, setIsLocating] = useState(true);
   const [attempt, setAttempt] = useState(0);
 
@@ -19,6 +21,7 @@ export function useCurrentLocation(fallback: LatLng) {
     void getCurrentLocation().then((next) => {
       if (cancelled) return;
       setResult(next);
+      if (next.status === "success") setMyLocation(next.latLng);
       setIsLocating(false);
     });
 
@@ -33,8 +36,8 @@ export function useCurrentLocation(fallback: LatLng) {
   };
 
   // 첫 결과가 오기 전에는 null이다.
-  const center = result && (result.status === "success" ? result.latLng : fallback);
+  const center = result && (myLocation ?? fallback);
   const status = isLocating || !result ? "locating" : result.status;
 
-  return { center, status, retry } as const;
+  return { center, myLocation, status, retry } as const;
 }

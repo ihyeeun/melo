@@ -9,6 +9,7 @@ import MyLocationMarker from "@/features/restaurant/components/markers/MyLocatio
 import NearbyRestaurantMarkers from "@/features/restaurant/components/markers/NearbyRestaurantMarkers";
 import { useCurrentLocation } from "@/features/restaurant/hooks/useCurrentLocation";
 import styles from "@/features/restaurant/styles/MapPage.module.css";
+import type { LatLng } from "@/features/restaurant/utils/currentLocation.util";
 import { type KakaoMap, loadKakaoMapSdk } from "@/features/restaurant/utils/kakaoMap.util";
 import { SearchInput } from "@/shared/commons/input/SearchInput";
 
@@ -25,27 +26,59 @@ export default function MapPage() {
   const baseMap = useRef<HTMLDivElement>(null);
   const [map, setMap] = useState<KakaoMap | null>(null);
   const [isMapError, setIsMapError] = useState(false);
-  // 지도와 위치는 각자 요청한다. 위치가 늦어도 지도는 기다리지 않는다.
-  const { center, status, retry } = useCurrentLocation(DEFAULT_CENTER);
-  // center는 실패하면 기본 위치가 되므로, 실제 위치를 받았을 때만 내 위치로 표시한다.
-  const myLocation = status === "success" ? center : null;
+  const { center, myLocation, status, retry } = useCurrentLocation(DEFAULT_CENTER);
   const [searchInput, setSearchInput] = useState("");
   const [searchKeyword, setSearchKeyword] = useState("");
   const [sheetSnapPoint, setSheetSnapPoint] = useState<SheetSnapPoint>(DEFAULT_SNAP_POINT);
-  // 목록과 마커가 항상 같은 쿼리를 보도록 조건을 한곳에서 묶어 넘긴다.
-  const restaurantSearch = { category: CATEGORY, center, keyword: searchKeyword };
+  const [isMapMoved, setIsMapMoved] = useState(false);
+  const [mapSearchCenter, setMapSearchCenter] = useState<LatLng | null>(null);
+  const searchCenter = mapSearchCenter ?? center;
+  const restaurantSearch = { category: CATEGORY, center: searchCenter, keyword: searchKeyword };
 
   const handleSearchInputChange = (value: string) => {
     setSearchInput(value);
-    // 검색어를 모두 지우면 주변 식당으로 돌아간다.
     if (!value.trim()) setSearchKeyword("");
   };
 
   const handleSearchSubmit = (value: string) => {
     setSearchKeyword(value.trim());
-    // 시트를 접거나 펼쳐 둔 상태에서도 지도와 결과가 함께 보이게 한다.
+    setIsMapMoved(false);
     setSheetSnapPoint(DEFAULT_SNAP_POINT);
   };
+
+  const handleSearchMapArea = () => {
+    if (!map) return;
+
+    const mapCenter = map.getCenter();
+    setMapSearchCenter({ lat: mapCenter.getLat(), lng: mapCenter.getLng() });
+    setIsMapMoved(false);
+    setSheetSnapPoint(DEFAULT_SNAP_POINT);
+  };
+
+  const handleMoveToMyLocation = () => {
+    setMapSearchCenter(null);
+    setIsMapMoved(false);
+    retry();
+  };
+
+  useEffect(() => {
+    if (!map) return;
+
+    const { event } = window.kakao.maps;
+    const handleMapDragEnd = () => setIsMapMoved(true);
+
+    // 코드로 옮길 때는 발생하지 않아서, 사용자가 지도를 끌었을 때만 버튼이 나타난다.
+    event.addListener(map, "dragend", handleMapDragEnd);
+    return () => event.removeListener(map, "dragend", handleMapDragEnd);
+  }, [map]);
+
+  // 검색 기준점이 바뀌거나 새로 검색하면 지도를 그 위치로 옮긴다.
+  useEffect(() => {
+    if (!map || !searchCenter) return;
+
+    const { maps } = window.kakao;
+    map.setCenter(new maps.LatLng(searchCenter.lat, searchCenter.lng));
+  }, [map, searchCenter, searchKeyword]);
 
   useEffect(() => {
     let cancelled = false;
@@ -59,7 +92,7 @@ export default function MapPage() {
         setMap(
           new kakao.maps.Map(baseMap.current, {
             center: new kakao.maps.LatLng(DEFAULT_CENTER.lat, DEFAULT_CENTER.lng),
-            level: 3,
+            level: 1,
           }),
         );
       })
@@ -93,6 +126,26 @@ export default function MapPage() {
             inputClassName="amp-unmask"
           />
         </div>
+        {map && (
+          <div className={styles.mapActions}>
+            <button
+              type="button"
+              className={`caption-m-semi text-primary ${styles.mapActionButton}`}
+              onClick={handleMoveToMyLocation}
+            >
+              현재 위치
+            </button>
+            {isMapMoved && (
+              <button
+                type="button"
+                className={`caption-m-semi text-primary ${styles.mapActionButton}`}
+                onClick={handleSearchMapArea}
+              >
+                현 지도에서 검색
+              </button>
+            )}
+          </div>
+        )}
         {map && status !== "success" && (
           <div className={styles.locationBadge}>
             <p className="caption-m-medium text-secondary" role="status">
@@ -102,7 +155,7 @@ export default function MapPage() {
               <button
                 type="button"
                 className={`caption-m-semi ${styles.retryButton}`}
-                onClick={retry}
+                onClick={handleMoveToMyLocation}
               >
                 다시 찾기
               </button>
