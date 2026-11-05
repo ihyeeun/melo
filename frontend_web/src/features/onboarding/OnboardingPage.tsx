@@ -112,7 +112,7 @@ export default function OnboardingPage() {
     if (!isWebOnboarding) return;
     if (getWebAuthAccessToken()) return;
 
-    navigate(PATH.KAKAO_WEB_LOGIN, { replace: true });
+    // navigate(PATH.KAKAO_WEB_LOGIN, { replace: true });
   }, [isWebOnboarding, navigate]);
 
   const navigateAfterOnboarding = useCallback(() => {
@@ -216,7 +216,7 @@ export default function OnboardingPage() {
       persona_type: userData.persona_type ?? 0,
       eating_out_freq_weekly: userData.eating_out_freq_weekly ?? 0,
       job_type: userData.job_type ?? 0,
-      lunch_location: userData.job_type === 0 ? userData.lunch_location ?? null : null,
+      lunch_location: userData.job_type === 0 ? (userData.lunch_location ?? null) : null,
     };
 
     if (isWebOnboarding) {
