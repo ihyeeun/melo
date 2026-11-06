@@ -13,6 +13,20 @@
   overflow-wrap: anywhere;
 }
 
+/* 서버 응답이 늦게 와도 항목 높이가 바뀌지 않도록 줄 안에 붙인다. */
+.meloBadge {
+  margin-left: 6px;
+  color: var(--primary-normal);
+  white-space: nowrap;
+  animation: melo-badge-enter 0.2s ease-out;
+}
+
+@keyframes melo-badge-enter {
+  from {
+    opacity: 0;
+  }
+}
+
 .state {
   display: grid;
   place-items: center;

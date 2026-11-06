@@ -1,7 +1,10 @@
 import { useEffect, useRef } from "react";
 
 import type { NearbyCategory } from "@/features/restaurant/api/nearbyRestaurant.api";
-import { useNearbyRestaurantsQuery } from "@/features/restaurant/hooks/queries/restaurant.query";
+import {
+  useNearbyRestaurantsQuery,
+  useRestaurantBrandsQuery,
+} from "@/features/restaurant/hooks/queries/restaurant.query";
 import styles from "@/features/restaurant/styles/NearbyRestaurantList.module.css";
 import type { LatLng } from "@/features/restaurant/utils/currentLocation.util";
 import { LoadingIndicator } from "@/shared/commons/loading/Loading";
@@ -32,6 +35,9 @@ export default function NearbyRestaurantList({
     fetchNextPage,
   } = useNearbyRestaurantsQuery(category, center, keyword);
   const restaurants = data?.pages.flatMap((page) => page.restaurants) ?? [];
+  const brandByPlaceId = useRestaurantBrandsQuery(
+    data?.pages.map((page) => page.restaurants.map(({ id }) => id)) ?? [],
+  );
   const listTitle = keyword
     ? `'${keyword}' 검색 결과 ${restaurants.length}곳`
     : `내 주변 식당 ${restaurants.length}곳`;
@@ -81,6 +87,9 @@ export default function NearbyRestaurantList({
               <p className="body-l-medium text-primary">{restaurant.name}</p>
               <p className="caption-m-medium text-secondary">
                 {restaurant.category} · {formatDistance(restaurant.distance)}
+                {brandByPlaceId.has(restaurant.id) && (
+                  <span className={`caption-m-semi ${styles.meloBadge}`}>멜로 식당</span>
+                )}
               </p>
             </li>
           ))}

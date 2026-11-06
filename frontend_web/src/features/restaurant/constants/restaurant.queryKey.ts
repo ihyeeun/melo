@@ -11,6 +11,7 @@ export const restaurantKeys = {
     center?.lng,
     keyword,
   ],
+  brands: (placeIds: string[]) => ["restaurantBrands", ...placeIds],
   detail: (restaurantId: number, filter?: string) => [
     ...restaurantKeys.all,
     restaurantId,
