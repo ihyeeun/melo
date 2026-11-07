@@ -1,6 +1,7 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 import { useGetProfileQuery } from "@/features/profile/hooks/queries/useProfileQuery";
+import { logout } from "@/features/settings/api/account";
 import { PATH } from "@/router/path";
 import { syncAppOptionalTabs } from "@/shared/api/bridge/nativeBridge";
 import type { OptionalTabName } from "@/shared/api/bridge/nativeBridge.types";
@@ -23,6 +24,8 @@ const WEB_OPTIONAL_TABS: readonly OptionalTabName[] = ["restaurant", "analysis"]
 
 const PROFILE_SYNC_EXCLUDED_PATHS = new Set([PATH.ONBOARDING, PATH.APP_INFO]);
 const STACKFLOW_HISTORY_STATE_TAG = "@stackflow/plugin-history-sync";
+// 정상이라면 signout 응답 직후 앱이 로그인 화면으로 이동하면서 이 웹뷰가 사라진다
+const ORPHAN_SESSION_END_FALLBACK_DELAY_MS = 3000;
 
 function isStackflowHistoryState(state: unknown) {
   if (typeof state !== "object" || state === null) {
@@ -52,8 +55,16 @@ function shouldFetchProfileForCurrentPath() {
 
 function useSyncFeatureGuardFromProfile() {
   const shouldFetchProfile = shouldFetchProfileForCurrentPath();
-  const { data: profile, isError } = useGetProfileQuery({ enabled: shouldFetchProfile });
+  const {
+    data: profile,
+    isSuccess,
+    isError,
+  } = useGetProfileQuery({
+    enabled: shouldFetchProfile,
+  });
   const isSubscribed = profile?.is_subscribed;
+  const isOrphanSession = shouldFetchProfile && isSuccess && typeof isSubscribed !== "boolean";
+  const [hasOrphanSessionEndFailed, setHasOrphanSessionEndFailed] = useState(false);
 
   useEffect(() => {
     if (typeof isSubscribed !== "boolean") {
@@ -62,6 +73,24 @@ function useSyncFeatureGuardFromProfile() {
 
     setFreeUserGuardEnabled(!isSubscribed);
   }, [isSubscribed]);
+
+  useEffect(() => {
+    if (!isOrphanSession) return;
+
+    // 앱은 signout 결과와 무관하게 토큰을 지우고 로그인 화면으로 보낸다
+    const markFailedLater = () => {
+      window.setTimeout(() => {
+        setHasOrphanSessionEndFailed(true);
+      }, ORPHAN_SESSION_END_FALLBACK_DELAY_MS);
+    };
+
+    void logout().then(markFailedLater, markFailedLater);
+  }, [isOrphanSession]);
+
+  if (hasOrphanSessionEndFailed) {
+    // 화면이 남아 있으면 signout이 앱에 닿지 못한 것: 에러 화면의 '다시 시도'(새로고침)로 다시 보낸다
+    throw new Error("만료된 세션을 정리하지 못했습니다.");
+  }
 
   return !shouldFetchProfile || typeof isSubscribed === "boolean" || isError;
 }
