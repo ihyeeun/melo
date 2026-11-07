@@ -1,10 +1,15 @@
+import { focusManager, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 
+import { queryKeys } from "@/features/profile/hooks/queries/queryKey";
 import { useGetProfileQuery } from "@/features/profile/hooks/queries/useProfileQuery";
 import { logout } from "@/features/settings/api/account";
 import { PATH } from "@/router/path";
+import { AppApiError } from "@/shared/api/apiClient";
 import { syncAppOptionalTabs } from "@/shared/api/bridge/nativeBridge";
 import type { OptionalTabName } from "@/shared/api/bridge/nativeBridge.types";
+import type { ProfileResponseDto } from "@/shared/api/types/api.response.dto";
+import { Button } from "@/shared/commons/button/Button";
 import { LoadingScreen } from "@/shared/commons/loading/Loading";
 import { setFreeUserGuardEnabled } from "@/shared/guards/featureGuard";
 
@@ -16,6 +21,7 @@ import {
   resetStackflowWithCurrentBrowserPath,
   syncStackflowWithCurrentBrowserPath,
 } from "./stackflowRouter";
+import styles from "./StackflowRuntime.module.css";
 import { getWebNavigationCommand, WEB_NAVIGATION_COMMAND_EVENT } from "./webNavigationCommand";
 
 const StackComponent = getStackflowStackComponent();
@@ -95,6 +101,63 @@ function useSyncFeatureGuardFromProfile() {
   return !shouldFetchProfile || typeof isSubscribed === "boolean" || isError;
 }
 
+// TODO: 탈퇴 계정 무한로딩 원인을 파악하면 제거
+const GUARD_LOADING_RECOVERY_DELAY_MS = 15_000;
+
+function getErrorCode(error: unknown) {
+  if (error instanceof AppApiError) return `${error.statusCode}:${error.error}`;
+  if (error instanceof Error) return error.name;
+  return "-";
+}
+
+// 로딩이 길어지면 원인과 무관하게 빠져나올 수 있는 로그아웃 버튼과, 스크린샷으로 원인을 알 수 있는 진단 한 줄을 보여준다
+function GuardLoadingRecovery() {
+  const queryClient = useQueryClient();
+  const [isVisible, setIsVisible] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      setIsVisible(true);
+    }, GUARD_LOADING_RECOVERY_DELAY_MS);
+
+    return () => window.clearTimeout(timeoutId);
+  }, []);
+
+  if (!isVisible) return null;
+
+  const profileState = queryClient.getQueryState<ProfileResponseDto | null>(queryKeys.profile);
+  const diagnostic = [
+    `profile=${profileState ? `${profileState.status}/${profileState.fetchStatus}` : "none"}`,
+    `fail=${profileState?.fetchFailureCount ?? "-"}`,
+    `reason=${getErrorCode(profileState?.fetchFailureReason ?? profileState?.error)}`,
+    `data=${profileState?.data === null ? "null" : typeof profileState?.data}`,
+    `sub=${String(profileState?.data?.is_subscribed)}`,
+    `online=${navigator.onLine}`,
+    `focus=${focusManager.isFocused()}`,
+  ].join(" ");
+
+  const handleLogout = () => {
+    setIsLoggingOut(true);
+
+    // 앱은 signout 결과와 무관하게 토큰을 지우고 로그인 화면으로 보낸다
+    const finishLogout = () => {
+      setIsLoggingOut(false);
+    };
+    void logout().then(finishLogout, finishLogout);
+  };
+
+  return (
+    <div className={styles.loadingRecovery}>
+      <p className="body-s-medium text-secondary">로딩이 오래 걸리고 있어요</p>
+      <Button variant="outlined" size="s" fullWidth disabled={isLoggingOut} onClick={handleLogout}>
+        {isLoggingOut ? "로그아웃 중이에요" : "로그아웃하고 다시 로그인하기"}
+      </Button>
+      <p className="caption-s-medium text-tertiary">{diagnostic}</p>
+    </div>
+  );
+}
+
 export function StackflowRuntime() {
   const isFeatureGuardReady = useSyncFeatureGuardFromProfile();
 
@@ -147,7 +210,12 @@ export function StackflowRuntime() {
 
   if (!isFeatureGuardReady) {
     // 웹앱 최초 진입 시 한 번, 프로필 구독 상태 기반 가드 설정 준비될 때까지 뜨는 로딩
-    return <LoadingScreen background="var(--background-gray-1)" />;
+    return (
+      <>
+        <LoadingScreen background="var(--background-gray-1)" />
+        <GuardLoadingRecovery />
+      </>
+    );
   }
 
   return <StackComponent />;
