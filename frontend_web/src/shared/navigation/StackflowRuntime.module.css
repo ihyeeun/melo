@@ -101,3 +101,20 @@
     transform: translateX(100%);
   }
 }
+
+/* TODO: 탈퇴 계정 무한로딩 원인을 파악하면 제거 */
+.loadingRecovery {
+  align-items: center;
+  bottom: calc(var(--safe-area-bottom) + 32px);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  left: 50%;
+  max-width: 360px;
+  padding: 0 24px;
+  position: fixed;
+  text-align: center;
+  transform: translateX(-50%);
+  width: 100%;
+  word-break: break-all;
+}
