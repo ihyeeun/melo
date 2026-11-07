@@ -1,15 +1,12 @@
-import { focusManager, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 
-import { queryKeys } from "@/features/profile/hooks/queries/queryKey";
 import { useGetProfileQuery } from "@/features/profile/hooks/queries/useProfileQuery";
 import { logout } from "@/features/settings/api/account";
 import { PATH } from "@/router/path";
-import { AppApiError } from "@/shared/api/apiClient";
 import { syncAppOptionalTabs } from "@/shared/api/bridge/nativeBridge";
 import type { OptionalTabName } from "@/shared/api/bridge/nativeBridge.types";
-import type { ProfileResponseDto } from "@/shared/api/types/api.response.dto";
 import { Button } from "@/shared/commons/button/Button";
+import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import { LoadingScreen } from "@/shared/commons/loading/Loading";
 import { setFreeUserGuardEnabled } from "@/shared/guards/featureGuard";
 
@@ -30,8 +27,6 @@ const WEB_OPTIONAL_TABS: readonly OptionalTabName[] = ["restaurant", "analysis"]
 
 const PROFILE_SYNC_EXCLUDED_PATHS = new Set([PATH.ONBOARDING, PATH.APP_INFO]);
 const STACKFLOW_HISTORY_STATE_TAG = "@stackflow/plugin-history-sync";
-// 정상이라면 signout 응답 직후 앱이 로그인 화면으로 이동하면서 이 웹뷰가 사라진다
-const ORPHAN_SESSION_END_FALLBACK_DELAY_MS = 3000;
 
 function isStackflowHistoryState(state: unknown) {
   if (typeof state !== "object" || state === null) {
@@ -65,12 +60,9 @@ function useSyncFeatureGuardFromProfile() {
     data: profile,
     isSuccess,
     isError,
-  } = useGetProfileQuery({
-    enabled: shouldFetchProfile,
-  });
+    refetch,
+  } = useGetProfileQuery({ enabled: shouldFetchProfile });
   const isSubscribed = profile?.is_subscribed;
-  const isOrphanSession = shouldFetchProfile && isSuccess && typeof isSubscribed !== "boolean";
-  const [hasOrphanSessionEndFailed, setHasOrphanSessionEndFailed] = useState(false);
 
   useEffect(() => {
     if (typeof isSubscribed !== "boolean") {
@@ -80,62 +72,21 @@ function useSyncFeatureGuardFromProfile() {
     setFreeUserGuardEnabled(!isSubscribed);
   }, [isSubscribed]);
 
-  useEffect(() => {
-    if (!isOrphanSession) return;
-
-    // 앱은 signout 결과와 무관하게 토큰을 지우고 로그인 화면으로 보낸다
-    const markFailedLater = () => {
-      window.setTimeout(() => {
-        setHasOrphanSessionEndFailed(true);
-      }, ORPHAN_SESSION_END_FALLBACK_DELAY_MS);
-    };
-
-    void logout().then(markFailedLater, markFailedLater);
-  }, [isOrphanSession]);
-
-  if (hasOrphanSessionEndFailed) {
-    // 화면이 남아 있으면 signout이 앱에 닿지 못한 것: 에러 화면의 '다시 시도'(새로고침)로 다시 보낸다
-    throw new Error("만료된 세션을 정리하지 못했습니다.");
+  if (!shouldFetchProfile || typeof isSubscribed === "boolean") {
+    return { status: "ready", retryProfile: refetch } as const;
   }
 
-  return !shouldFetchProfile || typeof isSubscribed === "boolean" || isError;
+  // 프로필 없이 홈을 띄우면 홈의 프로필 조회가 재요청을 일으키고, 데이터가 없는 쿼리는 재요청 때
+  // pending으로 돌아가 이 로딩과 홈이 끝없이 번갈아 뜬다(탈퇴 계정 무한로딩). 그래서 실패는 여기서 멈춘다
+  if (isError || isSuccess) {
+    return { status: "failed", retryProfile: refetch } as const;
+  }
+
+  return { status: "loading", retryProfile: refetch } as const;
 }
 
-// TODO: 탈퇴 계정 무한로딩 원인을 파악하면 제거
-const GUARD_LOADING_RECOVERY_DELAY_MS = 15_000;
-
-function getErrorCode(error: unknown) {
-  if (error instanceof AppApiError) return `${error.statusCode}:${error.error}`;
-  if (error instanceof Error) return error.name;
-  return "-";
-}
-
-// 로딩이 길어지면 원인과 무관하게 빠져나올 수 있는 로그아웃 버튼과, 스크린샷으로 원인을 알 수 있는 진단 한 줄을 보여준다
-function GuardLoadingRecovery() {
-  const queryClient = useQueryClient();
-  const [isVisible, setIsVisible] = useState(false);
+function ProfileLoadFailedScreen({ onRetry }: { onRetry: () => void }) {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
-
-  useEffect(() => {
-    const timeoutId = window.setTimeout(() => {
-      setIsVisible(true);
-    }, GUARD_LOADING_RECOVERY_DELAY_MS);
-
-    return () => window.clearTimeout(timeoutId);
-  }, []);
-
-  if (!isVisible) return null;
-
-  const profileState = queryClient.getQueryState<ProfileResponseDto | null>(queryKeys.profile);
-  const diagnostic = [
-    `profile=${profileState ? `${profileState.status}/${profileState.fetchStatus}` : "none"}`,
-    `fail=${profileState?.fetchFailureCount ?? "-"}`,
-    `reason=${getErrorCode(profileState?.fetchFailureReason ?? profileState?.error)}`,
-    `data=${profileState?.data === null ? "null" : typeof profileState?.data}`,
-    `sub=${String(profileState?.data?.is_subscribed)}`,
-    `online=${navigator.onLine}`,
-    `focus=${focusManager.isFocused()}`,
-  ].join(" ");
 
   const handleLogout = () => {
     setIsLoggingOut(true);
@@ -148,18 +99,26 @@ function GuardLoadingRecovery() {
   };
 
   return (
-    <div className={styles.loadingRecovery}>
-      <p className="body-s-medium text-secondary">로딩이 오래 걸리고 있어요</p>
-      <Button variant="outlined" size="s" fullWidth disabled={isLoggingOut} onClick={handleLogout}>
-        {isLoggingOut ? "로그아웃 중이에요" : "로그아웃하고 다시 로그인하기"}
-      </Button>
-      <p className="caption-s-medium text-tertiary">{diagnostic}</p>
-    </div>
+    <main className={styles.profileLoadFailed}>
+      <div className={styles.profileLoadFailedContent}>
+        <SystemIcon name="info" size={45} className={styles.profileLoadFailedIcon} />
+        <h1 className="title-l-semi text-primary">정보를 불러오지 못했어요</h1>
+        <p className={`${styles.profileLoadFailedDescription} body-l-medium text-secondary`}>
+          잠시 후 다시 시도해주세요.
+        </p>
+        <Button fullWidth disabled={isLoggingOut} onClick={onRetry}>
+          다시 시도
+        </Button>
+        <Button variant="outlined" fullWidth disabled={isLoggingOut} onClick={handleLogout}>
+          {isLoggingOut ? "로그아웃 중이에요" : "로그아웃하고 다시 로그인하기"}
+        </Button>
+      </div>
+    </main>
   );
 }
 
 export function StackflowRuntime() {
-  const isFeatureGuardReady = useSyncFeatureGuardFromProfile();
+  const { status: featureGuardStatus, retryProfile } = useSyncFeatureGuardFromProfile();
 
   useEffect(() => {
     const handleWebNavigationCommand = (event: Event) => {
@@ -208,14 +167,13 @@ export function StackflowRuntime() {
     };
   }, []);
 
-  if (!isFeatureGuardReady) {
+  if (featureGuardStatus === "loading") {
     // 웹앱 최초 진입 시 한 번, 프로필 구독 상태 기반 가드 설정 준비될 때까지 뜨는 로딩
-    return (
-      <>
-        <LoadingScreen background="var(--background-gray-1)" />
-        <GuardLoadingRecovery />
-      </>
-    );
+    return <LoadingScreen background="var(--background-gray-1)" />;
+  }
+
+  if (featureGuardStatus === "failed") {
+    return <ProfileLoadFailedScreen onRetry={() => void retryProfile()} />;
   }
 
   return <StackComponent />;
