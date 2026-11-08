@@ -98,7 +98,7 @@ declare global {
   }
 }
 
-const SDK_URL = `//dapi.kakao.com/v2/maps/sdk.js?appkey=${import.meta.env.VITE_KAKAO_MAP_KEY}&autoload=false&libraries=services`;
+const SDK_URL = `//dapi.kakao.com/v2/maps/sdk.js?appkey=${import.meta.env.KAKAO_MAP_KEY}&autoload=false&libraries=services`;
 
 let sdkLoadPromise: Promise<void> | null = null;
 
