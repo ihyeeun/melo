@@ -96,7 +96,9 @@ type SwipeBackTransitionOptions = {
 type SwipeBackTransitionRequester = (options: SwipeBackTransitionOptions) => boolean;
 
 const HomePage = createLazyActivity(() => import("@/features/home/pages/HomePage"));
-const RestaurantPage = createLazyActivity(() => import("@/features/restaurant/pages/MapPage"));
+const RestaurantPage = createLazyActivity(
+  () => import("@/features/restaurant/pages/RestaurantTabPage"),
+);
 const RestaurantDetailPage = createLazyActivity(
   () => import("@/features/restaurant/pages/RestaurantDetailPage"),
 );

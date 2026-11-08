@@ -41,10 +41,6 @@ export default function RestaurantPage() {
     <div className={`page ${styles.root}`}>
       <PageHeader title="식당" />
 
-      <button type="button" onClick={() => navigate(PATH.MAP)}>
-        지도
-      </button>
-
       <section
         className={styles.searchSection}
         onFocus={(event) => {
