@@ -5,6 +5,7 @@ import {
   useNearbyRestaurantsQuery,
   useRestaurantBrandsQuery,
 } from "@/features/restaurant/hooks/queries/restaurant.query";
+import type { SheetRestaurant } from "@/features/restaurant/hooks/useMapSheet";
 import styles from "@/features/restaurant/styles/NearbyRestaurantList.module.css";
 import type { LatLng } from "@/features/restaurant/utils/currentLocation.util";
 import { LoadingIndicator } from "@/shared/commons/loading/Loading";
@@ -13,6 +14,7 @@ type NearbyRestaurantListProps = {
   category: NearbyCategory;
   center: LatLng | null;
   keyword: string;
+  onSelectRestaurant: (restaurant: SheetRestaurant) => void;
 };
 
 function formatDistance(meters: number) {
@@ -23,6 +25,7 @@ export default function NearbyRestaurantList({
   category,
   center,
   keyword,
+  onSelectRestaurant,
 }: NearbyRestaurantListProps) {
   const loadMoreRef = useRef<HTMLDivElement>(null);
   const {
@@ -82,17 +85,42 @@ export default function NearbyRestaurantList({
         </div>
       ) : (
         <ul className={styles.list}>
-          {restaurants.map((restaurant) => (
-            <li key={restaurant.id} className={styles.item}>
-              <p className="body-l-medium text-primary">{restaurant.name}</p>
-              <p className="caption-m-medium text-secondary">
-                {restaurant.category} · {formatDistance(restaurant.distance)}
-                {brandByPlaceId.has(restaurant.id) && (
-                  <span className={`caption-m-semi ${styles.meloBadge}`}>멜로 식당</span>
+          {restaurants.map((restaurant) => {
+            const brand = brandByPlaceId.get(restaurant.id);
+            const itemContent = (
+              <>
+                <span className="body-l-medium text-primary">{restaurant.name}</span>
+                <span className="caption-m-medium text-secondary">
+                  {restaurant.category} · {formatDistance(restaurant.distance)}
+                  {brand && (
+                    <span className={`caption-m-semi ${styles.meloBadge}`}>멜로 식당</span>
+                  )}
+                </span>
+              </>
+            );
+
+            return (
+              <li key={restaurant.id} className={styles.item}>
+                {/* 멜로 식당만 restaurant_id가 있어 상세를 열 수 있다. */}
+                {brand ? (
+                  <button
+                    type="button"
+                    className={styles.itemContent}
+                    onClick={() =>
+                      onSelectRestaurant({
+                        restaurantId: brand.restaurant_id,
+                        restaurantName: restaurant.name,
+                      })
+                    }
+                  >
+                    {itemContent}
+                  </button>
+                ) : (
+                  <div className={styles.itemContent}>{itemContent}</div>
                 )}
-              </p>
-            </li>
-          ))}
+              </li>
+            );
+          })}
         </ul>
       )}
       <div ref={loadMoreRef} className={styles.loadMore}>

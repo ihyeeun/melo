@@ -5,11 +5,16 @@
 }
 
 .item {
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+/* 누를 수 있는 항목(button)과 아닌 항목(div)이 같은 모양이 되도록 함께 쓴다. */
+.itemContent {
   display: flex;
   flex-direction: column;
   gap: 4px;
+  width: 100%;
   padding: 14px 0;
-  border-bottom: 1px solid var(--border-subtle);
   overflow-wrap: anywhere;
 }
 

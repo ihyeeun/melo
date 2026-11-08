@@ -1,13 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 
-import MapBottomSheet, {
-  DEFAULT_SNAP_POINT,
-  type SheetSnapPoint,
-} from "@/features/restaurant/components/map/MapBottomSheet";
+import MapBottomSheet from "@/features/restaurant/components/map/MapBottomSheet";
 import NearbyRestaurantList from "@/features/restaurant/components/map/NearbyRestaurantList";
+import RestaurantDetailSheet from "@/features/restaurant/components/map/RestaurantDetailSheet";
 import MyLocationMarker from "@/features/restaurant/components/markers/MyLocationMarker";
 import NearbyRestaurantMarkers from "@/features/restaurant/components/markers/NearbyRestaurantMarkers";
 import { useCurrentLocation } from "@/features/restaurant/hooks/useCurrentLocation";
+import { useMapSheet } from "@/features/restaurant/hooks/useMapSheet";
 import styles from "@/features/restaurant/styles/MapPage.module.css";
 import type { LatLng } from "@/features/restaurant/utils/currentLocation.util";
 import { type KakaoMap, loadKakaoMapSdk } from "@/features/restaurant/utils/kakaoMap.util";
@@ -29,7 +28,8 @@ export default function MapPage() {
   const { center, myLocation, status, retry } = useCurrentLocation(DEFAULT_CENTER);
   const [searchInput, setSearchInput] = useState("");
   const [searchKeyword, setSearchKeyword] = useState("");
-  const [sheetSnapPoint, setSheetSnapPoint] = useState<SheetSnapPoint>(DEFAULT_SNAP_POINT);
+  const sheetBodyRef = useRef<HTMLDivElement>(null);
+  const { currentView, snapPoint, setSnapPoint, moveSheet } = useMapSheet(sheetBodyRef);
   const [isMapMoved, setIsMapMoved] = useState(false);
   const [mapSearchCenter, setMapSearchCenter] = useState<LatLng | null>(null);
   const searchCenter = mapSearchCenter ?? center;
@@ -43,7 +43,7 @@ export default function MapPage() {
   const handleSearchSubmit = (value: string) => {
     setSearchKeyword(value.trim());
     setIsMapMoved(false);
-    setSheetSnapPoint(DEFAULT_SNAP_POINT);
+    moveSheet({ type: "submit_search" });
   };
 
   const handleSearchMapArea = () => {
@@ -52,7 +52,7 @@ export default function MapPage() {
     const mapCenter = map.getCenter();
     setMapSearchCenter({ lat: mapCenter.getLat(), lng: mapCenter.getLng() });
     setIsMapMoved(false);
-    setSheetSnapPoint(DEFAULT_SNAP_POINT);
+    moveSheet({ type: "search_map_area" });
   };
 
   const handleMoveToMyLocation = () => {
@@ -168,11 +168,23 @@ export default function MapPage() {
       {map && myLocation && <MyLocationMarker map={map} position={myLocation} />}
 
       <MapBottomSheet
-        snapPoint={sheetSnapPoint}
-        onSnapPointChange={setSheetSnapPoint}
+        snapPoint={snapPoint}
+        onSnapPointChange={setSnapPoint}
         scrollResetKey={searchKeyword}
+        bodyRef={sheetBodyRef}
       >
-        <NearbyRestaurantList {...restaurantSearch} />
+        {currentView.type === "list" && (
+          <NearbyRestaurantList
+            {...restaurantSearch}
+            onSelectRestaurant={(restaurant) => moveSheet({ type: "click_restaurant", restaurant })}
+          />
+        )}
+        {currentView.type === "detail" && (
+          <RestaurantDetailSheet
+            restaurant={currentView.restaurant}
+            onBack={() => moveSheet({ type: "back" })}
+          />
+        )}
       </MapBottomSheet>
     </div>
   );
