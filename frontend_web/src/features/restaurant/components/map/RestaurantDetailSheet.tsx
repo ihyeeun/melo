@@ -36,15 +36,13 @@ function BestMenuList({ restaurantId, filter }: { restaurantId: number; filter: 
   );
 }
 
-export default function RestaurantDetailSheet({ restaurant, onBack }: RestaurantDetailSheetProps) {
+function RestaurantMenuSections({ restaurantId }: { restaurantId: number }) {
   const { data, isPending, isError, refetch } = useRestaurantDetailQuery({
-    restaurant_id: restaurant.restaurantId,
+    restaurant_id: restaurantId,
   });
 
   return (
-    <section>
-      <MapSheetHeader title={restaurant.restaurantName} onBack={onBack} />
-
+    <>
       <h3 className={`body-l-semi text-primary ${styles.sectionTitle}`}>
         오늘 식단 기록 기준 BEST {BEST_MENU_COUNT}
       </h3>
@@ -63,7 +61,7 @@ export default function RestaurantDetailSheet({ restaurant, onBack }: Restaurant
         </Tabs.List>
         {BEST_OPTIONS.map(({ filter }) => (
           <Tabs.Panel key={filter} value={filter} className={styles.bestPanel}>
-            <BestMenuList restaurantId={restaurant.restaurantId} filter={filter} />
+            <BestMenuList restaurantId={restaurantId} filter={filter} />
           </Tabs.Panel>
         ))}
       </Tabs.Root>
@@ -75,6 +73,21 @@ export default function RestaurantDetailSheet({ restaurant, onBack }: Restaurant
         isError={isError}
         onRetry={() => void refetch()}
       />
+    </>
+  );
+}
+
+export default function RestaurantDetailSheet({ restaurant, onBack }: RestaurantDetailSheetProps) {
+  return (
+    <section>
+      <MapSheetHeader title={restaurant.restaurantName} onBack={onBack} />
+      {restaurant.restaurantId === null ? (
+        <div className={styles.preparing} role="status">
+          <p className="body-m-medium text-tertiary">메뉴를 준비 중이에요</p>
+        </div>
+      ) : (
+        <RestaurantMenuSections restaurantId={restaurant.restaurantId} />
+      )}
     </section>
   );
 }

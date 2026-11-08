@@ -35,3 +35,11 @@
 .bestPanel {
   padding: 12px 0 24px;
 }
+
+.preparing {
+  display: grid;
+  place-items: center;
+  padding-block: 24px;
+  border-radius: 12px;
+  background-color: var(--background-gray-1);
+}

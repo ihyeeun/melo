@@ -87,37 +87,30 @@ export default function NearbyRestaurantList({
         <ul className={styles.list}>
           {restaurants.map((restaurant) => {
             const brand = brandByPlaceId.get(restaurant.id);
-            const itemContent = (
-              <>
-                <span className="body-l-medium text-primary">{restaurant.name}</span>
-                <span className="caption-m-medium text-secondary">
-                  {restaurant.category} · {formatDistance(restaurant.distance)}
-                  {brand && (
-                    <span className={`caption-m-semi ${styles.meloBadge}`}>멜로 식당</span>
-                  )}
-                </span>
-              </>
-            );
 
             return (
               <li key={restaurant.id} className={styles.item}>
-                {/* 멜로 식당만 restaurant_id가 있어 상세를 열 수 있다. */}
-                {brand ? (
-                  <button
-                    type="button"
-                    className={styles.itemContent}
-                    onClick={() =>
-                      onSelectRestaurant({
-                        restaurantId: brand.restaurant_id,
-                        restaurantName: restaurant.name,
-                      })
-                    }
-                  >
-                    {itemContent}
-                  </button>
-                ) : (
-                  <div className={styles.itemContent}>{itemContent}</div>
-                )}
+                <button
+                  type="button"
+                  className={styles.itemButton}
+                  onClick={() =>
+                    onSelectRestaurant({
+                      // 멜로 식당이 아니면 null이라, 상세에서 "메뉴 준비 중"을 보여준다.
+                      restaurantId: brand?.restaurant_id ?? null,
+                      restaurantName: restaurant.name,
+                      lat: restaurant.lat,
+                      lng: restaurant.lng,
+                    })
+                  }
+                >
+                  <span className="body-l-medium text-primary">{restaurant.name}</span>
+                  <span className="caption-m-medium text-secondary">
+                    {restaurant.category} · {formatDistance(restaurant.distance)}
+                    {brand && (
+                      <span className={`caption-m-semi ${styles.meloBadge}`}>멜로 식당</span>
+                    )}
+                  </span>
+                </button>
               </li>
             );
           })}

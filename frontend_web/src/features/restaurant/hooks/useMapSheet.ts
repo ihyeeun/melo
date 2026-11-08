@@ -5,46 +5,63 @@ import {
   SHEET_ACTION_POLICY,
   SHEET_VIEW_SNAP,
 } from "@/features/restaurant/constants/mapSheet.policy";
+import type { LatLng } from "@/features/restaurant/utils/currentLocation.util";
 import { useStackflowBackHandler } from "@/shared/navigation/stackflowNavigation";
 
-export type SheetRestaurant = { restaurantId: number; restaurantName: string };
+// restaurantId: 멜로 식당이 아니면 null이고, 상세 대신 "메뉴 준비 중"을 보여준다.
+// 좌표는 상세를 열 때 지도를 그 식당으로 옮기는 데 쓴다.
+export type SheetRestaurant = LatLng & { restaurantId: number | null; restaurantName: string };
 
 export type MapSheetAction =
-  | { type: "click_restaurant"; restaurant: SheetRestaurant }
+  | { type: "click_restaurant" | "click_marker"; restaurant: SheetRestaurant }
   | { type: "back" | "submit_search" | "search_map_area" };
 
 // scrollTop: 다른 화면으로 넘어갈 때의 스크롤 위치. 돌아오면 되살린다.
-// prevSnapPoint: 이 화면에 들어오기 전 시트 높이. 뒤로 가면 되돌린다.
-export type MapSheetView = { scrollTop?: number; prevSnapPoint?: SheetSnapPoint } & (
+export type MapSheetView = { scrollTop?: number } & (
   | { type: "list" }
   | { type: "detail"; restaurant: SheetRestaurant }
 );
 
 type MapSheet = { views: MapSheetView[]; snapPoint: SheetSnapPoint };
 
+// 시트가 이 높이일 때 화면 아래쪽을 가리는 높이(px). 비율은 화면 높이 기준이다.
+export function getSheetHeight(snapPoint: SheetSnapPoint) {
+  if (typeof snapPoint === "number") return window.innerHeight * snapPoint;
+  return snapPoint ? parseFloat(snapPoint) : 0;
+}
+
 function createListSheet(): MapSheet {
   return { views: [{ type: "list" }], snapPoint: SHEET_VIEW_SNAP.list };
 }
 
 function applySheetAction(sheet: MapSheet, action: MapSheetAction): MapSheet {
-  const policy = SHEET_ACTION_POLICY[action.type];
+  const currentView = sheet.views[sheet.views.length - 1];
+  const entry = SHEET_ACTION_POLICY[action.type];
+  // 화면마다 동작이 다른 액션은 지금 화면의 정책을 쓴다.
+  const policy = "method" in entry ? entry : entry[currentView.type];
 
   switch (policy.method) {
-    case "push": {
+    case "push":
+    case "replace": {
       // 액션에 담긴 값(restaurant)을 그대로 화면 값으로 쓴다. 둘의 짝은 MapSheetAction이 맞춘다.
-      const view = { ...action, type: policy.target, prevSnapPoint: sheet.snapPoint } as MapSheetView;
+      const view = { ...action, type: policy.target } as MapSheetView;
+      const baseViews = policy.method === "replace" ? sheet.views.slice(0, -1) : sheet.views;
+
       return {
-        views: [...sheet.views, view],
-        snapPoint: SHEET_VIEW_SNAP[policy.target] ?? sheet.snapPoint,
+        views: [...baseViews, view],
+        snapPoint:
+          ("snap" in policy ? policy.snap : undefined) ??
+          SHEET_VIEW_SNAP[policy.target] ??
+          sheet.snapPoint,
       };
     }
     case "pop": {
       if (sheet.views.length === 1) return sheet;
 
-      const leavingView = sheet.views[sheet.views.length - 1];
+      const backView = sheet.views[sheet.views.length - 2];
       return {
         views: sheet.views.slice(0, -1),
-        snapPoint: leavingView.prevSnapPoint ?? sheet.snapPoint,
+        snapPoint: SHEET_VIEW_SNAP[backView.type] ?? sheet.snapPoint,
       };
     }
     case "reset":
