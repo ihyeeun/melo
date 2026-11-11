@@ -9,6 +9,7 @@ import RestaurantDetailSheet from "@/features/restaurant/components/map/Restaura
 import MyLocationMarker from "@/features/restaurant/components/markers/MyLocationMarker";
 import NearbyRestaurantMarkers from "@/features/restaurant/components/markers/NearbyRestaurantMarkers";
 import { SHEET_VIEW_SNAP } from "@/features/restaurant/constants/mapSheet.policy";
+import { useNearbyRestaurantsQuery } from "@/features/restaurant/hooks/queries/restaurant.query";
 import { useCurrentLocation } from "@/features/restaurant/hooks/useCurrentLocation";
 import { getSheetHeight, useMapSheet } from "@/features/restaurant/hooks/useMapSheet";
 import styles from "@/features/restaurant/styles/MapPage.module.css";
@@ -46,6 +47,9 @@ export default function MapPage() {
   const [mapSearchCenter, setMapSearchCenter] = useState<LatLng | null>(null);
   const searchCenter = mapSearchCenter ?? center;
   const restaurantSearch = { category: CATEGORY, center: searchCenter, keyword: searchKeyword };
+  // 목록과 같은 쿼리라 요청은 한 번만 나간다. 카카오가 거리순으로 주므로 첫 번째가 가장 가깝다.
+  const { data: searchResult } = useNearbyRestaurantsQuery(CATEGORY, searchCenter, searchKeyword);
+  const nearestResult = searchKeyword ? searchResult?.pages[0]?.restaurants[0] : undefined;
 
   // 검색창과 시트가 가리는 높이. 다 펼친 시트는 지도를 모두 가리므로, 다시 내렸을 때(중간 높이)를 기준으로 한다.
   const getHiddenMapHeight = (sheetSnapPoint: SheetSnapPoint = snapPoint) => ({
@@ -107,14 +111,25 @@ export default function MapPage() {
   }, [map]);
 
   const moveToSearchCenter = useEffectEvent(() => {
-    if (searchCenter) moveMapToVisibleCenter(searchCenter);
+    // 검색어로 찾을 때는 결과가 온 뒤 가장 가까운 식당으로 옮긴다.
+    if (!searchKeyword && searchCenter) moveMapToVisibleCenter(searchCenter);
   });
 
-  // 내 위치를 받았거나 검색어가 바뀌면 검색 기준점으로 지도를 옮긴다.
+  // 내 위치를 받았거나 검색어를 지우면 검색 기준점으로 지도를 옮긴다.
   // '현 지도에서 검색'은 사용자가 맞춰 둔 지도에서 찾는 것이라 옮기지 않는다.
   useEffect(() => {
     moveToSearchCenter();
   }, [map, center, searchKeyword]);
+
+  const moveToNearestResult = useEffectEvent((restaurant: LatLng) => {
+    moveMapToVisibleCenter(restaurant);
+  });
+
+  // 검색어로 찾으면 확대 수준은 그대로 두고, 가장 가까운 식당을 보이는 영역 가운데로 옮긴다.
+  // 다음 페이지를 불러와도 첫 페이지는 그대로라 다시 움직이지 않는다.
+  useEffect(() => {
+    if (nearestResult) moveToNearestResult(nearestResult);
+  }, [map, nearestResult]);
 
   useEffect(() => {
     let cancelled = false;
