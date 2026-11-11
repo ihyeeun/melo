@@ -25,8 +25,8 @@ export default function RestaurantDetailSheet({ restaurant, onBack }: Restaurant
       />
       {restaurant.restaurantId === null ? (
         <div className={styles.preparing} role="status">
-          <SystemIcon name="hourglass-empty" size={20} className="text-tertiary" />
-          <p className="body-m-medium text-tertiary">메뉴 업데이트를 준비 중이에요</p>
+          <SystemIcon name="hourglass-empty" size={20} className="text-disabled" />
+          <p className="body-m-medium text-disabled">메뉴 업데이트를 준비 중이에요</p>
         </div>
       ) : (
         <BestMenuTabs restaurantId={restaurant.restaurantId} />

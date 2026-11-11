@@ -93,8 +93,8 @@ export default function NearbyRestaurantList({
       </header>
       {restaurants.length === 0 ? (
         <div className={styles.state} role="status">
-          <SystemIcon name="search" size={20} className="text-tertiary" />
-          <p className="body-m-medium text-tertiary">근처에 해당하는 식당이 없어요</p>
+          <SystemIcon name="search" size={20} className="text-disabled" />
+          <p className="body-m-medium text-disabled">근처에 해당하는 식당이 없어요</p>
         </div>
       ) : (
         <ul className={styles.list}>
