@@ -37,6 +37,7 @@ export const PATH = {
   // 식당
   RESTAURANT: "/restaurant",
   RESTAURANT_DETAIL: "/restaurant/detail",
+  RESTAURANT_MENU: "/restaurant/menu",
   MAP: "/map",
 
   // 개인 분석

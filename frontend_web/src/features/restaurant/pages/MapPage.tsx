@@ -21,8 +21,11 @@ import {
   loadKakaoMapSdk,
 } from "@/features/restaurant/utils/kakaoMap.util";
 import { dismissKeyboard } from "@/features/restaurant/utils/keyboard.util";
+import { PATH } from "@/router/path";
+import { Button } from "@/shared/commons/button/Button";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import { SearchInput } from "@/shared/commons/input/SearchInput";
+import { navigate } from "@/shared/navigation/stackflowNavigation";
 
 const DEFAULT_CENTER = { lat: 37.5665, lng: 126.978 };
 const CATEGORY = "RESTAURANT" as const;
@@ -43,6 +46,7 @@ export default function MapPage() {
   const searchBarRef = useRef<HTMLDivElement>(null);
   const sheetBodyRef = useRef<HTMLDivElement>(null);
   const { currentView, snapPoint, setSnapPoint, moveSheet } = useMapSheet(sheetBodyRef);
+  const detailRestaurant = currentView.type === "detail" ? currentView.restaurant : null;
   const [isMapMoved, setIsMapMoved] = useState(false);
   const [mapSearchCenter, setMapSearchCenter] = useState<LatLng | null>(null);
   const searchCenter = mapSearchCenter ?? center;
@@ -209,7 +213,7 @@ export default function MapPage() {
         <NearbyRestaurantMarkers
           map={map}
           {...restaurantSearch}
-          selectedPlaceId={currentView.type === "detail" ? currentView.restaurant.id : null}
+          selectedPlaceId={detailRestaurant?.id ?? null}
           onSelectRestaurant={(restaurant) => moveSheet({ type: "click_marker", restaurant })}
         />
       )}
@@ -230,6 +234,20 @@ export default function MapPage() {
             >
               <SystemIcon name="location-searching" />
             </button>
+          )
+        }
+        footer={
+          detailRestaurant?.restaurantId != null && (
+            <Button
+              fullWidth
+              onClick={() =>
+                navigate(`${PATH.RESTAURANT_MENU}?restaurantId=${detailRestaurant.restaurantId}`, {
+                  state: detailRestaurant,
+                })
+              }
+            >
+              식당 메뉴 전체 보기
+            </Button>
           )
         }
       >

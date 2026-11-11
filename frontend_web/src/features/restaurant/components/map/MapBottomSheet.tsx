@@ -18,6 +18,8 @@ type MapBottomSheetProps = {
   bodyRef?: Ref<HTMLDivElement>;
   // 시트 바로 위에 붙어서, 시트를 끌면 같이 움직인다.
   floatingAction?: ReactNode;
+  // 시트 높이와 상관없이 화면 아래에 붙어서 시트 내용 위에 보인다. 시트를 다 내리면 숨긴다.
+  footer?: ReactNode;
   children?: ReactNode;
 };
 
@@ -27,6 +29,7 @@ export default function MapBottomSheet({
   scrollResetKey,
   bodyRef,
   floatingAction,
+  footer,
   children,
 }: MapBottomSheetProps) {
   return (
@@ -46,6 +49,7 @@ export default function MapBottomSheet({
           aria-label="지도 시트"
           aria-describedby={undefined}
           data-expanded={snapPoint === 1}
+          data-has-footer={Boolean(footer)}
           onPointerDownCapture={dismissKeyboard}
         >
           {floatingAction && <div className={styles.floatingAction}>{floatingAction}</div>}
@@ -54,6 +58,7 @@ export default function MapBottomSheet({
             {children}
           </SeedBottomSheet.Body>
         </SeedBottomSheet.Content>
+        {footer && snapPoint !== SNAP_POINTS[0] && <div className={styles.footer}>{footer}</div>}
       </SeedBottomSheet.Positioner>
     </SeedBottomSheet.Root>
   );

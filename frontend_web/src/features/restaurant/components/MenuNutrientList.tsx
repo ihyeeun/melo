@@ -1,3 +1,10 @@
+import { Tabs } from "@base-ui/react";
+
+import {
+  BEST_OPTIONS,
+  type BestFilter,
+} from "@/features/restaurant/constants/restaurantBest.constant";
+import { useRestaurantDetailQuery } from "@/features/restaurant/hooks/queries/restaurant.query";
 import styles from "@/features/restaurant/styles/MapSheetView.module.css";
 import type { RestaurantMenuResponseDto } from "@/shared/api/types/api.response.dto";
 import { Skeleton, SkeletonStatus } from "@/shared/commons/skeleton/Skeleton";
@@ -9,7 +16,48 @@ const NUTRIENTS = [
   { key: "sat_fat", label: "포화지방" },
 ] as const;
 
-type SheetMenuListProps = {
+const BEST_MENU_COUNT = 5;
+
+// 선택한 탭의 패널만 그려지므로, 탭을 눌렀을 때 그 기준으로 처음 요청한다.
+function BestMenuList({ restaurantId, filter }: { restaurantId: number; filter: BestFilter }) {
+  const { data, isPending, isError } = useRestaurantDetailQuery({
+    restaurant_id: restaurantId,
+    filter,
+  });
+
+  return (
+    <MenuNutrientList
+      // 서버가 추천 순서로 정렬해 준다고 보고 앞에서부터 자른다.
+      menus={data?.menu_list.slice(0, BEST_MENU_COUNT) ?? []}
+      isPending={isPending}
+      isError={isError}
+      ranked
+    />
+  );
+}
+
+// 시트 상세와 식당 상세 페이지에서 같이 쓰는 BEST 탭
+export function BestMenuTabs({ restaurantId }: { restaurantId: number }) {
+  return (
+    <Tabs.Root defaultValue={BEST_OPTIONS[0].filter}>
+      <Tabs.List className={styles.bestTabList} aria-label="BEST 메뉴 기준">
+        {BEST_OPTIONS.map(({ filter }) => (
+          <Tabs.Tab key={filter} value={filter} className={`body-s-medium ${styles.bestTab}`}>
+            {filter} BEST
+          </Tabs.Tab>
+        ))}
+        <Tabs.Indicator className={styles.bestTabIndicator} />
+      </Tabs.List>
+      {BEST_OPTIONS.map(({ filter }) => (
+        <Tabs.Panel key={filter} value={filter} className={styles.bestPanel}>
+          <BestMenuList restaurantId={restaurantId} filter={filter} />
+        </Tabs.Panel>
+      ))}
+    </Tabs.Root>
+  );
+}
+
+type MenuNutrientListProps = {
   menus: RestaurantMenuResponseDto[];
   isPending: boolean;
   isError: boolean;
@@ -17,12 +65,12 @@ type SheetMenuListProps = {
   ranked?: boolean;
 };
 
-export default function SheetMenuList({
+export default function MenuNutrientList({
   menus,
   isPending,
   isError,
   ranked = false,
-}: SheetMenuListProps) {
+}: MenuNutrientListProps) {
   if (isPending) {
     return (
       <SkeletonStatus label="메뉴를 불러오는 중입니다.">

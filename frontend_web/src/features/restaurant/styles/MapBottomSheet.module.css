@@ -38,3 +38,19 @@
 .content[data-expanded="true"] .body:global(.seed-bottom-sheet__body) {
   overflow-y: auto;
 }
+
+/* 시트 내용(z-index 2)보다 위에 둔다. */
+.footer {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 3;
+  padding: 12px 16px;
+  pointer-events: auto;
+}
+
+/* 다 펼쳤을 때 마지막 항목이 버튼에 가리지 않도록 아래를 비워 둔다. */
+.content[data-has-footer="true"] .body:global(.seed-bottom-sheet__body) {
+  padding-bottom: 40px;
+}

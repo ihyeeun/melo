@@ -34,10 +34,6 @@
   vertical-align: middle;
 }
 
-.sectionTitle {
-  margin-bottom: 4px;
-}
-
 .bestTabList {
   position: relative;
   display: grid;
@@ -77,11 +73,6 @@
 
 .bestPanel {
   padding: 8px 0 16px;
-}
-
-.allMenuSection {
-  padding: 20px 0 24px;
-  border-top: 1px solid var(--border-subtle);
 }
 
 .menuList {
