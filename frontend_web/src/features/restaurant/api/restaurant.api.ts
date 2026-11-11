@@ -31,17 +31,15 @@ export function getRestaurantDetail(body: RestaurantDetailRequestDto) {
 const DEV_MELO_RESTAURANT_ID = 1;
 
 export function getRestaurantBrands(body: RestaurantBrandsRequestDto) {
-  if (import.meta.env.DEV) {
-    return Promise.resolve<RestaurantBrandsResponseDto>({
-      restaurants: [
-        {
-          place_id: Number(body.place_ids[0]),
-          restaurant_id: DEV_MELO_RESTAURANT_ID,
-          restaurant_name: "임시 멜로 식당",
-        },
-      ],
-    });
-  }
+  return Promise.resolve<RestaurantBrandsResponseDto>({
+    restaurants: [
+      {
+        place_id: Number(body.place_ids[0]),
+        restaurant_id: DEV_MELO_RESTAURANT_ID,
+        restaurant_name: "임시 멜로 식당",
+      },
+    ],
+  });
 
   return appApiData<RestaurantBrandsResponseDto>({
     endpoint: "/restaurant/brands",
