@@ -20,8 +20,8 @@
 }
 
 .marker[data-selected="true"] .icon {
-  top: -28px;
-  left: -14.5px;
+  top: -35px;
+  left: -14px;
   width: 28px;
   height: 39px;
   background-image: url("/icons/maps/marker-current.svg");
@@ -38,7 +38,7 @@
 .label {
   display: none;
   position: absolute;
-  top: 7px;
+  top: 8px;
   left: 0;
   transform: translateX(-50%);
   white-space: nowrap;
