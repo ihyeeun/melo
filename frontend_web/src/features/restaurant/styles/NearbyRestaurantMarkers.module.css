@@ -37,15 +37,13 @@
 .label {
   display: none;
   position: absolute;
-  top: 4px;
+  top: 7px;
   left: 0;
   transform: translateX(-50%);
   white-space: nowrap;
   color: var(--text-primary);
-  text-shadow:
-    0 0 2px var(--background-default),
-    0 0 2px var(--background-default),
-    0 0 2px var(--background-default);
+  -webkit-text-stroke: 3px var(--background-default);
+  paint-order: stroke fill;
 }
 .marker[data-selected="true"] .label {
   display: block;

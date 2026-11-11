@@ -157,7 +157,8 @@ export default function MapPage() {
             onValueChange={handleSearchInputChange}
             onEnter={handleSearchSubmit}
             debounceMs={null}
-            placeholder="식당 검색"
+            placeholder="식당을 검색해보세요"
+            showSearchIcon
             inputClassName="amp-unmask"
           />
         </div>
