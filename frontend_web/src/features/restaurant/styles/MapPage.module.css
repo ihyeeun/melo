@@ -70,14 +70,12 @@
 }
 
 .locationBadge {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin: 0;
+  width: fit-content;
+  margin-inline: auto;
   padding: 8px 14px;
   border-radius: 100px;
   background: var(--background-default);
-  box-shadow: var(--shadow-outer);
+  box-shadow: var(--shadow-normal);
 }
 
 .locationBadge > p {
