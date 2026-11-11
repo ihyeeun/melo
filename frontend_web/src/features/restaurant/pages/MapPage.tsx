@@ -19,6 +19,7 @@ import {
   type KakaoMap,
   loadKakaoMapSdk,
 } from "@/features/restaurant/utils/kakaoMap.util";
+import { dismissKeyboard } from "@/features/restaurant/utils/keyboard.util";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import { SearchInput } from "@/shared/commons/input/SearchInput";
 
@@ -147,7 +148,7 @@ export default function MapPage() {
           <p className="body-l-medium text-tertiary">지도를 불러오지 못했어요</p>
         </div>
       ) : (
-        <div ref={baseMap} className={styles.baseMap} />
+        <div ref={baseMap} className={styles.baseMap} onPointerDownCapture={dismissKeyboard} />
       )}
 
       <section className={styles.mapControlSection}>

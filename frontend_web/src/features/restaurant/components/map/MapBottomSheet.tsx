@@ -2,6 +2,7 @@ import { BottomSheet as SeedBottomSheet } from "@seed-design/react";
 import type { ReactNode, Ref } from "react";
 
 import styles from "@/features/restaurant/styles/MapBottomSheet.module.css";
+import { dismissKeyboard } from "@/features/restaurant/utils/keyboard.util";
 
 const SNAP_POINTS = ["36px", 0.5, 1];
 export const DEFAULT_SNAP_POINT = 0.5;
@@ -45,6 +46,7 @@ export default function MapBottomSheet({
           aria-label="지도 시트"
           aria-describedby={undefined}
           data-expanded={snapPoint === 1}
+          onPointerDownCapture={dismissKeyboard}
         >
           {floatingAction && <div className={styles.floatingAction}>{floatingAction}</div>}
           <SeedBottomSheet.Handle />
