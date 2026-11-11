@@ -10,6 +10,18 @@
   isolation: isolate;
 }
 
+.map :global(.seed-bottom-sheet__positioner) {
+  transition:
+    opacity 0.15s,
+    visibility 0.15s;
+}
+
+/* 검색창에 입력하는 동안은 시트를 숨겨 지도를 보이게 한다. 포커스가 풀리면 원래 높이로 다시 나타난다. */
+.map:has(.searchBar:focus-within) :global(.seed-bottom-sheet__positioner) {
+  opacity: 0;
+  visibility: hidden;
+}
+
 .errorSection {
   height: 100%;
   display: grid;
