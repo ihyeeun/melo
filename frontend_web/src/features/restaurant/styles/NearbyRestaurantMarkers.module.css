@@ -1,0 +1,52 @@
+.marker {
+  position: relative;
+  display: block;
+  width: 0;
+  height: 0;
+}
+
+.icon {
+  position: absolute;
+  top: -10px;
+  left: -10px;
+  width: 22px;
+  height: 22px;
+  background: url("/icons/maps/marker.svg") center / contain no-repeat;
+}
+
+.marker[data-melo="true"] .icon {
+  background-image: url("/icons/maps/marker-melo.svg");
+}
+
+.marker[data-selected="true"] .icon {
+  top: -28px;
+  left: -14.5px;
+  width: 28px;
+  height: 39px;
+  background-image: url("/icons/maps/marker-current.svg");
+}
+
+.marker[data-selected="true"][data-melo="true"] .icon {
+  background-image: url("/icons/maps/marker-melo-current.svg");
+}
+
+.marker[data-selected="true"] .label {
+  display: block;
+}
+
+.label {
+  display: none;
+  position: absolute;
+  top: 4px;
+  left: 0;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  color: var(--text-primary);
+  text-shadow:
+    0 0 2px var(--background-default),
+    0 0 2px var(--background-default),
+    0 0 2px var(--background-default);
+}
+.marker[data-selected="true"] .label {
+  display: block;
+}

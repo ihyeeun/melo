@@ -1,9 +1,9 @@
 .myLocation {
   box-sizing: border-box;
-  width: 18px;
-  height: 18px;
+  width: 15px;
+  height: 15px;
   border: 3px solid var(--background-default);
   border-radius: 50%;
-  background: var(--primary-normal);
-  box-shadow: 0px 0px 0px 8px rgba(153, 181, 215, 0.44);
+  background: var(--navy-700);
+  box-shadow: 0px 0px 0px 11px rgba(164, 186, 214, 0.4);
 }

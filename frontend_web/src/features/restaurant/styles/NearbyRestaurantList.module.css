@@ -1,26 +1,48 @@
+.header {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 12px;
+}
+
 .list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
   list-style: none;
   margin: 0;
   padding: 0;
 }
 
 .item {
-  border-bottom: 1px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 14px 16px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 16px;
 }
 
-.itemButton {
+.itemText {
   display: flex;
+  flex: 1;
   flex-direction: column;
   gap: 4px;
-  width: 100%;
-  padding: 14px 0;
+  min-width: 0;
   overflow-wrap: anywhere;
 }
 
-/* 서버 응답이 늦게 와도 항목 높이가 바뀌지 않도록 줄 안에 붙인다. */
+.nameRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
 .meloBadge {
-  margin-left: 6px;
-  color: var(--primary-normal);
+  flex-shrink: 0;
+  padding: 4px 6px;
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  color: var(--text-secondary);
   white-space: nowrap;
   animation: melo-badge-enter 0.2s ease-out;
 }
@@ -34,6 +56,7 @@
 .state {
   display: grid;
   place-items: center;
+  gap: 4px;
   margin-top: 8px;
   padding-block: 24px;
   text-align: center;

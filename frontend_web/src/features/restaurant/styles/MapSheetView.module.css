@@ -1,44 +1,146 @@
 .header {
-  display: flex;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
-  gap: 4px;
+  column-gap: 4px;
+  row-gap: 2px;
   margin-bottom: 16px;
 }
 
 .backButton {
   display: grid;
   place-items: center;
-  flex-shrink: 0;
   width: 32px;
   height: 32px;
   margin-left: -6px;
 }
 
 .title {
-  min-width: 0;
-  margin: 0;
   overflow-wrap: anywhere;
 }
 
-.sectionTitle {
-  margin: 0 0 12px;
+.description {
+  grid-column: 2;
 }
 
-/* 탭 모양은 상세 페이지(RestaurantPage.module.css)와 같고, 기준이 셋이라 3열로 나눈다. */
+/* 항목 사이에 세로 구분선을 넣는다. 예: 샐러드, 포케 | 120m */
+.divided > * + *::before {
+  content: "";
+  display: inline-block;
+  width: 1px;
+  height: 10px;
+  margin-inline: 6px;
+  background-color: var(--border-default);
+  vertical-align: middle;
+}
+
+.sectionTitle {
+  margin-bottom: 4px;
+}
+
 .bestTabList {
   position: relative;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  border-bottom: 1px solid var(--border-subtle);
+  padding: 8px;
+  gap: 4px;
+  border-radius: 16px;
+  background-color: var(--background-gray-2);
+}
+
+.bestTab {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  color: var(--text-tertiary);
+  padding: 6px;
+}
+
+.bestTab[data-active] {
+  color: var(--text-primary);
+}
+
+.bestTabIndicator {
+  position: absolute;
+  left: 0;
+  top: 8px;
+  bottom: 8px;
+  width: var(--active-tab-width);
+  transform: translateX(var(--active-tab-left));
+  border-radius: 12px;
+  background-color: var(--background-default);
+  box-shadow: var(--shadow-subtle);
+  transition:
+    transform 0.2s ease-out,
+    width 0.2s ease-out;
 }
 
 .bestPanel {
-  padding: 12px 0 24px;
+  padding: 8px 0 16px;
+}
+
+.allMenuSection {
+  padding: 20px 0 24px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.menuList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.menuItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-block: 12px;
+}
+.menuItem + .menuItem {
+  margin-top: 6px;
+}
+
+.rank {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  background-color: var(--background-selected);
+  color: var(--coral-500);
+}
+
+.menuTitle {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.category {
+  background-color: var(--background-gray-1);
+  padding: 4px 6px;
+  border-radius: 8px;
+}
+
+.menuText {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.menuState {
+  display: grid;
+  place-items: center;
+  padding-block: 24px;
 }
 
 .preparing {
   display: grid;
   place-items: center;
+  gap: 4px;
   padding-block: 24px;
   border-radius: 12px;
   background-color: var(--background-gray-1);

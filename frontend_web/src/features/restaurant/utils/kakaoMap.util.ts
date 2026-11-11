@@ -22,6 +22,10 @@ type KakaoMapObject = {
   setMap: (map: KakaoMap | null) => void;
 };
 
+export type KakaoCustomOverlay = KakaoMapObject & {
+  setZIndex: (zIndex: number) => void;
+};
+
 export type KakaoPlace = {
   id: string;
   place_name: string;
@@ -66,17 +70,15 @@ declare global {
         LatLng: new (lat: number, lng: number) => unknown;
         Point: new (x: number, y: number) => KakaoPoint;
         Map: new (container: HTMLElement, options: { center: unknown; level?: number }) => KakaoMap;
-        Marker: new (options: {
-          map: KakaoMap;
-          position: unknown;
-          title?: string;
-        }) => KakaoMapObject;
         CustomOverlay: new (options: {
           map: KakaoMap;
           position: unknown;
-          content: string;
+          content: string | HTMLElement;
+          xAnchor?: number;
+          yAnchor?: number;
           zIndex?: number;
-        }) => KakaoMapObject;
+          clickable?: boolean;
+        }) => KakaoCustomOverlay;
         services: {
           Places: new () => {
             categorySearch: (

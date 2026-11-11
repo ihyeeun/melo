@@ -1,16 +1,15 @@
 import { type RefObject, useLayoutEffect, useState } from "react";
 
+import type { NearbyRestaurant } from "@/features/restaurant/api/nearbyRestaurant.api";
 import type { SheetSnapPoint } from "@/features/restaurant/components/map/MapBottomSheet";
 import {
   SHEET_ACTION_POLICY,
   SHEET_VIEW_SNAP,
 } from "@/features/restaurant/constants/mapSheet.policy";
-import type { LatLng } from "@/features/restaurant/utils/currentLocation.util";
 import { useStackflowBackHandler } from "@/shared/navigation/stackflowNavigation";
 
 // restaurantId: 멜로 식당이 아니면 null이고, 상세 대신 "메뉴 준비 중"을 보여준다.
-// 좌표는 상세를 열 때 지도를 그 식당으로 옮기는 데 쓴다.
-export type SheetRestaurant = LatLng & { restaurantId: number | null; restaurantName: string };
+export type SheetRestaurant = NearbyRestaurant & { restaurantId: number | null };
 
 export type MapSheetAction =
   | { type: "click_restaurant" | "click_marker"; restaurant: SheetRestaurant }

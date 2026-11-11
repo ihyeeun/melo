@@ -29,23 +29,32 @@
   margin-bottom: 8px;
   border-radius: 12px;
   background: var(--background-default);
-  box-shadow: var(--shadow-outer);
+  box-shadow: var(--shadow-normal);
   pointer-events: auto;
-}
-
-.mapActions {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 8px;
 }
 
 .mapActionButton {
-  padding: 8px 14px;
-  border-radius: 100px;
+  margin-inline: auto;
+  padding: 6px 10px 6px 8px;
+  border-radius: 12px;
   background: var(--background-default);
-  box-shadow: var(--shadow-outer);
+  box-shadow: var(--shadow-normal);
   pointer-events: auto;
   white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.currentLocationButton {
+  background: var(--background-default);
+  box-shadow: var(--shadow-normal);
+  width: 44px;
+  height: 44px;
+  border-radius: 100px;
+  display: grid;
+  place-items: center;
+  color: var(--navy-700);
 }
 
 .locationBadge {

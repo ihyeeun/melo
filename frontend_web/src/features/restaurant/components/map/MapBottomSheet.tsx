@@ -15,6 +15,8 @@ type MapBottomSheetProps = {
   scrollResetKey: string;
   // 시트 화면을 바꿀 때 스크롤 위치를 저장하고 되살리는 데 쓴다.
   bodyRef?: Ref<HTMLDivElement>;
+  // 시트 바로 위에 붙어서, 시트를 끌면 같이 움직인다.
+  floatingAction?: ReactNode;
   children?: ReactNode;
 };
 
@@ -23,6 +25,7 @@ export default function MapBottomSheet({
   onSnapPointChange,
   scrollResetKey,
   bodyRef,
+  floatingAction,
   children,
 }: MapBottomSheetProps) {
   return (
@@ -43,6 +46,7 @@ export default function MapBottomSheet({
           aria-describedby={undefined}
           data-expanded={snapPoint === 1}
         >
+          {floatingAction && <div className={styles.floatingAction}>{floatingAction}</div>}
           <SeedBottomSheet.Handle />
           <SeedBottomSheet.Body key={scrollResetKey} ref={bodyRef} className={styles.body}>
             {children}

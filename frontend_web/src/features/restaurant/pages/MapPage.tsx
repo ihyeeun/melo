@@ -19,6 +19,7 @@ import {
   type KakaoMap,
   loadKakaoMapSdk,
 } from "@/features/restaurant/utils/kakaoMap.util";
+import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import { SearchInput } from "@/shared/commons/input/SearchInput";
 
 const DEFAULT_CENTER = { lat: 37.5665, lng: 126.978 };
@@ -126,7 +127,7 @@ export default function MapPage() {
         setMap(
           new kakao.maps.Map(baseMap.current, {
             center: new kakao.maps.LatLng(DEFAULT_CENTER.lat, DEFAULT_CENTER.lng),
-            level: 1,
+            level: 2,
           }),
         );
       })
@@ -160,25 +161,14 @@ export default function MapPage() {
             inputClassName="amp-unmask"
           />
         </div>
-        {map && (
-          <div className={styles.mapActions}>
-            <button
-              type="button"
-              className={`caption-m-semi text-primary ${styles.mapActionButton}`}
-              onClick={handleMoveToMyLocation}
-            >
-              현재 위치
-            </button>
-            {isMapMoved && (
-              <button
-                type="button"
-                className={`caption-m-semi text-primary ${styles.mapActionButton}`}
-                onClick={handleSearchMapArea}
-              >
-                현 지도에서 검색
-              </button>
-            )}
-          </div>
+        {map && isMapMoved && (
+          <button
+            type="button"
+            className={`body-s-medium text-primary ${styles.mapActionButton}`}
+            onClick={handleSearchMapArea}
+          >
+            <SystemIcon name="refresh" size={20} className="text-highlight" />현 지도에서 검색
+          </button>
         )}
         {map && status !== "success" && (
           <div className={styles.locationBadge}>
@@ -202,6 +192,7 @@ export default function MapPage() {
         <NearbyRestaurantMarkers
           map={map}
           {...restaurantSearch}
+          selectedPlaceId={currentView.type === "detail" ? currentView.restaurant.id : null}
           onSelectRestaurant={(restaurant) => moveSheet({ type: "click_marker", restaurant })}
         />
       )}
@@ -212,10 +203,23 @@ export default function MapPage() {
         onSnapPointChange={setSnapPoint}
         scrollResetKey={searchKeyword}
         bodyRef={sheetBodyRef}
+        floatingAction={
+          map && (
+            <button
+              type="button"
+              className={styles.currentLocationButton}
+              aria-label="현재 위치로 이동"
+              onClick={handleMoveToMyLocation}
+            >
+              <SystemIcon name="location-searching" />
+            </button>
+          )
+        }
       >
         {currentView.type === "list" && (
           <NearbyRestaurantList
             {...restaurantSearch}
+            isMapAreaSearch={mapSearchCenter !== null}
             onSelectRestaurant={(restaurant) => moveSheet({ type: "click_restaurant", restaurant })}
           />
         )}
