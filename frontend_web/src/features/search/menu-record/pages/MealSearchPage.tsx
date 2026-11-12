@@ -136,7 +136,7 @@ export default function MealSearchPage() {
     menuSelectionRouteContext.returnPath ?? (isFolderSearchMode ? PATH.CREATE_FOLDER : null);
   const backFallbackPath = isFolderSearchMode
     ? (personalMenuEditFallbackPath ?? PATH.CREATE_FOLDER)
-    : PATH.DIARY;
+    : PATH.HOME;
   const menuSelectionPathContext = buildMenuSelectionPathContext({
     dateKey,
     mealType,
