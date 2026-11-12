@@ -479,7 +479,7 @@ export default function MealRecordPage() {
         toast.success("식사 기록이 저장되었어요");
         navigateBack({
           animate: false,
-          fallbackTo: PATH.DIARY,
+          fallbackTo: PATH.HOME,
           skipBackHandler: true,
         });
         return;
@@ -508,7 +508,7 @@ export default function MealRecordPage() {
           if (deleteResult === DELETE_MEAL_RECORD_RESULT.FAILED_UNRECOVERED) {
             clearAllDrafts();
             toast.warning("서버가 불안정해요. 잠시 후 다시 시도해주세요.");
-            resetStackflow(PATH.DIARY, { animate: false });
+            resetStackflow(PATH.HOME, { animate: false });
             return;
           }
 
@@ -525,7 +525,7 @@ export default function MealRecordPage() {
       clearAllDrafts();
       navigateBack({
         animate: false,
-        fallbackTo: PATH.DIARY,
+        fallbackTo: PATH.HOME,
         skipBackHandler: true,
       });
       toast.success("식사 기록이 저장되었어요");
@@ -554,13 +554,13 @@ export default function MealRecordPage() {
   useStackflowBackHandler(handleBackGuard);
 
   const handleBack = () => {
-    navigateBack({ fallbackTo: PATH.DIARY });
+    navigateBack({ fallbackTo: PATH.HOME });
   };
 
   const handleExit = () => {
     clearAllDrafts();
     navigateBack({
-      fallbackTo: PATH.DIARY,
+      fallbackTo: PATH.HOME,
       skipBackHandler: true,
     });
   };
