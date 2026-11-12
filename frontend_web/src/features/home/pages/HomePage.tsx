@@ -11,6 +11,7 @@ import styles from "@/features/home/styles/HomePage.module.css";
 import type { HomeDashboardMode } from "@/features/home/types/homeDashboard.types";
 import { useMenstrualPhase } from "@/features/menstruation/hooks/useMenstrualPhase";
 import { getMenstrualCalendarStatus } from "@/features/menstruation/utils/menstrualPhaseDatesCalculation.util";
+import { useGetProfileQuery } from "@/features/profile/hooks/queries/useProfileQuery";
 import { track } from "@/shared/analytics/analytics";
 import { EVENT_NAME } from "@/shared/analytics/analytics.constants";
 import { FloatingCameraButton } from "@/shared/commons/button/FloatingCameraButton";
@@ -26,9 +27,13 @@ export default function HomePage() {
   const selectedDate = parseDateKey(selectedDateKey);
   const navigate = useNavigate();
   const isAiCameraBlocked = useIsFeatureBlocked(FEATURE_GUARD.FOOD_CAMERA);
+  const { data: profile } = useGetProfileQuery();
+  const isFemale = profile?.gender === 1;
   const [chatCameraUpdateUrl, setChatCameraUpdateUrl] = useState<string | null>(null);
   const [isChatCameraUpdateModalOpen, setIsChatCameraUpdateModalOpen] = useState(false);
-  const [mode, setMode] = useState<HomeDashboardMode>("daily");
+  const [selectedMode, setSelectedMode] = useState<HomeDashboardMode>("daily");
+  // 생리 모드는 여성만 쓴다. 생리 모드를 켠 채 성별을 바꿔도 기본 모드로 돌아오도록 매 렌더 계산한다
+  const mode: HomeDashboardMode = isFemale ? selectedMode : "daily";
   const pendingMenstrualEntryRef = useRef(false);
   const [calendarStartDate, setCalendarStartDate] = useState(selectedDateKey);
   const menstrualPhase = useMenstrualPhase(selectedDateKey, {
@@ -58,7 +63,7 @@ export default function HomePage() {
     if (nextMode === mode) return;
 
     pendingMenstrualEntryRef.current = nextMode === "menstruation";
-    setMode(nextMode);
+    setSelectedMode(nextMode);
   };
 
   const handleNavigateChatCamera = async () => {
@@ -93,13 +98,15 @@ export default function HomePage() {
               : undefined
           }
         />
-        <div className={styles.modeToggle} data-keep-calendar-open>
-          <HomeDashboardModeToggle
-            value={mode}
-            onChange={handleModeChange}
-            onClick={scrollToTop}
-          />
-        </div>
+        {isFemale ? (
+          <div className={styles.modeToggle} data-keep-calendar-open>
+            <HomeDashboardModeToggle
+              value={mode}
+              onChange={handleModeChange}
+              onClick={scrollToTop}
+            />
+          </div>
+        ) : null}
         <ScrollFogArea role="main" ref={contentRef} className={`main ${styles.content}`}>
           <PreviewTodayScoreSection homeMode={mode} menstrualPhase={menstrualPhase} />
           <RecordActionSection />
