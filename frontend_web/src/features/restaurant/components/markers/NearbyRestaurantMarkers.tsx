@@ -79,12 +79,19 @@ export default function NearbyRestaurantMarkers({
 
     const { maps } = window.kakao;
     const markers = markersRef.current;
+    // 마커를 지울 때 클릭 리스너도 함께 끊는다.
+    const listeners = new AbortController();
 
     data.pages
       .flatMap((page) => page.restaurants)
       .forEach((restaurant) => {
+        // 같은 장소가 여러 페이지에 와도 마커는 하나만 둔다.
+        if (markers.has(restaurant.id)) return;
+
         const element = createMarkerElement(restaurant.name);
-        element.addEventListener("click", () => handleMarkerClick(restaurant));
+        element.addEventListener("click", () => handleMarkerClick(restaurant), {
+          signal: listeners.signal,
+        });
 
         const overlay = new maps.CustomOverlay({
           map,
@@ -99,6 +106,7 @@ export default function NearbyRestaurantMarkers({
       });
 
     return () => {
+      listeners.abort();
       markers.forEach(({ overlay }) => overlay.setMap(null));
       markers.clear();
     };
