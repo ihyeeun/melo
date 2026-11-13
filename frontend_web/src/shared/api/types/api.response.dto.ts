@@ -471,6 +471,7 @@ export interface RestaurantDetailResponseDto {
 export interface RestaurantMenuResponseDto {
   menu_id: number;
   menu_name: string;
+  menu_category?: string;
   calories: number;
   sugars?: number;
   // carbs?: number;
@@ -480,6 +481,16 @@ export interface RestaurantMenuResponseDto {
   unit: number;
   weight?: number;
   unit_quantity: string;
+}
+
+export interface RestaurantBrandsResponseDto {
+  restaurants: RestaurantBrandPlaceResponseDto[]; // 매핑된 장소만 요청 순서대로 온다
+}
+
+export interface RestaurantBrandPlaceResponseDto {
+  place_id: number;
+  restaurant_id: number;
+  restaurant_name: string;
 }
 
 /* ======

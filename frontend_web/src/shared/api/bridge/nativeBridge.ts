@@ -8,6 +8,7 @@ import type {
   AppToWebMessage,
   CameraCaptureRequestPayload,
   CameraCaptureResponsePayload,
+  CurrentLocationPayload,
   GalleryPickRequestPayload,
   HapticType,
   HealthPermissionResponsePayload,
@@ -331,6 +332,15 @@ export function requestNativeAppDeviceInfo() {
   }));
 }
 
+export function requestNativeAppUpdateApply() {
+  if (!isNativeApp()) return;
+
+  postMessageToApp({
+    id: generateRequestId(),
+    type: "APP_UPDATE_APPLY_REQUEST",
+  });
+}
+
 export function requestNativeCameraCapture(payload?: CameraCaptureRequestPayload) {
   return sendRequestToApp<CameraCaptureResponsePayload>(
     (id) => ({
@@ -391,6 +401,14 @@ export function requestNativeHealthReadPermission() {
   return sendRequestToApp<HealthPermissionResponsePayload>((id) => ({
     id,
     type: "HEALTH_PERMISSION_REQUEST",
+  }));
+}
+
+// 권한 팝업에서 사용자가 고민하는 시간도 포함되므로 기본 타임아웃(1분)을 그대로 쓴다.
+export function requestNativeCurrentLocation() {
+  return sendRequestToApp<CurrentLocationPayload>((id) => ({
+    id,
+    type: "LOCATION_REQUEST",
   }));
 }
 

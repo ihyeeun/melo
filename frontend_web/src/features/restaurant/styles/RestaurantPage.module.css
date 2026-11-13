@@ -2,6 +2,10 @@
   background: var(--background-default);
 }
 
+.header {
+  border-bottom: 1px solid var(--border-subtle);
+}
+
 .searchSection {
   padding-inline: 16px;
 }
@@ -237,4 +241,22 @@
 
 .sheetBody:global(.seed-bottom-sheet__body) {
   padding: 12px 20px 20px;
+}
+
+/* 식당 상세(전체 메뉴) 페이지 */
+.menuPageMain {
+  padding-top: 20px;
+  padding-bottom: calc(var(--safe-area-bottom) + 24px);
+}
+
+.menuPageSummary {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 16px;
+}
+
+.menuPageAllMenu {
+  padding-top: 20px;
+  border-top: 1px solid var(--border-subtle);
 }

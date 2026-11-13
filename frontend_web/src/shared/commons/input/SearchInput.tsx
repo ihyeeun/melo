@@ -10,11 +10,14 @@ interface Props {
   onClear?: () => void;
   // 입력이 멈추거나 Enter를 눌렀을 때 호출된다.
   onEnter?: (value: string) => void;
-  debounceMs?: number;
+  // null이면 입력이 멈춰도 호출하지 않고 Enter를 눌렀을 때만 호출한다.
+  debounceMs?: number | null;
   placeholder?: string;
   inputClassName?: string;
   maxLength?: number;
   blurOnEnter?: boolean;
+  // 입력창 왼쪽에 검색 아이콘을 보여준다.
+  showSearchIcon?: boolean;
 
   // 부모에서 조합 상태에 따라 무한 스크롤 등을 제어할 때 사용
   onCompositionChange?: (isComposing: boolean) => void;
@@ -30,6 +33,7 @@ export function SearchInput({
   inputClassName,
   maxLength = 300,
   blurOnEnter = true,
+  showSearchIcon = false,
   onCompositionChange,
 }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -48,7 +52,7 @@ export function SearchInput({
     if (value !== initialValueRef.current) {
       hasValueChangedRef.current = true;
     }
-    if (!hasValueChangedRef.current || !onEnterRef.current) return;
+    if (debounceMs === null || !hasValueChangedRef.current || !onEnterRef.current) return;
 
     // SearchInputHeader처럼 조합 종료를 기다리지 않고 입력이 멈추면 검색한다.
     // 모바일 입력기는 키보드를 닫기 전까지 조합 상태를 유지할 수 있다.
@@ -106,7 +110,14 @@ export function SearchInput({
   };
 
   return (
-    <div className={styles.fieldWrap}>
+    <div className={styles.fieldWrap} data-search-icon={showSearchIcon}>
+      {showSearchIcon && (
+        <SystemIcon
+          name="search"
+          size={20}
+          className={`${value ? "text-primary" : "text-tertiary"} ${styles.searchIcon}`}
+        />
+      )}
       <input
         ref={inputRef}
         className={`${styles.input} body-s-medium text-primary ${inputClassName ?? ""}`}

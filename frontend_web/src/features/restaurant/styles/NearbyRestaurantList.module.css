@@ -1,0 +1,72 @@
+.header {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 12px;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 14px 16px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 16px;
+}
+
+.itemText {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.nameRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.meloBadge {
+  flex-shrink: 0;
+  padding: 4px 6px;
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  animation: melo-badge-enter 0.2s ease-out;
+}
+
+@keyframes melo-badge-enter {
+  from {
+    opacity: 0;
+  }
+}
+
+.state {
+  display: grid;
+  place-items: center;
+  gap: 4px;
+  margin-top: 8px;
+  padding-block: 24px;
+  text-align: center;
+  background-color: var(--background-gray-1);
+  border-radius: 12px;
+}
+
+.loadMore {
+  display: grid;
+  place-items: center;
+  min-height: 24px;
+  padding: 12px 0;
+}

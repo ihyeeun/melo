@@ -2,10 +2,13 @@ import { Tabs } from "@base-ui/react";
 import { useState } from "react";
 
 import RestaurantMenuList from "@/features/restaurant/components/RestaurantMenuList";
+import {
+  BEST_OPTIONS,
+  type BestFilter,
+} from "@/features/restaurant/constants/restaurantBest.constant";
 import { useRestaurantDetailQuery } from "@/features/restaurant/hooks/queries/restaurant.query";
 import styles from "@/features/restaurant/styles/RestaurantPage.module.css";
 import { PATH } from "@/router/path";
-import type { RestaurantDetailRequestDto } from "@/shared/api/types/api.request.dto";
 import type { RestaurantSummaryResponseDto } from "@/shared/api/types/api.response.dto";
 import BottomSheet from "@/shared/commons/bottomSheet/BottomSheet";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
@@ -16,14 +19,6 @@ import {
   useSearchParams,
   useStackflowBackHandler,
 } from "@/shared/navigation/stackflowNavigation";
-
-type BestFilter = NonNullable<RestaurantDetailRequestDto["filter"]>;
-
-const BEST_OPTIONS = [
-  { filter: "균형", icon: "⚖️", tone: "balanced" },
-  { filter: "저칼로리", icon: "🥬", tone: "light" },
-  { filter: "단백질", icon: "💪", tone: "protein" },
-] as const;
 
 export default function RestaurantDetailPage() {
   const [searchParams] = useSearchParams();

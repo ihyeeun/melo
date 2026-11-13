@@ -1,0 +1,92 @@
+.map {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+}
+
+.baseMap {
+  width: 100%;
+  height: 100%;
+  isolation: isolate;
+}
+
+.map :global(.seed-bottom-sheet__positioner) {
+  transition:
+    opacity 0.15s,
+    visibility 0.15s;
+}
+
+/* 검색창에 입력하는 동안은 시트를 숨겨 지도를 보이게 한다. 포커스가 풀리면 원래 높이로 다시 나타난다. */
+.map:has(.searchBar:focus-within) :global(.seed-bottom-sheet__positioner) {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.errorSection {
+  height: 100%;
+  display: grid;
+  place-items: center;
+}
+
+.mapControlSection {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  padding: calc(var(--safe-area-top) + 16px) 16px 16px;
+  pointer-events: none;
+}
+
+/* 컨트롤 영역은 지도 터치를 통과시키므로(pointer-events: none) 검색창은 다시 눌리게 한다. */
+.searchBar {
+  margin-bottom: 8px;
+  border-radius: 12px;
+  background: var(--background-default);
+  box-shadow: var(--shadow-normal);
+  pointer-events: auto;
+}
+
+.mapActionButton {
+  margin-inline: auto;
+  padding: 6px 10px 6px 8px;
+  border-radius: 12px;
+  background: var(--background-default);
+  box-shadow: var(--shadow-normal);
+  pointer-events: auto;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.currentLocationButton {
+  background: var(--background-default);
+  box-shadow: var(--shadow-normal);
+  width: 44px;
+  height: 44px;
+  border-radius: 100px;
+  display: grid;
+  place-items: center;
+  color: var(--navy-700);
+}
+
+.locationBadge {
+  width: fit-content;
+  margin-inline: auto;
+  padding: 8px 14px;
+  border-radius: 100px;
+  background: var(--background-default);
+  box-shadow: var(--shadow-normal);
+}
+
+.locationBadge > p {
+  flex: 1;
+  min-width: 0;
+}
+
+/* 컨트롤 영역은 지도 터치를 통과시키므로(pointer-events: none) 버튼만 다시 눌리게 한다. */
+.retryButton {
+  flex-shrink: 0;
+  pointer-events: auto;
+  color: var(--primary-normal);
+  white-space: nowrap;
+}

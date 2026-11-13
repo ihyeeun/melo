@@ -17,6 +17,7 @@ import {
   createWebNavigationCommandScript,
 } from "@/src/shared/navigation/webNavigationCommand";
 import { router } from "expo-router";
+import * as Updates from "expo-updates";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   AppState,
@@ -38,6 +39,11 @@ import { LoadingOverlay, Typo } from "@/src/shared/ui";
 import { semantic } from "@/src/shared/styles/color";
 
 const APP_FOREGROUND_EVENT_NAME = "MELO_APP_FOREGROUND";
+const APP_UPDATE_READY_SCRIPT = `
+  window.__MELO_APP_UPDATE_READY__ = true;
+  window.dispatchEvent(new Event("MELO_APP_UPDATE_READY"));
+  true;
+`;
 
 function isAllowedWebProtocol(protocol: string) {
   return protocol === "https:" || (__DEV__ && protocol === "http:");
@@ -389,6 +395,7 @@ export default function AppWebViewScreen({
   const [webViewLoadError, setWebViewLoadError] = useState<WebViewLoadError | null>(null);
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
+  const { isUpdatePending } = Updates.useUpdates();
   const isTabWebView = Boolean(currentTab);
   const normalizedTabPath = useMemo(() => normalizeTabPath(path), [path]);
   const webAppOrigin = getWebAppOrigin();
@@ -725,6 +732,12 @@ export default function AppWebViewScreen({
     webViewRef.current?.injectJavaScript(`${safeAreaSyncScript}true;`);
   }, [safeAreaSyncScript]);
 
+  useEffect(() => {
+    if (!isUpdatePending) return;
+
+    webViewRef.current?.injectJavaScript(APP_UPDATE_READY_SCRIPT);
+  }, [isUpdatePending]);
+
   const onLoadProgress = useCallback((event: WebViewLoadProgressEvent) => {
     if (event.nativeEvent.progress >= 1) {
       setIsInitialWebViewLoading(false);
@@ -741,9 +754,14 @@ export default function AppWebViewScreen({
     didLoadOnceRef.current = true;
     webViewRef.current?.injectJavaScript(`${safeAreaSyncScript}true;`);
 
+    // 다운로드가 웹 로드보다 먼저 끝난 경우에도 웹이 알 수 있도록 다시 전달한다
+    if (isUpdatePending) {
+      webViewRef.current?.injectJavaScript(APP_UPDATE_READY_SCRIPT);
+    }
+
     if (!isTabWebView) return;
     flushPendingTabPathSync();
-  }, [flushPendingTabPathSync, isTabWebView, safeAreaSyncScript]);
+  }, [flushPendingTabPathSync, isTabWebView, isUpdatePending, safeAreaSyncScript]);
 
   const onLoadError = useCallback((event: WebViewLoadErrorEvent) => {
     const error = formatWebViewLoadError(event);

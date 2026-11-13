@@ -66,6 +66,12 @@ export type BridgeAppDeviceInfoRequestMessage = {
   context?: BridgeMessageContext;
 };
 
+export type BridgeAppUpdateApplyRequestMessage = {
+  id: string;
+  type: "APP_UPDATE_APPLY_REQUEST";
+  context?: BridgeMessageContext;
+};
+
 export type BridgeCameraCaptureMode = "NUTRITION_LABEL" | "MENU_BOARD" | "FOOD" | "GENERAL";
 
 export type BridgeCameraCaptureRequestPayload = {
@@ -141,6 +147,12 @@ export type BridgeHealthStepsReadRequestMessage = {
   context?: BridgeMessageContext;
 };
 
+export type BridgeLocationRequestMessage = {
+  id: string;
+  type: "LOCATION_REQUEST";
+  context?: BridgeMessageContext;
+};
+
 export type WebToAppMessage =
   | BridgeApiRequestMessage
   | BridgeApiCancelMessage
@@ -148,13 +160,15 @@ export type WebToAppMessage =
   | BridgeNavigationBackMessage
   | BridgeHapticTriggerRequestMessage
   | BridgeAppDeviceInfoRequestMessage
+  | BridgeAppUpdateApplyRequestMessage
   | BridgeCameraCaptureRequestMessage
   | BridgeGalleryPickRequestMessage
   | BridgeImageUploadRequestMessage
   | BridgeInAppBrowserOpenRequestMessage
   | BridgeHealthPermissionStatusRequestMessage
   | BridgeHealthPermissionRequestMessage
-  | BridgeHealthStepsReadRequestMessage;
+  | BridgeHealthStepsReadRequestMessage
+  | BridgeLocationRequestMessage;
 
 export type BridgeErrorPayload = {
   message: string;

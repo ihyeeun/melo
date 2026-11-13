@@ -85,6 +85,12 @@ export type WebToAppAppDeviceInfoRequestMessage = {
   context?: BridgeMessageContext;
 };
 
+export type WebToAppAppUpdateApplyRequestMessage = {
+  id: string;
+  type: "APP_UPDATE_APPLY_REQUEST";
+  context?: BridgeMessageContext;
+};
+
 export type WebToAppFeatureGuardSyncMessage = {
   id: string;
   type: "FEATURE_GUARD_SYNC";
@@ -163,6 +169,17 @@ export type WebToAppInAppBrowserOpenMessage = {
   context?: BridgeMessageContext;
 };
 
+export type CurrentLocationPayload = {
+  latitude: number;
+  longitude: number;
+};
+
+export type WebToAppLocationRequestMessage = {
+  id: string;
+  type: "LOCATION_REQUEST";
+  context?: BridgeMessageContext;
+};
+
 export type WebToAppMessage =
   | WebToAppApiRequestMessage
   | WebToAppApiCancelMessage
@@ -171,6 +188,7 @@ export type WebToAppMessage =
   | WebToAppNavigationBackMessage
   | WebToAppHapticTriggerRequestMessage
   | WebToAppAppDeviceInfoRequestMessage
+  | WebToAppAppUpdateApplyRequestMessage
   | WebToAppFeatureGuardSyncMessage
   | WebToAppTabBarVisibilitySyncMessage
   | WebToAppCameraCaptureMessage
@@ -179,7 +197,8 @@ export type WebToAppMessage =
   | WebToAppInAppBrowserOpenMessage
   | WebToAppHealthPermissionStatusRequestMessage
   | WebToAppHealthPermissionRequestMessage
-  | WebToAppHealthStepsReadMessage;
+  | WebToAppHealthStepsReadMessage
+  | WebToAppLocationRequestMessage;
 
 export type CameraCaptureResponsePayload = {
   uri: string;

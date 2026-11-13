@@ -142,6 +142,10 @@ export interface RestaurantDetailRequestDto {
   filter?: "균형" | "저칼로리" | "단백질";
 }
 
+export interface RestaurantBrandsRequestDto {
+  place_ids: string[]; // 카카오 장소 id, 1~100개
+}
+
 /* ======
  * 분석 탭
  * ====== */

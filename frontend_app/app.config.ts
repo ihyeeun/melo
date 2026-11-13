@@ -1,6 +1,7 @@
 import type { ExpoConfig } from "expo/config";
 
 const APP_LINK_HOST = "melo-diet.vercel.app";
+const isHttpWebApp = process.env.EXPO_PUBLIC_WEB_APP_URL?.startsWith("http:") ?? false;
 
 const config: ExpoConfig = {
   name: "melo",
@@ -10,7 +11,12 @@ const config: ExpoConfig = {
       projectId: "507c0e33-8576-4aba-84f4-00d6b74a7338",
     },
   },
-  version: "1.2.6",
+  version: "1.3.0",
+  runtimeVersion: { policy: "appVersion" },
+  updates: {
+    url: "https://u.expo.dev/507c0e33-8576-4aba-84f4-00d6b74a7338",
+    requestHeaders: { "expo-channel-name": "production" },
+  },
   orientation: "portrait",
   icon: "./assets/design-update/logo/melo-logo-v2.png",
   scheme: "melo",
@@ -24,6 +30,11 @@ const config: ExpoConfig = {
     },
     infoPlist: {
       CFBundleAllowMixedLocalizations: true,
+      NSAppTransportSecurity: {
+        NSAllowsArbitraryLoads: false,
+        NSAllowsLocalNetworking: true,
+        NSAllowsArbitraryLoadsInWebContent: isHttpWebApp,
+      },
     },
   },
   android: {
@@ -75,6 +86,12 @@ const config: ExpoConfig = {
       {
         photosPermission:
           "Melo uses your photo library for diet management. You can select photos of food, menus, or nutrition labels to analyze nutrition data, check calories, and log your meals.",
+      },
+    ],
+    [
+      "expo-location",
+      {
+        locationWhenInUsePermission: "주변 식당을 찾기 위해 현재 위치를 사용합니다.",
       },
     ],
     [
