@@ -4,7 +4,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { calendarKeys } from "@/features/calendar/hooks/queries/calendar.queryKey";
 import { registerWeight } from "@/features/home/api/todayRecord.api";
 import { queryKeys as homeQueryKeys } from "@/features/home/hooks/queries/todayRecord.queryKey";
-import { useRecommendNutrientMutation } from "@/features/onboarding/hooks/mutations/useRecommendMutation";
 import {
   updateActivity,
   updateBirthYear,
@@ -19,8 +18,10 @@ import {
 import {
   hasNutrientTotal,
   isRatioChanged,
+  toTargetRatio,
   validateStartPlan,
 } from "@/features/profile/goalEdit.model";
+import { useRecommendNutrientMutation } from "@/features/profile/hooks/mutations/useRecommendMutation";
 import { queryKeys } from "@/features/profile/hooks/queries/queryKey";
 import { useGetProfileQuery } from "@/features/profile/hooks/queries/useProfileQuery";
 import {
@@ -166,7 +167,7 @@ export default function GoalEditNutrientPage() {
       return;
     }
 
-    if (!hasNutrientTotal(visibleDraft)) {
+    if (!hasNutrientTotal(toTargetRatio(visibleDraft))) {
       toast.show({
         title: "탄단지 비율의 합을 100으로 맞춰주세요",
         type: "error",

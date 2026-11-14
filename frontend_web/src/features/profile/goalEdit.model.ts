@@ -1,43 +1,108 @@
-import {
-  isInRange,
-  ONBOARDING_HEIGHT_RANGE,
-  ONBOARDING_WEIGHT_RANGE,
-} from "@/features/onboarding/constants/inputRanges";
-import type { OnboardingData } from "@/features/onboarding/onboarding.types";
-import { getGoalWeekEstimate } from "@/features/onboarding/utils/calculateGoalWeek";
+import { getGoalWeekEstimate } from "@/features/profile/utils/goalWeek.util";
 import type { ProfileResponseDto } from "@/shared/api/types/api.response.dto";
 import { isValidBirthYear } from "@/shared/commons/picker/yearOptions";
 
-export type GoalEditDraft = Pick<
-  OnboardingData,
-  | "gender"
-  | "birthYear"
-  | "height"
-  | "weight"
-  | "activity"
-  | "goal"
-  | "target_weight"
-  | "target_calories"
-  | "carbs"
-  | "protein"
-  | "fat"
->;
+// 프로필 목표 수정과 회원가입이 함께 쓰는 목표 규칙·선택지. 두 화면의 기준이 어긋나지 않도록 여기서만 정의한다
+
+export type GoalEditDraft = {
+  gender?: number;
+  birthYear?: number;
+  height?: number;
+  weight?: number;
+  activity?: number;
+  goal?: number;
+  target_weight?: number;
+  target_calories?: number;
+  // 목표 수정 화면은 탄단지를 따로 입력받는다
+  carbs?: number;
+  protein?: number;
+  fat?: number;
+};
+
+export const ONBOARDING_HEIGHT_RANGE = {
+  min: 1,
+  max: 250,
+} as const;
+
+export const ONBOARDING_WEIGHT_RANGE = {
+  min: 1,
+  max: 200,
+} as const;
+
+export function isInRange(value: number | undefined, min: number, max: number) {
+  if (value === undefined) return false;
+  return value >= min && value <= max;
+}
+
+export const GENDER = {
+  MALE: 0,
+  FEMALE: 1,
+} as const;
+
+export const ACTIVITY = {
+  S: 0,
+  M: 1,
+  L: 2,
+  XL: 3,
+} as const;
+
+export const GOAL = {
+  LOSE_WEIGHT: 0,
+  MAINTAIN_WEIGHT: 1,
+  GAIN_WEIGHT: 2,
+} as const;
+
+export const GENDER_OPTIONS = [
+  { value: GENDER.MALE, label: "남성" },
+  { value: GENDER.FEMALE, label: "여성" },
+] as const;
+
+export const ACTIVITY_OPTIONS = [
+  {
+    value: ACTIVITY.S,
+    title: "대부분 앉아서 생활해요",
+    description: "하루에 4,000보 이하로 걸어요",
+  },
+  {
+    value: ACTIVITY.M,
+    title: "가벼운 이동이 있어요",
+    description: "하루에 4,000 ~ 7,500보 사이로 걸어요",
+  },
+  {
+    value: ACTIVITY.L,
+    title: "움직이는 시간이 꽤 많아요",
+    description: "하루에 7,500 ~ 12,000보 사이로 걸어요",
+  },
+  {
+    value: ACTIVITY.XL,
+    title: "가만히 있는 시간은 거의 없어요",
+    description: "하루에 12,000보 이상 걸어요",
+  },
+] as const;
+
+export const GOAL_OPTIONS = [
+  { value: GOAL.LOSE_WEIGHT, title: "다이어트", description: "체지방을 줄이고 싶어요" },
+  { value: GOAL.MAINTAIN_WEIGHT, title: "체중 유지", description: "지금의 몸무게를 유지하고 싶어요" },
+  { value: GOAL.GAIN_WEIGHT, title: "근육 늘리기", description: "근육량을 늘리고 싶어요" },
+] as const;
 
 export const GOAL_CALORIES_MIN = 1;
 export const GOAL_CALORIES_MAX = 99999;
 const RATIO_TOLERANCE = 0.001;
 
-export function validateGoalCalories(
+type TargetCaloriesFeedback = {
+  isValid: boolean;
+  message: string;
+  detail?: string;
+};
+
+// 목표 칼로리로 목표 몸무게까지 갈 수 있는지 판단하고, 화면에 보여줄 안내 문구를 만든다
+export function getTargetCaloriesFeedback(
   draft: GoalEditDraft,
-): { title: string; description?: string } | null {
-  const targetCalories = draft.target_calories;
-
+  targetCalories: number | undefined,
+): TargetCaloriesFeedback {
   if (targetCalories === undefined) {
-    return { title: "목표 칼로리를 입력해주세요" };
-  }
-
-  if (targetCalories === 0) {
-    return { title: "목표 칼로리는 1 이상 입력해주세요" };
+    return { isValid: false, message: "목표 칼로리를 입력해주세요" };
   }
 
   if (
@@ -45,40 +110,46 @@ export function validateGoalCalories(
     targetCalories < GOAL_CALORIES_MIN ||
     targetCalories > GOAL_CALORIES_MAX
   ) {
-    return { title: "목표 칼로리는 1~99999 사이로 입력해주세요" };
+    return { isValid: false, message: "목표 칼로리는 1~99999 사이로 입력해주세요" };
   }
 
   const estimate = getGoalWeekEstimate(draft, targetCalories);
-  if (estimate.status === "ok") return null;
+
+  if (estimate.status === "ok") {
+    return { isValid: true, message: `목표 달성까지 약 ${estimate.weeks}주 걸려요` };
+  }
 
   if (estimate.reason === "insufficient_data") {
     return {
-      title: "목표 달성 기간을 계산할 정보가 부족해요",
-      description: "이전 단계에서 신체 정보와 목표 몸무게를 확인해주세요.",
+      isValid: false,
+      message: "목표 달성 기간을 계산할 정보가 부족해요",
+      detail: "이전 단계에서 신체 정보와 목표 몸무게를 확인해주세요",
     };
   }
 
   if (estimate.reason === "calories_too_low_for_gain") {
     return {
-      title: "목표 체중에 비해 목표 칼로리가 너무 낮아요.",
-      description:
+      isValid: false,
+      message: "목표 체중에 비해 목표 칼로리가 너무 낮아요",
+      detail:
         estimate.tdee === undefined
           ? undefined
-          : `${Math.floor(estimate.tdee) + 1}kcal 이상 입력해주세요.`,
+          : `${Math.floor(estimate.tdee) + 1}kcal 이상 입력해주세요`,
     };
   }
 
   if (estimate.reason === "calories_too_high_for_loss") {
     return {
-      title: "목표 체중에 비해 목표 칼로리가 너무 높아요.",
-      description:
+      isValid: false,
+      message: "목표 체중에 비해 목표 칼로리가 너무 높아요",
+      detail:
         estimate.tdee === undefined
           ? undefined
-          : `${Math.ceil(estimate.tdee) - 1}kcal 이하로 입력해주세요.`,
+          : `${Math.ceil(estimate.tdee) - 1}kcal 이하로 입력해주세요`,
     };
   }
 
-  return { title: "해당 칼로리로는 목표 달성이 어려워요." };
+  return { isValid: false, message: "해당 칼로리로는 목표 달성이 어려워요" };
 }
 
 export function toGoalEditDraft(profile: ProfileResponseDto): GoalEditDraft {
@@ -123,13 +194,20 @@ export function validateStartPlan(draft: GoalEditDraft) {
   return null;
 }
 
-export function hasNutrientTotal(draft: GoalEditDraft) {
+// 탄단지 비율 [탄수화물, 단백질, 지방]의 합이 100%인지
+export function hasNutrientTotal(ratio: readonly [number, number, number] | undefined) {
+  if (!ratio) return false;
+
+  return Math.abs(ratio[0] + ratio[1] + ratio[2] - 100) < RATIO_TOLERANCE;
+}
+
+// 목표 수정 화면은 탄단지를 따로 입력받으므로 비율 배열로 모은다. 하나라도 비어 있으면 undefined
+export function toTargetRatio(draft: GoalEditDraft): [number, number, number] | undefined {
   if (draft.carbs === undefined || draft.protein === undefined || draft.fat === undefined) {
-    return false;
+    return undefined;
   }
 
-  const nutrientTotal = draft.carbs + draft.protein + draft.fat;
-  return Math.abs(nutrientTotal - 100) < RATIO_TOLERANCE;
+  return [draft.carbs, draft.protein, draft.fat];
 }
 
 export function isRatioChanged(initial: GoalEditDraft, draft: GoalEditDraft) {

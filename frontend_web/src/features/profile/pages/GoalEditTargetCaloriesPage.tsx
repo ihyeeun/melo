@@ -1,13 +1,11 @@
 import { useEffect, useMemo, useRef } from "react";
 
-import { useTargetCaloriesMutation } from "@/features/onboarding/hooks/mutations/useRecommendMutation";
-import { getGoalWeekEstimate } from "@/features/onboarding/utils/calculateGoalWeek";
 import {
+  getTargetCaloriesFeedback,
   GOAL_CALORIES_MAX,
   GOAL_CALORIES_MIN,
-  type GoalEditDraft,
-  validateGoalCalories,
 } from "@/features/profile/goalEdit.model";
+import { useTargetCaloriesMutation } from "@/features/profile/hooks/mutations/useRecommendMutation";
 import { useGetProfileQuery } from "@/features/profile/hooks/queries/useProfileQuery";
 import {
   useEnsureGoalEditFlow,
@@ -23,33 +21,6 @@ import { PageHeader } from "@/shared/commons/header/PageHeader";
 import { NumberInput } from "@/shared/commons/input/NumberInput";
 import { toast } from "@/shared/commons/toast/toast";
 import { useNavigate } from "@/shared/navigation/stackflowNavigation";
-
-function getGoalWeekMessage(data: GoalEditDraft) {
-  const targetCalories = data.target_calories;
-
-  if (targetCalories === undefined) {
-    return "목표 칼로리를 입력하면 예상 기간을 확인할 수 있어요";
-  }
-
-  if (
-    !Number.isInteger(targetCalories) ||
-    targetCalories < GOAL_CALORIES_MIN ||
-    targetCalories > GOAL_CALORIES_MAX
-  ) {
-    return "목표 칼로리는 1~99999 사이로 입력해주세요";
-  }
-
-  const estimate = getGoalWeekEstimate(data, targetCalories);
-  if (estimate.status === "invalid" && estimate.reason === "insufficient_data") {
-    return "목표 달성 기간을 계산할 정보가 부족해요";
-  }
-
-  if (estimate.status === "invalid") {
-    return "해당 칼로리로는 목표 달성이 어려워요";
-  }
-
-  return `목표 달성까지 약 ${estimate.weeks}주 걸려요`;
-}
 
 export default function GoalEditTargetCaloriesPage() {
   const navigate = useNavigate();
@@ -141,9 +112,9 @@ export default function GoalEditTargetCaloriesPage() {
   const handleGoNutrient = () => {
     if (!visibleDraft || isRecommendationPending) return;
 
-    const validationError = validateGoalCalories(visibleDraft);
-    if (validationError) {
-      toast.warning(validationError.title, validationError.description);
+    const feedback = getTargetCaloriesFeedback(visibleDraft, visibleDraft.target_calories);
+    if (!feedback.isValid) {
+      toast.warning(feedback.message, feedback.detail);
       return;
     }
 
@@ -188,7 +159,7 @@ export default function GoalEditTargetCaloriesPage() {
             <p
               className={`body-l-regular text-secondary textCenter ${styles.calculateWeekMessage}`}
             >
-              {getGoalWeekMessage(visibleDraft)}
+              {getTargetCaloriesFeedback(visibleDraft, visibleDraft.target_calories).message}
             </p>
           </section>
         )}

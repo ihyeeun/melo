@@ -132,7 +132,7 @@ const NutrientModifyPage = createLazyActivity(
 const NutrientRegisterPage = createLazyActivity(
   () => import("@/features/nutrient-entry/NutrientRegisterPage"),
 );
-const OnboardingPage = createLazyActivity(() => import("@/features/onboarding/OnboardingPage"));
+const SignUpPage = createLazyActivity(() => import("@/features/sign-up/pages/SignUpPage"));
 const AppOpenSettingsFeedbackPage = createLazyActivity(
   () => import("@/features/app-open/AppOpenSettingsFeedbackPage"),
 );
@@ -202,7 +202,7 @@ const ACTIVITIES = {
   WorkoutDetailSheet: WorkoutDetailSheetPage,
   WorkoutUpsert: WorkoutUpsertPage,
   AppOpenSettingsFeedback: AppOpenSettingsFeedbackPage,
-  Onboarding: OnboardingPage,
+  Onboarding: SignUpPage,
   Profile: ProfilePage,
   ProfileNicknameSheet: ProfileNicknameSheetPage,
   Settings: SettingsPage,

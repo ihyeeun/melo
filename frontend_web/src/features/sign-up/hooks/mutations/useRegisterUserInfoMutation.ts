@@ -1,0 +1,22 @@
+import { useMutation } from "@tanstack/react-query";
+
+import { postRegisterUserInfo } from "@/features/sign-up/api/signUp.api";
+import { isRequestAbortError } from "@/shared/api/requestCancellation";
+import type { UseMutationCallback } from "@/shared/api/types/callback.types";
+import { useSetTargets } from "@/shared/stores/targetNutrient.store";
+
+export function useRegisterUserInfoMutation(callbacks?: UseMutationCallback) {
+  const setTargets = useSetTargets();
+
+  return useMutation({
+    mutationFn: postRegisterUserInfo,
+    onSuccess: (data) => {
+      setTargets({ target_calories: data.target_calories, target_ratio: data.target_ratio });
+      callbacks?.onSuccess?.();
+    },
+    onError: (error) => {
+      if (isRequestAbortError(error)) return;
+      callbacks?.onError?.(error);
+    },
+  });
+}
