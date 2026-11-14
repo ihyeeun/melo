@@ -58,7 +58,7 @@ export default function SignUpPage() {
   useEffect(() => {
     if (isNativeApp() || getWebAuthAccessToken()) return;
 
-    // navigate(PATH.KAKAO_WEB_LOGIN, { replace: true });
+    navigate(PATH.KAKAO_WEB_LOGIN, { replace: true });
   }, [navigate]);
 
   // 앞 단계 값이 없으면 첫 단계부터 다시 시작한다
