@@ -1,3 +1,5 @@
+import type { ACTIVITY, GENDER, GOAL } from "@/features/profile/goalEdit.model";
+
 export interface SignUpType {
   gender: (typeof GENDER)[keyof typeof GENDER];
   birthYear: number;
@@ -16,23 +18,36 @@ export interface SignUpType {
   lunch_location: (typeof LUNCH_LOCATION)[keyof typeof LUNCH_LOCATION] | null;
 }
 
-export const GENDER = {
-  MALE: 0,
-  FEMALE: 1,
-} as const;
+// 입력 중인 회원가입 값. 아직 고르지 않은 값은 비어 있다
+export type SignUpForm = Partial<SignUpType>;
 
-export const ACTIVITY = {
-  S: 0,
-  M: 1,
-  L: 2,
-  XL: 3,
-} as const;
+// 회원가입 단계와 각 단계에서 입력받는 값. 적힌 순서대로 진행하고, 진행 바도 이 순서를 따른다
+export const SIGN_UP_STEPS = {
+  basicInfo: ["gender", "birthYear"],
+  body: ["height", "weight"],
+  activity: ["activity"],
+  goal: ["goal"],
+  goalWeight: ["target_weight"],
+  targetCalories: ["target_calories"],
+  nutrient: ["target_ratio"],
+  dietManagement: ["diet_management_status"],
+  persona: ["persona_type"],
+  eatingOut: ["eating_out_freq_weekly"],
+  jobAndLunch: ["job_type", "lunch_location"],
+  subCode: ["subCode"],
+} as const satisfies Record<string, readonly (keyof SignUpType)[]>;
 
-export const GOAL = {
-  LOSE_WEIGHT: 0,
-  MAINTAIN_WEIGHT: 1,
-  GAIN_WEIGHT: 2,
-} as const;
+export type SignUpStep = keyof typeof SIGN_UP_STEPS;
+
+// 단계 컴포넌트가 받는 props. 어떤 단계인지 밝히면 그 단계가 맡은 값만 넘길 수 있다
+export type SignUpStepProps<S extends SignUpStep> = {
+  // 지금까지 저장된 값. 돌아온 단계의 입력을 채우거나, 다른 단계의 값을 참고할 때 쓴다
+  form: SignUpForm;
+  // 이 단계에서 입력한 값을 저장하고 다음 단계로 넘어간다
+  onNext: (values: Pick<SignUpForm, (typeof SIGN_UP_STEPS)[S][number]>) => void;
+  // 다음 버튼 문구. 어느 단계가 마지막인지는 플랫폼마다 달라서 페이지가 정한다
+  nextLabel: string;
+};
 
 export const MEAL_MANAGEMENT = {
   APP: 0,

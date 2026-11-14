@@ -1,0 +1,220 @@
+.content {
+  padding-bottom: 24px;
+}
+
+.titleGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 16px;
+  margin-bottom: 28px;
+}
+
+.title {
+  white-space: pre-line;
+}
+
+.fieldGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.fieldGroup + .fieldGroup {
+  margin-top: 24px;
+}
+
+.fieldBox {
+  align-items: center;
+  background-color: var(--background-default);
+  border: 1px solid var(--border-default);
+  border-radius: 16px;
+  display: flex;
+  justify-content: flex-end;
+  padding: 12px 20px;
+  width: 100%;
+}
+
+.textInput {
+  background-color: var(--background-default);
+  border: 1px solid var(--border-default);
+  border-radius: 16px;
+  color: var(--text-primary);
+  padding: 12px 20px;
+  text-align: right;
+  width: 100%;
+}
+
+.textInput::placeholder {
+  color: var(--text-disabled);
+}
+
+.textInput:focus {
+  outline: 1px solid var(--border-strong);
+}
+
+.helperText {
+  margin-top: 12px;
+  text-align: center;
+  white-space: pre-line;
+}
+
+/* 선택 카드 */
+.optionList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.optionCard {
+  padding: 20px;
+}
+
+.optionCard > p + p {
+  margin-top: 4px;
+}
+
+.optionTitle {
+  white-space: pre-line;
+}
+
+.genderGrid {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.genderCard {
+  padding: 12px 0;
+}
+
+.chipGroup {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.chipGroup[data-step="job-type"] {
+  margin-bottom: 40px;
+}
+
+.chip {
+  background-color: var(--background-default);
+  border: 1px solid var(--border-default);
+  border-radius: 100px;
+  color: var(--text-primary);
+  padding: 8px 16px;
+}
+
+.chip[aria-pressed="true"] {
+  background-color: var(--background-selected);
+  border-color: var(--border-strong);
+}
+
+/* 출생 연도 바텀시트 */
+.sheetBody:global(.seed-bottom-sheet__body) {
+  overflow: hidden;
+}
+
+.sheetContent {
+  padding: 0 16px;
+}
+
+.pickerItem {
+  color: var(--text-tertiary);
+}
+
+.pickerItemSelected {
+  color: var(--text-primary);
+}
+
+.pickerHighlight {
+  background-color: var(--background-gray-1);
+  border-radius: 16px;
+}
+
+/* 탄단지 비율 */
+.macroCardGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.macroCard {
+  background-color: var(--background-default);
+  border: 1px solid var(--border-default);
+  border-radius: 16px;
+  padding: 20px;
+  width: 100%;
+}
+
+.macroInfo {
+  align-items: center;
+  display: flex;
+  margin-bottom: 16px;
+  width: 100%;
+}
+
+.macroAmount {
+  margin-left: auto;
+}
+
+.macroAmount > span + span::before {
+  color: var(--text-disabled);
+  content: "|";
+  margin: 0 7px;
+}
+
+.macroInputArea {
+  background-color: var(--background-gray-1);
+  border-radius: 20px;
+  display: grid;
+  grid-template-columns: 32px 1fr 32px;
+  padding: 4px;
+  width: 100%;
+}
+
+.macroAdjustButton {
+  background-color: var(--background-default);
+  border-radius: 50%;
+  box-shadow: var(--shadow-outer);
+  color: var(--text-primary);
+  display: grid;
+  height: 32px;
+  place-items: center;
+  width: 32px;
+}
+
+.macroAdjustButton:active {
+  background-color: var(--background-gray-1);
+}
+
+.macroAdjustButton:disabled {
+  background-color: var(--background-gray-2);
+  color: var(--text-disabled);
+}
+
+.macroInputSection {
+  text-align: center;
+  width: 100%;
+}
+
+.macroInput {
+  background-color: transparent;
+  border: none;
+  padding: 0;
+  text-align: end;
+  width: 20%;
+}
+
+.macroInput:focus-within {
+  outline: none;
+}
+
+.macroTotalCard {
+  align-items: center;
+  background-color: var(--background-gray-1);
+  border-radius: 16px;
+  display: flex;
+  padding: 20px;
+  width: 100%;
+}

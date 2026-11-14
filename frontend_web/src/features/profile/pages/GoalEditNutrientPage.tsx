@@ -19,6 +19,7 @@ import {
 import {
   hasNutrientTotal,
   isRatioChanged,
+  toTargetRatio,
   validateStartPlan,
 } from "@/features/profile/goalEdit.model";
 import { queryKeys } from "@/features/profile/hooks/queries/queryKey";
@@ -166,7 +167,7 @@ export default function GoalEditNutrientPage() {
       return;
     }
 
-    if (!hasNutrientTotal(visibleDraft)) {
+    if (!hasNutrientTotal(toTargetRatio(visibleDraft))) {
       toast.show({
         title: "탄단지 비율의 합을 100으로 맞춰주세요",
         type: "error",

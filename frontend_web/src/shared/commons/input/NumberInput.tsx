@@ -13,6 +13,7 @@ type Props = {
   inputMode?: "numeric" | "decimal";
   normalizeOnBlur?: boolean;
   inputRef?: React.Ref<HTMLInputElement>;
+  autoFocus?: boolean;
 };
 
 function clamp(n: number, min?: number, max?: number) {
@@ -33,11 +34,13 @@ export function NumberInput({
   inputMode = "decimal",
   normalizeOnBlur = true,
   inputRef,
+  autoFocus,
 }: Props) {
   return (
     <div className={`${styles.inputBox} title-xl-medium`}>
       <Input
         ref={inputRef}
+        autoFocus={autoFocus}
         className={`${styles.input} title-xl-medium`}
         type="number"
         inputMode={inputMode}

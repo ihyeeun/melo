@@ -7,6 +7,9 @@ import {
 } from "@/features/onboarding/constants/inputRanges";
 import type { OnboardingData } from "@/features/onboarding/onboarding.types";
 import {
+  ACTIVITY_OPTIONS,
+  GENDER_OPTIONS,
+  GOAL_OPTIONS,
   type GoalEditDraft,
   isGoalWeightRangeValid,
   validateStartPlan,
@@ -67,23 +70,6 @@ const SUMMARY_FIELDS: SummaryField[] = [
   { id: "goalWeight", label: "목표 몸무게" },
 ];
 
-const ACTIVITY_OPTIONS = [
-  { title: "대부분 앉아서 생활해요", description: "하루에 4,000보 이하로 걸어요" },
-  { title: "가벼운 이동이 있어요", description: "하루에 4,000 ~ 7,500보 사이로 걸어요" },
-  { title: "움직이는 시간이 꽤 많아요", description: "하루에 7,500 ~ 12,000보 사이로 걸어요" },
-  { title: "가만히 있는 시간은 거의 없어요", description: "하루에 12,000보 이상 걸어요" },
-] as const;
-
-const ACTIVITY_LABELS = ACTIVITY_OPTIONS.map((activity) => activity.title);
-
-const GOAL_OPTIONS = [
-  { title: "다이어트", description: "체지방을 줄이고 싶어요" },
-  { title: "체중 유지", description: "지금의 몸무게를 유지하고 싶어요" },
-  { title: "근육 늘리기", description: "근육량을 늘리고 싶어요" },
-] as const;
-
-const GOAL_LABELS = GOAL_OPTIONS.map((goal) => goal.title);
-
 function formatDecimal(value?: number) {
   if (value === undefined) return "-";
   return Number.isInteger(value) ? value.toString() : value.toFixed(1);
@@ -91,9 +77,7 @@ function formatDecimal(value?: number) {
 
 function getSummaryValue(field: EditableField, draft: GoalEditDraft) {
   if (field === "gender") {
-    if (draft.gender === 0) return "남성";
-    if (draft.gender === 1) return "여성";
-    return "-";
+    return GENDER_OPTIONS.find((option) => option.value === draft.gender)?.label ?? "-";
   }
 
   if (field === "birthYear") {
@@ -109,11 +93,11 @@ function getSummaryValue(field: EditableField, draft: GoalEditDraft) {
   }
 
   if (field === "activity") {
-    return draft.activity !== undefined ? (ACTIVITY_LABELS[draft.activity] ?? "-") : "-";
+    return ACTIVITY_OPTIONS.find((option) => option.value === draft.activity)?.title ?? "-";
   }
 
   if (field === "goal") {
-    return draft.goal !== undefined ? (GOAL_LABELS[draft.goal] ?? "-") : "-";
+    return GOAL_OPTIONS.find((option) => option.value === draft.goal)?.title ?? "-";
   }
 
   return draft.target_weight !== undefined ? `${formatDecimal(draft.target_weight)}kg` : "-";
@@ -312,21 +296,16 @@ export default function GoalEditPage() {
       return (
         <section>
           <div className={styles.genderGrid}>
-            <SelectedCard
-              isSelected={sheetData.gender === 0}
-              className={styles.selectedCard}
-              setSelectedChange={() => applyInstantSelection({ gender: 0 })}
-            >
-              <p className={`body-l-medium text-secondary textCenter`}>남성</p>
-            </SelectedCard>
-
-            <SelectedCard
-              isSelected={sheetData.gender === 1}
-              className={styles.selectedCard}
-              setSelectedChange={() => applyInstantSelection({ gender: 1 })}
-            >
-              <p className={`body-l-medium text-secondary textCenter`}>여성</p>
-            </SelectedCard>
+            {GENDER_OPTIONS.map((option) => (
+              <SelectedCard
+                key={option.value}
+                isSelected={sheetData.gender === option.value}
+                className={styles.selectedCard}
+                setSelectedChange={() => applyInstantSelection({ gender: option.value })}
+              >
+                <p className={`body-l-medium text-secondary textCenter`}>{option.label}</p>
+              </SelectedCard>
+            ))}
           </div>
         </section>
       );
@@ -397,15 +376,13 @@ export default function GoalEditPage() {
     if (editingField === "activity") {
       return (
         <section>
-          {ACTIVITY_OPTIONS.map((activity, index) => (
+          {ACTIVITY_OPTIONS.map((activity) => (
             <SelectedCard
-              key={activity.title}
-              isSelected={sheetData.activity === index}
+              key={activity.value}
+              isSelected={sheetData.activity === activity.value}
               className={styles.segmentCard}
-              aria-pressed={sheetData.activity === index}
-              setSelectedChange={() =>
-                applyInstantSelection({ activity: index as OnboardingData["activity"] })
-              }
+              aria-pressed={sheetData.activity === activity.value}
+              setSelectedChange={() => applyInstantSelection({ activity: activity.value })}
             >
               <p className={`body-l-medium text-primary`}>{activity.title}</p>
               <p className={`body-s-regular text-secondary`}>{activity.description}</p>
@@ -418,15 +395,13 @@ export default function GoalEditPage() {
     if (editingField === "goal") {
       return (
         <section>
-          {GOAL_OPTIONS.map((goal, index) => (
+          {GOAL_OPTIONS.map((goal) => (
             <SelectedCard
-              key={goal.title}
-              isSelected={sheetData.goal === index}
+              key={goal.value}
+              isSelected={sheetData.goal === goal.value}
               className={styles.segmentCard}
-              aria-pressed={sheetData.goal === index}
-              setSelectedChange={() =>
-                applyInstantSelection({ goal: index as OnboardingData["goal"] })
-              }
+              aria-pressed={sheetData.goal === goal.value}
+              setSelectedChange={() => applyInstantSelection({ goal: goal.value })}
             >
               <p className={`body-l-medium text-primary`}>{goal.title}</p>
               <p className={`body-s-regular text-secondary`}>{goal.description}</p>
