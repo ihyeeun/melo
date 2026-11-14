@@ -1,6 +1,10 @@
-import { useRegisterUserInfoMutation } from "@/features/onboarding/hooks/mutations/useRegisterUserInfoMutation";
-import type { UserInfoRequest } from "@/features/onboarding/onboarding.types";
-import { JOB_TYPE, type SignUpForm, type SignUpType } from "@/features/sign-up/types/signUp.type";
+import { useRegisterUserInfoMutation } from "@/features/sign-up/hooks/mutations/useRegisterUserInfoMutation";
+import {
+  JOB_TYPE,
+  type SignUpForm,
+  type SignUpType,
+  type UserInfoRequest,
+} from "@/features/sign-up/types/signUp.type";
 import { PATH } from "@/router/path";
 import { AppApiError } from "@/shared/api/apiClient";
 import { API_ERROR_MESSAGE } from "@/shared/api/apiErrorMessage";

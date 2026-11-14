@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useRef } from "react";
 
-import { useTargetCaloriesMutation } from "@/features/onboarding/hooks/mutations/useRecommendMutation";
 import {
   getTargetCaloriesFeedback,
   GOAL_CALORIES_MAX,
   GOAL_CALORIES_MIN,
 } from "@/features/profile/goalEdit.model";
+import { useTargetCaloriesMutation } from "@/features/profile/hooks/mutations/useRecommendMutation";
 import { useGetProfileQuery } from "@/features/profile/hooks/queries/useProfileQuery";
 import {
   useEnsureGoalEditFlow,

@@ -1,10 +1,9 @@
 import { webAuthApiData } from "@/features/kakao-web-auth/api/webAuthApi";
-import { END_POINT } from "@/features/onboarding/api/endpoints";
-import type { UserInfoRequest, UserInfoResponse } from "@/features/onboarding/onboarding.types";
+import type { UserInfoRequest, UserInfoResponse } from "@/features/sign-up/types/signUp.type";
 
 export function postRegisterUserInfo(payload: UserInfoRequest) {
   return webAuthApiData<UserInfoResponse>({
-    endpoint: END_POINT.REGISTER_USER_INFO,
+    endpoint: "/userAuth/registerUserInfo",
     method: "POST",
     body: payload,
   });

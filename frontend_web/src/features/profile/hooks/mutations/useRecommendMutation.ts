@@ -3,7 +3,7 @@ import { useMutation } from "@tanstack/react-query";
 import {
   fetchRecommendtargetCalories,
   postRecommendNutrient,
-} from "@/features/onboarding/api/recommend";
+} from "@/features/profile/api/recommend.api";
 import { isRequestAbortError } from "@/shared/api/requestCancellation";
 import type { UseMutationCallback } from "@/shared/api/types/callback.types";
 

@@ -1,6 +1,6 @@
 import { skipToken, useQuery } from "@tanstack/react-query";
 
-import { fetchRecommendtargetCalories } from "@/features/onboarding/api/recommend";
+import { fetchRecommendtargetCalories } from "@/features/profile/api/recommend.api";
 import { signUpKeys } from "@/features/sign-up/constants/signUp.querykey";
 import type { SignUpForm } from "@/features/sign-up/types/signUp.type";
 

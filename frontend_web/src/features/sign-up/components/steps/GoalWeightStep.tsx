@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import { isInRange, ONBOARDING_WEIGHT_RANGE } from "@/features/onboarding/constants/inputRanges";
+import { isInRange, ONBOARDING_WEIGHT_RANGE } from "@/features/profile/goalEdit.model";
 import { StepLayout } from "@/features/sign-up/components/StepLayout";
 import styles from "@/features/sign-up/styles/SignUpSteps.module.css";
 import type { SignUpStepProps } from "@/features/sign-up/types/signUp.type";

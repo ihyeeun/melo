@@ -1,6 +1,6 @@
 import { useMutation } from "@tanstack/react-query";
 
-import { postRegisterUserInfo } from "@/features/onboarding/api/registerUserInfo";
+import { postRegisterUserInfo } from "@/features/sign-up/api/signUp.api";
 import { isRequestAbortError } from "@/shared/api/requestCancellation";
 import type { UseMutationCallback } from "@/shared/api/types/callback.types";
 import { useSetTargets } from "@/shared/stores/targetNutrient.store";

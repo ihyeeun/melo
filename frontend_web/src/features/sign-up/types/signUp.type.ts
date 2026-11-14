@@ -49,6 +49,30 @@ export type SignUpStepProps<S extends SignUpStep> = {
   nextLabel: string;
 };
 
+// 가입 요청에 보내는 값
+export type UserInfoRequest = {
+  gender: number;
+  birthYear: number;
+  height: number;
+  weight: number;
+  activity: number;
+  goal: number;
+  target_weight: number;
+  target_calories: number;
+  target_ratio: [carbs: number, protein: number, fat: number];
+  subCode?: string;
+  diet_management_status: number[];
+  persona_type: number;
+  eating_out_freq_weekly: number;
+  job_type: number;
+  lunch_location: number | null;
+};
+
+export type UserInfoResponse = {
+  nickname: string;
+  email: string;
+} & UserInfoRequest;
+
 export const MEAL_MANAGEMENT = {
   APP: 0,
   PT: 1,

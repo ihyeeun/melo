@@ -1,29 +1,38 @@
-import {
-  isInRange,
-  ONBOARDING_HEIGHT_RANGE,
-  ONBOARDING_WEIGHT_RANGE,
-} from "@/features/onboarding/constants/inputRanges";
-import type { OnboardingData } from "@/features/onboarding/onboarding.types";
-import { getGoalWeekEstimate } from "@/features/onboarding/utils/calculateGoalWeek";
+import { getGoalWeekEstimate } from "@/features/profile/utils/goalWeek.util";
 import type { ProfileResponseDto } from "@/shared/api/types/api.response.dto";
 import { isValidBirthYear } from "@/shared/commons/picker/yearOptions";
 
 // 프로필 목표 수정과 회원가입이 함께 쓰는 목표 규칙·선택지. 두 화면의 기준이 어긋나지 않도록 여기서만 정의한다
 
-export type GoalEditDraft = Pick<
-  OnboardingData,
-  | "gender"
-  | "birthYear"
-  | "height"
-  | "weight"
-  | "activity"
-  | "goal"
-  | "target_weight"
-  | "target_calories"
-  | "carbs"
-  | "protein"
-  | "fat"
->;
+export type GoalEditDraft = {
+  gender?: number;
+  birthYear?: number;
+  height?: number;
+  weight?: number;
+  activity?: number;
+  goal?: number;
+  target_weight?: number;
+  target_calories?: number;
+  // 목표 수정 화면은 탄단지를 따로 입력받는다
+  carbs?: number;
+  protein?: number;
+  fat?: number;
+};
+
+export const ONBOARDING_HEIGHT_RANGE = {
+  min: 1,
+  max: 250,
+} as const;
+
+export const ONBOARDING_WEIGHT_RANGE = {
+  min: 1,
+  max: 200,
+} as const;
+
+export function isInRange(value: number | undefined, min: number, max: number) {
+  if (value === undefined) return false;
+  return value >= min && value <= max;
+}
 
 export const GENDER = {
   MALE: 0,

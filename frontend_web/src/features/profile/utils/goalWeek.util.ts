@@ -1,4 +1,4 @@
-import type { OnboardingData } from "@/features/onboarding/onboarding.types";
+import type { GoalEditDraft } from "@/features/profile/goalEdit.model";
 import { getAge } from "@/shared/utils/health.utils";
 
 type WeightDirection = "loss" | "gain" | "maintain";
@@ -22,9 +22,9 @@ export type GoalWeekEstimateResult =
     };
 
 function hasRequiredGoalWeekBaseFields(
-  data: OnboardingData,
-): data is OnboardingData &
-  Required<Pick<OnboardingData, "birthYear" | "weight" | "height" | "gender" | "activity">> {
+  data: GoalEditDraft,
+): data is GoalEditDraft &
+  Required<Pick<GoalEditDraft, "birthYear" | "weight" | "height" | "gender" | "activity">> {
   return (
     data.birthYear !== undefined &&
     data.weight !== undefined &&
@@ -105,7 +105,7 @@ export function calculateGoalWeeks(
 }
 
 export function getGoalWeekEstimate(
-  data: OnboardingData,
+  data: GoalEditDraft,
   targetCalories: number,
 ): GoalWeekEstimateResult {
   if (!hasRequiredGoalWeekBaseFields(data)) {
@@ -121,7 +121,7 @@ export function getGoalWeekEstimate(
   return calculateGoalWeeks(data.weight, data.target_weight, targetCalories, tdee);
 }
 
-export function calculateGoalWeek(data: OnboardingData, targetCalories: number): number {
+export function calculateGoalWeek(data: GoalEditDraft, targetCalories: number): number {
   const goalWeekEstimate = getGoalWeekEstimate(data, targetCalories);
 
   if (goalWeekEstimate.status !== "ok") {

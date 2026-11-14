@@ -1,17 +1,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import {
-  isInRange,
-  ONBOARDING_HEIGHT_RANGE,
-  ONBOARDING_WEIGHT_RANGE,
-} from "@/features/onboarding/constants/inputRanges";
-import type { OnboardingData } from "@/features/onboarding/onboarding.types";
-import {
   ACTIVITY_OPTIONS,
   GENDER_OPTIONS,
   GOAL_OPTIONS,
   type GoalEditDraft,
   isGoalWeightRangeValid,
+  isInRange,
+  ONBOARDING_HEIGHT_RANGE,
+  ONBOARDING_WEIGHT_RANGE,
   validateStartPlan,
 } from "@/features/profile/goalEdit.model";
 import { useGetProfileQuery } from "@/features/profile/hooks/queries/useProfileQuery";
@@ -125,7 +122,7 @@ export default function GoalEditPage() {
 
   const visibleDraft = draft;
 
-  const updateSheetData = useCallback((patch: Partial<OnboardingData>) => {
+  const updateSheetData = useCallback((patch: Partial<GoalEditDraft>) => {
     setSheetData((previous) => ({ ...previous, ...patch }));
   }, []);
 
@@ -171,7 +168,7 @@ export default function GoalEditPage() {
     editorInputRef.current?.focus();
   }, [editingField]);
 
-  const applyInstantSelection = (patch: Partial<OnboardingData>) => {
+  const applyInstantSelection = (patch: Partial<GoalEditDraft>) => {
     updateDraft(patch);
     closeEditor();
   };

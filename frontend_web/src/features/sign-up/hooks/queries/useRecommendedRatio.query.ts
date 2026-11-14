@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 
-import { postRecommendNutrient } from "@/features/onboarding/api/recommend";
+import { postRecommendNutrient } from "@/features/profile/api/recommend.api";
 import { signUpKeys } from "@/features/sign-up/constants/signUp.querykey";
 import type { SignUpForm, SignUpType } from "@/features/sign-up/types/signUp.type";
 

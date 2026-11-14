@@ -4,7 +4,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { calendarKeys } from "@/features/calendar/hooks/queries/calendar.queryKey";
 import { registerWeight } from "@/features/home/api/todayRecord.api";
 import { queryKeys as homeQueryKeys } from "@/features/home/hooks/queries/todayRecord.queryKey";
-import { useRecommendNutrientMutation } from "@/features/onboarding/hooks/mutations/useRecommendMutation";
 import {
   updateActivity,
   updateBirthYear,
@@ -22,6 +21,7 @@ import {
   toTargetRatio,
   validateStartPlan,
 } from "@/features/profile/goalEdit.model";
+import { useRecommendNutrientMutation } from "@/features/profile/hooks/mutations/useRecommendMutation";
 import { queryKeys } from "@/features/profile/hooks/queries/queryKey";
 import { useGetProfileQuery } from "@/features/profile/hooks/queries/useProfileQuery";
 import {
