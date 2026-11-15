@@ -415,6 +415,7 @@ export default function WorkoutUpsertPage() {
               min={0}
               max={60 * 24}
               step={10}
+              fractionDigits={0}
               unit="분"
               classNames={{
                 group: styles.timeInputGroup,
