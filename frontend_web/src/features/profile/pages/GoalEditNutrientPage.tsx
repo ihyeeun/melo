@@ -37,10 +37,7 @@ import { PATH } from "@/router/path";
 import { track } from "@/shared/analytics/analytics";
 import { EVENT_NAME } from "@/shared/analytics/analytics.constants";
 import { isRequestAbortError } from "@/shared/api/requestCancellation";
-import type {
-  ProfileResponseDto,
-  WeightStepsResponseDto,
-} from "@/shared/api/types/api.response.dto";
+import type { WeightStepsResponseDto } from "@/shared/api/types/api.response.dto";
 import { Button } from "@/shared/commons/button/Button";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
@@ -71,6 +68,33 @@ function formatRoundedValue(value?: number) {
 
 function isAllowedNutrientInput(nextInputValue: string) {
   return NUTRIENT_INPUT_PATTERN.test(nextInputValue);
+}
+
+type GoalUpdateTask = {
+  run: () => Promise<unknown>;
+  // 처음 값이 없던 항목은 되돌릴 수 없다
+  undo?: () => Promise<unknown>;
+};
+
+// 저장한 순서의 반대로 처음 값을 다시 저장한다. 하나라도 되돌리지 못하면 false
+async function rollbackGoalUpdateTasks(tasks: GoalUpdateTask[]) {
+  let isRolledBack = true;
+
+  for (const task of [...tasks].reverse()) {
+    if (!task.undo) {
+      isRolledBack = false;
+      continue;
+    }
+
+    try {
+      await task.undo();
+    } catch (error) {
+      isRolledBack = false;
+      console.error("Failed to rollback goal update", error);
+    }
+  }
+
+  return isRolledBack;
 }
 
 // screen: PRF-01-005
@@ -179,85 +203,60 @@ export default function GoalEditNutrientPage() {
     }
 
     const today = getTodayFormatDateKey();
-    const updateTasks: Array<() => Promise<ProfileResponseDto>> = [];
+    // 항목마다 API가 따로라, 중간에 실패하면 앞서 저장한 항목을 처음 값으로 되돌려 전부 저장되거나 전부 안 되게 한다
+    const updateTasks: GoalUpdateTask[] = [];
+    const pushFieldTask = <T,>(
+      next: T | undefined,
+      initial: T | undefined,
+      update: (value: T) => Promise<unknown>,
+    ) => {
+      if (next === undefined || next === initial) return;
+      updateTasks.push({
+        run: () => update(next),
+        undo: initial === undefined ? undefined : () => update(initial),
+      });
+    };
 
-    if (visibleDraft.gender !== undefined && visibleDraft.gender !== initialDraft.gender) {
-      updateTasks.push(() => updateGender(visibleDraft.gender!));
-    }
+    pushFieldTask(visibleDraft.gender, initialDraft.gender, updateGender);
+    pushFieldTask(visibleDraft.birthYear, initialDraft.birthYear, updateBirthYear);
+    pushFieldTask(visibleDraft.height, initialDraft.height, updateHeight);
+    pushFieldTask(visibleDraft.weight, initialDraft.weight, updateWeight);
+    pushFieldTask(visibleDraft.activity, initialDraft.activity, updateActivity);
+    pushFieldTask(visibleDraft.goal, initialDraft.goal, updateGoal);
+    pushFieldTask(visibleDraft.target_weight, initialDraft.target_weight, updateTargetWeight);
+    pushFieldTask(visibleDraft.target_calories, initialDraft.target_calories, updateTargetCalories);
 
-    if (visibleDraft.birthYear !== undefined && visibleDraft.birthYear !== initialDraft.birthYear) {
-      updateTasks.push(() => updateBirthYear(visibleDraft.birthYear!));
-    }
-
-    if (visibleDraft.height !== undefined && visibleDraft.height !== initialDraft.height) {
-      updateTasks.push(() => updateHeight(visibleDraft.height!));
-    }
-
-    if (visibleDraft.weight !== undefined && visibleDraft.weight !== initialDraft.weight) {
-      updateTasks.push(async () => {
-        const nextWeight = visibleDraft.weight!;
-        const previousWeight = initialDraft.weight;
-        const updatedProfile = await updateWeight(nextWeight);
-
-        try {
-          await registerWeight({ date: today, weight: nextWeight });
-        } catch (error) {
-          if (isRequestAbortError(error)) throw error;
-          console.error("Failed to register updated weight", error);
-
-          if (previousWeight !== undefined) {
-            try {
-              await updateWeight(previousWeight);
-            } catch (rollbackError) {
-              if (isRequestAbortError(rollbackError)) throw rollbackError;
-              console.error("Failed to rollback profile weight", rollbackError);
-            }
-          }
-
-          throw error;
-        }
-
-        queryClient.setQueryData<WeightStepsResponseDto>(
-          homeQueryKeys.bodyStats(today),
-          (previous) => ({
-            weight: nextWeight,
-            steps: previous?.steps ?? 0,
-          }),
-        );
-        await queryClient.invalidateQueries({
-          queryKey: calendarKeys.monthly.month({ date: today.slice(0, 7), mode: "weight" }),
-        });
-
-        return updatedProfile;
+    if (isRatioChanged(initialDraft, visibleDraft)) {
+      const { carbs, protein, fat } = initialDraft;
+      updateTasks.push({
+        run: () =>
+          updateTargetRatio([visibleDraft.carbs!, visibleDraft.protein!, visibleDraft.fat!]),
+        undo:
+          carbs === undefined || protein === undefined || fat === undefined
+            ? undefined
+            : () => updateTargetRatio([carbs, protein, fat]),
       });
     }
 
-    if (visibleDraft.activity !== undefined && visibleDraft.activity !== initialDraft.activity) {
-      updateTasks.push(() => updateActivity(visibleDraft.activity!));
-    }
+    // 체중 기록은 되돌릴 수 없어서 프로필 항목을 모두 저장한 뒤 마지막에 남긴다
+    if (visibleDraft.weight !== undefined && visibleDraft.weight !== initialDraft.weight) {
+      const nextWeight = visibleDraft.weight;
+      updateTasks.push({
+        run: async () => {
+          await registerWeight({ date: today, weight: nextWeight });
 
-    if (visibleDraft.goal !== undefined && visibleDraft.goal !== initialDraft.goal) {
-      updateTasks.push(() => updateGoal(visibleDraft.goal!));
-    }
-
-    if (
-      visibleDraft.target_weight !== undefined &&
-      visibleDraft.target_weight !== initialDraft.target_weight
-    ) {
-      updateTasks.push(() => updateTargetWeight(visibleDraft.target_weight!));
-    }
-
-    if (
-      visibleDraft.target_calories !== undefined &&
-      visibleDraft.target_calories !== initialDraft.target_calories
-    ) {
-      updateTasks.push(() => updateTargetCalories(visibleDraft.target_calories!));
-    }
-
-    if (isRatioChanged(initialDraft, visibleDraft)) {
-      updateTasks.push(() =>
-        updateTargetRatio([visibleDraft.carbs!, visibleDraft.protein!, visibleDraft.fat!]),
-      );
+          queryClient.setQueryData<WeightStepsResponseDto>(
+            homeQueryKeys.bodyStats(today),
+            (previous) => ({
+              weight: nextWeight,
+              steps: previous?.steps ?? 0,
+            }),
+          );
+          await queryClient.invalidateQueries({
+            queryKey: calendarKeys.monthly.month({ date: today.slice(0, 7), mode: "weight" }),
+          });
+        },
+      });
     }
 
     if (updateTasks.length === 0) {
@@ -265,11 +264,14 @@ export default function GoalEditNutrientPage() {
       return;
     }
 
+    const completedTasks: GoalUpdateTask[] = [];
+
     try {
       setIsSubmitting(true);
 
       for (const task of updateTasks) {
-        await task();
+        await task.run();
+        completedTasks.push(task);
       }
 
       track(EVENT_NAME.USER_PROFILE_UPDATED);
@@ -285,7 +287,18 @@ export default function GoalEditNutrientPage() {
     } catch (error) {
       if (isRequestAbortError(error)) return;
       console.error(error);
-      toast.warning("목표 수정에 실패했어요");
+
+      const isRolledBack = await rollbackGoalUpdateTasks(completedTasks);
+      if (isRolledBack) {
+        toast.warning("목표 수정에 실패했어요", "잠시 후 다시 시도해주세요.");
+        return;
+      }
+
+      // 되돌리지 못한 항목이 있으면 서버 값을 다시 받아 프로필에 맞춘다
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.profile,
+      });
+      toast.warning("목표 수정에 실패했어요", "일부 항목만 저장됐을 수 있어요. 다시 확인해주세요.");
     } finally {
       setIsSubmitting(false);
     }
