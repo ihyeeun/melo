@@ -3,6 +3,8 @@ import "./BaseAlertModal.css";
 import { AlertDialog } from "@base-ui/react/alert-dialog";
 import * as React from "react";
 
+import { useStackflowOverlayBackHandler } from "@/shared/navigation/stackflowBackHandlers";
+
 type BaseAlertModalProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -22,6 +24,8 @@ export function BaseAlertModal({
 }: BaseAlertModalProps) {
   const popupRef = React.useRef<HTMLDivElement | null>(null);
   const actionCount = React.Children.toArray(children).filter(Boolean).length;
+
+  useStackflowOverlayBackHandler(open, () => onOpenChange(false));
 
   return (
     <AlertDialog.Root open={open} onOpenChange={onOpenChange}>

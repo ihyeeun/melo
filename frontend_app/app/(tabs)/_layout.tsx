@@ -8,7 +8,9 @@ import {
   isAppTabName,
   isAppTabVisible,
   shouldEnableTabBackGesture,
+  shouldUseNativeBackOnTabExit,
 } from "@/src/shared/navigation/appTabNavigation";
+import { requestAppExit } from "@/src/shared/navigation/appExit";
 import { useEdgeSwipeBack } from "@/src/shared/navigation/useEdgeSwipeBack";
 import { triggerNativeHaptic } from "@/src/shared/native/haptics";
 import { router, Slot, useSegments } from "expo-router";
@@ -90,6 +92,23 @@ export default function TabsLayout() {
     enabled: shouldEnableChatBackSwipe,
     onBack: requestChatBack,
   });
+  // 1번째 탭은 사용자 유형에 따라 다르다(지도 배포 후 무료 = 식당, 유료 = 홈). 탭 바 순서를 따른다
+  const firstTab = visibleTabItems[0]?.tab ?? "home";
+  const handleTabRootBack = useCallback(() => {
+    // G-2: 1번째 탭의 루트는 종료 확인
+    if (currentTab === firstTab) {
+      requestAppExit();
+      return;
+    }
+
+    // G-3: 그 외 탭의 루트는 1번째 탭으로 전환. AI 코치처럼 위에 쌓인 탭은 아래에 1번째 탭이 있으면 되돌아간다
+    if (shouldUseNativeBackOnTabExit(currentTab, firstTab)) {
+      router.dismissTo(getTabRoute(firstTab));
+      return;
+    }
+
+    navigateToTab(firstTab, currentTab);
+  }, [currentTab, firstTab]);
 
   useEffect(() => {
     if (visibleTabItems.some((item) => item.tab === currentTab)) return;
@@ -107,6 +126,7 @@ export default function TabsLayout() {
           onTabBarVisibilityChange={setIsTabBarHidden}
           onFeatureGuardEnabledChange={setIsFreeUserGuardEnabled}
           onOptionalTabsChange={setOptionalTabs}
+          onRootBack={handleTabRootBack}
         />
       </View>
 

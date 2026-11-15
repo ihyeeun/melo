@@ -1,7 +1,11 @@
 import { create } from "zustand";
 import { devtools } from "zustand/middleware";
 
-import { type GoalEditDraft, toGoalEditDraft } from "@/features/profile/goalEdit.model";
+import {
+  applyMaintainTargetWeight,
+  type GoalEditDraft,
+  toGoalEditDraft,
+} from "@/features/profile/goalEdit.model";
 import type { ProfileResponseDto } from "@/shared/api/types/api.response.dto";
 
 type GoalEditFlowState = {
@@ -27,12 +31,13 @@ export const useGoalEditFlowStore = create<GoalEditFlowState>()(
           set({ hasActiveFlow: false, draft: null, initialDraft: null }, false, "goalEdit/finish");
         },
         startFromProfile: (profile) => {
-          const nextDraft = toGoalEditDraft(profile);
+          const initialDraft = toGoalEditDraft(profile);
           set(
             {
-              draft: nextDraft,
+              // 체중 유지인데 저장된 목표 몸무게가 다르면 수정 값만 맞춘다. 처음 값은 그대로 둬야 저장할 때 바뀐 항목으로 잡힌다
+              draft: applyMaintainTargetWeight(initialDraft),
               hasActiveFlow: true,
-              initialDraft: nextDraft,
+              initialDraft,
             },
             false,
             "goalEdit/startFromProfile",
@@ -45,21 +50,24 @@ export const useGoalEditFlowStore = create<GoalEditFlowState>()(
             return;
           }
 
-          const nextDraft = toGoalEditDraft(profile);
+          const nextInitialDraft = toGoalEditDraft(profile);
           set(
             {
-              draft: nextDraft,
+              draft: applyMaintainTargetWeight(nextInitialDraft),
               hasActiveFlow: true,
-              initialDraft: nextDraft,
+              initialDraft: nextInitialDraft,
             },
             false,
             "goalEdit/ensureFromProfile",
           );
         },
+        // 체중 유지면 목표 몸무게가 현재 몸무게를 따라간다(목표를 체중 유지로 바꿀 때, 체중 유지 중 몸무게를 바꿀 때)
         updateDraft: (patch) =>
           set(
             (state) => ({
-              draft: state.draft ? { ...state.draft, ...patch } : state.draft,
+              draft: state.draft
+                ? applyMaintainTargetWeight({ ...state.draft, ...patch })
+                : state.draft,
             }),
             false,
             "goalEdit/updateDraft",

@@ -49,6 +49,7 @@ const METRIC_CONFIG: Record<
   },
 };
 
+// screen: PRF-01-001
 export default function ProfilePage() {
   const navigate = useNavigate();
   const today = getTodayFormatDateKey();
@@ -205,9 +206,8 @@ export default function ProfilePage() {
 
             <p className={`body-s-medium amp-mask marginLeft`}>
               <span className={styles.highlightText}>
-                {(dayMeal?.totalCalories ?? 0).toLocaleString("ko-KR", {
-                  maximumFractionDigits: 1,
-                })}
+                {/* 하루 총 섭취량은 반올림한 정수로 보여 준다. 소수 1자리는 끼니별 합에만 쓴다 */}
+                {Math.round(dayMeal?.totalCalories ?? 0).toLocaleString("ko-KR")}
               </span>
               <span className={`${styles.amountUnit} body-s-regular`}>kcal</span>
             </p>

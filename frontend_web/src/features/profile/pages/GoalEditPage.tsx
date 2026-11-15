@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ACTIVITY_OPTIONS,
   GENDER_OPTIONS,
+  GOAL,
   GOAL_OPTIONS,
   type GoalEditDraft,
   isGoalWeightRangeValid,
@@ -100,9 +101,10 @@ function getSummaryValue(field: EditableField, draft: GoalEditDraft) {
   return draft.target_weight !== undefined ? `${formatDecimal(draft.target_weight)}kg` : "-";
 }
 
+// screen: PRF-01-003
 export default function GoalEditPage() {
   const navigate = useNavigate();
-  const { data: profile, isPending } = useGetProfileQuery();
+  const { data: profile, isPending, isFetching, refetch } = useGetProfileQuery();
   const draft = useGoalEditDraft();
   const startGoalEditFlow = useStartGoalEditFlow();
   const updateDraft = useUpdateGoalEditDraft();
@@ -142,6 +144,16 @@ export default function GoalEditPage() {
 
   const openEditor = (field: EditableField) => {
     if (!visibleDraft || field === "birthYear") return;
+
+    // 체중 유지면 목표 몸무게는 현재 몸무게로 정해져 있어 따로 바꿀 수 없다
+    if (field === "goalWeight" && visibleDraft.goal === GOAL.MAINTAIN_WEIGHT) {
+      toast.info(
+        "체중 유지 목표는 현재 몸무게로 맞춰져요",
+        "목표를 바꾸면 목표 몸무게를 수정할 수 있어요.",
+      );
+      return;
+    }
+
     setEditingField(field);
     setSheetData({ ...visibleDraft });
   };
@@ -432,8 +444,12 @@ export default function GoalEditPage() {
 
   const isFooterDisabled = !canStartPlan;
 
-  if (isPending) return <GoalEditSummarySkeleton />;
-  if (!visibleDraft) return <p>error</p>;
+  // 프로필을 받은 직후에는 수정 흐름을 시작하기 전이라 draft가 잠깐 비어 있다
+  const isPreparingDraft = !visibleDraft && (profile !== undefined || isFetching);
+  if (isPending || isPreparingDraft) return <GoalEditSummarySkeleton />;
+  if (!visibleDraft) {
+    return <GoalEditLoadFailed onBack={handleBack} onRetry={() => void refetch()} />;
+  }
 
   return (
     <div className={`${styles.page} page`}>
@@ -458,6 +474,7 @@ export default function GoalEditPage() {
                 <SystemIcon name="chevron-right" className="text-secondary" size={16} />
               </div>
 
+              {/* screen: PRF-01-003_modal-birth */}
               {isBirthItem && (
                 <select
                   className={styles.birthYearSelect}
@@ -500,6 +517,8 @@ export default function GoalEditPage() {
         </Button>
       </footer>
 
+      {/* screen: PRF-01-003_modal-gender, PRF-01-003_modal-height, PRF-01-003_modal-weight */}
+      {/* screen: PRF-01-003_modal-activity-level, PRF-01-003_modal-goal, PRF-01-003_modal-target-weight */}
       <BottomSheet
         isOpen={editingField !== null}
         onClose={closeEditor}
@@ -523,6 +542,20 @@ export default function GoalEditPage() {
           )}
         </div>
       </BottomSheet>
+    </div>
+  );
+}
+
+function GoalEditLoadFailed({ onBack, onRetry }: { onBack: () => void; onRetry: () => void }) {
+  return (
+    <div className={`${styles.page} page`}>
+      <PageHeader title="정보 및 목표 수정" onBack={onBack} />
+      <main className={`main ${styles.loadFailed}`} role="alert">
+        <p className="body-l-medium text-tertiary">정보를 불러오지 못했어요</p>
+        <Button variant="outlined" size="s" onClick={onRetry}>
+          다시 시도
+        </Button>
+      </main>
     </div>
   );
 }

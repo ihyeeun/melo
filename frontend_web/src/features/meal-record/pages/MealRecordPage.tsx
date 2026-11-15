@@ -136,6 +136,7 @@ const MEAL_RECORD_MINUTE_OPTIONS = Array.from({ length: 60 }, (_, index) =>
   String(index).padStart(2, "0"),
 );
 
+// screen: DIET-04-001
 export default function MealRecordPage() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -156,8 +157,10 @@ export default function MealRecordPage() {
     [location.state],
   );
   const dayText = isToday(parseDateKey(dateKey))
-    ? "오늘의"
+    ? "오늘"
     : formatDateKeyToMonthDayWeekdayLabel(dateKey);
+  // 요약 값은 고른 끼니의 칼로리 합이라 끼니 이름을 함께 쓴다
+  const mealTypeLabel = MEAL_TYPE_OPTIONS.find((option) => option.key === mealType)?.label ?? "";
 
   const { data: currentMenus, isPending: isSummaryReady } = useDayMealsQuery(dateKey);
 
@@ -426,6 +429,7 @@ export default function MealRecordPage() {
   const handleConfirmTime = () => {
     setMealTime({ key: draftKey, mealTime: toMealRecordTime(draftMealRecordTime) });
     setIsTimeSheetOpen(false);
+    toast.success("시간이 수정되었어요");
   };
 
   const handleResetTime = () => {
@@ -433,6 +437,7 @@ export default function MealRecordPage() {
     setDraftMealRecordTime(toMealRecordTimeValue(defaultTime));
     setMealTime({ key: draftKey, mealTime: defaultTime });
     setIsTimeSheetOpen(false);
+    toast.success("시간을 삭제했어요");
   };
 
   const handleRemoveMenu = (menuId: number) => {
@@ -585,7 +590,9 @@ export default function MealRecordPage() {
 
       <main className={`main ${styles.content}`}>
         <article className={styles.summaryCard}>
-          <p className="body-s-regular text-secondary">{dayText} 섭취 칼로리</p>
+          <p className="body-s-regular text-secondary">
+            {dayText} {mealTypeLabel} 섭취 칼로리
+          </p>
 
           <div className={`${styles.calorieRow} textNoWrap`}>
             <span className={`title-xl-medium`}>
@@ -689,6 +696,7 @@ export default function MealRecordPage() {
         <SystemIcon name="plus" size={28} />
       </button> */}
 
+      {/* screen: DIET-04-001_modal-exit */}
       <ConfirmModal
         open={isExitConfirmOpen}
         onOpenChange={setIsExitConfirmOpen}
@@ -699,6 +707,7 @@ export default function MealRecordPage() {
         onConfirm={() => {}}
       />
 
+      {/* screen: DIET-04-001_modal-time */}
       <BottomSheet
         isOpen={isTimeSheetOpen}
         onClose={() => setIsTimeSheetOpen(false)}
@@ -707,7 +716,7 @@ export default function MealRecordPage() {
         title="식사 시간"
         titleRightSlot={
           <button type="button" onClick={handleResetTime} className="marginLeft">
-            <span className="body-l-regular text-tertiary">삭제</span>
+            <span className="body-l-regular text-tertiary textNoWrap">삭제</span>
           </button>
         }
       >

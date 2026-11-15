@@ -11,6 +11,7 @@ import styles from "@/features/sign-up/styles/SignUpSteps.module.css";
 import type { SignUpStepProps } from "@/features/sign-up/types/signUp.type";
 import { NumberInput } from "@/shared/commons/input/NumberInput";
 
+// screen: ONB-01-004
 export function BodyInfoStep({ form, onNext, nextLabel }: SignUpStepProps<"body">) {
   const [height, setHeight] = useState(form.height);
   const [weight, setWeight] = useState(form.weight);

@@ -210,7 +210,6 @@ export type MealPhotoGroup = {
   items: MealMenuItem[];
 };
 
-export const DEFAULT_MEAL_TYPE: MealType = "1";
 export const MEAL_TYPE_SET: ReadonlySet<MealType> = new Set(
   MEAL_TYPE_OPTIONS.map((option) => option.key),
 );

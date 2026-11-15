@@ -12,6 +12,7 @@ const PERSONA_OPTIONS = [
   { value: PERSONA.ETC, title: "기타" },
 ] as const;
 
+// screen: ONB-01-011
 export function PersonaTypeStep({ form, onNext, nextLabel }: SignUpStepProps<"persona">) {
   const [personaType, setPersonaType] = useState(form.persona_type);
 

@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { useTabBarVisibilitySync } from "@/shared/api/bridge/useTabBarVisibilitySync";
 import { useBottomSheetPositionerStyle } from "@/shared/commons/bottomSheet/useBottomSheetPositionerStyle";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
+import { useStackflowOverlayBackHandler } from "@/shared/navigation/stackflowBackHandlers";
 
 import styles from "./BottomSheet.module.css";
 
@@ -74,6 +75,7 @@ export default function BottomSheet({
   }, [isOpen]);
 
   useTabBarVisibilitySync(isTabBarHidden);
+  useStackflowOverlayBackHandler(isOpen, onClose);
 
   return (
     <SeedBottomSheet.Root

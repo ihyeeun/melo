@@ -52,6 +52,7 @@ const EMPTY_RECORDED_DATES: string[] = [];
 const KEEP_CALENDAR_OPEN_SELECTOR = "[data-keep-calendar-open]";
 
 /** 기존 기록 화면의 조회·디자인·주간 전환 정책을 조합한다. */
+// screen: COM-00-003
 export default function RecordCalendar({
   onSelectDate,
   onVisibleStartDateChange,

@@ -5,6 +5,7 @@ import { StepLayout } from "@/features/sign-up/components/StepLayout";
 import styles from "@/features/sign-up/styles/SignUpSteps.module.css";
 import type { SignUpStepProps } from "@/features/sign-up/types/signUp.type";
 
+// screen: ONB-01-017
 export function SubCodeStep({ form, onNext, nextLabel }: SignUpStepProps<"subCode">) {
   const [subCode, setSubCode] = useState(form.subCode ?? "");
 

@@ -15,6 +15,41 @@
   align-items: center;
 }
 
+.menstrualPhaseToggle {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.switch {
+  display: block;
+  width: 36px;
+  height: 20px;
+  padding: 2px;
+  flex-shrink: 0;
+  border-radius: 999px;
+  background-color: var(--gray-300);
+  transition: background-color 0.2s ease;
+}
+
+.menstrualPhaseToggle[data-checked="true"] .switch {
+  background-color: var(--coral-500);
+}
+
+.switchThumb {
+  display: block;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background-color: var(--background-default);
+  transition: transform 0.2s ease;
+}
+
+.menstrualPhaseToggle[data-checked="true"] .switchThumb {
+  transform: translateX(16px);
+}
+
 .content {
   overflow-x: hidden;
   background-color: var(--background-default);

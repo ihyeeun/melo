@@ -1,5 +1,6 @@
-import { DEFAULT_MEAL_TYPE, MEAL_TYPE_SET, type MealType } from "@/shared/api/types/api.dto";
+import { MEAL_TYPE_SET, type MealType } from "@/shared/api/types/api.dto";
 import { getTodayFormatDateKey } from "@/shared/utils/dateFormat";
+import { getMealTypeFromCurrentTime } from "@/shared/utils/timeformat";
 
 export function getSafeDateKey(value: string | null) {
   if (!value) return getTodayFormatDateKey();
@@ -12,7 +13,8 @@ export function getMealType(value: string | null): MealType {
     return value as MealType;
   }
 
-  return DEFAULT_MEAL_TYPE;
+  // 끼니 값 없이 들어온 경우 지금 시각의 끼니로 정한다
+  return getMealTypeFromCurrentTime(new Date());
 }
 
 export function getSafeMenuId(value: unknown): number | null {

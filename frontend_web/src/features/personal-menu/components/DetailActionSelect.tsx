@@ -3,6 +3,7 @@ import { useState } from "react";
 
 import styles from "@/features/personal-menu/folder/styles/FolderDetailPage.module.css";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
+import { useStackflowOverlayBackHandler } from "@/shared/navigation/stackflowNavigation";
 
 type DetailActionValue = "edit" | "delete";
 
@@ -22,12 +23,16 @@ const DETAIL_ACTION_OPTIONS: Array<{
   { label: "삭제", value: "delete", variant: "danger" },
 ];
 
+// screen: DIET-03-001_modal-more-action
 export function DetailActionSelect({
   disabled = false,
   onDelete,
   onEdit,
 }: DetailActionSelectProps) {
   const [value, setValue] = useState<DetailActionValue | null>(null);
+  const [isOpen, setIsOpen] = useState(false);
+
+  useStackflowOverlayBackHandler(isOpen, () => setIsOpen(false));
 
   const handleValueChange = (nextValue: DetailActionValue | null) => {
     setValue(null);
@@ -46,6 +51,8 @@ export function DetailActionSelect({
     <Select.Root<DetailActionValue>
       value={value}
       onValueChange={handleValueChange}
+      open={isOpen}
+      onOpenChange={setIsOpen}
       disabled={disabled}
       modal={false}
     >

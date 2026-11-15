@@ -42,6 +42,7 @@ type NutritionLabelCreateLocationState = {
   mealType?: MealType;
 };
 
+// screen: DIET-02-006
 export default function NutrientCameraPage() {
   const navigation = useNavigate();
   const location = useLocation();
@@ -191,6 +192,7 @@ export default function NutrientCameraPage() {
         <main className={styles.main} />
       )}
 
+      {/* screen: DIET-02-008_modal-analysis-failed, DIET-02-008_modal-invalid-image */}
       <CheckButtonModal
         open={captureErrorFeedback !== null}
         onOpenChange={handleCaptureErrorModalOpenChange}

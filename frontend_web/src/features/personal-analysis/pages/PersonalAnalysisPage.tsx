@@ -3,8 +3,13 @@ import type { UseQueryResult } from "@tanstack/react-query";
 
 import { LineChart } from "@/features/personal-analysis/components/LineChart";
 import { usePersonalAnalysisByModeQuery } from "@/features/personal-analysis/hooks/queries/usePersonalAnalysis.query";
+import {
+  useIsMenstrualPhaseVisible,
+  useSetMenstrualPhaseVisible,
+} from "@/features/personal-analysis/stores/menstrualPhaseSetting.store";
 import styles from "@/features/personal-analysis/styles/PersonalAnalysisPage.module.css";
 import { getAnalysisRange } from "@/features/personal-analysis/utils/analysisRange.util";
+import { useGetProfileQuery } from "@/features/profile/hooks/queries/useProfileQuery";
 import { PATH } from "@/router/path";
 import { track } from "@/shared/analytics/analytics";
 import { EVENT_NAME } from "@/shared/analytics/analytics.constants";
@@ -17,14 +22,16 @@ import { Skeleton } from "@/shared/commons/skeleton/Skeleton";
 import { isFreeUserGuardEnabled } from "@/shared/guards/featureGuard";
 import { navigate } from "@/shared/navigation/stackflowNavigation";
 import { formatDotDate, getTodayFormatDateKey } from "@/shared/utils/dateFormat";
-import { formatDisplayNumber } from "@/shared/utils/numberFormat";
 
 type AnalysisCardProps<M extends RecentAnalysisMode> = {
   query: UseQueryResult<RecentAnalysisResponseDto[M][]>;
 };
 
+// screen: ANA-01-001
 export default function PersonalAnalysisPage() {
   const isFree = isFreeUserGuardEnabled();
+  const { data: profile } = useGetProfileQuery();
+  const isFemale = profile?.gender === 1;
   const today = getTodayFormatDateKey();
   const deficitQuery = usePersonalAnalysisByModeQuery({ date: today, mode: "deficit" });
   const intakeQuery = usePersonalAnalysisByModeQuery({ date: today, mode: "intake" });
@@ -49,6 +56,7 @@ export default function PersonalAnalysisPage() {
         <span className="body-xs-regular text-tertiary">
           {startDate} ~ {endDate}
         </span>
+        {isFemale && <MenstrualPhaseToggle />}
       </div>
 
       <ScrollFogArea className={`main ${styles.content}`}>
@@ -74,6 +82,28 @@ export default function PersonalAnalysisPage() {
         </div>
       </ScrollFogArea>
     </div>
+  );
+}
+
+// 그래프 배경에 생리 주기를 표시할지. 여성에게만 보이고, 기본은 꺼져 있다
+function MenstrualPhaseToggle() {
+  const isVisible = useIsMenstrualPhaseVisible();
+  const setVisible = useSetMenstrualPhaseVisible();
+
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={isVisible}
+      data-checked={isVisible}
+      className={styles.menstrualPhaseToggle}
+      onClick={() => setVisible(!isVisible)}
+    >
+      <span className="body-xs-regular text-secondary">생리 주기</span>
+      <span className={styles.switch}>
+        <span className={styles.switchThumb} />
+      </span>
+    </button>
   );
 }
 
@@ -118,9 +148,9 @@ function IntakeCard({ query }: AnalysisCardProps<"intake">) {
 
   const averageKcal =
     intake && intake.length > 0
-      ? formatDisplayNumber(
+      ? Math.round(
           intake.reduce((sum, value) => sum + value.intake_calories, 0) / intake.length,
-        )
+        ).toLocaleString("ko-KR")
       : 0;
 
   if (isPending) return <SkeletonChart title={title} />;
@@ -161,9 +191,9 @@ function BurnedCard({ query }: AnalysisCardProps<"burned">) {
 
   const averageBurned =
     burned && burned.length > 0
-      ? formatDisplayNumber(
+      ? Math.round(
           burned.reduce((sum, value) => sum + value.total_burned_calories, 0) / burned.length,
-        )
+        ).toLocaleString("ko-KR")
       : 0;
 
   if (isPending) return <SkeletonChart title={title} />;

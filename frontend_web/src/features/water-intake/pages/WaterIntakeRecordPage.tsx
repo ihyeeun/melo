@@ -25,6 +25,7 @@ import { toast } from "@/shared/commons/toast/toast";
 import { navigateBack } from "@/shared/navigation/stackflowNavigationController";
 import { useSelectedDateKey } from "@/shared/stores/selectedDate.store";
 
+// screen: REC-02-003
 export default function WaterIntakeRecordPage() {
   const selectdate = useSelectedDateKey();
   const [editedWaterAmount, setEditedWaterAmount] = useState<number>();
@@ -134,6 +135,7 @@ export default function WaterIntakeRecordPage() {
         </Button>
       </footer>
 
+      {/* screen: REC-02-003_modal-cup-size */}
       <BottomSheet
         isOpen={isSheetOpen}
         onClose={() => {

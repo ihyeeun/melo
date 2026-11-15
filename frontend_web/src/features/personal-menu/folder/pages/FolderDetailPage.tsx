@@ -76,6 +76,7 @@ function scaleCaloriesByQuantity(menu: MenuSimpleResponseDto, quantity: number) 
   return baseCalories * (quantity / baseWeight);
 }
 
+// screen: DIET-03-001
 export default function FolderDetailPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -414,6 +415,7 @@ export default function FolderDetailPage() {
         </Button>
       </footer>
 
+      {/* screen: DIET-03-001_modal-delete */}
       <ConfirmModal
         open={isDeleteConfirmOpen}
         onOpenChange={setIsDeleteConfirmOpen}

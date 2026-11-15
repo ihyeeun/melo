@@ -17,6 +17,7 @@ const BIRTH_YEAR_OPTIONS = Array.from(
   (_, index) => String(BIRTH_YEAR_RANGE.min + index),
 );
 
+// screen: ONB-01-003
 export function BasicInfoStep({ form, onNext, nextLabel }: SignUpStepProps<"basicInfo">) {
   const [gender, setGender] = useState(form.gender);
   const [birthYear, setBirthYear] = useState(form.birthYear);
@@ -70,6 +71,7 @@ export function BasicInfoStep({ form, onNext, nextLabel }: SignUpStepProps<"basi
         </button>
       </div>
 
+      {/* screen: ONB-01-003_modal-birth */}
       <BottomSheet
         isOpen={isBirthYearSheetOpen}
         onClose={() => setIsBirthYearSheetOpen(false)}

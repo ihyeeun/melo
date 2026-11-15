@@ -1,3 +1,4 @@
+export { useStackflowBackHandler, useStackflowOverlayBackHandler } from "./stackflowBackHandlers";
 export type {
   Location,
   NavigateFunction,
@@ -18,5 +19,4 @@ export {
   useLocation,
   useNavigate,
   useSearchParams,
-  useStackflowBackHandler,
 } from "./stackflowRouter";

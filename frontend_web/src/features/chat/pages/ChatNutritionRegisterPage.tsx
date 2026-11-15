@@ -22,6 +22,7 @@ import { navigateBack, useLocation } from "@/shared/navigation/stackflowNavigati
 
 const MAX_INPUT_LENGTH = 300;
 
+// screen: DIET-02-004
 export default function ChatNutritionRegisterPage() {
   const queryClient = useQueryClient();
   const { state } = useLocation<NutritionLabelRecognitionResponseDto>();

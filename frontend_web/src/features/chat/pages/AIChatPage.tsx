@@ -59,7 +59,11 @@ import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import { ConfirmModal } from "@/shared/commons/modals/ConfirmModal";
 import { toast } from "@/shared/commons/toast/toast";
 import { MEAL_TIMES } from "@/shared/constants/meal.constants";
-import { useLocation, useNavigate } from "@/shared/navigation/stackflowNavigation";
+import {
+  useLocation,
+  useNavigate,
+  useStackflowOverlayBackHandler,
+} from "@/shared/navigation/stackflowNavigation";
 import { navigateBack } from "@/shared/navigation/stackflowNavigationController";
 import {
   formatDateDividerText,
@@ -80,6 +84,9 @@ type ChatEntryRequest =
   | { type: "management" }
   | { type: "management-pattern-analysis" };
 
+const MAX_AUTO_COMPLETE_COUNT = 3;
+
+// screen: CHA-01-001
 export default function AIChatPage() {
   const navigate = useNavigate();
   const { id: screenId, isActive } = useActivity();
@@ -93,6 +100,7 @@ export default function AIChatPage() {
   const setImage = useSetImage();
 
   const [isShowChatActions, setIsShowChatActions] = useState<boolean>(true);
+  const [isPhotoMenuOpen, setIsPhotoMenuOpen] = useState(false);
   const [isTextMealRecordMode, setIsTextMealRecordMode] = useState<boolean>(false);
   const [inputMessage, setInputMessage] = useState<string>("");
   const [showScrollToBottomBtn, setShowScrollToBottomBtn] = useState<boolean>(false);
@@ -126,7 +134,10 @@ export default function AIChatPage() {
   const { data: suggestionsResponse } = useSearchMenuQuery(debouncedKeyword, {
     enabled: canAutoCompleteKeyword,
   });
-  const suggestionsMenuNames = canAutoCompleteKeyword ? (suggestionsResponse?.name ?? []) : [];
+  // 자동 완성은 최대 3개까지만 보여 준다
+  const suggestionsMenuNames = canAutoCompleteKeyword
+    ? (suggestionsResponse?.name ?? []).slice(0, MAX_AUTO_COMPLETE_COUNT)
+    : [];
   const nutritionResponse = historyQuery.data?.chat_list.find(
     (chat) => chat.id === nutritionMealChatId,
   )?.response_payload;
@@ -428,6 +439,10 @@ export default function AIChatPage() {
     setIsShowChatActions(false);
   }
 
+  // [+] 메뉴 펼침과 사진 선택은 뒤로가기로 닫는다. 사진 선택이 위에 뜨므로 먼저 닫힌다
+  useStackflowOverlayBackHandler(isShowChatActions, () => setIsShowChatActions(false));
+  useStackflowOverlayBackHandler(isPhotoMenuOpen, () => setIsPhotoMenuOpen(false));
+
   return (
     <div className={`page ${styles.root}`}>
       <header className={styles.header}>
@@ -611,8 +626,10 @@ export default function AIChatPage() {
           </div>
         </section>
 
+        {/* screen: CHA-01-001_modal-menu */}
         <section className={styles.chatActionsSection} data-isView={isShowChatActions}>
-          <Menu.Root>
+          {/* screen: CHA-01-001_modal-photo-select */}
+          <Menu.Root open={isPhotoMenuOpen} onOpenChange={setIsPhotoMenuOpen}>
             <Menu.Trigger type="button" className={styles.chatActionButton}>
               <div className={styles.chatActionIcon}>
                 <SystemIcon name="photo-library" size={24} />
@@ -664,7 +681,7 @@ export default function AIChatPage() {
             <div className={styles.chatActionIcon}>
               <SystemIcon name="contract-edit" size={24} />
             </div>
-            <p className="body-xs-regular text-primary textCenter">식사기록 모드</p>
+            <p className="body-xs-regular text-primary textCenter">식사 기록 모드</p>
 
             {isShowChatActions && <TextMealRecordCoachMark />}
           </button>

@@ -36,6 +36,7 @@ import {
 } from "@/shared/guards/featureGuard";
 
 import { screenRequestCancellationPlugin } from "./screenRequestCancellationPlugin";
+import { runStackflowBackHandlers } from "./stackflowBackHandlers";
 import { setStackflowNavigateBackHandler } from "./stackflowNavigationController";
 import styles from "./StackflowRuntime.module.css";
 
@@ -86,7 +87,6 @@ type RenderableStack = Stack & {
   };
 };
 
-type StackflowBackHandler = () => boolean | void;
 type SwipeBackTransitionOptions = {
   count?: number;
   fallbackOptions?: NavigateOptions;
@@ -176,7 +176,6 @@ const ChatNutritionRegisterPage = createGuardedLazyActivity(
   FEATURE_GUARD.CHAT,
   () => import("@/features/chat/pages/ChatNutritionRegisterPage"),
 );
-const DiaryPage = createLazyActivity(() => import("@/features/diary/pages/DiaryPage"));
 const ChatCameraPage = createGuardedLazyActivity(
   FEATURE_GUARD.FOOD_CAMERA,
   () => import("@/features/camera/pages/ChatCameraPage"),
@@ -220,7 +219,6 @@ const ACTIVITIES = {
   BrandSearch,
   Chat: AIChatPage,
   ChatNutritionRegister: ChatNutritionRegisterPage,
-  Diary: DiaryPage,
   Restaurant: RestaurantPage,
   RestaurantDetail: RestaurantDetailPage,
   RestaurantMenu: RestaurantMenuPage,
@@ -262,7 +260,6 @@ const ACTIVITY_ROUTES: Record<keyof typeof ACTIVITIES, RoutePath> = {
   BrandSearch: PATH.BRAND_SEARCH,
   Chat: PATH.AI_CHAT,
   ChatNutritionRegister: PATH.CHAT_NUTRITION_REGISTER,
-  Diary: PATH.DIARY,
   Restaurant: PATH.RESTAURANT,
   RestaurantDetail: PATH.RESTAURANT_DETAIL,
   RestaurantMenu: PATH.RESTAURANT_MENU,
@@ -296,7 +293,6 @@ const SWIPE_VERTICAL_CANCEL_DISTANCE = 32;
 const SWIPE_VERTICAL_CANCEL_RATIO = 2.4;
 
 const activityNavigationStateMap = new Map<string, unknown>();
-const stackflowBackHandlerMap = new Map<string, StackflowBackHandler>();
 let pruneActivityNavigationStateTimeoutId: number | null = null;
 let programmaticPopStateTimeoutId: number | null = null;
 let pendingProgrammaticPopStateCount = 0;
@@ -653,13 +649,13 @@ function getActiveActivity() {
   return stackflowActions.getStack().activities.find((activity) => activity.isActive);
 }
 
-function runActiveBackHandler(skipBackHandler: boolean | undefined) {
+function runActiveBackHandler(skipBackHandler: boolean | undefined, includeOverlays = false) {
   if (skipBackHandler) return false;
 
   const activeActivity = getActiveActivity();
   if (!activeActivity) return false;
 
-  return stackflowBackHandlerMap.get(activeActivity.id)?.() === true;
+  return runStackflowBackHandlers(activeActivity.id, { includeOverlays });
 }
 
 function createSearchParams(init?: URLSearchParamsInit) {
@@ -979,7 +975,7 @@ function StackActivityFrame({
       setIsDragging(false);
 
       if (shouldPop) {
-        if (runActiveBackHandler(false)) {
+        if (runActiveBackHandler(false, true)) {
           snapBackSwipe();
           return;
         }
@@ -1453,14 +1449,17 @@ export function navigateBack({
   fallbackOptions,
   fallbackTo,
   skipBackHandler = false,
+  closeOverlayFirst = false,
 }: {
   animate?: boolean;
   count?: number;
   fallbackOptions?: NavigateOptions;
   fallbackTo?: To;
   skipBackHandler?: boolean;
+  // 사용자가 직접 뒤로가기를 했을 때만 true. 열린 모달·바텀시트를 먼저 닫는다
+  closeOverlayFirst?: boolean;
 } = {}) {
-  if (runActiveBackHandler(skipBackHandler)) {
+  if (runActiveBackHandler(skipBackHandler, closeOverlayFirst)) {
     return false;
   }
 
@@ -1717,28 +1716,6 @@ export function useSearchParams(): [
   );
 
   return [searchParams, setSearchParams];
-}
-
-export function useStackflowBackHandler(handler: StackflowBackHandler | null | undefined) {
-  const activity = useActivity();
-  const handlerRef = useRef(handler);
-
-  useEffect(() => {
-    handlerRef.current = handler;
-  }, [handler]);
-
-  useEffect(() => {
-    if (!handler) return;
-
-    const backHandler = () => handlerRef.current?.();
-    stackflowBackHandlerMap.set(activity.id, backHandler);
-
-    return () => {
-      if (stackflowBackHandlerMap.get(activity.id) === backHandler) {
-        stackflowBackHandlerMap.delete(activity.id);
-      }
-    };
-  }, [activity.id, handler]);
 }
 
 export function getStackflowStackComponent() {

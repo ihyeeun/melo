@@ -10,6 +10,7 @@ import styles from "@/features/sign-up/styles/SignUpSteps.module.css";
 import type { SignUpStepProps } from "@/features/sign-up/types/signUp.type";
 import { NumberInput } from "@/shared/commons/input/NumberInput";
 
+// screen: ONB-01-008
 export function TargetCaloriesStep({ form, onNext, nextLabel }: SignUpStepProps<"targetCalories">) {
   const recommendation = useRecommendedCaloriesQuery(form);
   const [calories, setCalories] = useRecommendedDraft(form.target_calories, recommendation.data);
@@ -32,7 +33,13 @@ export function TargetCaloriesStep({ form, onNext, nextLabel }: SignUpStepProps<
       <NumberInput
         value={calories}
         onChange={(nextCalories) => {
-          if (nextCalories !== undefined && nextCalories > GOAL_CALORIES_MAX) return;
+          // 0으로 시작하거나 최댓값을 넘는 입력은 받지 않는다
+          if (
+            nextCalories !== undefined &&
+            (nextCalories < GOAL_CALORIES_MIN || nextCalories > GOAL_CALORIES_MAX)
+          ) {
+            return;
+          }
           setCalories(nextCalories === undefined ? undefined : Math.trunc(nextCalories));
         }}
         placeholder="0000"

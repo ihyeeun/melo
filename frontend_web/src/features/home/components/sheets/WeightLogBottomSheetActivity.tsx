@@ -34,6 +34,7 @@ function isWeightInputAllowed(inputValue: string) {
   return Number(normalized) <= MAX_WEIGHT;
 }
 
+// screen: REC-02-002
 export default function WeightLogBottomSheetActivity() {
   const activity = useActivity();
   const date = activity.params.date ?? getTodayFormatDateKey();

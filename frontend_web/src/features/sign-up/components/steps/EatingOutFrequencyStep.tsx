@@ -11,6 +11,7 @@ const EATING_OUT_OPTIONS = [
   { value: MEAL_OUTSIDE.L, title: "주 5회 이상" },
 ] as const;
 
+// screen: ONB-01-012
 export function EatingOutFrequencyStep({ form, onNext, nextLabel }: SignUpStepProps<"eatingOut">) {
   const [frequency, setFrequency] = useState(form.eating_out_freq_weekly);
 

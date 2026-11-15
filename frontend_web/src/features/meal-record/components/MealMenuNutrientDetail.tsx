@@ -170,6 +170,7 @@ function getModeFallbackValue(
   return roundDecimal(serving.baseUnitCount * scaleFactor, 1);
 }
 
+// screen: DIET-02-001
 export function MealMenuNutrientDetail({
   menu,
   initialQuantity,

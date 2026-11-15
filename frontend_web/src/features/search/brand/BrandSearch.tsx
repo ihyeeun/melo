@@ -36,6 +36,7 @@ function mapBrandList(brandList: string[]): BrandSearchResult[] {
   }, []);
 }
 
+// screen: DIET-02-005
 export default function BrandSearch() {
   const location = useLocation();
   const formState = (location.state ?? {}) as BrandSearchLocationState;

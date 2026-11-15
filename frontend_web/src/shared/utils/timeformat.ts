@@ -1,3 +1,5 @@
+import type { MealType } from "@/shared/api/types/api.dto";
+
 export const MEAL_TYPE_OPTIONS = [
   { key: "0", label: "아침" },
   { key: "1", label: "점심" },
@@ -8,4 +10,27 @@ export const MEAL_TYPE_OPTIONS = [
 
 export function mealTimeNumberToLabel(time: number): string {
   return MEAL_TYPE_OPTIONS.find((option) => option.key === String(time))?.label ?? "식사";
+}
+
+// 서비스 정책 식사 시간 구간: 05:00~10:59 아침 · 11:00~14:59 점심 · 15:00~16:59 간식 · 17:00~20:59 저녁 · 그 외 야식
+export function getMealTypeFromCurrentTime(date: Date): MealType {
+  const hour = date.getHours();
+
+  if (hour >= 5 && hour <= 10) {
+    return "0";
+  }
+
+  if (hour >= 11 && hour <= 14) {
+    return "1";
+  }
+
+  if (hour >= 15 && hour <= 16) {
+    return "3";
+  }
+
+  if (hour >= 17 && hour <= 20) {
+    return "2";
+  }
+
+  return "4";
 }

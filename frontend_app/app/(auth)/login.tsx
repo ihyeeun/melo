@@ -1,9 +1,11 @@
 import React from "react";
-import { Image, Linking, StyleSheet, View } from "react-native";
+import { BackHandler, Image, Linking, StyleSheet, View } from "react-native";
 import { KakaoLoginButton } from "@/features/auth/components/KakaoLoginButton";
 import { AppleLoginButton } from "@/features/auth/components/AppleLoginButton";
 import { router } from "expo-router";
+import { useIsFocused } from "@react-navigation/native";
 import * as WebBrowser from "expo-web-browser";
+import { requestAppExit } from "@/src/shared/navigation/appExit";
 import { semantic } from "@/src/shared/styles";
 import { Typo } from "@/src/shared/ui";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -13,7 +15,24 @@ const LoginImage = require("@/assets/design-update/login-image.png");
 const TERMS_AND_PRIVACY_POLICY_URL =
   "https://third-princess-d57.notion.site/termsofuseandprivacypolicy";
 
+// screen: ONB-01-001
 export default function LoginPage() {
+  const isFocused = useIsFocused();
+
+  // 앱 첫 화면(G-1)이라 Android 뒤로가기는 종료 확인 후 종료한다
+  React.useEffect(() => {
+    if (!isFocused) return;
+
+    const backSubscription = BackHandler.addEventListener("hardwareBackPress", () => {
+      requestAppExit();
+      return true;
+    });
+
+    return () => {
+      backSubscription.remove();
+    };
+  }, [isFocused]);
+
   const startAppleLogin = React.useCallback(() => {
     router.push("/appleLogin");
   }, []);

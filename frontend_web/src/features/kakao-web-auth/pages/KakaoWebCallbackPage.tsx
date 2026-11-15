@@ -44,6 +44,7 @@ function replacePath(path: string) {
   window.dispatchEvent(new PopStateEvent("popstate"));
 }
 
+// screen: ONB-01-002
 export default function KakaoWebCallbackPage() {
   const initialState = useMemo(() => getInitialCallbackState(), []);
   const didStartRef = useRef(false);

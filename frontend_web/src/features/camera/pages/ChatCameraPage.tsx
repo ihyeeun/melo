@@ -35,6 +35,7 @@ interface CameraUpdateNotice {
   updateUrl: string | null;
 }
 
+// screen: DIET-02-006
 export default function ChatCameraPage() {
   const navigate = useNavigate();
   const setImage = useSetImage();

@@ -36,6 +36,7 @@ type StepsDraftState = {
   steps?: number;
 };
 
+// screen: REC-02-001
 export default function StepsLogBottomSheetActivity() {
   const activity = useActivity();
   const date = activity.params.date ?? getTodayFormatDateKey();

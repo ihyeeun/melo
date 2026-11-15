@@ -219,6 +219,7 @@ function CameraOnboardingOverlay({
   );
 }
 
+// screen: DIET-02-006
 export default function CameraCaptureScreen() {
   const insets = useSafeAreaInsets();
   const isFocused = useIsFocused();
@@ -781,6 +782,7 @@ export default function CameraCaptureScreen() {
         />
       ) : null}
 
+      {/* screen: DIET-02-007 */}
       {isProcessing ? <LoadingOverlay message={processingMessage} /> : null}
     </View>
   );

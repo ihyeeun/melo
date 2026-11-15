@@ -36,6 +36,7 @@ const LOCATION_MESSAGE = {
   unavailable: "현재 위치를 확인하지 못했어요",
 };
 
+// screen: RES-01-001
 export default function MapPage() {
   const baseMap = useRef<HTMLDivElement>(null);
   const [map, setMap] = useState<KakaoMap | null>(null);

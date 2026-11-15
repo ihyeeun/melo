@@ -95,6 +95,7 @@ const config: ExpoConfig = {
       },
     ],
     [
+      // screen: COM-01-001
       "expo-splash-screen",
       {
         image: "./assets/design-update/melo-logo-white.png",

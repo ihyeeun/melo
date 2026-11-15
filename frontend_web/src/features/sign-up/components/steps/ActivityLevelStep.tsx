@@ -6,6 +6,7 @@ import { StepLayout } from "@/features/sign-up/components/StepLayout";
 import styles from "@/features/sign-up/styles/SignUpSteps.module.css";
 import type { SignUpStepProps } from "@/features/sign-up/types/signUp.type";
 
+// screen: ONB-01-005
 export function ActivityLevelStep({ form, onNext, nextLabel }: SignUpStepProps<"activity">) {
   const [activity, setActivity] = useState(form.activity);
 

@@ -3,7 +3,7 @@ import { useMemo } from "react";
 
 import RecordCalendar from "@/features/calendar/components/RecordCalendar";
 import { useGetWorkoutRecordQuery } from "@/features/health/hooks/queries/workout.query";
-import { formatWorkoutDuration } from "@/features/health/utils/workoutFormat";
+import { formatWorkoutDuration, getWorkoutDayTitles } from "@/features/health/utils/workoutFormat";
 import Tile from "@/features/home/components/cards/Tile";
 import { PATH } from "@/router/path";
 import {
@@ -34,10 +34,12 @@ function getWorkoutSummary(workouts: WorkoutRecordItemResponseDto[]) {
   );
 }
 
+// screen: EXR-01-001
 export default function WorkoutRecordPage() {
   const selectedDateKey = useSelectedDateKey();
   const setSelectedDate = useSetSelectedDate();
   const selectedDate = parseDateKey(selectedDateKey);
+  const dayTitles = getWorkoutDayTitles(selectedDateKey);
   const navigate = useNavigate();
   const workoutRecordQuery = useGetWorkoutRecordQuery(selectedDateKey);
   const workouts = workoutRecordQuery.data?.workout_list ?? EMPTY_WORKOUT_RECORDS;
@@ -135,7 +137,7 @@ export default function WorkoutRecordPage() {
 
       <main className={`${styles.content} main`}>
         <section className={styles.summaryArea}>
-          <p className="title-s-semi text-primary">오늘 운동 요약</p>
+          <p className="title-s-semi text-primary">{dayTitles.summary}</p>
           <div className={styles.summaryGrid} aria-label="운동 요약">
             <Tile>
               <p className={`body-l-medium text-primary`}>총 운동 시간</p>
@@ -164,7 +166,7 @@ export default function WorkoutRecordPage() {
         </section>
 
         <div className={styles.workoutListTitle}>
-          <p className="title-s-semi text-primary">오늘 한 운동</p>
+          <p className="title-s-semi text-primary">{dayTitles.list}</p>
           {workouts.length > 0 && (
             <button onClick={handleEditWorkoutRecords} className="body-s-regular text-secondary">
               수정하기

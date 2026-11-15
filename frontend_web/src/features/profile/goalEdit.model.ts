@@ -172,6 +172,14 @@ export function isGoalWeightRangeValid(data: GoalEditDraft) {
   return isInRange(data.target_weight, ONBOARDING_WEIGHT_RANGE.min, ONBOARDING_WEIGHT_RANGE.max);
 }
 
+// 체중 유지는 목표 몸무게를 따로 받지 않고 현재 몸무게로 맞춘다.
+// 다른 목표는 고른 목표가 아니라 목표 몸무게로 감량·증량을 판단한다(근육 늘리기여도 목표 몸무게가 더 낮을 수 있음)
+export function applyMaintainTargetWeight<T extends GoalEditDraft>(draft: T): T {
+  if (draft.goal !== GOAL.MAINTAIN_WEIGHT || draft.target_weight === draft.weight) return draft;
+
+  return { ...draft, target_weight: draft.weight };
+}
+
 export function validateStartPlan(draft: GoalEditDraft) {
   if (draft.gender === undefined) return "성별을 선택해주세요";
   if (!isValidBirthYear(draft.birthYear)) return "출생 연도를 다시 확인해주세요";
@@ -199,6 +207,17 @@ export function hasNutrientTotal(ratio: readonly [number, number, number] | unde
   if (!ratio) return false;
 
   return Math.abs(ratio[0] + ratio[1] + ratio[2] - 100) < RATIO_TOLERANCE;
+}
+
+// 추천 비율은 반올림한 정수로 쓴다. 반올림으로 합이 100에서 어긋나면 탄수화물에서 맞춘다(정책: 차이는 탄수화물에서 보정)
+export function roundRecommendedRatio(
+  ratio: readonly [number, number, number],
+): [number, number, number] {
+  const [carbs, protein, fat] = ratio.map(Math.round);
+  // 추천값 합이 원래 100이 아니면 보정하지 않는다
+  if (Math.abs(ratio[0] + ratio[1] + ratio[2] - 100) >= 1) return [carbs, protein, fat];
+
+  return [100 - protein - fat, protein, fat];
 }
 
 // 목표 수정 화면은 탄단지를 따로 입력받으므로 비율 배열로 모은다. 하나라도 비어 있으면 undefined

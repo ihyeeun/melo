@@ -7,6 +7,7 @@ import {
 import { useRestaurantDetailQuery } from "@/features/restaurant/hooks/queries/restaurant.query";
 import styles from "@/features/restaurant/styles/MapSheetView.module.css";
 import type { RestaurantMenuResponseDto } from "@/shared/api/types/api.response.dto";
+import { InfoPopover } from "@/shared/commons/popover/InfoPopover";
 import { Skeleton, SkeletonStatus } from "@/shared/commons/skeleton/Skeleton";
 import { formatDisplayNumber } from "@/shared/utils/numberFormat";
 
@@ -17,6 +18,7 @@ const NUTRIENTS = [
 ] as const;
 
 const BEST_MENU_COUNT = 5;
+const MISSING_NUTRIENT_MESSAGES = ["일부 영양성분 정보는 판매사에서 제공하고 있지 않아요"] as const;
 
 // 선택한 탭의 패널만 그려지므로, 탭을 눌렀을 때 그 기준으로 처음 요청한다.
 function BestMenuList({ restaurantId, filter }: { restaurantId: number; filter: BestFilter }) {
@@ -117,6 +119,15 @@ export default function MenuNutrientList({
                 {menu.menu_category}
               </span>
               {menu.menu_name}
+              {NUTRIENTS.some(({ key }) => menu[key] == null) && (
+                <InfoPopover
+                  ariaLabel="영양성분 정보 안내"
+                  messages={MISSING_NUTRIENT_MESSAGES}
+                  iconSize={16}
+                  side="bottom"
+                  align="start"
+                />
+              )}
             </p>
             <p className={`body-s-regular text-tertiary ${styles.divided}`}>
               {NUTRIENTS.map(({ key, label }) => (

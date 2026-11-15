@@ -1,3 +1,4 @@
+import { postHasUserInfo } from "@/features/auth/api/onboardingStatusApi";
 import { loadAccessToken } from "@/features/auth/store/tokenStore";
 import { subscribeAuthExpired } from "@/src/shared/auth/authSessionEvents";
 import { semantic } from "@/src/shared/styles";
@@ -61,7 +62,19 @@ export default function RootLayout() {
         if (cancelled) return;
 
         if (isRootRoute(currentSegments) && token) {
-          router.replace("/(tabs)/home");
+          // 회원가입 도중 앱이 종료됐으면 회원 정보가 없다. 홈 대신 회원가입으로 이어서 보낸다
+          let hasUserInfo = true;
+          try {
+            hasUserInfo = await postHasUserInfo();
+          } catch (error) {
+            // 세션이 만료됐으면 apiClient가 토큰을 지우고 로그인으로 보낸 뒤다
+            if (!(await loadAccessToken())) return;
+            // 네트워크 오류 등은 지금처럼 홈으로 보낸다(웹이 프로필 조회 실패 화면을 보여 준다)
+            console.warn("회원 정보 확인 실패", error);
+          }
+          if (cancelled) return;
+
+          router.replace(hasUserInfo ? "/(tabs)/home" : "/(auth)/onboarding");
         } else if (!token) {
           router.replace("/(auth)/login");
         }
@@ -81,6 +94,7 @@ export default function RootLayout() {
     };
   }, [segments]);
 
+  // screen: COM-01-001
   const shouldShowBootOverlay = (!fontsLoaded && !fontError) || isBootstrapping;
 
   return (

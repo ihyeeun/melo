@@ -18,6 +18,7 @@ const NICKNAME_ALLOWED_PATTERN = /[^0-9A-Za-zㄱ-ㅎㅏ-ㅣ가-힣]/g;
 const sanitizeNickName = (value: string) =>
   value.replace(NICKNAME_ALLOWED_PATTERN, "").slice(0, NICKNAME_MAX_LENGTH);
 
+// screen: PRF-01-001_modal-nickname
 export default function ProfileNicknameSheetPage() {
   const activity = useActivity();
   const { data: profile } = useGetProfileQuery();

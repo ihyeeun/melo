@@ -70,6 +70,7 @@ function ActionIcon({ icon, isSelected }: { icon: MealMenuCardIcon; isSelected?:
   );
 }
 
+// screen: COM-00-002
 export function MealMenuCard({
   name,
   calories,

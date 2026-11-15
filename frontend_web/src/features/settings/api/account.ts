@@ -1,4 +1,5 @@
 import { CHAT_MEAL_RECORD_MODE_ONBOARDING_STORAGE_KEY } from "@/features/chat/constants/mealRecordModeOnboarding";
+import { MENSTRUAL_PHASE_SETTING_STORAGE_KEY } from "@/features/personal-analysis/constants/personalAnalysis.constant";
 import { appApiData } from "@/shared/api/apiClient";
 import { isRequestAbortError } from "@/shared/api/requestCancellation";
 
@@ -15,6 +16,7 @@ export async function logout() {
   }
 
   window.localStorage.removeItem(CHAT_MEAL_RECORD_MODE_ONBOARDING_STORAGE_KEY);
+  window.localStorage.removeItem(MENSTRUAL_PHASE_SETTING_STORAGE_KEY);
 }
 
 export async function withdraw() {
@@ -24,4 +26,5 @@ export async function withdraw() {
   });
 
   window.localStorage.removeItem(CHAT_MEAL_RECORD_MODE_ONBOARDING_STORAGE_KEY);
+  window.localStorage.removeItem(MENSTRUAL_PHASE_SETTING_STORAGE_KEY);
 }

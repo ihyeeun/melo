@@ -22,6 +22,7 @@ import { NumberInput } from "@/shared/commons/input/NumberInput";
 import { toast } from "@/shared/commons/toast/toast";
 import { useNavigate } from "@/shared/navigation/stackflowNavigation";
 
+// screen: PRF-01-004
 export default function GoalEditTargetCaloriesPage() {
   const navigate = useNavigate();
   const { data: profile, isPending } = useGetProfileQuery();
@@ -62,7 +63,7 @@ export default function GoalEditTargetCaloriesPage() {
       ? "추천 목표 칼로리를 불러오지 못했어요"
       : recommendedCalories === undefined
         ? "추천 목표 칼로리를 계산할 정보가 부족해요"
-        : `추천하는 목표 칼로리는 ${Math.trunc(recommendedCalories)}kcal 예요`;
+        : `추천하는 목표 칼로리는 ${Math.round(recommendedCalories)}kcal 예요`;
 
   useEffect(() => {
     if (!profile) {
@@ -83,7 +84,7 @@ export default function GoalEditTargetCaloriesPage() {
         // 늦게 도착한 추천값이 사용자가 입력하거나 지운 값을 덮어쓰지 않도록 한다.
         if (cancelled || hasEditedCaloriesRef.current) return;
 
-        updateDraft({ target_calories: Math.trunc(calories) });
+        updateDraft({ target_calories: Math.round(calories) });
       },
       onError: (error) => {
         if (isRequestAbortError(error)) return;
@@ -99,7 +100,8 @@ export default function GoalEditTargetCaloriesPage() {
   }, [recommendCalories, requestPayload, updateDraft]);
 
   const handleTargetCaloriesChange = (value?: number) => {
-    if (value !== undefined && value > GOAL_CALORIES_MAX) return;
+    // 0으로 시작하거나 최댓값을 넘는 입력은 받지 않는다
+    if (value !== undefined && (value < GOAL_CALORIES_MIN || value > GOAL_CALORIES_MAX)) return;
 
     hasEditedCaloriesRef.current = true;
     updateDraft({ target_calories: value === undefined ? undefined : Math.trunc(value) });
