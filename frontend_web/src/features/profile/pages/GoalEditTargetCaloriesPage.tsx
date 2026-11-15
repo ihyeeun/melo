@@ -100,7 +100,8 @@ export default function GoalEditTargetCaloriesPage() {
   }, [recommendCalories, requestPayload, updateDraft]);
 
   const handleTargetCaloriesChange = (value?: number) => {
-    if (value !== undefined && value > GOAL_CALORIES_MAX) return;
+    // 0으로 시작하거나 최댓값을 넘는 입력은 받지 않는다
+    if (value !== undefined && (value < GOAL_CALORIES_MIN || value > GOAL_CALORIES_MAX)) return;
 
     hasEditedCaloriesRef.current = true;
     updateDraft({ target_calories: value === undefined ? undefined : Math.trunc(value) });
