@@ -22,7 +22,11 @@ export function WaterIntakeRecordActionButton() {
 
       <div className="marginLeft">
         <span className="title-l-medium text-primary">
-          {mlToLiter(recordWaterIntake?.water_intake ?? 0)}
+          {/* 물 기록 화면과 같은 소수 2자리 형식 */}
+          {mlToLiter(recordWaterIntake?.water_intake ?? 0).toLocaleString("ko-KR", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          })}
         </span>
         <span className="body-l-regular text-tertiary"> L</span>
       </div>
