@@ -681,7 +681,7 @@ export default function AIChatPage() {
             <div className={styles.chatActionIcon}>
               <SystemIcon name="contract-edit" size={24} />
             </div>
-            <p className="body-xs-regular text-primary textCenter">식사기록 모드</p>
+            <p className="body-xs-regular text-primary textCenter">식사 기록 모드</p>
 
             {isShowChatActions && <TextMealRecordCoachMark />}
           </button>
