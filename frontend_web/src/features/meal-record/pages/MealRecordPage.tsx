@@ -427,6 +427,7 @@ export default function MealRecordPage() {
   const handleConfirmTime = () => {
     setMealTime({ key: draftKey, mealTime: toMealRecordTime(draftMealRecordTime) });
     setIsTimeSheetOpen(false);
+    toast.success("시간이 수정되었어요");
   };
 
   const handleResetTime = () => {
@@ -434,6 +435,7 @@ export default function MealRecordPage() {
     setDraftMealRecordTime(toMealRecordTimeValue(defaultTime));
     setMealTime({ key: draftKey, mealTime: defaultTime });
     setIsTimeSheetOpen(false);
+    toast.success("시간을 삭제했어요");
   };
 
   const handleRemoveMenu = (menuId: number) => {
