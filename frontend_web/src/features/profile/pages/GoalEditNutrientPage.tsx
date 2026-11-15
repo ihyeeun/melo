@@ -18,6 +18,7 @@ import {
 import {
   hasNutrientTotal,
   isRatioChanged,
+  roundRecommendedRatio,
   toTargetRatio,
   validateStartPlan,
 } from "@/features/profile/goalEdit.model";
@@ -151,7 +152,12 @@ export default function GoalEditNutrientPage() {
       onSuccess: (nutrient) => {
         if (cancelled || hasEditedNutrientsRef.current) return;
 
-        updateDraft({ carbs: nutrient.carbs, protein: nutrient.protein, fat: nutrient.fat });
+        const [carbs, protein, fat] = roundRecommendedRatio([
+          nutrient.carbs,
+          nutrient.protein,
+          nutrient.fat,
+        ]);
+        updateDraft({ carbs, protein, fat });
       },
       onError: (error) => {
         if (isRequestAbortError(error)) return;

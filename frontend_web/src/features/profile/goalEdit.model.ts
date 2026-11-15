@@ -201,6 +201,17 @@ export function hasNutrientTotal(ratio: readonly [number, number, number] | unde
   return Math.abs(ratio[0] + ratio[1] + ratio[2] - 100) < RATIO_TOLERANCE;
 }
 
+// 추천 비율은 반올림한 정수로 쓴다. 반올림으로 합이 100에서 어긋나면 탄수화물에서 맞춘다(정책: 차이는 탄수화물에서 보정)
+export function roundRecommendedRatio(
+  ratio: readonly [number, number, number],
+): [number, number, number] {
+  const [carbs, protein, fat] = ratio.map(Math.round);
+  // 추천값 합이 원래 100이 아니면 보정하지 않는다
+  if (Math.abs(ratio[0] + ratio[1] + ratio[2] - 100) >= 1) return [carbs, protein, fat];
+
+  return [100 - protein - fat, protein, fat];
+}
+
 // 목표 수정 화면은 탄단지를 따로 입력받으므로 비율 배열로 모은다. 하나라도 비어 있으면 undefined
 export function toTargetRatio(draft: GoalEditDraft): [number, number, number] | undefined {
   if (draft.carbs === undefined || draft.protein === undefined || draft.fat === undefined) {
