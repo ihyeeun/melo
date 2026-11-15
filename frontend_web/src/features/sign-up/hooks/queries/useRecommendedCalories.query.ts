@@ -28,7 +28,8 @@ export function useRecommendedCaloriesQuery(form: SignUpForm) {
   return useQuery({
     queryKey: signUpKeys.recommendation.calories(body),
     queryFn: body ? () => fetchRecommendtargetCalories(body) : skipToken,
-    select: (calories) => Math.trunc(calories),
+    // 추천 칼로리는 반올림한 정수로 쓴다
+    select: (calories) => Math.round(calories),
     // 같은 입력이면 추천값도 같으므로 다시 요청하지 않는다
     staleTime: Infinity,
   });

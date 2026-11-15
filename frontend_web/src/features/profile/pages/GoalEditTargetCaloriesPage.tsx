@@ -63,7 +63,7 @@ export default function GoalEditTargetCaloriesPage() {
       ? "추천 목표 칼로리를 불러오지 못했어요"
       : recommendedCalories === undefined
         ? "추천 목표 칼로리를 계산할 정보가 부족해요"
-        : `추천하는 목표 칼로리는 ${Math.trunc(recommendedCalories)}kcal 예요`;
+        : `추천하는 목표 칼로리는 ${Math.round(recommendedCalories)}kcal 예요`;
 
   useEffect(() => {
     if (!profile) {
@@ -84,7 +84,7 @@ export default function GoalEditTargetCaloriesPage() {
         // 늦게 도착한 추천값이 사용자가 입력하거나 지운 값을 덮어쓰지 않도록 한다.
         if (cancelled || hasEditedCaloriesRef.current) return;
 
-        updateDraft({ target_calories: Math.trunc(calories) });
+        updateDraft({ target_calories: Math.round(calories) });
       },
       onError: (error) => {
         if (isRequestAbortError(error)) return;
