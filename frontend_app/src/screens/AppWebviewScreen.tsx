@@ -76,6 +76,8 @@ type AppWebViewScreenProps = {
   onTabBarVisibilityChange?: (hidden: boolean) => void;
   onFeatureGuardEnabledChange?: (enabled: boolean) => void;
   onOptionalTabsChange?: (tabs: OptionalTabName[] | null) => void;
+  // 웹에 더 돌아갈 화면이 없을 때(NAVIGATION_BACK) 할 일. 없으면 네이티브 화면을 되돌리고, 그것도 없으면 앱을 닫는다
+  onRootBack?: () => void;
 };
 
 type WebViewOpenWindowEvent = Parameters<NonNullable<WebViewProps["onOpenWindow"]>>[0];
@@ -375,6 +377,7 @@ export default function AppWebViewScreen({
   onTabBarVisibilityChange,
   onFeatureGuardEnabledChange,
   onOptionalTabsChange,
+  onRootBack,
 }: AppWebViewScreenProps) {
   const webViewRef = useRef<WebView>(null);
   const [apiRequests] = useState(createBridgeRequestRegistry);
@@ -626,6 +629,11 @@ export default function AppWebViewScreen({
           context?: { href?: string };
         };
 
+        if (rawData.type === "NAVIGATION_BACK" && onRootBack) {
+          onRootBack();
+          return;
+        }
+
         if (rawData.type === "TAB_CONFIG_SET") {
           if (!isTabWebView) return;
 
@@ -684,6 +692,7 @@ export default function AppWebViewScreen({
       isTabWebView,
       onFeatureGuardEnabledChange,
       onOptionalTabsChange,
+      onRootBack,
       rememberTabWebHref,
       syncTabBarVisibility,
       syncTabStateFromUrl,
