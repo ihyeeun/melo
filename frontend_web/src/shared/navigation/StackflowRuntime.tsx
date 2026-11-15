@@ -127,7 +127,8 @@ export function StackflowRuntime() {
 
       window.setTimeout(() => {
         if (command.type === "BACK") {
-          navigateBack({ animate: command.animate });
+          // 앱의 뒤로가기(Android 뒤로가기·AI 코치 스와이프)는 사용자 동작이라 모달을 먼저 닫는다
+          navigateBack({ animate: command.animate, closeOverlayFirst: true });
           return;
         }
 

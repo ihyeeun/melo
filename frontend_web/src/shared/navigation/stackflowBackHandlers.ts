@@ -16,7 +16,12 @@ type BackHandlerEntry = {
 const backHandlerMap = new Map<string, BackHandlerEntry[]>();
 let isRunningBackHandler = false;
 
-export function runStackflowBackHandlers(activityId: string) {
+// includeOverlays는 사용자가 직접 뒤로가기(Android 뒤로가기·스와이프)를 했을 때만 켠다.
+// 버튼이 부르는 뒤로가기까지 모달이 받으면, 모달 [삭제] 뒤 화면 이동이 모달 닫기로 끝나 버린다
+export function runStackflowBackHandlers(
+  activityId: string,
+  { includeOverlays }: { includeOverlays: boolean },
+) {
   // 핸들러 안에서 다시 뒤로가기를 부르면(예: 바텀시트 화면의 닫기 버튼 동작) 실제로 뒤로 간다
   if (isRunningBackHandler) return false;
 
@@ -26,7 +31,7 @@ export function runStackflowBackHandlers(activityId: string) {
   // 모달·바텀시트를 먼저, 같은 종류끼리는 나중에 등록한 것(위에 뜬 것)부터 처리를 맡긴다
   const orderedEntries = [
     ...entries.filter((entry) => !entry.isOverlay),
-    ...entries.filter((entry) => entry.isOverlay),
+    ...(includeOverlays ? entries.filter((entry) => entry.isOverlay) : []),
   ].reverse();
 
   isRunningBackHandler = true;
@@ -73,7 +78,8 @@ export function useStackflowBackHandler(handler: StackflowBackHandler | null | u
   useRegisterBackHandler(handler, false);
 }
 
-// 뒤로가기 = 닫기 (D형). 열려 있는 동안 아래 화면은 뒤로 가지 않는다
+// 뒤로가기 = 닫기 (D형). 열려 있는 동안 사용자의 뒤로가기는 아래 화면으로 가지 않는다.
+// 버튼이 부르는 navigateBack은 막지 않는다(runStackflowBackHandlers의 includeOverlays)
 export function useStackflowOverlayBackHandler(isOpen: boolean, onClose: () => void) {
   useRegisterBackHandler(
     isOpen
