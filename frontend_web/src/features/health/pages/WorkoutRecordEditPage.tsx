@@ -20,7 +20,7 @@ import {
   useWorkoutRecordEditRecords,
 } from "@/features/health/stores/workoutRecordEdit.store";
 import styles from "@/features/health/styles/WorkoutRecordPage.module.css";
-import { formatWorkoutDuration } from "@/features/health/utils/workoutFormat";
+import { formatWorkoutDuration, getWorkoutDayTitles } from "@/features/health/utils/workoutFormat";
 import Tile from "@/features/home/components/cards/Tile";
 import {
   getWorkoutRecordPath,
@@ -193,6 +193,7 @@ export default function WorkoutRecordEditPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const dateKey = getSafeWorkoutDateKey(searchParams.get("date"));
+  const dayTitles = getWorkoutDayTitles(dateKey);
   const workoutRecordQuery = useGetWorkoutRecordQuery(dateKey);
   const editDate = useWorkoutRecordEditDate();
   const editRecords = useWorkoutRecordEditRecords();
@@ -458,7 +459,7 @@ export default function WorkoutRecordEditPage() {
 
       <main className={`main ${styles.editContent}`}>
         <section className={styles.summaryArea}>
-          <h2 className="title-s-semi text-primary">오늘 운동 요약</h2>
+          <h2 className="title-s-semi text-primary">{dayTitles.summary}</h2>
           <div className={styles.summaryGrid} aria-label="운동 수정 요약">
             <Tile>
               <p className={`body-l-medium text-primary`}>총 운동 시간</p>
@@ -487,7 +488,7 @@ export default function WorkoutRecordEditPage() {
         </section>
 
         <div className={styles.workoutListTitle}>
-          <p className="title-s-semi text-primary">오늘 한 운동</p>
+          <p className="title-s-semi text-primary">{dayTitles.list}</p>
         </div>
 
         {renderEditContent()}
