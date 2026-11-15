@@ -33,7 +33,10 @@ interface chartProps<M extends RecentAnalysisMode> {
 }
 
 const Y_AXIS_TICK_GAP = 8;
-const formatYAxisTick = (value: number) => String(Number(value.toFixed(1)));
+// 칼로리는 반올림한 정수, 체중만 소수 1자리로 보여 준다(수치 표시 정책)
+const getFractionDigits = (valueKey: string) => (valueKey === "weight" ? 1 : 0);
+const formatChartValue = (value: number, fractionDigits: number) =>
+  String(Number(value.toFixed(fractionDigits)));
 
 export function LineChart<M extends RecentAnalysisMode>({ chartData, valueKey }: chartProps<M>) {
   if (chartData.length === 0) return <EmptyChartPreview />;
@@ -86,7 +89,10 @@ export function LineChart<M extends RecentAnalysisMode>({ chartData, valueKey }:
             <YAxis
               domain={["auto", "auto"]}
               reversed={valueKey === "calorie_deficit"}
-              tickFormatter={formatYAxisTick}
+              allowDecimals={getFractionDigits(valueKey) > 0}
+              tickFormatter={(value: number) =>
+                formatChartValue(value, getFractionDigits(valueKey))
+              }
               tick={{
                 className: "caption-s-medium",
                 fill: "var(--text-tertiary)",
@@ -101,7 +107,10 @@ export function LineChart<M extends RecentAnalysisMode>({ chartData, valueKey }:
               padding={{ top: 12, bottom: 12 }}
             />
 
-            <FixedYAxis portal={viewport.overlayPortal} />
+            <FixedYAxis
+              portal={viewport.overlayPortal}
+              fractionDigits={getFractionDigits(valueKey)}
+            />
             <PointTooltip valueKey={valueKey} viewport={viewport} />
 
             <Line
@@ -121,7 +130,13 @@ export function LineChart<M extends RecentAnalysisMode>({ chartData, valueKey }:
   );
 }
 
-function FixedYAxis({ portal }: { portal: HTMLDivElement | null }) {
+function FixedYAxis({
+  portal,
+  fractionDigits,
+}: {
+  portal: HTMLDivElement | null;
+  fractionDigits: number;
+}) {
   const plot = usePlotArea();
   const ticks = useYAxisTicks();
 
@@ -139,7 +154,7 @@ function FixedYAxis({ portal }: { portal: HTMLDivElement | null }) {
           className="caption-s-medium"
           fill="var(--text-tertiary)"
         >
-          {formatYAxisTick(value)}
+          {formatChartValue(value, fractionDigits)}
         </Text>
       ))}
     </svg>,
@@ -173,7 +188,7 @@ function PointTooltip({ valueKey, viewport }: { valueKey: string; viewport: Char
         if (x < (plot?.x ?? 0) || x > viewport.width) return null;
 
         const unit = valueKey === "weight" ? "kg" : "kcal";
-        const displayLabel = `${value} ${unit}`;
+        const displayLabel = `${formatChartValue(value, getFractionDigits(valueKey))} ${unit}`;
 
         return <div className={`caption-m-medium ${styles.tooltip}`}>{displayLabel}</div>;
       }}

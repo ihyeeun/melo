@@ -17,7 +17,6 @@ import { Skeleton } from "@/shared/commons/skeleton/Skeleton";
 import { isFreeUserGuardEnabled } from "@/shared/guards/featureGuard";
 import { navigate } from "@/shared/navigation/stackflowNavigation";
 import { formatDotDate, getTodayFormatDateKey } from "@/shared/utils/dateFormat";
-import { formatDisplayNumber } from "@/shared/utils/numberFormat";
 
 type AnalysisCardProps<M extends RecentAnalysisMode> = {
   query: UseQueryResult<RecentAnalysisResponseDto[M][]>;
@@ -119,9 +118,9 @@ function IntakeCard({ query }: AnalysisCardProps<"intake">) {
 
   const averageKcal =
     intake && intake.length > 0
-      ? formatDisplayNumber(
+      ? Math.round(
           intake.reduce((sum, value) => sum + value.intake_calories, 0) / intake.length,
-        )
+        ).toLocaleString("ko-KR")
       : 0;
 
   if (isPending) return <SkeletonChart title={title} />;
@@ -162,9 +161,9 @@ function BurnedCard({ query }: AnalysisCardProps<"burned">) {
 
   const averageBurned =
     burned && burned.length > 0
-      ? formatDisplayNumber(
+      ? Math.round(
           burned.reduce((sum, value) => sum + value.total_burned_calories, 0) / burned.length,
-        )
+        ).toLocaleString("ko-KR")
       : 0;
 
   if (isPending) return <SkeletonChart title={title} />;
