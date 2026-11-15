@@ -157,8 +157,10 @@ export default function MealRecordPage() {
     [location.state],
   );
   const dayText = isToday(parseDateKey(dateKey))
-    ? "오늘의"
+    ? "오늘"
     : formatDateKeyToMonthDayWeekdayLabel(dateKey);
+  // 요약 값은 고른 끼니의 칼로리 합이라 끼니 이름을 함께 쓴다
+  const mealTypeLabel = MEAL_TYPE_OPTIONS.find((option) => option.key === mealType)?.label ?? "";
 
   const { data: currentMenus, isPending: isSummaryReady } = useDayMealsQuery(dateKey);
 
@@ -588,7 +590,9 @@ export default function MealRecordPage() {
 
       <main className={`main ${styles.content}`}>
         <article className={styles.summaryCard}>
-          <p className="body-s-regular text-secondary">{dayText} 섭취 칼로리</p>
+          <p className="body-s-regular text-secondary">
+            {dayText} {mealTypeLabel} 섭취 칼로리
+          </p>
 
           <div className={`${styles.calorieRow} textNoWrap`}>
             <span className={`title-xl-medium`}>
