@@ -31,9 +31,6 @@ export const PATH = {
   AI_CHAT: "/chat",
   CHAT_NUTRITION_REGISTER: "/chat/nutrition-register",
 
-  //Diary
-  DIARY: "/diary",
-
   // 식당
   RESTAURANT: "/restaurant",
   RESTAURANT_DETAIL: "/restaurant/detail",

@@ -176,7 +176,6 @@ const ChatNutritionRegisterPage = createGuardedLazyActivity(
   FEATURE_GUARD.CHAT,
   () => import("@/features/chat/pages/ChatNutritionRegisterPage"),
 );
-const DiaryPage = createLazyActivity(() => import("@/features/diary/pages/DiaryPage"));
 const ChatCameraPage = createGuardedLazyActivity(
   FEATURE_GUARD.FOOD_CAMERA,
   () => import("@/features/camera/pages/ChatCameraPage"),
@@ -220,7 +219,6 @@ const ACTIVITIES = {
   BrandSearch,
   Chat: AIChatPage,
   ChatNutritionRegister: ChatNutritionRegisterPage,
-  Diary: DiaryPage,
   Restaurant: RestaurantPage,
   RestaurantDetail: RestaurantDetailPage,
   RestaurantMenu: RestaurantMenuPage,
@@ -262,7 +260,6 @@ const ACTIVITY_ROUTES: Record<keyof typeof ACTIVITIES, RoutePath> = {
   BrandSearch: PATH.BRAND_SEARCH,
   Chat: PATH.AI_CHAT,
   ChatNutritionRegister: PATH.CHAT_NUTRITION_REGISTER,
-  Diary: PATH.DIARY,
   Restaurant: PATH.RESTAURANT,
   RestaurantDetail: PATH.RESTAURANT_DETAIL,
   RestaurantMenu: PATH.RESTAURANT_MENU,
