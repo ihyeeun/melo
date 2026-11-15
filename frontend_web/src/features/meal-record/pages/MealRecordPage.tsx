@@ -716,7 +716,7 @@ export default function MealRecordPage() {
         title="식사 시간"
         titleRightSlot={
           <button type="button" onClick={handleResetTime} className="marginLeft">
-            <span className="body-l-regular text-tertiary">삭제</span>
+            <span className="body-l-regular text-tertiary textNoWrap">삭제</span>
           </button>
         }
       >
