@@ -7,7 +7,8 @@ export function formatWorkoutDuration(minutes: number | null | undefined) {
     return "0분";
   }
 
-  const normalizedMinutes = Math.trunc(minutes);
+  // 운동 시간은 반올림한 정수 분으로 보여 준다(수치 표시 정책)
+  const normalizedMinutes = Math.round(minutes);
 
   if (normalizedMinutes < 60) {
     return `${normalizedMinutes}분`;
