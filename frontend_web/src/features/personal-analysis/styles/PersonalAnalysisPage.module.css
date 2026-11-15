@@ -20,10 +20,10 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  cursor: pointer;
 }
 
 .switch {
+  display: block;
   width: 36px;
   height: 20px;
   padding: 2px;
@@ -33,7 +33,7 @@
   transition: background-color 0.2s ease;
 }
 
-.switch[data-checked="true"] {
+.menstrualPhaseToggle[data-checked="true"] .switch {
   background-color: var(--coral-500);
 }
 
@@ -46,7 +46,7 @@
   transition: transform 0.2s ease;
 }
 
-.switch[data-checked="true"] .switchThumb {
+.menstrualPhaseToggle[data-checked="true"] .switchThumb {
   transform: translateX(16px);
 }
 

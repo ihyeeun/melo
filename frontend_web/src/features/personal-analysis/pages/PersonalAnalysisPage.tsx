@@ -91,19 +91,19 @@ function MenstrualPhaseToggle() {
   const setVisible = useSetMenstrualPhaseVisible();
 
   return (
-    <label className={styles.menstrualPhaseToggle}>
+    <button
+      type="button"
+      role="switch"
+      aria-checked={isVisible}
+      data-checked={isVisible}
+      className={styles.menstrualPhaseToggle}
+      onClick={() => setVisible(!isVisible)}
+    >
       <span className="body-xs-regular text-secondary">생리 주기</span>
-      <button
-        type="button"
-        role="switch"
-        aria-checked={isVisible}
-        data-checked={isVisible}
-        className={styles.switch}
-        onClick={() => setVisible(!isVisible)}
-      >
+      <span className={styles.switch}>
         <span className={styles.switchThumb} />
-      </button>
-    </label>
+      </span>
+    </button>
   );
 }
 
