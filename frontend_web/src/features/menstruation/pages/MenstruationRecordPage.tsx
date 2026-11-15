@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import MenstruationCalendar from "@/features/calendar/components/menstruation/MenstruationCalendar";
 import { usePastCalendarMonths } from "@/features/calendar/hooks/usePastCalendarMonths";
@@ -10,6 +10,8 @@ import {
   type MenstrualDateSelections,
   toggleMenstrualDate,
 } from "@/features/menstruation/utils/menstrualRecordSelection.util";
+import { useGetProfileQuery } from "@/features/profile/hooks/queries/useProfileQuery";
+import { PATH } from "@/router/path";
 import { isRequestAbortError } from "@/shared/api/requestCancellation";
 import { Button } from "@/shared/commons/button/Button";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
@@ -17,6 +19,9 @@ import { toast } from "@/shared/commons/toast/toast";
 import { navigateBack } from "@/shared/navigation/stackflowNavigation";
 
 export default function MenstruationRecordPage() {
+  const { data: profile } = useGetProfileQuery();
+  // 월경 기록은 여성만 쓴다. 주소로 바로 들어온 경우에도 돌려보낸다
+  const isNotFemale = profile !== undefined && profile.gender !== 1;
   const [selections, setSelections] = useState<MenstrualDateSelections>({});
   const saveInFlightRef = useRef(false);
   const { months, scrollRef, loadOlderRef, addOlderMonth } = usePastCalendarMonths();
@@ -27,6 +32,10 @@ export default function MenstruationRecordPage() {
   const isLoadingRecords = yearQueries.some((query) => query.isPending || query.isFetching);
   const hasRecordError = yearQueries.some((query) => query.isError);
   const canSave = hasChanges && !isLoadingRecords && !hasRecordError && !isSaving;
+
+  useEffect(() => {
+    if (isNotFemale) navigateBack({ fallbackTo: PATH.HOME, animate: false });
+  }, [isNotFemale]);
 
   const handleToggleDate = useCallback((dateKey: string, isRecorded: boolean) => {
     if (saveInFlightRef.current) return;
@@ -51,6 +60,8 @@ export default function MenstruationRecordPage() {
       saveInFlightRef.current = false;
     }
   };
+
+  if (isNotFemale) return null;
 
   return (
     <div className={`page ${styles.root}`}>
