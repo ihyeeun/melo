@@ -102,7 +102,7 @@ function getSummaryValue(field: EditableField, draft: GoalEditDraft) {
 
 export default function GoalEditPage() {
   const navigate = useNavigate();
-  const { data: profile, isPending } = useGetProfileQuery();
+  const { data: profile, isPending, isFetching, refetch } = useGetProfileQuery();
   const draft = useGoalEditDraft();
   const startGoalEditFlow = useStartGoalEditFlow();
   const updateDraft = useUpdateGoalEditDraft();
@@ -432,8 +432,12 @@ export default function GoalEditPage() {
 
   const isFooterDisabled = !canStartPlan;
 
-  if (isPending) return <GoalEditSummarySkeleton />;
-  if (!visibleDraft) return <p>error</p>;
+  // 프로필을 받은 직후에는 수정 흐름을 시작하기 전이라 draft가 잠깐 비어 있다
+  const isPreparingDraft = !visibleDraft && (profile !== undefined || isFetching);
+  if (isPending || isPreparingDraft) return <GoalEditSummarySkeleton />;
+  if (!visibleDraft) {
+    return <GoalEditLoadFailed onBack={handleBack} onRetry={() => void refetch()} />;
+  }
 
   return (
     <div className={`${styles.page} page`}>
@@ -523,6 +527,20 @@ export default function GoalEditPage() {
           )}
         </div>
       </BottomSheet>
+    </div>
+  );
+}
+
+function GoalEditLoadFailed({ onBack, onRetry }: { onBack: () => void; onRetry: () => void }) {
+  return (
+    <div className={`${styles.page} page`}>
+      <PageHeader title="정보 및 목표 수정" onBack={onBack} />
+      <main className={`main ${styles.loadFailed}`} role="alert">
+        <p className="body-l-medium text-tertiary">정보를 불러오지 못했어요</p>
+        <Button variant="outlined" size="s" onClick={onRetry}>
+          다시 시도
+        </Button>
+      </main>
     </div>
   );
 }
