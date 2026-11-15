@@ -53,12 +53,8 @@ export default function WorkoutDetailSheetPage() {
   };
 
   const renderContent = () => {
-    if (workoutId === null || !detailWorkout) {
+    if (workoutId === null) {
       return <SheetStatus message="운동 정보를 찾을 수 없어요" />;
-    }
-
-    if (workoutDetailQuery.isError) {
-      return <SheetStatus message="운동 상세 정보를 불러오지 못했어요" />;
     }
 
     if (workoutDetailQuery.isPending) {
@@ -79,6 +75,19 @@ export default function WorkoutDetailSheetPage() {
 
           <Skeleton height={52} width={"100%"} />
         </section>
+      );
+    }
+
+    // 다시 불러오다 실패해도 이미 받은 정보가 있으면 그대로 보여준다
+    if (!detailWorkout) {
+      return (
+        <SheetStatus
+          message={
+            workoutDetailQuery.isError
+              ? "운동 상세 정보를 불러오지 못했어요"
+              : "운동 정보를 찾을 수 없어요"
+          }
+        />
       );
     }
 
