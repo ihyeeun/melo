@@ -36,6 +36,7 @@ import {
 } from "@/shared/guards/featureGuard";
 
 import { screenRequestCancellationPlugin } from "./screenRequestCancellationPlugin";
+import { runStackflowBackHandlers } from "./stackflowBackHandlers";
 import { setStackflowNavigateBackHandler } from "./stackflowNavigationController";
 import styles from "./StackflowRuntime.module.css";
 
@@ -86,7 +87,6 @@ type RenderableStack = Stack & {
   };
 };
 
-type StackflowBackHandler = () => boolean | void;
 type SwipeBackTransitionOptions = {
   count?: number;
   fallbackOptions?: NavigateOptions;
@@ -296,7 +296,6 @@ const SWIPE_VERTICAL_CANCEL_DISTANCE = 32;
 const SWIPE_VERTICAL_CANCEL_RATIO = 2.4;
 
 const activityNavigationStateMap = new Map<string, unknown>();
-const stackflowBackHandlerMap = new Map<string, StackflowBackHandler>();
 let pruneActivityNavigationStateTimeoutId: number | null = null;
 let programmaticPopStateTimeoutId: number | null = null;
 let pendingProgrammaticPopStateCount = 0;
@@ -659,7 +658,7 @@ function runActiveBackHandler(skipBackHandler: boolean | undefined) {
   const activeActivity = getActiveActivity();
   if (!activeActivity) return false;
 
-  return stackflowBackHandlerMap.get(activeActivity.id)?.() === true;
+  return runStackflowBackHandlers(activeActivity.id);
 }
 
 function createSearchParams(init?: URLSearchParamsInit) {
@@ -1717,28 +1716,6 @@ export function useSearchParams(): [
   );
 
   return [searchParams, setSearchParams];
-}
-
-export function useStackflowBackHandler(handler: StackflowBackHandler | null | undefined) {
-  const activity = useActivity();
-  const handlerRef = useRef(handler);
-
-  useEffect(() => {
-    handlerRef.current = handler;
-  }, [handler]);
-
-  useEffect(() => {
-    if (!handler) return;
-
-    const backHandler = () => handlerRef.current?.();
-    stackflowBackHandlerMap.set(activity.id, backHandler);
-
-    return () => {
-      if (stackflowBackHandlerMap.get(activity.id) === backHandler) {
-        stackflowBackHandlerMap.delete(activity.id);
-      }
-    };
-  }, [activity.id, handler]);
 }
 
 export function getStackflowStackComponent() {

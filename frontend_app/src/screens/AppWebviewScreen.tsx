@@ -380,7 +380,6 @@ export default function AppWebViewScreen({
   const [apiRequests] = useState(createBridgeRequestRegistry);
   const appStateRef = useRef(AppState.currentState);
   const initialTabUrlRef = useRef<string | null>(null);
-  const canGoBackRef = useRef(false);
   const didLoadOnceRef = useRef(false);
   const didInitializeTabPathSyncRef = useRef(false);
   const hasWebViewLoadErrorRef = useRef(false);
@@ -694,7 +693,6 @@ export default function AppWebViewScreen({
 
   const onNavigationStateChange = useCallback(
     (navState: WebViewNavigation) => {
-      canGoBackRef.current = navState.canGoBack;
       rememberTabWebHref(navState.url);
 
       if (canSyncAfterInitialLoad()) {
@@ -709,24 +707,18 @@ export default function AppWebViewScreen({
 
     const backSubscription = BackHandler.addEventListener("hardwareBackPress", () => {
       if (!navigation.isFocused()) return false;
+      if (!didLoadOnceRef.current) return false;
 
-      if (isTabWebView) {
-        if (!didLoadOnceRef.current) return false;
-
-        webViewRef.current?.injectJavaScript(createNativeBackRequestScript());
-        return true;
-      }
-
-      if (!canGoBackRef.current) return false;
-
-      webViewRef.current?.goBack();
+      // 탭이 아닌 화면(회원가입 등)도 웹에 맡긴다. 웹이 화면 안 모달을 먼저 닫고 쌓인 화면을 되돌리며,
+      // 더 돌아갈 화면이 없으면 앱에 뒤로가기를 넘긴다(NAVIGATION_BACK)
+      webViewRef.current?.injectJavaScript(createNativeBackRequestScript());
       return true;
     });
 
     return () => {
       backSubscription.remove();
     };
-  }, [isTabWebView, navigation]);
+  }, [navigation]);
 
   useEffect(() => {
     webViewRef.current?.injectJavaScript(`${safeAreaSyncScript}true;`);

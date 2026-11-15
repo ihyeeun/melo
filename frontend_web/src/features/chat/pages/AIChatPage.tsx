@@ -59,7 +59,11 @@ import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import { ConfirmModal } from "@/shared/commons/modals/ConfirmModal";
 import { toast } from "@/shared/commons/toast/toast";
 import { MEAL_TIMES } from "@/shared/constants/meal.constants";
-import { useLocation, useNavigate } from "@/shared/navigation/stackflowNavigation";
+import {
+  useLocation,
+  useNavigate,
+  useStackflowOverlayBackHandler,
+} from "@/shared/navigation/stackflowNavigation";
 import { navigateBack } from "@/shared/navigation/stackflowNavigationController";
 import {
   formatDateDividerText,
@@ -93,6 +97,7 @@ export default function AIChatPage() {
   const setImage = useSetImage();
 
   const [isShowChatActions, setIsShowChatActions] = useState<boolean>(true);
+  const [isPhotoMenuOpen, setIsPhotoMenuOpen] = useState(false);
   const [isTextMealRecordMode, setIsTextMealRecordMode] = useState<boolean>(false);
   const [inputMessage, setInputMessage] = useState<string>("");
   const [showScrollToBottomBtn, setShowScrollToBottomBtn] = useState<boolean>(false);
@@ -428,6 +433,10 @@ export default function AIChatPage() {
     setIsShowChatActions(false);
   }
 
+  // [+] 메뉴 펼침과 사진 선택은 뒤로가기로 닫는다. 사진 선택이 위에 뜨므로 먼저 닫힌다
+  useStackflowOverlayBackHandler(isShowChatActions, () => setIsShowChatActions(false));
+  useStackflowOverlayBackHandler(isPhotoMenuOpen, () => setIsPhotoMenuOpen(false));
+
   return (
     <div className={`page ${styles.root}`}>
       <header className={styles.header}>
@@ -612,7 +621,7 @@ export default function AIChatPage() {
         </section>
 
         <section className={styles.chatActionsSection} data-isView={isShowChatActions}>
-          <Menu.Root>
+          <Menu.Root open={isPhotoMenuOpen} onOpenChange={setIsPhotoMenuOpen}>
             <Menu.Trigger type="button" className={styles.chatActionButton}>
               <div className={styles.chatActionIcon}>
                 <SystemIcon name="photo-library" size={24} />
