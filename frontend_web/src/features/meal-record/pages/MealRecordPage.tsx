@@ -136,6 +136,7 @@ const MEAL_RECORD_MINUTE_OPTIONS = Array.from({ length: 60 }, (_, index) =>
   String(index).padStart(2, "0"),
 );
 
+// screen: DIET-04-001
 export default function MealRecordPage() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -689,6 +690,7 @@ export default function MealRecordPage() {
         <SystemIcon name="plus" size={28} />
       </button> */}
 
+      {/* screen: DIET-04-001_modal-exit */}
       <ConfirmModal
         open={isExitConfirmOpen}
         onOpenChange={setIsExitConfirmOpen}
@@ -699,6 +701,7 @@ export default function MealRecordPage() {
         onConfirm={() => {}}
       />
 
+      {/* screen: DIET-04-001_modal-time */}
       <BottomSheet
         isOpen={isTimeSheetOpen}
         onClose={() => setIsTimeSheetOpen(false)}

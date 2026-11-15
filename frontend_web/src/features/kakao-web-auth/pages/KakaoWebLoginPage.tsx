@@ -2,6 +2,7 @@ import { redirectToKakaoWebLogin } from "@/features/kakao-web-auth/api/kakaoWebA
 import styles from "@/features/kakao-web-auth/styles/AppInfo.module.css";
 import { TERMS_AND_PRIVACY_POLICY_URL } from "@/shared/config/externalLinks";
 
+// screen: ONB-01-001
 export default function KakaoWebLoginPage() {
   return (
     <main className={styles.loginContainer}>

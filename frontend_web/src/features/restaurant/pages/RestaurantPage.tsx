@@ -13,6 +13,7 @@ import { LoadingIndicator } from "@/shared/commons/loading/Loading";
 import { ScrollFogArea } from "@/shared/commons/scrollFog";
 import { useNavigate } from "@/shared/navigation/stackflowNavigation";
 
+// screen: RES-01-001
 export default function RestaurantPage() {
   const navigate = useNavigate();
   const [input, setInput] = useState("");

@@ -79,6 +79,7 @@ export function getCameraCaptureErrorMessage(error: unknown) {
   return getErrorMessage(error, "카메라를 실행하지 못했어요");
 }
 
+// screen: DIET-02-008_modal-invalid-image
 export function getCameraCaptureErrorFeedback(error: unknown): CameraCaptureErrorFeedback {
   if (isCameraPermissionDenied(error)) {
     return {
@@ -136,6 +137,7 @@ function shouldUseRecognitionFallbackMessage(error: unknown) {
   );
 }
 
+// screen: DIET-02-008_modal-analysis-failed
 export function getRecognitionErrorFeedback(
   domain: RecognitionDomain,
   error?: unknown,

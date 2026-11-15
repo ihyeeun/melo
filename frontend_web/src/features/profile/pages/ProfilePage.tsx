@@ -49,6 +49,7 @@ const METRIC_CONFIG: Record<
   },
 };
 
+// screen: PRF-01-001
 export default function ProfilePage() {
   const navigate = useNavigate();
   const today = getTodayFormatDateKey();

@@ -26,6 +26,7 @@ function formatRounded(value?: number) {
   return value === undefined ? "--" : Math.round(value).toString();
 }
 
+// screen: ONB-01-009
 export function NutrientRatioStep({ form, onNext, nextLabel }: SignUpStepProps<"nutrient">) {
   const recommendation = useRecommendedRatioQuery(form);
   const [ratio, setRatio] = useRecommendedDraft(form.target_ratio, recommendation.data);
@@ -116,6 +117,7 @@ export function NutrientRatioStep({ form, onNext, nextLabel }: SignUpStepProps<"
         </article>
       </div>
 
+      {/* screen: ONB-01-009_modal-macro-ratio-error */}
       <CheckButtonModal
         open={isTotalModalOpen}
         onOpenChange={setIsTotalModalOpen}

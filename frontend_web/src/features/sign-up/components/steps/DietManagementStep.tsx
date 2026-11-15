@@ -35,6 +35,7 @@ function toggleStatus(selected: DietManagementStatus[], value: DietManagementSta
     : [...withoutNone, value];
 }
 
+// screen: ONB-01-010
 export function DietManagementStep({ form, onNext, nextLabel }: SignUpStepProps<"dietManagement">) {
   const [statuses, setStatuses] = useState(form.diet_management_status ?? []);
 

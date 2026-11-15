@@ -84,6 +84,7 @@ type ChatEntryRequest =
   | { type: "management" }
   | { type: "management-pattern-analysis" };
 
+// screen: CHA-01-001
 export default function AIChatPage() {
   const navigate = useNavigate();
   const { id: screenId, isActive } = useActivity();
@@ -620,7 +621,9 @@ export default function AIChatPage() {
           </div>
         </section>
 
+        {/* screen: CHA-01-001_modal-menu */}
         <section className={styles.chatActionsSection} data-isView={isShowChatActions}>
+          {/* screen: CHA-01-001_modal-photo-select */}
           <Menu.Root open={isPhotoMenuOpen} onOpenChange={setIsPhotoMenuOpen}>
             <Menu.Trigger type="button" className={styles.chatActionButton}>
               <div className={styles.chatActionIcon}>

@@ -12,6 +12,7 @@ type DirectInputBottomSheetProps = {
   cameraInputLabel?: string;
 };
 
+// screen: DIET-02-003
 export default function DirectInputBottomSheet({
   isOpen,
   onClose,

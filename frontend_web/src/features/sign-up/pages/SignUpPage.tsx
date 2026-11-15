@@ -31,6 +31,9 @@ import {
   useSearchParams,
 } from "@/shared/navigation/stackflowNavigation";
 
+// screen: ONB-01-003, ONB-01-004, ONB-01-005, ONB-01-006, ONB-01-007, ONB-01-008
+// screen: ONB-01-009, ONB-01-010, ONB-01-011, ONB-01-012, ONB-01-013
+// screen: ONB-01-017
 export default function SignUpPage() {
   const navigate = useNavigate();
   // 구독 코드는 웹에서 가입할 때만 입력받는다

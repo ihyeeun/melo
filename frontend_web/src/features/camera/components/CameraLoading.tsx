@@ -5,6 +5,7 @@ type CameraLoadingProps = {
   previewSrc?: string | null;
 };
 
+// screen: DIET-02-008
 export function CameraLoading({ description, previewSrc = null }: CameraLoadingProps) {
   return (
     <main className={styles.mainLoading}>

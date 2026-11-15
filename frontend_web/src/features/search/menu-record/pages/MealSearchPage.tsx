@@ -76,6 +76,7 @@ function getDefaultConsumedWeight(weight: number) {
   return typeof weight === "number" && Number.isFinite(weight) && weight > 0 ? weight : 1;
 }
 
+// screen: DIET-01-001
 export default function MealSearchPage() {
   const navigate = useNavigate();
   const { isTop } = useActivity();

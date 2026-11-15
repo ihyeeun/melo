@@ -41,6 +41,7 @@ function resolveErrorMessage(error: unknown, fallbackMessage: string) {
   return fallbackMessage;
 }
 
+// screen: PRF-01-002
 export default function SettingsPage() {
   const navigate = useNavigate();
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
@@ -113,6 +114,7 @@ export default function SettingsPage() {
         </button>
       </main>
 
+      {/* screen: PRF-01-002_modal-logout */}
       <ConfirmModal
         open={isLogoutModalOpen}
         onOpenChange={setIsLogoutModalOpen}
@@ -133,6 +135,7 @@ export default function SettingsPage() {
         }}
       />
 
+      {/* screen: PRF-01-002_modal-withdraw */}
       <ConfirmModal
         open={isWithdrawModalOpen}
         onOpenChange={setIsWithdrawModalOpen}

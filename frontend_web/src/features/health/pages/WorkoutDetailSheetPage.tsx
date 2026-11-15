@@ -26,6 +26,7 @@ function isWorkoutEditMode(rawMode: string | undefined) {
   return rawMode === "edit";
 }
 
+// screen: EXR-01-002_modal-gif
 export default function WorkoutDetailSheetPage() {
   const activity = useActivity();
   const navigate = useNavigate();

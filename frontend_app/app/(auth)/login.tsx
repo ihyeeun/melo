@@ -13,6 +13,7 @@ const LoginImage = require("@/assets/design-update/login-image.png");
 const TERMS_AND_PRIVACY_POLICY_URL =
   "https://third-princess-d57.notion.site/termsofuseandprivacypolicy";
 
+// screen: ONB-01-001
 export default function LoginPage() {
   const startAppleLogin = React.useCallback(() => {
     router.push("/appleLogin");

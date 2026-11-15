@@ -59,6 +59,7 @@ const MEAL_RECORD_NUTRITION_LABEL_SCAN_SOURCE = "diary_nutrition_camera";
 
 type CapturedImage = Awaited<ReturnType<typeof requestNativeCameraCapture>>;
 
+// screen: DIET-02-006
 export default function MealRecordCreatePage() {
   const navigate = useNavigate();
   const { id: screenId, isActive: isScreenActive } = useActivity();
@@ -336,6 +337,7 @@ export default function MealRecordCreatePage() {
         <main className={styles.main} />
       )}
 
+      {/* screen: DIET-02-008_modal-analysis-failed, DIET-02-008_modal-invalid-image */}
       <CheckButtonModal
         open={captureErrorFeedback !== null}
         onOpenChange={handleCaptureErrorModalOpenChange}

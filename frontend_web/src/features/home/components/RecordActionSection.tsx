@@ -20,6 +20,7 @@ import { useSelectedDateKey } from "@/shared/stores/selectedDate.store";
 import { getTodayFormatDateKey, isFutureDateKey } from "@/shared/utils/dateFormat";
 import { formatDisplayNumber } from "@/shared/utils/numberFormat";
 
+// screen: REC-01-001
 export default function RecordActionSection() {
   const selectedDate = useSelectedDateKey();
   const navigate = useNavigate();

@@ -21,6 +21,7 @@ import { useNavigate } from "@/shared/navigation/stackflowNavigation";
 import { useSelectedDateKey, useSetSelectedDate } from "@/shared/stores/selectedDate.store";
 import { formatDateKey, parseDateKey } from "@/shared/utils/dateFormat";
 
+// screen: REC-01-001
 export default function HomePage() {
   const selectedDateKey = useSelectedDateKey();
   const setSelectedDate = useSetSelectedDate();

@@ -23,6 +23,7 @@ import {
   useSearchParams,
 } from "@/shared/navigation/stackflowNavigation";
 
+// screen: DIET-02-004
 export default function NutrientRegisterPage() {
   const navigation = useNavigate();
   const location = useLocation();

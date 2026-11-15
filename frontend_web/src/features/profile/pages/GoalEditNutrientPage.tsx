@@ -73,6 +73,7 @@ function isAllowedNutrientInput(nextInputValue: string) {
   return NUTRIENT_INPUT_PATTERN.test(nextInputValue);
 }
 
+// screen: PRF-01-005
 export default function GoalEditNutrientPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();

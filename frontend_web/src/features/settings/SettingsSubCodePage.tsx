@@ -26,6 +26,7 @@ function resolveRegisterSubCodeErrorMessage(error: unknown) {
   return REGISTER_SUB_CODE_ERROR_MESSAGE;
 }
 
+// screen: ONB-01-017
 export default function SettingsSubCodePage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();

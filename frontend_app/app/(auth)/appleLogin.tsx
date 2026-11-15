@@ -35,6 +35,7 @@ function extractAppleTokens(result: AppleLoginResponse) {
   };
 }
 
+// screen: ONB-01-002
 export default function AppleLogin() {
   const isExchangingRef = useRef(false);
   const [isPageLoading, setIsPageLoading] = useState(true);

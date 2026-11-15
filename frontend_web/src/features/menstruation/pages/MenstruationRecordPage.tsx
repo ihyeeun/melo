@@ -18,6 +18,7 @@ import { PageHeader } from "@/shared/commons/header/PageHeader";
 import { toast } from "@/shared/commons/toast/toast";
 import { navigateBack } from "@/shared/navigation/stackflowNavigation";
 
+// screen: MEN-01-002
 export default function MenstruationRecordPage() {
   const { data: profile } = useGetProfileQuery();
   // 월경 기록은 여성만 쓴다. 주소로 바로 들어온 경우에도 돌려보낸다

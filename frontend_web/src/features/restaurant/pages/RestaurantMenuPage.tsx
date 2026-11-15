@@ -13,6 +13,7 @@ import {
 } from "@/shared/navigation/stackflowNavigation";
 
 // 지도 시트의 '식당 메뉴 전체 보기'로 들어온다. 시트에서 본 식당 정보는 state로 받는다.
+// screen: RES-02-001
 export default function RestaurantMenuPage() {
   const [searchParams] = useSearchParams();
   const { state: restaurant } = useLocation<SheetRestaurant>();

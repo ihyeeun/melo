@@ -30,6 +30,7 @@ import {
   useStackflowBackHandler,
 } from "@/shared/navigation/stackflowNavigation";
 
+// screen: DIET-03-002, DIET-03-003
 export default function CreateFolderPage() {
   const navigate = useNavigate();
   const folderId = useFolderDraftFolderId();

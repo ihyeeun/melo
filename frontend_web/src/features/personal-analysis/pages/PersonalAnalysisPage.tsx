@@ -23,6 +23,7 @@ type AnalysisCardProps<M extends RecentAnalysisMode> = {
   query: UseQueryResult<RecentAnalysisResponseDto[M][]>;
 };
 
+// screen: ANA-01-001
 export default function PersonalAnalysisPage() {
   const isFree = isFreeUserGuardEnabled();
   const today = getTodayFormatDateKey();

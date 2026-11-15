@@ -100,6 +100,7 @@ function getSummaryValue(field: EditableField, draft: GoalEditDraft) {
   return draft.target_weight !== undefined ? `${formatDecimal(draft.target_weight)}kg` : "-";
 }
 
+// screen: PRF-01-003
 export default function GoalEditPage() {
   const navigate = useNavigate();
   const { data: profile, isPending, isFetching, refetch } = useGetProfileQuery();
@@ -462,6 +463,7 @@ export default function GoalEditPage() {
                 <SystemIcon name="chevron-right" className="text-secondary" size={16} />
               </div>
 
+              {/* screen: PRF-01-003_modal-birth */}
               {isBirthItem && (
                 <select
                   className={styles.birthYearSelect}
@@ -504,6 +506,8 @@ export default function GoalEditPage() {
         </Button>
       </footer>
 
+      {/* screen: PRF-01-003_modal-gender, PRF-01-003_modal-height, PRF-01-003_modal-weight */}
+      {/* screen: PRF-01-003_modal-activity-level, PRF-01-003_modal-goal, PRF-01-003_modal-target-weight */}
       <BottomSheet
         isOpen={editingField !== null}
         onClose={closeEditor}

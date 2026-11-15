@@ -187,6 +187,7 @@ function trackWorkoutRecordEditCompleted() {
   });
 }
 
+// screen: EXR-01-004
 export default function WorkoutRecordEditPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();

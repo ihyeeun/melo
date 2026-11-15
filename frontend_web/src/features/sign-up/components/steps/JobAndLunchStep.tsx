@@ -25,6 +25,7 @@ const LUNCH_LOCATION_OPTIONS = [
   { value: LUNCH_LOCATION.ETC, title: "기타" },
 ] as const;
 
+// screen: ONB-01-013
 export function JobAndLunchStep({ form, onNext, nextLabel }: SignUpStepProps<"jobAndLunch">) {
   const [jobType, setJobType] = useState(form.job_type);
   const [lunchLocation, setLunchLocation] = useState(form.lunch_location ?? undefined);

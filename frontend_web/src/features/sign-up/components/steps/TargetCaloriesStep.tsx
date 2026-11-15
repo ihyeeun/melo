@@ -10,6 +10,7 @@ import styles from "@/features/sign-up/styles/SignUpSteps.module.css";
 import type { SignUpStepProps } from "@/features/sign-up/types/signUp.type";
 import { NumberInput } from "@/shared/commons/input/NumberInput";
 
+// screen: ONB-01-008
 export function TargetCaloriesStep({ form, onNext, nextLabel }: SignUpStepProps<"targetCalories">) {
   const recommendation = useRecommendedCaloriesQuery(form);
   const [calories, setCalories] = useRecommendedDraft(form.target_calories, recommendation.data);

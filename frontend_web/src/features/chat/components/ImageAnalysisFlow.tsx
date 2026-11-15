@@ -29,6 +29,7 @@ interface MealTimeDecision {
   mealTime?: MealType;
 }
 
+// screen: CHA-01-001
 export function ImageAnalysisFlow({
   enabled,
   waitForResponse,

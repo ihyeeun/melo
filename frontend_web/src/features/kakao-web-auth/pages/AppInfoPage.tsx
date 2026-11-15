@@ -67,6 +67,7 @@ function openInstallPage(installUrl: string) {
   window.location.assign(installUrl);
 }
 
+// screen: ONB-01-018
 export default function AppInfoPage() {
   const [searchParams] = useSearchParams();
   const installUrl = getInstallUrl();

@@ -22,6 +22,7 @@ import { NumberInput } from "@/shared/commons/input/NumberInput";
 import { toast } from "@/shared/commons/toast/toast";
 import { useNavigate } from "@/shared/navigation/stackflowNavigation";
 
+// screen: PRF-01-004
 export default function GoalEditTargetCaloriesPage() {
   const navigate = useNavigate();
   const { data: profile, isPending } = useGetProfileQuery();

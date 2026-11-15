@@ -97,6 +97,7 @@ function getKakaoLoginErrorLog(error: unknown) {
 
 const kakaoAuthorizeUrl = createKakaoAuthorizeUrl();
 
+// screen: ONB-01-002
 export default function KakaoLogin() {
   const isExchangingRef = useRef(false);
   const [errorMessage, setErrorMessage] = useState(

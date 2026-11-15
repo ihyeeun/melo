@@ -20,6 +20,7 @@ import {
   useStackflowBackHandler,
 } from "@/shared/navigation/stackflowNavigation";
 
+// screen: RES-02-001
 export default function RestaurantDetailPage() {
   const [searchParams] = useSearchParams();
   const location = useLocation<RestaurantSummaryResponseDto>();

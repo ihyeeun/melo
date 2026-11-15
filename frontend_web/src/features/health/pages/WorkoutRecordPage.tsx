@@ -34,6 +34,7 @@ function getWorkoutSummary(workouts: WorkoutRecordItemResponseDto[]) {
   );
 }
 
+// screen: EXR-01-001
 export default function WorkoutRecordPage() {
   const selectedDateKey = useSelectedDateKey();
   const setSelectedDate = useSetSelectedDate();

@@ -23,6 +23,7 @@ const DETAIL_ACTION_OPTIONS: Array<{
   { label: "삭제", value: "delete", variant: "danger" },
 ];
 
+// screen: DIET-03-001_modal-more-action
 export function DetailActionSelect({
   disabled = false,
   onDelete,

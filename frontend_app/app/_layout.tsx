@@ -94,6 +94,7 @@ export default function RootLayout() {
     };
   }, [segments]);
 
+  // screen: COM-01-001
   const shouldShowBootOverlay = (!fontsLoaded && !fontError) || isBootstrapping;
 
   return (

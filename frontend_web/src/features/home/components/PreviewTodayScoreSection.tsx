@@ -31,6 +31,7 @@ const SCORE_CHARACTER_SOURCES = [
 
 const DEFAULT_CHARACTER_SRC = SCORE_CHARACTER_SOURCES[0].src;
 
+// screen: REC-01-001
 export default function PreviewTodayScoreSection({
   homeMode,
   menstrualPhase,

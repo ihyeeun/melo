@@ -44,6 +44,7 @@ function getMenuIsDeleted(menu: unknown) {
   return typeof isDeleted === "number" ? isDeleted : 0;
 }
 
+// screen: DIET-02-001
 export default function MealDetailPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -393,6 +394,7 @@ export default function MealDetailPage() {
         </Button>
       </footer>
 
+      {/* screen: DIET-02-001_modal-delete */}
       <ConfirmModal
         open={isDeleteConfirmOpen}
         onOpenChange={setIsDeleteConfirmOpen}

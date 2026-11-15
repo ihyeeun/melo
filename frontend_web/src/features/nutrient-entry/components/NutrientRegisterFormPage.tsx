@@ -65,6 +65,7 @@ export type NutrientRegisterSubmitPayload = Pick<
 > &
   Partial<MenuNutrientFields>;
 
+// screen: DIET-02-004
 export function NutrientRegisterFormPage({
   appendMealQueryToBrandSearchReturn = true,
   backFallbackPath,

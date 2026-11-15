@@ -13,6 +13,7 @@ import { useNavigate } from "@/shared/navigation/stackflowNavigation";
 import { useSelectedDateKey } from "@/shared/stores/selectedDate.store";
 import { parseDate } from "@/shared/utils/dateFormat";
 
+// screen: MEN-01-001
 export default function MenstruationCardButton({ phase }: { phase: MenstrualPhaseResult }) {
   const selectedDateKey = useSelectedDateKey();
   const selectedDay = parseDate(selectedDateKey);

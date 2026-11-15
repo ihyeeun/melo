@@ -13,6 +13,7 @@ function formatWeightDiff(weight?: number, targetWeight?: number) {
   return `${diff > 0 ? "+" : ""}${diff}kg`;
 }
 
+// screen: ONB-01-007
 export function GoalWeightStep({ form, onNext, nextLabel }: SignUpStepProps<"goalWeight">) {
   const [targetWeight, setTargetWeight] = useState(form.target_weight);
   const weightDiff = formatWeightDiff(form.weight, targetWeight);
