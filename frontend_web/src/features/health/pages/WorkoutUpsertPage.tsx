@@ -1,6 +1,6 @@
 import { useQueryClient } from "@tanstack/react-query";
 import type { FormEvent, ReactNode } from "react";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { useUpsertWorkoutRecordMutation } from "@/features/health/hooks/mutations/workout.mutation";
 import {
@@ -39,6 +39,7 @@ import { PageHeader } from "@/shared/commons/header/PageHeader";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import NumberField from "@/shared/commons/input/NumberField";
 import { InfoPopover } from "@/shared/commons/popover/InfoPopover";
+import { Skeleton } from "@/shared/commons/skeleton/Skeleton";
 import { toast } from "@/shared/commons/toast/toast";
 import {
   navigateBack,
@@ -170,13 +171,12 @@ export default function WorkoutUpsertPage() {
   const editDate = useWorkoutRecordEditDate();
   const replaceEditRecord = useReplaceWorkoutRecordEditRecord();
   const isEditSession = isEditMode && editDate === date;
-  const {
-    data: workout,
-    isPending: workoutQueryPending,
-    isError: workoutQueryError,
-  } = useGetWorkoutDetailQuery(workoutId ?? 0, {
-    enabled: workoutId !== null,
-  });
+  const { data: workout, isPending: workoutQueryPending } = useGetWorkoutDetailQuery(
+    workoutId ?? 0,
+    {
+      enabled: workoutId !== null,
+    },
+  );
   const workoutRecordQuery = useGetWorkoutRecordQuery(date);
   const { data: profile } = useGetProfileQuery();
   const workoutRecordFromState =
@@ -299,13 +299,21 @@ export default function WorkoutUpsertPage() {
       },
     });
 
+  const backFallbackPath = isEditMode
+    ? getWorkoutRecordEditPath(date)
+    : getWorkoutSearchPath(date, workoutPathOptions);
   const handleBack = () => {
-    navigateBack({
-      fallbackTo: isEditMode
-        ? getWorkoutRecordEditPath(date)
-        : getWorkoutSearchPath(date, workoutPathOptions),
-    });
+    navigateBack({ fallbackTo: backFallbackPath });
   };
+
+  // 운동 정보를 불러오지 못하면 안내하고 이전 화면으로 돌아간다. 다시 불러오다 실패해도 받은 정보가 있으면 그대로 쓴다
+  const isWorkoutUnavailable = workoutId === null || (!workoutQueryPending && !workout);
+  useEffect(() => {
+    if (!isWorkoutUnavailable) return;
+
+    toast.warning("운동 정보를 불러오지 못했어요", "잠시 후 다시 시도해주세요.");
+    navigateBack({ fallbackTo: backFallbackPath });
+  }, [backFallbackPath, isWorkoutUnavailable]);
 
   const updateDraft = (field: "burned_calories" | "workout_duration", value?: number) => {
     updateCurrentDraft((current) => ({
@@ -391,12 +399,8 @@ export default function WorkoutUpsertPage() {
     });
   };
 
-  if (workoutQueryPending) {
-    return <></>;
-  }
-
-  if (workoutId === null || !workout || workoutQueryError) {
-    return navigateBack();
+  if (isWorkoutUnavailable || !workout) {
+    return <WorkoutUpsertSkeleton onBack={handleBack} />;
   }
 
   const renderWorkoutFields = () => {
@@ -634,6 +638,25 @@ export default function WorkoutUpsertPage() {
         </Button>
       </footer>
     </form>
+  );
+}
+
+function WorkoutUpsertSkeleton({ onBack }: { onBack: () => void }) {
+  return (
+    <div className={`${styles.page} page`} aria-busy="true">
+      <header className={styles.header}>
+        <PageHeader title="운동 추가" onBack={onBack} />
+      </header>
+
+      <main className={`${styles.content} main`}>
+        <section className={styles.workoutTitleGroup}>
+          <Skeleton height={16} width={40} />
+          <Skeleton height={28} width={160} />
+        </section>
+        <Skeleton height={120} />
+        <Skeleton height={120} />
+      </main>
+    </div>
   );
 }
 
