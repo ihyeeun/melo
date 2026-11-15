@@ -1,6 +1,7 @@
 import { useEffect, useMemo } from "react";
 
 import { getWebAuthAccessToken } from "@/features/kakao-web-auth/api/webAuthApi";
+import { GOAL } from "@/features/profile/goalEdit.model";
 import { SignUpFrame } from "@/features/sign-up/components/SignUpFrame";
 import { SignUpHeader } from "@/features/sign-up/components/SignUpHeader";
 import { ActivityLevelStep } from "@/features/sign-up/components/steps/ActivityLevelStep";
@@ -31,16 +32,23 @@ import {
   useSearchParams,
 } from "@/shared/navigation/stackflowNavigation";
 
+// 구독 코드는 웹에서 가입할 때만, 목표 몸무게는 체중 유지가 아닐 때만 입력받는다
+function getSignUpSteps(goal: SignUpForm["goal"]) {
+  return (Object.keys(SIGN_UP_STEPS) as SignUpStep[]).filter((step) => {
+    if (step === "subCode") return !isNativeApp();
+    if (step === "goalWeight") return goal !== GOAL.MAINTAIN_WEIGHT;
+    return true;
+  });
+}
+
 // screen: ONB-01-003, ONB-01-004, ONB-01-005, ONB-01-006, ONB-01-007, ONB-01-008
 // screen: ONB-01-009, ONB-01-010, ONB-01-011, ONB-01-012, ONB-01-013
 // screen: ONB-01-017
 export default function SignUpPage() {
   const navigate = useNavigate();
-  // 구독 코드는 웹에서 가입할 때만 입력받는다
-  const steps = useMemo(() => {
-    const allSteps = Object.keys(SIGN_UP_STEPS) as SignUpStep[];
-    return isNativeApp() ? allSteps.filter((step) => step !== "subCode") : allSteps;
-  }, []);
+  const form = useSignUpForm();
+  const { save, reset } = useSignUpFormActions();
+  const steps = useMemo(() => getSignUpSteps(form.goal), [form.goal]);
 
   // 단계마다 화면을 하나씩 쌓는다. 이 화면이 보여줄 단계는 주소가 정한다
   // (/onboarding → 첫 단계, /onboarding?step=body → 키·몸무게)
@@ -48,9 +56,6 @@ export default function SignUpPage() {
   const step = steps.find((candidate) => candidate === searchParams.get("step")) ?? steps[0];
   const stepIndex = steps.indexOf(step);
   const isLastStep = stepIndex === steps.length - 1;
-
-  const form = useSignUpForm();
-  const { save, reset } = useSignUpFormActions();
 
   // 앞 단계 값 없이 중간 단계 주소로 바로 들어왔는지
   const hasPreviousValues = steps
@@ -99,7 +104,9 @@ export default function SignUpPage() {
       return;
     }
 
-    navigate(`${PATH.ONBOARDING}?step=${steps[stepIndex + 1]}`);
+    // 방금 고른 목표에 따라 다음 단계가 달라지므로(체중 유지 → 목표 몸무게 건너뜀) 저장한 값으로 다시 구한다
+    const nextSteps = getSignUpSteps(nextForm.goal);
+    navigate(`${PATH.ONBOARDING}?step=${nextSteps[nextSteps.indexOf(step) + 1]}`);
   };
 
   // 모든 단계가 같은 것을 받는다. 마지막 단계는 플랫폼마다 달라서(웹: 구독 코드, 앱: 하는 일)

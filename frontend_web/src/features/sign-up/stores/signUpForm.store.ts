@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { devtools } from "zustand/middleware";
 
+import { applyMaintainTargetWeight, GOAL } from "@/features/profile/goalEdit.model";
 import type { SignUpForm, SignUpType } from "@/features/sign-up/types/signUp.type";
 
 // 추천 목표 칼로리를 계산할 때 쓰이는 값
@@ -19,7 +20,13 @@ const TARGET_CALORIES_INPUT_KEYS = [
  * 비워진 값은 해당 단계에 다시 들어갔을 때 새 추천값으로 채워진다.
  */
 function applySignUpPatch(prev: SignUpForm, patch: SignUpForm): SignUpForm {
-  const next = { ...prev, ...patch };
+  const merged = { ...prev, ...patch };
+  // 체중 유지는 목표 몸무게 단계를 건너뛰고 현재 몸무게로 맞춘다.
+  // 체중 유지에서 다른 목표로 바꾸면 맞춰 둔 값을 비워 목표 몸무게 단계에서 다시 입력받는다
+  const next =
+    prev.goal === GOAL.MAINTAIN_WEIGHT && merged.goal !== GOAL.MAINTAIN_WEIGHT
+      ? { ...merged, target_weight: undefined }
+      : applyMaintainTargetWeight(merged);
 
   if (TARGET_CALORIES_INPUT_KEYS.some((key) => prev[key] !== next[key])) {
     return { ...next, target_calories: undefined, target_ratio: undefined };

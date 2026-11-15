@@ -7,6 +7,7 @@ import {
   calculateMenstrualPhaseDates,
   getMenstrualTypeFromPhase,
 } from "@/features/menstruation/utils/menstrualPhaseDatesCalculation.util";
+import { useIsMenstrualPhaseVisible } from "@/features/personal-analysis/stores/menstrualPhaseSetting.store";
 import { useGetProfileQuery } from "@/features/profile/hooks/queries/useProfileQuery";
 
 const PHASE_VIEW = {
@@ -26,14 +27,16 @@ type PhaseRange = {
 export function MenstrualPhaseBackground({ data }: { data: readonly { date: string }[] }) {
   const { data: profile } = useGetProfileQuery();
   const isFemale = profile?.gender === 1;
+  // 분석 화면 상단 토글로 켰을 때만 그린다. 꺼져 있으면 주기 정보도 불러오지 않는다
+  const isVisible = useIsMenstrualPhaseVisible();
   const { cycles, isLoading, isError } = useMenstrualPhase(data[data.length - 1].date, {
-    enabled: isFemale,
+    enabled: isFemale && isVisible,
     historyStartDate: data[0].date,
   });
   const plot = usePlotArea();
   const xScale = useXAxisScale();
 
-  if (!isFemale || isLoading || isError || !plot || !xScale) return null;
+  if (!isVisible || !isFemale || isLoading || isError || !plot || !xScale) return null;
 
   const ranges: PhaseRange[] = [];
   data.forEach(({ date }, index) => {

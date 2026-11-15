@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ACTIVITY_OPTIONS,
   GENDER_OPTIONS,
+  GOAL,
   GOAL_OPTIONS,
   type GoalEditDraft,
   isGoalWeightRangeValid,
@@ -143,6 +144,16 @@ export default function GoalEditPage() {
 
   const openEditor = (field: EditableField) => {
     if (!visibleDraft || field === "birthYear") return;
+
+    // 체중 유지면 목표 몸무게는 현재 몸무게로 정해져 있어 따로 바꿀 수 없다
+    if (field === "goalWeight" && visibleDraft.goal === GOAL.MAINTAIN_WEIGHT) {
+      toast.info(
+        "체중 유지 목표는 현재 몸무게로 맞춰져요",
+        "목표를 바꾸면 목표 몸무게를 수정할 수 있어요.",
+      );
+      return;
+    }
+
     setEditingField(field);
     setSheetData({ ...visibleDraft });
   };

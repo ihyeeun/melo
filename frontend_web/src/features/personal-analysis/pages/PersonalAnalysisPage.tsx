@@ -3,8 +3,13 @@ import type { UseQueryResult } from "@tanstack/react-query";
 
 import { LineChart } from "@/features/personal-analysis/components/LineChart";
 import { usePersonalAnalysisByModeQuery } from "@/features/personal-analysis/hooks/queries/usePersonalAnalysis.query";
+import {
+  useIsMenstrualPhaseVisible,
+  useSetMenstrualPhaseVisible,
+} from "@/features/personal-analysis/stores/menstrualPhaseSetting.store";
 import styles from "@/features/personal-analysis/styles/PersonalAnalysisPage.module.css";
 import { getAnalysisRange } from "@/features/personal-analysis/utils/analysisRange.util";
+import { useGetProfileQuery } from "@/features/profile/hooks/queries/useProfileQuery";
 import { PATH } from "@/router/path";
 import { track } from "@/shared/analytics/analytics";
 import { EVENT_NAME } from "@/shared/analytics/analytics.constants";
@@ -25,6 +30,8 @@ type AnalysisCardProps<M extends RecentAnalysisMode> = {
 // screen: ANA-01-001
 export default function PersonalAnalysisPage() {
   const isFree = isFreeUserGuardEnabled();
+  const { data: profile } = useGetProfileQuery();
+  const isFemale = profile?.gender === 1;
   const today = getTodayFormatDateKey();
   const deficitQuery = usePersonalAnalysisByModeQuery({ date: today, mode: "deficit" });
   const intakeQuery = usePersonalAnalysisByModeQuery({ date: today, mode: "intake" });
@@ -49,6 +56,7 @@ export default function PersonalAnalysisPage() {
         <span className="body-xs-regular text-tertiary">
           {startDate} ~ {endDate}
         </span>
+        {isFemale && <MenstrualPhaseToggle />}
       </div>
 
       <ScrollFogArea className={`main ${styles.content}`}>
@@ -74,6 +82,28 @@ export default function PersonalAnalysisPage() {
         </div>
       </ScrollFogArea>
     </div>
+  );
+}
+
+// 그래프 배경에 생리 주기를 표시할지. 여성에게만 보이고, 기본은 꺼져 있다
+function MenstrualPhaseToggle() {
+  const isVisible = useIsMenstrualPhaseVisible();
+  const setVisible = useSetMenstrualPhaseVisible();
+
+  return (
+    <label className={styles.menstrualPhaseToggle}>
+      <span className="body-xs-regular text-secondary">생리 주기</span>
+      <button
+        type="button"
+        role="switch"
+        aria-checked={isVisible}
+        data-checked={isVisible}
+        className={styles.switch}
+        onClick={() => setVisible(!isVisible)}
+      >
+        <span className={styles.switchThumb} />
+      </button>
+    </label>
   );
 }
 
