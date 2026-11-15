@@ -84,6 +84,8 @@ type ChatEntryRequest =
   | { type: "management" }
   | { type: "management-pattern-analysis" };
 
+const MAX_AUTO_COMPLETE_COUNT = 3;
+
 // screen: CHA-01-001
 export default function AIChatPage() {
   const navigate = useNavigate();
@@ -132,7 +134,10 @@ export default function AIChatPage() {
   const { data: suggestionsResponse } = useSearchMenuQuery(debouncedKeyword, {
     enabled: canAutoCompleteKeyword,
   });
-  const suggestionsMenuNames = canAutoCompleteKeyword ? (suggestionsResponse?.name ?? []) : [];
+  // 자동 완성은 최대 3개까지만 보여 준다
+  const suggestionsMenuNames = canAutoCompleteKeyword
+    ? (suggestionsResponse?.name ?? []).slice(0, MAX_AUTO_COMPLETE_COUNT)
+    : [];
   const nutritionResponse = historyQuery.data?.chat_list.find(
     (chat) => chat.id === nutritionMealChatId,
   )?.response_payload;
