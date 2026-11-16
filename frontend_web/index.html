@@ -9,6 +9,13 @@
       content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
     />
     <title>melo</title>
+    <script>
+      if (typeof window.setImmediate !== "function" && /iPhone/.test(navigator.userAgent)) {
+        window.setImmediate = function (callback) {
+          return setTimeout(callback, 0);
+        };
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>
