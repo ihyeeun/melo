@@ -79,6 +79,22 @@
   overflow: hidden;
 }
 
+.failedMessage {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: 6px;
+}
+
+.retryButton {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+
+  &:disabled {
+    opacity: 0.5;
+  }
+}
+
 .score {
   margin-top: auto;
 }

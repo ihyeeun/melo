@@ -1,10 +1,17 @@
 import { useEffect, useState } from "react";
 
+import { hasValidDayNutritionTarget } from "@/features/home/utils/dayMealSummary";
 import { useGetProfileQuery } from "@/features/profile/hooks/queries/useProfileQuery";
 import { logout } from "@/features/settings/api/account";
 import { PATH } from "@/router/path";
-import { syncAppOptionalTabs } from "@/shared/api/bridge/nativeBridge";
+import { AppApiError } from "@/shared/api/apiClient";
+import {
+  isNativeApp,
+  requestNativeSignUpRedirect,
+  syncAppOptionalTabs,
+} from "@/shared/api/bridge/nativeBridge";
 import type { OptionalTabName } from "@/shared/api/bridge/nativeBridge.types";
+import { useNativeAppFeature } from "@/shared/api/bridge/useNativeAppFeature";
 import { Button } from "@/shared/commons/button/Button";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import { LoadingScreen } from "@/shared/commons/loading/Loading";
@@ -26,6 +33,7 @@ const StackComponent = getStackflowStackComponent();
 const WEB_OPTIONAL_TABS: readonly OptionalTabName[] = ["restaurant", "analysis"];
 
 const PROFILE_SYNC_EXCLUDED_PATHS = new Set([PATH.ONBOARDING, PATH.APP_INFO]);
+const USER_INFO_NOT_FOUND_STATUS_CODE = 40411;
 const STACKFLOW_HISTORY_STATE_TAG = "@stackflow/plugin-history-sync";
 
 function isStackflowHistoryState(state: unknown) {
@@ -58,11 +66,17 @@ function useSyncFeatureGuardFromProfile() {
   const shouldFetchProfile = shouldFetchProfileForCurrentPath();
   const {
     data: profile,
+    error,
     isSuccess,
     isError,
     refetch,
   } = useGetProfileQuery({ enabled: shouldFetchProfile });
   const isSubscribed = profile?.is_subscribed;
+  // 가입을 마치지 않아 회원 정보나 목표가 없는 계정
+  const isSignUpRequired =
+    shouldFetchProfile &&
+    ((error instanceof AppApiError && error.statusCode === USER_INFO_NOT_FOUND_STATUS_CODE) ||
+      (profile !== undefined && !hasValidDayNutritionTarget(profile)));
 
   useEffect(() => {
     if (typeof isSubscribed !== "boolean") {
@@ -73,16 +87,33 @@ function useSyncFeatureGuardFromProfile() {
   }, [isSubscribed]);
 
   if (!shouldFetchProfile || typeof isSubscribed === "boolean") {
-    return { status: "ready", retryProfile: refetch } as const;
+    return { status: "ready", isSignUpRequired, retryProfile: refetch } as const;
   }
 
   // 프로필 없이 홈을 띄우면 홈의 프로필 조회가 재요청을 일으키고, 데이터가 없는 쿼리는 재요청 때
   // pending으로 돌아가 이 로딩과 홈이 끝없이 번갈아 뜬다(탈퇴 계정 무한로딩). 그래서 실패는 여기서 멈춘다
   if (isError || isSuccess) {
-    return { status: "failed", retryProfile: refetch } as const;
+    return { status: "failed", isSignUpRequired, retryProfile: refetch } as const;
   }
 
-  return { status: "loading", retryProfile: refetch } as const;
+  return { status: "loading", isSignUpRequired, retryProfile: refetch } as const;
+}
+
+// 회원가입으로 보낼 수 있는지. 앱은 이 기능을 지원해야 회원가입 화면을 띄우고, 확인 중이면 undefined다
+function useCanRedirectToSignUp() {
+  const isNative = isNativeApp();
+  const canNativeRedirect = useNativeAppFeature("SIGN_UP_REDIRECT");
+
+  return isNative ? canNativeRedirect : true;
+}
+
+function redirectToSignUp() {
+  if (isNativeApp()) {
+    requestNativeSignUpRedirect();
+    return;
+  }
+
+  window.location.replace(PATH.ONBOARDING);
 }
 
 function ProfileLoadFailedScreen({ onRetry }: { onRetry: () => void }) {
@@ -118,7 +149,20 @@ function ProfileLoadFailedScreen({ onRetry }: { onRetry: () => void }) {
 }
 
 export function StackflowRuntime() {
-  const { status: featureGuardStatus, retryProfile } = useSyncFeatureGuardFromProfile();
+  const {
+    status: featureGuardStatus,
+    isSignUpRequired,
+    retryProfile,
+  } = useSyncFeatureGuardFromProfile();
+  const canRedirectToSignUp = useCanRedirectToSignUp();
+  // 이 기능이 없는 옛 앱에서는 지금처럼 홈 문구나 불러오기 실패 화면을 보여 준다
+  const shouldRedirectToSignUp = isSignUpRequired && canRedirectToSignUp !== false;
+
+  useEffect(() => {
+    if (isSignUpRequired && canRedirectToSignUp) {
+      redirectToSignUp();
+    }
+  }, [isSignUpRequired, canRedirectToSignUp]);
 
   useEffect(() => {
     const handleWebNavigationCommand = (event: Event) => {
@@ -168,7 +212,7 @@ export function StackflowRuntime() {
     };
   }, []);
 
-  if (featureGuardStatus === "loading") {
+  if (featureGuardStatus === "loading" || shouldRedirectToSignUp) {
     // 웹앱 최초 진입 시 한 번, 프로필 구독 상태 기반 가드 설정 준비될 때까지 뜨는 로딩
     return <LoadingScreen background="var(--background-gray-1)" />;
   }

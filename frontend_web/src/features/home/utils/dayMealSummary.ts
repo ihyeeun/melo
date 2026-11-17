@@ -182,7 +182,7 @@ export function getActivityAdjustedTargetCalories(
   return Math.round(targetCalories + safeActivityCalories);
 }
 
-function hasValidDayNutritionTarget(
+export function hasValidDayNutritionTarget(
   target: DayNutritionTarget | null | undefined,
 ): target is DayNutritionTarget {
   if (

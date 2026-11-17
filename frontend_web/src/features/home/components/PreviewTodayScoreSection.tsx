@@ -52,11 +52,15 @@ export default function PreviewTodayScoreSection({
     data: dayMeal,
     isError: isSummaryError,
     isPending: isSummaryPending,
+    isFetching: isSummaryFetching,
+    refetch: refetchDayMeals,
   } = useDayMealsQuery(selectedDateKey);
   const {
     data: profile,
     isError: isProfileError,
     isPending: isProfilePending,
+    isFetching: isProfileFetching,
+    refetch: refetchProfile,
   } = useGetProfileQuery();
 
   const { data: userGoal, isPending: isUserGoalPending } =
@@ -81,11 +85,20 @@ export default function PreviewTodayScoreSection({
     },
     activitySummary?.calories,
   );
-  const nutrition = isProfileError
-    ? { message: "목표 정보를 불러오지 못했어요", score: null }
+  const failedLoad = isProfileError
+    ? {
+        message: "목표 정보를 불러오지 못했어요",
+        isRetrying: isProfileFetching,
+        retry: refetchProfile,
+      }
     : isSummaryError
-      ? { message: "식사 정보를 불러오지 못했어요", score: null }
-      : nutritionSummary;
+      ? {
+          message: "식사 정보를 불러오지 못했어요",
+          isRetrying: isSummaryFetching,
+          retry: refetchDayMeals,
+        }
+      : null;
+  const nutrition = failedLoad ? { message: failedLoad.message, score: null } : nutritionSummary;
   const characterSrc = getScoreCharacterSrc(nutrition.score ?? 0);
   const activityCalories =
     typeof nutritionSummary.calories.activity === "number" &&
@@ -119,9 +132,23 @@ export default function PreviewTodayScoreSection({
             <div className={styles.summaryArea}>
               <div className={styles.titleArea}>
                 <p className="text-primary title-s-semi">오늘의 영양 밸런스</p>
-                <p className={`${styles.message} text-tertiary body-s-regular`}>
-                  {nutrition.message}
-                </p>
+                {failedLoad ? (
+                  <div className={styles.failedMessage}>
+                    <p className="text-tertiary body-s-regular">{failedLoad.message}</p>
+                    <button
+                      type="button"
+                      className={`${styles.retryButton} text-secondary body-s-medium`}
+                      disabled={failedLoad.isRetrying}
+                      onClick={() => void failedLoad.retry()}
+                    >
+                      다시 시도
+                    </button>
+                  </div>
+                ) : (
+                  <p className={`${styles.message} text-tertiary body-s-regular`}>
+                    {nutrition.message}
+                  </p>
+                )}
               </div>
 
               <p className={`text-primary title-xl-medium ${styles.score}`}>
