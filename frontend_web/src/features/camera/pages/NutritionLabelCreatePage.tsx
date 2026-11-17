@@ -174,7 +174,7 @@ export default function NutrientCameraPage() {
 
   return (
     <section className={styles.page}>
-      <PageHeader title="영양정보 촬영" onBack={returnFromCameraPage} />
+      <PageHeader title={isUploading ? "사진 분석" : "사진 촬영"} onBack={returnFromCameraPage} />
 
       {isOpeningCamera ? (
         <main className={styles.main} />
