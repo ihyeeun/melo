@@ -44,7 +44,11 @@ import { getMenuSelectionMenuDetailPath } from "@/features/menu-selection/utils/
 import { PATH } from "@/router/path";
 import { getMealRecordPath } from "@/router/pathHelpers";
 import { trackChatTextMenuSave, trackScanMenuSave } from "@/shared/analytics/menuSaveEvent.util";
-import { requestNativeGalleryPick } from "@/shared/api/bridge/nativeBridge";
+import {
+  requestNativeAppSettingsOpen,
+  requestNativeGalleryPick,
+} from "@/shared/api/bridge/nativeBridge";
+import { useNativeAppFeature } from "@/shared/api/bridge/useNativeAppFeature";
 import { isRequestAbortError } from "@/shared/api/requestCancellation";
 import { captureScreenRequestScope } from "@/shared/api/screenRequests";
 import type { MealType } from "@/shared/api/types/api.dto";
@@ -99,6 +103,7 @@ export default function AIChatPage() {
   const cameraImage = useGetImage();
   const setImage = useSetImage();
 
+  const canOpenAppSettings = useNativeAppFeature("OPEN_APP_SETTINGS");
   const [isShowChatActions, setIsShowChatActions] = useState<boolean>(true);
   // 진입 때 자동으로 펼쳐진 메뉴는 뒤로가기로 닫지 않는다. [+]로 직접 연 메뉴만 닫는다
   const [isChatActionsOpenedByUser, setIsChatActionsOpenedByUser] = useState(false);
@@ -378,6 +383,25 @@ export default function AIChatPage() {
         typeof error === "object" && error !== null && "error" in error ? error.error : undefined;
 
       if (errorCode === "GALLERY_PICK_CANCELLED") return;
+
+      // 사진 권한을 거부했으면 설정 앱에서 직접 켤 수 있게 버튼을 붙이고, 닫을 때까지 둔다
+      if (errorCode === "GALLERY_PERMISSION_DENIED" && canOpenAppSettings) {
+        const toastId = toast.show({
+          type: "error",
+          title: "사진 접근 권한이 필요해요",
+          description: "설정에서 권한을 허용해주세요.",
+          timeout: 0,
+          priority: "high",
+          action: {
+            label: "설정으로 이동",
+            onClick: () => {
+              requestNativeAppSettingsOpen();
+              toast.close(toastId);
+            },
+          },
+        });
+        return;
+      }
 
       toast.error(
         errorCode === "GALLERY_PERMISSION_DENIED"
