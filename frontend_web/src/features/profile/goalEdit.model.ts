@@ -29,6 +29,17 @@ export const ONBOARDING_WEIGHT_RANGE = {
   max: 200,
 } as const;
 
+// 범위 밖 값 안내. 문구 형식: "{항목}은 {최소}~{최대}{단위} 사이로 입력해주세요"
+export const BODY_RANGE_MESSAGES = {
+  height: `키는 ${ONBOARDING_HEIGHT_RANGE.min}~${ONBOARDING_HEIGHT_RANGE.max}cm 사이로 입력해주세요`,
+  weight: `몸무게는 ${ONBOARDING_WEIGHT_RANGE.min}~${ONBOARDING_WEIGHT_RANGE.max}kg 사이로 입력해주세요`,
+  targetWeight: `목표 몸무게는 ${ONBOARDING_WEIGHT_RANGE.min}~${ONBOARDING_WEIGHT_RANGE.max}kg 사이로 입력해주세요`,
+} as const;
+
+// 키 · 몸무게 입력은 정수 3자리 + 소수 1자리까지만 받는다. 범위는 입력 중이 아니라 확인할 때 본다
+export const BODY_VALUE_INTEGER_DIGITS = 3;
+export const BODY_VALUE_FRACTION_DIGITS = 1;
+
 export function isInRange(value: number | undefined, min: number, max: number) {
   if (value === undefined) return false;
   return value >= min && value <= max;

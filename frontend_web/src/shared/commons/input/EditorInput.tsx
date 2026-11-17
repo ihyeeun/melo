@@ -7,6 +7,8 @@ type Props = Omit<React.ComponentProps<"input">, "onChange" | "value" | "min" | 
   value?: number;
   min?: number;
   max?: number;
+  // 정수 부분 자릿수 제한 (예: 3 → 999.9까지)
+  integerDigits?: number;
   fractionDigits?: number;
   blockOutOfRangeInput?: boolean;
   clampOnChange?: boolean;
@@ -28,6 +30,7 @@ export function EditorInput({
   value,
   min,
   max,
+  integerDigits,
   fractionDigits,
   blockOutOfRangeInput = false,
   clampOnChange = true,
@@ -52,9 +55,16 @@ export function EditorInput({
             return;
           }
 
-          if (fractionDigits !== undefined) {
-            const safeDigits = Math.max(0, Math.trunc(fractionDigits));
-            const decimalPattern = new RegExp(`^-?\\d*(\\.\\d{0,${safeDigits}})?$`);
+          if (fractionDigits !== undefined || integerDigits !== undefined) {
+            const integerPart =
+              integerDigits === undefined
+                ? "\\d*"
+                : `\\d{0,${Math.max(1, Math.trunc(integerDigits))}}`;
+            const fractionPart =
+              fractionDigits === undefined
+                ? "(\\.\\d*)?"
+                : `(\\.\\d{0,${Math.max(0, Math.trunc(fractionDigits))}})?`;
+            const decimalPattern = new RegExp(`^-?${integerPart}${fractionPart}$`);
 
             if (!decimalPattern.test(raw)) return;
           }

@@ -2,6 +2,9 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import {
   ACTIVITY_OPTIONS,
+  BODY_RANGE_MESSAGES,
+  BODY_VALUE_FRACTION_DIGITS,
+  BODY_VALUE_INTEGER_DIGITS,
   GENDER_OPTIONS,
   GOAL,
   GOAL_OPTIONS,
@@ -71,6 +74,14 @@ const SUMMARY_FIELDS: SummaryField[] = [
 function formatDecimal(value?: number) {
   if (value === undefined) return "-";
   return Number.isInteger(value) ? value.toString() : value.toFixed(1);
+}
+
+const BODY_VALUE_INPUT_PATTERN = new RegExp(
+  `^\\d{0,${BODY_VALUE_INTEGER_DIGITS}}(?:\\.\\d{0,${BODY_VALUE_FRACTION_DIGITS}})?$`,
+);
+
+function isBodyValueInputAllowed(inputValue: string) {
+  return BODY_VALUE_INPUT_PATTERN.test(inputValue.trim());
 }
 
 function getSummaryValue(field: EditableField, draft: GoalEditDraft) {
@@ -201,7 +212,7 @@ export default function GoalEditPage() {
 
     if (editingField === "height") {
       if (!isInRange(sheetData.height, ONBOARDING_HEIGHT_RANGE.min, ONBOARDING_HEIGHT_RANGE.max)) {
-        toast.warning("키를 다시 확인해주세요");
+        toast.warning(BODY_RANGE_MESSAGES.height);
         return;
       }
 
@@ -212,7 +223,7 @@ export default function GoalEditPage() {
 
     if (editingField === "weight") {
       if (!isInRange(sheetData.weight, ONBOARDING_WEIGHT_RANGE.min, ONBOARDING_WEIGHT_RANGE.max)) {
-        toast.warning("현재 몸무게를 다시 확인해주세요");
+        toast.warning(BODY_RANGE_MESSAGES.weight);
         return;
       }
 
@@ -249,7 +260,7 @@ export default function GoalEditPage() {
     };
 
     if (!isGoalWeightRangeValid(nextDraft)) {
-      toast.warning("목표 몸무게를 다시 확인해주세요");
+      toast.warning(BODY_RANGE_MESSAGES.targetWeight);
       return;
     }
 
@@ -333,8 +344,8 @@ export default function GoalEditPage() {
             min={ONBOARDING_HEIGHT_RANGE.min}
             max={ONBOARDING_HEIGHT_RANGE.max}
             step={1}
-            blockOutOfRangeInput
-            fractionDigits={1}
+            integerDigits={BODY_VALUE_INTEGER_DIGITS}
+            fractionDigits={BODY_VALUE_FRACTION_DIGITS}
             unit="cm"
             clampOnChange={false}
             normalizeOnBlur={false}
@@ -352,7 +363,9 @@ export default function GoalEditPage() {
             min={ONBOARDING_WEIGHT_RANGE.min}
             max={ONBOARDING_WEIGHT_RANGE.max}
             step={0.1}
+            allowOutOfRange
             normalizeValue={toOneDecimalPlace}
+            isInputTextAllowed={isBodyValueInputAllowed}
             decrementAriaLabel="체중 0.1kg 감소"
             incrementAriaLabel="체중 0.1kg 증가"
             decrementIcon={<SystemIcon name="minus-circle" mode="image" size={28} />}
@@ -432,8 +445,8 @@ export default function GoalEditPage() {
           min={ONBOARDING_WEIGHT_RANGE.min}
           max={ONBOARDING_WEIGHT_RANGE.max}
           step={0.1}
-          fractionDigits={1}
-          blockOutOfRangeInput
+          integerDigits={BODY_VALUE_INTEGER_DIGITS}
+          fractionDigits={BODY_VALUE_FRACTION_DIGITS}
           unit="kg"
           clampOnChange={false}
           normalizeOnBlur={false}
