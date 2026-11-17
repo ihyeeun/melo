@@ -469,9 +469,9 @@ export default function MealRecordPage() {
     }
 
     try {
+      // 바뀐 게 없으면 저장 안내 없이 닫는다
       if (changedRequests.length === 0) {
         clearAllDrafts();
-        toast.success("식사 기록이 저장되었어요");
         navigateBack({
           animate: false,
           fallbackTo: PATH.HOME,
