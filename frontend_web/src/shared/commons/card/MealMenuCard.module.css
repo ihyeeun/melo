@@ -14,6 +14,17 @@
   min-width: 0;
 }
 
+.nameRow {
+  align-items: center;
+  display: flex;
+  gap: 6px;
+  min-width: 0;
+}
+
+.nameRow > p {
+  min-width: 0;
+}
+
 .meta {
   align-items: baseline;
   display: flex;

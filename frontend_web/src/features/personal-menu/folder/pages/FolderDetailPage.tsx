@@ -77,6 +77,13 @@ function scaleCaloriesByQuantity(menu: MenuSimpleResponseDto, quantity: number) 
   return baseCalories * (quantity / baseWeight);
 }
 
+const DELETED_MENU_MESSAGE = "삭제된 메뉴라 담을 수 없어요";
+
+// 폴더 응답의 음식 타입에는 is_deleted가 없어서, 서버가 내려준 값을 그대로 읽는다(끼니 요약과 같은 방식)
+function isDeletedMenu(folderMenu: FolderDetailMenu) {
+  return (folderMenu.menu as { is_deleted?: unknown }).is_deleted === 1;
+}
+
 // screen: DIET-03-001
 export default function FolderDetailPage() {
   const navigate = useNavigate();
@@ -168,9 +175,13 @@ export default function FolderDetailPage() {
     [draftMenuById, serverFolderMenus],
   );
 
+  // 지운 내 음식은 폴더에 '삭제됨'으로 남지만 담을 수 없다(폴더 수정에서 직접 뺀다)
+  const selectableFolderMenus = serverFolderMenus.filter(
+    (folderMenu) => !isDeletedMenu(folderMenu),
+  );
   const areAllFolderMenusSelected =
-    serverFolderMenus.length > 0 &&
-    serverFolderMenus.every((folderMenu) => selectedMenuIdSet.has(folderMenu.menu.id));
+    selectableFolderMenus.length > 0 &&
+    selectableFolderMenus.every((folderMenu) => selectedMenuIdSet.has(folderMenu.menu.id));
 
   const folderDetailPath = getFolderDetailPath(dateKey, mealType, folderId);
 
@@ -258,6 +269,11 @@ export default function FolderDetailPage() {
       return;
     }
 
+    if (isDeletedMenu(folderMenu)) {
+      toast.warning(DELETED_MENU_MESSAGE);
+      return;
+    }
+
     if (selectedCount + 1 > maxSelectableMenuCount) {
       toast.warning(menuCountLimitMessage);
       return;
@@ -283,7 +299,7 @@ export default function FolderDetailPage() {
     }
 
     // 100개를 넘으면 아직 안 담긴 폴더 음식을 순서대로 남은 자리만큼만 담고 알린다
-    const unselectedFolderMenus = serverFolderMenus.filter(
+    const unselectedFolderMenus = selectableFolderMenus.filter(
       (folderMenu) => !selectedMenuIdSet.has(folderMenu.menu.id),
     );
     const remainingCount = Math.max(0, maxSelectableMenuCount - selectedMenuIdSet.size);
@@ -297,7 +313,7 @@ export default function FolderDetailPage() {
       unselectedFolderMenus.slice(0, remainingCount).map((folderMenu) => folderMenu.menu.id),
     );
 
-    serverFolderMenus.forEach((folderMenu) => {
+    selectableFolderMenus.forEach((folderMenu) => {
       const isSelected = selectedMenuIdSet.has(folderMenu.menu.id);
       if (!isSelected && !menusToAddIdSet.has(folderMenu.menu.id)) return;
 
@@ -382,6 +398,7 @@ export default function FolderDetailPage() {
                 weight={folderMenu.menu.weight}
                 unit={folderMenu.menu.unit}
                 quantity={folderMenu.quantity}
+                isDeleted={isDeletedMenu(folderMenu)}
                 icon={"add"}
                 state={isSelected}
                 onClick={() => handleMenuDetailOpen(folderMenu)}

@@ -128,6 +128,7 @@ type DisplayMenuItem = {
   unit?: number;
   weight?: number;
   data_source?: number;
+  isDeleted?: boolean;
 };
 
 const MEAL_RECORD_PERIOD_OPTIONS: MealRecordPeriod[] = ["오전", "오후"];
@@ -303,6 +304,7 @@ export default function MealRecordPage() {
       unit: menu.unit,
       weight: menu.weight,
       data_source: menu.data_source,
+      isDeleted: menu.is_deleted === 1,
     });
 
     if (!hasCurrentDraft) {
@@ -644,6 +646,7 @@ export default function MealRecordPage() {
                   unit={menu.unit}
                   weight={menu.weight}
                   data_source={menu.data_source}
+                  isDeleted={menu.isDeleted}
                   icon="delete"
                   onIconClick={() => handleRemoveMenu(menu.id)}
                   onClick={() => handleMenuDetail(menu.id)}

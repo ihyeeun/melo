@@ -1,7 +1,10 @@
 import { useActivity } from "@stackflow/react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
 
+import { queryKeys as homeQueryKeys } from "@/features/home/hooks/queries/todayRecord.queryKey";
 import { useDayMealsQuery } from "@/features/home/hooks/queries/useTodayRecordQuery";
+import type { DayMealSummary } from "@/features/home/utils/dayMealSummary";
 import {
   MealMenuNutrientDetail,
   type MealMenuNutrientSelection,
@@ -26,6 +29,7 @@ import {
   type MenuSelectionPathParams,
 } from "@/features/menu-selection/utils/menuSelectionRoutes";
 import type { NutrientModifyLocationState } from "@/features/nutrient-entry/types/nutrientEntry.state";
+import { folderQueryKeys } from "@/features/personal-menu/folder/hooks/queries/folder.queryKey";
 import { PATH } from "@/router/path";
 import { getMealRecordPath } from "@/router/pathHelpers";
 import { type MealMenuItem, MENU_DATA_SOURCE } from "@/shared/api/types/api.dto";
@@ -94,6 +98,7 @@ export default function MealDetailPage() {
     : null;
 
   const { data: meal, isPending, isLoadingError } = useMealDetailQuery(menuId);
+  const queryClient = useQueryClient();
   const { isActive } = useActivity();
   const hasLeftForFailureRef = useRef(false);
 
@@ -113,8 +118,27 @@ export default function MealDetailPage() {
     navigateBack({ fallbackTo: getBackFallbackPath() });
   };
 
+  // 지운 음식은 지금 담는 중인 목록에서 빼서 [N개 담겼어요]를 줄인다.
+  // 이미 저장된 식사 기록 · 폴더에서는 빼지 않고 '삭제됨'으로 남긴다
+  const removeDeletedMenuFromDraft = (deletedMenuId: number) => {
+    if (menuSelectionAdapter.selectionTarget !== MENU_SELECTION_TARGET.MEAL_RECORD) return;
+
+    const savedDayMeals = queryClient.getQueryData<DayMealSummary>(
+      homeQueryKeys.dayMeals.byDate(dateKey),
+    );
+    const isSavedInMeal = savedDayMeals?.menusByTime[mealType].some(
+      (menu) => menu.id === deletedMenuId,
+    );
+    if (isSavedInMeal) return;
+
+    menuSelectionAdapter.removeSelectedMenu(deletedMenuId);
+  };
+
   const { mutate: deleteMealMutation, isPending: isDeletePending } = useMealDeleteMutation({
     onSuccess: () => {
+      if (menuId !== null) removeDeletedMenuFromDraft(menuId);
+      void queryClient.invalidateQueries({ queryKey: homeQueryKeys.dayMeals.all });
+      void queryClient.invalidateQueries({ queryKey: folderQueryKeys.details() });
       toast.success("삭제되었어요");
       handleGoBack();
     },
