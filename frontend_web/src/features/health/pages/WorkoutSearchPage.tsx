@@ -84,7 +84,7 @@ export default function WorkoutSearchPage() {
     useDeleteWorkoutRecordMutation({
       onError: (error) => {
         if (isRequestAbortError(error)) return;
-        toast.warning("운동 기록을 제외하지 못했어요", "잠시 후 다시 시도해주세요.");
+        toast.warning("운동을 빼지 못했어요. 다시 시도해주세요");
       },
     });
   const inputRef = useRef<HTMLInputElement>(null);
