@@ -57,7 +57,7 @@ export default function ProfileNicknameSheetPage() {
     setNickNameErrorMessage("");
     updateNickName(nickName, {
       onSuccess: () => {
-        toast.success("닉네임이 수정되었어요");
+        toast.success("닉네임을 수정했어요");
         closeSheet();
       },
       onError: (error) => {
