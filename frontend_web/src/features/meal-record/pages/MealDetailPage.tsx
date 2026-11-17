@@ -431,7 +431,7 @@ export default function MealDetailPage() {
         title="영양 성분 삭제"
         description="저장한 영양 성분을 삭제할까요?"
         cancelText="취소"
-        confirmText="확인"
+        confirmText="삭제"
         confirmDisabled={isDeletePending}
         onConfirm={handleConfirmDelete}
       />
