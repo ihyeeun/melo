@@ -500,9 +500,9 @@ export default function GoalEditPage() {
         <div className={styles.planInfoAnchor}>
           <InfoPopover defaultOpen side="top" align="center" ariaLabel="수정한 정보 반영 안내">
             <p className={styles.planInfoMessage}>
-              수정한 정보는 새로운 식단 계획을 받아야
+              수정한 정보는
               <br />
-              목표 칼로리에 반영돼요
+              새로운 식단 계획을 받아야 반영돼요
             </p>
           </InfoPopover>
         </div>
