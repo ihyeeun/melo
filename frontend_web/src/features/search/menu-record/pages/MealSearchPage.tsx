@@ -528,7 +528,7 @@ export default function MealSearchPage() {
           setIsDirectInputSheetOpen(true);
         }}
       >
-        <span className={`${styles.bottomText} body-s-medium`}>찾으시는 메뉴가 없나요?</span>
+        <span className={`${styles.bottomText} body-s-medium`}>찾으시는 음식이 없나요?</span>
         직접 등록하기
         <SystemIcon name="chevron-right" size={16} />
       </Button>
