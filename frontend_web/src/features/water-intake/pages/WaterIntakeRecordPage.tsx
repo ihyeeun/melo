@@ -35,6 +35,8 @@ export default function WaterIntakeRecordPage() {
   const { data: recordWaterIntake, isPending: isWaterIntakePending } =
     useGetWaterIntakeQuery(selectdate);
   const waterAmount = editedWaterAmount ?? recordWaterIntake?.water_intake ?? 0;
+  // 컵 크기를 정한 적 없으면(서버 값 없음·0) 200ml로 본다
+  const currentCupSize = recordWaterIntake?.cup_size || WATER_CUP_SIZE.DEFAULT;
   const { mutate: updateWaterIntake } = useRegisterWaterIntakeMutation({
     onSuccess: () => {
       toast.success("물 섭취를 기록했어요");
@@ -90,7 +92,7 @@ export default function WaterIntakeRecordPage() {
             }}
             min={mlToLiter(WATER_INTAKE_SIZE.MIN)}
             max={mlToLiter(WATER_INTAKE_SIZE.MAX)}
-            step={mlToLiter(recordWaterIntake?.cup_size ?? 100)}
+            step={mlToLiter(currentCupSize)}
             fractionDigits={2}
             format={{ minimumFractionDigits: 2 }}
             unit={"L"}
@@ -116,13 +118,13 @@ export default function WaterIntakeRecordPage() {
           <button
             type="button"
             onClick={() => {
-              setCupAmount(recordWaterIntake?.cup_size ?? 50);
+              setCupAmount(currentCupSize);
               setIsSheetOpen(true);
             }}
             className={styles.sheetOpenButton}
           >
             <p className="body-s-medium text-tertiary">
-              내가 마시는 한 컵 크기 : {recordWaterIntake?.cup_size}ml
+              내가 마시는 한 컵 크기 : {currentCupSize}ml
             </p>
             <SystemIcon name="chevron-right" size={12} />
           </button>
