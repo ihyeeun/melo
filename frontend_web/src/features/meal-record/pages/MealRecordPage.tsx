@@ -432,14 +432,6 @@ export default function MealRecordPage() {
     toast.success("시간이 수정되었어요");
   };
 
-  const handleResetTime = () => {
-    const defaultTime = getCurrentMealRecordTime();
-    setDraftMealRecordTime(toMealRecordTimeValue(defaultTime));
-    setMealTime({ key: draftKey, mealTime: defaultTime });
-    setIsTimeSheetOpen(false);
-    toast.success("시간을 삭제했어요");
-  };
-
   const handleRemoveMenu = (menuId: number) => {
     removeMenu({ key: draftKey, id: menuId });
   };
@@ -714,11 +706,6 @@ export default function MealRecordPage() {
         bodyClassName={styles.timeSheetBody}
         disableContentDrag
         title="식사 시간"
-        titleRightSlot={
-          <button type="button" onClick={handleResetTime} className="marginLeft">
-            <span className="body-l-regular text-tertiary textNoWrap">삭제</span>
-          </button>
-        }
       >
         <div className={styles.timeSheetContent}>
           <ScrollWheelPicker
