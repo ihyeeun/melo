@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 
 import { useDayMealsQuery } from "@/features/home/hooks/queries/useTodayRecordQuery";
+import { MEAL_RECORD_MENU_LIMIT_FILLED_MESSAGE } from "@/features/meal-record/constants/menu.constants";
 import { useMenuCacheItems } from "@/features/meal-record/hooks/queries/menuCache";
 import { useSyncMenuDraftWithDayMeals } from "@/features/meal-record/stores/menuDraft.store";
 import { getMealType, getSafeDateKey } from "@/features/meal-record/utils/mealRecord.queryParams";
@@ -281,24 +282,35 @@ export default function FolderDetailPage() {
       return;
     }
 
-    const nextMenuIdSet = new Set(selectedMenuIdSet);
+    // 100개를 넘으면 아직 안 담긴 폴더 음식을 순서대로 남은 자리만큼만 담고 알린다
+    const unselectedFolderMenus = serverFolderMenus.filter(
+      (folderMenu) => !selectedMenuIdSet.has(folderMenu.menu.id),
+    );
+    const remainingCount = Math.max(0, maxSelectableMenuCount - selectedMenuIdSet.size);
 
-    serverFolderMenus.forEach((folderMenu) => {
-      nextMenuIdSet.add(folderMenu.menu.id);
-    });
-
-    if (nextMenuIdSet.size > maxSelectableMenuCount) {
+    if (remainingCount === 0) {
       toast.warning(menuCountLimitMessage);
       return;
     }
 
+    const menusToAddIdSet = new Set(
+      unselectedFolderMenus.slice(0, remainingCount).map((folderMenu) => folderMenu.menu.id),
+    );
+
     serverFolderMenus.forEach((folderMenu) => {
+      const isSelected = selectedMenuIdSet.has(folderMenu.menu.id);
+      if (!isSelected && !menusToAddIdSet.has(folderMenu.menu.id)) return;
+
       upsertSelectedMenu({
         viewMenu: folderMenu.menu,
         menuQuantity: folderMenu.quantity,
         menuInputMode: folderMenu.inputMode,
       });
     });
+
+    if (menusToAddIdSet.size < unselectedFolderMenus.length) {
+      toast.warning(MEAL_RECORD_MENU_LIMIT_FILLED_MESSAGE);
+    }
   };
 
   const handleApplySelectedMenus = () => {
