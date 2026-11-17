@@ -8,7 +8,7 @@ import { manipulateAsync, SaveFormat } from "expo-image-manipulator";
 import * as ImagePicker from "expo-image-picker";
 import * as Updates from "expo-updates";
 import * as WebBrowser from "expo-web-browser";
-import { BackHandler, Platform } from "react-native";
+import { BackHandler, Linking, Platform } from "react-native";
 import { clearTokens } from "@/features/auth/store/tokenStore";
 import { apiClient } from "@/src/shared/api/apiClient";
 import { emitAuthExpired } from "@/src/shared/auth/authSessionEvents";
@@ -490,6 +490,7 @@ function resolveAppDeviceInfo(): BridgeAppDeviceInfoPayload {
     appBuild: resolveBuildVersion(),
     osName: Platform.OS === "android" ? "android" : "ios",
     osVersion: resolveOsVersion(),
+    supportedFeatures: ["OPEN_APP_SETTINGS", "SIGN_UP_REDIRECT"],
   };
 }
 
@@ -568,7 +569,12 @@ function isWebToAppMessage(value: unknown): value is WebToAppMessage {
     return value.payload.type === undefined || isNativeHapticType(value.payload.type);
   }
 
-  if (value.type === "APP_DEVICE_INFO_REQUEST" || value.type === "APP_UPDATE_APPLY_REQUEST") {
+  if (
+    value.type === "APP_DEVICE_INFO_REQUEST" ||
+    value.type === "APP_UPDATE_APPLY_REQUEST" ||
+    value.type === "APP_SETTINGS_OPEN_REQUEST" ||
+    value.type === "SIGN_UP_REDIRECT_REQUEST"
+  ) {
     return true;
   }
 
@@ -714,6 +720,18 @@ export async function handleWebMessage(
 
     if (message.type === "APP_UPDATE_APPLY_REQUEST") {
       await Updates.reloadAsync();
+      return;
+    }
+
+    // 위치 · 사진 권한을 거부한 사용자가 직접 켤 수 있게 휴대폰 설정의 멜로 화면을 연다
+    if (message.type === "APP_SETTINGS_OPEN_REQUEST") {
+      await Linking.openSettings();
+      return;
+    }
+
+    // 가입을 마치지 않은 계정은 회원가입으로 보낸다
+    if (message.type === "SIGN_UP_REDIRECT_REQUEST") {
+      router.replace("/(auth)/onboarding");
       return;
     }
 

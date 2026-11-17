@@ -22,6 +22,8 @@ import {
 } from "@/features/restaurant/utils/kakaoMap.util";
 import { dismissKeyboard } from "@/features/restaurant/utils/keyboard.util";
 import { PATH } from "@/router/path";
+import { requestNativeAppSettingsOpen } from "@/shared/api/bridge/nativeBridge";
+import { useNativeAppFeature } from "@/shared/api/bridge/useNativeAppFeature";
 import { Button } from "@/shared/commons/button/Button";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import { SearchInput } from "@/shared/commons/input/SearchInput";
@@ -38,6 +40,8 @@ const LOCATION_MESSAGE = {
 
 // screen: RES-01-001
 export default function MapPage() {
+  // 위치 권한을 한 번 거부하면(Android는 두 번) OS가 다시 묻지 않아서, 설정 앱에서 직접 켜도록 안내한다
+  const canOpenAppSettings = useNativeAppFeature("OPEN_APP_SETTINGS");
   const baseMap = useRef<HTMLDivElement>(null);
   const [map, setMap] = useState<KakaoMap | null>(null);
   const [isMapError, setIsMapError] = useState(false);
@@ -197,6 +201,15 @@ export default function MapPage() {
             <p className="caption-m-medium text-secondary" role="status">
               {LOCATION_MESSAGE[status]}
             </p>
+            {status === "denied" && canOpenAppSettings && (
+              <button
+                type="button"
+                className={`caption-m-semi ${styles.retryButton}`}
+                onClick={requestNativeAppSettingsOpen}
+              >
+                설정으로 이동
+              </button>
+            )}
             {status !== "locating" && (
               <button
                 type="button"

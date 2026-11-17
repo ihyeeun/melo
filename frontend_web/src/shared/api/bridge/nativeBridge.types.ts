@@ -72,11 +72,16 @@ export type WebToAppHapticTriggerRequestMessage = {
   context?: BridgeMessageContext;
 };
 
+// 앱이 지원하는 브리지 기능. OTA는 앱 버전을 바꾸지 않아서 버전 대신 이 목록으로 구분한다
+// (목록이 없는 옛 앱은 아무것도 지원하지 않는 것으로 본다)
+export type AppFeature = "OPEN_APP_SETTINGS" | "SIGN_UP_REDIRECT";
+
 export type AppDeviceInfoPayload = {
   appVersion: string;
   appBuild: string | null;
   osName: "ios" | "android";
   osVersion: string | null;
+  supportedFeatures?: AppFeature[];
 };
 
 export type WebToAppAppDeviceInfoRequestMessage = {
@@ -88,6 +93,20 @@ export type WebToAppAppDeviceInfoRequestMessage = {
 export type WebToAppAppUpdateApplyRequestMessage = {
   id: string;
   type: "APP_UPDATE_APPLY_REQUEST";
+  context?: BridgeMessageContext;
+};
+
+// 휴대폰 설정 앱의 멜로 권한 화면을 연다
+export type WebToAppAppSettingsOpenRequestMessage = {
+  id: string;
+  type: "APP_SETTINGS_OPEN_REQUEST";
+  context?: BridgeMessageContext;
+};
+
+// 가입을 마치지 않은 계정을 앱의 회원가입 화면으로 보낸다
+export type WebToAppSignUpRedirectRequestMessage = {
+  id: string;
+  type: "SIGN_UP_REDIRECT_REQUEST";
   context?: BridgeMessageContext;
 };
 
@@ -189,6 +208,8 @@ export type WebToAppMessage =
   | WebToAppHapticTriggerRequestMessage
   | WebToAppAppDeviceInfoRequestMessage
   | WebToAppAppUpdateApplyRequestMessage
+  | WebToAppAppSettingsOpenRequestMessage
+  | WebToAppSignUpRedirectRequestMessage
   | WebToAppFeatureGuardSyncMessage
   | WebToAppTabBarVisibilitySyncMessage
   | WebToAppCameraCaptureMessage

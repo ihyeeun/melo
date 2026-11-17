@@ -53,11 +53,15 @@ export type BridgeHapticTriggerRequestMessage = {
   context?: BridgeMessageContext;
 };
 
+// 이 앱이 지원하는 브리지 기능. OTA는 앱 버전을 바꾸지 않아서 웹은 버전 대신 이 목록을 본다
+export type BridgeAppFeature = "OPEN_APP_SETTINGS" | "SIGN_UP_REDIRECT";
+
 export type BridgeAppDeviceInfoPayload = {
   appVersion: string;
   appBuild: string | null;
   osName: "ios" | "android";
   osVersion: string | null;
+  supportedFeatures: BridgeAppFeature[];
 };
 
 export type BridgeAppDeviceInfoRequestMessage = {
@@ -69,6 +73,18 @@ export type BridgeAppDeviceInfoRequestMessage = {
 export type BridgeAppUpdateApplyRequestMessage = {
   id: string;
   type: "APP_UPDATE_APPLY_REQUEST";
+  context?: BridgeMessageContext;
+};
+
+export type BridgeAppSettingsOpenRequestMessage = {
+  id: string;
+  type: "APP_SETTINGS_OPEN_REQUEST";
+  context?: BridgeMessageContext;
+};
+
+export type BridgeSignUpRedirectRequestMessage = {
+  id: string;
+  type: "SIGN_UP_REDIRECT_REQUEST";
   context?: BridgeMessageContext;
 };
 
@@ -161,6 +177,8 @@ export type WebToAppMessage =
   | BridgeHapticTriggerRequestMessage
   | BridgeAppDeviceInfoRequestMessage
   | BridgeAppUpdateApplyRequestMessage
+  | BridgeAppSettingsOpenRequestMessage
+  | BridgeSignUpRedirectRequestMessage
   | BridgeCameraCaptureRequestMessage
   | BridgeGalleryPickRequestMessage
   | BridgeImageUploadRequestMessage
