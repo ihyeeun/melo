@@ -44,7 +44,7 @@ export default function CreateFolderPage() {
   const { mutate: upsertFolder, isPending: isUpsertFolderPending } = useUpsertFolderMutation({
     onSuccess: () => {
       clearDraft();
-      toast.success(isEditMode ? "폴더가 수정되었어요" : "폴더가 저장되었어요");
+      toast.success(isEditMode ? "폴더를 수정했어요" : "폴더를 만들었어요");
       navigateBack({
         fallbackTo: PATH.MEAL_RECORD_ADD_SEARCH,
         skipBackHandler: true,
