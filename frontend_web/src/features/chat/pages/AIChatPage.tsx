@@ -100,6 +100,8 @@ export default function AIChatPage() {
   const setImage = useSetImage();
 
   const [isShowChatActions, setIsShowChatActions] = useState<boolean>(true);
+  // 진입 때 자동으로 펼쳐진 메뉴는 뒤로가기로 닫지 않는다. [+]로 직접 연 메뉴만 닫는다
+  const [isChatActionsOpenedByUser, setIsChatActionsOpenedByUser] = useState(false);
   const [isPhotoMenuOpen, setIsPhotoMenuOpen] = useState(false);
   const [isTextMealRecordMode, setIsTextMealRecordMode] = useState<boolean>(false);
   const [inputMessage, setInputMessage] = useState<string>("");
@@ -439,8 +441,10 @@ export default function AIChatPage() {
     setIsShowChatActions(false);
   }
 
-  // [+] 메뉴 펼침과 사진 선택은 뒤로가기로 닫는다. 사진 선택이 위에 뜨므로 먼저 닫힌다
-  useStackflowOverlayBackHandler(isShowChatActions, () => setIsShowChatActions(false));
+  // [+]로 연 메뉴와 사진 선택은 뒤로가기로 닫는다. 사진 선택이 위에 뜨므로 먼저 닫힌다
+  useStackflowOverlayBackHandler(isShowChatActions && isChatActionsOpenedByUser, () =>
+    setIsShowChatActions(false),
+  );
   useStackflowOverlayBackHandler(isPhotoMenuOpen, () => setIsPhotoMenuOpen(false));
 
   return (
@@ -556,6 +560,7 @@ export default function AIChatPage() {
             }}
             onClick={() => {
               if (!isShowChatActions) textareaRef.current?.blur();
+              setIsChatActionsOpenedByUser(!isShowChatActions);
               setIsShowChatActions((prev) => !prev);
             }}
             className={styles.chatActionExpendButton}
