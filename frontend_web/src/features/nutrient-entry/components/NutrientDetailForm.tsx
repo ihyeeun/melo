@@ -143,12 +143,12 @@ export function NutrientDetailForm({
 }: Props) {
   return (
     <>
-      <FieldSection label="총 용량">
+      <FieldSection label="총 내용량">
         <div className={styles.weightRow}>
           <SingleDecimalInput
             className={`body-l-regular ${styles.input} amp-unmask`}
             placeholder="0"
-            aria-label="총 용량 입력"
+            aria-label="총 내용량 입력"
             value={totalWeight}
             onValueChange={onTotalWeightChange}
             max={MAX_INPUT_VALUE}
