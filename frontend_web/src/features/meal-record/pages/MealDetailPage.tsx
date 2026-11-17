@@ -362,6 +362,7 @@ export default function MealDetailPage() {
         title="영양성분 상세"
         onBack={handleGoBack}
         rightSlot={
+          !isFromChat &&
           isPersonalMenuData &&
           mealIsDeleted === 0 && (
             <Button variant="text" size="xs" onClick={handleDelete}>
@@ -384,17 +385,20 @@ export default function MealDetailPage() {
         />
       </main>
 
-      <footer className={`footer`}>
-        <Button
-          variant="default"
-          size="m"
-          fullWidth
-          onClick={handleAddMenu}
-          disabled={!selection || mealIsDeleted !== 0}
-        >
-          {footerButtonLabel}
-        </Button>
-      </footer>
+      {/* AI 채팅 [등록한 메뉴 보기]로 연 상세는 확인 · 수정만 한다([담기] · [삭제] 숨김) */}
+      {!isFromChat && (
+        <footer className={`footer`}>
+          <Button
+            variant="default"
+            size="m"
+            fullWidth
+            onClick={handleAddMenu}
+            disabled={!selection || mealIsDeleted !== 0}
+          >
+            {footerButtonLabel}
+          </Button>
+        </footer>
+      )}
 
       {/* screen: DIET-02-001_modal-delete */}
       <ConfirmModal
