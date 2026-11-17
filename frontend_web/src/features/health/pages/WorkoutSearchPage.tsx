@@ -48,8 +48,8 @@ const EQUIPMENT_OPTIONS = [
   "폼롤러",
   "머신",
   "스미스 머신",
-  "맨몸",
   "케이블 머신",
+  "맨몸",
   "기타",
 ] as const;
 
