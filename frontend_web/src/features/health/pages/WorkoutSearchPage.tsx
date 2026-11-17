@@ -190,7 +190,7 @@ export default function WorkoutSearchPage() {
 
   const handleComplete = () => {
     if (hasAddedWorkoutRecord()) {
-      toast.success("운동 기록을 완료했어요");
+      toast.success("운동을 기록했어요");
       trackWorkoutRecordCompleted();
     }
 
