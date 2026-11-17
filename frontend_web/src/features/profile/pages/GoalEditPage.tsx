@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
+import { BirthYearSheet } from "@/features/profile/components/BirthYearSheet";
 import {
   ACTIVITY_OPTIONS,
   BODY_RANGE_MESSAGES,
@@ -30,11 +31,7 @@ import { PageHeader } from "@/shared/commons/header/PageHeader";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import { EditorInput } from "@/shared/commons/input/EditorInput";
 import NumberField from "@/shared/commons/input/NumberField";
-import {
-  getBirthYearRange,
-  isValidBirthYear,
-  makeYearOptions,
-} from "@/shared/commons/picker/yearOptions";
+import { getBirthYearPickerStart } from "@/shared/commons/picker/yearOptions";
 import { InfoPopover } from "@/shared/commons/popover/InfoPopover";
 import { Skeleton, SkeletonStatus } from "@/shared/commons/skeleton/Skeleton";
 import { toast } from "@/shared/commons/toast/toast";
@@ -139,22 +136,17 @@ export default function GoalEditPage() {
     setSheetData((previous) => ({ ...previous, ...patch }));
   }, []);
 
-  const birthYearRange = useMemo(() => getBirthYearRange(), []);
-  const birthYearDefault = useMemo(
-    () => Math.min(Math.max(2000, birthYearRange.min), birthYearRange.max),
-    [birthYearRange.max, birthYearRange.min],
-  );
-  const birthYearOptions = useMemo(
-    () =>
-      makeYearOptions({
-        from: birthYearRange.max,
-        count: birthYearRange.max - birthYearRange.min + 1,
-      }).map(String),
-    [birthYearRange.max, birthYearRange.min],
-  );
+  const [isBirthYearSheetOpen, setIsBirthYearSheetOpen] = useState(false);
+  const [pickerBirthYear, setPickerBirthYear] = useState(getBirthYearPickerStart);
 
   const openEditor = (field: EditableField) => {
-    if (!visibleDraft || field === "birthYear") return;
+    if (!visibleDraft) return;
+
+    if (field === "birthYear") {
+      setPickerBirthYear(getBirthYearPickerStart(visibleDraft.birthYear));
+      setIsBirthYearSheetOpen(true);
+      return;
+    }
 
     // 체중 유지면 목표 몸무게는 현재 몸무게로 정해져 있어 따로 바꿀 수 없다
     if (field === "goalWeight" && visibleDraft.goal === GOAL.MAINTAIN_WEIGHT) {
@@ -289,14 +281,9 @@ export default function GoalEditPage() {
     navigateBack();
   };
 
-  const currentBirthYear = visibleDraft?.birthYear;
-  const selectedBirthYear = isValidBirthYear(currentBirthYear)
-    ? currentBirthYear
-    : birthYearDefault;
-  const selectDefaultBirthYear = () => {
-    if (!isValidBirthYear(currentBirthYear)) {
-      updateDraft({ birthYear: birthYearDefault });
-    }
+  const confirmBirthYear = () => {
+    updateDraft({ birthYear: pickerBirthYear });
+    setIsBirthYearSheetOpen(false);
   };
   const editorTitle = SUMMARY_FIELDS.find((field) => field.id === editingField)?.label;
   const isInstantSelectEditor =
@@ -469,44 +456,22 @@ export default function GoalEditPage() {
       <PageHeader title="목표 재설정" onBack={handleBack} />
 
       <main className={`main ${styles.content}`}>
-        {SUMMARY_FIELDS.map((field) => {
-          const isBirthItem = field.id === "birthYear";
-
-          return (
-            <button
-              key={field.id}
-              type="button"
-              className={`${styles.editItem} ${isBirthItem ? styles.birthYearItem : ""}`}
-              onClick={() => openEditor(field.id)}
-            >
-              <span className={`body-l-medium text-primary`}>{field.label}</span>
-              <div className={styles.profileMeta}>
-                <span className={`body-l-regular text-tertiary`}>
-                  {getSummaryValue(field.id, visibleDraft)}
-                </span>
-                <SystemIcon name="chevron-right" className="text-secondary" size={16} />
-              </div>
-
-              {/* screen: PRF-01-003_modal-birth */}
-              {isBirthItem && (
-                <select
-                  className={styles.birthYearSelect}
-                  value={String(selectedBirthYear)}
-                  aria-label="출생 연도 선택"
-                  onFocus={selectDefaultBirthYear}
-                  onPointerDown={selectDefaultBirthYear}
-                  onChange={(event) => updateDraft({ birthYear: Number(event.target.value) })}
-                >
-                  {birthYearOptions.map((year) => (
-                    <option key={year} value={year}>
-                      {year}년
-                    </option>
-                  ))}
-                </select>
-              )}
-            </button>
-          );
-        })}
+        {SUMMARY_FIELDS.map((field) => (
+          <button
+            key={field.id}
+            type="button"
+            className={styles.editItem}
+            onClick={() => openEditor(field.id)}
+          >
+            <span className={`body-l-medium text-primary`}>{field.label}</span>
+            <div className={styles.profileMeta}>
+              <span className={`body-l-regular text-tertiary`}>
+                {getSummaryValue(field.id, visibleDraft)}
+              </span>
+              <SystemIcon name="chevron-right" className="text-secondary" size={16} />
+            </div>
+          </button>
+        ))}
       </main>
 
       <footer className={`footer`}>
@@ -555,6 +520,15 @@ export default function GoalEditPage() {
           )}
         </div>
       </BottomSheet>
+
+      {/* screen: PRF-01-003_modal-birth */}
+      <BirthYearSheet
+        isOpen={isBirthYearSheetOpen}
+        value={pickerBirthYear}
+        onChange={setPickerBirthYear}
+        onConfirm={confirmBirthYear}
+        onClose={() => setIsBirthYearSheetOpen(false)}
+      />
     </div>
   );
 }

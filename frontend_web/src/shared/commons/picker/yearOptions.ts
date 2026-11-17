@@ -13,11 +13,20 @@ type BirthYearRange = {
   max: number;
 };
 
+// 출생 연도는 현재년도-100부터 만 14세가 되는 해(현재년도-14)까지 고를 수 있다
 export function getBirthYearRange(currentYear = new Date().getFullYear()): BirthYearRange {
   return {
     min: currentYear - 100,
-    max: currentYear - 10,
+    max: currentYear - 14,
   };
+}
+
+const DEFAULT_BIRTH_YEAR = 2000;
+
+// 출생 연도 선택 시트를 열 때 처음 보일 연도. 범위 밖이면 가장 가까운 연도로 맞춘다
+export function getBirthYearPickerStart(birthYear?: number) {
+  const { min, max } = getBirthYearRange();
+  return Math.min(Math.max(birthYear ?? DEFAULT_BIRTH_YEAR, min), max);
 }
 
 export function isValidBirthYear(year: number | undefined): year is number {

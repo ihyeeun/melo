@@ -1,0 +1,20 @@
+.sheetBody:global(.seed-bottom-sheet__body) {
+  overflow: hidden;
+}
+
+.sheetContent {
+  padding: 0 16px;
+}
+
+.pickerItem {
+  color: var(--text-tertiary);
+}
+
+.pickerItemSelected {
+  color: var(--text-primary);
+}
+
+.pickerHighlight {
+  background-color: var(--background-gray-1);
+  border-radius: 16px;
+}

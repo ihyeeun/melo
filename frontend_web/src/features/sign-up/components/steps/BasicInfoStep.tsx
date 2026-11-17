@@ -1,31 +1,22 @@
 import { useState } from "react";
 
+import { BirthYearSheet } from "@/features/profile/components/BirthYearSheet";
 import { GENDER_OPTIONS } from "@/features/profile/goalEdit.model";
 import { StepLayout } from "@/features/sign-up/components/StepLayout";
 import styles from "@/features/sign-up/styles/SignUpSteps.module.css";
 import type { SignUpStepProps } from "@/features/sign-up/types/signUp.type";
-import BottomSheet from "@/shared/commons/bottomSheet/BottomSheet";
-import { Button } from "@/shared/commons/button/Button";
 import { SelectedCard } from "@/shared/commons/card/SelectedCard";
-import { ScrollWheelPicker } from "@/shared/commons/picker/ScrollWheelPicker";
-import { getBirthYearRange, isValidBirthYear } from "@/shared/commons/picker/yearOptions";
-
-const BIRTH_YEAR_RANGE = getBirthYearRange();
-const DEFAULT_BIRTH_YEAR = Math.min(Math.max(2000, BIRTH_YEAR_RANGE.min), BIRTH_YEAR_RANGE.max);
-const BIRTH_YEAR_OPTIONS = Array.from(
-  { length: BIRTH_YEAR_RANGE.max - BIRTH_YEAR_RANGE.min + 1 },
-  (_, index) => String(BIRTH_YEAR_RANGE.min + index),
-);
+import { getBirthYearPickerStart, isValidBirthYear } from "@/shared/commons/picker/yearOptions";
 
 // screen: ONB-01-003
 export function BasicInfoStep({ form, onNext, nextLabel }: SignUpStepProps<"basicInfo">) {
   const [gender, setGender] = useState(form.gender);
   const [birthYear, setBirthYear] = useState(form.birthYear);
   const [isBirthYearSheetOpen, setIsBirthYearSheetOpen] = useState(false);
-  const [pickerYear, setPickerYear] = useState(DEFAULT_BIRTH_YEAR);
+  const [pickerYear, setPickerYear] = useState(getBirthYearPickerStart);
 
   const openBirthYearSheet = () => {
-    setPickerYear(birthYear ?? DEFAULT_BIRTH_YEAR);
+    setPickerYear(getBirthYearPickerStart(birthYear));
     setIsBirthYearSheetOpen(true);
   };
 
@@ -66,45 +57,19 @@ export function BasicInfoStep({ form, onNext, nextLabel }: SignUpStepProps<"basi
           aria-label="출생 연도 선택"
         >
           <span className={birthYear === undefined ? "text-disabled" : "text-primary"}>
-            {birthYear ?? DEFAULT_BIRTH_YEAR} 년
+            {birthYear ?? getBirthYearPickerStart()} 년
           </span>
         </button>
       </div>
 
       {/* screen: ONB-01-003_modal-birth */}
-      <BottomSheet
+      <BirthYearSheet
         isOpen={isBirthYearSheetOpen}
+        value={pickerYear}
+        onChange={setPickerYear}
+        onConfirm={confirmBirthYear}
         onClose={() => setIsBirthYearSheetOpen(false)}
-        title="출생 연도"
-        bodyClassName={styles.sheetBody}
-        disableContentDrag
-      >
-        <div className={styles.sheetContent}>
-          <ScrollWheelPicker
-            height={260}
-            itemHeight={52}
-            classNames={{
-              item: `title-l-semi ${styles.pickerItem}`,
-              itemSelected: styles.pickerItemSelected,
-              highlight: styles.pickerHighlight,
-            }}
-            columns={[
-              {
-                key: "birthYear",
-                value: String(pickerYear),
-                options: BIRTH_YEAR_OPTIONS,
-                renderOption: (year) => `${year} 년`,
-                ariaLabel: "출생 연도 선택",
-              },
-            ]}
-            onChange={(_key, year) => setPickerYear(Number(year))}
-          />
-
-          <Button size="m" fullWidth onClick={confirmBirthYear}>
-            확인
-          </Button>
-        </div>
-      </BottomSheet>
+      />
     </StepLayout>
   );
 }
