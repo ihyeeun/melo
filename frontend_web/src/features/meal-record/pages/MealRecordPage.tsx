@@ -187,7 +187,6 @@ export default function MealRecordPage() {
     currentDraft?.image === null
       ? null
       : (normalizeMealImage(currentDraft?.image ?? currentMenus?.imagesByTime[mealType]) ?? null);
-  const didNotEat = Boolean(currentMenus?.didNotEatByTime[mealType]);
   const currentMenuItems = useMemo(
     () => currentMenus?.menusByTime[mealType] ?? [],
     [currentMenus, mealType],
@@ -401,7 +400,6 @@ export default function MealRecordPage() {
       return sum + menu.calories;
     }, 0);
   }, [displayMenuItems]);
-  const showDidNotEatState = didNotEat && displayMenuItems.length === 0;
   const selectedMealRecordTime =
     normalizeMealRecordTime(currentDraft?.mealTime) ??
     getBaselineMealRecordTime(mealType) ??
@@ -652,10 +650,6 @@ export default function MealRecordPage() {
                 />
               ))}
             </div>
-          ) : showDidNotEatState ? (
-            <article className={styles.didNotEatState}>
-              <p className="title-m-semi">안 먹었어요</p>
-            </article>
           ) : (
             <button type="button" className={styles.emptyState} onClick={handleMealSearchNavigate}>
               <img src="/icons/characters/question.png" alt="" aria-hidden="true" width={200} />
