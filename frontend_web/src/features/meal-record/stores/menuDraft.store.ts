@@ -109,6 +109,13 @@ type UpsertPreviewsParams = {
   previews: MealRecordTransferPreview[];
 };
 
+type ApplyRecognizedMenusParams = {
+  key: MenuDraftKey;
+  menus: MenuDraftType[];
+  previews: MealRecordTransferPreview[];
+  image?: string | null;
+};
+
 type MenuDraftStoreState = {
   drafts: Record<MenuDraftKey, MenusDraft>;
   syncDraftFromServer: (params: SyncDraftFromServerParams) => void;
@@ -120,6 +127,7 @@ type MenuDraftStoreState = {
   prepareRegisterRequest: (params: PrepareRegisterRequestParams) => RegisterMealRequestDto;
   buildRegisterRequest: (params: BuildRegisterRequestParams) => RegisterMealRequestDto;
   upsertPreviews: (params: UpsertPreviewsParams) => void;
+  applyRecognizedMenus: (params: ApplyRecognizedMenusParams) => void;
   clearDraft: (key: MenuDraftKey) => void;
 };
 
@@ -495,6 +503,30 @@ export const useMenuDraftStore = create<MenuDraftStoreState>()(
         });
       },
 
+      // 사진으로 찾은 음식을 담는다. 저장은 식사 기록 상세의 [완료하기] 때 하고, 식사 시간은 그대로 둔다
+      applyRecognizedMenus: ({ key, menus, previews, image }) => {
+        set((state) => {
+          const draft = state.drafts[key] ?? INIT_DRAFT;
+          const nextPreviews = { ...draft.previewsById };
+
+          previews.forEach((preview) => {
+            nextPreviews[preview.id] = preview;
+          });
+
+          return {
+            drafts: {
+              ...state.drafts,
+              [key]: {
+                ...draft,
+                existingMenus: [...menus],
+                previewsById: nextPreviews,
+                image: normalizeDraftImage(image) ?? draft.image,
+              },
+            },
+          };
+        });
+      },
+
       clearDraft: (key) => {
         set((state) => {
           const nextDrafts = { ...state.drafts };
@@ -520,6 +552,8 @@ export const useMenuDraftPrepareRegisterRequest = () =>
 export const useMenuDraftBuildRegisterRequest = () =>
   useMenuDraftStore((store) => store.buildRegisterRequest);
 export const useMenuDraftUpsertPreviews = () => useMenuDraftStore((store) => store.upsertPreviews);
+export const useMenuDraftApplyRecognizedMenus = () =>
+  useMenuDraftStore((store) => store.applyRecognizedMenus);
 export const useMenuDraftClear = () => useMenuDraftStore((store) => store.clearDraft);
 
 export function useSyncMenuDraftWithDayMeals({

@@ -1,4 +1,5 @@
 import { useActivity } from "@stackflow/react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { CameraLoading } from "@/features/camera/components/CameraLoading";
@@ -16,15 +17,19 @@ import {
   getRecognitionErrorFeedback,
   isCameraCaptureCancelled,
 } from "@/features/camera/utils/cameraCapture";
+import { getMealDetail } from "@/features/meal-record/api/mealDetail";
 import {
   MAX_MEAL_RECORD_MENUS,
   MEAL_RECORD_MENU_LIMIT_FILLED_MESSAGE,
 } from "@/features/meal-record/constants/menu.constants";
-import { useTodayMealRecordRegisterMutation } from "@/features/meal-record/hooks/mutations/useTodayMealRecordMutation";
+import {
+  menuQueryKeys,
+  writeMenuDetailCache,
+} from "@/features/meal-record/hooks/queries/menuCache";
 import {
   formatMenuDraftKey,
   type MenuDraftType,
-  useMenuDraftPrepareRegisterRequest,
+  useMenuDraftApplyRecognizedMenus,
   useMenuDraftStore,
 } from "@/features/meal-record/stores/menuDraft.store";
 import { getMealType, getSafeDateKey } from "@/features/meal-record/utils/mealRecord.queryParams";
@@ -40,6 +45,7 @@ import {
 } from "@/shared/analytics/nutritionLabelEvents";
 import { requestNativeCameraCapture } from "@/shared/api/bridge/nativeBridge";
 import { captureScreenRequestScope, type ScreenRequestScope } from "@/shared/api/screenRequests";
+import type { MenuSimpleResponseDto } from "@/shared/api/types/api.response.dto";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
 import { CheckButtonModal } from "@/shared/commons/modals/CheckButtonModal";
 import { toast } from "@/shared/commons/toast/toast";
@@ -49,6 +55,7 @@ import {
   useNavigate,
   useSearchParams,
 } from "@/shared/navigation/stackflowNavigation";
+import type { MealRecordTransferPreview } from "@/shared/types/mealRecordTransfer";
 
 const MEAL_RECORD_CAMERA_LOADING_DESCRIPTION = {
   FOOD: "음식을 분석하고 있어요",
@@ -58,6 +65,19 @@ const MEAL_RECORD_CAMERA_LOADING_DESCRIPTION = {
 const MEAL_RECORD_NUTRITION_LABEL_SCAN_SOURCE = "diary_nutrition_camera";
 
 type CapturedImage = Awaited<ReturnType<typeof requestNativeCameraCapture>>;
+
+function toMenuPreview(menu: MenuSimpleResponseDto): MealRecordTransferPreview {
+  return {
+    id: menu.id,
+    name: menu.name,
+    brand: menu.brand,
+    unit_quantity: menu.unit_quantity,
+    calories: menu.calories,
+    weight: menu.weight ?? undefined,
+    unit: menu.unit,
+    data_source: menu.data_source,
+  };
+}
 
 // screen: DIET-02-006
 export default function MealRecordCreatePage() {
@@ -78,12 +98,12 @@ export default function MealRecordCreatePage() {
 
   const { mutateAsync: uploadFoodImage } = useCreateMealRecordByFoodImageMutation();
   const { mutateAsync: uploadNutritionLabelImage } = useCreateMenuByNutritionLabelImageMutation();
-  const { mutateAsync: mealRegisterAsync } = useTodayMealRecordRegisterMutation();
 
   const dateKey = getSafeDateKey(searchParams.get("date"));
   const mealType = getMealType(searchParams.get("mealType"));
   const draftKey = formatMenuDraftKey(dateKey, mealType);
-  const prepareRegisterRequest = useMenuDraftPrepareRegisterRequest();
+  const applyRecognizedMenus = useMenuDraftApplyRecognizedMenus();
+  const queryClient = useQueryClient();
 
   const returnFromCameraPage = useCallback(() => {
     navigateBack({ fallbackTo: getMealRecordPath(dateKey, mealType) });
@@ -153,32 +173,41 @@ export default function MealRecordCreatePage() {
         // 100개를 넘으면 이미 담긴 음식부터, 인식된 순서대로 100개까지만 담는다
         const recognizedMenus = Array.from(menusById.values());
         const isOverMenuLimit = recognizedMenus.length > MAX_MEAL_RECORD_MENUS;
+        const nextMenus = recognizedMenus.slice(0, MAX_MEAL_RECORD_MENUS);
 
-        const registerRequest = prepareRegisterRequest({
-          dateKey,
-          mealType,
-          menus: recognizedMenus.slice(0, MAX_MEAL_RECORD_MENUS),
+        // 식사 기록 상세에 보여 줄 음식 정보(칼로리 등)를 받아 둔다. 이미 담겨 있던 음식은 정보가 있다
+        const shownMenuIds = new Set([
+          ...(currentDraft?.existingMenus ?? []).map((menu) => menu.id),
+          ...Object.keys(currentDraft?.previewsById ?? {}).map(Number),
+        ]);
+        const newMenuDetails = await Promise.all(
+          nextMenus
+            .filter((menu) => !shownMenuIds.has(menu.id))
+            .map((menu) =>
+              queryClient.fetchQuery({
+                queryKey: menuQueryKeys.detail(menu.id),
+                queryFn: async () =>
+                  writeMenuDetailCache(queryClient, await getMealDetail(menu.id)),
+              }),
+            ),
+        );
+        screen.assertActive();
+
+        // 바로 저장하지 않고 담아 두기만 한다. 저장은 식사 기록 상세의 [완료하기] 때 한다
+        applyRecognizedMenus({
+          key: draftKey,
+          menus: nextMenus,
+          previews: newMenuDetails.map(toMenuPreview),
           image: imageData.image_url,
         });
-
-        await mealRegisterAsync(registerRequest, {
-          onSuccess: () => {
-            trackScanMenuSave({
-              menus: registerRequest.menu_ids?.map((id) => ({
-                menu_id: id,
-                menu_name: menusById.get(id)?.name,
-              })),
-              source: "home_tab",
-              scanType: "photo",
-            });
-          },
+        trackScanMenuSave({
+          menus: nextMenus.map((menu) => ({ menu_id: menu.id, menu_name: menu.name })),
+          source: "home_tab",
+          scanType: "photo",
         });
 
-        screen.assertActive();
         if (isOverMenuLimit) {
           toast.warning(MEAL_RECORD_MENU_LIMIT_FILLED_MESSAGE);
-        } else {
-          toast.success("촬영한 사진의 메뉴가 기록되었어요.");
         }
         navigateBackToPathOrPushFromRoot({
           animate: false,
@@ -196,7 +225,7 @@ export default function MealRecordCreatePage() {
         setCaptureErrorFeedback(getRecognitionErrorFeedback("FOOD", error));
       }
     },
-    [dateKey, draftKey, mealRegisterAsync, mealType, prepareRegisterRequest, uploadFoodImage],
+    [applyRecognizedMenus, dateKey, draftKey, mealType, queryClient, uploadFoodImage],
   );
 
   const handleNutritionLabelImage = useCallback(
@@ -233,8 +262,6 @@ export default function MealRecordCreatePage() {
           mealType: rawMealType ?? undefined,
         },
       });
-
-      toast.success("영양성분표 분석이 완료되었어요.");
     },
     [createNutritionLabelRegisterPath, navigate, searchParams, uploadNutritionLabelImage],
   );
