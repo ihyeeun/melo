@@ -5,6 +5,7 @@ import { useRegisterWeightMutation } from "@/features/home/hooks/mutations/useBo
 import { useGetBodyLog } from "@/features/home/hooks/queries/useTodayRecordQuery";
 import styles from "@/features/home/styles/TodayBodyLogSection.module.css";
 import { useMenstrualPhase } from "@/features/menstruation/hooks/useMenstrualPhase";
+import { BODY_RANGE_MESSAGES, ONBOARDING_WEIGHT_RANGE } from "@/features/profile/goalEdit.model";
 import { useGetProfileQuery } from "@/features/profile/hooks/queries/useProfileQuery";
 import { PATH } from "@/router/path";
 import { track } from "@/shared/analytics/analytics";
@@ -20,7 +21,7 @@ import { navigateBack } from "@/shared/navigation/stackflowNavigationController"
 import { getTodayFormatDateKey, isFutureDateKey } from "@/shared/utils/dateFormat";
 import { toOneDecimalPlace } from "@/shared/utils/numberFormat";
 
-const MAX_WEIGHT = 200;
+const MAX_WEIGHT = ONBOARDING_WEIGHT_RANGE.max;
 
 type WeightDraft = {
   value: number | undefined;
@@ -76,8 +77,8 @@ export default function WeightLogBottomSheetActivity() {
     }
 
     const nextWeight = toOneDecimalPlace(draftWeight);
-    if (nextWeight < 1 || nextWeight > MAX_WEIGHT) {
-      toast.warning("정확한 값인지 다시 확인해주세요");
+    if (nextWeight < ONBOARDING_WEIGHT_RANGE.min || nextWeight > MAX_WEIGHT) {
+      toast.warning(BODY_RANGE_MESSAGES.weight);
       return;
     }
 
