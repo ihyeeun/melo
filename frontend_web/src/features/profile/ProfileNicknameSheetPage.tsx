@@ -15,6 +15,9 @@ import { navigateBack } from "@/shared/navigation/stackflowNavigationController"
 const NICKNAME_MAX_LENGTH = 15;
 const NICKNAME_ALLOWED_PATTERN = /[^0-9A-Za-zㄱ-ㅎㅏ-ㅣ가-힣]/g;
 
+// 자음·모음만으로 된 닉네임(예: ㅋㅋㅋ)은 저장하지 않는다. 입력 중에는 한글 조합 때문에 막지 않는다
+const JAMO_ONLY_PATTERN = /^[ㄱ-ㅎㅏ-ㅣ]+$/;
+
 const sanitizeNickName = (value: string) =>
   value.replace(NICKNAME_ALLOWED_PATTERN, "").slice(0, NICKNAME_MAX_LENGTH);
 
@@ -43,6 +46,11 @@ export default function ProfileNicknameSheetPage() {
     if (nickName.trim() === "") {
       setNickNameErrorMessage("");
       toast.warning("닉네임을 입력해주세요");
+      return;
+    }
+
+    if (JAMO_ONLY_PATTERN.test(nickName.trim())) {
+      setNickNameErrorMessage("자음이나 모음만으로는 닉네임을 만들 수 없어요");
       return;
     }
 
