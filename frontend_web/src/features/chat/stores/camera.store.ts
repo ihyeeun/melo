@@ -1,13 +1,14 @@
 import { create } from "zustand";
 import { combine } from "zustand/middleware";
 
-import type { ChatGalleryMode } from "@/features/chat/types/camera.type";
+import type { ChatGalleryMode, ChatImageSource } from "@/features/chat/types/camera.type";
 import type { CameraCaptureResponsePayload } from "@/shared/api/bridge/nativeBridge.types";
 
 interface ChatCameraState {
   capture: {
     id: number;
     image: CameraCaptureResponsePayload;
+    source: ChatImageSource;
   } | null;
   nextId: number;
 }
@@ -22,9 +23,11 @@ const useChatCameraStore = create(
     setCapture: ({
       image,
       mode,
+      source,
     }: {
       image: CameraCaptureResponsePayload;
       mode?: ChatGalleryMode;
+      source: ChatImageSource;
     }) => {
       set((state) => ({
         capture: {
@@ -33,6 +36,7 @@ const useChatCameraStore = create(
             ...image,
             mode: mode ?? image.mode,
           },
+          source,
         },
         nextId: state.nextId + 1,
       }));

@@ -370,7 +370,7 @@ export default function AIChatPage() {
 
       screen.assertActive();
 
-      setImage({ image, mode });
+      setImage({ image, mode, source: "gallery" });
     } catch (error) {
       if (isRequestAbortError(error) || !screen.isActive()) return;
 

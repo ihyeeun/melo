@@ -19,6 +19,7 @@ import { getCurrentDateTime } from "@/features/chat/utils/date.util";
 import { track } from "@/shared/analytics/analytics";
 import { EVENT_NAME } from "@/shared/analytics/analytics.constants";
 import { trackScanMenuSave } from "@/shared/analytics/menuSaveEvent.util";
+import { AppApiError } from "@/shared/api/apiClient";
 import { isRequestAbortError } from "@/shared/api/requestCancellation";
 import { captureScreenRequestScope, type ScreenRequestScope } from "@/shared/api/screenRequests";
 import type { MealType } from "@/shared/api/types/api.dto";
@@ -28,6 +29,20 @@ interface MealTimeDecision {
   status: "waiting" | "confirmed" | "skipped";
   mealTime?: MealType;
 }
+
+// 화질 낮음 · 흐림 · 조명은 '흐림'으로, 그 밖의 음식 사진 실패는 '음식이 잘 안 보임'으로 안내한다
+const BLURRY_IMAGE_STATUS_CODES = new Set([40052, 40054, 40055]);
+
+const RETRY_MESSAGES = {
+  blurry: {
+    camera: "더 선명하게 다시 촬영해주세요",
+    gallery: "더 선명한 사진으로 다시 골라주세요",
+  },
+  foodNotVisible: {
+    camera: "음식이 잘 보이도록 다시 촬영해주세요",
+    gallery: "음식이 잘 보이는 사진으로 다시 골라주세요",
+  },
+} as const;
 
 // screen: CHA-01-001
 export function ImageAnalysisFlow({
@@ -97,8 +112,13 @@ export function ImageAnalysisFlow({
         });
       }
 
-      const retryMessage =
-        mode === "FOOD" ? "음식이 잘 보이도록 다시 촬영해 주세요" : "선명하게 다시 촬영해 주세요";
+      // 영양성분표는 글자가 읽히도록 선명하게 다시 찍거나 고르도록 안내한다
+      const statusCode = error instanceof AppApiError ? error.statusCode : undefined;
+      const reason =
+        mode === "FOOD" && !BLURRY_IMAGE_STATUS_CODES.has(statusCode ?? 0)
+          ? "foodNotVisible"
+          : "blurry";
+      const retryMessage = RETRY_MESSAGES[reason][getImage?.source ?? "camera"];
 
       toast.show({
         type: "error",
