@@ -77,7 +77,7 @@ export default function StepsLogBottomSheetActivity() {
   const { mutate: registerManualSteps, isPending: isManualStepsPending } = useRegisterStepsMutation(
     {
       onSuccess: () => {
-        toast.success("걸음 수가 기록되었어요");
+        toast.success("걸음 수를 기록했어요");
         closeSheet();
       },
       onError: (error) => {
