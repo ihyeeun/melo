@@ -126,7 +126,8 @@ export default function AIChatPage() {
   const { mutate: requestPatternAnalysis } = useManagementPatternAnalysisMutation();
 
   const isTimelinePending = historyQuery.isPending || mealsQuery.isPending;
-  const isChatBusy = isChatRequestPending || cameraImage !== null;
+  // 사진 기록과 글 기록(식사 기록 모드)의 시간대 카드가 떠 있는 동안은 입력을 막는다
+  const isChatBusy = isChatRequestPending || cameraImage !== null || textMealData !== undefined;
   const debouncedKeyword = useDebounceValue(typingKeyword, 300);
   const canAutoCompleteKeyword =
     isTextMealRecordMode &&
