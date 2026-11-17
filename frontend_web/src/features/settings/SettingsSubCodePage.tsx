@@ -4,6 +4,7 @@ import { useState } from "react";
 import { queryKeys } from "@/features/profile/hooks/queries/queryKey";
 import { registerSubCode } from "@/features/settings/api/subCode";
 import { SubCodeInputSection } from "@/features/sub-code/components/SubCodeInputSection";
+import { MAX_SUB_CODE_LENGTH } from "@/features/sub-code/constants/subCode.constant";
 import { PATH } from "@/router/path";
 import { AppApiError } from "@/shared/api/apiClient";
 import { API_ERROR_MESSAGE } from "@/shared/api/apiErrorMessage";
@@ -15,7 +16,6 @@ import { useNavigate } from "@/shared/navigation/stackflowNavigation";
 
 import styles from "./styles/SettingsSubCodePage.module.css";
 
-const MAX_SUB_CODE_LENGTH = 40;
 const REGISTER_SUB_CODE_ERROR_MESSAGE = "구독 코드 등록에 실패했어요";
 
 function resolveRegisterSubCodeErrorMessage(error: unknown) {
