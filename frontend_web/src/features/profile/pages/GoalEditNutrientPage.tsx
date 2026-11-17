@@ -273,8 +273,12 @@ export default function GoalEditNutrientPage() {
       });
     }
 
+    // 바뀐 게 없으면 저장할 것 없이 끝내고 프로필로 돌아간다
     if (updateTasks.length === 0) {
-      toast.warning("변경된 내용이 없어요");
+      finishGoalEditFlow();
+      resetStackflow(PATH.PROFILE, {
+        animate: false,
+      });
       return;
     }
 
