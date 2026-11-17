@@ -613,22 +613,23 @@ export default function AIChatPage() {
             </div>
           </button>
 
-          <div className={styles.mealRecordModeChip} data-isView={isTextMealRecordMode}>
+          <button
+            type="button"
+            className={styles.mealRecordModeChip}
+            data-isView={isTextMealRecordMode}
+            aria-label="식사 기록 모드 끄기"
+            onPointerDown={(event) => {
+              if (!event.isPrimary) return;
+              event.preventDefault();
+              setIsTextMealRecordMode(false);
+            }}
+            onClick={(event) => {
+              if (event.detail === 0) setIsTextMealRecordMode(false);
+            }}
+          >
             <span className="body-s-medium text-primary">식사 기록 모드</span>
-            <button
-              type="button"
-              onPointerDown={(event) => {
-                if (!event.isPrimary) return;
-                event.preventDefault();
-                setIsTextMealRecordMode(false);
-              }}
-              onClick={(event) => {
-                if (event.detail === 0) setIsTextMealRecordMode(false);
-              }}
-            >
-              <SystemIcon name="exit" size={16} className="text-primary" />
-            </button>
-          </div>
+            <SystemIcon name="exit" size={16} className="text-primary" />
+          </button>
         </section>
 
         {/* screen: CHA-01-001_modal-menu */}
