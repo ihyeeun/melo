@@ -12,6 +12,8 @@ export type DayCellRenderProps = {
   weekdayLabel?: string;
   onSelect: (date: Date) => void;
   variant?: ViewMode;
+  // 고를 수 있는 범위(오늘 포함 7일) 밖의 날짜
+  isDisabled?: boolean;
 };
 
 export const CALENDAR_VIEW_MODE = {

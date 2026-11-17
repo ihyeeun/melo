@@ -17,6 +17,7 @@ export default function MenstruationDayCell({
   weekdayLabel,
   onSelect,
   variant = "week",
+  isDisabled = false,
   selectionMode = "single",
   showMonthBackground = false,
 }: Props) {
@@ -38,6 +39,8 @@ export default function MenstruationDayCell({
       data-menstruation={menstruationType}
       data-selection-mode={selectionMode}
       data-future={isFutureDateKey(formatDateKey(day.date))}
+      data-disabled={isDisabled}
+      disabled={isDisabled}
       onClick={() => onSelect(day.date)}
       aria-pressed={day.isSelected}
       aria-current={day.isToday ? "date" : undefined}

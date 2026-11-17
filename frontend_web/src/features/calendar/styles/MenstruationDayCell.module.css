@@ -16,6 +16,12 @@
   &[data-outside="true"] {
     color: var(--day-muted-color);
   }
+
+  /* 고를 수 있는 범위(오늘 포함 7일) 밖의 날짜 */
+  &[data-disabled="true"] {
+    color: var(--text-disabled);
+    cursor: default;
+  }
 }
 
 /* 생리 기록 화면의 그리드가 셀 크기를 조정할 수 있도록 우선순위를 낮춘다. */

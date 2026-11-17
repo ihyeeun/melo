@@ -17,7 +17,7 @@ import NumberField from "@/shared/commons/input/NumberField";
 import { LoadingOverlay } from "@/shared/commons/loading/Loading";
 import { toast } from "@/shared/commons/toast/toast";
 import { navigateBack } from "@/shared/navigation/stackflowNavigationController";
-import { getTodayFormatDateKey } from "@/shared/utils/dateFormat";
+import { getTodayFormatDateKey, isFutureDateKey } from "@/shared/utils/dateFormat";
 import { toOneDecimalPlace } from "@/shared/utils/numberFormat";
 
 const MAX_WEIGHT = 200;
@@ -62,10 +62,14 @@ export default function WeightLogBottomSheetActivity() {
     },
   });
 
+  // 체중은 미래 날짜에 기록할 수 없다(걸음 수와 같음)
+  const isFutureDate = isFutureDateKey(date);
   const canDecrease = draftWeight !== undefined && draftWeight > 1;
   const canIncrease = draftWeight === undefined || draftWeight < MAX_WEIGHT;
 
   const handleSubmit = () => {
+    if (isFutureDate) return;
+
     if (draftWeight === undefined) {
       toast.warning("체중을 입력해주세요");
       return;
@@ -120,52 +124,60 @@ export default function WeightLogBottomSheetActivity() {
     <>
       <BottomSheet isOpen={isOpen} onClose={closeSheet} title="오늘의 체중">
         <div className={styles.sheetContainer}>
-          <NumberField
-            value={draftWeight}
-            onChange={(value) => setWeightDraft({ value })}
-            min={1}
-            max={MAX_WEIGHT}
-            step={0.1}
-            allowOutOfRange
-            normalizeValue={toOneDecimalPlace}
-            isInputTextAllowed={isWeightInputAllowed}
-            classNames={{
-              group: styles.weightNumberFieldGroup,
-              decrement: styles.weightAdjustButton,
-              increment: styles.weightAdjustButton,
-              inputWrapper: styles.weightValueDisplay,
-              input: `title-xl-medium text-primary ${styles.weightNumberInput}`,
-              unit: `title-s-regular text-tertiary`,
-            }}
-            decrementAriaLabel="체중 0.1kg 감소"
-            incrementAriaLabel="체중 0.1kg 증가"
-            decrementDisabled={!canDecrease}
-            incrementDisabled={!canIncrease}
-            decrementIcon={<SystemIcon name="minus-circle" mode="image" size={28} />}
-            incrementIcon={<SystemIcon name="plus-circle" mode="image" size={28} />}
-            unit="kg"
-            unstyled
-            format={{
-              maximumFractionDigits: 1,
-              minimumFractionDigits: 0,
-              useGrouping: false,
-            }}
-            inputProps={{
-              inputMode: "decimal",
-              placeholder: "0",
-              "aria-label": "오늘의 체중 입력",
-            }}
-          />
-          <div className={styles.sheetActions}>
-            <Button
-              onClick={handleSubmit}
-              fullWidth
-              size="m"
-              disabled={draftWeight === undefined || draftWeight === 0 || isWeightPending}
-            >
-              기록하기
-            </Button>
-          </div>
+          {isFutureDate ? (
+            <p className={`${styles.syncedStepsValue} title-m-semi`}>
+              이 날은 아직 기록할 수 없어요
+            </p>
+          ) : (
+            <NumberField
+              value={draftWeight}
+              onChange={(value) => setWeightDraft({ value })}
+              min={1}
+              max={MAX_WEIGHT}
+              step={0.1}
+              allowOutOfRange
+              normalizeValue={toOneDecimalPlace}
+              isInputTextAllowed={isWeightInputAllowed}
+              classNames={{
+                group: styles.weightNumberFieldGroup,
+                decrement: styles.weightAdjustButton,
+                increment: styles.weightAdjustButton,
+                inputWrapper: styles.weightValueDisplay,
+                input: `title-xl-medium text-primary ${styles.weightNumberInput}`,
+                unit: `title-s-regular text-tertiary`,
+              }}
+              decrementAriaLabel="체중 0.1kg 감소"
+              incrementAriaLabel="체중 0.1kg 증가"
+              decrementDisabled={!canDecrease}
+              incrementDisabled={!canIncrease}
+              decrementIcon={<SystemIcon name="minus-circle" mode="image" size={28} />}
+              incrementIcon={<SystemIcon name="plus-circle" mode="image" size={28} />}
+              unit="kg"
+              unstyled
+              format={{
+                maximumFractionDigits: 1,
+                minimumFractionDigits: 0,
+                useGrouping: false,
+              }}
+              inputProps={{
+                inputMode: "decimal",
+                placeholder: "0",
+                "aria-label": "오늘의 체중 입력",
+              }}
+            />
+          )}
+          {!isFutureDate && (
+            <div className={styles.sheetActions}>
+              <Button
+                onClick={handleSubmit}
+                fullWidth
+                size="m"
+                disabled={draftWeight === undefined || draftWeight === 0 || isWeightPending}
+              >
+                기록하기
+              </Button>
+            </div>
+          )}
         </div>
       </BottomSheet>
 

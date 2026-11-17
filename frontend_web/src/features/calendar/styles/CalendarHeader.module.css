@@ -55,6 +55,11 @@
   width: 24px;
 }
 
+.navButton:disabled {
+  color: var(--text-disabled);
+  cursor: default;
+}
+
 .titleText,
 .monthTitleText {
   color: var(--text-primary);

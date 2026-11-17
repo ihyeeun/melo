@@ -1,7 +1,6 @@
-import { addWeeks, startOfWeek } from "date-fns";
 import { type SetStateAction, useState } from "react";
 
-import { moveNext, movePrev } from "@/features/calendar/utils/calendar";
+import { getPeriodStart, moveNext, movePrev } from "@/features/calendar/utils/calendar";
 import { formatDateKey, parseDateKey } from "@/shared/utils/dateFormat";
 
 import type { ViewMode } from "../types/calendar.types";
@@ -10,16 +9,16 @@ type UseCalendarParams = {
   initialDate?: Date;
   initialViewMode?: ViewMode;
   selectedDate?: Date;
-  allowFutureWeekNavigation?: boolean;
+  // 이 날짜가 들어 있는 주 · 달까지만 넘길 수 있다. 없으면 제한하지 않는다
+  maxDate?: Date;
 };
 
 export function useCalendar({
   initialDate = new Date(),
   initialViewMode = "week",
   selectedDate: controlledSelectedDate,
-  allowFutureWeekNavigation = true,
+  maxDate,
 }: UseCalendarParams = {}) {
-  const weekStartsOn = 1 as const;
   const initialSelectedDate = controlledSelectedDate ?? initialDate;
   const controlledSelectedDateKey = controlledSelectedDate
     ? formatDateKey(controlledSelectedDate)
@@ -53,10 +52,9 @@ export function useCalendar({
     });
   };
 
-  const viewWeekStart = startOfWeek(viewDate, { weekStartsOn });
-  const currentWeekStart = startOfWeek(new Date(), { weekStartsOn });
-  const canGoNextWeek =
-    allowFutureWeekNavigation || addWeeks(viewWeekStart, 1).getTime() <= currentWeekStart.getTime();
+  const canMoveTo = (date: Date, mode: typeof viewMode) =>
+    !maxDate || getPeriodStart(date, mode).getTime() <= maxDate.getTime();
+  const canGoNext = canMoveTo(moveNext(viewDate, viewMode), viewMode);
 
   const toggleViewMode = () => {
     setViewMode((prev) => (prev === "week" ? "month" : "week"));
@@ -71,17 +69,6 @@ export function useCalendar({
     setViewDate(date);
   };
 
-  const clampFutureWeekNavigationDate = (candidateDate: Date, currentDate: Date) => {
-    const candidateWeekStart = startOfWeek(candidateDate, { weekStartsOn });
-    const currentWeekStart = startOfWeek(new Date(), { weekStartsOn });
-
-    if (candidateWeekStart.getTime() > currentWeekStart.getTime()) {
-      return currentDate;
-    }
-
-    return candidateDate;
-  };
-
   const goPrev = () => {
     setViewDate((prev) => {
       return movePrev(prev, viewMode);
@@ -92,9 +79,7 @@ export function useCalendar({
     setViewDate((prev) => {
       const candidateDate = moveNext(prev, viewMode);
 
-      if (viewMode !== "week" || allowFutureWeekNavigation) return candidateDate;
-
-      return clampFutureWeekNavigationDate(candidateDate, prev);
+      return canMoveTo(candidateDate, viewMode) ? candidateDate : prev;
     });
   };
 
@@ -114,7 +99,7 @@ export function useCalendar({
     selectedDate,
     viewDate,
     setViewMode,
-    canGoNextWeek,
+    canGoNext,
     toggleViewMode,
     selectDate,
     goPrev,
