@@ -453,7 +453,7 @@ export default function GoalEditPage() {
 
   return (
     <div className={`${styles.page} page`}>
-      <PageHeader title="정보 및 목표 수정" onBack={handleBack} />
+      <PageHeader title="목표 재설정" onBack={handleBack} />
 
       <main className={`main ${styles.content}`}>
         {SUMMARY_FIELDS.map((field) => {
@@ -549,7 +549,7 @@ export default function GoalEditPage() {
 function GoalEditLoadFailed({ onBack, onRetry }: { onBack: () => void; onRetry: () => void }) {
   return (
     <div className={`${styles.page} page`}>
-      <PageHeader title="정보 및 목표 수정" onBack={onBack} />
+      <PageHeader title="목표 재설정" onBack={onBack} />
       <main className={`main ${styles.loadFailed}`} role="alert">
         <p className="body-l-medium text-tertiary">정보를 불러오지 못했어요</p>
         <Button variant="outlined" size="s" onClick={onRetry}>
