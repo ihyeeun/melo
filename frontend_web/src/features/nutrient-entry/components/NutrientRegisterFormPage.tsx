@@ -190,7 +190,7 @@ export function NutrientRegisterFormPage({
 
     registerManualMenu(payload, {
       onSuccess: (savedMenuId) => {
-        toast.success("메뉴가 등록되었어요");
+        toast.success("음식을 등록했어요");
         onRegisteredMenu?.(savedMenuId);
       },
       onError: (error) => {
