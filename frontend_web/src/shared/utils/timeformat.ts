@@ -1,4 +1,7 @@
+import { subDays } from "date-fns";
+
 import type { MealType } from "@/shared/api/types/api.dto";
+import { formatDateKey } from "@/shared/utils/dateFormat";
 
 export const MEAL_TYPE_OPTIONS = [
   { key: "0", label: "아침" },
@@ -33,4 +36,11 @@ export function getMealTypeFromCurrentTime(date: Date): MealType {
   }
 
   return "4";
+}
+
+// 식사 기록의 하루 경계는 05:00이다. 00:00~04:59에 기록하면 전날 야식이 된다
+const MEAL_DAY_START_HOUR = 5;
+
+export function getMealDateKeyFromCurrentTime(date: Date): string {
+  return formatDateKey(date.getHours() < MEAL_DAY_START_HOUR ? subDays(date, 1) : date);
 }
