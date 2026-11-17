@@ -16,6 +16,7 @@ import {
   updateWeight,
 } from "@/features/profile/api/profile";
 import {
+  getRatioRecommendationKey,
   hasNutrientTotal,
   isRatioChanged,
   roundRecommendedRatio,
@@ -29,8 +30,10 @@ import {
   useEnsureGoalEditFlow,
   useFinishGoalEditFlow,
   useGoalEditDraft,
+  useGoalEditFlowStore,
   useGoalEditHasActiveFlow,
   useGoalEditInitialDraft,
+  useSetGoalEditRecommendationBasis,
   useUpdateGoalEditDraft,
 } from "@/features/profile/stores/goalEditFlow.store";
 import styles from "@/features/profile/styles/GoalEditPage.module.css";
@@ -110,6 +113,7 @@ export default function GoalEditNutrientPage() {
   const ensureGoalEditFlow = useEnsureGoalEditFlow();
   const finishGoalEditFlow = useFinishGoalEditFlow();
   const updateDraft = useUpdateGoalEditDraft();
+  const setRecommendationBasis = useSetGoalEditRecommendationBasis();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isNutrientTotalModalOpen, setIsNutrientTotalModalOpen] = useState(false);
   const visibleDraft = hasActiveFlow || isSubmitting ? draft : null;
@@ -149,10 +153,13 @@ export default function GoalEditNutrientPage() {
 
     let cancelled = false;
     hasEditedNutrientsRef.current = false;
+    const basisKey = getRatioRecommendationKey(requestPayload);
 
     recommendNutrient(requestPayload, {
       onSuccess: (nutrient) => {
         if (cancelled || hasEditedNutrientsRef.current) return;
+        // 계산에 들어가는 값(목표 칼로리 등)이 그대로면 지금 비율(저장된 값 · 직접 고친 값)을 유지한다
+        if (useGoalEditFlowStore.getState().recommendationBasis.ratio === basisKey) return;
 
         const [carbs, protein, fat] = roundRecommendedRatio([
           nutrient.carbs,
@@ -160,6 +167,7 @@ export default function GoalEditNutrientPage() {
           nutrient.fat,
         ]);
         updateDraft({ carbs, protein, fat });
+        setRecommendationBasis({ ratio: basisKey });
       },
       onError: (error) => {
         if (isRequestAbortError(error)) return;
@@ -172,11 +180,14 @@ export default function GoalEditNutrientPage() {
     return () => {
       cancelled = true;
     };
-  }, [recommendNutrient, requestPayload, updateDraft]);
+  }, [recommendNutrient, requestPayload, setRecommendationBasis, updateDraft]);
 
   const handleNutrientChange = (nutrientType: NutrientType, value?: number) => {
     hasEditedNutrientsRef.current = true;
     updateDraft({ [nutrientType]: value });
+    if (visibleDraft) {
+      setRecommendationBasis({ ratio: getRatioRecommendationKey(visibleDraft) });
+    }
   };
 
   const handleBack = () => {

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef } from "react";
 
 import {
+  getCaloriesRecommendationKey,
   getTargetCaloriesFeedback,
   GOAL_CALORIES_MAX,
   GOAL_CALORIES_MIN,
@@ -10,7 +11,9 @@ import { useGetProfileQuery } from "@/features/profile/hooks/queries/useProfileQ
 import {
   useEnsureGoalEditFlow,
   useGoalEditDraft,
+  useGoalEditFlowStore,
   useGoalEditHasActiveFlow,
+  useSetGoalEditRecommendationBasis,
   useUpdateGoalEditDraft,
 } from "@/features/profile/stores/goalEditFlow.store";
 import styles from "@/features/profile/styles/GoalEditPage.module.css";
@@ -30,6 +33,7 @@ export default function GoalEditTargetCaloriesPage() {
   const hasActiveFlow = useGoalEditHasActiveFlow();
   const ensureGoalEditFlow = useEnsureGoalEditFlow();
   const updateDraft = useUpdateGoalEditDraft();
+  const setRecommendationBasis = useSetGoalEditRecommendationBasis();
   const visibleDraft = hasActiveFlow ? draft : null;
   const hasEditedCaloriesRef = useRef(false);
   const {
@@ -78,13 +82,17 @@ export default function GoalEditTargetCaloriesPage() {
 
     let cancelled = false;
     hasEditedCaloriesRef.current = false;
+    const basisKey = getCaloriesRecommendationKey(requestPayload);
 
     recommendCalories(requestPayload, {
       onSuccess: (calories) => {
         // 늦게 도착한 추천값이 사용자가 입력하거나 지운 값을 덮어쓰지 않도록 한다.
         if (cancelled || hasEditedCaloriesRef.current) return;
+        // 계산에 들어가는 값이 그대로면 지금 값(저장된 값 · 직접 고친 값)을 유지한다
+        if (useGoalEditFlowStore.getState().recommendationBasis.calories === basisKey) return;
 
         updateDraft({ target_calories: Math.round(calories) });
+        setRecommendationBasis({ calories: basisKey });
       },
       onError: (error) => {
         if (isRequestAbortError(error)) return;
@@ -97,7 +105,7 @@ export default function GoalEditTargetCaloriesPage() {
     return () => {
       cancelled = true;
     };
-  }, [recommendCalories, requestPayload, updateDraft]);
+  }, [recommendCalories, requestPayload, setRecommendationBasis, updateDraft]);
 
   const handleTargetCaloriesChange = (value?: number) => {
     // 0으로 시작하거나 최댓값을 넘는 입력은 받지 않는다
@@ -105,6 +113,10 @@ export default function GoalEditTargetCaloriesPage() {
 
     hasEditedCaloriesRef.current = true;
     updateDraft({ target_calories: value === undefined ? undefined : Math.trunc(value) });
+    // 직접 고친 값은 지금 입력값 기준으로 정한 값이라, 계산에 들어가는 값이 바뀌기 전까지 유지한다
+    if (visibleDraft) {
+      setRecommendationBasis({ calories: getCaloriesRecommendationKey(visibleDraft) });
+    }
   };
 
   const handleBack = () => {

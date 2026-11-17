@@ -180,6 +180,29 @@ export function applyMaintainTargetWeight<T extends GoalEditDraft>(draft: T): T 
   return { ...draft, target_weight: draft.weight };
 }
 
+// 목표 칼로리 추천(서버)에 들어가는 값. 이 값이 바뀌었을 때만 새로 추천한다
+export function getCaloriesRecommendationKey({
+  gender,
+  birthYear,
+  height,
+  weight,
+  activity,
+  goal,
+  target_weight,
+}: GoalEditDraft) {
+  return JSON.stringify([gender, birthYear, height, weight, activity, goal, target_weight]);
+}
+
+// 탄단지 비율 추천(서버)에 들어가는 값
+export function getRatioRecommendationKey({
+  target_calories,
+  weight,
+  goal,
+  target_weight,
+}: GoalEditDraft) {
+  return JSON.stringify([target_calories, weight, goal, target_weight]);
+}
+
 export function validateStartPlan(draft: GoalEditDraft) {
   if (draft.gender === undefined) return "성별을 선택해주세요";
   if (!isValidBirthYear(draft.birthYear)) return "출생 연도를 다시 확인해주세요";
