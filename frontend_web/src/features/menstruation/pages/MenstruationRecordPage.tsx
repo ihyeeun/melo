@@ -25,7 +25,7 @@ export default function MenstruationRecordPage() {
   const isNotFemale = profile !== undefined && profile.gender !== 1;
   const [selections, setSelections] = useState<MenstrualDateSelections>({});
   const saveInFlightRef = useRef(false);
-  const { months, scrollRef, loadOlderRef, addOlderMonth } = usePastCalendarMonths();
+  const { months, scrollRef, loadOlderRef } = usePastCalendarMonths();
   const { yearQueries, monthQueries, recordedRanges } = useMenstrualYearQueries(months);
   const { mutateAsync: saveRecords, isPending: isSaving } = useSaveMenstrualRecords();
   const updateRequest = buildMenstrualRecordsUpdate(selections, recordedRanges);
@@ -87,9 +87,6 @@ export default function MenstruationRecordPage() {
 
       <main ref={scrollRef} className={`main ${styles.content}`}>
         <div ref={loadOlderRef} className={styles.loadOlder} aria-hidden="true" />
-        <Button variant="text" size="xs" onClick={addOlderMonth}>
-          이전 달 보기
-        </Button>
         <MenstruationCalendar
           months={monthQueries}
           selections={selections}
