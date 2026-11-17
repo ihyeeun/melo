@@ -113,9 +113,9 @@ export default function PreviewTodayScoreSection({
   const remainingCalories = baseTarget > 0 ? Math.max(0, baseTarget - current) : 0;
   const calorieStatusText =
     excessCalories > 0
-      ? `${excessCalories.toLocaleString("ko-KR")} kcal 초과했어요`
+      ? `${excessCalories.toLocaleString("ko-KR")}kcal 초과했어요`
       : remainingCalories > 0
-        ? `${remainingCalories.toLocaleString("ko-KR")} kcal 더 먹을 수 있어요`
+        ? `${remainingCalories.toLocaleString("ko-KR")}kcal 더 먹을 수 있어요`
         : null;
   const calorieValueText =
     target > 0
@@ -189,7 +189,7 @@ export default function PreviewTodayScoreSection({
             <p className="body-l-medium text-primary">칼로리</p>
             {activityCalories > 0 && (
               <InfoPopover ariaLabel="운동 칼로리 안내" align="start" side="bottom">
-                운동으로 {activityCalories.toLocaleString("ko-KR")} kcal 소모했어요
+                운동으로 {activityCalories.toLocaleString("ko-KR")}kcal 소모했어요
               </InfoPopover>
             )}
           </div>
@@ -202,7 +202,7 @@ export default function PreviewTodayScoreSection({
                 {current.toLocaleString("ko-KR")}
               </span>{" "}
               <span className="body-l-regular text-tertiary">
-                / {target.toLocaleString("ko-KR")} kcal
+                / {target.toLocaleString("ko-KR")}kcal
               </span>
             </p>
             {calorieStatusText && (
