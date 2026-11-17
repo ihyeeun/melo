@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
+import { useActivity } from "@stackflow/react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { useDayMealsQuery } from "@/features/home/hooks/queries/useTodayRecordQuery";
 import {
@@ -92,7 +93,9 @@ export default function MealDetailPage() {
     ? menuSelectionPathContext
     : null;
 
-  const { data: meal, isPending, isError } = useMealDetailQuery(menuId);
+  const { data: meal, isPending, isLoadingError } = useMealDetailQuery(menuId);
+  const { isActive } = useActivity();
+  const hasLeftForFailureRef = useRef(false);
 
   const getBackFallbackPath = () => {
     if (menuSelectionRouteContext.returnPath) {
@@ -117,24 +120,23 @@ export default function MealDetailPage() {
     },
   });
 
+  // 상세를 열 수 없으면(잘못된 진입 · 불러오기 실패) 안내 후 카드를 눌렀던 직전 화면으로 돌아간다.
+  // 이 화면이 맨 위일 때 한 번만 돌아가야 다른 화면을 닫지 않는다
+  const backFallbackPath = getBackFallbackPath();
+  const failureMessage =
+    menuId === null
+      ? "잘못된 접근입니다."
+      : isLoadingError
+        ? "메뉴 정보를 불러오지 못했어요"
+        : null;
+
   useEffect(() => {
-    if (menuId !== null) {
-      return;
-    }
+    if (!failureMessage || !isActive || hasLeftForFailureRef.current) return;
 
-    toast.warning("잘못된 접근입니다.");
-
-    navigate(PATH.HOME, { replace: true });
-  }, [dateKey, mealType, menuId, navigate]);
-
-  useEffect(() => {
-    if (!isError) {
-      return;
-    }
-
-    toast.warning("메뉴 정보를 불러오지 못했어요");
-    navigate(PATH.HOME, { replace: true });
-  }, [dateKey, isError, mealType, navigate]);
+    hasLeftForFailureRef.current = true;
+    toast.warning(failureMessage);
+    navigateBack({ fallbackTo: backFallbackPath });
+  }, [backFallbackPath, failureMessage, isActive]);
 
   const existingSelection = useMemo(() => {
     if (menuId === null) {
