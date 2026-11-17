@@ -43,6 +43,7 @@ import { Button } from "@/shared/commons/button/Button";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import NumberField from "@/shared/commons/input/NumberField";
+import { CheckButtonModal } from "@/shared/commons/modals/CheckButtonModal";
 import { toast } from "@/shared/commons/toast/toast";
 import { resetStackflow, useNavigate } from "@/shared/navigation/stackflowNavigation";
 import { getTodayFormatDateKey } from "@/shared/utils/dateFormat";
@@ -110,6 +111,7 @@ export default function GoalEditNutrientPage() {
   const finishGoalEditFlow = useFinishGoalEditFlow();
   const updateDraft = useUpdateGoalEditDraft();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isNutrientTotalModalOpen, setIsNutrientTotalModalOpen] = useState(false);
   const visibleDraft = hasActiveFlow || isSubmitting ? draft : null;
   const hasEditedNutrientsRef = useRef(false);
   const {
@@ -199,12 +201,7 @@ export default function GoalEditNutrientPage() {
     }
 
     if (!hasNutrientTotal(toTargetRatio(visibleDraft))) {
-      toast.show({
-        title: "탄단지 비율의 합을 100으로 맞춰주세요",
-        type: "error",
-        position: "bottom",
-        timeout: 3000,
-      });
+      setIsNutrientTotalModalOpen(true);
       return;
     }
 
@@ -412,12 +409,13 @@ export default function GoalEditNutrientPage() {
         </Button>
       </footer>
 
-      {/* <CheckButtonModal
+      {/* screen: PRF-01-005_modal-macro-ratio-error */}
+      <CheckButtonModal
         open={isNutrientTotalModalOpen}
         onOpenChange={setIsNutrientTotalModalOpen}
         title="영양소 비율 확인"
-        description="탄단지 비율의 합을 100으로 맞춰주세요"
-      /> */}
+        description="탄단지 비율의 합을 100%로 맞춰주세요"
+      />
     </div>
   );
 }
