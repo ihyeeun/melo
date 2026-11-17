@@ -18,7 +18,7 @@ import {
 } from "@/features/camera/utils/cameraCapture";
 import {
   MAX_MEAL_RECORD_MENUS,
-  MEAL_RECORD_MENU_LIMIT_MESSAGE,
+  MEAL_RECORD_MENU_LIMIT_FILLED_MESSAGE,
 } from "@/features/meal-record/constants/menu.constants";
 import { useTodayMealRecordRegisterMutation } from "@/features/meal-record/hooks/mutations/useTodayMealRecordMutation";
 import {
@@ -150,18 +150,14 @@ export default function MealRecordCreatePage() {
           source: "meal_record_camera",
         });
 
-        if (menusById.size > MAX_MEAL_RECORD_MENUS) {
-          toast.warning(MEAL_RECORD_MENU_LIMIT_MESSAGE);
-          setCapturedPreviewSrc(null);
-          setIsUploading(false);
-          returnFromCameraPage();
-          return;
-        }
+        // 100개를 넘으면 이미 담긴 음식부터, 인식된 순서대로 100개까지만 담는다
+        const recognizedMenus = Array.from(menusById.values());
+        const isOverMenuLimit = recognizedMenus.length > MAX_MEAL_RECORD_MENUS;
 
         const registerRequest = prepareRegisterRequest({
           dateKey,
           mealType,
-          menus: Array.from(menusById.values()),
+          menus: recognizedMenus.slice(0, MAX_MEAL_RECORD_MENUS),
           image: imageData.image_url,
         });
 
@@ -179,7 +175,11 @@ export default function MealRecordCreatePage() {
         });
 
         screen.assertActive();
-        toast.success("촬영한 사진의 메뉴가 기록되었어요.");
+        if (isOverMenuLimit) {
+          toast.warning(MEAL_RECORD_MENU_LIMIT_FILLED_MESSAGE);
+        } else {
+          toast.success("촬영한 사진의 메뉴가 기록되었어요.");
+        }
         navigateBackToPathOrPushFromRoot({
           animate: false,
           to: getMealRecordPath(dateKey, mealType),
@@ -196,15 +196,7 @@ export default function MealRecordCreatePage() {
         setCaptureErrorFeedback(getRecognitionErrorFeedback("FOOD", error));
       }
     },
-    [
-      dateKey,
-      draftKey,
-      mealRegisterAsync,
-      mealType,
-      prepareRegisterRequest,
-      returnFromCameraPage,
-      uploadFoodImage,
-    ],
+    [dateKey, draftKey, mealRegisterAsync, mealType, prepareRegisterRequest, uploadFoodImage],
   );
 
   const handleNutritionLabelImage = useCallback(
