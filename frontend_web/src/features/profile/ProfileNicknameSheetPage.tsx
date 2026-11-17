@@ -77,9 +77,16 @@ export default function ProfileNicknameSheetPage() {
               }}
               className={`${styles.input} body-s-medium`}
               aria-invalid={nickNameErrorMessage ? true : undefined}
-              aria-describedby={nickNameErrorMessage ? "profile-nickname-error-message" : undefined}
+              aria-describedby={
+                nickNameErrorMessage
+                  ? "profile-nickname-guide profile-nickname-error-message"
+                  : "profile-nickname-guide"
+              }
               ref={inputRef}
             />
+            <p id="profile-nickname-guide" className="body-s-regular text-tertiary">
+              한글 · 영문 · 숫자, 15자까지
+            </p>
             {nickNameErrorMessage ? (
               <p
                 id="profile-nickname-error-message"
