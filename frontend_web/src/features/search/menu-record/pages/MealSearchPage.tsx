@@ -341,9 +341,16 @@ export default function MealSearchPage() {
     navigate(getMealDetailPath(dateKey, mealType, menuId));
   };
 
+  // 검색어를 지우면(키보드로 지우거나 [X]) 검색 입력 전 화면인 '최근에 먹었어요'를 보여 준다
   const handleClearKeyword = () => {
     searchInputRef.current?.focus();
     resetSearchState();
+    setIsRecentMenuOpen(true);
+  };
+
+  const handleKeywordChange = (keyword: string) => {
+    setSubmittedKeyword(keyword);
+    if (keyword.trim() === "") setIsRecentMenuOpen(true);
   };
 
   const [isDirectInputSheetOpen, setIsDirectInputSheetOpen] = useState(false);
@@ -926,7 +933,7 @@ export default function MealSearchPage() {
       <section className={styles.page}>
         <SearchInputHeader
           value={submittedKeyword}
-          onValueChange={setSubmittedKeyword}
+          onValueChange={handleKeywordChange}
           onClear={handleClearKeyword}
           onEnter={handleMealSearch}
           inputRef={searchInputRef}
@@ -944,7 +951,7 @@ export default function MealSearchPage() {
     <section className={styles.page}>
       <SearchInputHeader
         value={submittedKeyword}
-        onValueChange={setSubmittedKeyword}
+        onValueChange={handleKeywordChange}
         onClear={handleClearKeyword}
         onEnter={handleMealSearch}
         inputRef={searchInputRef}
