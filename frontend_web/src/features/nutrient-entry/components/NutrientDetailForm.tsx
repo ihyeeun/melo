@@ -147,7 +147,7 @@ export function NutrientDetailForm({
         <div className={styles.weightRow}>
           <SingleDecimalInput
             className={`body-l-regular ${styles.input} amp-unmask`}
-            placeholder="0"
+            placeholder="-"
             aria-label="총 내용량 입력"
             value={totalWeight}
             onValueChange={onTotalWeightChange}
@@ -179,7 +179,7 @@ export function NutrientDetailForm({
       <FieldSection label="총 칼로리" description="(kcal)">
         <SingleDecimalInput
           className={`body-l-regular ${styles.input} amp-unmask`}
-          placeholder="0"
+          placeholder="-"
           aria-label="총 칼로리 입력"
           value={totalCalories}
           onValueChange={onTotalCaloriesChange}
@@ -217,7 +217,7 @@ export function NutrientDetailForm({
                   onFieldChange(field.key, nextValue === undefined ? "" : String(nextValue));
                 }}
                 aria-label={`${field.label} 입력`}
-                placeholder="0"
+                placeholder="-"
                 max={MAX_INPUT_VALUE}
                 min={0}
               />
