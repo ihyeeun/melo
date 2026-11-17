@@ -119,7 +119,7 @@ export default function MenstruationRecordPage() {
           aria-busy={isSaving || isLoadingRecords}
           onClick={() => void handleSave()}
         >
-          {isSaving ? "저장 중…" : isLoadingRecords ? "기록 불러오는 중…" : "기록 저장하기"}
+          {isSaving ? "저장 중…" : isLoadingRecords ? "기록 불러오는 중…" : "저장하기"}
         </Button>
       </footer>
     </div>
