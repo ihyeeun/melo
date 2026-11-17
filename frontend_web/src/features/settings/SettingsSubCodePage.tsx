@@ -46,7 +46,7 @@ export default function SettingsSubCodePage() {
       setIsSubmitting(true);
       const updatedProfile = await registerSubCode(trimmedSubCode);
       queryClient.setQueryData(queryKeys.profile, updatedProfile);
-      toast.success("구독 코드가 등록되었어요");
+      toast.success("구독 코드를 등록했어요");
       navigate(PATH.APP_INFO, { replace: true });
     } catch (error) {
       if (isRequestAbortError(error)) return;
