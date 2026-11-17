@@ -37,7 +37,7 @@ export default function MenstruationCardButton({ phase }: { phase: MenstrualPhas
   const message = isLoading
     ? "잠시만 기다려 주세요."
     : isError
-      ? "눌러서 다시 시도해 주세요."
+      ? "눌러서 다시 시도해주세요."
       : homeContent.message;
 
   const timeline = [

@@ -56,7 +56,7 @@ export default function MenstruationRecordPage() {
       navigateBack();
     } catch (error) {
       if (isRequestAbortError(error)) return;
-      toast.error("생리 기록을 저장하지 못했어요. 다시 시도해 주세요.");
+      toast.error("생리 기록을 저장하지 못했어요. 다시 시도해주세요.");
     } finally {
       saveInFlightRef.current = false;
     }
