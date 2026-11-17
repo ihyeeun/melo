@@ -1,13 +1,23 @@
 import { startOfMonth, subMonths } from "date-fns";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 
+import { getLastSelectableDate } from "@/features/calendar/utils/calendar";
 import { formatDateKey, parseDateKey } from "@/shared/utils/dateFormat";
 
-export function usePastCalendarMonths() {
-  const [months, setMonths] = useState(() => {
-    const currentMonth = startOfMonth(new Date());
+// 각 달 영역에 붙여 두면, 처음 열 때 이번 달이 화면 아래에 맞춰진다
+export const CALENDAR_MONTH_ATTRIBUTE = "data-calendar-month";
 
-    return [2, 1, 0].map((offset) => formatDateKey(subMonths(currentMonth, offset)));
+export function usePastCalendarMonths() {
+  const [currentMonthKey] = useState(() => formatDateKey(startOfMonth(new Date())));
+  const [months, setMonths] = useState(() => {
+    const currentMonth = parseDateKey(currentMonthKey);
+    const pastMonths = [2, 1, 0].map((offset) => formatDateKey(subMonths(currentMonth, offset)));
+    // 고를 수 있는 미래 날짜(오늘 포함 7일)가 다음 달로 넘어가면 다음 달도 보여 준다
+    const lastSelectableMonthKey = formatDateKey(startOfMonth(getLastSelectableDate()));
+
+    return lastSelectableMonthKey === currentMonthKey
+      ? pastMonths
+      : [...pastMonths, lastSelectableMonthKey];
   });
   const scrollRef = useRef<HTMLElement>(null);
   const loadOlderRef = useRef<HTMLDivElement>(null);
@@ -32,6 +42,15 @@ export function usePastCalendarMonths() {
 
     if (!initializedRef.current) {
       scroll.scrollTop = scroll.scrollHeight;
+      // 다음 달까지 있으면 이번 달의 끝이 화면 아래에 오도록 맞춘다
+      const currentMonthElement = scroll.querySelector(
+        `[${CALENDAR_MONTH_ATTRIBUTE}="${currentMonthKey}"]`,
+      );
+      if (currentMonthElement && months[months.length - 1] !== currentMonthKey) {
+        scroll.scrollTop +=
+          currentMonthElement.getBoundingClientRect().bottom -
+          scroll.getBoundingClientRect().bottom;
+      }
       initializedRef.current = true;
       return;
     }
@@ -41,7 +60,7 @@ export function usePastCalendarMonths() {
       scroll.scrollTop += scroll.scrollHeight - previousHeightRef.current;
       previousHeightRef.current = null;
     }
-  }, [months.length]);
+  }, [currentMonthKey, months]);
 
   useEffect(() => {
     const root = scrollRef.current;

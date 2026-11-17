@@ -1,8 +1,9 @@
 import type { UseQueryResult } from "@tanstack/react-query";
 
 import MenstruationDayCell from "@/features/calendar/components/menstruation/MenstruationDayCell";
+import { CALENDAR_MONTH_ATTRIBUTE } from "@/features/calendar/hooks/usePastCalendarMonths";
 import styles from "@/features/calendar/styles/MenstruationCalendar.module.css";
-import { buildMonthCalendarDays } from "@/features/calendar/utils/calendar";
+import { buildMonthCalendarDays, isSelectableDate } from "@/features/calendar/utils/calendar";
 import { formatCalendarHeader, WEEKDAY_LABELS } from "@/features/calendar/utils/format";
 import {
   isMenstrualDateSelected,
@@ -48,7 +49,12 @@ function MenstruationMonth({
   const ranges = query.data?.recorded_ranges ?? [];
 
   return (
-    <section className={styles.month} aria-label={label} aria-busy={query.isFetching}>
+    <section
+      className={styles.month}
+      aria-label={label}
+      aria-busy={query.isFetching}
+      {...{ [CALENDAR_MONTH_ATTRIBUTE]: monthKey }}
+    >
       <h2 className={`title-m-medium text-primary`}>{label}</h2>
 
       <div className={styles.status} aria-live="polite">
@@ -95,6 +101,8 @@ function MenstruationMonth({
               day={{ ...day, isSelected }}
               variant="month"
               selectionMode="multiple"
+              // 미래는 오늘 포함 7일까지만 고를 수 있다
+              isDisabled={!isSelectableDate(day.date)}
               menstruationType={recorded ? "menstrual_recorded" : null}
               onSelect={() => onToggleDate(dateKey, recorded)}
             />
