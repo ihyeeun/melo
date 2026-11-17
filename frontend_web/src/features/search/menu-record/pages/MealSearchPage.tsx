@@ -762,7 +762,7 @@ export default function MealSearchPage() {
           value={PERSONAL_MENU_TAB.REGISTERED}
           className={`${styles.personalMenuTabsTab} body-s-medium`}
         >
-          내 등록 메뉴
+          내 등록 음식
         </Tabs.Tab>
         <Tabs.Indicator className={styles.personalMenuTabsIndicator} />
       </Tabs.List>
