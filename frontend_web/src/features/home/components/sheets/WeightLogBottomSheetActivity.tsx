@@ -105,7 +105,7 @@ export default function WeightLogBottomSheetActivity() {
             });
           }
 
-          let message = "체중이 기록되었어요";
+          let message = "체중을 기록했어요";
 
           if (weightDiff !== null && userGoal === 0 && weightDiff < 0)
             message = `${weightDiff.toFixed(1)}kg 감량했어요!`;
