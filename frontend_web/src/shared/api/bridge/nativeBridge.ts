@@ -17,6 +17,7 @@ import type {
   HealthStepsReadRequestPayload,
   ImageUploadRequestPayload,
   InAppBrowserOpenResponsePayload,
+  LocationRequestPayload,
   OptionalTabName,
   WebToAppMessage,
 } from "./nativeBridge.types";
@@ -440,10 +441,11 @@ export function requestNativeHealthReadPermission() {
 }
 
 // 권한 팝업에서 사용자가 고민하는 시간도 포함되므로 기본 타임아웃(1분)을 그대로 쓴다.
-export function requestNativeCurrentLocation() {
+export function requestNativeCurrentLocation(payload?: LocationRequestPayload) {
   return sendRequestToApp<CurrentLocationPayload>((id) => ({
     id,
     type: "LOCATION_REQUEST",
+    payload,
   }));
 }
 

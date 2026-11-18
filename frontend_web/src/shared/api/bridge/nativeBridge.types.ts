@@ -74,7 +74,7 @@ export type WebToAppHapticTriggerRequestMessage = {
 
 // 앱이 지원하는 브리지 기능. OTA는 앱 버전을 바꾸지 않아서 버전 대신 이 목록으로 구분한다
 // (목록이 없는 옛 앱은 아무것도 지원하지 않는 것으로 본다)
-export type AppFeature = "OPEN_APP_SETTINGS" | "SIGN_UP_REDIRECT";
+export type AppFeature = "OPEN_APP_SETTINGS" | "SIGN_UP_REDIRECT" | "LOCATION_CHECK_WITHOUT_PROMPT";
 
 export type AppDeviceInfoPayload = {
   appVersion: string;
@@ -193,9 +193,15 @@ export type CurrentLocationPayload = {
   longitude: number;
 };
 
+export type LocationRequestPayload = {
+  // false면 권한 팝업 없이 지금 권한 상태로만 위치를 찾는다
+  askPermission?: boolean;
+};
+
 export type WebToAppLocationRequestMessage = {
   id: string;
   type: "LOCATION_REQUEST";
+  payload?: LocationRequestPayload;
   context?: BridgeMessageContext;
 };
 
@@ -243,6 +249,8 @@ export type AppToWebMessage<T = unknown> = {
         message: string;
         statusCode: number;
         error: string;
+        // LOCATION_PERMISSION_DENIED: OS가 권한 팝업을 다시 띄울 수 있는지 (옛 앱은 보내지 않는다)
+        canAskAgain?: boolean;
       };
 };
 

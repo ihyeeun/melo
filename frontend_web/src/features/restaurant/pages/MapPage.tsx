@@ -34,13 +34,13 @@ const CATEGORY = "RESTAURANT" as const;
 
 const LOCATION_MESSAGE = {
   locating: "현재 위치를 찾는 중이에요",
-  denied: "설정에서 위치 권한을 허용하면 내 주변을 볼 수 있어요",
+  denied: "위치 권한을 허용하면 내 주변을 볼 수 있어요",
+  blocked: "설정에서 위치 권한을 허용하면 내 주변을 볼 수 있어요",
   unavailable: "현재 위치를 확인하지 못했어요",
 };
 
 // screen: RES-01-001
 export default function MapPage() {
-  // 위치 권한을 한 번 거부하면(Android는 두 번) OS가 다시 묻지 않아서, 설정 앱에서 직접 켜도록 안내한다
   const canOpenAppSettings = useNativeAppFeature("OPEN_APP_SETTINGS");
   const baseMap = useRef<HTMLDivElement>(null);
   const [map, setMap] = useState<KakaoMap | null>(null);
@@ -201,24 +201,26 @@ export default function MapPage() {
             <p className="caption-m-medium text-secondary" role="status">
               {LOCATION_MESSAGE[status]}
             </p>
-            {status === "denied" && canOpenAppSettings && (
-              <button
-                type="button"
-                className={`caption-m-semi ${styles.retryButton}`}
-                onClick={requestNativeAppSettingsOpen}
-              >
-                설정으로 이동
-              </button>
-            )}
-            {status !== "locating" && (
-              <button
-                type="button"
-                className={`caption-m-semi ${styles.retryButton}`}
-                onClick={handleMoveToMyLocation}
-              >
-                다시 찾기
-              </button>
-            )}
+            <div className={styles.locationBadgeActions}>
+              {status === "blocked" && canOpenAppSettings && (
+                <button
+                  type="button"
+                  className={`caption-m-semi ${styles.retryButton}`}
+                  onClick={requestNativeAppSettingsOpen}
+                >
+                  설정으로 이동
+                </button>
+              )}
+              {status !== "locating" && (
+                <button
+                  type="button"
+                  className={`caption-m-semi ${styles.retryButton}`}
+                  onClick={handleMoveToMyLocation}
+                >
+                  다시 찾기
+                </button>
+              )}
+            </div>
           </div>
         )}
       </section>

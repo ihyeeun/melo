@@ -53,8 +53,10 @@ export type BridgeHapticTriggerRequestMessage = {
   context?: BridgeMessageContext;
 };
 
-// 이 앱이 지원하는 브리지 기능. OTA는 앱 버전을 바꾸지 않아서 웹은 버전 대신 이 목록을 본다
-export type BridgeAppFeature = "OPEN_APP_SETTINGS" | "SIGN_UP_REDIRECT";
+export type BridgeAppFeature =
+  | "OPEN_APP_SETTINGS"
+  | "SIGN_UP_REDIRECT"
+  | "LOCATION_CHECK_WITHOUT_PROMPT";
 
 export type BridgeAppDeviceInfoPayload = {
   appVersion: string;
@@ -163,9 +165,15 @@ export type BridgeHealthStepsReadRequestMessage = {
   context?: BridgeMessageContext;
 };
 
+export type BridgeLocationRequestPayload = {
+  // false면 권한 팝업 없이 지금 권한 상태로만 위치를 찾는다
+  askPermission?: boolean;
+};
+
 export type BridgeLocationRequestMessage = {
   id: string;
   type: "LOCATION_REQUEST";
+  payload?: BridgeLocationRequestPayload;
   context?: BridgeMessageContext;
 };
 
@@ -188,7 +196,13 @@ export type WebToAppMessage =
   | BridgeHealthStepsReadRequestMessage
   | BridgeLocationRequestMessage;
 
-export type BridgeErrorPayload = {
+// 에러 코드만으로는 웹이 다음 행동을 정할 수 없을 때 함께 넘기는 정보
+export type BridgeErrorDetail = {
+  // LOCATION_PERMISSION_DENIED: OS가 권한 팝업을 다시 띄울 수 있는지
+  canAskAgain?: boolean;
+};
+
+export type BridgeErrorPayload = BridgeErrorDetail & {
   message: string;
   statusCode: number;
   error: string;

@@ -490,7 +490,7 @@ function resolveAppDeviceInfo(): BridgeAppDeviceInfoPayload {
     appBuild: resolveBuildVersion(),
     osName: Platform.OS === "android" ? "android" : "ios",
     osVersion: resolveOsVersion(),
-    supportedFeatures: ["OPEN_APP_SETTINGS", "SIGN_UP_REDIRECT"],
+    supportedFeatures: ["OPEN_APP_SETTINGS", "SIGN_UP_REDIRECT", "LOCATION_CHECK_WITHOUT_PROMPT"],
   };
 }
 
@@ -654,8 +654,7 @@ function isWebToAppMessage(value: unknown): value is WebToAppMessage {
 
   if (
     value.type === "HEALTH_PERMISSION_STATUS_REQUEST" ||
-    value.type === "HEALTH_PERMISSION_REQUEST" ||
-    value.type === "LOCATION_REQUEST"
+    value.type === "HEALTH_PERMISSION_REQUEST"
   ) {
     return true;
   }
@@ -664,6 +663,15 @@ function isWebToAppMessage(value: unknown): value is WebToAppMessage {
     if (!isRecord(value.payload)) return false;
 
     return typeof value.payload.startDate === "string" && typeof value.payload.endDate === "string";
+  }
+
+  if (value.type === "LOCATION_REQUEST") {
+    if (value.payload === undefined) return true;
+    if (!isRecord(value.payload)) return false;
+
+    return (
+      value.payload.askPermission === undefined || typeof value.payload.askPermission === "boolean"
+    );
   }
 
   return false;
@@ -836,7 +844,7 @@ export async function handleWebMessage(
     }
 
     if (message.type === "LOCATION_REQUEST") {
-      const result = await getCurrentLocation();
+      const result = await getCurrentLocation(message.payload);
 
       sendToWeb(webViewRef, {
         id: requestId,
@@ -856,6 +864,7 @@ export async function handleWebMessage(
           message: error.message,
           statusCode: error.statusCode,
           error: error.errorCode,
+          ...error.detail,
         },
       });
       if (shouldClearLocalSession) {

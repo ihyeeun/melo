@@ -1,5 +1,6 @@
 import * as Location from "expo-location";
 
+import type { BridgeLocationRequestPayload } from "@/src/shared/api/bridge/bridge.types";
 import { BridgeHandledError } from "@/src/shared/api/bridge/bridgeError";
 
 export type CurrentLocation = {
@@ -7,10 +8,17 @@ export type CurrentLocation = {
   longitude: number;
 };
 
-export async function getCurrentLocation(): Promise<CurrentLocation> {
-  const permission = await Location.requestForegroundPermissionsAsync();
+export async function getCurrentLocation({
+  askPermission = true,
+}: BridgeLocationRequestPayload = {}): Promise<CurrentLocation> {
+  const permission = askPermission
+    ? await Location.requestForegroundPermissionsAsync()
+    : await Location.getForegroundPermissionsAsync();
   if (!permission.granted) {
-    throw new BridgeHandledError("위치 권한이 필요해요.", 403, "LOCATION_PERMISSION_DENIED");
+    // 웹은 이 값으로 권한 팝업을 다시 띄울지, 설정 앱으로 보낼지 정한다
+    throw new BridgeHandledError("위치 권한이 필요해요.", 403, "LOCATION_PERMISSION_DENIED", {
+      canAskAgain: permission.canAskAgain,
+    });
   }
 
   try {
