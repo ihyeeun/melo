@@ -20,10 +20,10 @@
 }
 
 .marker[data-selected="true"] .icon {
-  top: -35px;
-  left: -14px;
-  width: 28px;
-  height: 39px;
+  top: -47px;
+  left: -17px;
+  width: 34px;
+  height: 47px;
   background-image: url("/icons/maps/marker-current.svg");
 }
 
@@ -43,7 +43,7 @@
   transform: translateX(-50%);
   white-space: nowrap;
   color: var(--text-primary);
-  -webkit-text-stroke: 3px var(--background-default);
+  -webkit-text-stroke: 2px var(--background-default);
   paint-order: stroke fill;
 }
 .marker[data-selected="true"] .label {

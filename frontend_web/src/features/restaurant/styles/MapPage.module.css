@@ -69,6 +69,10 @@
   color: var(--navy-700);
 }
 
+.mapActionButton + .locationBadge {
+  margin-top: 8px;
+}
+
 .locationBadge {
   width: fit-content;
   margin-inline: auto;
