@@ -43,7 +43,7 @@
   transform: translateX(-50%);
   white-space: nowrap;
   color: var(--text-primary);
-  -webkit-text-stroke: 2px var(--background-default);
+  -webkit-text-stroke: 3px var(--background-default);
   paint-order: stroke fill;
 }
 .marker[data-selected="true"] .label {
