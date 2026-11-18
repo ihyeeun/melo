@@ -11,10 +11,7 @@ import {
   getRecognitionErrorFeedback,
   isCameraCaptureCancelled,
 } from "@/features/camera/utils/cameraCapture";
-import {
-  getMealType,
-  getSafeDateKey,
-} from "@/features/meal-record/utils/mealRecord.queryParams";
+import { getMealType, getSafeDateKey } from "@/features/meal-record/utils/mealRecord.queryParams";
 import {
   buildMenuSelectionPathContext,
   getMenuSelectionPath,
@@ -29,7 +26,6 @@ import { captureScreenRequestScope } from "@/shared/api/screenRequests";
 import type { MealType } from "@/shared/api/types/api.dto";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
 import { CheckButtonModal } from "@/shared/commons/modals/CheckButtonModal";
-import { toast } from "@/shared/commons/toast/toast";
 import {
   navigateBack,
   useLocation,
@@ -61,9 +57,7 @@ export default function NutrientCameraPage() {
     () => getMenuSelectionRouteContextFromSearchParams(searchParams),
     [searchParams],
   );
-  const dateKey = getSafeDateKey(
-    searchParams.get("date") ?? locationState.dateKey ?? null,
-  );
+  const dateKey = getSafeDateKey(searchParams.get("date") ?? locationState.dateKey ?? null);
   const mealType = getMealType(searchParams.get("mealType") ?? locationState.mealType ?? null);
   const menuSelectionContext = useMemo<MenuSelectionPathParams | null>(
     () =>
@@ -138,8 +132,6 @@ export default function NutrientCameraPage() {
           mealType,
         },
       });
-
-      toast.success("영양성분표 분석이 완료되었어요.");
     } catch (error) {
       if (!screen.isActive()) return;
       setCapturedPreviewSrc(null);
@@ -182,7 +174,7 @@ export default function NutrientCameraPage() {
 
   return (
     <section className={styles.page}>
-      <PageHeader title="영양정보 촬영" onBack={returnFromCameraPage} />
+      <PageHeader title={isUploading ? "사진 분석" : "사진 촬영"} onBack={returnFromCameraPage} />
 
       {isOpeningCamera ? (
         <main className={styles.main} />

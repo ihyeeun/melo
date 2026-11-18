@@ -67,7 +67,7 @@ export default function ChatNutritionRegisterPage() {
       // Cache sync is best-effort after the menu registration has already succeeded.
     }
 
-    toast.success("메뉴가 등록되었어요.");
+    toast.success("음식을 등록했어요");
     navigateBack({ fallbackTo: PATH.CHAT });
   };
 

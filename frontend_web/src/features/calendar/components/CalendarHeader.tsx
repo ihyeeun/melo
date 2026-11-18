@@ -13,6 +13,7 @@ type Props = {
   onToggleViewMode: () => void;
   onPrev: () => void;
   onNext: () => void;
+  canGoNext?: boolean;
   onToday: () => void;
 };
 
@@ -24,6 +25,7 @@ export default function CalendarHeader({
   onToggleViewMode,
   onPrev,
   onNext,
+  canGoNext = true,
   onToday,
 }: Props) {
   const weekTitle = isToday(selectedDate) ? "오늘" : formatCalendarHeader(selectedDate, "week");
@@ -70,6 +72,7 @@ export default function CalendarHeader({
               className={styles.navButton}
               onClick={onNext}
               aria-label="다음 달"
+              disabled={!canGoNext}
               tabIndex={isMonthView ? 0 : -1}
             >
               <SystemIcon name="arrow-filled-right" size={24} />

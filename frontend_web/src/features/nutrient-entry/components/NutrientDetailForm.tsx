@@ -42,7 +42,8 @@ function sanitizeSingleDecimalInput(value: string) {
   return `${integerPart}.${decimalParts.join("").slice(0, 1)}`;
 }
 
-function parseSingleDecimalInput(value: string, min = 0, max = MAX_INPUT_VALUE) {
+// 최댓값은 입력 자릿수로만 막는다(자동으로 줄이지 않는다)
+function parseSingleDecimalInput(value: string, min = 0) {
   const sanitized = sanitizeSingleDecimalInput(value);
 
   if (sanitized === "" || sanitized === ".") {
@@ -54,8 +55,13 @@ function parseSingleDecimalInput(value: string, min = 0, max = MAX_INPUT_VALUE) 
     return undefined;
   }
 
-  const clamped = Math.min(max, Math.max(min, parsed));
-  return roundToSingleDecimal(clamped);
+  return roundToSingleDecimal(Math.max(min, parsed));
+}
+
+// 최댓값의 정수 자릿수(9999.9 → 4자리)를 넘는 입력은 받지 않는다
+function isWithinIntegerDigits(value: string, max: number) {
+  const [integerPart = ""] = value.split(".");
+  return integerPart.length <= String(Math.trunc(max)).length;
 }
 
 function cx(...classes: Array<string | false | undefined>) {
@@ -86,7 +92,7 @@ function SingleDecimalInput({
   const displayValue = isFocused ? draftValue : formatSingleDecimalValue(value);
 
   const normalizeDraftValue = (nextDraftValue: string) => {
-    const parsedValue = parseSingleDecimalInput(nextDraftValue, min, max);
+    const parsedValue = parseSingleDecimalInput(nextDraftValue, min);
     const normalizedValue = formatSingleDecimalValue(parsedValue);
 
     setDraftValue(normalizedValue);
@@ -116,9 +122,10 @@ function SingleDecimalInput({
       onBlur={handleBlur}
       onChange={(event) => {
         const nextDraftValue = sanitizeSingleDecimalInput(event.target.value);
+        if (!isWithinIntegerDigits(nextDraftValue, max)) return;
 
         setDraftValue(nextDraftValue);
-        onValueChange(parseSingleDecimalInput(nextDraftValue, min, max));
+        onValueChange(parseSingleDecimalInput(nextDraftValue, min));
       }}
     />
   );
@@ -136,12 +143,12 @@ export function NutrientDetailForm({
 }: Props) {
   return (
     <>
-      <FieldSection label="총 용량">
+      <FieldSection label="총 내용량">
         <div className={styles.weightRow}>
           <SingleDecimalInput
             className={`body-l-regular ${styles.input} amp-unmask`}
-            placeholder="0"
-            aria-label="총 용량 입력"
+            placeholder="-"
+            aria-label="총 내용량 입력"
             value={totalWeight}
             onValueChange={onTotalWeightChange}
             max={MAX_INPUT_VALUE}
@@ -172,7 +179,7 @@ export function NutrientDetailForm({
       <FieldSection label="총 칼로리" description="(kcal)">
         <SingleDecimalInput
           className={`body-l-regular ${styles.input} amp-unmask`}
-          placeholder="0"
+          placeholder="-"
           aria-label="총 칼로리 입력"
           value={totalCalories}
           onValueChange={onTotalCaloriesChange}
@@ -210,7 +217,7 @@ export function NutrientDetailForm({
                   onFieldChange(field.key, nextValue === undefined ? "" : String(nextValue));
                 }}
                 aria-label={`${field.label} 입력`}
-                placeholder="0"
+                placeholder="-"
                 max={MAX_INPUT_VALUE}
                 min={0}
               />

@@ -170,7 +170,7 @@ export default function BrandSearch() {
                     onClick={() => handleBrandRegister()}
                     disabled={isDirectRegisterDisabled}
                   >
-                    <p className="body-m-regular textCenter">브랜드 직접 등록하기</p>
+                    <p className="body-m-regular textCenter">브랜드 직접 입력</p>
                   </button>
                 </>
               )}
@@ -191,7 +191,7 @@ export default function BrandSearch() {
               onClick={() => handleBrandRegister()}
               disabled={isDirectRegisterDisabled}
             >
-              <p className="body-m-regular textCenter">브랜드 직접 등록하기</p>
+              <p className="body-m-regular textCenter">브랜드 직접 입력</p>
             </button>
           </section>
         )}

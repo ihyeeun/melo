@@ -52,11 +52,15 @@ export default function PreviewTodayScoreSection({
     data: dayMeal,
     isError: isSummaryError,
     isPending: isSummaryPending,
+    isFetching: isSummaryFetching,
+    refetch: refetchDayMeals,
   } = useDayMealsQuery(selectedDateKey);
   const {
     data: profile,
     isError: isProfileError,
     isPending: isProfilePending,
+    isFetching: isProfileFetching,
+    refetch: refetchProfile,
   } = useGetProfileQuery();
 
   const { data: userGoal, isPending: isUserGoalPending } =
@@ -81,11 +85,20 @@ export default function PreviewTodayScoreSection({
     },
     activitySummary?.calories,
   );
-  const nutrition = isProfileError
-    ? { message: "목표 정보를 불러오지 못했어요", score: null }
+  const failedLoad = isProfileError
+    ? {
+        message: "목표 정보를 불러오지 못했어요",
+        isRetrying: isProfileFetching,
+        retry: refetchProfile,
+      }
     : isSummaryError
-      ? { message: "식사 정보를 불러오지 못했어요", score: null }
-      : nutritionSummary;
+      ? {
+          message: "식사 정보를 불러오지 못했어요",
+          isRetrying: isSummaryFetching,
+          retry: refetchDayMeals,
+        }
+      : null;
+  const nutrition = failedLoad ? { message: failedLoad.message, score: null } : nutritionSummary;
   const characterSrc = getScoreCharacterSrc(nutrition.score ?? 0);
   const activityCalories =
     typeof nutritionSummary.calories.activity === "number" &&
@@ -100,9 +113,9 @@ export default function PreviewTodayScoreSection({
   const remainingCalories = baseTarget > 0 ? Math.max(0, baseTarget - current) : 0;
   const calorieStatusText =
     excessCalories > 0
-      ? `${excessCalories.toLocaleString("ko-KR")} kcal 초과했어요`
+      ? `${excessCalories.toLocaleString("ko-KR")}kcal 초과했어요`
       : remainingCalories > 0
-        ? `${remainingCalories.toLocaleString("ko-KR")} kcal 더 먹을 수 있어요`
+        ? `${remainingCalories.toLocaleString("ko-KR")}kcal 더 먹을 수 있어요`
         : null;
   const calorieValueText =
     target > 0
@@ -119,9 +132,23 @@ export default function PreviewTodayScoreSection({
             <div className={styles.summaryArea}>
               <div className={styles.titleArea}>
                 <p className="text-primary title-s-semi">오늘의 영양 밸런스</p>
-                <p className={`${styles.message} text-tertiary body-s-regular`}>
-                  {nutrition.message}
-                </p>
+                {failedLoad ? (
+                  <div className={styles.failedMessage}>
+                    <p className="text-tertiary body-s-regular">{failedLoad.message}</p>
+                    <button
+                      type="button"
+                      className={`${styles.retryButton} text-secondary body-s-medium`}
+                      disabled={failedLoad.isRetrying}
+                      onClick={() => void failedLoad.retry()}
+                    >
+                      다시 시도
+                    </button>
+                  </div>
+                ) : (
+                  <p className={`${styles.message} text-tertiary body-s-regular`}>
+                    {nutrition.message}
+                  </p>
+                )}
               </div>
 
               <p className={`text-primary title-xl-medium ${styles.score}`}>
@@ -162,7 +189,7 @@ export default function PreviewTodayScoreSection({
             <p className="body-l-medium text-primary">칼로리</p>
             {activityCalories > 0 && (
               <InfoPopover ariaLabel="운동 칼로리 안내" align="start" side="bottom">
-                운동으로 {activityCalories.toLocaleString("ko-KR")} kcal 소모했어요
+                운동으로 {activityCalories.toLocaleString("ko-KR")}kcal 소모했어요
               </InfoPopover>
             )}
           </div>
@@ -175,7 +202,7 @@ export default function PreviewTodayScoreSection({
                 {current.toLocaleString("ko-KR")}
               </span>{" "}
               <span className="body-l-regular text-tertiary">
-                / {target.toLocaleString("ko-KR")} kcal
+                / {target.toLocaleString("ko-KR")}kcal
               </span>
             </p>
             {calorieStatusText && (

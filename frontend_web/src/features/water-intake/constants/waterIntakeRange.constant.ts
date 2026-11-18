@@ -10,8 +10,9 @@ export const WATER_INTAKE_SIZE = {
   MIN: 0,
 };
 
-/** 물 컵 사이즈 최대 : 1000ml, 최소: 50ml */
+/** 물 컵 사이즈 최대 : 1000ml, 최소: 50ml, 서버 값이 없을 때 기본: 200ml */
 export const WATER_CUP_SIZE = {
   MAX: 10 * WATER_UNIT,
   MIN: 50,
+  DEFAULT: 200,
 };

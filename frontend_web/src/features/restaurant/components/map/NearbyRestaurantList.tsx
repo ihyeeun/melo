@@ -22,7 +22,7 @@ type NearbyRestaurantListProps = {
 };
 
 function getListTitle(keyword: string, isMapAreaSearch: boolean, count: number) {
-  if (keyword) return `'${keyword}' 검색 결과 ${count}곳`;
+  if (keyword) return `‘${keyword}’ 검색 결과 ${count}곳`;
   if (isMapAreaSearch) return `현 지도 기준 식당 ${count}곳`;
   return `내 주변 식당 ${count}곳`;
 }

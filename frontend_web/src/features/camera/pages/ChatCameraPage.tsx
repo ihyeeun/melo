@@ -108,6 +108,7 @@ export default function ChatCameraPage() {
       setImage({
         image,
         mode: selectedMode,
+        source: "camera",
       });
       moveToChat();
     } catch (error) {

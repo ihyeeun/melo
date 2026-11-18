@@ -111,24 +111,6 @@
   background-color: var(--background-gray-2);
 }
 
-.didNotEatState {
-  color: var(--text-secondary);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 16px;
-  min-height: 335px;
-  padding: 20px;
-  text-align: center;
-  width: 100%;
-}
-
-.didNotEatImage {
-  height: 120px;
-  width: 120px;
-}
-
 .foodAddButton {
   position: absolute;
   bottom: var(--safe-area-bottom);

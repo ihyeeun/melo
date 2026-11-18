@@ -341,9 +341,16 @@ export default function MealSearchPage() {
     navigate(getMealDetailPath(dateKey, mealType, menuId));
   };
 
+  // 검색어를 지우면(키보드로 지우거나 [X]) 검색 입력 전 화면인 '최근에 먹었어요'를 보여 준다
   const handleClearKeyword = () => {
     searchInputRef.current?.focus();
     resetSearchState();
+    setIsRecentMenuOpen(true);
+  };
+
+  const handleKeywordChange = (keyword: string) => {
+    setSubmittedKeyword(keyword);
+    if (keyword.trim() === "") setIsRecentMenuOpen(true);
   };
 
   const [isDirectInputSheetOpen, setIsDirectInputSheetOpen] = useState(false);
@@ -521,7 +528,7 @@ export default function MealSearchPage() {
           setIsDirectInputSheetOpen(true);
         }}
       >
-        <span className={`${styles.bottomText} body-s-medium`}>찾으시는 메뉴가 없나요?</span>
+        <span className={`${styles.bottomText} body-s-medium`}>찾으시는 음식이 없나요?</span>
         직접 등록하기
         <SystemIcon name="chevron-right" size={16} />
       </Button>
@@ -755,7 +762,7 @@ export default function MealSearchPage() {
           value={PERSONAL_MENU_TAB.REGISTERED}
           className={`${styles.personalMenuTabsTab} body-s-medium`}
         >
-          내 등록 메뉴
+          내 등록 음식
         </Tabs.Tab>
         <Tabs.Indicator className={styles.personalMenuTabsIndicator} />
       </Tabs.List>
@@ -926,7 +933,7 @@ export default function MealSearchPage() {
       <section className={styles.page}>
         <SearchInputHeader
           value={submittedKeyword}
-          onValueChange={setSubmittedKeyword}
+          onValueChange={handleKeywordChange}
           onClear={handleClearKeyword}
           onEnter={handleMealSearch}
           inputRef={searchInputRef}
@@ -944,7 +951,7 @@ export default function MealSearchPage() {
     <section className={styles.page}>
       <SearchInputHeader
         value={submittedKeyword}
-        onValueChange={setSubmittedKeyword}
+        onValueChange={handleKeywordChange}
         onClear={handleClearKeyword}
         onEnter={handleMealSearch}
         inputRef={searchInputRef}
@@ -1074,9 +1081,9 @@ function FolderPanel({
               <img src="/icons/characters/search-mono.png" alt="" aria-hidden="true" width={200} />
 
               <p className="body-l-medium text-tertiary">
-                자주 먹는 음식을 폴더로 기록해두고
+                자주 먹는 음식을 폴더에 모아 두고
                 <br />
-                빠르게 기록해보세요!
+                빠르게 기록해보세요
               </p>
             </section>
           )}

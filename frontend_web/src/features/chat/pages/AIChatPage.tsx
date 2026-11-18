@@ -44,7 +44,11 @@ import { getMenuSelectionMenuDetailPath } from "@/features/menu-selection/utils/
 import { PATH } from "@/router/path";
 import { getMealRecordPath } from "@/router/pathHelpers";
 import { trackChatTextMenuSave, trackScanMenuSave } from "@/shared/analytics/menuSaveEvent.util";
-import { requestNativeGalleryPick } from "@/shared/api/bridge/nativeBridge";
+import {
+  requestNativeAppSettingsOpen,
+  requestNativeGalleryPick,
+} from "@/shared/api/bridge/nativeBridge";
+import { useNativeAppFeature } from "@/shared/api/bridge/useNativeAppFeature";
 import { isRequestAbortError } from "@/shared/api/requestCancellation";
 import { captureScreenRequestScope } from "@/shared/api/screenRequests";
 import type { MealType } from "@/shared/api/types/api.dto";
@@ -99,7 +103,10 @@ export default function AIChatPage() {
   const cameraImage = useGetImage();
   const setImage = useSetImage();
 
+  const canOpenAppSettings = useNativeAppFeature("OPEN_APP_SETTINGS");
   const [isShowChatActions, setIsShowChatActions] = useState<boolean>(true);
+  // 진입 때 자동으로 펼쳐진 메뉴는 뒤로가기로 닫지 않는다. [+]로 직접 연 메뉴만 닫는다
+  const [isChatActionsOpenedByUser, setIsChatActionsOpenedByUser] = useState(false);
   const [isPhotoMenuOpen, setIsPhotoMenuOpen] = useState(false);
   const [isTextMealRecordMode, setIsTextMealRecordMode] = useState<boolean>(false);
   const [inputMessage, setInputMessage] = useState<string>("");
@@ -124,7 +131,8 @@ export default function AIChatPage() {
   const { mutate: requestPatternAnalysis } = useManagementPatternAnalysisMutation();
 
   const isTimelinePending = historyQuery.isPending || mealsQuery.isPending;
-  const isChatBusy = isChatRequestPending || cameraImage !== null;
+  // 사진 기록과 글 기록(식사 기록 모드)의 시간대 카드가 떠 있는 동안은 입력을 막는다
+  const isChatBusy = isChatRequestPending || cameraImage !== null || textMealData !== undefined;
   const debouncedKeyword = useDebounceValue(typingKeyword, 300);
   const canAutoCompleteKeyword =
     isTextMealRecordMode &&
@@ -367,7 +375,7 @@ export default function AIChatPage() {
 
       screen.assertActive();
 
-      setImage({ image, mode });
+      setImage({ image, mode, source: "gallery" });
     } catch (error) {
       if (isRequestAbortError(error) || !screen.isActive()) return;
 
@@ -375,6 +383,25 @@ export default function AIChatPage() {
         typeof error === "object" && error !== null && "error" in error ? error.error : undefined;
 
       if (errorCode === "GALLERY_PICK_CANCELLED") return;
+
+      // 사진 권한을 거부했으면 설정 앱에서 직접 켤 수 있게 버튼을 붙이고, 닫을 때까지 둔다
+      if (errorCode === "GALLERY_PERMISSION_DENIED" && canOpenAppSettings) {
+        const toastId = toast.show({
+          type: "error",
+          title: "사진 접근 권한이 필요해요",
+          description: "설정에서 권한을 허용해주세요.",
+          timeout: 0,
+          priority: "high",
+          action: {
+            label: "설정으로 이동",
+            onClick: () => {
+              requestNativeAppSettingsOpen();
+              toast.close(toastId);
+            },
+          },
+        });
+        return;
+      }
 
       toast.error(
         errorCode === "GALLERY_PERMISSION_DENIED"
@@ -439,8 +466,10 @@ export default function AIChatPage() {
     setIsShowChatActions(false);
   }
 
-  // [+] 메뉴 펼침과 사진 선택은 뒤로가기로 닫는다. 사진 선택이 위에 뜨므로 먼저 닫힌다
-  useStackflowOverlayBackHandler(isShowChatActions, () => setIsShowChatActions(false));
+  // [+]로 연 메뉴와 사진 선택은 뒤로가기로 닫는다. 사진 선택이 위에 뜨므로 먼저 닫힌다
+  useStackflowOverlayBackHandler(isShowChatActions && isChatActionsOpenedByUser, () =>
+    setIsShowChatActions(false),
+  );
   useStackflowOverlayBackHandler(isPhotoMenuOpen, () => setIsPhotoMenuOpen(false));
 
   return (
@@ -556,6 +585,7 @@ export default function AIChatPage() {
             }}
             onClick={() => {
               if (!isShowChatActions) textareaRef.current?.blur();
+              setIsChatActionsOpenedByUser(!isShowChatActions);
               setIsShowChatActions((prev) => !prev);
             }}
             className={styles.chatActionExpendButton}
@@ -608,22 +638,23 @@ export default function AIChatPage() {
             </div>
           </button>
 
-          <div className={styles.mealRecordModeChip} data-isView={isTextMealRecordMode}>
+          <button
+            type="button"
+            className={styles.mealRecordModeChip}
+            data-isView={isTextMealRecordMode}
+            aria-label="식사 기록 모드 끄기"
+            onPointerDown={(event) => {
+              if (!event.isPrimary) return;
+              event.preventDefault();
+              setIsTextMealRecordMode(false);
+            }}
+            onClick={(event) => {
+              if (event.detail === 0) setIsTextMealRecordMode(false);
+            }}
+          >
             <span className="body-s-medium text-primary">식사 기록 모드</span>
-            <button
-              type="button"
-              onPointerDown={(event) => {
-                if (!event.isPrimary) return;
-                event.preventDefault();
-                setIsTextMealRecordMode(false);
-              }}
-              onClick={(event) => {
-                if (event.detail === 0) setIsTextMealRecordMode(false);
-              }}
-            >
-              <SystemIcon name="exit" size={16} className="text-primary" />
-            </button>
-          </div>
+            <SystemIcon name="exit" size={16} className="text-primary" />
+          </button>
         </section>
 
         {/* screen: CHA-01-001_modal-menu */}

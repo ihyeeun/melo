@@ -25,7 +25,7 @@ export default function MenstruationRecordPage() {
   const isNotFemale = profile !== undefined && profile.gender !== 1;
   const [selections, setSelections] = useState<MenstrualDateSelections>({});
   const saveInFlightRef = useRef(false);
-  const { months, scrollRef, loadOlderRef, addOlderMonth } = usePastCalendarMonths();
+  const { months, scrollRef, loadOlderRef } = usePastCalendarMonths();
   const { yearQueries, monthQueries, recordedRanges } = useMenstrualYearQueries(months);
   const { mutateAsync: saveRecords, isPending: isSaving } = useSaveMenstrualRecords();
   const updateRequest = buildMenstrualRecordsUpdate(selections, recordedRanges);
@@ -56,7 +56,7 @@ export default function MenstruationRecordPage() {
       navigateBack();
     } catch (error) {
       if (isRequestAbortError(error)) return;
-      toast.error("생리 기록을 저장하지 못했어요. 다시 시도해 주세요.");
+      toast.error("생리 기록을 저장하지 못했어요. 다시 시도해주세요.");
     } finally {
       saveInFlightRef.current = false;
     }
@@ -87,9 +87,6 @@ export default function MenstruationRecordPage() {
 
       <main ref={scrollRef} className={`main ${styles.content}`}>
         <div ref={loadOlderRef} className={styles.loadOlder} aria-hidden="true" />
-        <Button variant="text" size="xs" onClick={addOlderMonth}>
-          이전 달 보기
-        </Button>
         <MenstruationCalendar
           months={monthQueries}
           selections={selections}
@@ -122,7 +119,7 @@ export default function MenstruationRecordPage() {
           aria-busy={isSaving || isLoadingRecords}
           onClick={() => void handleSave()}
         >
-          {isSaving ? "저장 중…" : isLoadingRecords ? "기록 불러오는 중…" : "기록 저장하기"}
+          {isSaving ? "저장 중…" : isLoadingRecords ? "기록 불러오는 중…" : "저장하기"}
         </Button>
       </footer>
     </div>

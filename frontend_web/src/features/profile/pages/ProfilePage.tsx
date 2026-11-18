@@ -59,7 +59,7 @@ export default function ProfilePage() {
 
   const [selectedMetric, setSelectedMetric] = useState<WeeklyMetricType>("weight");
 
-  const nickname = profile?.nickname ?? "진득한 푸마";
+  const nickname = profile?.nickname?.trim() || "멜로 회원";
   const todayWeight =
     typeof bodyLog?.weight === "number" && Number.isFinite(bodyLog.weight) && bodyLog.weight > 0
       ? bodyLog.weight

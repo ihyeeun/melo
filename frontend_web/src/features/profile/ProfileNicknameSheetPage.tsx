@@ -15,6 +15,9 @@ import { navigateBack } from "@/shared/navigation/stackflowNavigationController"
 const NICKNAME_MAX_LENGTH = 15;
 const NICKNAME_ALLOWED_PATTERN = /[^0-9A-Za-zㄱ-ㅎㅏ-ㅣ가-힣]/g;
 
+// 자음·모음만으로 된 닉네임(예: ㅋㅋㅋ)은 저장하지 않는다. 입력 중에는 한글 조합 때문에 막지 않는다
+const JAMO_ONLY_PATTERN = /^[ㄱ-ㅎㅏ-ㅣ]+$/;
+
 const sanitizeNickName = (value: string) =>
   value.replace(NICKNAME_ALLOWED_PATTERN, "").slice(0, NICKNAME_MAX_LENGTH);
 
@@ -46,10 +49,15 @@ export default function ProfileNicknameSheetPage() {
       return;
     }
 
+    if (JAMO_ONLY_PATTERN.test(nickName.trim())) {
+      setNickNameErrorMessage("자음이나 모음만으로는 닉네임을 만들 수 없어요");
+      return;
+    }
+
     setNickNameErrorMessage("");
     updateNickName(nickName, {
       onSuccess: () => {
-        toast.success("닉네임이 수정되었어요");
+        toast.success("닉네임을 수정했어요");
         closeSheet();
       },
       onError: (error) => {
@@ -77,9 +85,16 @@ export default function ProfileNicknameSheetPage() {
               }}
               className={`${styles.input} body-s-medium`}
               aria-invalid={nickNameErrorMessage ? true : undefined}
-              aria-describedby={nickNameErrorMessage ? "profile-nickname-error-message" : undefined}
+              aria-describedby={
+                nickNameErrorMessage
+                  ? "profile-nickname-guide profile-nickname-error-message"
+                  : "profile-nickname-guide"
+              }
               ref={inputRef}
             />
+            <p id="profile-nickname-guide" className="body-s-regular text-tertiary">
+              한글 · 영문 · 숫자, 15자까지
+            </p>
             {nickNameErrorMessage ? (
               <p
                 id="profile-nickname-error-message"

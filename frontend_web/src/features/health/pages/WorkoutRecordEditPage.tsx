@@ -274,7 +274,7 @@ export default function WorkoutRecordEditPage() {
         trackWorkoutRecordEditCompleted();
       }
       leaveEditMode();
-      toast.success("운동 기록이 저장되었어요");
+      toast.success("운동 기록을 수정했어요");
     } catch (error) {
       setIsSavePending(false);
       if (isRequestAbortError(error)) return;

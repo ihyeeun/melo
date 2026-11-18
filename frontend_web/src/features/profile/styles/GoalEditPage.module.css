@@ -63,21 +63,6 @@
   background: var(--border-default);
 }
 
-.birthYearItem {
-  cursor: pointer;
-  position: relative;
-}
-
-.birthYearSelect {
-  appearance: none;
-  cursor: pointer;
-  height: 100%;
-  inset: 0;
-  opacity: 0;
-  position: absolute;
-  width: 100%;
-}
-
 .profileMeta {
   align-items: center;
   display: inline-flex;

@@ -24,7 +24,7 @@ export function DayMealCopyButton({ dayMeals }: DayMealCopyButtonProps) {
       toast.success("하루 식단을 복사했어요");
     } catch (error) {
       if (isRequestAbortError(error)) return;
-      toast.error("식단을 복사하지 못했어요", "잠시 후 다시 시도해 주세요");
+      toast.error("식단을 복사하지 못했어요", "잠시 후 다시 시도해주세요");
     }
   };
 

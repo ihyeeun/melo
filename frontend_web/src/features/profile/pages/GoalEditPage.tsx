@@ -1,7 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
+import { BirthYearSheet } from "@/features/profile/components/BirthYearSheet";
 import {
   ACTIVITY_OPTIONS,
+  BODY_RANGE_MESSAGES,
+  BODY_VALUE_FRACTION_DIGITS,
+  BODY_VALUE_INTEGER_DIGITS,
   GENDER_OPTIONS,
   GOAL,
   GOAL_OPTIONS,
@@ -27,11 +31,7 @@ import { PageHeader } from "@/shared/commons/header/PageHeader";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import { EditorInput } from "@/shared/commons/input/EditorInput";
 import NumberField from "@/shared/commons/input/NumberField";
-import {
-  getBirthYearRange,
-  isValidBirthYear,
-  makeYearOptions,
-} from "@/shared/commons/picker/yearOptions";
+import { getBirthYearPickerStart } from "@/shared/commons/picker/yearOptions";
 import { InfoPopover } from "@/shared/commons/popover/InfoPopover";
 import { Skeleton, SkeletonStatus } from "@/shared/commons/skeleton/Skeleton";
 import { toast } from "@/shared/commons/toast/toast";
@@ -71,6 +71,14 @@ const SUMMARY_FIELDS: SummaryField[] = [
 function formatDecimal(value?: number) {
   if (value === undefined) return "-";
   return Number.isInteger(value) ? value.toString() : value.toFixed(1);
+}
+
+const BODY_VALUE_INPUT_PATTERN = new RegExp(
+  `^\\d{0,${BODY_VALUE_INTEGER_DIGITS}}(?:\\.\\d{0,${BODY_VALUE_FRACTION_DIGITS}})?$`,
+);
+
+function isBodyValueInputAllowed(inputValue: string) {
+  return BODY_VALUE_INPUT_PATTERN.test(inputValue.trim());
 }
 
 function getSummaryValue(field: EditableField, draft: GoalEditDraft) {
@@ -128,22 +136,17 @@ export default function GoalEditPage() {
     setSheetData((previous) => ({ ...previous, ...patch }));
   }, []);
 
-  const birthYearRange = useMemo(() => getBirthYearRange(), []);
-  const birthYearDefault = useMemo(
-    () => Math.min(Math.max(2000, birthYearRange.min), birthYearRange.max),
-    [birthYearRange.max, birthYearRange.min],
-  );
-  const birthYearOptions = useMemo(
-    () =>
-      makeYearOptions({
-        from: birthYearRange.max,
-        count: birthYearRange.max - birthYearRange.min + 1,
-      }).map(String),
-    [birthYearRange.max, birthYearRange.min],
-  );
+  const [isBirthYearSheetOpen, setIsBirthYearSheetOpen] = useState(false);
+  const [pickerBirthYear, setPickerBirthYear] = useState(getBirthYearPickerStart);
 
   const openEditor = (field: EditableField) => {
-    if (!visibleDraft || field === "birthYear") return;
+    if (!visibleDraft) return;
+
+    if (field === "birthYear") {
+      setPickerBirthYear(getBirthYearPickerStart(visibleDraft.birthYear));
+      setIsBirthYearSheetOpen(true);
+      return;
+    }
 
     // 체중 유지면 목표 몸무게는 현재 몸무게로 정해져 있어 따로 바꿀 수 없다
     if (field === "goalWeight" && visibleDraft.goal === GOAL.MAINTAIN_WEIGHT) {
@@ -201,7 +204,7 @@ export default function GoalEditPage() {
 
     if (editingField === "height") {
       if (!isInRange(sheetData.height, ONBOARDING_HEIGHT_RANGE.min, ONBOARDING_HEIGHT_RANGE.max)) {
-        toast.warning("키를 다시 확인해주세요");
+        toast.warning(BODY_RANGE_MESSAGES.height);
         return;
       }
 
@@ -212,7 +215,7 @@ export default function GoalEditPage() {
 
     if (editingField === "weight") {
       if (!isInRange(sheetData.weight, ONBOARDING_WEIGHT_RANGE.min, ONBOARDING_WEIGHT_RANGE.max)) {
-        toast.warning("현재 몸무게를 다시 확인해주세요");
+        toast.warning(BODY_RANGE_MESSAGES.weight);
         return;
       }
 
@@ -249,7 +252,7 @@ export default function GoalEditPage() {
     };
 
     if (!isGoalWeightRangeValid(nextDraft)) {
-      toast.warning("목표 몸무게를 다시 확인해주세요");
+      toast.warning(BODY_RANGE_MESSAGES.targetWeight);
       return;
     }
 
@@ -278,14 +281,9 @@ export default function GoalEditPage() {
     navigateBack();
   };
 
-  const currentBirthYear = visibleDraft?.birthYear;
-  const selectedBirthYear = isValidBirthYear(currentBirthYear)
-    ? currentBirthYear
-    : birthYearDefault;
-  const selectDefaultBirthYear = () => {
-    if (!isValidBirthYear(currentBirthYear)) {
-      updateDraft({ birthYear: birthYearDefault });
-    }
+  const confirmBirthYear = () => {
+    updateDraft({ birthYear: pickerBirthYear });
+    setIsBirthYearSheetOpen(false);
   };
   const editorTitle = SUMMARY_FIELDS.find((field) => field.id === editingField)?.label;
   const isInstantSelectEditor =
@@ -333,8 +331,8 @@ export default function GoalEditPage() {
             min={ONBOARDING_HEIGHT_RANGE.min}
             max={ONBOARDING_HEIGHT_RANGE.max}
             step={1}
-            blockOutOfRangeInput
-            fractionDigits={1}
+            integerDigits={BODY_VALUE_INTEGER_DIGITS}
+            fractionDigits={BODY_VALUE_FRACTION_DIGITS}
             unit="cm"
             clampOnChange={false}
             normalizeOnBlur={false}
@@ -352,7 +350,9 @@ export default function GoalEditPage() {
             min={ONBOARDING_WEIGHT_RANGE.min}
             max={ONBOARDING_WEIGHT_RANGE.max}
             step={0.1}
+            allowOutOfRange
             normalizeValue={toOneDecimalPlace}
+            isInputTextAllowed={isBodyValueInputAllowed}
             decrementAriaLabel="체중 0.1kg 감소"
             incrementAriaLabel="체중 0.1kg 증가"
             decrementIcon={<SystemIcon name="minus-circle" mode="image" size={28} />}
@@ -432,8 +432,8 @@ export default function GoalEditPage() {
           min={ONBOARDING_WEIGHT_RANGE.min}
           max={ONBOARDING_WEIGHT_RANGE.max}
           step={0.1}
-          fractionDigits={1}
-          blockOutOfRangeInput
+          integerDigits={BODY_VALUE_INTEGER_DIGITS}
+          fractionDigits={BODY_VALUE_FRACTION_DIGITS}
           unit="kg"
           clampOnChange={false}
           normalizeOnBlur={false}
@@ -453,56 +453,34 @@ export default function GoalEditPage() {
 
   return (
     <div className={`${styles.page} page`}>
-      <PageHeader title="정보 및 목표 수정" onBack={handleBack} />
+      <PageHeader title="목표 재설정" onBack={handleBack} />
 
       <main className={`main ${styles.content}`}>
-        {SUMMARY_FIELDS.map((field) => {
-          const isBirthItem = field.id === "birthYear";
-
-          return (
-            <button
-              key={field.id}
-              type="button"
-              className={`${styles.editItem} ${isBirthItem ? styles.birthYearItem : ""}`}
-              onClick={() => openEditor(field.id)}
-            >
-              <span className={`body-l-medium text-primary`}>{field.label}</span>
-              <div className={styles.profileMeta}>
-                <span className={`body-l-regular text-tertiary`}>
-                  {getSummaryValue(field.id, visibleDraft)}
-                </span>
-                <SystemIcon name="chevron-right" className="text-secondary" size={16} />
-              </div>
-
-              {/* screen: PRF-01-003_modal-birth */}
-              {isBirthItem && (
-                <select
-                  className={styles.birthYearSelect}
-                  value={String(selectedBirthYear)}
-                  aria-label="출생 연도 선택"
-                  onFocus={selectDefaultBirthYear}
-                  onPointerDown={selectDefaultBirthYear}
-                  onChange={(event) => updateDraft({ birthYear: Number(event.target.value) })}
-                >
-                  {birthYearOptions.map((year) => (
-                    <option key={year} value={year}>
-                      {year}년
-                    </option>
-                  ))}
-                </select>
-              )}
-            </button>
-          );
-        })}
+        {SUMMARY_FIELDS.map((field) => (
+          <button
+            key={field.id}
+            type="button"
+            className={styles.editItem}
+            onClick={() => openEditor(field.id)}
+          >
+            <span className={`body-l-medium text-primary`}>{field.label}</span>
+            <div className={styles.profileMeta}>
+              <span className={`body-l-regular text-tertiary`}>
+                {getSummaryValue(field.id, visibleDraft)}
+              </span>
+              <SystemIcon name="chevron-right" className="text-secondary" size={16} />
+            </div>
+          </button>
+        ))}
       </main>
 
       <footer className={`footer`}>
         <div className={styles.planInfoAnchor}>
           <InfoPopover defaultOpen side="top" align="center" ariaLabel="수정한 정보 반영 안내">
             <p className={styles.planInfoMessage}>
-              수정한 정보는 새로운 식단 계획을 받아야
+              수정한 정보는
               <br />
-              목표 칼로리에 반영돼요
+              새로운 식단 계획을 받아야 반영돼요
             </p>
           </InfoPopover>
         </div>
@@ -542,6 +520,15 @@ export default function GoalEditPage() {
           )}
         </div>
       </BottomSheet>
+
+      {/* screen: PRF-01-003_modal-birth */}
+      <BirthYearSheet
+        isOpen={isBirthYearSheetOpen}
+        value={pickerBirthYear}
+        onChange={setPickerBirthYear}
+        onConfirm={confirmBirthYear}
+        onClose={() => setIsBirthYearSheetOpen(false)}
+      />
     </div>
   );
 }
@@ -549,7 +536,7 @@ export default function GoalEditPage() {
 function GoalEditLoadFailed({ onBack, onRetry }: { onBack: () => void; onRetry: () => void }) {
   return (
     <div className={`${styles.page} page`}>
-      <PageHeader title="정보 및 목표 수정" onBack={onBack} />
+      <PageHeader title="목표 재설정" onBack={onBack} />
       <main className={`main ${styles.loadFailed}`} role="alert">
         <p className="body-l-medium text-tertiary">정보를 불러오지 못했어요</p>
         <Button variant="outlined" size="s" onClick={onRetry}>

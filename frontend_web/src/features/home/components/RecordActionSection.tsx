@@ -11,6 +11,7 @@ import { useGetProfileQuery } from "@/features/profile/hooks/queries/useProfileQ
 import { WaterIntakeRecordActionButton } from "@/features/water-intake/components/WaterIntakeRecordActionButton";
 import { PATH } from "@/router/path";
 import { getMealRecordPath, getMealSearchPath, getWorkoutRecordPath } from "@/router/pathHelpers";
+import { isNativeApp } from "@/shared/api/bridge/nativeBridge";
 import type { MealType } from "@/shared/api/types/api.dto";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import { Skeleton, SkeletonStatus } from "@/shared/commons/skeleton/Skeleton";
@@ -32,16 +33,19 @@ export default function RecordActionSection() {
   const isBodyLogLoaded = bodyLog !== undefined;
   const displayWeight = bodyLog?.weight ?? (isToday ? (profile?.weight ?? 0) : 0);
   const displaySteps = bodyLog?.steps ?? 0;
-  const { nativeStepConnectionStatus } = useSyncNativeStepCount(selectedDate, {
-    enabled: isBodyLogLoaded && !isFutureDate,
-    savedSteps: bodyLog?.steps,
-  });
+  const { nativeStepConnectionStatus, requestStepPermissionAndSync } = useSyncNativeStepCount(
+    selectedDate,
+    {
+      enabled: isBodyLogLoaded && !isFutureDate,
+      savedSteps: bodyLog?.steps,
+    },
+  );
   const {
     workoutRecords,
     summary: activitySummary,
     isWorkoutRecordPending,
   } = useActivityCalories(selectedDate);
-  const isHealthConnected = nativeStepConnectionStatus !== "disconnected";
+  const isHealthConnected = nativeStepConnectionStatus === "connected";
 
   const hasWorkoutRecords = workoutRecords.length > 0;
   const totalWorkoutDuration = workoutRecords.reduce(
@@ -67,12 +71,18 @@ export default function RecordActionSection() {
     navigate(getBodyLogSheetPath(PATH.HOME_WEIGHT_LOG_SHEET));
   };
 
-  const openStepsEditor = () => {
-    if (nativeStepConnectionStatus !== "disconnected") return;
+  // 건강 앱 미연동(권한 거부 포함)이거나 그날 데이터가 없으면 직접 입력한다.
+  // 미연동이면 먼저 권한을 다시 요청해 보고, 그래도 걸음 수가 없으면 입력 시트를 연다
+  const openStepsEditor = async () => {
+    let status = nativeStepConnectionStatus;
+    if (status === "disconnected" && isNativeApp() && !isFutureDate) {
+      status = await requestStepPermissionAndSync();
+    }
+    if (status !== "disconnected" && status !== "no_data") return;
 
     navigate(
       getBodyLogSheetPath(PATH.HOME_STEPS_LOG_SHEET, {
-        nativeStepConnectionStatus,
+        nativeStepConnectionStatus: status,
       }),
     );
   };
@@ -137,7 +147,7 @@ export default function RecordActionSection() {
             title="걸음 수"
             value={displaySteps}
             unit="보"
-            onClick={openStepsEditor}
+            onClick={() => void openStepsEditor()}
             isPending={isBodyLogPending}
             isHealthConnected={isHealthConnected}
           />

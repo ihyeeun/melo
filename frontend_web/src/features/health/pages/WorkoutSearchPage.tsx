@@ -48,8 +48,8 @@ const EQUIPMENT_OPTIONS = [
   "폼롤러",
   "머신",
   "스미스 머신",
-  "맨몸",
   "케이블 머신",
+  "맨몸",
   "기타",
 ] as const;
 
@@ -84,7 +84,7 @@ export default function WorkoutSearchPage() {
     useDeleteWorkoutRecordMutation({
       onError: (error) => {
         if (isRequestAbortError(error)) return;
-        toast.warning("운동 기록을 제외하지 못했어요", "잠시 후 다시 시도해주세요.");
+        toast.warning("운동을 빼지 못했어요. 다시 시도해주세요");
       },
     });
   const inputRef = useRef<HTMLInputElement>(null);
@@ -190,7 +190,7 @@ export default function WorkoutSearchPage() {
 
   const handleComplete = () => {
     if (hasAddedWorkoutRecord()) {
-      toast.success("운동 기록을 완료했어요");
+      toast.success("운동을 기록했어요");
       trackWorkoutRecordCompleted();
     }
 

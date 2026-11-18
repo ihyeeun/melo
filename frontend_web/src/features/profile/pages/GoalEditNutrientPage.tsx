@@ -16,6 +16,7 @@ import {
   updateWeight,
 } from "@/features/profile/api/profile";
 import {
+  getRatioRecommendationKey,
   hasNutrientTotal,
   isRatioChanged,
   roundRecommendedRatio,
@@ -29,8 +30,10 @@ import {
   useEnsureGoalEditFlow,
   useFinishGoalEditFlow,
   useGoalEditDraft,
+  useGoalEditFlowStore,
   useGoalEditHasActiveFlow,
   useGoalEditInitialDraft,
+  useSetGoalEditRecommendationBasis,
   useUpdateGoalEditDraft,
 } from "@/features/profile/stores/goalEditFlow.store";
 import styles from "@/features/profile/styles/GoalEditPage.module.css";
@@ -43,6 +46,7 @@ import { Button } from "@/shared/commons/button/Button";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import NumberField from "@/shared/commons/input/NumberField";
+import { CheckButtonModal } from "@/shared/commons/modals/CheckButtonModal";
 import { toast } from "@/shared/commons/toast/toast";
 import { resetStackflow, useNavigate } from "@/shared/navigation/stackflowNavigation";
 import { getTodayFormatDateKey } from "@/shared/utils/dateFormat";
@@ -109,7 +113,9 @@ export default function GoalEditNutrientPage() {
   const ensureGoalEditFlow = useEnsureGoalEditFlow();
   const finishGoalEditFlow = useFinishGoalEditFlow();
   const updateDraft = useUpdateGoalEditDraft();
+  const setRecommendationBasis = useSetGoalEditRecommendationBasis();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isNutrientTotalModalOpen, setIsNutrientTotalModalOpen] = useState(false);
   const visibleDraft = hasActiveFlow || isSubmitting ? draft : null;
   const hasEditedNutrientsRef = useRef(false);
   const {
@@ -147,10 +153,13 @@ export default function GoalEditNutrientPage() {
 
     let cancelled = false;
     hasEditedNutrientsRef.current = false;
+    const basisKey = getRatioRecommendationKey(requestPayload);
 
     recommendNutrient(requestPayload, {
       onSuccess: (nutrient) => {
         if (cancelled || hasEditedNutrientsRef.current) return;
+        // 계산에 들어가는 값(목표 칼로리 등)이 그대로면 지금 비율(저장된 값 · 직접 고친 값)을 유지한다
+        if (useGoalEditFlowStore.getState().recommendationBasis.ratio === basisKey) return;
 
         const [carbs, protein, fat] = roundRecommendedRatio([
           nutrient.carbs,
@@ -158,6 +167,7 @@ export default function GoalEditNutrientPage() {
           nutrient.fat,
         ]);
         updateDraft({ carbs, protein, fat });
+        setRecommendationBasis({ ratio: basisKey });
       },
       onError: (error) => {
         if (isRequestAbortError(error)) return;
@@ -170,11 +180,14 @@ export default function GoalEditNutrientPage() {
     return () => {
       cancelled = true;
     };
-  }, [recommendNutrient, requestPayload, updateDraft]);
+  }, [recommendNutrient, requestPayload, setRecommendationBasis, updateDraft]);
 
   const handleNutrientChange = (nutrientType: NutrientType, value?: number) => {
     hasEditedNutrientsRef.current = true;
     updateDraft({ [nutrientType]: value });
+    if (visibleDraft) {
+      setRecommendationBasis({ ratio: getRatioRecommendationKey(visibleDraft) });
+    }
   };
 
   const handleBack = () => {
@@ -199,12 +212,7 @@ export default function GoalEditNutrientPage() {
     }
 
     if (!hasNutrientTotal(toTargetRatio(visibleDraft))) {
-      toast.show({
-        title: "탄단지 비율의 합을 100으로 맞춰주세요",
-        type: "error",
-        position: "bottom",
-        timeout: 3000,
-      });
+      setIsNutrientTotalModalOpen(true);
       return;
     }
 
@@ -265,8 +273,12 @@ export default function GoalEditNutrientPage() {
       });
     }
 
+    // 바뀐 게 없으면 저장할 것 없이 끝내고 프로필로 돌아간다
     if (updateTasks.length === 0) {
-      toast.warning("변경된 내용이 없어요");
+      finishGoalEditFlow();
+      resetStackflow(PATH.PROFILE, {
+        animate: false,
+      });
       return;
     }
 
@@ -412,12 +424,13 @@ export default function GoalEditNutrientPage() {
         </Button>
       </footer>
 
-      {/* <CheckButtonModal
+      {/* screen: PRF-01-005_modal-macro-ratio-error */}
+      <CheckButtonModal
         open={isNutrientTotalModalOpen}
         onOpenChange={setIsNutrientTotalModalOpen}
         title="영양소 비율 확인"
-        description="탄단지 비율의 합을 100으로 맞춰주세요"
-      /> */}
+        description="탄단지 비율의 합을 100%로 맞춰주세요"
+      />
     </div>
   );
 }

@@ -32,12 +32,12 @@ export default function MenstruationCardButton({ phase }: { phase: MenstrualPhas
     : isError
       ? "기록을 불러오지 못했어요"
       : isIrregularBleeding
-        ? "부정출혈"
+        ? "평소보다 이른 출혈"
         : homeContent.title(getMenstrualPhaseDayInfo(selectedDateKey, phaseDate));
   const message = isLoading
     ? "잠시만 기다려 주세요."
     : isError
-      ? "눌러서 다시 시도해 주세요."
+      ? "눌러서 다시 시도해주세요."
       : homeContent.message;
 
   const timeline = [

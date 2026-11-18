@@ -18,8 +18,8 @@ export type NutrientFormKey = {
 
 export const NUTRIENT_FORM_CONFIG: NutrientFormKey[] = [
   { key: "carbs", label: "탄수화물", unit: "g", variant: "main", group: "carbs" },
-  { key: "sugars", label: "당", unit: "g", variant: "sub", group: "carbs" },
-  { key: "sugar_alchol", label: "당알코올/대체당", unit: "g", variant: "sub", group: "carbs" },
+  { key: "sugars", label: "당류", unit: "g", variant: "sub", group: "carbs" },
+  { key: "sugar_alchol", label: "당알코올(대체당)", unit: "g", variant: "sub", group: "carbs" },
   { key: "dietary_fiber", label: "식이섬유", unit: "g", variant: "sub", group: "carbs" },
 
   { key: "protein", label: "단백질", unit: "g", variant: "main", group: "protein" },

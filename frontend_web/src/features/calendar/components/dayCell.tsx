@@ -15,6 +15,7 @@ export default function DayCell({
   weekdayLabel,
   onSelect,
   variant = "week",
+  isDisabled = false,
   hasRecord,
   showMonthBackground = false,
   recordLabel,
@@ -30,6 +31,8 @@ export default function DayCell({
       data-today={day.isToday}
       data-outside={!day.isCurrentMonth}
       data-has-record={hasRecord}
+      data-disabled={isDisabled}
+      disabled={isDisabled}
       onClick={() => onSelect(day.date)}
       aria-pressed={day.isSelected}
       aria-label={`${day.date.toLocaleDateString("ko-KR", {

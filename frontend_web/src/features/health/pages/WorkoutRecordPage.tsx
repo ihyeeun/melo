@@ -169,7 +169,7 @@ export default function WorkoutRecordPage() {
           <p className="title-s-semi text-primary">{dayTitles.list}</p>
           {workouts.length > 0 && (
             <button onClick={handleEditWorkoutRecords} className="body-s-regular text-secondary">
-              수정하기
+              수정
             </button>
           )}
         </div>

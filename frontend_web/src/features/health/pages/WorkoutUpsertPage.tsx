@@ -294,7 +294,7 @@ export default function WorkoutUpsertPage() {
   const { mutate: upsertWorkoutRecord, isPending: isUpsertPending } =
     useUpsertWorkoutRecordMutation({
       onSuccess: () => {
-        toast.success("추가되었어요");
+        toast.success("운동을 추가했어요");
         navigateBack({ fallbackTo: getWorkoutRecordPath(date) });
       },
     });

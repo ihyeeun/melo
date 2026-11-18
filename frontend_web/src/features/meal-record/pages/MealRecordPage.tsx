@@ -128,6 +128,7 @@ type DisplayMenuItem = {
   unit?: number;
   weight?: number;
   data_source?: number;
+  isDeleted?: boolean;
 };
 
 const MEAL_RECORD_PERIOD_OPTIONS: MealRecordPeriod[] = ["오전", "오후"];
@@ -187,7 +188,6 @@ export default function MealRecordPage() {
     currentDraft?.image === null
       ? null
       : (normalizeMealImage(currentDraft?.image ?? currentMenus?.imagesByTime[mealType]) ?? null);
-  const didNotEat = Boolean(currentMenus?.didNotEatByTime[mealType]);
   const currentMenuItems = useMemo(
     () => currentMenus?.menusByTime[mealType] ?? [],
     [currentMenus, mealType],
@@ -304,6 +304,7 @@ export default function MealRecordPage() {
       unit: menu.unit,
       weight: menu.weight,
       data_source: menu.data_source,
+      isDeleted: menu.is_deleted === 1,
     });
 
     if (!hasCurrentDraft) {
@@ -401,7 +402,6 @@ export default function MealRecordPage() {
       return sum + menu.calories;
     }, 0);
   }, [displayMenuItems]);
-  const showDidNotEatState = didNotEat && displayMenuItems.length === 0;
   const selectedMealRecordTime =
     normalizeMealRecordTime(currentDraft?.mealTime) ??
     getBaselineMealRecordTime(mealType) ??
@@ -429,15 +429,7 @@ export default function MealRecordPage() {
   const handleConfirmTime = () => {
     setMealTime({ key: draftKey, mealTime: toMealRecordTime(draftMealRecordTime) });
     setIsTimeSheetOpen(false);
-    toast.success("시간이 수정되었어요");
-  };
-
-  const handleResetTime = () => {
-    const defaultTime = getCurrentMealRecordTime();
-    setDraftMealRecordTime(toMealRecordTimeValue(defaultTime));
-    setMealTime({ key: draftKey, mealTime: defaultTime });
-    setIsTimeSheetOpen(false);
-    toast.success("시간을 삭제했어요");
+    toast.success("시간을 수정했어요");
   };
 
   const handleRemoveMenu = (menuId: number) => {
@@ -479,9 +471,9 @@ export default function MealRecordPage() {
     }
 
     try {
+      // 바뀐 게 없으면 저장 안내 없이 닫는다
       if (changedRequests.length === 0) {
         clearAllDrafts();
-        toast.success("식사 기록이 저장되었어요");
         navigateBack({
           animate: false,
           fallbackTo: PATH.HOME,
@@ -533,7 +525,7 @@ export default function MealRecordPage() {
         fallbackTo: PATH.HOME,
         skipBackHandler: true,
       });
-      toast.success("식사 기록이 저장되었어요");
+      toast.success("식사를 기록했어요");
     } catch (error) {
       if (isRequestAbortError(error)) return;
       toast.warning("식사 기록 저장에 실패했어요", "잠시 후 다시 시도해주세요.");
@@ -654,16 +646,13 @@ export default function MealRecordPage() {
                   unit={menu.unit}
                   weight={menu.weight}
                   data_source={menu.data_source}
+                  isDeleted={menu.isDeleted}
                   icon="delete"
                   onIconClick={() => handleRemoveMenu(menu.id)}
                   onClick={() => handleMenuDetail(menu.id)}
                 />
               ))}
             </div>
-          ) : showDidNotEatState ? (
-            <article className={styles.didNotEatState}>
-              <p className="title-m-semi">안 먹었어요</p>
-            </article>
           ) : (
             <button type="button" className={styles.emptyState} onClick={handleMealSearchNavigate}>
               <img src="/icons/characters/question.png" alt="" aria-hidden="true" width={200} />
@@ -714,11 +703,6 @@ export default function MealRecordPage() {
         bodyClassName={styles.timeSheetBody}
         disableContentDrag
         title="식사 시간"
-        titleRightSlot={
-          <button type="button" onClick={handleResetTime} className="marginLeft">
-            <span className="body-l-regular text-tertiary textNoWrap">삭제</span>
-          </button>
-        }
       >
         <div className={styles.timeSheetContent}>
           <ScrollWheelPicker

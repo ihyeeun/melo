@@ -40,7 +40,8 @@ type ReadNativeStepCountOptions = {
   shouldRequestPermission?: boolean;
 };
 
-export type NativeStepConnectionStatus = "connected" | "disconnected" | "unknown";
+// no_data: 건강 앱과 연동은 됐지만 그날 걸음 데이터가 없음(0보 포함, iOS는 권한을 거부해도 여기로 온다)
+export type NativeStepConnectionStatus = "connected" | "no_data" | "disconnected" | "unknown";
 
 export function canUseNativeStepCount(startDate: string, endDate: string, enabled = true) {
   return enabled && isNativeApp() && isValidDateKey(startDate) && isValidDateKey(endDate);

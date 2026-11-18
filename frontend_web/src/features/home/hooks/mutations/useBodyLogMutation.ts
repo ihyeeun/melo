@@ -4,6 +4,7 @@ import { calendarKeys } from "@/features/calendar/hooks/queries/calendar.queryKe
 import { registerStep, registerWeight } from "@/features/home/api/todayRecord.api";
 import { queryKeys as homeQueryKeys } from "@/features/home/hooks/queries/todayRecord.queryKey";
 import { updateWeight } from "@/features/profile/api/profile";
+import { queryKeys as profileQueryKeys } from "@/features/profile/hooks/queries/queryKey";
 import { isRequestAbortError } from "@/shared/api/requestCancellation";
 import type { WeightStepsResponseDto } from "@/shared/api/types/api.response.dto";
 import type { UseMutationCallback } from "@/shared/api/types/callback.types";
@@ -27,7 +28,7 @@ export function useRegisterWeightMutation(callbacks?: UseMutationCallback) {
         return undefined;
       }
     },
-    onSuccess: async (_, { date, weight }) => {
+    onSuccess: async (updatedProfile, { date, weight }) => {
       queryClient.setQueryData<WeightStepsResponseDto>(
         homeQueryKeys.bodyStats(date),
         (previous) => ({
@@ -35,6 +36,12 @@ export function useRegisterWeightMutation(callbacks?: UseMutationCallback) {
           steps: previous?.steps ?? null,
         }),
       );
+      // 오늘 체중은 프로필 체중도 바뀌므로, 운동 칼로리 등이 새 체중으로 계산되게 프로필을 바로 맞춘다
+      if (updatedProfile) {
+        queryClient.setQueryData(profileQueryKeys.profile, updatedProfile);
+      } else if (date === getTodayFormatDateKey()) {
+        void queryClient.invalidateQueries({ queryKey: profileQueryKeys.profile, exact: true });
+      }
       await queryClient.invalidateQueries({
         queryKey: calendarKeys.monthly.month({ date: date.slice(0, 7), mode: "weight" }),
       });

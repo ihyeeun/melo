@@ -1,6 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
+import { useActivity } from "@stackflow/react";
+import { useQueryClient } from "@tanstack/react-query";
+import { useEffect, useMemo, useRef, useState } from "react";
 
+import { queryKeys as homeQueryKeys } from "@/features/home/hooks/queries/todayRecord.queryKey";
 import { useDayMealsQuery } from "@/features/home/hooks/queries/useTodayRecordQuery";
+import type { DayMealSummary } from "@/features/home/utils/dayMealSummary";
 import {
   MealMenuNutrientDetail,
   type MealMenuNutrientSelection,
@@ -25,6 +29,7 @@ import {
   type MenuSelectionPathParams,
 } from "@/features/menu-selection/utils/menuSelectionRoutes";
 import type { NutrientModifyLocationState } from "@/features/nutrient-entry/types/nutrientEntry.state";
+import { folderQueryKeys } from "@/features/personal-menu/folder/hooks/queries/folder.queryKey";
 import { PATH } from "@/router/path";
 import { getMealRecordPath } from "@/router/pathHelpers";
 import { type MealMenuItem, MENU_DATA_SOURCE } from "@/shared/api/types/api.dto";
@@ -92,7 +97,10 @@ export default function MealDetailPage() {
     ? menuSelectionPathContext
     : null;
 
-  const { data: meal, isPending, isError } = useMealDetailQuery(menuId);
+  const { data: meal, isPending, isLoadingError } = useMealDetailQuery(menuId);
+  const queryClient = useQueryClient();
+  const { isActive } = useActivity();
+  const hasLeftForFailureRef = useRef(false);
 
   const getBackFallbackPath = () => {
     if (menuSelectionRouteContext.returnPath) {
@@ -110,31 +118,49 @@ export default function MealDetailPage() {
     navigateBack({ fallbackTo: getBackFallbackPath() });
   };
 
+  // 지운 음식은 지금 담는 중인 목록에서 빼서 [N개 담겼어요]를 줄인다.
+  // 이미 저장된 식사 기록 · 폴더에서는 빼지 않고 '삭제됨'으로 남긴다
+  const removeDeletedMenuFromDraft = (deletedMenuId: number) => {
+    if (menuSelectionAdapter.selectionTarget !== MENU_SELECTION_TARGET.MEAL_RECORD) return;
+
+    const savedDayMeals = queryClient.getQueryData<DayMealSummary>(
+      homeQueryKeys.dayMeals.byDate(dateKey),
+    );
+    const isSavedInMeal = savedDayMeals?.menusByTime[mealType].some(
+      (menu) => menu.id === deletedMenuId,
+    );
+    if (isSavedInMeal) return;
+
+    menuSelectionAdapter.removeSelectedMenu(deletedMenuId);
+  };
+
   const { mutate: deleteMealMutation, isPending: isDeletePending } = useMealDeleteMutation({
     onSuccess: () => {
+      if (menuId !== null) removeDeletedMenuFromDraft(menuId);
+      void queryClient.invalidateQueries({ queryKey: homeQueryKeys.dayMeals.all });
+      void queryClient.invalidateQueries({ queryKey: folderQueryKeys.details() });
       toast.success("삭제되었어요");
       handleGoBack();
     },
   });
 
+  // 상세를 열 수 없으면(잘못된 진입 · 불러오기 실패) 안내 후 카드를 눌렀던 직전 화면으로 돌아간다.
+  // 이 화면이 맨 위일 때 한 번만 돌아가야 다른 화면을 닫지 않는다
+  const backFallbackPath = getBackFallbackPath();
+  const failureMessage =
+    menuId === null
+      ? "잘못된 접근입니다."
+      : isLoadingError
+        ? "메뉴 정보를 불러오지 못했어요"
+        : null;
+
   useEffect(() => {
-    if (menuId !== null) {
-      return;
-    }
+    if (!failureMessage || !isActive || hasLeftForFailureRef.current) return;
 
-    toast.warning("잘못된 접근입니다.");
-
-    navigate(PATH.HOME, { replace: true });
-  }, [dateKey, mealType, menuId, navigate]);
-
-  useEffect(() => {
-    if (!isError) {
-      return;
-    }
-
-    toast.warning("메뉴 정보를 불러오지 못했어요");
-    navigate(PATH.HOME, { replace: true });
-  }, [dateKey, isError, mealType, navigate]);
+    hasLeftForFailureRef.current = true;
+    toast.warning(failureMessage);
+    navigateBack({ fallbackTo: backFallbackPath });
+  }, [backFallbackPath, failureMessage, isActive]);
 
   const existingSelection = useMemo(() => {
     if (menuId === null) {
@@ -360,6 +386,7 @@ export default function MealDetailPage() {
         title="영양성분 상세"
         onBack={handleGoBack}
         rightSlot={
+          !isFromChat &&
           isPersonalMenuData &&
           mealIsDeleted === 0 && (
             <Button variant="text" size="xs" onClick={handleDelete}>
@@ -382,17 +409,20 @@ export default function MealDetailPage() {
         />
       </main>
 
-      <footer className={`footer`}>
-        <Button
-          variant="default"
-          size="m"
-          fullWidth
-          onClick={handleAddMenu}
-          disabled={!selection || mealIsDeleted !== 0}
-        >
-          {footerButtonLabel}
-        </Button>
-      </footer>
+      {/* AI 채팅 [등록한 메뉴 보기]로 연 상세는 확인 · 수정만 한다([담기] · [삭제] 숨김) */}
+      {!isFromChat && (
+        <footer className={`footer`}>
+          <Button
+            variant="default"
+            size="m"
+            fullWidth
+            onClick={handleAddMenu}
+            disabled={!selection || mealIsDeleted !== 0}
+          >
+            {footerButtonLabel}
+          </Button>
+        </footer>
+      )}
 
       {/* screen: DIET-02-001_modal-delete */}
       <ConfirmModal
@@ -401,7 +431,7 @@ export default function MealDetailPage() {
         title="영양 성분 삭제"
         description="저장한 영양 성분을 삭제할까요?"
         cancelText="취소"
-        confirmText="확인"
+        confirmText="삭제"
         confirmDisabled={isDeletePending}
         onConfirm={handleConfirmDelete}
       />

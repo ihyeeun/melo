@@ -4,6 +4,7 @@ import { captureScreenRequestScope } from "@/shared/api/screenRequests";
 import type {
   ApiRequestPayload,
   AppDeviceInfoPayload,
+  AppFeature,
   AppTabName,
   AppToWebMessage,
   CameraCaptureRequestPayload,
@@ -338,6 +339,40 @@ export function requestNativeAppUpdateApply() {
   postMessageToApp({
     id: generateRequestId(),
     type: "APP_UPDATE_APPLY_REQUEST",
+  });
+}
+
+let supportedAppFeaturesPromise: Promise<AppFeature[]> | null = null;
+
+// 앱이 지원하는 브리지 기능 목록. 앱 화면이 다시 열리기 전까지는 바뀌지 않아서 한 번만 묻는다
+export function getNativeAppSupportedFeatures(): Promise<AppFeature[]> {
+  if (!isNativeApp()) return Promise.resolve([]);
+
+  supportedAppFeaturesPromise ??= requestNativeAppDeviceInfo()
+    .then((deviceInfo) => deviceInfo.supportedFeatures ?? [])
+    .catch(() => {
+      supportedAppFeaturesPromise = null;
+      return [];
+    });
+
+  return supportedAppFeaturesPromise;
+}
+
+export function requestNativeAppSettingsOpen() {
+  if (!isNativeApp()) return;
+
+  postMessageToApp({
+    id: generateRequestId(),
+    type: "APP_SETTINGS_OPEN_REQUEST",
+  });
+}
+
+export function requestNativeSignUpRedirect() {
+  if (!isNativeApp()) return;
+
+  postMessageToApp({
+    id: generateRequestId(),
+    type: "SIGN_UP_REDIRECT_REQUEST",
   });
 }
 

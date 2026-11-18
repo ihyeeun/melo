@@ -22,6 +22,8 @@ type MealMenuCardProps = {
   data_source?: MenuDataSource | number;
   icon?: MealMenuCardIcon;
   state?: boolean;
+  // 사용자가 지운 내 음식. 지난 기록 · 폴더에서 '삭제됨'으로 남는다
+  isDeleted?: boolean;
   className?: string;
   onClick?: () => void;
   onIconClick?: () => void;
@@ -82,6 +84,7 @@ export function MealMenuCard({
   data_source,
   icon,
   state = false,
+  isDeleted = false,
   className,
   onClick,
   onIconClick,
@@ -112,7 +115,12 @@ export function MealMenuCard({
       <button onClick={onClick ? () => onClick() : undefined} className={styles.contents}>
         {isPersonalMenu && <DataSourceBadge variant="personal" active={isSelected} />}
 
-        <p className={`body-l-medium text-primary ellipsis`}>{name}</p>
+        <div className={styles.nameRow}>
+          <p className={`body-l-medium ${isDeleted ? "text-tertiary" : "text-primary"} ellipsis`}>
+            {name}
+          </p>
+          {isDeleted && <span className={`caption-m-medium text-tertiary textNoWrap`}>삭제됨</span>}
+        </div>
 
         {shouldShowCalories ? (
           <p className={`${styles.meta} body-s-regular`}>

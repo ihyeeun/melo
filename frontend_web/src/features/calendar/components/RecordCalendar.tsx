@@ -22,6 +22,7 @@ import type {
   CalendarViewMode,
   DayCellRenderProps,
 } from "@/features/calendar/types/calendar.types";
+import { getLastSelectableDate, isSelectableDate } from "@/features/calendar/utils/calendar";
 import {
   formatMonthlyCalendarRecord,
   MONTHLY_RECORD_MODES,
@@ -65,11 +66,13 @@ export default function RecordCalendar({
   renderDayCell,
 }: Props) {
   const [recordMode, setRecordMode] = useState<CalendarViewMode>(initialRecordMode);
+  // 날짜는 오늘 포함 7일까지만 고를 수 있다
+  const lastSelectableDate = getLastSelectableDate();
   const {
     viewMode,
     selectedDate,
     viewDate,
-    canGoNextWeek,
+    canGoNext,
     setViewMode,
     toggleViewMode,
     selectDate,
@@ -79,7 +82,7 @@ export default function RecordCalendar({
   } = useCalendar({
     initialViewMode: "week",
     selectedDate: controlledSelectedDate,
-    allowFutureWeekNavigation: false,
+    maxDate: lastSelectableDate,
   });
   const { isActive } = useActivity();
   const rootRef = useRef<HTMLElement>(null);
@@ -128,6 +131,8 @@ export default function RecordCalendar({
   });
 
   const handleSelectDate = (date: Date) => {
+    if (!isSelectableDate(date)) return;
+
     selectDate(date);
     setViewMode("week");
     onSelectDate?.(date);
@@ -154,6 +159,7 @@ export default function RecordCalendar({
         onToggleViewMode={toggleViewMode}
         onPrev={goPrev}
         onNext={goNext}
+        canGoNext={canGoNext}
         onToday={handleGoToday}
       />
 
@@ -193,13 +199,17 @@ export default function RecordCalendar({
         viewMode={viewMode}
         viewDate={viewDate}
         selectedDate={selectedDate}
-        canGoNext={viewMode === "month" || canGoNextWeek}
+        canGoNext={canGoNext}
         onSelectDate={handleSelectDate}
         onPrev={goPrev}
         onNext={goNext}
         onRenderedStartDateChange={onVisibleStartDateChange}
         renderDayCell={(props) => {
-          const dayCellProps = { ...props, showMonthBackground };
+          const dayCellProps = {
+            ...props,
+            showMonthBackground,
+            isDisabled: !isSelectableDate(props.day.date),
+          };
           const dateKey = formatDateKey(props.day.date);
           const recordLabel =
             showMonthlyRecords && props.day.isCurrentMonth

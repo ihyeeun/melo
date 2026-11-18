@@ -90,3 +90,7 @@
   color: var(--primary-normal);
   white-space: nowrap;
 }
+
+.retryButton + .retryButton {
+  margin-left: 12px;
+}
