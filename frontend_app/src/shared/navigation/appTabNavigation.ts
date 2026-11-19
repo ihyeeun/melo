@@ -14,6 +14,33 @@ export function normalizeOptionalTabs(value: unknown): OptionalTabName[] | null 
   return value.length > 0 && acceptedTabs.length === 0 ? null : acceptedTabs;
 }
 
+// 웹이 정한 탭바 구성. 순서대로 그리고, label이 없으면 앱의 기본 이름을 쓴다
+export type AppTabConfig = { tab: AppTabName; label?: string }[];
+
+// 웹이 보낸 탭 구성을 검사한다. 모르는 탭과 중복은 버리고, 남는 게 없으면 null
+export function normalizeTabConfig(value: unknown): AppTabConfig | null {
+  if (!Array.isArray(value)) return null;
+
+  const addedTabs = new Set<AppTabName>();
+  const config: AppTabConfig = [];
+  for (const item of value) {
+    if (typeof item !== "object" || item === null) continue;
+
+    const { tab, label } = item as { tab?: unknown; label?: unknown };
+    if (!isAppTabName(tab) || addedTabs.has(tab)) continue;
+
+    addedTabs.add(tab);
+    config.push(typeof label === "string" && label.trim() ? { tab, label: label.trim() } : { tab });
+  }
+
+  return config.length > 0 ? config : null;
+}
+
+// 앱을 시작하고 뒤로가기로 돌아오는 기준 탭. 위에 쌓이는 탭(AI 코치)은 기준이 될 수 없다
+export function getRootTab(tabs: readonly AppTabName[]): AppTabName {
+  return tabs.find((tab) => TAB_NAVIGATION_POLICY[tab].nativeHistory === "replace") ?? "home";
+}
+
 export function isAppTabVisible(
   tab: AppTabName,
   optionalTabs: readonly OptionalTabName[] | null,

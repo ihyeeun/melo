@@ -1,4 +1,5 @@
 import { type Tokens } from "@/features/auth/types";
+import { clearTabConfig } from "@/src/shared/navigation/tabConfigStore";
 import * as SecureStore from "expo-secure-store";
 
 const ACCESS_TOKEN_KEY = "accessToken";
@@ -18,8 +19,9 @@ export async function loadRefreshToken() {
   return SecureStore.getItemAsync(REFRESH_TOKEN_KEY);
 }
 
-// store에 있는 토큰 삭제하기
+// store에 있는 토큰 삭제하기. 탭 구성은 계정(유료/무료)마다 달라서 세션이 끝나면 같이 지운다
 export async function clearTokens() {
   await SecureStore.deleteItemAsync(ACCESS_TOKEN_KEY);
   await SecureStore.deleteItemAsync(REFRESH_TOKEN_KEY);
+  await clearTabConfig();
 }

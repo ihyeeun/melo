@@ -1,8 +1,10 @@
 import AppWebViewScreen from "@/src/screens/AppWebviewScreen";
 import {
+  type AppTabConfig,
   type AppTabName,
   type OptionalTabName,
   getNativeTabHistoryAction,
+  getRootTab,
   getTabPath,
   getTabRoute,
   isAppTabName,
@@ -10,6 +12,7 @@ import {
   shouldEnableTabBackGesture,
   shouldUseNativeBackOnTabExit,
 } from "@/src/shared/navigation/appTabNavigation";
+import { getCachedTabConfig, saveTabConfig } from "@/src/shared/navigation/tabConfigStore";
 import { requestAppExit } from "@/src/shared/navigation/appExit";
 import { useEdgeSwipeBack } from "@/src/shared/navigation/useEdgeSwipeBack";
 import { triggerNativeHaptic } from "@/src/shared/native/haptics";
@@ -28,11 +31,13 @@ import { semantic, colors } from "@/src/shared/styles";
 
 const TAB_ITEMS = [
   { tab: "home", label: "기록", Icon: HomeIcon },
+  { tab: "restaurant", label: "식당", Icon: RestaurantIcon },
   { tab: "chat", label: "AI 코치", Icon: ChatIcon },
   { tab: "analysis", label: "분석", Icon: AnalysisIcon },
-  { tab: "restaurant", label: "식당", Icon: RestaurantIcon },
   { tab: "profile", label: "프로필", Icon: UserIcon },
 ] as const;
+
+type TabItem = { tab: AppTabName; label: string; Icon: (typeof TAB_ITEMS)[number]["Icon"] };
 
 const ACTIVE_ICON_COLOR = colors.coral[500];
 const INACTIVE_ICON_COLOR = semantic.text.tertiary;
@@ -87,17 +92,29 @@ export default function TabsLayout() {
   const [chatBackRequestKey, setChatBackRequestKey] = useState(0);
   const [isFreeUserGuardEnabled, setIsFreeUserGuardEnabled] = useState(FREE_USER_GUARD_ENABLED);
   const [optionalTabs, setOptionalTabs] = useState<OptionalTabName[] | null>(null);
+  const [tabConfig, setTabConfig] = useState<AppTabConfig | null>(getCachedTabConfig);
+  const handleTabConfigChange = useCallback((config: AppTabConfig) => {
+    setTabConfig(config);
+    void saveTabConfig(config);
+  }, []);
   const insets = useSafeAreaInsets();
   const tabBarBottom =
     Platform.OS === "android"
       ? insets.bottom + TAB_BAR_BOTTOM_GAP
       : Math.max(insets.bottom - IOS_SAFE_AREA_OVERLAP, TAB_BAR_BOTTOM_GAP);
   const tabBarInset = tabBarBottom + TAB_BAR_HEIGHT;
-  const visibleTabItems = useMemo(
-    () =>
-      TAB_ITEMS.filter((item) => isAppTabVisible(item.tab, optionalTabs, isFreeUserGuardEnabled)),
-    [isFreeUserGuardEnabled, optionalTabs],
-  );
+  const visibleTabItems = useMemo((): TabItem[] => {
+    // 웹이 정한 구성(저장해 둔 것 포함)이 있으면 그 순서와 이름을 따른다. 이 앱 버전에 없는 탭은 건너뛴다
+    const configuredItems = (tabConfig ?? []).flatMap(({ tab, label }) => {
+      const item = TAB_ITEMS.find((candidate) => candidate.tab === tab);
+      return item ? [{ ...item, label: label ?? item.label }] : [];
+    });
+    if (configuredItems.length > 0) return configuredItems;
+
+    return TAB_ITEMS.filter((item) =>
+      isAppTabVisible(item.tab, optionalTabs, isFreeUserGuardEnabled),
+    );
+  }, [isFreeUserGuardEnabled, optionalTabs, tabConfig]);
   const reduceMotion = useReducedMotion();
   const [tabBarWidth, setTabBarWidth] = useState(0);
   const focusedTabIndex = visibleTabItems.findIndex((item) => item.tab === currentTab);
@@ -113,8 +130,8 @@ export default function TabsLayout() {
     enabled: shouldEnableChatBackSwipe,
     onBack: requestChatBack,
   });
-  // 1번째 탭은 사용자 유형에 따라 다르다(지도 배포 후 무료 = 식당, 유료 = 홈). 탭 바 순서를 따른다
-  const firstTab = visibleTabItems[0]?.tab ?? "home";
+  // 1번째 탭은 웹이 사용자 유형별로 정한 탭 순서를 따른다. AI 코치처럼 위에 쌓이는 탭은 건너뛴다
+  const firstTab = getRootTab(visibleTabItems.map((item) => item.tab));
   const handleTabRootBack = useCallback(() => {
     // G-2: 1번째 탭의 루트는 종료 확인
     if (currentTab === firstTab) {
@@ -134,8 +151,8 @@ export default function TabsLayout() {
   useEffect(() => {
     if (visibleTabItems.some((item) => item.tab === currentTab)) return;
 
-    router.replace(getTabRoute("home"));
-  }, [currentTab, visibleTabItems]);
+    router.replace(getTabRoute(firstTab));
+  }, [currentTab, firstTab, visibleTabItems]);
 
   return (
     <View style={styles.container}>
@@ -148,6 +165,7 @@ export default function TabsLayout() {
           onTabBarVisibilityChange={setIsTabBarHidden}
           onFeatureGuardEnabledChange={setIsFreeUserGuardEnabled}
           onOptionalTabsChange={setOptionalTabs}
+          onTabConfigChange={handleTabConfigChange}
           onRootBack={handleTabRootBack}
         />
       </View>
@@ -173,6 +191,8 @@ export default function TabsLayout() {
           >
             {focusedTabIndex >= 0 && tabBarWidth > 0 ? (
               <Animated.View
+                // 탭 구성이 바뀌면 새로 그려서 미끄러지지 않게 한다. 사용자가 탭을 바꿀 때만 미끄러진다
+                key={visibleTabItems.map((item) => item.tab).join()}
                 pointerEvents="none"
                 style={{
                   ...styles.tabIndicator,

@@ -8,14 +8,14 @@ import { AppApiError } from "@/shared/api/apiClient";
 import {
   isNativeApp,
   requestNativeSignUpRedirect,
-  syncAppOptionalTabs,
+  syncAppTabConfig,
 } from "@/shared/api/bridge/nativeBridge";
-import type { OptionalTabName } from "@/shared/api/bridge/nativeBridge.types";
 import { useNativeAppFeature } from "@/shared/api/bridge/useNativeAppFeature";
 import { Button } from "@/shared/commons/button/Button";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import { LoadingScreen } from "@/shared/commons/loading/Loading";
 import { setFreeUserGuardEnabled } from "@/shared/guards/featureGuard";
+import { APP_OPTIONAL_TABS, APP_TABS } from "@/shared/navigation/appTabConfig";
 
 import {
   consumeExpectedStackflowPopState,
@@ -29,8 +29,6 @@ import styles from "./StackflowRuntime.module.css";
 import { getWebNavigationCommand, WEB_NAVIGATION_COMMAND_EVENT } from "./webNavigationCommand";
 
 const StackComponent = getStackflowStackComponent();
-
-const WEB_OPTIONAL_TABS: readonly OptionalTabName[] = ["restaurant", "analysis"];
 
 const PROFILE_SYNC_EXCLUDED_PATHS = new Set([PATH.ONBOARDING, PATH.APP_INFO]);
 const USER_INFO_NOT_FOUND_STATUS_CODE = 40411;
@@ -84,6 +82,10 @@ function useSyncFeatureGuardFromProfile() {
     }
 
     setFreeUserGuardEnabled(!isSubscribed);
+    syncAppTabConfig({
+      optionalTabs: APP_OPTIONAL_TABS,
+      tabs: isSubscribed ? APP_TABS.paid : APP_TABS.free,
+    });
   }, [isSubscribed]);
 
   if (!shouldFetchProfile || typeof isSubscribed === "boolean") {
@@ -204,7 +206,7 @@ export function StackflowRuntime() {
     syncStackflowWithCurrentBrowserPath({ animate: false });
 
     // Install navigation listeners before a hidden tab can redirect to home.
-    syncAppOptionalTabs(WEB_OPTIONAL_TABS);
+    syncAppTabConfig({ optionalTabs: APP_OPTIONAL_TABS });
 
     return () => {
       window.removeEventListener(WEB_NAVIGATION_COMMAND_EVENT, handleWebNavigationCommand);

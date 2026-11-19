@@ -18,8 +18,8 @@ import type {
   ImageUploadRequestPayload,
   InAppBrowserOpenResponsePayload,
   LocationRequestPayload,
-  OptionalTabName,
   WebToAppMessage,
+  WebToAppTabConfigSetMessage,
 } from "./nativeBridge.types";
 
 type PendingRequest = {
@@ -223,13 +223,13 @@ export function syncAppTab(tab: AppTabName) {
   });
 }
 
-export function syncAppOptionalTabs(optionalTabs: readonly OptionalTabName[]) {
+export function syncAppTabConfig(config: WebToAppTabConfigSetMessage["payload"]) {
   if (!isNativeApp()) return;
 
   postMessageToApp({
     id: generateRequestId(),
     type: "TAB_CONFIG_SET",
-    payload: { optionalTabs },
+    payload: config,
   });
 }
 

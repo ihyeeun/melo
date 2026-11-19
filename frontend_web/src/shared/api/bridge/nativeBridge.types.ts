@@ -3,6 +3,11 @@ import type { ApiResponse } from "@/shared/api/types/apiResponse.types";
 export type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 export type AppTabName = "home" | "chat" | "diary" | "restaurant" | "analysis" | "profile";
 export type OptionalTabName = Extract<AppTabName, "diary" | "restaurant" | "analysis">;
+// 앱 탭바에 그릴 탭 하나. label이 없으면 앱의 기본 이름을 쓴다
+export type AppTabConfigItem = {
+  tab: AppTabName;
+  label?: string;
+};
 export type BridgeMessageContext = {
   href?: string;
 };
@@ -42,6 +47,8 @@ export type WebToAppTabConfigSetMessage = {
   context?: BridgeMessageContext;
   payload: {
     optionalTabs: readonly OptionalTabName[];
+    // 탭바의 구성과 순서. 이 값을 모르는 이전 버전 앱은 optionalTabs만 쓴다
+    tabs?: readonly AppTabConfigItem[];
   };
 };
 

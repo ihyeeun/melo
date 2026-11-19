@@ -2,6 +2,7 @@ import { handleWebMessage } from "@/src/shared/api/bridge/handleWebMessage";
 import { createBridgeRequestRegistry } from "@/src/shared/api/bridge/bridgeRequestRegistry";
 import { subscribeAuthExpired } from "@/src/shared/auth/authSessionEvents";
 import {
+  type AppTabConfig,
   type AppTabName,
   type OptionalTabName,
   getNativeTabHistoryAction,
@@ -9,6 +10,7 @@ import {
   getWebTabStackAction,
   isAppTabName,
   normalizeOptionalTabs,
+  normalizeTabConfig,
   resolveTabFromPath,
   shouldUseNativeBackOnTabExit,
 } from "@/src/shared/navigation/appTabNavigation";
@@ -78,6 +80,7 @@ type AppWebViewScreenProps = {
   onTabBarVisibilityChange?: (hidden: boolean) => void;
   onFeatureGuardEnabledChange?: (enabled: boolean) => void;
   onOptionalTabsChange?: (tabs: OptionalTabName[] | null) => void;
+  onTabConfigChange?: (config: AppTabConfig) => void;
   // 웹에 더 돌아갈 화면이 없을 때(NAVIGATION_BACK) 할 일. 없으면 네이티브 화면을 되돌리고, 그것도 없으면 앱을 닫는다
   onRootBack?: () => void;
 };
@@ -385,6 +388,7 @@ export default function AppWebViewScreen({
   onTabBarVisibilityChange,
   onFeatureGuardEnabledChange,
   onOptionalTabsChange,
+  onTabConfigChange,
   onRootBack,
 }: AppWebViewScreenProps) {
   const webViewRef = useRef<WebView>(null);
@@ -632,6 +636,7 @@ export default function AppWebViewScreen({
             isHidden?: boolean;
             tab?: unknown;
             optionalTabs?: unknown;
+            tabs?: unknown;
             documentStarted?: boolean;
           };
           context?: { href?: string };
@@ -647,6 +652,9 @@ export default function AppWebViewScreen({
 
           const optionalTabs = normalizeOptionalTabs(rawData.payload?.optionalTabs);
           if (optionalTabs !== null) onOptionalTabsChange?.(optionalTabs);
+
+          const tabConfig = normalizeTabConfig(rawData.payload?.tabs);
+          if (tabConfig !== null) onTabConfigChange?.(tabConfig);
           return;
         }
 
@@ -701,6 +709,7 @@ export default function AppWebViewScreen({
       onFeatureGuardEnabledChange,
       onOptionalTabsChange,
       onRootBack,
+      onTabConfigChange,
       rememberTabWebHref,
       syncTabBarVisibility,
       syncTabStateFromUrl,

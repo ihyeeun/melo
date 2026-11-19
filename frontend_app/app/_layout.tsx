@@ -1,6 +1,8 @@
 import { postHasUserInfo } from "@/features/auth/api/onboardingStatusApi";
 import { loadAccessToken } from "@/features/auth/store/tokenStore";
 import { subscribeAuthExpired } from "@/src/shared/auth/authSessionEvents";
+import { getRootTab, getTabRoute } from "@/src/shared/navigation/appTabNavigation";
+import { loadTabConfig } from "@/src/shared/navigation/tabConfigStore";
 import { semantic } from "@/src/shared/styles";
 import { pretendardFonts } from "@/src/shared/styles/fonts";
 import { useFonts } from "expo-font";
@@ -74,7 +76,15 @@ export default function RootLayout() {
           }
           if (cancelled) return;
 
-          router.replace(hasUserInfo ? "/(tabs)/home" : "/(auth)/onboarding");
+          // 마지막으로 받은 탭 구성의 1번째 탭에서 시작한다. 저장된 구성이 없으면(로그인 직후 등) 홈
+          const tabConfig = await loadTabConfig();
+          if (cancelled) return;
+
+          router.replace(
+            hasUserInfo
+              ? getTabRoute(getRootTab(tabConfig?.map(({ tab }) => tab) ?? []))
+              : "/(auth)/onboarding",
+          );
         } else if (!token) {
           router.replace("/(auth)/login");
         }
