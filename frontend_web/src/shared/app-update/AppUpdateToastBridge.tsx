@@ -7,15 +7,18 @@ import type { AppToastData } from "@/shared/commons/toast/toastManager";
 const APP_UPDATE_READY_EVENT_NAME = "MELO_APP_UPDATE_READY";
 const APP_UPDATE_TOAST_ID = "app-update-ready";
 
+const SHOW_APP_UPDATE_TOAST = false;
+
 export function AppUpdateToastBridge() {
   const { add } = Toast.useToastManager<AppToastData>();
 
   useEffect(() => {
+    if (!SHOW_APP_UPDATE_TOAST) return;
+
     const showToast = () => {
       add({
         id: APP_UPDATE_TOAST_ID,
         title: "새 버전이 준비됐어요",
-        description: "적용하면 앱이 다시 시작돼요.",
         timeout: 0,
         actionProps: {
           children: "지금 적용",
