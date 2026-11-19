@@ -14,12 +14,11 @@ import { requestAppExit } from "@/src/shared/navigation/appExit";
 import { useEdgeSwipeBack } from "@/src/shared/navigation/useEdgeSwipeBack";
 import { triggerNativeHaptic } from "@/src/shared/native/haptics";
 import { router, Slot, useSegments } from "expo-router";
-import { Pressable, StyleSheet, View } from "react-native";
+import { Platform, Pressable, StyleSheet, View } from "react-native";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import HomeIcon from "@/assets/design-update/tab-icons/home.svg";
 import ChatIcon from "@/assets/design-update/tab-icons/chat.svg";
-import DiaryIcon from "@/assets/design-update/tab-icons/diary.svg";
 import UserIcon from "@/assets/design-update/tab-icons/user.svg";
 import RestaurantIcon from "@/assets/design-update/tab-icons/restaurant.svg";
 import AnalysisIcon from "@/assets/design-update/tab-icons/analysis.svg";
@@ -27,16 +26,21 @@ import { Typo } from "@/src/shared/ui";
 import { semantic, colors } from "@/src/shared/styles";
 
 const TAB_ITEMS = [
-  { tab: "home", label: "홈", Icon: HomeIcon },
+  { tab: "home", label: "기록", Icon: HomeIcon },
   { tab: "chat", label: "AI 코치", Icon: ChatIcon },
-  { tab: "diary", label: "다이어리", Icon: DiaryIcon },
   { tab: "analysis", label: "분석", Icon: AnalysisIcon },
   { tab: "restaurant", label: "식당", Icon: RestaurantIcon },
   { tab: "profile", label: "프로필", Icon: UserIcon },
 ] as const;
 
-const ACTIVE_TAB_COLOR = colors.coral[500];
-const INACTIVE_TAB_COLOR = semantic.text.tertiary;
+const ACTIVE_ICON_COLOR = colors.coral[500];
+const INACTIVE_ICON_COLOR = semantic.text.tertiary;
+const ACTIVE_LABEL_COLOR = semantic.text.secondary;
+const INACTIVE_LABEL_COLOR = semantic.text.disabled;
+
+const TAB_BAR_HEIGHT = 64;
+const TAB_BAR_BOTTOM_GAP = 10;
+const IOS_SAFE_AREA_OVERLAP = 13;
 
 const FREE_USER_GUARD_ENABLED = true;
 
@@ -77,7 +81,11 @@ export default function TabsLayout() {
   const [isFreeUserGuardEnabled, setIsFreeUserGuardEnabled] = useState(FREE_USER_GUARD_ENABLED);
   const [optionalTabs, setOptionalTabs] = useState<OptionalTabName[] | null>(null);
   const insets = useSafeAreaInsets();
-  const tabBarBottomPadding = Math.max(insets.bottom, 4);
+  const tabBarBottom =
+    Platform.OS === "android"
+      ? insets.bottom + TAB_BAR_BOTTOM_GAP
+      : Math.max(insets.bottom - IOS_SAFE_AREA_OVERLAP, TAB_BAR_BOTTOM_GAP);
+  const tabBarInset = tabBarBottom + TAB_BAR_HEIGHT;
   const visibleTabItems = useMemo(
     () =>
       TAB_ITEMS.filter((item) => isAppTabVisible(item.tab, optionalTabs, isFreeUserGuardEnabled)),
@@ -123,6 +131,7 @@ export default function TabsLayout() {
           path={tabPath}
           currentTab={currentTab}
           chatBackRequestKey={chatBackRequestKey}
+          tabBarInset={tabBarInset}
           onTabBarVisibilityChange={setIsTabBarHidden}
           onFeatureGuardEnabledChange={setIsFreeUserGuardEnabled}
           onOptionalTabsChange={setOptionalTabs}
@@ -142,36 +151,43 @@ export default function TabsLayout() {
       ) : null}
 
       {!shouldHideTabBar ? (
-        <View style={[styles.tabBar, { paddingBottom: tabBarBottomPadding }]}>
-          {visibleTabItems.map(({ tab, label, Icon }) => {
-            const isFocused = currentTab === tab;
+        // 탭바는 웹뷰 위에 떠 있다. 탭바 양옆 빈 곳의 터치는 웹뷰로 넘긴다
+        <View pointerEvents="box-none" style={[styles.tabBarContainer, { bottom: tabBarBottom }]}>
+          <View style={styles.tabBar} accessibilityRole="tablist">
+            {visibleTabItems.map(({ tab, label, Icon }) => {
+              const isFocused = currentTab === tab;
 
-            return (
-              <Pressable
-                key={tab}
-                style={styles.tabButton}
-                onPress={() => {
-                  triggerNativeHaptic("tap");
-                  navigateToTab(tab, currentTab);
-                }}
-              >
-                <Icon
-                  width={24}
-                  height={24}
-                  color={isFocused ? ACTIVE_TAB_COLOR : INACTIVE_TAB_COLOR}
-                />
-                <Typo
-                  size={isFocused ? "body-s-semi" : "body-s-medium"}
-                  style={[
-                    styles.tabLabel,
-                    isFocused ? styles.tabLabelFocused : styles.tabLabelBlurred,
-                  ]}
+              return (
+                <Pressable
+                  key={tab}
+                  style={styles.tabButton}
+                  accessibilityRole="tab"
+                  accessibilityState={{ selected: isFocused }}
+                  onPress={() => {
+                    triggerNativeHaptic("tap");
+                    navigateToTab(tab, currentTab);
+                  }}
                 >
-                  {label}
-                </Typo>
-              </Pressable>
-            );
-          })}
+                  <View style={[styles.tabPill, isFocused ? styles.tabPillFocused : null]}>
+                    <Icon
+                      width={24}
+                      height={24}
+                      color={isFocused ? ACTIVE_ICON_COLOR : INACTIVE_ICON_COLOR}
+                    />
+                    <Typo
+                      size={"body-s-medium"}
+                      style={[
+                        styles.tabLabel,
+                        isFocused ? styles.tabLabelFocused : styles.tabLabelBlurred,
+                      ]}
+                    >
+                      {label}
+                    </Typo>
+                  </View>
+                </Pressable>
+              );
+            })}
+          </View>
         </View>
       ) : null}
     </View>
@@ -198,25 +214,41 @@ const styles = StyleSheet.create({
     top: 0,
     zIndex: 10,
   },
+  tabBarContainer: {
+    left: 0,
+    paddingHorizontal: 16,
+    position: "absolute",
+    right: 0,
+  },
   tabBar: {
     backgroundColor: "#ffffff",
-    borderTopWidth: 1,
-    borderTopColor: semantic.border.default,
+    borderRadius: 100,
+    boxShadow: "0px 2px 8px rgba(0, 0, 0, 0.12)",
     flexDirection: "row",
-    paddingTop: 8,
+    height: TAB_BAR_HEIGHT,
+    padding: 6,
+    gap: 2,
   },
   tabButton: {
     flex: 1,
+  },
+  tabPill: {
+    backgroundColor: "#ffffff",
     alignItems: "center",
+    borderRadius: 100,
+    flex: 1,
     justifyContent: "center",
+  },
+  tabPillFocused: {
+    backgroundColor: colors.coral[50],
   },
   tabLabel: {
     marginTop: 2,
   },
   tabLabelFocused: {
-    color: ACTIVE_TAB_COLOR,
+    color: ACTIVE_LABEL_COLOR,
   },
   tabLabelBlurred: {
-    color: INACTIVE_TAB_COLOR,
+    color: INACTIVE_LABEL_COLOR,
   },
 });

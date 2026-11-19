@@ -1,11 +1,20 @@
 import { BottomSheet as SeedBottomSheet } from "@seed-design/react";
-import type { ReactNode, Ref } from "react";
+import { type ReactNode, type Ref, useState } from "react";
 
 import styles from "@/features/restaurant/styles/MapBottomSheet.module.css";
 import { dismissKeyboard } from "@/features/restaurant/utils/keyboard.util";
 
-const SNAP_POINTS = ["36px", 0.5, 1];
+const COLLAPSED_SHEET_HEIGHT = 36;
 export const DEFAULT_SNAP_POINT = 0.5;
+
+// 다 내렸을 때도 손잡이가 떠 있는 탭바 위로 보이도록, 탭바가 가리는 높이만큼 더 올린다.
+function getSnapPoints() {
+  const tabBarInset =
+    parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--tab-bar-inset")) ||
+    0;
+
+  return [`${COLLAPSED_SHEET_HEIGHT + tabBarInset}px`, DEFAULT_SNAP_POINT, 1];
+}
 
 export type SheetSnapPoint = number | string | null;
 
@@ -32,12 +41,14 @@ export default function MapBottomSheet({
   footer,
   children,
 }: MapBottomSheetProps) {
+  const [snapPoints] = useState(getSnapPoints);
+
   return (
     <SeedBottomSheet.Root
       open
       modal={false}
       dismissible={false}
-      snapPoints={SNAP_POINTS}
+      snapPoints={snapPoints}
       activeSnapPoint={snapPoint}
       setActiveSnapPoint={onSnapPointChange}
       autoFocus={false}
@@ -58,7 +69,7 @@ export default function MapBottomSheet({
             {children}
           </SeedBottomSheet.Body>
         </SeedBottomSheet.Content>
-        {footer && snapPoint !== SNAP_POINTS[0] && <div className={styles.footer}>{footer}</div>}
+        {footer && snapPoint !== snapPoints[0] && <div className={styles.footer}>{footer}</div>}
       </SeedBottomSheet.Positioner>
     </SeedBottomSheet.Root>
   );

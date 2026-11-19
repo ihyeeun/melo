@@ -25,7 +25,7 @@
   flex-direction: column;
   gap: 40px;
   padding-top: 12px;
-  padding-bottom: calc(30px + var(--tab-height));
+  padding-bottom: calc(var(--tab-bar-inset) + 80px);
 }
 
 .pageColor .modeToggle {

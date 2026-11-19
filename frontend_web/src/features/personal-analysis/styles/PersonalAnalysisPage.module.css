@@ -54,6 +54,7 @@
   overflow-x: hidden;
   background-color: var(--background-default);
   padding-top: 20px;
+  padding-bottom: var(--tab-bar-inset);
   border-radius: 42px 42px 0 0;
 }
 

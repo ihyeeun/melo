@@ -6,6 +6,7 @@
   display: flex;
   flex-direction: column;
   padding-top: 20px;
+  padding-bottom: calc(var(--tab-bar-inset) + 16px);
 }
 
 .headerIconButton {

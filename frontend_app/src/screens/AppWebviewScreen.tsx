@@ -73,6 +73,8 @@ type AppWebViewScreenProps = {
   path?: string;
   currentTab?: AppTabName;
   chatBackRequestKey?: number;
+  // 떠 있는 탭바가 가리는 화면 아래 높이. 웹은 탭 첫 화면의 아래 여백에 쓴다
+  tabBarInset?: number;
   onTabBarVisibilityChange?: (hidden: boolean) => void;
   onFeatureGuardEnabledChange?: (enabled: boolean) => void;
   onOptionalTabsChange?: (tabs: OptionalTabName[] | null) => void;
@@ -331,9 +333,13 @@ function normalizeInset(inset: number) {
   return Math.max(0, Math.round(inset * 100) / 100);
 }
 
-function createSafeAreaSyncScript(topInset: number, bottomInset: number) {
+function createSafeAreaSyncScript(topInset: number, bottomInset: number, tabBarInset?: number) {
   const normalizedTopInset = normalizeInset(topInset);
   const normalizedBottomInset = normalizeInset(bottomInset);
+  const tabBarInsetScript =
+    tabBarInset === undefined
+      ? ""
+      : `root.style.setProperty("--native-tab-bar-inset", "${normalizeInset(tabBarInset)}px");`;
 
   return `
     (function () {
@@ -341,6 +347,7 @@ function createSafeAreaSyncScript(topInset: number, bottomInset: number) {
       if (!root) return;
       root.style.setProperty("--native-safe-area-top", "${normalizedTopInset}px");
       root.style.setProperty("--native-safe-area-bottom", "${normalizedBottomInset}px");
+      ${tabBarInsetScript}
     })();
   `;
 }
@@ -374,6 +381,7 @@ export default function AppWebViewScreen({
   path,
   currentTab,
   chatBackRequestKey,
+  tabBarInset,
   onTabBarVisibilityChange,
   onFeatureGuardEnabledChange,
   onOptionalTabsChange,
@@ -410,8 +418,8 @@ export default function AppWebViewScreen({
 
   const webViewSource = useMemo(() => ({ uri: targetUrl }), [targetUrl]);
   const safeAreaSyncScript = useMemo(
-    () => createSafeAreaSyncScript(insets.top, insets.bottom),
-    [insets.bottom, insets.top],
+    () => createSafeAreaSyncScript(insets.top, insets.bottom, tabBarInset),
+    [insets.bottom, insets.top, tabBarInset],
   );
   const injectedScriptBeforeContentLoaded = useMemo(
     () => `${safeAreaSyncScript}${isTabWebView ? pathChangeBridgeScript : ""}true;`,

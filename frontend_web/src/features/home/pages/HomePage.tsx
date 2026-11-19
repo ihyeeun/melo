@@ -120,7 +120,7 @@ export default function HomePage() {
           onClick={() => {
             void handleNavigateChatCamera();
           }}
-          bottomOffset={10}
+          bottomOffset="calc(var(--tab-bar-inset) + 10px)"
         />
       ) : null}
 
