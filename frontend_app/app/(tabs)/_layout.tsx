@@ -16,6 +16,7 @@ import { triggerNativeHaptic } from "@/src/shared/native/haptics";
 import { router, Slot, useSegments } from "expo-router";
 import { Platform, Pressable, StyleSheet, View } from "react-native";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import Animated, { useReducedMotion } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import HomeIcon from "@/assets/design-update/tab-icons/home.svg";
 import ChatIcon from "@/assets/design-update/tab-icons/chat.svg";
@@ -39,8 +40,14 @@ const ACTIVE_LABEL_COLOR = semantic.text.secondary;
 const INACTIVE_LABEL_COLOR = semantic.text.disabled;
 
 const TAB_BAR_HEIGHT = 64;
+const TAB_BAR_PADDING = 6;
+const TAB_GAP = 2;
 const TAB_BAR_BOTTOM_GAP = 10;
 const IOS_SAFE_AREA_OVERLAP = 13;
+
+const TAB_INDICATOR_DURATION = "250ms";
+const TAB_PRESS_DURATION = "120ms";
+const TAB_PRESSED_SCALE = 0.95;
 
 const FREE_USER_GUARD_ENABLED = true;
 
@@ -91,6 +98,12 @@ export default function TabsLayout() {
       TAB_ITEMS.filter((item) => isAppTabVisible(item.tab, optionalTabs, isFreeUserGuardEnabled)),
     [isFreeUserGuardEnabled, optionalTabs],
   );
+  const reduceMotion = useReducedMotion();
+  const [tabBarWidth, setTabBarWidth] = useState(0);
+  const focusedTabIndex = visibleTabItems.findIndex((item) => item.tab === currentTab);
+  const tabWidth =
+    (tabBarWidth - TAB_BAR_PADDING * 2 - TAB_GAP * (visibleTabItems.length - 1)) /
+    visibleTabItems.length;
   const shouldHideTabBar = isTabBarHidden || currentTab === "chat";
   const shouldEnableChatBackSwipe = shouldEnableTabBackGesture(currentTab) && !isTabBarHidden;
   const requestChatBack = useCallback(() => {
@@ -153,7 +166,25 @@ export default function TabsLayout() {
       {!shouldHideTabBar ? (
         // 탭바는 웹뷰 위에 떠 있다. 탭바 양옆 빈 곳의 터치는 웹뷰로 넘긴다
         <View pointerEvents="box-none" style={[styles.tabBarContainer, { bottom: tabBarBottom }]}>
-          <View style={styles.tabBar} accessibilityRole="tablist">
+          <View
+            style={styles.tabBar}
+            accessibilityRole="tablist"
+            onLayout={(event) => setTabBarWidth(event.nativeEvent.layout.width)}
+          >
+            {focusedTabIndex >= 0 && tabBarWidth > 0 ? (
+              <Animated.View
+                pointerEvents="none"
+                style={{
+                  ...styles.tabIndicator,
+                  width: tabWidth,
+                  transform: [{ translateX: focusedTabIndex * (tabWidth + TAB_GAP) }],
+                  transitionProperty: "transform",
+                  transitionDuration: reduceMotion ? "0ms" : TAB_INDICATOR_DURATION,
+                  transitionTimingFunction: "ease-out",
+                }}
+              />
+            ) : null}
+
             {visibleTabItems.map(({ tab, label, Icon }) => {
               const isFocused = currentTab === tab;
 
@@ -168,22 +199,31 @@ export default function TabsLayout() {
                     navigateToTab(tab, currentTab);
                   }}
                 >
-                  <View style={[styles.tabPill, isFocused ? styles.tabPillFocused : null]}>
-                    <Icon
-                      width={24}
-                      height={24}
-                      color={isFocused ? ACTIVE_ICON_COLOR : INACTIVE_ICON_COLOR}
-                    />
-                    <Typo
-                      size={"body-s-medium"}
-                      style={[
-                        styles.tabLabel,
-                        isFocused ? styles.tabLabelFocused : styles.tabLabelBlurred,
-                      ]}
+                  {({ pressed }) => (
+                    <Animated.View
+                      style={{
+                        ...styles.tabPill,
+                        transform: [{ scale: pressed ? TAB_PRESSED_SCALE : 1 }],
+                        transitionProperty: "transform",
+                        transitionDuration: reduceMotion ? "0ms" : TAB_PRESS_DURATION,
+                      }}
                     >
-                      {label}
-                    </Typo>
-                  </View>
+                      <Icon
+                        width={24}
+                        height={24}
+                        color={isFocused ? ACTIVE_ICON_COLOR : INACTIVE_ICON_COLOR}
+                      />
+                      <Typo
+                        size={"body-s-medium"}
+                        style={[
+                          styles.tabLabel,
+                          isFocused ? styles.tabLabelFocused : styles.tabLabelBlurred,
+                        ]}
+                      >
+                        {label}
+                      </Typo>
+                    </Animated.View>
+                  )}
                 </Pressable>
               );
             })}
@@ -226,21 +266,24 @@ const styles = StyleSheet.create({
     boxShadow: "0px 2px 8px rgba(0, 0, 0, 0.12)",
     flexDirection: "row",
     height: TAB_BAR_HEIGHT,
-    padding: 6,
-    gap: 2,
+    padding: TAB_BAR_PADDING,
+    gap: TAB_GAP,
+  },
+  tabIndicator: {
+    backgroundColor: colors.coral[50],
+    borderRadius: 100,
+    bottom: TAB_BAR_PADDING,
+    left: TAB_BAR_PADDING,
+    position: "absolute",
+    top: TAB_BAR_PADDING,
   },
   tabButton: {
     flex: 1,
   },
   tabPill: {
-    backgroundColor: "#ffffff",
     alignItems: "center",
-    borderRadius: 100,
     flex: 1,
     justifyContent: "center",
-  },
-  tabPillFocused: {
-    backgroundColor: colors.coral[50],
   },
   tabLabel: {
     marginTop: 2,
