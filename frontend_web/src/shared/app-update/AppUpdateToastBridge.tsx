@@ -18,10 +18,10 @@ export function AppUpdateToastBridge() {
     const showToast = () => {
       add({
         id: APP_UPDATE_TOAST_ID,
-        title: "새 버전이 준비됐어요",
+        title: "새로운 업데이트가 준비됐어요",
         timeout: 0,
         actionProps: {
-          children: "지금 적용",
+          children: "새로고침",
           onClick: requestNativeAppUpdateApply,
         },
         data: {
