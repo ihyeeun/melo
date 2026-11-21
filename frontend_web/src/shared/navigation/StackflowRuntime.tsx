@@ -1,6 +1,9 @@
+import { captureMessage } from "@sentry/react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 
 import { hasValidDayNutritionTarget } from "@/features/home/utils/dayMealSummary";
+import { queryKeys } from "@/features/profile/hooks/queries/queryKey";
 import { useGetProfileQuery } from "@/features/profile/hooks/queries/useProfileQuery";
 import { logout } from "@/features/settings/api/account";
 import { PATH } from "@/router/path";
@@ -119,7 +122,19 @@ function redirectToSignUp() {
 }
 
 function ProfileLoadFailedScreen({ onRetry }: { onRetry: () => void }) {
+  const queryClient = useQueryClient();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  useEffect(() => {
+    const error = queryClient.getQueryState(queryKeys.profile)?.error;
+    captureMessage("Profile load failed screen shown", {
+      level: "error",
+      tags:
+        error instanceof AppApiError
+          ? { status_code: String(error.statusCode), error_code: error.error }
+          : undefined,
+    });
+  }, [queryClient]);
 
   const handleLogout = () => {
     setIsLoggingOut(true);

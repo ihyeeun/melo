@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { getProfile, getUserGoalSnapshot } from "@/features/profile/api/profile";
 import { queryKeys } from "@/features/profile/hooks/queries/queryKey";
 import { identifyAnalyticsUser } from "@/shared/analytics/analytics";
+import { setSentryUser } from "@/shared/monitoring/sentry";
 import { useSetTargets } from "@/shared/stores/targetNutrient.store";
 
 type UseGetProfileQueryOptions = {
@@ -28,6 +29,7 @@ export function useGetProfileQuery(options?: UseGetProfileQueryOptions) {
   useEffect(() => {
     if (!shouldSyncProfileSideEffects || !query.data) return;
     identifyAnalyticsUser(query.data);
+    setSentryUser(query.data);
     setTargets({
       target_calories: query.data.target_calories,
       target_ratio: toTargetRatioTuple(query.data.target_ratio),

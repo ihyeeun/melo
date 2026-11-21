@@ -1,3 +1,5 @@
+import { captureMessage } from "@sentry/react";
+
 import { createRequestAbortError } from "@/shared/api/requestCancellation";
 import { captureScreenRequestScope } from "@/shared/api/screenRequests";
 
@@ -134,6 +136,31 @@ type SendRequestOptions = {
   timeoutMs?: number;
 };
 
+// 사용자가 고르거나 권한 팝업에서 고민하는 요청, 옛 앱이 답하지 않는 기기 정보 요청은 시간 초과가 정상이다
+const BRIDGE_TIMEOUT_EXPECTED_TYPES = new Set<WebToAppMessage["type"]>([
+  "CAMERA_CAPTURE_REQUEST",
+  "GALLERY_PICK_REQUEST",
+  "HEALTH_PERMISSION_REQUEST",
+  "LOCATION_REQUEST",
+  "APP_DEVICE_INFO_REQUEST",
+]);
+
+function captureBridgeTimeout(message: WebToAppMessage) {
+  if (BRIDGE_TIMEOUT_EXPECTED_TYPES.has(message.type)) return;
+
+  // 숫자 id를 묶어야 같은 API의 시간 초과가 한 이슈로 모인다
+  const endpoint =
+    message.type === "API_REQUEST"
+      ? message.payload.endpoint.replace(/\/\d+(?=\/|$)/g, "/:id")
+      : undefined;
+
+  captureMessage("Bridge request timed out", {
+    level: "warning",
+    tags: { bridge_message_type: message.type, bridge_endpoint: endpoint },
+    fingerprint: ["bridge-timeout", message.type, endpoint ?? ""],
+  });
+}
+
 function sendRequestToApp<T>(
   messageFactory: (id: string) => WebToAppMessage,
   options?: SendRequestOptions & { cancelNativeRequest?: boolean },
@@ -175,6 +202,7 @@ function sendRequestToApp<T>(
     timeoutId =
       timeoutMs > 0
         ? window.setTimeout(() => {
+            captureBridgeTimeout(message);
             cancel({
               message: "앱 응답 시간이 초과되었습니다.",
               statusCode: 408,

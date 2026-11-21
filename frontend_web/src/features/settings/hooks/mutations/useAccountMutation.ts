@@ -5,12 +5,14 @@ import { logout, withdraw } from "@/features/settings/api/account";
 import { resetAnalyticsIdentity } from "@/shared/analytics/analytics";
 import { isRequestAbortError } from "@/shared/api/requestCancellation";
 import type { UseMutationCallback } from "@/shared/api/types/callback.types";
+import { clearSentryUser } from "@/shared/monitoring/sentry";
 
 const TARGETS_STORAGE_KEY = "targets";
 
 function clearClientSession(queryClient: QueryClient) {
   queryClient.clear();
   resetAnalyticsIdentity();
+  clearSentryUser();
 
   if (typeof window === "undefined") return;
 

@@ -16,6 +16,7 @@ import { VitePreloadErrorToastBridge } from "@/shared/app-update/VitePreloadErro
 import { AppErrorBoundary } from "@/shared/commons/error/AppErrorBoundary";
 import { AppToastViewport } from "@/shared/commons/toast/AppToastViewport";
 import { appToastManager } from "@/shared/commons/toast/toastManager";
+import { initSentry } from "@/shared/monitoring/sentry";
 
 import App from "./App.tsx";
 
@@ -35,5 +36,6 @@ function renderApp() {
   );
 }
 
+initSentry();
 initVitePreloadErrorListener();
 void enableMocking().then(renderApp);

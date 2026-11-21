@@ -16,6 +16,7 @@
     "@seed-design/css": "^1.2.16",
     "@seed-design/react": "^1.2.16",
     "@seed-design/stackflow": "^1.1.23",
+    "@sentry/react": "^11.16.0",
     "@stackflow/plugin-devtools": "^0.1.11",
     "@stackflow/plugin-history-sync": "^1.10.1",
     "@stackflow/plugin-stack-depth-change": "^1.1.5",
@@ -31,6 +32,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.5",
+    "@sentry/vite-plugin": "^11.16.0",
     "@types/node": "^24.13.3",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.4",
