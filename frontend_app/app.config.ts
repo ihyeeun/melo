@@ -11,7 +11,7 @@ const config: ExpoConfig = {
       projectId: "507c0e33-8576-4aba-84f4-00d6b74a7338",
     },
   },
-  version: "1.4.0",
+  version: "1.3.1",
   runtimeVersion: { policy: "appVersion" },
   updates: {
     url: "https://u.expo.dev/507c0e33-8576-4aba-84f4-00d6b74a7338",
