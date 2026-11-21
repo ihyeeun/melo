@@ -11,7 +11,7 @@ const config: ExpoConfig = {
       projectId: "507c0e33-8576-4aba-84f4-00d6b74a7338",
     },
   },
-  version: "1.3.0",
+  version: "1.4.0",
   runtimeVersion: { policy: "appVersion" },
   updates: {
     url: "https://u.expo.dev/507c0e33-8576-4aba-84f4-00d6b74a7338",
@@ -121,6 +121,13 @@ const config: ExpoConfig = {
         NSHealthUpdateUsageDescription:
           "이 앱은 Apple 건강에 데이터를 추가하거나 수정하지 않습니다",
         background: false,
+      },
+    ],
+    [
+      "@sentry/react-native/expo",
+      {
+        organization: "melo-46",
+        project: "melo-app",
       },
     ],
   ],
