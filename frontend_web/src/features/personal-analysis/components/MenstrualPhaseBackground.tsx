@@ -84,7 +84,7 @@ export function MenstrualPhaseBackground({ data }: { data: readonly { date: stri
               {width > label.length * 12 && (
                 <text
                   x={(left + right) / 2}
-                  y={plot.y + 16}
+                  y={plot.y - 4}
                   textAnchor="middle"
                   className="caption-m-medium text-secondary"
                   fill="currentColor"
