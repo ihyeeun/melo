@@ -39,3 +39,11 @@
   background-color: var(--background-gray-1);
   padding: 4px 6px;
 }
+
+.loadError {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  padding: 8px 0;
+}
