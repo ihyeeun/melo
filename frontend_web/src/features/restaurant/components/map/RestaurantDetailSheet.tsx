@@ -1,4 +1,5 @@
 import MapSheetHeader from "@/features/restaurant/components/map/MapSheetHeader";
+import { MeloVerifiedBadge } from "@/features/restaurant/components/MeloVerifiedBadge";
 import { BestMenuTabs } from "@/features/restaurant/components/MenuNutrientList";
 import type { SheetRestaurant } from "@/features/restaurant/hooks/useMapSheet";
 import styles from "@/features/restaurant/styles/MapSheetView.module.css";
@@ -15,6 +16,7 @@ export default function RestaurantDetailSheet({ restaurant, onBack }: Restaurant
     <section>
       <MapSheetHeader
         title={restaurant.name}
+        titleBadge={restaurant.restaurantId !== null ? <MeloVerifiedBadge /> : null}
         description={
           <>
             <span>{restaurant.category}</span>
@@ -26,7 +28,7 @@ export default function RestaurantDetailSheet({ restaurant, onBack }: Restaurant
       {restaurant.restaurantId === null ? (
         <div className={styles.preparing} role="status">
           <SystemIcon name="hourglass-empty" size={20} className="text-disabled" />
-          <p className="body-m-medium text-disabled">메뉴 업데이트를 준비 중이에요</p>
+          <p className="body-m-medium text-disabled">메뉴를 준비 중이에요</p>
         </div>
       ) : (
         <BestMenuTabs restaurantId={restaurant.restaurantId} />

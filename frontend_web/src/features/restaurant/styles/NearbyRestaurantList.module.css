@@ -37,14 +37,10 @@
   gap: 6px;
 }
 
-.meloBadge {
-  flex-shrink: 0;
-  padding: 4px 6px;
-  border: 1px solid var(--border-strong);
-  border-radius: 8px;
-  color: var(--text-secondary);
-  white-space: nowrap;
-  animation: melo-badge-enter 0.2s ease-out;
+.meloCount {
+  align-items: center;
+  display: flex;
+  gap: 4px;
 }
 
 @keyframes melo-badge-enter {

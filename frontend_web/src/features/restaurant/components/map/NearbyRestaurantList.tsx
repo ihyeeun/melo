@@ -1,4 +1,5 @@
 import type { NearbyCategory } from "@/features/restaurant/api/nearbyRestaurant.api";
+import { MeloVerifiedBadge } from "@/features/restaurant/components/MeloVerifiedBadge";
 import {
   useNearbyRestaurantsQuery,
   useRestaurantBrandsQuery,
@@ -63,7 +64,10 @@ export default function NearbyRestaurantList({
           {getListTitle(keyword, isMapAreaSearch, restaurants.length)}
         </h2>
         {restaurants.length > 0 && brandByPlaceId.size > 0 && (
-          <p className="body-s-regular text-tertiary">멜로 등록 식당 {meloCount}곳</p>
+          <p className={`body-s-regular text-tertiary ${styles.meloCount}`}>
+            <MeloVerifiedBadge size={14} />
+            멜로 등록 식당 {meloCount}곳
+          </p>
         )}
       </header>
       {restaurants.length === 0 ? (
@@ -91,14 +95,12 @@ export default function NearbyRestaurantList({
                   <span className={styles.itemText}>
                     <span className={styles.nameRow}>
                       <span className="body-l-semi text-primary">{restaurant.name}</span>
-                      {brand && (
-                        <span className={`caption-m-medium ${styles.meloBadge}`}>멜로 등록</span>
-                      )}
+                      {brand && <MeloVerifiedBadge />}
                     </span>
                     <span className={`body-s-regular text-tertiary ${sheetStyles.divided}`}>
                       <span>{restaurant.category}</span>
                       <span>{formatDistance(restaurant.distance)}</span>
-                      {brand === null && <span>메뉴를 준비중이에요</span>}
+                      {brand === null && <span>메뉴를 준비 중이에요</span>}
                     </span>
                   </span>
                   <SystemIcon name="chevron-right" size={20} className="text-tertiary" />

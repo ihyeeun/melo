@@ -19,6 +19,12 @@
   overflow-wrap: anywhere;
 }
 
+/* 식당 이름 오른쪽 뱃지는 이름이 길어도 줄 끝에 붙는다 */
+.title > [data-system-icon] {
+  margin-left: 6px;
+  vertical-align: -2px;
+}
+
 .description {
   grid-column: 2;
 }
