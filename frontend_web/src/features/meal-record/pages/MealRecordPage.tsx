@@ -689,11 +689,12 @@ export default function MealRecordPage() {
       <ConfirmModal
         open={isExitConfirmOpen}
         onOpenChange={setIsExitConfirmOpen}
-        title="변경사항을 저장하지 않고 나갈까요?"
-        cancelText="나가기"
-        confirmText="계속 수정"
-        onCancel={handleExit}
-        onConfirm={() => {}}
+        title="변경 사항을 저장하지 않고 나갈까요?"
+        confirmText="나가기"
+        cancelText="계속 수정"
+        actionOrder="confirm-cancel"
+        emphasis="cancel"
+        onConfirm={handleExit}
       />
 
       {/* screen: DIET-04-001_modal-time */}
