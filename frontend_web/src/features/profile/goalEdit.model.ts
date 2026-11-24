@@ -145,7 +145,7 @@ export function getTargetCaloriesFeedback(
       detail:
         estimate.tdee === undefined
           ? undefined
-          : `${Math.floor(estimate.tdee) + 1}kcal 이상 입력해주세요`,
+          : `${(Math.floor(estimate.tdee) + 1).toLocaleString("ko-KR")}kcal 이상으로 입력해주세요`,
     };
   }
 
@@ -156,7 +156,7 @@ export function getTargetCaloriesFeedback(
       detail:
         estimate.tdee === undefined
           ? undefined
-          : `${Math.ceil(estimate.tdee) - 1}kcal 이하로 입력해주세요`,
+          : `${(Math.ceil(estimate.tdee) - 1).toLocaleString("ko-KR")}kcal 이하로 입력해주세요`,
     };
   }
 
