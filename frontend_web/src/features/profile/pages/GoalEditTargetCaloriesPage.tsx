@@ -98,7 +98,7 @@ export default function GoalEditTargetCaloriesPage() {
         if (isRequestAbortError(error)) return;
         if (cancelled) return;
 
-        toast.warning("추천 목표 칼로리를 불러오지 못했어요", "목표 칼로리를 직접 입력해주세요.");
+        toast.error("추천 목표 칼로리를 불러오지 못했어요", "목표 칼로리를 직접 입력해주세요");
       },
     });
 

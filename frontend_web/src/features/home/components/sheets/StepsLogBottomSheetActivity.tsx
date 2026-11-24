@@ -82,7 +82,7 @@ export default function StepsLogBottomSheetActivity() {
       },
       onError: (error) => {
         if (isRequestAbortError(error)) return;
-        toast.error("걸음 수 기록에 실패했어요");
+        toast.error("걸음 수를 기록하지 못했어요");
       },
     },
   );

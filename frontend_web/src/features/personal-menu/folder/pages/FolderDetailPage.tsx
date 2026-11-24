@@ -250,7 +250,7 @@ export default function FolderDetailPage() {
     }
 
     if (isDayMealsError || !dayMeals) {
-      toast.warning("식사 기록을 불러오지 못했어요", "잠시 후 다시 시도해주세요.");
+      toast.error("식사 기록을 불러오지 못했어요", "잠시 후 다시 시도해주세요");
       return false;
     }
 

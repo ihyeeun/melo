@@ -40,7 +40,7 @@ export default function ChatNutritionRegisterPage() {
 
     if (!body) {
       trackNutritionLabelRegisterFail("영양성분 정보를 불러오지 못했어요. 다시 시도해주세요.");
-      toast.warning("영양성분 정보를 불러오지 못했어요. 다시 시도해주세요.");
+      toast.error("영양성분 정보를 불러오지 못했어요. 다시 시도해주세요.");
       return;
     }
 
@@ -49,9 +49,9 @@ export default function ChatNutritionRegisterPage() {
     } catch (error) {
       if (isRequestAbortError(error)) return;
       trackNutritionLabelRegisterFail(
-        getAnalyticsErrorMessage(error, "등록에 실패했어요. 잠시 후 다시 시도해주세요."),
+        getAnalyticsErrorMessage(error, "음식을 등록하지 못했어요"),
       );
-      toast.warning("등록에 실패했어요. 잠시 후 다시 시도해주세요.");
+      toast.error("음식을 등록하지 못했어요", "잠시 후 다시 시도해주세요");
       return;
     }
 

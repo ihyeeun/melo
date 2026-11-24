@@ -498,7 +498,7 @@ export default function MealRecordPage() {
           });
 
           if (deleteResult === DELETE_MEAL_RECORD_RESULT.FAILED_RECOVERED) {
-            toast.warning("식사 기록 저장에 실패했어요. 잠시 후 다시 시도해주세요.");
+            toast.error("식사 기록을 저장하지 못했어요", "잠시 후 다시 시도해주세요");
             return;
           }
 
@@ -528,7 +528,7 @@ export default function MealRecordPage() {
       toast.success("식사를 기록했어요");
     } catch (error) {
       if (isRequestAbortError(error)) return;
-      toast.warning("식사 기록 저장에 실패했어요", "잠시 후 다시 시도해주세요.");
+      toast.error("식사 기록을 저장하지 못했어요", "잠시 후 다시 시도해주세요");
     }
   };
 

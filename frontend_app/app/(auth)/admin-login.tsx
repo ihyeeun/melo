@@ -64,12 +64,12 @@ export default function AdminLoginPage() {
       if (isAxiosError(error)) {
         const serverMessage =
           (error.response?.data as { message?: string } | undefined)?.message ??
-          "관리자 로그인에 실패했습니다.";
+          "관리자 로그인을 하지 못했어요";
         setErrorMessage(serverMessage);
       } else if (error instanceof Error) {
         setErrorMessage(error.message);
       } else {
-        setErrorMessage("관리자 로그인에 실패했습니다.");
+        setErrorMessage("관리자 로그인을 하지 못했어요");
       }
     } finally {
       setIsSubmitting(false);

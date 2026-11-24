@@ -173,7 +173,7 @@ export default function GoalEditNutrientPage() {
         if (isRequestAbortError(error)) return;
         if (cancelled) return;
 
-        toast.warning("추천 비율을 불러오지 못했어요", "탄단지 비율을 직접 입력해주세요.");
+        toast.error("추천 비율을 불러오지 못했어요", "탄단지 비율을 직접 입력해주세요");
       },
     });
 
@@ -308,7 +308,7 @@ export default function GoalEditNutrientPage() {
 
       const isRolledBack = await rollbackGoalUpdateTasks(completedTasks);
       if (isRolledBack) {
-        toast.warning("목표 수정에 실패했어요", "잠시 후 다시 시도해주세요.");
+        toast.error("목표를 수정하지 못했어요", "잠시 후 다시 시도해주세요");
         return;
       }
 
@@ -316,7 +316,7 @@ export default function GoalEditNutrientPage() {
       queryClient.invalidateQueries({
         queryKey: queryKeys.profile,
       });
-      toast.warning("목표 수정에 실패했어요", "일부 항목만 저장됐을 수 있어요. 다시 확인해주세요.");
+      toast.error("목표를 수정하지 못했어요", "일부 항목만 저장됐을 수 있어요. 다시 확인해주세요.");
     } finally {
       setIsSubmitting(false);
     }

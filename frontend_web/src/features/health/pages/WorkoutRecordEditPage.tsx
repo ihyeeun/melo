@@ -295,7 +295,7 @@ export default function WorkoutRecordEditPage() {
     } catch (error) {
       setIsSavePending(false);
       if (isRequestAbortError(error)) return;
-      toast.error("운동 기록을 저장하지 못했어요", "잠시 후 다시 시도해주세요.");
+      toast.error("운동 기록을 저장하지 못했어요", "잠시 후 다시 시도해주세요");
     } finally {
       await queryClient.invalidateQueries({
         queryKey: calendarKeys.monthly.month({ date: dateKey.slice(0, 7), mode: "workout" }),

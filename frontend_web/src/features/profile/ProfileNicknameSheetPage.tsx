@@ -65,7 +65,7 @@ export default function ProfileNicknameSheetPage() {
         if (error.statusCode === 409) {
           setNickNameErrorMessage("이미 사용 중인 닉네임이에요");
         } else {
-          setNickNameErrorMessage("닉네임 수정에 실패했어요");
+          setNickNameErrorMessage("닉네임을 수정하지 못했어요");
         }
       },
     });

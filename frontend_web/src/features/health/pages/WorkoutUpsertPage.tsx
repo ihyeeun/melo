@@ -324,7 +324,7 @@ export default function WorkoutUpsertPage() {
   useEffect(() => {
     if (!isWorkoutUnavailable) return;
 
-    toast.warning("운동 정보를 불러오지 못했어요", "잠시 후 다시 시도해주세요.");
+    toast.error("운동 정보를 불러오지 못했어요", "잠시 후 다시 시도해주세요");
     navigateBack({ fallbackTo: backFallbackPath });
   }, [backFallbackPath, isWorkoutUnavailable]);
 

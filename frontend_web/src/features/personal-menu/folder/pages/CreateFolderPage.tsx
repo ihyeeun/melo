@@ -52,7 +52,7 @@ export default function CreateFolderPage() {
     },
     onError: (error) => {
       if (isRequestAbortError(error)) return;
-      toast.warning("폴더 저장에 실패했어요", "잠시 후 다시 시도해주세요.");
+      toast.error("폴더를 저장하지 못했어요", "잠시 후 다시 시도해주세요");
     },
   });
   const canSubmit = folderName.trim().length > 0 && selectedMenus.length > 0;
