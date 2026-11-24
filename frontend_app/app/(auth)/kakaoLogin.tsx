@@ -1,6 +1,7 @@
 import { exchangeKakaoCodeForToken } from "@/features/auth/api/authTokenApi";
 import { postHasUserInfo } from "@/features/auth/api/onboardingStatusApi";
 import { parseKakaoRedirectUrl } from "@/features/auth/hooks/parseKakaoCode";
+import { saveLastLoginMethod } from "@/features/auth/store/lastLoginMethodStore";
 import { LoadingOverlay, Typo } from "@/src/shared/ui";
 import { isAxiosError } from "axios";
 import { router } from "expo-router";
@@ -79,6 +80,7 @@ export default function KakaoLogin() {
       (async () => {
         try {
           await exchangeKakaoCodeForToken(redirectResult.code);
+          await saveLastLoginMethod("kakao");
           const hasUserInfo = await postHasUserInfo();
 
           if (!hasUserInfo) {

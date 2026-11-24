@@ -56,7 +56,9 @@ export type BridgeHapticTriggerRequestMessage = {
 export type BridgeAppFeature =
   | "OPEN_APP_SETTINGS"
   | "SIGN_UP_REDIRECT"
-  | "LOCATION_CHECK_WITHOUT_PROMPT";
+  | "LOCATION_CHECK_WITHOUT_PROMPT"
+  // 회원가입 중 로그아웃(signout)하면 로그인 화면으로 돌아간다
+  | "SIGN_OUT_FROM_SIGN_UP";
 
 export type BridgeAppDeviceInfoPayload = {
   appVersion: string;

@@ -1,7 +1,11 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 
-import { getWebAuthAccessToken } from "@/features/kakao-web-auth/api/webAuthApi";
+import {
+  clearWebAuthAccessToken,
+  getWebAuthAccessToken,
+} from "@/features/kakao-web-auth/api/webAuthApi";
 import { GOAL } from "@/features/profile/goalEdit.model";
+import { logout } from "@/features/settings/api/account";
 import { SignUpFrame } from "@/features/sign-up/components/SignUpFrame";
 import { SignUpHeader } from "@/features/sign-up/components/SignUpHeader";
 import { AcquisitionChannelStep } from "@/features/sign-up/components/steps/AcquisitionChannelStep";
@@ -30,7 +34,9 @@ import {
 } from "@/features/sign-up/types/signUp.type";
 import { PATH } from "@/router/path";
 import { isNativeApp } from "@/shared/api/bridge/nativeBridge";
+import { useNativeAppFeature } from "@/shared/api/bridge/useNativeAppFeature";
 import { LoadingOverlay } from "@/shared/commons/loading/Loading";
+import { ConfirmModal } from "@/shared/commons/modals/ConfirmModal";
 import {
   navigateBack,
   useNavigate,
@@ -61,6 +67,22 @@ export default function SignUpPage() {
   const step = steps.find((candidate) => candidate === searchParams.get("step")) ?? steps[0];
   const stepIndex = steps.indexOf(step);
   const isLastStep = stepIndex === steps.length - 1;
+
+  // 첫 단계에서는 다른 계정으로 다시 로그인할 수 있다. 앱은 로그아웃 뒤 로그인 화면으로 돌려보낼 수 있을 때만
+  const [isSwitchAccountOpen, setIsSwitchAccountOpen] = useState(false);
+  const canSignOutInApp = useNativeAppFeature("SIGN_OUT_FROM_SIGN_UP");
+  const canSwitchAccount = stepIndex === 0 && (!isNativeApp() || canSignOutInApp === true);
+
+  const switchAccount = async () => {
+    if (isNativeApp()) {
+      // 앱이 토큰을 지우고 로그인 화면으로 보낸다
+      await logout();
+      return;
+    }
+
+    clearWebAuthAccessToken();
+    navigate(PATH.KAKAO_WEB_LOGIN, { replace: true });
+  };
 
   // 앞 단계 값 없이 중간 단계 주소로 바로 들어왔는지
   const hasPreviousValues = steps
@@ -127,6 +149,7 @@ export default function SignUpPage() {
         progress={SIGN_UP_PROGRESS[step]}
         total={SIGN_UP_PROGRESS_TOTAL}
         onBack={() => navigateBack()}
+        onSwitchAccount={canSwitchAccount ? () => setIsSwitchAccountOpen(true) : undefined}
       />
 
       {step === "basicInfo" && <BasicInfoStep {...stepProps} />}
@@ -144,6 +167,17 @@ export default function SignUpPage() {
       {step === "glp1" && <Glp1UseStep {...stepProps} />}
       {step === "acquisitionChannel" && <AcquisitionChannelStep {...stepProps} />}
       {step === "subCode" && <SubCodeStep {...stepProps} />}
+
+      {/* screen: ONB-01-003 다른 계정 로그인 확인 모달 */}
+      <ConfirmModal
+        open={isSwitchAccountOpen}
+        onOpenChange={setIsSwitchAccountOpen}
+        title="지금 계정에서 로그아웃하고 로그인 화면으로 돌아갈까요?"
+        cancelText="취소"
+        confirmText="로그아웃"
+        emphasis="cancel"
+        onConfirm={switchAccount}
+      />
 
       {isSubmitting && <LoadingOverlay label="회원 정보를 저장하는 중입니다." />}
     </SignUpFrame>

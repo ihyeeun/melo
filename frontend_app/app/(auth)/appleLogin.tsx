@@ -1,4 +1,5 @@
 import { postHasUserInfo } from "@/features/auth/api/onboardingStatusApi";
+import { saveLastLoginMethod } from "@/features/auth/store/lastLoginMethodStore";
 import { saveTokens } from "@/features/auth/store/tokenStore";
 import { LoadingOverlay } from "@/src/shared/ui";
 import { router } from "expo-router";
@@ -73,6 +74,7 @@ export default function AppleLogin() {
       isExchangingRef.current = true;
 
       await saveTokens(tokens);
+      await saveLastLoginMethod("apple");
       const hasUserInfo = await postHasUserInfo();
 
       if (!hasUserInfo) {

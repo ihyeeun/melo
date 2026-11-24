@@ -7,9 +7,11 @@ type Props = {
   progress: number;
   total: number;
   onBack: () => void;
+  // 있으면 오른쪽에 [다른 계정으로 로그인]을 보여 준다
+  onSwitchAccount?: () => void;
 };
 
-export function SignUpHeader({ stepIndex, progress, total, onBack }: Props) {
+export function SignUpHeader({ stepIndex, progress, total, onBack, onSwitchAccount }: Props) {
   return (
     <header className={styles.header}>
       <section className={styles.backButtonSection}>
@@ -22,6 +24,16 @@ export function SignUpHeader({ stepIndex, progress, total, onBack }: Props) {
         >
           <SystemIcon name="chevron-left" size={24} className={`text-secondary`} />
         </button>
+
+        {onSwitchAccount ? (
+          <button
+            type="button"
+            className="body-s-medium text-tertiary"
+            onClick={onSwitchAccount}
+          >
+            다른 계정으로 로그인
+          </button>
+        ) : null}
       </section>
 
       <section

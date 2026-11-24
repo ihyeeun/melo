@@ -2,6 +2,10 @@ import React from "react";
 import { BackHandler, Image, Linking, StyleSheet, View } from "react-native";
 import { KakaoLoginButton } from "@/features/auth/components/KakaoLoginButton";
 import { AppleLoginButton } from "@/features/auth/components/AppleLoginButton";
+import {
+  loadLastLoginMethod,
+  type LoginMethod,
+} from "@/features/auth/store/lastLoginMethodStore";
 import { router } from "expo-router";
 import { useIsFocused } from "@react-navigation/native";
 import * as WebBrowser from "expo-web-browser";
@@ -15,9 +19,37 @@ const LoginImage = require("@/assets/design-update/login-image.png");
 const TERMS_AND_PRIVACY_POLICY_URL =
   "https://third-princess-d57.notion.site/termsofuseandprivacypolicy";
 
+// 이 기기에서 마지막으로 쓴 로그인 버튼 위에 띄우는 말풍선
+function RecentLoginBubble() {
+  return (
+    <View style={styles.recentLogin} pointerEvents="none">
+      <View style={styles.recentLoginBubble}>
+        <Typo size="caption-m-medium" color="white">
+          최근 로그인
+        </Typo>
+      </View>
+      <View style={styles.recentLoginTail} />
+    </View>
+  );
+}
+
 // screen: ONB-01-001
 export default function LoginPage() {
   const isFocused = useIsFocused();
+  const [lastLoginMethod, setLastLoginMethod] = React.useState<LoginMethod | null>(null);
+
+  React.useEffect(() => {
+    if (!isFocused) return;
+
+    let cancelled = false;
+    void loadLastLoginMethod().then((method) => {
+      if (!cancelled) setLastLoginMethod(method);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isFocused]);
 
   // 앱 첫 화면(G-1)이라 Android 뒤로가기는 종료 확인 후 종료한다
   React.useEffect(() => {
@@ -58,8 +90,14 @@ export default function LoginPage() {
       </View>
       <View style={styles.bottom}>
         <View style={styles.socialButtonGroup}>
-          <KakaoLoginButton onPress={() => router.push("/kakaoLogin")} />
-          <AppleLoginButton onPress={startAppleLogin} />
+          <View style={styles.socialButton}>
+            <KakaoLoginButton onPress={() => router.push("/kakaoLogin")} />
+            {lastLoginMethod === "kakao" ? <RecentLoginBubble /> : null}
+          </View>
+          <View style={styles.socialButton}>
+            <AppleLoginButton onPress={startAppleLogin} />
+            {lastLoginMethod === "apple" ? <RecentLoginBubble /> : null}
+          </View>
         </View>
 
         <Typo
@@ -107,6 +145,33 @@ const styles = StyleSheet.create({
     gap: 8,
     alignItems: "center",
     width: "100%",
+  },
+  socialButton: {
+    width: "100%",
+  },
+  recentLogin: {
+    position: "absolute",
+    right: 24,
+    bottom: "100%",
+    marginBottom: -2,
+    alignItems: "flex-end",
+  },
+  recentLoginBubble: {
+    backgroundColor: semantic.text.primary,
+    borderRadius: 99,
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+  },
+  recentLoginTail: {
+    width: 0,
+    height: 0,
+    marginRight: 22,
+    borderLeftWidth: 5,
+    borderRightWidth: 5,
+    borderTopWidth: 6,
+    borderLeftColor: "transparent",
+    borderRightColor: "transparent",
+    borderTopColor: semantic.text.primary,
   },
   textCenter: {
     textAlign: "center",
