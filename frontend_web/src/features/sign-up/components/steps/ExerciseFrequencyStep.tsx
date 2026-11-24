@@ -18,7 +18,7 @@ export function ExerciseFrequencyStep({ form, onNext, nextLabel }: SignUpStepPro
 
   return (
     <StepLayout
-      title={"일주일에 운동을\n몇 번 하시나요?"}
+      title="일주일에 운동을 몇 번 하시나요?"
       canGoNext={frequency !== undefined}
       onNext={() => onNext({ exercise_freq_weekly: frequency })}
       nextLabel={nextLabel}

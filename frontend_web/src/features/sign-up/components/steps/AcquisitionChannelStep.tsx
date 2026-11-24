@@ -23,7 +23,7 @@ export function AcquisitionChannelStep({
 
   return (
     <StepLayout
-      title={"멜로(Melo)를\n어떻게 알게 되셨나요?"}
+      title="멜로(Melo)를 어떻게 알게 되셨나요?"
       canGoNext={channel !== undefined}
       onNext={() => onNext({ acquisition_channel: channel })}
       nextLabel={nextLabel}
