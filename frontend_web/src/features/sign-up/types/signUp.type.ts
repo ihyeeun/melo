@@ -16,6 +16,10 @@ export interface SignUpType {
   eating_out_freq_weekly: (typeof MEAL_OUTSIDE)[keyof typeof MEAL_OUTSIDE];
   job_type: (typeof JOB_TYPE)[keyof typeof JOB_TYPE];
   lunch_location: (typeof LUNCH_LOCATION)[keyof typeof LUNCH_LOCATION] | null;
+  // 아래 셋은 가입 요청에 아직 보내지 않는다 (서버 필드 미정)
+  exercise_freq_weekly: (typeof EXERCISE)[keyof typeof EXERCISE];
+  glp1_use: (typeof MEDICAL)[keyof typeof MEDICAL];
+  acquisition_channel: (typeof SOCIAL)[keyof typeof SOCIAL];
 }
 
 // 입력 중인 회원가입 값. 아직 고르지 않은 값은 비어 있다
@@ -34,6 +38,9 @@ export const SIGN_UP_STEPS = {
   persona: ["persona_type"],
   eatingOut: ["eating_out_freq_weekly"],
   jobAndLunch: ["job_type", "lunch_location"],
+  exercise: ["exercise_freq_weekly"],
+  glp1: ["glp1_use"],
+  acquisitionChannel: ["acquisition_channel"],
   subCode: ["subCode"],
 } as const satisfies Record<string, readonly (keyof SignUpType)[]>;
 
@@ -53,6 +60,9 @@ export const SIGN_UP_PROGRESS = {
   persona: 5,
   eatingOut: 5,
   jobAndLunch: 6,
+  exercise: 6,
+  glp1: 6,
+  acquisitionChannel: 6,
   subCode: 6,
 } as const satisfies Record<SignUpStep, number>;
 
@@ -145,4 +155,5 @@ export const SOCIAL = {
   APP_STORE: 1,
   REFERRAL: 2,
   ETC: 3,
+  NAVER_CAFE: 4,
 } as const;

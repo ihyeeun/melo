@@ -4,11 +4,14 @@ import { getWebAuthAccessToken } from "@/features/kakao-web-auth/api/webAuthApi"
 import { GOAL } from "@/features/profile/goalEdit.model";
 import { SignUpFrame } from "@/features/sign-up/components/SignUpFrame";
 import { SignUpHeader } from "@/features/sign-up/components/SignUpHeader";
+import { AcquisitionChannelStep } from "@/features/sign-up/components/steps/AcquisitionChannelStep";
 import { ActivityLevelStep } from "@/features/sign-up/components/steps/ActivityLevelStep";
 import { BasicInfoStep } from "@/features/sign-up/components/steps/BasicInfoStep";
 import { BodyInfoStep } from "@/features/sign-up/components/steps/BodyInfoStep";
 import { DietManagementStep } from "@/features/sign-up/components/steps/DietManagementStep";
 import { EatingOutFrequencyStep } from "@/features/sign-up/components/steps/EatingOutFrequencyStep";
+import { ExerciseFrequencyStep } from "@/features/sign-up/components/steps/ExerciseFrequencyStep";
+import { Glp1UseStep } from "@/features/sign-up/components/steps/Glp1UseStep";
 import { GoalStep } from "@/features/sign-up/components/steps/GoalStep";
 import { GoalWeightStep } from "@/features/sign-up/components/steps/GoalWeightStep";
 import { JobAndLunchStep } from "@/features/sign-up/components/steps/JobAndLunchStep";
@@ -45,7 +48,7 @@ function getSignUpSteps(goal: SignUpForm["goal"]) {
 
 // screen: ONB-01-003, ONB-01-004, ONB-01-005, ONB-01-006, ONB-01-007, ONB-01-008
 // screen: ONB-01-009, ONB-01-010, ONB-01-011, ONB-01-012, ONB-01-013
-// screen: ONB-01-017
+// screen: ONB-01-014, ONB-01-015, ONB-01-016, ONB-01-017
 export default function SignUpPage() {
   const navigate = useNavigate();
   const form = useSignUpForm();
@@ -111,7 +114,7 @@ export default function SignUpPage() {
     navigate(`${PATH.ONBOARDING}?step=${nextSteps[nextSteps.indexOf(step) + 1]}`);
   };
 
-  // 모든 단계가 같은 것을 받는다. 마지막 단계는 플랫폼마다 달라서(웹: 구독 코드, 앱: 하는 일)
+  // 모든 단계가 같은 것을 받는다. 마지막 단계는 플랫폼마다 달라서(웹: 구독 코드, 앱: 마케팅 채널)
   // 다음 버튼 문구도 여기서 정한다
   const stepProps = { form, onNext: handleNext, nextLabel: isLastStep ? "시작하기" : "다음" };
 
@@ -137,6 +140,9 @@ export default function SignUpPage() {
       {step === "persona" && <PersonaTypeStep {...stepProps} />}
       {step === "eatingOut" && <EatingOutFrequencyStep {...stepProps} />}
       {step === "jobAndLunch" && <JobAndLunchStep {...stepProps} />}
+      {step === "exercise" && <ExerciseFrequencyStep {...stepProps} />}
+      {step === "glp1" && <Glp1UseStep {...stepProps} />}
+      {step === "acquisitionChannel" && <AcquisitionChannelStep {...stepProps} />}
       {step === "subCode" && <SubCodeStep {...stepProps} />}
 
       {isSubmitting && <LoadingOverlay label="회원 정보를 저장하는 중입니다." />}
