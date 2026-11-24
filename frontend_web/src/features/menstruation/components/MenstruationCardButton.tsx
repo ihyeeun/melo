@@ -20,30 +20,33 @@ export default function MenstruationCardButton({ phase }: { phase: MenstrualPhas
   const isSelectedDateToday = selectedDay !== null ? isToday(selectedDay) : false;
   const { menstrualStatus, isIrregularBleeding, isLoading, isError, retry, phaseDate } = phase;
   const isFreeBlocked = useIsFeatureBlocked(FEATURE_GUARD.CHAT);
-  const showChatButton = isSelectedDateToday && !isFreeBlocked;
   const navigate = useNavigate();
   const homeContent = menstrualStatus
     ? HOME_MENSTRUAL_STATUS_VIEW[menstrualStatus]
     : HOME_MENSTRUAL_STATUS_VIEW["undefined"];
 
+  // 생리 기록이 없으면 진행 바와 [관리법 알아보기]를 숨기고 카드로 기록을 시작하게 한다
   const isEmpty = menstrualStatus === undefined;
+  const showChatButton = isSelectedDateToday && !isFreeBlocked && !isEmpty;
   const title = isLoading
     ? "생리 기록을 불러오고 있어요"
     : isError
       ? "기록을 불러오지 못했어요"
       : isIrregularBleeding
-        ? "평소보다 이른 출혈"
+        ? "예상보다 이른 출혈"
         : homeContent.title(getMenstrualPhaseDayInfo(selectedDateKey, phaseDate));
   const message = isLoading
-    ? "잠시만 기다려 주세요."
+    ? "잠시만 기다려주세요"
     : isError
-      ? "눌러서 다시 시도해주세요."
-      : homeContent.message;
+      ? "눌러서 다시 시도해주세요"
+      : isIrregularBleeding
+        ? "컨디션에 따라 주기가 달라질\n수 있어요. 자주 반복되면\n진료를 받아보세요"
+        : homeContent.message;
 
   const timeline = [
     ...new Set(
       Object.values(HOME_MENSTRUAL_STATUS_VIEW)
-        .filter(({ phaseIndex }) => (isEmpty ? phaseIndex < 4 : phaseIndex >= 0))
+        .filter(({ phaseIndex }) => phaseIndex >= 0)
         .sort((a, b) => a.phaseIndex - b.phaseIndex)
         .map(({ phaseLabel }) => phaseLabel),
     ),
@@ -85,7 +88,7 @@ export default function MenstruationCardButton({ phase }: { phase: MenstrualPhas
         <span className={`${styles.title} title-s-semi text-primary`}>{title}</span>
         <span className={styles.messageBubble}>{message}</span>
 
-        {!isLoading && !isError && (
+        {!isLoading && !isError && !isEmpty && (
           <span className={styles.stepper} aria-hidden="true">
             <span className={styles.track}>
               <span className={styles.progress} style={{ width: `${progressPercent}%` }} />
