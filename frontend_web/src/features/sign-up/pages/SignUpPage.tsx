@@ -43,9 +43,13 @@ import {
   useSearchParams,
 } from "@/shared/navigation/stackflowNavigation";
 
+// 운동 빈도 · GLP-1 · 가입 경로는 가입 API가 받을 필드가 정해지면 보여 준다
+const HIDDEN_STEPS: readonly SignUpStep[] = ["exercise", "glp1", "acquisitionChannel"];
+
 // 구독 코드는 웹에서 가입할 때만, 목표 몸무게는 체중 유지가 아닐 때만 입력받는다
 function getSignUpSteps(goal: SignUpForm["goal"]) {
   return (Object.keys(SIGN_UP_STEPS) as SignUpStep[]).filter((step) => {
+    if (HIDDEN_STEPS.includes(step)) return false;
     if (step === "subCode") return !isNativeApp();
     if (step === "goalWeight") return goal !== GOAL.MAINTAIN_WEIGHT;
     return true;
@@ -136,7 +140,7 @@ export default function SignUpPage() {
     navigate(`${PATH.ONBOARDING}?step=${nextSteps[nextSteps.indexOf(step) + 1]}`);
   };
 
-  // 모든 단계가 같은 것을 받는다. 마지막 단계는 플랫폼마다 달라서(웹: 구독 코드, 앱: 마케팅 채널)
+  // 모든 단계가 같은 것을 받는다. 마지막 단계는 플랫폼마다 달라서(웹: 구독 코드, 앱: 하는 일)
   // 다음 버튼 문구도 여기서 정한다
   const stepProps = { form, onNext: handleNext, nextLabel: isLastStep ? "시작하기" : "다음" };
 
