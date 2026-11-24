@@ -23,7 +23,6 @@ export const EVENT_NAME = {
   LABEL_SCAN_SUCCESS: "label_scan_success",
   LABEL_SCAN_FAIL: "label_scan_fail",
 
-  LABEL_REGISTER_SUCCESS: "label_register_success",
   LABEL_REGISTER_FAIL: "label_register_fail",
 
   AI_COACH_CHAT: "ai_coach_chat",
@@ -32,10 +31,6 @@ export const EVENT_NAME = {
   CHAT_TEXT_MENU_SAVE: "menu_save_text",
   DIARY_MENU_SAVE: "menu_save_manual",
   MENU_SAVE_BY_SCAN: "menu_save_scan",
-
-  USER_PROFILE_UPDATED: "user_profile_updated",
-
-  CLICK_FEEDBACK_BUTTON: "click_feedback_button",
 
   BODY_WEIGHT_RECORDED: "body_weight_recorded",
 

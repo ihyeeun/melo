@@ -3,8 +3,6 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 
 import AppOpenSettingsFeedbackPage from "@/features/app-open/AppOpenSettingsFeedbackPage";
 import { useGetProfileQuery } from "@/features/profile/hooks/queries/useProfileQuery";
-import { track } from "@/shared/analytics/analytics";
-import { EVENT_NAME } from "@/shared/analytics/analytics.constants";
 import {
   isNativeApp,
   requestNativeAppDeviceInfo,
@@ -89,10 +87,6 @@ function NativeSettingsFeedbackPage() {
 
     syncAppTab("home");
   }, [canGoBack, navigate]);
-
-  useEffect(() => {
-    track(EVENT_NAME.CLICK_FEEDBACK_BUTTON);
-  }, []);
 
   useEffect(() => {
     let isActive = true;

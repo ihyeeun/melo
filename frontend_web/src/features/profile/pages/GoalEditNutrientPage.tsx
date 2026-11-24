@@ -38,8 +38,6 @@ import {
 } from "@/features/profile/stores/goalEditFlow.store";
 import styles from "@/features/profile/styles/GoalEditPage.module.css";
 import { PATH } from "@/router/path";
-import { track } from "@/shared/analytics/analytics";
-import { EVENT_NAME } from "@/shared/analytics/analytics.constants";
 import { isRequestAbortError } from "@/shared/api/requestCancellation";
 import type { WeightStepsResponseDto } from "@/shared/api/types/api.response.dto";
 import { Button } from "@/shared/commons/button/Button";
@@ -292,7 +290,6 @@ export default function GoalEditNutrientPage() {
         completedTasks.push(task);
       }
 
-      track(EVENT_NAME.USER_PROFILE_UPDATED);
       toast.success("목표를 수정했어요");
       queryClient.invalidateQueries({
         queryKey: queryKeys.profile,

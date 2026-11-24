@@ -68,7 +68,6 @@ export function useRegisterMenuByNutritionLabelImageMutation(options?: UseMutati
   return useMutation({
     mutationFn: registerMenuByNutritionLabelImageFeedback,
     onSuccess: () => {
-      track(EVENT_NAME.LABEL_REGISTER_SUCCESS, { source: "chat_tab" });
       if (options?.onSuccess) options.onSuccess();
     },
     onError: (error) => {

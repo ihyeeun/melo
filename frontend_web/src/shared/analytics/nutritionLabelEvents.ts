@@ -18,10 +18,6 @@ export function trackNutritionLabelScanFail(
   track(EVENT_NAME.LABEL_SCAN_FAIL, { ...properties, reason });
 }
 
-export function trackNutritionLabelRegisterSuccess() {
-  track(EVENT_NAME.LABEL_REGISTER_SUCCESS);
-}
-
 export function trackNutritionLabelRegisterFail(reason: string) {
   track(EVENT_NAME.LABEL_REGISTER_FAIL, { reason });
 }
