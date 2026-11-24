@@ -20,7 +20,6 @@ import {
   type KakaoMap,
   loadKakaoMapSdk,
 } from "@/features/restaurant/utils/kakaoMap.util";
-import { dismissKeyboard } from "@/features/restaurant/utils/keyboard.util";
 import { PATH } from "@/router/path";
 import { requestNativeAppSettingsOpen } from "@/shared/api/bridge/nativeBridge";
 import { useNativeAppFeature } from "@/shared/api/bridge/useNativeAppFeature";
@@ -28,6 +27,7 @@ import { Button } from "@/shared/commons/button/Button";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import { SearchInput } from "@/shared/commons/input/SearchInput";
 import { navigate } from "@/shared/navigation/stackflowNavigation";
+import { dismissKeyboard } from "@/shared/utils/keyboard.util";
 
 const DEFAULT_CENTER = { lat: 37.5665, lng: 126.978 };
 const CATEGORY = "RESTAURANT" as const;
