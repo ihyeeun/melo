@@ -12,7 +12,7 @@ import React, {
 } from "react";
 
 import { MODE } from "@/features/camera/constants/camera.constant";
-import { getAnalyticsErrorMessage } from "@/features/camera/utils/cameraCapture";
+import { getCameraCaptureErrorFeedback } from "@/features/camera/utils/cameraCapture";
 import { AssistantMessageText } from "@/features/chat/components/AssistantMessageText";
 import { AssistantPendingMessage } from "@/features/chat/components/AssistantPendingMessage";
 import { ImageAnalysisFlow } from "@/features/chat/components/ImageAnalysisFlow";
@@ -360,12 +360,14 @@ export default function AIChatPage() {
 
       if (errorCode === "GALLERY_PICK_CANCELLED") return;
 
+      const feedback = getCameraCaptureErrorFeedback(error);
+
       // 사진 권한을 거부했으면 설정 앱에서 직접 켤 수 있게 버튼을 붙이고, 닫을 때까지 둔다
       if (errorCode === "GALLERY_PERMISSION_DENIED" && canOpenAppSettings) {
         const toastId = toast.show({
           type: "error",
-          title: "사진 접근 권한이 필요해요",
-          description: "설정에서 권한을 허용해주세요.",
+          title: feedback.title,
+          description: feedback.description,
           timeout: 0,
           priority: "high",
           action: {
@@ -379,11 +381,7 @@ export default function AIChatPage() {
         return;
       }
 
-      toast.error(
-        errorCode === "GALLERY_PERMISSION_DENIED"
-          ? "사진 접근 권한이 필요해요. 설정에서 권한을 허용해 주세요."
-          : getAnalyticsErrorMessage(error, "사진을 가져오지 못했어요. 다시 선택해 주세요."),
-      );
+      toast.error(feedback.title, feedback.description);
     } finally {
       setIsPickingImage(false);
     }

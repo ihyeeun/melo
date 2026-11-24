@@ -250,6 +250,8 @@ export type CameraCaptureResponsePayload = {
   previewBase64: string | null;
   previewMimeType: string | null;
   mode?: CameraCaptureMode | null;
+  // 촬영했는지, 카메라 화면의 갤러리에서 골랐는지. 옛 앱은 보내지 않는다
+  imageFrom?: "camera" | "gallery";
 };
 
 export type AppToWebMessage<T = unknown> = {

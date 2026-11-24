@@ -16,6 +16,8 @@ export type CameraCaptureSessionResult = {
   previewBase64?: string | null;
   previewMimeType?: string | null;
   mode?: BridgeCameraCaptureMode | null;
+  // 촬영했는지, 카메라 화면의 갤러리에서 골랐는지 — 웹이 실패 안내(다시 촬영 / 다시 고르기)와 이벤트에 쓴다
+  imageFrom?: "camera" | "gallery";
 };
 
 type PendingCameraCaptureSession = {

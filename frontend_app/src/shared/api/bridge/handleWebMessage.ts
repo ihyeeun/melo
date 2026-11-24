@@ -410,7 +410,7 @@ async function pickPhotoFromGallery(payload?: BridgeGalleryPickRequestPayload) {
   });
 
   if (result.canceled) {
-    throw new BridgeHandledError("사진 선택이 취소되었어요.", 499, "GALLERY_PICK_CANCELLED");
+    throw new BridgeHandledError("사진 선택을 취소했어요", 499, "GALLERY_PICK_CANCELLED");
   }
 
   if (result.assets.length !== 1) {

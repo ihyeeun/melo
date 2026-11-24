@@ -135,7 +135,7 @@ export default function NutrientCameraPage() {
     } catch (error) {
       if (!screen.isActive()) return;
       setCapturedPreviewSrc(null);
-      setCaptureErrorFeedback(getRecognitionErrorFeedback("NUTRITION_LABEL", error));
+      setCaptureErrorFeedback(getRecognitionErrorFeedback(error, capturedImage.imageFrom));
     } finally {
       setIsUploading(false);
     }

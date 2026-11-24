@@ -273,7 +273,7 @@ export default function CameraCaptureScreen() {
 
     didRequestCloseRef.current = true;
     rejectCameraCaptureSession(
-      new BridgeHandledError("촬영이 취소되었어요.", 499, "CAMERA_CAPTURE_CANCELLED"),
+      new BridgeHandledError("촬영을 취소했어요", 499, "CAMERA_CAPTURE_CANCELLED"),
     );
     if (router.canGoBack()) {
       router.back();
@@ -333,7 +333,7 @@ export default function CameraCaptureScreen() {
       if (!hasPendingCameraCaptureSession()) return;
 
       rejectCameraCaptureSession(
-        new BridgeHandledError("촬영이 취소되었어요.", 499, "CAMERA_CAPTURE_CANCELLED"),
+        new BridgeHandledError("촬영을 취소했어요", 499, "CAMERA_CAPTURE_CANCELLED"),
       );
     };
   }, [getCameraPermissionStatus]);
@@ -479,6 +479,7 @@ export default function CameraCaptureScreen() {
         previewBase64: previewThumbnail?.base64 ?? null,
         previewMimeType: previewThumbnail?.mimeType ?? null,
         mode: captureMode,
+        imageFrom: "camera",
       });
 
       router.back();
@@ -578,6 +579,7 @@ export default function CameraCaptureScreen() {
         previewBase64: previewThumbnail?.base64 ?? null,
         previewMimeType: previewThumbnail?.mimeType ?? null,
         mode: captureMode,
+        imageFrom: "gallery",
       });
       router.back();
     } catch {

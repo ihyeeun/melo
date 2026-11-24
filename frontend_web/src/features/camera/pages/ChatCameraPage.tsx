@@ -113,7 +113,7 @@ export default function ChatCameraPage() {
       moveToChat();
     } catch (error) {
       if (!screen.isActive()) return;
-      setCaptureErrorFeedback(getRecognitionErrorFeedback(selectedMode, error));
+      setCaptureErrorFeedback(getRecognitionErrorFeedback(error, image.imageFrom));
     }
   }, [returnFromCameraPage, screenId, setImage, moveToChat]);
 

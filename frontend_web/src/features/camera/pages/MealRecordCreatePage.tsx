@@ -14,6 +14,7 @@ import {
   getAnalyticsErrorMessage,
   getCameraCaptureErrorFeedback,
   getCapturedImagePreviewSrc,
+  getNoFoodDetectedFeedback,
   getRecognitionErrorFeedback,
   isCameraCaptureCancelled,
 } from "@/features/camera/utils/cameraCapture";
@@ -140,7 +141,7 @@ export default function MealRecordCreatePage() {
             source: "meal_record_camera",
           });
           setCapturedPreviewSrc(null);
-          setCaptureErrorFeedback(getRecognitionErrorFeedback("FOOD"));
+          setCaptureErrorFeedback(getNoFoodDetectedFeedback(capturedImage.imageFrom));
           return;
         }
         const currentDraft = useMenuDraftStore.getState().drafts[draftKey];
@@ -222,7 +223,7 @@ export default function MealRecordCreatePage() {
           });
         }
         setCapturedPreviewSrc(null);
-        setCaptureErrorFeedback(getRecognitionErrorFeedback("FOOD", error));
+        setCaptureErrorFeedback(getRecognitionErrorFeedback(error, capturedImage.imageFrom));
       }
     },
     [applyRecognizedMenus, dateKey, draftKey, mealType, queryClient, uploadFoodImage],
@@ -243,7 +244,7 @@ export default function MealRecordCreatePage() {
           { source: MEAL_RECORD_NUTRITION_LABEL_SCAN_SOURCE },
         );
         setCapturedPreviewSrc(null);
-        setCaptureErrorFeedback(getRecognitionErrorFeedback("NUTRITION_LABEL", error));
+        setCaptureErrorFeedback(getRecognitionErrorFeedback(error, capturedImage.imageFrom));
         return;
       }
 
