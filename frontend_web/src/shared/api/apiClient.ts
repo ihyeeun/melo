@@ -1,4 +1,4 @@
-import { resolveApiErrorMessage } from "@/shared/api/apiErrorMessage";
+import { API_ERROR_MESSAGE, resolveApiErrorMessage } from "@/shared/api/apiErrorMessage";
 import { isNativeApp, requestToApp } from "@/shared/api/bridge/nativeBridge";
 import { isRequestAbortError } from "@/shared/api/requestCancellation";
 import { captureScreenRequestScope } from "@/shared/api/screenRequests";
@@ -215,12 +215,19 @@ export async function webApi<T>(
 export class AppApiError extends Error {
   statusCode: number;
   error: string;
+  // 오류 문구 표에 있는 문구. 표에 없으면 비어 있고 message는 기본 문구가 된다
+  userMessage?: string;
+  // 서버가 보낸 원문. 화면에는 내지 않고 기록에만 남긴다
+  serverMessage: string;
 
   constructor(payload: ApiFailResponse) {
-    super(resolveApiErrorMessage(payload));
+    const userMessage = resolveApiErrorMessage(payload);
+    super(userMessage ?? API_ERROR_MESSAGE.DEFAULT);
     this.name = "AppApiError";
     this.statusCode = payload.statusCode;
     this.error = payload.error;
+    this.userMessage = userMessage;
+    this.serverMessage = payload.message;
   }
 }
 

@@ -1,24 +1,24 @@
 import type { ApiFailResponse } from "@/shared/api/types/apiResponse.types";
 
 export const API_ERROR_MESSAGE = {
-  DEFAULT: "요청 처리 중 오류가 발생했습니다",
+  DEFAULT: "문제가 생겼어요.\n잠시 후 다시 시도해주세요.",
   BAD_REQUEST: "입력값을 다시 확인해주세요",
-  AUTH_EXPIRED: "로그인이 만료되었어요\n다시 로그인해주세요",
-  FORBIDDEN: "요청 권한이 없어요",
+  AUTH_EXPIRED: "로그인이 만료됐어요\n다시 로그인해주세요",
+  FORBIDDEN: "이용 권한이 없어요",
   NOT_FOUND: "요청한 정보를 찾지 못했어요",
   CONFLICT: "이미 처리된 요청이에요",
-  NUTRIENT_RATIO_TOTAL: "탄단지 비율의 합을 100으로 맞춰주세요",
+  NUTRIENT_RATIO_TOTAL: "탄단지 비율의 합을 100%로 맞춰주세요",
   SUB_CODE_REQUIRED: "구독 코드를 입력해주세요",
   SUB_CODE_INACTIVE: "사용 기간이 지났거나 비활성화된 구독 코드예요",
-  IMAGE_REQUIRED: "이미지 파일이 누락되었어요",
-  IMAGE_TYPE_INVALID: "지원하지 않는 이미지 형식이에요",
+  IMAGE_REQUIRED: "사진이 첨부되지 않았어요",
+  IMAGE_TYPE_INVALID: "사진을 불러오지 못했어요",
   FOOD_IMAGE_QUALITY_LOW: "사진 화질이 너무 낮아요",
-  FOOD_IMAGE_TOO_SMALL: "사진 속 음식이 너무 작게 보여요",
+  FOOD_IMAGE_TOO_SMALL: "음식이 너무 작게 찍혔어요",
   FOOD_IMAGE_BLURRY: "사진이 흐려요",
-  FOOD_IMAGE_LIGHTING_POOR: "조명이 좋지 않아 인식하기 어려워요",
-  FOOD_OCCLUDED_OR_CUT_OFF: "음식이 가려졌거나 잘려 있어요",
-  FOOD_NOT_DETECTED: "사진에서 음식을 찾을 수 없어요",
-  FOOD_NOT_MATCHED: "사진 속 음식이 후보 메뉴와 매칭되지 않았어요",
+  FOOD_IMAGE_LIGHTING_POOR: "너무 어두워 알아보기 어려워요",
+  FOOD_OCCLUDED_OR_CUT_OFF: "음식이 가려졌거나 잘렸어요",
+  FOOD_NOT_DETECTED: "사진에서 음식을 찾지 못했어요",
+  FOOD_NOT_MATCHED: "사진 속 음식을 알아보지 못했어요",
   ADMIN_ID_OR_EMAIL_INVALID: "아이디 또는 이메일을 다시 확인해주세요",
   KAKAO_AUTH_FAILED: "카카오 인증에 실패했어요\n다시 로그인해주세요",
   APPLE_AUTH_FAILED: "Apple 인증에 실패했어요\n다시 로그인해주세요",
@@ -26,12 +26,12 @@ export const API_ERROR_MESSAGE = {
   SUB_CODE_NOT_FOUND: "존재하지 않는 구독 코드예요",
   USER_INFO_NOT_FOUND: "회원 정보를 찾지 못했어요",
   MEAL_NOT_FOUND: "식사를 찾지 못했어요",
-  MENU_NOT_FOUND: "메뉴 정보를 찾지 못했어요",
+  MENU_NOT_FOUND: "음식 정보를 찾지 못했어요",
   PROFILE_ALREADY_EXISTS: "이미 등록된 프로필이 있어요",
   SUB_CODE_ALREADY_EXISTS: "이미 등록한 구독 코드예요",
   SUB_CODE_LIMIT_EXCEEDED: "사용 한도가 초과된 구독 코드예요",
-  REQUEST_TIMEOUT: "요청 시간이 초과되었습니다\n잠시 후 다시 시도해주세요",
-  NETWORK_ERROR: "서버에 연결할 수 없어요\n네트워크 상태를 확인해주세요",
+  REQUEST_TIMEOUT: "응답이 늦어지고 있어요.\n잠시 후 다시 시도해주세요.",
+  NETWORK_ERROR: "네트워크 상태를 확인해주세요",
   SERVICE_UNAVAILABLE: "서버가 일시적으로 불안정해요\n잠시 후 다시 시도해주세요",
 } as const;
 
@@ -181,19 +181,22 @@ const API_ERROR_USER_MESSAGE_BY_CUSTOM_STATUS_CODE: Partial<Record<number, strin
   40911: API_ERROR_MESSAGE.SUB_CODE_LIMIT_EXCEEDED,
 };
 
-export function resolveApiErrorMessage(response: ApiFailResponse) {
+// 서버 오류를 위 표의 문구로 바꾼다. 표에 없으면 undefined — 서버 원문은 화면에 내지 않는다
+export function resolveApiErrorMessage(response: ApiFailResponse): string | undefined {
+  // 앱은 네트워크가 끊기면 503 + NETWORK_ERROR를 넘기므로 오류 코드를 상태 코드보다 먼저 본다
+  const errorCodeMessage = API_ERROR_USER_MESSAGE_BY_ERROR_CODE[response.error];
+  if (errorCodeMessage) return errorCodeMessage;
+
   const matchedRule = API_ERROR_USER_MESSAGE_RULES.find((rule) =>
     rule.messages?.includes(response.message),
   );
   const matchedStatusRule = API_ERROR_USER_MESSAGE_RULES.find(
     (rule) => rule.messages === undefined && rule.statusCode === response.statusCode,
   );
-  const resolvedMessage =
+
+  return (
     matchedRule?.userMessage ??
     matchedStatusRule?.userMessage ??
-    API_ERROR_USER_MESSAGE_BY_CUSTOM_STATUS_CODE[response.statusCode] ??
-    API_ERROR_USER_MESSAGE_BY_ERROR_CODE[response.error] ??
-    response.message;
-
-  return resolvedMessage || API_ERROR_MESSAGE.DEFAULT;
+    API_ERROR_USER_MESSAGE_BY_CUSTOM_STATUS_CODE[response.statusCode]
+  );
 }
