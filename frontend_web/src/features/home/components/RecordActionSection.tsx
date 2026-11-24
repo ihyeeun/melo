@@ -54,6 +54,10 @@ export default function RecordActionSection() {
     isWorkoutRecordPending,
   } = useActivityCalories(selectedDate);
   const isHealthConnected = nativeStepConnectionStatus === "connected";
+  // [+]는 직접 입력할 수 있을 때만(미연동 · 권한 거부 · 그날 건강 앱 데이터 없음)
+  const canInputSteps =
+    !isFutureDate &&
+    (nativeStepConnectionStatus === "disconnected" || nativeStepConnectionStatus === "no_data");
 
   const hasWorkoutRecords = workoutRecords.length > 0;
   const totalWorkoutDuration = workoutRecords.reduce(
@@ -80,10 +84,16 @@ export default function RecordActionSection() {
   };
 
   // 건강 앱 미연동(권한 거부 포함)이거나 그날 데이터가 없으면 직접 입력한다.
-  // 미연동이면 먼저 권한을 다시 요청해 보고, 그래도 걸음 수가 없으면 입력 시트를 연다
+  // 미연동이면 먼저 권한을 다시 요청해 보고, 그래도 걸음 수가 없으면 입력 시트를 연다.
+  // 미래 날짜는 "이 날은 아직 기록할 수 없어요" 시트를 연다
   const openStepsEditor = async () => {
+    if (isFutureDate) {
+      navigate(getBodyLogSheetPath(PATH.HOME_STEPS_LOG_SHEET));
+      return;
+    }
+
     let status = nativeStepConnectionStatus;
-    if (status === "disconnected" && isNativeApp() && !isFutureDate) {
+    if (status === "disconnected" && isNativeApp()) {
       status = await requestStepPermissionAndSync();
     }
     if (status !== "disconnected" && status !== "no_data") return;
@@ -158,6 +168,7 @@ export default function RecordActionSection() {
             onClick={() => void openStepsEditor()}
             isPending={isBodyLogPending}
             isHealthConnected={isHealthConnected}
+            canAdd={canInputSteps}
           />
           {showsRecentWeight ? (
             <HealthMetricCard
@@ -230,6 +241,7 @@ function HealthMetricCard({
   onClick,
   isPending = false,
   isHealthConnected = false,
+  canAdd = true,
 }: {
   title: string;
   // 기록이 없으면 비워서 "-"로 보여 준다
@@ -241,9 +253,8 @@ function HealthMetricCard({
   onClick: () => void;
   isPending?: boolean;
   isHealthConnected?: boolean;
+  canAdd?: boolean;
 }) {
-  const isNotShowIcon = isHealthConnected && title === "걸음 수";
-
   return (
     <Tile
       onClick={isPending ? undefined : onClick}
@@ -252,7 +263,7 @@ function HealthMetricCard({
     >
       <div className={styles.bodyLogTitle}>
         <p className="body-l-medium text-primary">{title}</p>
-        {!isNotShowIcon && (
+        {canAdd && (
           <SystemIcon name="plus-circle" size={18} className="text-secondary marginLeft" />
         )}
       </div>
