@@ -8,7 +8,7 @@ import type { SheetRestaurant } from "@/features/restaurant/hooks/useMapSheet";
 import sheetStyles from "@/features/restaurant/styles/MapSheetView.module.css";
 import styles from "@/features/restaurant/styles/NearbyRestaurantList.module.css";
 import type { LatLng } from "@/features/restaurant/utils/currentLocation.util";
-import { formatDistance } from "@/features/restaurant/utils/distance.util";
+import { formatDistance, getRestaurantDistance } from "@/features/restaurant/utils/distance.util";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import { LoadingIndicator } from "@/shared/commons/loading/Loading";
 
@@ -17,6 +17,7 @@ type NearbyRestaurantListProps = {
   center: LatLng | null;
   keyword: string;
   isMapAreaSearch: boolean;
+  myLocation: LatLng | null;
   onSelectRestaurant: (restaurant: SheetRestaurant) => void;
 };
 
@@ -31,6 +32,7 @@ export default function NearbyRestaurantList({
   center,
   keyword,
   isMapAreaSearch,
+  myLocation,
   onSelectRestaurant,
 }: NearbyRestaurantListProps) {
   const {
@@ -99,7 +101,7 @@ export default function NearbyRestaurantList({
                     </span>
                     <span className={`body-s-regular text-tertiary ${sheetStyles.divided}`}>
                       <span>{restaurant.category}</span>
-                      <span>{formatDistance(restaurant.distance)}</span>
+                      <span>{formatDistance(getRestaurantDistance(restaurant, myLocation))}</span>
                       {brand === null && <span>메뉴를 준비 중이에요</span>}
                     </span>
                   </span>

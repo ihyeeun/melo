@@ -21,6 +21,7 @@ import {
 } from "@/features/restaurant/hooks/useMapSheet";
 import styles from "@/features/restaurant/styles/MapPage.module.css";
 import type { LatLng } from "@/features/restaurant/utils/currentLocation.util";
+import { getRestaurantDistance } from "@/features/restaurant/utils/distance.util";
 import {
   getMapCenterForVisibleArea,
   getVisibleAreaCenter,
@@ -59,7 +60,9 @@ export default function MapPage() {
   const detailRestaurant = currentView.type === "detail" ? currentView.restaurant : null;
   const [isMapMoved, setIsMapMoved] = useState(false);
   const [mapSearchCenter, setMapSearchCenter] = useState<LatLng | null>(null);
-  const searchCenter = mapSearchCenter ?? center;
+  // 검색 중에 [현재 위치]를 누르면 검색한 기준점을 붙잡아 둬서, 지도만 옮기고 검색 결과는 그대로 둔다.
+  const [pinnedSearchCenter, setPinnedSearchCenter] = useState<LatLng | null>(null);
+  const searchCenter = (searchKeyword ? pinnedSearchCenter : null) ?? mapSearchCenter ?? center;
   const restaurantSearch = { category: CATEGORY, center: searchCenter, keyword: searchKeyword };
   // 목록과 같은 쿼리라 요청은 한 번만 나간다. 카카오가 거리순으로 주므로 첫 번째가 가장 가깝다.
   const { data: searchResult, isFetching: isSearching } = useNearbyRestaurantsQuery(
@@ -83,9 +86,17 @@ export default function MapPage() {
     if (map) map.setCenter(getMapCenterForVisibleArea(map, position, getHiddenMapHeight()));
   };
 
+  // 검색어를 지우면 지도가 검색 전 기준점으로 돌아가 목록과 맞으므로 [현 지도에서 검색]을 내린다.
+  // 결과를 받기 전에 지웠으면 그 검색은 restaurant_search로 남기지 않는다.
+  const clearSearchKeyword = () => {
+    setSearchKeyword("");
+    setIsMapMoved(false);
+    setSearchRequest(null);
+  };
+
   const handleSearchInputChange = (value: string) => {
     setSearchInput(value);
-    if (!value.trim()) setSearchKeyword("");
+    if (!value.trim() && searchKeyword) clearSearchKeyword();
   };
 
   // 지도는 옮기지 않는다. 검색하면 시트가 목록 높이로 바뀌므로, 그때 보이는 영역의 가운데를 기준으로 찾는다.
@@ -98,6 +109,7 @@ export default function MapPage() {
   const handleSearchSubmit = (value: string) => {
     // 지도를 끌어 옮긴 뒤 검색하면 옮긴 지도에서 찾는다.
     if (isMapMoved) setSearchCenterToMapArea();
+    setPinnedSearchCenter(null);
     setSearchKeyword(value.trim());
     setIsMapMoved(false);
     setSearchRequest({ id: Date.now(), trigger: "keyboard", query: value.trim() });
@@ -108,6 +120,7 @@ export default function MapPage() {
     if (!map) return;
 
     setSearchCenterToMapArea();
+    setPinnedSearchCenter(null);
     setIsMapMoved(false);
     setSearchRequest({ id: Date.now(), trigger: "map_button", query: searchKeyword });
     moveSheet({ type: "search_map_area" });
@@ -135,7 +148,12 @@ export default function MapPage() {
       // [AI 추정] 식당을 구분하는 값이 응답에 없어 멜로 등록 식당은 모두 franchise로 보낸다
       data_type: restaurant.restaurantId !== null ? "franchise" : "none",
     });
-    moveSheet({ type: target === "pin" ? "click_marker" : "click_restaurant", restaurant });
+    // 상세 시트 · 식당 메뉴 전체 화면도 목록처럼 내 위치에서 잰 거리를 보여 준다
+    const distance = getRestaurantDistance(restaurant, myLocation);
+    moveSheet({
+      type: target === "pin" ? "click_marker" : "click_restaurant",
+      restaurant: { ...restaurant, distance },
+    });
   };
 
   // 다시 물어볼 수 있으면 권한 팝업, 아니면 설정 앱으로. 설정에서 돌아오면 자동으로 다시 확인한다
@@ -148,9 +166,11 @@ export default function MapPage() {
     handleMoveToMyLocation();
   };
 
+  // 검색 중이면 검색 결과는 그대로 두고 지도만 옮긴다. 지도가 목록과 달라지므로 [현 지도에서 검색]을 띄운다.
   const handleMoveToMyLocation = () => {
+    if (searchKeyword) setPinnedSearchCenter(searchCenter);
     setMapSearchCenter(null);
-    setIsMapMoved(false);
+    setIsMapMoved(searchKeyword !== "");
     // 위치를 다시 받기 전까지는 마지막으로 받은 위치로 먼저 옮긴다.
     if (center) moveMapToVisibleCenter(center);
     retry();
@@ -170,16 +190,22 @@ export default function MapPage() {
     if (!map) return;
 
     const { event } = window.kakao.maps;
-    const handleMapDragEnd = () => setIsMapMoved(true);
+    const handleMapMoved = () => setIsMapMoved(true);
 
-    // 코드로 옮길 때는 발생하지 않아서, 사용자가 지도를 끌었을 때만 버튼이 나타난다.
-    event.addListener(map, "dragend", handleMapDragEnd);
-    return () => event.removeListener(map, "dragend", handleMapDragEnd);
+    // 코드로 옮길 때(setCenter · panTo)는 발생하지 않아서, 사용자가 지도를 끌거나 확대 · 축소했을 때만 버튼이 나타난다.
+    event.addListener(map, "dragend", handleMapMoved);
+    event.addListener(map, "zoom_changed", handleMapMoved);
+    return () => {
+      event.removeListener(map, "dragend", handleMapMoved);
+      event.removeListener(map, "zoom_changed", handleMapMoved);
+    };
   }, [map]);
 
   const moveToSearchCenter = useEffectEvent(() => {
     // 검색어로 찾을 때는 결과가 온 뒤 가장 가까운 식당으로 옮긴다.
-    if (!searchKeyword && searchCenter) moveMapToVisibleCenter(searchCenter);
+    // 검색 중에 [현재 위치]를 눌렀으면 결과는 그대로 두고, 새로 받은 내 위치로 옮긴다.
+    const target = searchKeyword ? pinnedSearchCenter && center : searchCenter;
+    if (target) moveMapToVisibleCenter(target);
   });
 
   // 내 위치를 받았거나 검색어를 지우면 검색 기준점으로 지도를 옮긴다.
@@ -326,6 +352,7 @@ export default function MapPage() {
           <NearbyRestaurantList
             {...restaurantSearch}
             isMapAreaSearch={mapSearchCenter !== null}
+            myLocation={myLocation}
             onSelectRestaurant={(restaurant) => handleSelectRestaurant(restaurant, "card")}
           />
         )}
