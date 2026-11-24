@@ -484,12 +484,12 @@ export interface RestaurantMenuResponseDto {
 }
 
 export interface RestaurantBrandsResponseDto {
-  restaurants: RestaurantBrandPlaceResponseDto[]; // 매핑된 장소만 요청 순서대로 온다
+  restaurants: RestaurantBrandPlaceResponseDto[]; // 등록되지 않은 장소는 빠지거나 restaurant_id가 null로 온다
 }
 
 export interface RestaurantBrandPlaceResponseDto {
   place_id: number;
-  restaurant_id: number;
+  restaurant_id: number | null; // 멜로에 등록되지 않은 장소면 null
   restaurant_name: string;
 }
 

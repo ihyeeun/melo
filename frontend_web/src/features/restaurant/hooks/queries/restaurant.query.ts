@@ -56,15 +56,20 @@ export function useNearbyRestaurantsQuery(
   });
 }
 
-type BrandEntry = readonly [placeId: string, brand: RestaurantBrandPlaceResponseDto | null];
+type MeloRestaurant = RestaurantBrandPlaceResponseDto & { restaurant_id: number };
+type BrandEntry = readonly [placeId: string, brand: MeloRestaurant | null];
 
-// 응답에는 멜로 식당만 오므로, 물어본 장소마다 멜로 식당이 아니면 null을 채워 확인 전과 구분한다.
+// 응답에 있어도 restaurant_id가 없으면 멜로 식당이 아니다.
+// 물어본 장소마다 멜로 식당이 아니면 null을 채워 확인 전과 구분한다.
 // 응답의 place_id는 number, 카카오 장소 id는 string이라 문자열로 맞춘다.
 async function getBrandEntries(placeIds: string[]): Promise<BrandEntry[]> {
   const { restaurants } = await getRestaurantBrands({ place_ids: placeIds });
   return placeIds.map((placeId) => [
     placeId,
-    restaurants.find((brand) => String(brand.place_id) === placeId) ?? null,
+    restaurants.find(
+      (brand): brand is MeloRestaurant =>
+        String(brand.place_id) === placeId && brand.restaurant_id !== null,
+    ) ?? null,
   ]);
 }
 
