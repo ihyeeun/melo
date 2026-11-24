@@ -39,7 +39,6 @@ import type { ChatGalleryMode } from "@/features/chat/types/camera.type";
 import { getCurrentDateTime } from "@/features/chat/utils/date.util";
 import { textSplitByLines } from "@/features/chat/utils/textdivider.util";
 import type { MenuWithQuantity } from "@/features/home/utils/dayMealSummary";
-import { useTodayMealRecordDeleteMutation } from "@/features/meal-record/hooks/mutations/useTodayMealRecordMutation";
 import { getMenuSelectionMenuDetailPath } from "@/features/menu-selection/utils/menuSelectionRoutes";
 import { PATH } from "@/router/path";
 import { getMealRecordPath } from "@/router/pathHelpers";
@@ -52,7 +51,6 @@ import { useNativeAppFeature } from "@/shared/api/bridge/useNativeAppFeature";
 import { isRequestAbortError } from "@/shared/api/requestCancellation";
 import { captureScreenRequestScope } from "@/shared/api/screenRequests";
 import type { MealType } from "@/shared/api/types/api.dto";
-import type { MealTime } from "@/shared/api/types/api.request.dto";
 import type {
   ChatHistoryItemResponseDto,
   ChatRecommendResponseDto,
@@ -60,7 +58,6 @@ import type {
 import { Button } from "@/shared/commons/button/Button";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
-import { ConfirmModal } from "@/shared/commons/modals/ConfirmModal";
 import { toast } from "@/shared/commons/toast/toast";
 import { MEAL_TIMES } from "@/shared/constants/meal.constants";
 import {
@@ -978,23 +975,11 @@ function MealRecordCard({
   const isSingleMenu = menus.length === 1;
   const time = mealTimeNumberToLabel(mealTime);
   const [isMenuExtended, setIsMenuExtended] = useState<boolean>(true);
-  const [isMealDeleteOpen, setIsMealDeleteOpen] = useState<boolean>(false);
   const totalCalories = formatDisplayNumber(menus.reduce((sum, value) => sum + value.calories, 0));
   const navigate = useNavigate();
 
-  const { mutateAsync: deleteMealRecordByTime, isPending: isDeleteMealPending } =
-    useTodayMealRecordDeleteMutation();
-
   const handleToGoMealRecord = () => {
     navigate(getMealRecordPath(date, mealTime));
-  };
-
-  const handleDeleteMealRecord = () => {
-    for (const menu of menus) {
-      deleteMealRecordByTime({ date, time: mealTime as MealTime, menu_id: menu.id });
-    }
-
-    setIsMealDeleteOpen(false);
   };
 
   return (
@@ -1058,16 +1043,8 @@ function MealRecordCard({
         )}
       </section>
 
+      {/* 카드는 그 날짜 · 끼니 전체 요약이라 [기록 취소]를 두지 않는다. 지우기는 식사 기록 상세에서 */}
       <section className={styles.mealRecordActionSection}>
-        <Button
-          onClick={() => setIsMealDeleteOpen(true)}
-          size="xs"
-          fullWidth
-          variant="outlined"
-          border="secondary"
-        >
-          기록 취소
-        </Button>
         <Button
           onClick={handleToGoMealRecord}
           size="xs"
@@ -1079,16 +1056,6 @@ function MealRecordCard({
         </Button>
       </section>
 
-      <ConfirmModal
-        open={isMealDeleteOpen}
-        onOpenChange={setIsMealDeleteOpen}
-        title="기록을 취소할까요?"
-        description="방금 기록한 식사 내용이 삭제돼요"
-        onConfirm={handleDeleteMealRecord}
-        confirmText="취소할래요"
-        cancelText="아니요"
-        confirmDisabled={isDeleteMealPending}
-      />
     </div>
   );
 }
