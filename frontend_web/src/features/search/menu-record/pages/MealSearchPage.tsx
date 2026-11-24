@@ -407,7 +407,7 @@ export default function MealSearchPage() {
     if (selectedCount >= MAX_MEAL_RECORD_MENUS) {
       toast.warning(
         MEAL_RECORD_MENU_LIMIT_MESSAGE,
-        "기존 메뉴를 일부 삭제한 뒤 다시 시도해주세요.",
+        "담은 음식을 일부 지운 뒤 다시 시도해주세요",
       );
       return;
     }

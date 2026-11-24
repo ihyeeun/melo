@@ -179,7 +179,7 @@ export default function NutrientCameraPage() {
       {isOpeningCamera ? (
         <main className={styles.main} />
       ) : isUploading ? (
-        <CameraLoading description="영양 성분을 확인하고 있어요" previewSrc={capturedPreviewSrc} />
+        <CameraLoading description="영양성분을 확인하고 있어요" previewSrc={capturedPreviewSrc} />
       ) : (
         <main className={styles.main} />
       )}

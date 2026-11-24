@@ -46,7 +46,7 @@ export function NutrientDetailList({
     <div id={detailListId} className={`${styles.nutritionList} ${className ?? ""}`}>
       <div className={styles.listItem}>
         <p className="body-l-medium text-secondary">
-          총 용량 {formatNutrientValue(weight)}
+          총 내용량 {formatNutrientValue(weight)}
           {weightUnit}
         </p>
 

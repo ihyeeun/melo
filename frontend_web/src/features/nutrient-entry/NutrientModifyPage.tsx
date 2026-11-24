@@ -116,7 +116,7 @@ export default function NutrientModifyPage() {
       return;
     }
 
-    toast.warning("수정할 메뉴 정보를 찾지 못했어요");
+    toast.error("수정할 음식 정보를 찾지 못했어요");
     navigate(-1);
   }, [menuId, navigate]);
 
@@ -125,7 +125,7 @@ export default function NutrientModifyPage() {
       return;
     }
 
-    toast.warning("메뉴 정보를 불러오지 못했어요");
+    toast.error("음식 정보를 불러오지 못했어요");
     navigate(-1);
   }, [isMenuError, navigate]);
 
@@ -259,7 +259,7 @@ export default function NutrientModifyPage() {
 
     if (isPersonalData) {
       if (menuId === null) {
-        toast.error("수정할 메뉴 정보를 찾지 못했어요");
+        toast.error("수정할 음식 정보를 찾지 못했어요");
         navigate(PATH.HOME, { replace: true });
         return;
       }
@@ -268,12 +268,12 @@ export default function NutrientModifyPage() {
         { id: menuId, ...payload },
         {
           onSuccess: () => {
-            toast.success("영양 성분을 수정했어요");
+            toast.success("영양성분을 수정했어요");
             navigateToSavedMenuDetail(menuId);
           },
           onError: (error) => {
             if (isRequestAbortError(error)) return;
-            toast.warning("영양 성분 수정에 실패했어요");
+            toast.error("영양성분을 수정하지 못했어요");
           },
         },
       );
@@ -283,17 +283,17 @@ export default function NutrientModifyPage() {
     createMenuFromPublic(payload, {
       onSuccess: (createdMenuId) => {
         if (!Number.isInteger(createdMenuId) || createdMenuId <= 0) {
-          toast.warning("등록된 메뉴 정보를 불러오지 못했어요");
+          toast.error("등록된 음식 정보를 불러오지 못했어요");
           navigate(PATH.HOME, { replace: true });
           return;
         }
 
-        toast.success("개인 메뉴로 등록했어요");
+        toast.success("내 음식으로 저장했어요");
         navigateToSavedMenuDetail(createdMenuId);
       },
       onError: (error) => {
         if (isRequestAbortError(error)) return;
-        toast.warning("공용 데이터를 개인 데이터 등록하는데 실패했어요");
+        toast.error("내 음식으로 저장하지 못했어요");
       },
     });
   };
@@ -305,7 +305,7 @@ export default function NutrientModifyPage() {
       <main className={`main ${styles.content}`}>
         <section className={styles.menuNameGroup}>
           {brandName && <p className={`body-xs-regular text-tertiary`}>{brandName}</p>}
-          <p className={`title-m-semi text-primary`}>{foodName || "메뉴 정보를 확인해주세요"}</p>
+          <p className={`title-m-semi text-primary`}>{foodName || "음식 정보를 확인해주세요"}</p>
         </section>
 
         <div className={styles.formClearActionArea}>

@@ -139,7 +139,7 @@ export default function MealDetailPage() {
       if (menuId !== null) removeDeletedMenuFromDraft(menuId);
       void queryClient.invalidateQueries({ queryKey: homeQueryKeys.dayMeals.all });
       void queryClient.invalidateQueries({ queryKey: folderQueryKeys.details() });
-      toast.success("삭제되었어요");
+      toast.success("음식을 삭제했어요");
       handleGoBack();
     },
   });
@@ -149,9 +149,9 @@ export default function MealDetailPage() {
   const backFallbackPath = getBackFallbackPath();
   const failureMessage =
     menuId === null
-      ? "잘못된 접근입니다."
+      ? "음식 정보를 찾지 못했어요"
       : isLoadingError
-        ? "메뉴 정보를 불러오지 못했어요"
+        ? "음식 정보를 불러오지 못했어요"
         : null;
 
   useEffect(() => {
@@ -302,7 +302,7 @@ export default function MealDetailPage() {
     (meal.data_source === MENU_DATA_SOURCE.PUBLIC || mealIsDeleted === 0);
   const addButtonLabel = isPersonalMenuEditMode ? "추가하기" : "담기";
   const footerButtonLabel = mealIsDeleted
-    ? "삭제된 메뉴라 담을 수 없어요"
+    ? "삭제된 음식이라 담을 수 없어요"
     : isAlreadyQueued
       ? "수정하기"
       : addButtonLabel;

@@ -77,7 +77,7 @@ function scaleCaloriesByQuantity(menu: MenuSimpleResponseDto, quantity: number) 
   return baseCalories * (quantity / baseWeight);
 }
 
-const DELETED_MENU_MESSAGE = "삭제된 메뉴라 담을 수 없어요";
+const DELETED_MENU_MESSAGE = "삭제된 음식이라 담을 수 없어요";
 
 // 폴더 응답의 음식 타입에는 is_deleted가 없어서, 서버가 내려준 값을 그대로 읽는다(끼니 요약과 같은 방식)
 function isDeletedMenu(folderMenu: FolderDetailMenu) {
@@ -217,11 +217,11 @@ export default function FolderDetailPage() {
     try {
       await deleteFolder({ folder_id: folderId });
       clearFolderDraft();
-      toast.success("삭제되었어요");
+      toast.success("폴더를 삭제했어요");
       navigateBack({ fallbackTo: getMealSearchPath(dateKey, mealType) });
     } catch (error) {
       if (isRequestAbortError(error)) throw error;
-      toast.warning("폴더 삭제에 실패했어요", "잠시 후 다시 시도해주세요.");
+      toast.error("폴더를 삭제하지 못했어요", "잠시 후 다시 시도해주세요");
       throw error;
     }
   };

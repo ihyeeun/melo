@@ -59,7 +59,7 @@ import type { MealRecordTransferPreview } from "@/shared/types/mealRecordTransfe
 
 const MEAL_RECORD_CAMERA_LOADING_DESCRIPTION = {
   FOOD: "음식을 분석하고 있어요",
-  NUTRITION_LABEL: "영양 성분을 확인하고 있어요",
+  NUTRITION_LABEL: "영양성분을 확인하고 있어요",
 } as const;
 
 const MEAL_RECORD_NUTRITION_LABEL_SCAN_SOURCE = "diary_nutrition_camera";
