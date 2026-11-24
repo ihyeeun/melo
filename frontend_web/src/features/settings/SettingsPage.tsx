@@ -75,7 +75,7 @@ export default function SettingsPage() {
           className={styles.menuItem}
           onClick={() => openExternalDocument(TERMS_AND_PRIVACY_POLICY_URL)}
         >
-          <span className={`body-l-medium text-primary`}>서비스이용약관 / 개인정보처리방침</span>
+          <span className={`body-l-medium text-primary`}>서비스 이용약관 / 개인정보처리방침</span>
           <SystemIcon name="chevron-right" size={16} className={`text-secondary marginLeft`} />
         </button>
 
