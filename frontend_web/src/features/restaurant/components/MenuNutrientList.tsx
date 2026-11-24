@@ -115,9 +115,11 @@ export default function MenuNutrientList({
           {ranked && <span className={`body-s-semi ${styles.rank}`}>{index + 1}</span>}
           <div className={styles.menuText}>
             <p className={`body-l-medium text-primary ${styles.menuTitle}`}>
-              <span className={`caption-m-medium text-tertiary ${styles.category}`}>
-                {menu.menu_category}
-              </span>
+              {menu.menu_category && (
+                <span className={`caption-m-medium text-tertiary ellipsis ${styles.category}`}>
+                  {menu.menu_category}
+                </span>
+              )}
               {menu.menu_name}
               {NUTRIENTS.some(({ key }) => menu[key] == null) && (
                 <InfoPopover
@@ -125,7 +127,7 @@ export default function MenuNutrientList({
                   messages={MISSING_NUTRIENT_MESSAGES}
                   iconSize={16}
                   side="bottom"
-                  align="start"
+                  align="center"
                 />
               )}
             </p>

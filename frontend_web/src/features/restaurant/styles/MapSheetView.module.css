@@ -109,6 +109,8 @@
 }
 
 .category {
+  flex-shrink: 0;
+  max-width: 30%;
   background-color: var(--background-gray-1);
   padding: 4px 6px;
   border-radius: 8px;
