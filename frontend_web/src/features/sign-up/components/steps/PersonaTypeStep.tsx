@@ -8,7 +8,7 @@ import { PERSONA, type SignUpStepProps } from "@/features/sign-up/types/signUp.t
 const PERSONA_OPTIONS = [
   { value: PERSONA.SEARCHER, title: "음식의 칼로리·영양성분을 직접 검색해요" },
   { value: PERSONA.ROUTINE, title: "정해둔 음식(샐러드 등)만 반복해서 먹어요" },
-  { value: PERSONA.CASUAL, title: "덜 부담스러워 보이는 음식을 감으로 골라요" },
+  { value: PERSONA.CASUAL, title: "덜 부담스러워 보이는 걸 감으로 골라요" },
   { value: PERSONA.ETC, title: "기타" },
 ] as const;
 

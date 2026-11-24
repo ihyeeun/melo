@@ -16,7 +16,7 @@ const DIET_MANAGEMENT_OPTIONS = [
   { value: MEAL_MANAGEMENT.PT, title: "PT나 영양사 등\n전문가 가이드를 받고 있어요" },
   {
     value: MEAL_MANAGEMENT.NO_RECORD,
-    title: "따로 기록하지 않지만,\n메뉴 고를 때 의식적으로 신경 써요",
+    title: "따로 기록하진 않지만,\n메뉴 고를 때 의식적으로 신경 써요",
   },
   { value: MEAL_MANAGEMENT.NONE, title: "딱히 하고 있는 건 없어요" },
   { value: MEAL_MANAGEMENT.ETC, title: "기타" },
