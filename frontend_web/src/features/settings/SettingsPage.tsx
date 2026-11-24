@@ -111,10 +111,10 @@ export default function SettingsPage() {
       <ConfirmModal
         open={isLogoutModalOpen}
         onOpenChange={setIsLogoutModalOpen}
-        title="로그아웃 하시겠어요?"
+        title="로그아웃하시겠어요?"
         cancelText="취소"
-        confirmText="확인"
-        // actionOrder="confirm-cancel"
+        confirmText="로그아웃"
+        emphasis="cancel"
         confirmDisabled={isLogoutPending}
         closeOnConfirm={false}
         // 서버 요청이 실패해도 기기의 로그인 정보를 지우고 로그인 화면으로 가므로 실패 안내가 없다
@@ -128,8 +128,9 @@ export default function SettingsPage() {
         title="정말 탈퇴하시겠어요?"
         description={"기록한 데이터가 완전히 삭제되며\n복구할 수 없어요"}
         cancelText="취소"
-        confirmText="확인"
-        // actionOrder="confirm-cancel"
+        confirmText="탈퇴하기"
+        actionOrder="confirm-cancel"
+        emphasis="cancel"
         confirmDisabled={isWithdrawPending}
         closeOnConfirm={false}
         onConfirm={async () => {
