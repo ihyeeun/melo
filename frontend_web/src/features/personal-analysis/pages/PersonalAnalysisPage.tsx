@@ -64,15 +64,15 @@ export default function PersonalAnalysisPage() {
         <IntakeCard query={intakeQuery} />
         <BurnedCard query={burnedQuery} />
         <WeightCard query={weightQuery} />
+        {/* 그래프 4개 모두 기록이 없으면 숨기고, 기록이 있으면 유료 사용자에게만 탭바 위에 고정 */}
         <div className={styles.actionAnchor}>
-          {!isFree && (
+          {!isFree && hasAnalysisData && (
             <Button
-              disabled={!hasAnalysisData}
               onClick={() => {
                 navigate(PATH.AI_CHAT, { state: { type: "management-pattern-analysis" } });
                 track(EVENT_NAME.CLICK_MANAGEMENT_PATTERN_ANALYSIS);
               }}
-              variant={!hasAnalysisData ? "disabled" : "outlined"}
+              variant="outlined"
               fullWidth
               className={styles.coachButton}
             >
@@ -126,7 +126,9 @@ function DeficitCard({ query }: AnalysisCardProps<"deficit">) {
               기초대사량을 포함한 <br />총 소모 칼로리를 기준으로 계산해요
             </InfoPopover>
           </div>
-          <p className="body-s-regular text-primary">섭취한 칼로리와 소모한 칼로리의 차이예요</p>
+          {!isEmpty && (
+            <p className="body-s-regular text-primary">섭취한 칼로리와 소모한 칼로리의 차이예요</p>
+          )}
         </div>
         <div className={styles.graphArea}>
           <LineChart<"deficit"> chartData={deficit} valueKey="calorie_deficit" />
@@ -135,7 +137,7 @@ function DeficitCard({ query }: AnalysisCardProps<"deficit">) {
       {isEmpty && (
         <div className={styles.emptyOverlay} role="status">
           <p className={`body-l-medium text-secondary ${styles.emptyText}`}>
-            최근 30일 내 기록이 없습니다
+            최근 30일 기록이 없어요
           </p>
         </div>
       )}
@@ -163,7 +165,9 @@ function IntakeCard({ query }: AnalysisCardProps<"intake">) {
       <div data-isEmpty={isEmpty} className={styles.blur}>
         <div className={styles.titleGroup}>
           <h3 className="title-m-semi text-primary">{title}</h3>
-          <p className="body-s-regular text-primary">하루 평균 {averageKcal}kcal 섭취했어요</p>
+          {!isEmpty && (
+            <p className="body-s-regular text-primary">하루 평균 {averageKcal}kcal 섭취했어요</p>
+          )}
         </div>
         <div className={styles.graphArea}>
           <LineChart<"intake"> chartData={intake} valueKey="intake_calories" />
@@ -172,7 +176,7 @@ function IntakeCard({ query }: AnalysisCardProps<"intake">) {
       {isEmpty && (
         <div className={styles.emptyOverlay} role="status">
           <p className={`body-l-medium text-secondary ${styles.emptyText}`}>
-            최근 30일 내 기록이 없습니다
+            최근 30일 기록이 없어요
           </p>
         </div>
       )}
@@ -206,7 +210,9 @@ function BurnedCard({ query }: AnalysisCardProps<"burned">) {
       <div data-isEmpty={isEmpty} className={styles.blur}>
         <div className={styles.titleGroup}>
           <h3 className="title-m-semi text-primary">{title}</h3>
-          <p className="body-s-regular text-primary">하루 평균 {averageBurned}kcal 소모했어요</p>
+          {!isEmpty && (
+            <p className="body-s-regular text-primary">하루 평균 {averageBurned}kcal 소모했어요</p>
+          )}
         </div>
         <Tabs.Root defaultValue="total_burned_calories">
           <Tabs.List className={styles.tabList}>
@@ -226,7 +232,7 @@ function BurnedCard({ query }: AnalysisCardProps<"burned">) {
       {isEmpty && (
         <div className={styles.emptyOverlay} role="status">
           <p className={`body-l-medium text-secondary ${styles.emptyText}`}>
-            최근 30일 내 기록이 없습니다
+            최근 30일 기록이 없어요
           </p>
         </div>
       )}
@@ -249,7 +255,9 @@ function WeightCard({ query }: AnalysisCardProps<"weight">) {
       <div data-isEmpty={isEmpty} className={styles.blur}>
         <div className={styles.titleGroup}>
           <h3 className="title-m-semi text-primary">{title}</h3>
-          <p className="body-s-regular text-primary">최근 체중은 {recentBodyWeight}kg이에요</p>
+          {!isEmpty && (
+            <p className="body-s-regular text-primary">최근 체중은 {recentBodyWeight}kg이에요</p>
+          )}
         </div>
         <div className={styles.graphArea}>
           <LineChart<"weight"> chartData={bodyWeight} valueKey="weight" />
@@ -258,7 +266,7 @@ function WeightCard({ query }: AnalysisCardProps<"weight">) {
       {isEmpty && (
         <div className={styles.emptyOverlay} role="status">
           <p className={`body-l-medium text-secondary ${styles.emptyText}`}>
-            최근 30일 내 기록이 없습니다
+            최근 30일 기록이 없어요
           </p>
         </div>
       )}
