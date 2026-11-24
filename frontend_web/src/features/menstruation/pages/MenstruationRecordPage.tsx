@@ -12,6 +12,8 @@ import {
 } from "@/features/menstruation/utils/menstrualRecordSelection.util";
 import { useGetProfileQuery } from "@/features/profile/hooks/queries/useProfileQuery";
 import { PATH } from "@/router/path";
+import { track } from "@/shared/analytics/analytics";
+import { EVENT_NAME } from "@/shared/analytics/analytics.constants";
 import { isRequestAbortError } from "@/shared/api/requestCancellation";
 import { Button } from "@/shared/commons/button/Button";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
@@ -51,6 +53,7 @@ export default function MenstruationRecordPage() {
     try {
       // mutation의 캐시 갱신이 끝난 뒤 편집 상태를 비운다.
       await saveRecords(updateRequest);
+      track(EVENT_NAME.MENSTRUAL_RECORDED);
       setSelections({});
       toast.success("생리 기록을 저장했어요");
       navigateBack();
