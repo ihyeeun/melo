@@ -1,6 +1,7 @@
 import type { ButtonHTMLAttributes, PointerEventHandler } from "react";
 
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
+import { dismissKeyboard } from "@/shared/utils/keyboard.util";
 
 import styles from "./KeyboardDown.module.css";
 
@@ -11,14 +12,6 @@ type KeyboardDownProps = Omit<
 
 function cx(...classNames: Array<string | false | null | undefined>) {
   return classNames.filter(Boolean).join(" ");
-}
-
-function dismissKeyboard() {
-  const activeElement = document.activeElement;
-
-  if (activeElement instanceof HTMLElement) {
-    activeElement.blur();
-  }
 }
 
 const handlePointerDown: PointerEventHandler<HTMLButtonElement> = (event) => {

@@ -61,9 +61,11 @@ import {
   useSearchParams,
   useStackflowBackHandler,
 } from "@/shared/navigation/stackflowNavigation";
+import { dismissKeyboard } from "@/shared/utils/keyboard.util";
 
 const MENU_SEARCH_PAGE_LIMIT = 20;
-const DIRECT_REGISTER_BUTTON_INTERVAL = 15;
+// 내 등록 음식이 이만큼 있어야 탭 안 검색칸을 보여 준다
+const REGISTERED_MENU_SEARCH_MIN_COUNT = 4;
 const PERSONAL_MENU_TAB = {
   FREQUENTLY_RECORDED: "frequently-recorded",
   FOLDER: "folder",
@@ -194,6 +196,15 @@ export default function MealSearchPage() {
   );
   const frequentlyRecordedMenuList = useMenuCacheItems(frequentlyRecordedMenuIds);
   const registeredMenuList = useMenuCacheItems(registeredMenuIds);
+  // 내 등록 음식 탭 검색칸은 등록한 음식이 4개 이상일 때만. 검색 중에는 결과 수가 아니라 검색 전 목록으로 정한다
+  const [showsRegisteredMenuSearch, setShowsRegisteredMenuSearch] = useState(false);
+  if (!registeredMenuKeyword && registeredMenus) {
+    const nextShowsRegisteredMenuSearch =
+      registeredMenuIds.length >= REGISTERED_MENU_SEARCH_MIN_COUNT || hasNextRegisteredMenusPage;
+    if (nextShowsRegisteredMenuSearch !== showsRegisteredMenuSearch) {
+      setShowsRegisteredMenuSearch(nextShowsRegisteredMenuSearch);
+    }
+  }
 
   const resetSearchState = () => {
     setSubmittedKeyword("");
@@ -308,7 +319,9 @@ export default function MealSearchPage() {
     isTop,
   ]);
 
+  // 카드 · [+]는 키보드가 올라와 있어도 첫 탭에 바로 동작하고 키보드도 함께 내린다
   const handleToggleMenuSelection = (menu: MenuSimpleResponseDto) => {
+    dismissKeyboard();
     const menuId = menu.id;
 
     if (selectedMenuIdSet.has(menuId)) {
@@ -328,6 +341,7 @@ export default function MealSearchPage() {
   };
 
   const handleMenuDetailPageOpen = (menuId: number) => {
+    dismissKeyboard();
     if (hasMenuSelectionRouteContext) {
       navigate(
         getMenuSelectionMenuDetailPath({
@@ -514,72 +528,31 @@ export default function MealSearchPage() {
   const renderLoadMoreState = () => (
     <div ref={loadMoreRef} className={styles.loadMoreState}>
       {isFetchingNextPage ? (
-        <LoadingIndicator iconSize={24} label="메뉴를 더 불러오는 중입니다." />
+        <LoadingIndicator iconSize={24} label="음식을 더 불러오는 중입니다." />
       ) : null}
     </div>
   );
 
-  const renderDirectRegisterButton = (key?: string) => (
-    <div key={key} className={styles.bottomTextContainer}>
-      <Button
-        variant="text"
-        size="xs"
-        onClick={() => {
-          setIsDirectInputSheetOpen(true);
-        }}
-      >
-        <span className={`${styles.bottomText} body-s-medium`}>찾으시는 음식이 없나요?</span>
-        직접 등록하기
-        <SystemIcon name="chevron-right" size={16} />
-      </Button>
-    </div>
-  );
-
-  const renderMenuCardsWithDirectRegisterButtons = () =>
-    searchMenuList.flatMap((menu, index) => {
-      const menuIndex = index + 1;
-      const elements = [renderMenuCard(menu)];
-
-      if (menuIndex % DIRECT_REGISTER_BUTTON_INTERVAL === 0) {
-        elements.push(renderDirectRegisterButton(`direct-register-${menuIndex}`));
-      }
-
-      return elements;
-    });
-
-  const renderPaginationFooter = () => {
-    if (hasNextPage) {
-      return renderLoadMoreState();
-    }
-
-    if (
-      searchMenuList.length > 0 &&
-      searchMenuList.length % DIRECT_REGISTER_BUTTON_INTERVAL === 0
-    ) {
-      return null;
-    }
-
-    return renderDirectRegisterButton();
-  };
-
-  const renderDirectRegisterPrompt = () => (
+  // 검색 결과(결과 있음 · 없음)의 아래 고정 영역, [N개 담겼어요] 바로 위 글자 링크
+  const renderDirectRegisterLink = () => (
     <button
       type="button"
-      className={styles.directRegisterPrompt}
+      className={styles.directRegisterLink}
       onClick={() => {
         setIsDirectInputSheetOpen(true);
       }}
     >
-      <span className={`body-s-medium`}>찾으시는 메뉴가 없나요?</span>
-      <span className={`body-m-regular ${styles.directRegisterPromptAction}`}>
-        영양 성분 직접 등록
-        <SystemIcon name="chevron-right" size={18} />
+      <span className="body-s-regular text-disabled">찾으시는 음식이 없나요?</span>
+      <span className={`body-s-medium text-tertiary ${styles.directRegisterLinkAction}`}>
+        직접 등록하기
+        <SystemIcon name="chevron-right" size={16} />
       </span>
     </button>
   );
+
   const renderSearchErrorState = () => (
     <section className={styles.emptyResult}>
-      <p className="body-l-medium">메뉴를 검색하지 못했어요</p>
+      <p className="body-l-medium">음식을 검색하지 못했어요</p>
       <div className={styles.buttonContainer}>
         <Button
           variant="text"
@@ -614,7 +587,7 @@ export default function MealSearchPage() {
     if (isRegisteredMenusError && !registeredMenus) {
       return (
         <section className={styles.emptyResult}>
-          <p className="body-l-medium">메뉴를 불러오지 못했어요</p>
+          <p className="body-l-medium">음식을 불러오지 못했어요</p>
           <Button variant="text" size="xs" onClick={() => void refetchRegisteredMenus()}>
             다시 시도
           </Button>
@@ -629,8 +602,8 @@ export default function MealSearchPage() {
           <section className={styles.emptyResult}>
             <p className="body-s-medium">
               {isRegisteredMenusFetchNextPageError
-                ? "메뉴를 더 불러오지 못했어요"
-                : "메뉴를 새로고침하지 못했어요"}
+                ? "음식을 더 불러오지 못했어요"
+                : "음식을 새로고침하지 못했어요"}
             </p>
             <Button
               variant="text"
@@ -647,15 +620,13 @@ export default function MealSearchPage() {
               다시 시도
             </Button>
           </section>
-        ) : registeredMenuList.length === 0 ? (
-          renderPersonalMenuEmptyState(
-            registeredMenuKeyword ? "검색 결과가 없어요" : "직접 등록한 메뉴가 없어요",
-          )
+        ) : registeredMenuList.length === 0 && registeredMenuKeyword ? (
+          renderPersonalMenuEmptyState("검색 결과가 없어요")
         ) : null}
         {hasNextRegisteredMenusPage ? (
           <div ref={registeredLoadMoreRef} className={styles.loadMoreState}>
             {isRegisteredMenusFetchingNextPage ? (
-              <LoadingIndicator iconSize={24} label="등록 메뉴를 더 불러오는 중입니다." />
+              <LoadingIndicator iconSize={24} label="등록 음식을 더 불러오는 중입니다." />
             ) : null}
           </div>
         ) : null}
@@ -665,36 +636,36 @@ export default function MealSearchPage() {
 
   const renderRegisteredPersonalMenuPanel = () => (
     <div className={styles.personalMenuPanelContent}>
-      <div
-        className={`${styles.searchFieldWrap} ${styles.registeredSearchField}`}
-        data-isShow={registeredMenuIds.length >= 3}
-      >
-        <SearchInput
-          value={registeredMenuInput}
-          onValueChange={(value) => {
-            setRegisteredMenuInput(value);
-            if (!value.trim()) {
-              setRegisteredMenuKeyword("");
-            }
+      <div className={styles.registeredMenuActions}>
+        {showsRegisteredMenuSearch ? (
+          <div className={styles.searchFieldWrap}>
+            <SearchInput
+              value={registeredMenuInput}
+              onValueChange={(value) => {
+                setRegisteredMenuInput(value);
+                if (!value.trim()) {
+                  setRegisteredMenuKeyword("");
+                }
+              }}
+              onEnter={(value) => {
+                setRegisteredMenuKeyword(value.trim());
+              }}
+              onCompositionChange={setIsRegisteredMenuComposing}
+              placeholder="내 등록 음식에서 검색"
+            />
+          </div>
+        ) : null}
+        <button
+          type="button"
+          className={styles.addButton}
+          onClick={() => {
+            setIsDirectInputSheetOpen(true);
           }}
-          onEnter={(value) => {
-            setRegisteredMenuKeyword(value.trim());
-          }}
-          onCompositionChange={setIsRegisteredMenuComposing}
-          placeholder="내 등록 메뉴를 검색해보세요"
-        />
+        >
+          <SystemIcon name="plus-circle" size={18} />
+          <p className="body-m-regular">영양성분 직접 등록</p>
+        </button>
       </div>
-      <button
-        type="button"
-        className={styles.addButton}
-        onClick={() => {
-          setIsDirectInputSheetOpen(true);
-        }}
-        data-isShow={registeredMenuIds.length >= 3}
-      >
-        <SystemIcon name="plus-circle" size={18} />
-        <p className="body-m-regular">영양 성분 직접 등록</p>
-      </button>
       {renderRegisteredFoodResult()}
     </div>
   );
@@ -704,23 +675,19 @@ export default function MealSearchPage() {
     isPending,
     isError,
     emptyText,
-    showDirectRegisterPrompt = false,
   }: {
     menuList: MenuSimpleResponseDto[];
     isPending: boolean;
     isError: boolean;
     emptyText: string;
-    showDirectRegisterPrompt?: boolean;
   }) => (
     <div className={styles.personalMenuPanelContent}>
-      {showDirectRegisterPrompt ? renderDirectRegisterPrompt() : null}
-
       {isPending ? (
         <section className={styles.loadingContainer}>
           <LoadingIndicator iconSize={24} />
         </section>
       ) : isError ? (
-        renderPersonalMenuEmptyState("메뉴를 불러오지 못했어요")
+        renderPersonalMenuEmptyState("음식을 불러오지 못했어요")
       ) : menuList.length > 0 ? (
         <div className={styles.resultList}>{menuList.map(renderMenuCard)}</div>
       ) : (
@@ -783,7 +750,7 @@ export default function MealSearchPage() {
               className={styles.pullToRefreshIndicatorInner}
               style={{ opacity: value === undefined ? 1 : value / 100 }}
             >
-              <LoadingIndicator iconSize={24} label="메뉴를 새로고침하는 중입니다." />
+              <LoadingIndicator iconSize={24} label="음식을 새로고침하는 중입니다." />
             </div>
           )}
         </PullToRefresh.Indicator>
@@ -797,7 +764,7 @@ export default function MealSearchPage() {
               menuList: frequentlyRecordedMenuList,
               isPending: isFrequentlyRecordedMenusPending,
               isError: isFrequentlyRecordedMenusError,
-              emptyText: "자주 먹은 메뉴가 없어요",
+              emptyText: "자주 먹은 음식이 없어요",
             })}
           </Tabs.Panel>
 
@@ -846,6 +813,11 @@ export default function MealSearchPage() {
 
     const recentMenus = recentRecordMenu ?? [];
 
+    // 최근에 먹은 음식이 없으면 자주 먹었어요 탭 빈 화면과 같은 모양
+    if (recentMenus.length === 0) {
+      return renderPersonalMenuEmptyState("최근에 먹은 음식이 없어요");
+    }
+
     return (
       <section className={styles.recentMenuSection}>
         <div className={styles.recentMenuTitle}>
@@ -893,8 +865,8 @@ export default function MealSearchPage() {
     if (firstSearchResult.has_result) {
       return (
         <div className={styles.resultList}>
-          {renderMenuCardsWithDirectRegisterButtons()}
-          {renderPaginationFooter()}
+          {searchMenuList.map(renderMenuCard)}
+          {hasNextPage ? renderLoadMoreState() : null}
         </div>
       );
     }
@@ -906,22 +878,13 @@ export default function MealSearchPage() {
             <img src="/icons/characters/question.png" alt="" aria-hidden="true" width={200} />
 
             <p className="body-l-medium text-tertiary">검색 결과가 없어요</p>
-            <Button
-              variant="text"
-              size="xs"
-              onClick={() => {
-                setIsDirectInputSheetOpen(true);
-              }}
-            >
-              <p className="body-s-medium text-secondary">영양 성분 직접 등록</p>
-            </Button>
           </section>
         )}
 
         {searchMenuList.length > 0 && (
           <section className={styles.similarSection}>
-            <div className={styles.resultList}>{renderMenuCardsWithDirectRegisterButtons()}</div>
-            {renderPaginationFooter()}
+            <div className={styles.resultList}>{searchMenuList.map(renderMenuCard)}</div>
+            {hasNextPage ? renderLoadMoreState() : null}
           </section>
         )}
       </div>
@@ -941,8 +904,8 @@ export default function MealSearchPage() {
           onClear={handleClearKeyword}
           onEnter={handleMealSearch}
           inputRef={searchInputRef}
-          placeholder="메뉴를 검색해보세요"
-          inputAriaLabel="메뉴 검색"
+          placeholder="음식을 검색해보세요"
+          inputAriaLabel="음식 검색"
           onBack={handleSearchPageBack}
         />
 
@@ -959,13 +922,17 @@ export default function MealSearchPage() {
         onClear={handleClearKeyword}
         onEnter={handleMealSearch}
         inputRef={searchInputRef}
-        placeholder="메뉴를 검색해보세요"
-        inputAriaLabel="메뉴 검색"
+        placeholder="음식을 검색해보세요"
+        inputAriaLabel="음식 검색"
         onBack={handleSearchPageBack}
         onFocus={() => setIsRecentMenuOpen(true)}
       />
 
-      <main className={`${styles.main} ${hasSearchKeyword ? styles.searchMain : ""}`}>
+      {/* 목록을 끌어 스크롤하면 키보드를 내린다 (_global 검색 화면 키보드) */}
+      <main
+        className={`${styles.main} ${hasSearchKeyword ? styles.searchMain : ""}`}
+        onTouchMove={dismissKeyboard}
+      >
         {hasSearchKeyword ? (
           <div className={styles.searchContent}>{renderSearchContent()}</div>
         ) : isRecentMenuVisible ? (
@@ -983,6 +950,10 @@ export default function MealSearchPage() {
             ariaLabel="사진으로 기록하기"
           />
         ) : null}
+
+        {hasSearchKeyword && !isPersonalMenuEditSearchMode && !isSearchPending && !isSearchError
+          ? renderDirectRegisterLink()
+          : null}
 
         <Button
           onClick={handleApplySelectedMenus}
