@@ -123,7 +123,8 @@ export default function WorkoutRecordPage() {
 
   return (
     <section className={`${styles.page} page`}>
-      <PageHeader title="운동 기록" onBack={handleBack} />
+      {/* 위에 주간 · 월간 달력이 있어 제목은 두지 않는다 */}
+      <PageHeader onBack={handleBack} />
 
       <RecordCalendar
         selectedDate={selectedDate}
