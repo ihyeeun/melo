@@ -11,16 +11,16 @@ import { PATH } from "@/router/path";
 import { Button } from "@/shared/commons/button/Button";
 import { LoadingIndicator } from "@/shared/commons/loading/Loading";
 
-const DEFAULT_ERROR_MESSAGE = "카카오 로그인 처리 중 오류가 발생했습니다.";
+const UNKNOWN_FAILURE_REASON = "카카오 로그인 처리 중 오류가 발생했습니다.";
 
 function getCallbackError(searchParams: URLSearchParams) {
   return searchParams.get("error_description") ?? searchParams.get("error");
 }
 
-function getLoginErrorMessage(error: unknown) {
+function getFailureReason(error: unknown) {
   if (error instanceof KakaoWebAuthApiError) return error.message;
   if (error instanceof Error) return error.message;
-  return DEFAULT_ERROR_MESSAGE;
+  return UNKNOWN_FAILURE_REASON;
 }
 
 function getInitialCallbackState() {
@@ -29,14 +29,14 @@ function getInitialCallbackState() {
   const code = searchParams.get("code");
 
   if (callbackError) {
-    return { code: null, errorMessage: callbackError };
+    return { code: null, failureReason: callbackError };
   }
 
   if (!code) {
-    return { code: null, errorMessage: "카카오 인증 코드를 받지 못했습니다." };
+    return { code: null, failureReason: "카카오 인증 코드를 받지 못했습니다." };
   }
 
-  return { code, errorMessage: "" };
+  return { code, failureReason: "" };
 }
 
 function replacePath(path: string) {
@@ -48,18 +48,23 @@ function replacePath(path: string) {
 export default function KakaoWebCallbackPage() {
   const initialState = useMemo(() => getInitialCallbackState(), []);
   const didStartRef = useRef(false);
-  const [errorMessage, setErrorMessage] = useState(initialState.errorMessage);
+  // 실패 원인은 기록에만 남기고, 화면에는 원인과 상관없이 같은 안내를 보여 준다
+  const [failureReason, setFailureReason] = useState(initialState.failureReason);
+
+  useEffect(() => {
+    if (failureReason) console.warn("[KakaoWebLogin] 로그인 실패", failureReason);
+  }, [failureReason]);
 
   const retryKakaoLogin = () => {
     try {
       redirectToKakaoWebLogin();
     } catch (error) {
-      setErrorMessage(getLoginErrorMessage(error));
+      setFailureReason(getFailureReason(error));
     }
   };
 
   useEffect(() => {
-    if (initialState.errorMessage || !initialState.code) return;
+    if (initialState.failureReason || !initialState.code) return;
     if (didStartRef.current) return;
     didStartRef.current = true;
 
@@ -86,7 +91,7 @@ export default function KakaoWebCallbackPage() {
         replacePath(PATH.APP_INFO);
       } catch (error) {
         if (cancelled) return;
-        setErrorMessage(getLoginErrorMessage(error));
+        setFailureReason(getFailureReason(error));
       }
     }
 
@@ -95,13 +100,13 @@ export default function KakaoWebCallbackPage() {
     return () => {
       cancelled = true;
     };
-  }, [initialState.code, initialState.errorMessage]);
+  }, [initialState.code, initialState.failureReason]);
 
-  if (errorMessage) {
+  if (failureReason) {
     return (
       <main className={styles.container}>
-        <h1 className="text-primary">카카오 로그인 실패</h1>
-        <p className={styles.description}>{errorMessage}</p>
+        <h1 className="text-primary">카카오 로그인을 하지 못했어요</h1>
+        <p className={styles.description}>다시 시도해주세요</p>
         <div className={styles.actions}>
           <Button className={styles.actionButton} onClick={retryKakaoLogin}>
             다시 시도
