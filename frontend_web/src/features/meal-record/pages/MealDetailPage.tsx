@@ -406,12 +406,17 @@ export default function MealDetailPage() {
           onSelectionChange={setSelection}
           onEditAndAdd={handleEditAndAdd}
           showEditSection={showEditSection}
+          showServingInput={!isFromChat}
         />
       </main>
 
-      {/* AI 채팅 [등록한 메뉴 보기]로 연 상세는 확인 · 수정만 한다([담기] · [삭제] 숨김) */}
-      {!isFromChat && (
-        <footer className={`footer`}>
+      <footer className={`footer`}>
+        {/* AI 채팅 [등록한 음식 보기]로 연 상세는 확인 · 수정만 한다([담기] · [삭제] 대신 [확인했어요]) */}
+        {isFromChat ? (
+          <Button variant="default" size="m" fullWidth onClick={handleGoBack}>
+            확인했어요
+          </Button>
+        ) : (
           <Button
             variant="default"
             size="m"
@@ -421,8 +426,8 @@ export default function MealDetailPage() {
           >
             {footerButtonLabel}
           </Button>
-        </footer>
-      )}
+        )}
+      </footer>
 
       {/* screen: DIET-02-001_modal-delete */}
       <ConfirmModal
