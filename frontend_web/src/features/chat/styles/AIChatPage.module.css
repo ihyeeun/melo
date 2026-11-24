@@ -417,6 +417,10 @@
   background-color: var(--background-selected);
 }
 
+.registeredMealTimeChipList {
+  margin-top: 0;
+}
+
 .mealTimeActionsSection {
   display: flex;
   flex-direction: column;

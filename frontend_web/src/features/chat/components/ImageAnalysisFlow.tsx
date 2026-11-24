@@ -49,12 +49,10 @@ export function ImageAnalysisFlow({
   enabled,
   waitForResponse,
   onAnalysisStart,
-  onNutritionAnalyzed,
 }: {
   enabled?: boolean;
   waitForResponse: (chatId: number) => Promise<void>;
   onAnalysisStart: () => void;
-  onNutritionAnalyzed: (chatId: number) => void;
 }) {
   const { id: screenId, isActive } = useActivity();
   const queryClient = useQueryClient();
@@ -183,16 +181,6 @@ export function ImageAnalysisFlow({
         const history = await refreshChatHistory(queryClient, screen);
         screen.assertActive();
 
-        if (mode === MODE.NUTRITION) {
-          const chatId = history.chat_list[0]?.id;
-
-          if (chatId === undefined) {
-            throw new Error("분석한 대화를 찾지 못했어요.");
-          }
-
-          onNutritionAnalyzed(chatId);
-        }
-
         setHistoryStatus("success");
 
         if (shouldSaveMeal && selectedMealTime !== undefined) {
@@ -255,7 +243,6 @@ export function ImageAnalysisFlow({
     registerChatMeal,
     clearImage,
     waitForResponse,
-    onNutritionAnalyzed,
   ]);
 
   const isHistoryLoading = analysisSuccess && historyStatus === "pending";
