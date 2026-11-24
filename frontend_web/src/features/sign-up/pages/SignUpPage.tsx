@@ -19,6 +19,8 @@ import { TargetCaloriesStep } from "@/features/sign-up/components/steps/TargetCa
 import { useSignUpSubmit } from "@/features/sign-up/hooks/useSignUpSubmit";
 import { useSignUpForm, useSignUpFormActions } from "@/features/sign-up/stores/signUpForm.store";
 import {
+  SIGN_UP_PROGRESS,
+  SIGN_UP_PROGRESS_TOTAL,
   SIGN_UP_STEPS,
   type SignUpForm,
   type SignUpStep,
@@ -117,7 +119,12 @@ export default function SignUpPage() {
 
   return (
     <SignUpFrame>
-      <SignUpHeader stepIndex={stepIndex} total={steps.length} onBack={() => navigateBack()} />
+      <SignUpHeader
+        stepIndex={stepIndex}
+        progress={SIGN_UP_PROGRESS[step]}
+        total={SIGN_UP_PROGRESS_TOTAL}
+        onBack={() => navigateBack()}
+      />
 
       {step === "basicInfo" && <BasicInfoStep {...stepProps} />}
       {step === "body" && <BodyInfoStep {...stepProps} />}

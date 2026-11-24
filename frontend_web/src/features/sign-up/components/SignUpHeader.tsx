@@ -3,11 +3,13 @@ import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 
 type Props = {
   stepIndex: number;
+  // 채워지는 칸 수 / 전체 칸 수
+  progress: number;
   total: number;
   onBack: () => void;
 };
 
-export function SignUpHeader({ stepIndex, total, onBack }: Props) {
+export function SignUpHeader({ stepIndex, progress, total, onBack }: Props) {
   return (
     <header className={styles.header}>
       <section className={styles.backButtonSection}>
@@ -27,10 +29,10 @@ export function SignUpHeader({ stepIndex, total, onBack }: Props) {
         role="progressbar"
         aria-valuemin={1}
         aria-valuemax={total}
-        aria-valuenow={stepIndex + 1}
+        aria-valuenow={progress}
       >
         {Array.from({ length: total }, (_, index) => (
-          <span key={index} className={styles.segment} data-filled={index <= stepIndex} />
+          <span key={index} className={styles.segment} data-filled={index < progress} />
         ))}
       </section>
     </header>

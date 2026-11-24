@@ -21,7 +21,7 @@ export interface SignUpType {
 // 입력 중인 회원가입 값. 아직 고르지 않은 값은 비어 있다
 export type SignUpForm = Partial<SignUpType>;
 
-// 회원가입 단계와 각 단계에서 입력받는 값. 적힌 순서대로 진행하고, 진행 바도 이 순서를 따른다
+// 회원가입 단계와 각 단계에서 입력받는 값. 적힌 순서대로 진행한다
 export const SIGN_UP_STEPS = {
   basicInfo: ["gender", "birthYear"],
   body: ["height", "weight"],
@@ -38,6 +38,23 @@ export const SIGN_UP_STEPS = {
 } as const satisfies Record<string, readonly (keyof SignUpType)[]>;
 
 export type SignUpStep = keyof typeof SIGN_UP_STEPS;
+
+// 진행 바는 단계를 6칸으로 묶어 보여 준다. 값 = 채워지는 칸 수
+export const SIGN_UP_PROGRESS_TOTAL = 6;
+export const SIGN_UP_PROGRESS = {
+  basicInfo: 1,
+  body: 1,
+  activity: 2,
+  goal: 2,
+  goalWeight: 3,
+  targetCalories: 3,
+  nutrient: 4,
+  dietManagement: 5,
+  persona: 5,
+  eatingOut: 5,
+  jobAndLunch: 6,
+  subCode: 6,
+} as const satisfies Record<SignUpStep, number>;
 
 // 단계 컴포넌트가 받는 props. 어떤 단계인지 밝히면 그 단계가 맡은 값만 넘길 수 있다
 export type SignUpStepProps<S extends SignUpStep> = {
