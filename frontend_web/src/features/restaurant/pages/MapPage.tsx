@@ -36,7 +36,7 @@ import { useNativeAppFeature } from "@/shared/api/bridge/useNativeAppFeature";
 import { Button } from "@/shared/commons/button/Button";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import { SearchInput } from "@/shared/commons/input/SearchInput";
-import { navigate } from "@/shared/navigation/stackflowNavigation";
+import { navigate, useStackflowBackHandler } from "@/shared/navigation/stackflowNavigation";
 import { dismissKeyboard } from "@/shared/utils/keyboard.util";
 
 const DEFAULT_CENTER = { lat: 37.5665, lng: 126.978 };
@@ -125,6 +125,19 @@ export default function MapPage() {
     setSearchRequest({ id: Date.now(), trigger: "map_button", query: searchKeyword });
     moveSheet({ type: "search_map_area" });
   };
+
+  useStackflowBackHandler(
+    searchInput.trim()
+      ? () => {
+          if (currentView.type === "detail") return false;
+
+          dismissKeyboard();
+          setSearchInput("");
+          if (searchKeyword) clearSearchKeyword();
+          return true;
+        }
+      : null,
+  );
 
   // 검색 결과와 멜로 등록 여부까지 받은 뒤 한 번 남긴다
   useEffect(() => {
