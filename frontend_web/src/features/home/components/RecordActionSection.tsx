@@ -19,7 +19,7 @@ import { Skeleton, SkeletonStatus } from "@/shared/commons/skeleton/Skeleton";
 import { MEAL_TIMES } from "@/shared/constants/meal.constants";
 import { useNavigate } from "@/shared/navigation/stackflowNavigation";
 import { useSelectedDateKey } from "@/shared/stores/selectedDate.store";
-import { getTodayFormatDateKey, isFutureDateKey } from "@/shared/utils/dateFormat";
+import { getTodayFormatDateKey, isFutureDateKey, parseDateKey } from "@/shared/utils/dateFormat";
 import { formatDisplayNumber } from "@/shared/utils/numberFormat";
 
 // screen: REC-01-001
@@ -30,6 +30,8 @@ export default function RecordActionSection() {
   const { data: dayMeals, isPending: isDayMealsPending } = useDayMealsQuery(selectedDate);
   const { data: bodyLog, isPending: isBodyLogPending } = useGetBodyLog(selectedDate);
   const isToday = selectedDate === getTodayFormatDateKey();
+  const selectedDay = parseDateKey(selectedDate);
+  const selectedDayLabel = `${selectedDay.getMonth() + 1}월 ${selectedDay.getDate()}일`;
   const isFutureDate = isFutureDateKey(selectedDate);
   const isBodyLogLoaded = bodyLog !== undefined;
   // 오늘 체중 기록이 없으면 최근 기록(없으면 프로필 체중)을 흐리게 보여 준다. 다른 날은 빈 값
@@ -209,7 +211,9 @@ export default function RecordActionSection() {
             <WorkoutRecordSkeleton />
           ) : hasWorkoutRecords ? (
             <div className={styles.workoutTitleGroup}>
-              <p className="body-l-medium text-primary">오늘 운동</p>
+              <p className="body-l-medium text-primary">
+                {isToday ? "오늘 운동" : `${selectedDayLabel} 운동`}
+              </p>
               <p className="body-s-regular text-tertiary">
                 총 {totalWorkoutDuration}분,{" "}
                 {activitySummary?.calories.toLocaleString("ko-KR") ?? 0}
@@ -218,7 +222,9 @@ export default function RecordActionSection() {
             </div>
           ) : (
             <div className={styles.workoutTitleGroup}>
-              <p className="body-l-medium text-primary">아직 오늘의 운동 기록이 없어요</p>
+              <p className="body-l-medium text-primary">
+                {isToday ? "아직 오늘의 운동 기록이 없어요" : "아직 운동 기록이 없어요"}
+              </p>
               <p className="body-s-regular text-tertiary">지금 바로 기록하러 갈까요?</p>
             </div>
           )}
