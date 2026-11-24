@@ -449,9 +449,10 @@ export default function FolderDetailPage() {
         open={isDeleteConfirmOpen}
         onOpenChange={setIsDeleteConfirmOpen}
         title="폴더 삭제"
-        description="폴더를 삭제할까요?"
+        description={"폴더를 삭제할까요?\n삭제하면 되돌릴 수 없어요"}
         cancelText="취소"
         confirmText="삭제"
+        emphasis="cancel"
         confirmDisabled={isDeleteFolderPending}
         closeOnConfirm={false}
         onConfirm={handleDeleteFolderConfirm}

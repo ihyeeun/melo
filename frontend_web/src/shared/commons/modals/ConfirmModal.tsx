@@ -16,6 +16,12 @@ type ConfirmModalProps = {
   cancelText?: string;
   confirmText?: string;
   actionOrder?: "cancel-confirm" | "confirm-cancel";
+  /**
+   * 주황으로 강조할 버튼
+   * - confirm: 실행이 주황, [취소]는 테두리 (기본)
+   * - cancel: 실수로 누르면 곤란한 실행(삭제 · 로그아웃 · 탈퇴 · 나가기)은 [취소]를 주황으로, 실행은 회색 글자로
+   */
+  emphasis?: "confirm" | "cancel";
 
   /** 모달이 열려 있는 동안 네이티브 앱의 하단 탭바를 숨김 */
   hideTabBar?: boolean;
@@ -40,6 +46,7 @@ export function ConfirmModal({
   cancelText = "취소",
   confirmText = "확인",
   actionOrder = "cancel-confirm",
+  emphasis = "confirm",
   hideTabBar = false,
   confirmDisabled = false,
   closeOnConfirm = true,
@@ -47,6 +54,8 @@ export function ConfirmModal({
   onConfirm,
 }: ConfirmModalProps) {
   useTabBarVisibilitySync(open && hideTabBar);
+
+  const isCancelEmphasized = emphasis === "cancel";
 
   const cancelAction = (
     <AlertDialog.Close
@@ -64,9 +73,10 @@ export function ConfirmModal({
               console.error(error);
             });
           }}
-          variant="outlined"
+          {...(isCancelEmphasized
+            ? { variant: "default" as const }
+            : { variant: "outlined" as const, border: "primary" as const })}
           size="s"
-          border="primary"
         >
           {cancelText}
         </Button>
@@ -85,7 +95,7 @@ export function ConfirmModal({
             props.onClick?.(e); // 닫기 동작 유지
             void onConfirm(); // 로직 실행
           }}
-          variant="default"
+          variant={isCancelEmphasized ? "dismiss" : "default"}
           size="s"
         >
           {confirmText}
@@ -106,7 +116,7 @@ export function ConfirmModal({
           if (!isRequestAbortError(error)) console.error(error);
         }
       }}
-      variant="default"
+      variant={isCancelEmphasized ? "dismiss" : "default"}
       size="s"
     >
       {confirmText}

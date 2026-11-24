@@ -428,10 +428,11 @@ export default function MealDetailPage() {
       <ConfirmModal
         open={isDeleteConfirmOpen}
         onOpenChange={setIsDeleteConfirmOpen}
-        title="영양 성분 삭제"
-        description="저장한 영양 성분을 삭제할까요?"
+        title="영양성분 삭제"
+        description={"저장한 영양성분을 삭제할까요?\n삭제하면 되돌릴 수 없어요"}
         cancelText="취소"
         confirmText="삭제"
+        emphasis="cancel"
         confirmDisabled={isDeletePending}
         onConfirm={handleConfirmDelete}
       />
