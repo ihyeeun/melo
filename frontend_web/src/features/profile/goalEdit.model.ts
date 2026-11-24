@@ -127,6 +127,13 @@ export function getTargetCaloriesFeedback(
   const estimate = getGoalWeekEstimate(draft, targetCalories);
 
   if (estimate.status === "ok") {
+    // 체중 유지는 목표 칼로리를 고쳐도 기간 대신 같은 문구를 보여 준다
+    if (draft.goal === GOAL.MAINTAIN_WEIGHT) {
+      return { isValid: true, message: "지금 체중을 유지하는 목표예요" };
+    }
+    if (estimate.weeks === 0) {
+      return { isValid: true, message: "체중은 유지하면서 목표를 이어가요" };
+    }
     return { isValid: true, message: `목표 달성까지 약 ${estimate.weeks}주 걸려요` };
   }
 
