@@ -1,7 +1,6 @@
 import styles from "@/features/calendar/styles/MenstruationDayCell.module.css";
 import type { DayCellRenderProps } from "@/features/calendar/types/calendar.types";
 import type { MenstrualStatus } from "@/features/menstruation/types/menstruation.type";
-import { formatDateKey, isFutureDateKey } from "@/shared/utils/dateFormat";
 
 import { formatDayNumber } from "../../utils/format";
 
@@ -38,7 +37,6 @@ export default function MenstruationDayCell({
       data-outside={!day.isCurrentMonth}
       data-menstruation={menstruationType}
       data-selection-mode={selectionMode}
-      data-future={isFutureDateKey(formatDateKey(day.date))}
       data-disabled={isDisabled}
       disabled={isDisabled}
       onClick={() => onSelect(day.date)}
