@@ -194,6 +194,8 @@ export function identifyAnalyticsUser(source: ProfileResponseDto) {
 
   syncUserProperties(buildAnalyticsUserProperties(source));
   initializeAnalyticsIfReady();
+  // 로그아웃 뒤 다음 계정을 알기 전까지 모아 둔 이벤트를 이 계정으로 보낸다
+  if (initialized) flushPendingEvents();
 }
 
 export function identifyNickname(nickname?: string | null) {
@@ -226,7 +228,9 @@ export function resetAnalyticsIdentity() {
 export function track(eventName: AnalyticsEventName, properties?: AnalyticsProperties) {
   if (analyticsUnavailable) return;
 
-  if (!initialized) {
+  // 초기화 전이거나, 로그아웃해서 사용자를 모르는 동안은 모아 두었다가 사용자를 안 뒤 보낸다
+  // (사용자 id 없이 새 기기로 잡히지 않게)
+  if (!initialized || currentUserId === null) {
     pendingEvents.push({ eventName, properties });
     return;
   }
