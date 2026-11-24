@@ -61,7 +61,7 @@ export default function WaterIntakeRecordPage() {
     if (!cupSize) return;
     if (!Number.isInteger(cupSize)) return toast.warning("컵 용량은 정수로 입력해주세요");
     if (cupSize > WATER_CUP_SIZE.MAX || cupSize < WATER_CUP_SIZE.MIN)
-      return toast.warning("50~1000ml까지 설정할 수 있어요");
+      return toast.warning("컵 용량은 50~1,000ml 사이로 입력해주세요");
 
     updateCupSizeMutation(cupSize);
     setIsSheetOpen(false);
@@ -76,12 +76,6 @@ export default function WaterIntakeRecordPage() {
       <PageHeader title="물 섭취 기록" onBack={() => navigateBack()} />
 
       <main className={`main ${styles.content}`}>
-        <h2 className="title-m-medium text-primary">
-          오늘 물을 얼마나 마셨는지
-          <br />
-          기록해주세요
-        </h2>
-
         <section className={styles.recordSection}>
           <WaterIntakeGlass amountMl={waterAmount} />
 
@@ -124,7 +118,7 @@ export default function WaterIntakeRecordPage() {
             className={styles.sheetOpenButton}
           >
             <p className="body-s-medium text-tertiary">
-              내가 마시는 한 컵 크기 : {currentCupSize}ml
+              내가 마시는 한 컵 크기 {currentCupSize} ml
             </p>
             <SystemIcon name="chevron-right" size={12} />
           </button>
@@ -176,12 +170,6 @@ function SkeletonPage() {
       <PageHeader title="물 섭취 기록" />
 
       <main className={`main ${styles.content}`}>
-        <h2 className="title-m-medium text-primary">
-          오늘 물을 얼마나 마셨는지
-          <br />
-          기록해주세요
-        </h2>
-
         <section className={styles.skeletonContent}>
           <Skeleton width={230} height={320} />
           <Skeleton width={"80%"} height={60} />
