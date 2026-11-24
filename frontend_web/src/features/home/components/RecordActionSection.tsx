@@ -130,7 +130,7 @@ export default function RecordActionSection() {
                     onClick={() => handleMoveMealRecord(type, hasMenus)}
                   >
                     <div className={styles.mealTitleArea}>
-                      <div className={styles.mealIcon} data-selected={hasMenus}>
+                      <div className={styles.mealIcon} data-meal={type} data-selected={hasMenus}>
                         <SystemIcon size={18} name={icon} />
                       </div>
 

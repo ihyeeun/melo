@@ -69,13 +69,37 @@
 
 .mealIcon {
   align-items: center;
-  background-color: var(--background-gray-1);
   border-radius: 100px;
-  color: var(--text-disabled);
   display: flex;
   height: 30px;
   justify-content: center;
   width: 30px;
+}
+
+/* 기록 없는 끼니는 끼니마다 다른 색 (정리본 4383:152) */
+.mealIcon[data-meal="0"] {
+  background-color: var(--coral-50);
+  color: var(--coral-500);
+}
+
+.mealIcon[data-meal="1"] {
+  background-color: var(--coral-100);
+  color: var(--coral-500);
+}
+
+.mealIcon[data-meal="2"] {
+  background-color: var(--navy-200);
+  color: var(--navy-500);
+}
+
+.mealIcon[data-meal="3"] {
+  background-color: var(--gray-200);
+  color: var(--gray-600);
+}
+
+.mealIcon[data-meal="4"] {
+  background-color: var(--navy-400);
+  color: var(--navy-50);
 }
 
 .mealIcon[data-selected="true"] {
