@@ -21,6 +21,7 @@
   /* 월간은 위 칩의 값이 있는 날만 흰 칸, 기록 없는 날은 칸 없이 글자만 */
   &[data-view="month"][data-has-record="true"][data-outside="false"] {
     background-color: var(--background-default);
+    color: var(--text-primary);
   }
 
   /* 오늘(선택 안 됨)은 주황 외곽선 */
