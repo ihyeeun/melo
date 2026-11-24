@@ -57,7 +57,7 @@ export function NutrientRatioStep({ form, onNext, nextLabel }: SignUpStepProps<"
     ? "추천 비율을 계산하고 있어요"
     : recommendation.isError
       ? "추천 비율을 불러오지 못했어요. 직접 입력해주세요"
-      : "원하는대로 비율을 수정할 수 있어요";
+      : "원하는 대로 비율을 수정할 수 있어요";
 
   return (
     <StepLayout
