@@ -67,7 +67,7 @@ export default function GoalEditTargetCaloriesPage() {
       ? "추천 목표 칼로리를 불러오지 못했어요"
       : recommendedCalories === undefined
         ? "추천 목표 칼로리를 계산할 정보가 부족해요"
-        : `추천하는 목표 칼로리는 ${Math.round(recommendedCalories)}kcal 예요`;
+        : `추천하는 목표 칼로리는 ${Math.round(recommendedCalories).toLocaleString("ko-KR")}kcal예요`;
 
   useEffect(() => {
     if (!profile) {

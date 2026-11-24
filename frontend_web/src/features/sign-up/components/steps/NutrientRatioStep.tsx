@@ -23,7 +23,7 @@ const EMPTY_RATIO: Ratio = [0, 0, 0];
 const NUTRIENT_INPUT_PATTERN = /^(?:100(?:\.0?)?|[0-9]{0,2}(?:\.[0-9]?)?)$/;
 
 function formatRounded(value?: number) {
-  return value === undefined ? "--" : Math.round(value).toString();
+  return value === undefined ? "--" : Math.round(value).toLocaleString("ko-KR");
 }
 
 // screen: ONB-01-009
@@ -111,7 +111,7 @@ export function NutrientRatioStep({ form, onNext, nextLabel }: SignUpStepProps<"
 
         <article className={styles.macroTotalCard}>
           <span className="body-l-medium text-tertiary">
-            목표 칼로리 {targetCalories ?? "--"} kcal
+            목표 칼로리 {targetCalories?.toLocaleString("ko-KR") ?? "--"} kcal
           </span>
           <span className="title-s-semi text-primary marginLeft">총 {total}%</span>
         </article>

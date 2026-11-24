@@ -68,7 +68,7 @@ function roundToPrecision(value: number) {
 
 function formatRoundedValue(value?: number) {
   if (value === undefined || Number.isNaN(value)) return "--";
-  return Math.round(value).toString();
+  return Math.round(value).toLocaleString("ko-KR");
 }
 
 function isAllowedNutrientInput(nextInputValue: string) {
@@ -397,7 +397,7 @@ export default function GoalEditNutrientPage() {
 
               <article className={styles.macroTotalCard}>
                 <span className="body-l-medium text-tertiary">
-                  목표 칼로리 {visibleDraft.target_calories ?? "--"} kcal
+                  목표 칼로리 {visibleDraft.target_calories?.toLocaleString("ko-KR") ?? "--"} kcal
                 </span>
                 <span className="title-s-semi text-primary marginLeft">
                   총{" "}

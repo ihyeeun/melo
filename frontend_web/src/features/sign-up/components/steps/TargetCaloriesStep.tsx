@@ -21,7 +21,7 @@ export function TargetCaloriesStep({ form, onNext, nextLabel }: SignUpStepProps<
     ? "추천 칼로리를 불러오지 못했어요. 직접 입력해주세요"
     : recommendation.data === undefined
       ? "추천 칼로리를 계산하고 있어요"
-      : `추천하는 목표 칼로리는 ${recommendation.data}kcal예요`;
+      : `추천하는 목표 칼로리는 ${recommendation.data.toLocaleString("ko-KR")}kcal예요`;
 
   return (
     <StepLayout
