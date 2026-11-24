@@ -942,7 +942,7 @@ export default function MealSearchPage() {
         )}
       </main>
 
-      <footer className={styles.footer}>
+      <footer className={`${styles.footer} hide-on-keyboard`}>
         {showFoodCameraButton ? (
           <FloatingCameraButton
             onClick={handleCameraClick}

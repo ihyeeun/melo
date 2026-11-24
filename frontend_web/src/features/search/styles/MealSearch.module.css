@@ -316,11 +316,6 @@
   gap: 2px;
 }
 
-/* 키보드가 올라와 있을 때는 아래 고정 영역을 키보드 위로 띄우지 않는다 (_global 검색 화면 키보드) */
-:global(body:has(:is(input, textarea, [contenteditable="true"]):focus)) .footer {
-  display: none;
-}
-
 @keyframes personal-menu-panel-enter {
   from {
     opacity: 0;

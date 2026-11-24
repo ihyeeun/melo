@@ -238,3 +238,8 @@
   flex-shrink: 0;
   padding: 0 16px var(--safe-area-bottom);
 }
+
+/* 검색 화면의 아래 고정 영역: 키보드가 올라와 있으면 키보드 위로 띄우지 않는다 (_global 검색 화면 키보드) */
+body:has(:is(input, textarea, [contenteditable="true"]):focus) .hide-on-keyboard {
+  display: none;
+}

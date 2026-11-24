@@ -35,6 +35,7 @@ import {
   useSearchParams,
 } from "@/shared/navigation/stackflowNavigation";
 import { getTodayFormatDateKey, isValidDateKey } from "@/shared/utils/dateFormat";
+import { dismissKeyboard } from "@/shared/utils/keyboard.util";
 
 import styles from "../styles/WorkoutSearchPage.module.css";
 
@@ -212,6 +213,7 @@ export default function WorkoutSearchPage() {
   };
 
   const handleUpsertWorkout = (workoutId: number) => {
+    dismissKeyboard();
     navigate(getWorkoutUpsertPath(dateKey, workoutId, workoutPathOptions), {
       state: {
         workoutRecord: selectedWorkoutRecordMap.get(workoutId),
@@ -220,6 +222,7 @@ export default function WorkoutSearchPage() {
   };
 
   const handleRemoveWorkout = (workoutId: number) => {
+    dismissKeyboard();
     if (isDeletePending || !selectedWorkoutRecordMap.has(workoutId)) return;
 
     if (isEditSession) {
@@ -231,6 +234,7 @@ export default function WorkoutSearchPage() {
   };
 
   const handleWorkoutDetail = (workoutId: number) => {
+    dismissKeyboard();
     navigate(getWorkoutDetailSheetPath(dateKey, workoutId, workoutPathOptions));
   };
 
@@ -322,7 +326,8 @@ export default function WorkoutSearchPage() {
         onBack={handleBack}
       />
 
-      <main className={styles.main}>
+      {/* 목록을 끌어 스크롤하면 키보드를 내린다 (_global 검색 화면 키보드) */}
+      <main className={styles.main} onTouchMove={dismissKeyboard}>
         <section className={styles.filterSection} aria-label="운동 검색 필터">
           <FilterTabGroup
             options={BODY_PART_OPTIONS}
@@ -339,7 +344,7 @@ export default function WorkoutSearchPage() {
         <ScrollFogArea sizes={{ top: 10, bottom: 20 }}>{renderSearchState()}</ScrollFogArea>
       </main>
 
-      <footer className={`footer`}>
+      <footer className="footer hide-on-keyboard">
         <Button fullWidth size="m" disabled={isDeletePending} onClick={handleComplete}>
           추가 완료
         </Button>
