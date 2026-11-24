@@ -90,14 +90,11 @@ export default function StepsLogBottomSheetActivity() {
   const handleSubmit = () => {
     const submittedSteps = draftSteps;
 
-    if (submittedSteps === undefined) {
-      toast.warning("걸음 수를 입력해주세요");
-      return;
-    }
+    if (submittedSteps === undefined) return;
 
     const nextSteps = toInteger(submittedSteps);
     if (nextSteps < 0 || nextSteps > MAX_STEPS) {
-      toast.warning("걸음 수는 0 ~ 999,999 사이로 입력해주세요");
+      toast.warning("걸음 수는 0~999,999 사이로 입력해주세요");
       return;
     }
 
@@ -168,7 +165,12 @@ export default function StepsLogBottomSheetActivity() {
           </div>
           {canInputSteps && (
             <div className={styles.sheetActions}>
-              <Button onClick={handleSubmit} fullWidth size="m" disabled={isManualStepsPending}>
+              <Button
+                onClick={handleSubmit}
+                fullWidth
+                size="m"
+                disabled={isManualStepsPending || draftSteps === undefined}
+              >
                 기록하기
               </Button>
               <Button
