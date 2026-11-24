@@ -68,7 +68,7 @@ export default function ChatNutritionRegisterPage() {
     }
 
     toast.success("음식을 등록했어요");
-    navigateBack({ fallbackTo: PATH.CHAT });
+    navigateBack({ fallbackTo: PATH.CHAT, skipBackHandler: true });
   };
 
   return (

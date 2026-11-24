@@ -73,6 +73,7 @@ export default function NutrientRegisterPage() {
             animate: false,
             backTo: backFallbackPath,
             to: registeredMenuDetailPath,
+            skipBackHandler: true,
           });
           return;
         }
