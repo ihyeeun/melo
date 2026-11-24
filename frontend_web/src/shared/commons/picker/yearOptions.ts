@@ -13,11 +13,11 @@ type BirthYearRange = {
   max: number;
 };
 
-// 출생 연도는 현재년도-100부터 만 14세가 되는 해(현재년도-14)까지 고를 수 있다
+// 출생 연도는 현재년도-100부터 현재년도-15까지 고를 수 있다 (서비스 정책 P2)
 export function getBirthYearRange(currentYear = new Date().getFullYear()): BirthYearRange {
   return {
     min: currentYear - 100,
-    max: currentYear - 14,
+    max: currentYear - 15,
   };
 }
 
