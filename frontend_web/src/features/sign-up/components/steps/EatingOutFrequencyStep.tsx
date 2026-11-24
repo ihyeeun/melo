@@ -17,7 +17,7 @@ export function EatingOutFrequencyStep({ form, onNext, nextLabel }: SignUpStepPr
 
   return (
     <StepLayout
-      title={"일주일에 외식·배달을\n몇 번 하시나요?"}
+      title={"일주일에 외식(배달/포장 포함)을\n몇 번 하시나요?"}
       canGoNext={frequency !== undefined}
       onNext={() => onNext({ eating_out_freq_weekly: frequency })}
       nextLabel={nextLabel}
