@@ -25,6 +25,11 @@ const sessionReplayTracking = sessionReplayPlugin({
   sampleRate: 1,
 });
 
+// 세션이 끝나는 기준(기록 없는 시간). 앱을 켜 둔 채 둔 시간이 사용 시간에 들어가지 않게 짧게 둔다
+const SESSION_TIMEOUT_MS = 5 * 60 * 1000;
+// 앱이 다시 앞으로 오면 앱이 웹에 보내는 이벤트
+const APP_FOREGROUND_EVENT_NAME = "MELO_APP_FOREGROUND";
+
 let initialized = false;
 let analyticsUnavailable = false;
 let analyticsInitRequested = false;
@@ -116,6 +121,15 @@ function flushPendingEvents() {
   });
 }
 
+// 앱이 백그라운드에서 돌아오면 새 세션으로 센다 (백그라운드에 둔 시간이 세션 길이에 들어가지 않게).
+// fromBackground를 보내지 않는 옛 앱은 세션 시간 초과로만 나뉜다
+function startNewSessionOnAppReturn() {
+  window.addEventListener(APP_FOREGROUND_EVENT_NAME, (event) => {
+    const detail = (event as CustomEvent<{ fromBackground?: boolean } | undefined>).detail;
+    if (detail?.fromBackground) amplitude.setSessionId(Date.now());
+  });
+}
+
 function initializeAnalyticsIfReady() {
   if (initialized || analyticsUnavailable || !analyticsInitRequested) return;
   if (currentUserRole === undefined || !appDeviceInfoReady) return;
@@ -129,9 +143,11 @@ function initializeAnalyticsIfReady() {
   amplitude.add(sessionReplayTracking);
   amplitude.init(apiKey, {
     autocapture: false,
+    sessionTimeout: SESSION_TIMEOUT_MS,
   });
 
   initialized = true;
+  startNewSessionOnAppReturn();
 
   if (currentUserId) {
     amplitude.setUserId(currentUserId);
