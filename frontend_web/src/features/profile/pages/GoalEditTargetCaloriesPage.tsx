@@ -137,7 +137,7 @@ export default function GoalEditTargetCaloriesPage() {
 
   return (
     <div className={`${styles.page} page`}>
-      <PageHeader onBack={handleBack} />
+      <PageHeader title="목표 재설정" onBack={handleBack} />
 
       <main className="main">
         {isPending && !visibleDraft && (

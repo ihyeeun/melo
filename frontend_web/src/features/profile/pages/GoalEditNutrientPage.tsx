@@ -324,7 +324,7 @@ export default function GoalEditNutrientPage() {
 
   return (
     <div className={`${styles.page} page`}>
-      <PageHeader onBack={handleBack} />
+      <PageHeader title="목표 재설정" onBack={handleBack} />
 
       <main className="main">
         {isPending && !visibleDraft && <p>프로필 목표 정보를 불러오는 중입니다</p>}
