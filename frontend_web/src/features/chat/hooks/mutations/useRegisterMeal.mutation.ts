@@ -11,6 +11,7 @@ import { invalidateMealRecordRelatedQueries } from "@/features/meal-record/hooks
 import { mergeMenuDraftMenus } from "@/features/meal-record/stores/menuDraft.store";
 import { getCurrentMealRecordTime } from "@/features/meal-record/utils/mealRecordTime";
 import { toMenuDraftSeed } from "@/features/meal-record/utils/menuDraftSync";
+import { trackMenuSave } from "@/shared/analytics/menuSaveEvent.util";
 import { isRequestAbortError } from "@/shared/api/requestCancellation";
 import type { ScreenRequestScope } from "@/shared/api/screenRequests";
 import { type MealTime, type MealType, MENU_INPUT_MODE } from "@/shared/api/types/api.dto";
@@ -21,6 +22,7 @@ interface RegisterMealParams {
   mealTime: MealType;
   menus: {
     id: number;
+    name?: string;
     quantity: number;
     mode: "unit" | "weight";
   }[];
@@ -54,10 +56,8 @@ export function useRegisterChatMealMutation() {
 
         const time = Number(mealTime) as MealTime;
 
-        const mergedMenus = mergeMenuDraftMenus({
-          baseMenus: dayMeals.menusByTime[time].map(toMenuDraftSeed),
-          overrideMenus: menus,
-        });
+        const baseMenus = dayMeals.menusByTime[time].map(toMenuDraftSeed);
+        const mergedMenus = mergeMenuDraftMenus({ baseMenus, overrideMenus: menus });
 
         if (mergedMenus.length > MAX_MEAL_RECORD_MENUS) {
           throw new Error(MEAL_RECORD_MENU_LIMIT_MESSAGE);
@@ -80,7 +80,13 @@ export function useRegisterChatMealMutation() {
 
         screen.assertActive();
 
-        return postTodayMealRecordRegister(request);
+        const response = await postTodayMealRecordRegister(request);
+        trackMenuSave({
+          source: "chat",
+          menus: mergedMenus.map((menu) => ({ menu_id: menu.id, menu_name: menu.name })),
+          isEdit: baseMenus.length > 0,
+        });
+        return response;
       }),
 
     retry: false,

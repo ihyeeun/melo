@@ -17,52 +17,21 @@ function getMenuAnalyticsProperties(menu: MenuSaveAnalyticsItem) {
   };
 }
 
-function trackMenuArrayEvent({
-  eventName,
-  menus,
+// 끼니가 서버에 저장된 순간에 한 번. menus는 그 끼니의 전체 음식, isEdit은 이미 있던 끼니를 고친 저장
+export function trackMenuSave({
   source,
-  scanType,
+  menus,
+  isEdit,
 }: {
-  eventName:
-    | typeof EVENT_NAME.CHAT_TEXT_MENU_SAVE
-    | typeof EVENT_NAME.DIARY_MENU_SAVE
-    | typeof EVENT_NAME.MENU_SAVE_BY_SCAN;
+  source: "diet" | "chat";
   menus: MenuSaveAnalyticsItem[];
-  source?: "home_tab" | "chat_tab";
-  scanType?: "photo" | "barcode";
+  isEdit: boolean;
 }) {
   if (menus.length === 0) return;
 
-  track(eventName, {
+  track(EVENT_NAME.MENU_SAVE, {
+    source,
     menus: menus.map(getMenuAnalyticsProperties),
-    source: source,
-    scan_type: scanType,
-  });
-}
-
-export function trackChatTextMenuSave(menus: MenuSaveAnalyticsItem[]) {
-  trackMenuArrayEvent({ eventName: EVENT_NAME.CHAT_TEXT_MENU_SAVE, menus, source: "chat_tab" });
-}
-
-export function trackDiaryMenuSave(menus: MenuSaveAnalyticsItem[]) {
-  trackMenuArrayEvent({ eventName: EVENT_NAME.DIARY_MENU_SAVE, menus, source: "home_tab" });
-}
-
-export function trackScanMenuSave({
-  menus,
-  scanType,
-  source,
-}: {
-  menus: MenuSaveAnalyticsItem[] | undefined;
-  scanType: "photo" | "barcode";
-  source: "home_tab" | "chat_tab";
-}) {
-  if (!menus) return;
-
-  trackMenuArrayEvent({
-    eventName: EVENT_NAME.MENU_SAVE_BY_SCAN,
-    menus,
-    scanType: scanType,
-    source: source,
+    is_edit: isEdit,
   });
 }

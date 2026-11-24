@@ -1,3 +1,10 @@
+import { MODE } from "@/features/camera/constants/camera.constant";
+import {
+  type ScanKind,
+  type ScanSource,
+  trackScanFail,
+  trackScanStart,
+} from "@/shared/analytics/scanEvents";
 import { AppApiError } from "@/shared/api/apiClient";
 import { API_ERROR_MESSAGE } from "@/shared/api/apiErrorMessage";
 
@@ -6,6 +13,9 @@ const CAMERA_CAPTURE_CANCELLED_CODE = "CAMERA_CAPTURE_CANCELLED";
 type BridgeCameraError = Error & {
   error?: string;
   statusCode?: number;
+  // 앱의 사진 검사에서 막혔을 때 앱이 붙여 주는 값 (옛 앱은 없음)
+  mode?: string | null;
+  imageFrom?: ImageFrom;
 };
 
 export type CameraCaptureErrorFeedback = {
@@ -111,6 +121,84 @@ function getRawErrorMessage(error: unknown) {
 export function getAnalyticsErrorMessage(error: unknown, fallback = "unknown") {
   const message = getRawErrorMessage(error);
   return message.length > 0 ? message : fallback;
+}
+
+// 이벤트(*_scan_fail · text_record_fail)의 실패 이유. 원인 구분은 위 안내 문구 표와 같다
+const FAILURE_REASON_BY_CODE: Record<string, string> = {
+  CAMERA_PERMISSION_DENIED: "permission_denied",
+  GALLERY_PERMISSION_DENIED: "permission_denied",
+  CAMERA_PREPARE_FAILED: "capture_failed",
+  CAMERA_DEVICE_UNAVAILABLE: "capture_failed",
+  CAMERA_CAPTURE_FAILED: "capture_failed",
+  CAMERA_CAPTURE_IN_PROGRESS: "capture_failed",
+  IMAGE_COUNT_EXCEEDED: "invalid_image",
+  IMAGE_FORMAT_NOT_ALLOWED: "invalid_image",
+  IMAGE_FORMAT_UNKNOWN: "invalid_image",
+  IMAGE_SIZE_EXCEEDED: "invalid_image",
+  IMAGE_SIZE_UNAVAILABLE: "invalid_image",
+  IMAGE_PROCESSING_FAILED: "invalid_image",
+  GALLERY_PICK_FAILED: "invalid_image",
+  GALLERY_ACCESS_FAILED: "invalid_image",
+  NETWORK_ERROR: "network",
+};
+const FAILURE_REASON_BY_ANALYSIS_MESSAGE: Partial<Record<string, string>> = {
+  [API_ERROR_MESSAGE.FOOD_IMAGE_QUALITY_LOW]: "low_quality",
+  [API_ERROR_MESSAGE.FOOD_IMAGE_TOO_SMALL]: "too_small",
+  [API_ERROR_MESSAGE.FOOD_IMAGE_BLURRY]: "blurry",
+  [API_ERROR_MESSAGE.FOOD_IMAGE_LIGHTING_POOR]: "dark",
+  [API_ERROR_MESSAGE.FOOD_OCCLUDED_OR_CUT_OFF]: "occluded",
+  [API_ERROR_MESSAGE.FOOD_NOT_DETECTED]: "no_food",
+  [API_ERROR_MESSAGE.FOOD_NOT_MATCHED]: "not_recognized",
+};
+
+export function getRecordFailureReason(error: unknown) {
+  const bridgeError = (error ?? {}) as BridgeCameraError;
+  const reasonByCode = bridgeError.error ? FAILURE_REASON_BY_CODE[bridgeError.error] : undefined;
+  if (reasonByCode) return reasonByCode;
+
+  if (
+    TIMEOUT_ERROR_CODES.has(bridgeError.error ?? "") ||
+    TIMEOUT_STATUS_CODES.has(bridgeError.statusCode ?? 0)
+  ) {
+    return "timeout";
+  }
+
+  const userMessage = error instanceof AppApiError ? error.userMessage : undefined;
+  if (userMessage && IMAGE_MISSING_MESSAGES.has(userMessage)) return "image_missing";
+  return (userMessage && FAILURE_REASON_BY_ANALYSIS_MESSAGE[userMessage]) || "server_error";
+}
+
+export function getScanKind(mode: string | null | undefined): ScanKind {
+  return mode === MODE.NUTRITION ? "label" : "food";
+}
+
+// 사진은 찍거나 골랐지만 앱의 형식 · 용량 검사에서 막힌 오류
+const REJECTED_IMAGE_CODES = new Set([
+  "IMAGE_COUNT_EXCEEDED",
+  "IMAGE_FORMAT_NOT_ALLOWED",
+  "IMAGE_FORMAT_UNKNOWN",
+  "IMAGE_SIZE_EXCEEDED",
+  "IMAGE_SIZE_UNAVAILABLE",
+  "IMAGE_PROCESSING_FAILED",
+  "GALLERY_PICK_FAILED",
+]);
+
+// 촬영 · 고르기 단계 실패 중 사진이 있었던 경우만 시작과 실패를 함께 보낸다(true).
+// 카메라를 열지 못한 것처럼 사진이 없으면 시작으로 세지 않는다(false)
+export function trackRejectedImageScan(
+  error: unknown,
+  fallback: { source: ScanSource; mode: string | null | undefined; imageFrom: ImageFrom },
+) {
+  const bridgeError = (error ?? {}) as BridgeCameraError;
+  if (!bridgeError.error || !REJECTED_IMAGE_CODES.has(bridgeError.error)) return false;
+
+  const kind = getScanKind(bridgeError.mode ?? fallback.mode);
+  trackScanStart(kind, {
+    source: fallback.source,
+    imageFrom: bridgeError.imageFrom ?? fallback.imageFrom,
+  });
+  trackScanFail(kind, { source: fallback.source, reason: getRecordFailureReason(error) });
+  return true;
 }
 
 // screen: DIET-02-008_modal-invalid-image

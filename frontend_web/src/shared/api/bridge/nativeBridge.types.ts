@@ -265,6 +265,9 @@ export type AppToWebMessage<T = unknown> = {
         error: string;
         // LOCATION_PERMISSION_DENIED: OS가 권한 팝업을 다시 띄울 수 있는지 (옛 앱은 보내지 않는다)
         canAskAgain?: boolean;
+        // 찍거나 고른 사진이 형식 · 용량 검사에서 막혔을 때: 어떤 모드로, 어디서 가져온 사진인지 (옛 앱은 없음)
+        mode?: string | null;
+        imageFrom?: "camera" | "gallery";
       };
 };
 

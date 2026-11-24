@@ -2,6 +2,7 @@ import { useActivity } from "@stackflow/react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { CameraLoading } from "@/features/camera/components/CameraLoading";
+import { MODE } from "@/features/camera/constants/camera.constant";
 import { useCreateMenuByNutritionLabelImageMutation } from "@/features/camera/hooks/mutations/useImageRecognitionMutation";
 import styles from "@/features/camera/styles/CameraPage.module.css";
 import {
@@ -9,7 +10,9 @@ import {
   getCameraCaptureErrorFeedback,
   getCapturedImagePreviewSrc,
   getRecognitionErrorFeedback,
+  getRecordFailureReason,
   isCameraCaptureCancelled,
+  trackRejectedImageScan,
 } from "@/features/camera/utils/cameraCapture";
 import { getMealType, getSafeDateKey } from "@/features/meal-record/utils/mealRecord.queryParams";
 import {
@@ -21,6 +24,7 @@ import {
 } from "@/features/menu-selection/utils/menuSelectionRoutes";
 import { PATH } from "@/router/path";
 import { getMealSearchPath, getPathWithMeal } from "@/router/pathHelpers";
+import { trackScanFail, trackScanStart, trackScanSuccess } from "@/shared/analytics/scanEvents";
 import { requestNativeCameraCapture } from "@/shared/api/bridge/nativeBridge";
 import { captureScreenRequestScope } from "@/shared/api/screenRequests";
 import type { MealType } from "@/shared/api/types/api.dto";
@@ -93,7 +97,7 @@ export default function NutrientCameraPage() {
     try {
       setIsOpeningCamera(true);
       capturedImage = await requestNativeCameraCapture({
-        mode: "NUTRITION_LABEL",
+        mode: MODE.NUTRITION,
       });
       screen.assertActive();
       setIsOpeningCamera(false);
@@ -104,16 +108,22 @@ export default function NutrientCameraPage() {
         returnFromCameraPage();
         return;
       }
+      trackRejectedImageScan(error, { source: "diet", mode: MODE.NUTRITION, imageFrom: "camera" });
       setCapturedPreviewSrc(null);
       setCaptureErrorFeedback(getCameraCaptureErrorFeedback(error));
       return;
     }
 
+    trackScanStart("label", { source: "diet", imageFrom: capturedImage.imageFrom ?? "camera" });
+
+    let hasRecognitionSucceeded = false;
     try {
       setCapturedPreviewSrc(getCapturedImagePreviewSrc(capturedImage));
       setIsUploading(true);
       const imageData = await uploadImage(capturedImage);
       screen.assertActive();
+      hasRecognitionSucceeded = true;
+      trackScanSuccess("label", "diet");
       const registerPath = menuSelectionContext?.target
         ? getMenuSelectionPath({
             path: PATH.NUTRIENT_ADD_REGISTER,
@@ -134,6 +144,9 @@ export default function NutrientCameraPage() {
       });
     } catch (error) {
       if (!screen.isActive()) return;
+      if (!hasRecognitionSucceeded) {
+        trackScanFail("label", { source: "diet", reason: getRecordFailureReason(error) });
+      }
       setCapturedPreviewSrc(null);
       setCaptureErrorFeedback(getRecognitionErrorFeedback(error, capturedImage.imageFrom));
     } finally {

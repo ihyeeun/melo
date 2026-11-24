@@ -9,13 +9,16 @@ import {
   getAnalyticsErrorMessage,
   getCameraCaptureErrorFeedback,
   getRecognitionErrorFeedback,
+  getScanKind,
   isCameraCaptureCancelled,
+  trackRejectedImageScan,
 } from "@/features/camera/utils/cameraCapture";
 import { getChatCameraSupportResult } from "@/features/camera/utils/chatCameraSupport";
 import { useSetImage } from "@/features/chat/stores/camera.store";
 import { PATH } from "@/router/path";
 import { track } from "@/shared/analytics/analytics";
 import { EVENT_NAME } from "@/shared/analytics/analytics.constants";
+import { trackScanStart } from "@/shared/analytics/scanEvents";
 import { requestNativeCameraCapture } from "@/shared/api/bridge/nativeBridge";
 import { captureScreenRequestScope } from "@/shared/api/screenRequests";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
@@ -79,7 +82,6 @@ export default function ChatCameraPage() {
         return;
       }
 
-      track(EVENT_NAME.CAMERA_START, { source: "chat_tab" });
       image = await requestNativeCameraCapture({
         mode: MODE.FOOD,
         selectableModes: [MODE.FOOD, MODE.NUTRITION],
@@ -88,21 +90,28 @@ export default function ChatCameraPage() {
     } catch (error) {
       if (!screen.isActive()) return;
       if (isCameraCaptureCancelled(error)) {
-        track(EVENT_NAME.CAMERA_CANCEL, { source: "chat_tab" });
         returnFromCameraPage();
         return;
       }
 
-      track(EVENT_NAME.CAMERA_FAIL, {
-        reason: getAnalyticsErrorMessage(error, "카메라 실행 또는 촬영에 실패했어요."),
-        source: "chat_tab",
-      });
+      if (
+        !trackRejectedImageScan(error, { source: "chat", mode: MODE.FOOD, imageFrom: "camera" })
+      ) {
+        track(EVENT_NAME.CAMERA_FAIL, {
+          reason: getAnalyticsErrorMessage(error, "카메라 실행 또는 촬영에 실패했어요."),
+          source: "chat",
+        });
+      }
 
       setCaptureErrorFeedback(getCameraCaptureErrorFeedback(error));
       return;
     }
 
     const selectedMode = resolveChatCameraMode(image.mode);
+    trackScanStart(getScanKind(selectedMode), {
+      source: "chat",
+      imageFrom: image.imageFrom ?? "camera",
+    });
 
     try {
       setImage({

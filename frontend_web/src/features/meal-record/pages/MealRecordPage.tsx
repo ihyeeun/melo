@@ -43,10 +43,7 @@ import {
 } from "@/features/meal-record/utils/menuDraftSync";
 import { PATH } from "@/router/path";
 import { getMealDetailPath, getMealRecordPath, getMealSearchPath } from "@/router/pathHelpers";
-import {
-  type MenuSaveAnalyticsItem,
-  trackDiaryMenuSave,
-} from "@/shared/analytics/menuSaveEvent.util";
+import { type MenuSaveAnalyticsItem, trackMenuSave } from "@/shared/analytics/menuSaveEvent.util";
 import { isRequestAbortError } from "@/shared/api/requestCancellation";
 import {
   MEAL_TYPE_OPTIONS,
@@ -514,7 +511,11 @@ export default function MealRecordPage() {
 
         await registerMealAsync(request, {
           onSuccess: () => {
-            trackDiaryMenuSave(getSavedMenusFromRequest(request));
+            trackMenuSave({
+              source: "diet",
+              menus: getSavedMenusFromRequest(request),
+              isEdit: currentMenus.menusByTime[request.time].length > 0,
+            });
           },
         });
       }

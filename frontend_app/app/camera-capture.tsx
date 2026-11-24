@@ -552,7 +552,10 @@ export default function CameraCaptureScreen() {
 
       if (result.assets.length !== 1) {
         rejectCameraCaptureSession(
-          new BridgeHandledError("이미지는 1장만 첨부할 수 있어요.", 400, "IMAGE_COUNT_EXCEEDED"),
+          new BridgeHandledError("이미지는 1장만 첨부할 수 있어요.", 400, "IMAGE_COUNT_EXCEEDED", {
+            mode: captureMode,
+            imageFrom: "gallery",
+          }),
         );
         router.back();
         return;
@@ -561,7 +564,10 @@ export default function CameraCaptureScreen() {
       const asset = result.assets[0];
       if (!asset) {
         rejectCameraCaptureSession(
-          new BridgeHandledError("선택한 사진을 가져오지 못했어요.", 500, "GALLERY_PICK_FAILED"),
+          new BridgeHandledError("선택한 사진을 가져오지 못했어요.", 500, "GALLERY_PICK_FAILED", {
+            mode: captureMode,
+            imageFrom: "gallery",
+          }),
         );
         router.back();
         return;

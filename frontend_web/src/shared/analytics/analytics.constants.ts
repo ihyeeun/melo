@@ -7,8 +7,6 @@ export const EVENT_NAME = {
   RESTAURANT_SEARCH_FOCUS: "restaurant_search_focus",
   RESTAURANT_CARD_CLICK: "restaurant_card_click",
 
-  CAMERA_START: "camera_start",
-  CAMERA_CANCEL: "camera_cancel",
   CAMERA_FAIL: "camera_fail",
 
   OCR_SCAN_START: "ocr_scan_start",
@@ -25,12 +23,14 @@ export const EVENT_NAME = {
 
   LABEL_REGISTER_FAIL: "label_register_fail",
 
+  TEXT_RECORD_SUCCESS: "text_record_success",
+  TEXT_RECORD_FAIL: "text_record_fail",
+
   AI_COACH_CHAT: "ai_coach_chat",
 
   RECOMMEND_MENU_SAVE: "chat_menu_save",
-  CHAT_TEXT_MENU_SAVE: "menu_save_text",
-  DIARY_MENU_SAVE: "menu_save_manual",
-  MENU_SAVE_BY_SCAN: "menu_save_scan",
+  // 서버 저장이 성공한 순간에 한 번 (식사 기록 상세 [완료하기] · AI 코치 시간대 카드 · 등록 완료 카드)
+  MENU_SAVE: "menu_save",
 
   BODY_WEIGHT_RECORDED: "body_weight_recorded",
 

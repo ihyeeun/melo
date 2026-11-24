@@ -12,7 +12,12 @@ import React, {
 } from "react";
 
 import { MODE } from "@/features/camera/constants/camera.constant";
-import { getCameraCaptureErrorFeedback } from "@/features/camera/utils/cameraCapture";
+import {
+  getCameraCaptureErrorFeedback,
+  getRecordFailureReason,
+  getScanKind,
+  trackRejectedImageScan,
+} from "@/features/camera/utils/cameraCapture";
 import { AssistantMessageText } from "@/features/chat/components/AssistantMessageText";
 import { AssistantPendingMessage } from "@/features/chat/components/AssistantPendingMessage";
 import { ImageAnalysisFlow } from "@/features/chat/components/ImageAnalysisFlow";
@@ -42,7 +47,9 @@ import type { MenuWithQuantity } from "@/features/home/utils/dayMealSummary";
 import { getMenuSelectionMenuDetailPath } from "@/features/menu-selection/utils/menuSelectionRoutes";
 import { PATH } from "@/router/path";
 import { getMealRecordPath } from "@/router/pathHelpers";
-import { trackChatTextMenuSave, trackScanMenuSave } from "@/shared/analytics/menuSaveEvent.util";
+import { track } from "@/shared/analytics/analytics";
+import { EVENT_NAME } from "@/shared/analytics/analytics.constants";
+import { trackScanStart } from "@/shared/analytics/scanEvents";
 import {
   requestNativeAppSettingsOpen,
   requestNativeGalleryPick,
@@ -194,6 +201,11 @@ export default function AIChatPage() {
         {
           onSuccess: ({ menu_ids }) => {
             if (menu_ids.length === 0) {
+              track(EVENT_NAME.TEXT_RECORD_FAIL, {
+                source: "chat",
+                entry: "record_mode",
+                reason: "no_food",
+              });
               resetSendTextMeal();
               toast.show({
                 type: "warning",
@@ -203,11 +215,18 @@ export default function AIChatPage() {
               });
               return;
             }
+            track(EVENT_NAME.TEXT_RECORD_SUCCESS, { source: "chat", entry: "record_mode" });
             setIsTextMealRecordMode(false);
           },
           onError: (error) => {
             setInputMessage(formattedMessage);
             if (isRequestAbortError(error)) return;
+
+            track(EVENT_NAME.TEXT_RECORD_FAIL, {
+              source: "chat",
+              entry: "record_mode",
+              reason: getRecordFailureReason(error),
+            });
 
             toast.error("연결이 일시적으로 불안정해요. 다시 시도해주세요.");
           },
@@ -246,19 +265,15 @@ export default function AIChatPage() {
     if (!screen.isActive()) return;
 
     const { dateKey: currentDate } = getCurrentDateTime();
-    const parseMenus = textMealData.menu_ids.map((id, index) => ({
-      menu_id: id,
-      menu_name: textMealData.menu_names[index],
-      menu_weight: textMealData.menu_quantities[index],
-    }));
 
     registerMeal(
       {
         dateKey: textMealData.date ?? currentDate,
         mealTime,
-        menus: parseMenus.map(({ menu_id, menu_weight }) => ({
-          id: menu_id,
-          quantity: menu_weight,
+        menus: textMealData.menu_ids.map((id, index) => ({
+          id,
+          name: textMealData.menu_names[index],
+          quantity: textMealData.menu_quantities[index],
           mode: "weight" as const,
         })),
         screen,
@@ -266,7 +281,6 @@ export default function AIChatPage() {
       {
         onSuccess: () => {
           if (!screen.isActive()) return;
-          trackChatTextMenuSave(parseMenus);
           resetSendTextMeal();
         },
         onError: (error) => {
@@ -294,6 +308,7 @@ export default function AIChatPage() {
         menus: [
           {
             id: registeredMenu.menu_id,
+            name: registeredMenu.menu_name,
             quantity: registeredMenu.registered_nutrition.weight,
             mode: "weight",
           },
@@ -301,14 +316,6 @@ export default function AIChatPage() {
         screen,
       },
       {
-        onSuccess: () => {
-          if (!screen.isActive()) return;
-          trackScanMenuSave({
-            menus: [{ menu_id: registeredMenu.menu_id, menu_name: registeredMenu.menu_name }],
-            scanType: "photo",
-            source: "chat_tab",
-          });
-        },
         onError: (error) => {
           if (isRequestAbortError(error) || !screen.isActive()) return;
 
@@ -351,6 +358,7 @@ export default function AIChatPage() {
 
       screen.assertActive();
 
+      trackScanStart(getScanKind(mode), { source: "chat", imageFrom: "gallery" });
       setImage({ image, mode, source: "gallery" });
     } catch (error) {
       if (isRequestAbortError(error) || !screen.isActive()) return;
@@ -359,6 +367,7 @@ export default function AIChatPage() {
         typeof error === "object" && error !== null && "error" in error ? error.error : undefined;
 
       if (errorCode === "GALLERY_PICK_CANCELLED") return;
+      trackRejectedImageScan(error, { source: "chat", mode, imageFrom: "gallery" });
 
       const feedback = getCameraCaptureErrorFeedback(error);
 

@@ -391,7 +391,14 @@ async function uploadImageToServer(payload: BridgeImageUploadRequestPayload, sig
 
 async function capturePhotoFromCamera(payload?: BridgeCameraCaptureRequestPayload) {
   const captured = await beginCameraCaptureSession(payload);
-  return await normalizeCapturedImageSource(captured);
+  try {
+    return await normalizeCapturedImageSource(captured);
+  } catch (error) {
+    if (isBridgeHandledError(error)) {
+      error.detail = { ...error.detail, mode: captured.mode ?? null, imageFrom: captured.imageFrom };
+    }
+    throw error;
+  }
 }
 
 async function pickPhotoFromGallery(payload?: BridgeGalleryPickRequestPayload) {

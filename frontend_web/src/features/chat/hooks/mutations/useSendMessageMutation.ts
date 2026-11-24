@@ -73,7 +73,7 @@ export function useRegisterMenuByNutritionLabelImageMutation(options?: UseMutati
     onError: (error) => {
       if (isRequestAbortError(error)) return;
       track(EVENT_NAME.LABEL_REGISTER_FAIL, {
-        source: "chat_tab",
+        source: "chat",
         reason: getAnalyticsErrorMessage(error, "영양성분표 기반 메뉴 등록 실패"),
       });
       if (options?.onError) options.onError(error);

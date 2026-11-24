@@ -202,6 +202,9 @@ export type WebToAppMessage =
 export type BridgeErrorDetail = {
   // LOCATION_PERMISSION_DENIED: OS가 권한 팝업을 다시 띄울 수 있는지
   canAskAgain?: boolean;
+  // 찍거나 고른 사진이 형식 · 용량 검사에서 막혔을 때: 어떤 모드로, 어디서 가져온 사진인지 (웹 이벤트용)
+  mode?: BridgeCameraCaptureMode | null;
+  imageFrom?: "camera" | "gallery";
 };
 
 export type BridgeErrorPayload = BridgeErrorDetail & {

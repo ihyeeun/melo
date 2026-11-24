@@ -4,9 +4,10 @@ import { useEffect, useRef, useState } from "react";
 
 import { MODE } from "@/features/camera/constants/camera.constant";
 import {
-  getAnalyticsErrorMessage,
   getCapturedImagePreviewSrc,
   getRecognitionErrorFeedback,
+  getRecordFailureReason,
+  getScanKind,
 } from "@/features/camera/utils/cameraCapture";
 import { getChatHistory } from "@/features/chat/api/chat.api";
 import { AssistantPendingMessage } from "@/features/chat/components/AssistantPendingMessage";
@@ -17,9 +18,7 @@ import { MealTimeSelectCard } from "@/features/chat/pages/AIChatPage";
 import { useClearImage, useGetImage } from "@/features/chat/stores/camera.store";
 import styles from "@/features/chat/styles/AIChatPage.module.css";
 import { getCurrentDateTime } from "@/features/chat/utils/date.util";
-import { track } from "@/shared/analytics/analytics";
-import { EVENT_NAME } from "@/shared/analytics/analytics.constants";
-import { trackScanMenuSave } from "@/shared/analytics/menuSaveEvent.util";
+import { trackScanFail, trackScanSuccess } from "@/shared/analytics/scanEvents";
 import { isRequestAbortError } from "@/shared/api/requestCancellation";
 import { captureScreenRequestScope, type ScreenRequestScope } from "@/shared/api/screenRequests";
 import type { MealType } from "@/shared/api/types/api.dto";
@@ -66,12 +65,7 @@ export function ImageAnalysisFlow({
     isSuccess: analysisSuccess,
   } = useImageAnalysisMutation({
     onSuccess: () => {
-      // 분석 성공
-      if (mode === "FOOD") {
-        track(EVENT_NAME.FOOD_SCAN_SUCCESS, { source: "chat_food_camera" });
-      } else if (mode === "NUTRITION_LABEL") {
-        track(EVENT_NAME.LABEL_SCAN_SUCCESS, { source: "chat_nutrition_camera" });
-      }
+      trackScanSuccess(getScanKind(mode), "chat");
     },
     onError: (error) => {
       // 분석 실패
@@ -82,19 +76,7 @@ export function ImageAnalysisFlow({
         return;
       }
 
-      const errorMessage = getAnalyticsErrorMessage(error, "");
-
-      if (mode === "FOOD") {
-        track(EVENT_NAME.FOOD_SCAN_FAIL, {
-          reason: errorMessage || "음식 메뉴 분석 실패",
-          source: "chat_food_camera",
-        });
-      } else if (mode === "NUTRITION_LABEL") {
-        track(EVENT_NAME.LABEL_SCAN_FAIL, {
-          reason: errorMessage || "영양성분표 이미지 분석 실패",
-          source: "chat_nutrition_camera",
-        });
-      }
+      trackScanFail(getScanKind(mode), { source: "chat", reason: getRecordFailureReason(error) });
 
       // 사진 기록 화면의 실패 모달과 같은 원인별 문구를 채팅 하단 토스트로 보여 준다
       const feedback = getRecognitionErrorFeedback(error, getImage?.source ?? "camera");
@@ -179,19 +161,12 @@ export function ImageAnalysisFlow({
             mealTime: selectedMealTime,
             menus: (result.feedback?.menus ?? []).map((menu) => ({
               id: menu.menu_id,
+              name: menu.menu_name,
               quantity: menu.estimated_quantity ?? menu.weight,
               mode: menu.estimated_quantity != null ? "weight" : "unit",
             })),
             image: result.image_url ?? undefined,
             screen,
-          });
-
-          trackScanMenuSave({
-            menus:
-              result.feedback?.menus.map(({ menu_id, menu_name }) => ({ menu_id, menu_name })) ??
-              [],
-            scanType: "photo",
-            source: "chat_tab",
           });
           screen.assertActive();
         }
