@@ -231,6 +231,20 @@ export class AppApiError extends Error {
   }
 }
 
+type ApiErrorToastContent = {
+  title: string;
+  description?: string;
+};
+
+// 오류 문구 표에 있는 오류는 그 문구로, 없으면 화면마다 정한 실패 문구로 알린다
+export function resolveApiErrorToast(
+  error: unknown,
+  fallback: ApiErrorToastContent,
+): ApiErrorToastContent {
+  if (error instanceof AppApiError && error.userMessage) return { title: error.userMessage };
+  return fallback;
+}
+
 export function toAppApiError(
   error: unknown,
   fallbackMessage = "요청 처리 중 오류가 발생했습니다",

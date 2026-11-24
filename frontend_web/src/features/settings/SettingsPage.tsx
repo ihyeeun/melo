@@ -5,6 +5,7 @@ import {
   useWithdrawMutation,
 } from "@/features/settings/hooks/mutations/useAccountMutation";
 import { PATH } from "@/router/path";
+import { resolveApiErrorToast } from "@/shared/api/apiClient";
 import { isNativeApp, openNativeInAppBrowser } from "@/shared/api/bridge/nativeBridge";
 import { isRequestAbortError } from "@/shared/api/requestCancellation";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
@@ -31,14 +32,6 @@ function openExternalDocument(url: string) {
   void openNativeInAppBrowser(url).catch(() => {
     window.open(url, "_blank", "noopener,noreferrer");
   });
-}
-
-function resolveErrorMessage(error: unknown, fallbackMessage: string) {
-  if (error instanceof Error && error.message.trim().length > 0) {
-    return error.message;
-  }
-
-  return fallbackMessage;
 }
 
 // screen: PRF-01-002
@@ -124,15 +117,8 @@ export default function SettingsPage() {
         // actionOrder="confirm-cancel"
         confirmDisabled={isLogoutPending}
         closeOnConfirm={false}
-        onConfirm={async () => {
-          try {
-            await requestLogout();
-          } catch (error) {
-            if (isRequestAbortError(error)) throw error;
-            toast.warning(resolveErrorMessage(error, "로그아웃에 실패했어요."));
-            throw error;
-          }
-        }}
+        // 서버 요청이 실패해도 기기의 로그인 정보를 지우고 로그인 화면으로 가므로 실패 안내가 없다
+        onConfirm={requestLogout}
       />
 
       {/* screen: PRF-01-002_modal-withdraw */}
@@ -151,7 +137,11 @@ export default function SettingsPage() {
             await requestWithdraw();
           } catch (error) {
             if (isRequestAbortError(error)) throw error;
-            toast.warning(resolveErrorMessage(error, "탈퇴 처리에 실패했어요."));
+            const { title, description } = resolveApiErrorToast(error, {
+              title: "탈퇴하지 못했어요",
+              description: "잠시 후 다시 시도해주세요",
+            });
+            toast.error(title, description);
             throw error;
           }
         }}
