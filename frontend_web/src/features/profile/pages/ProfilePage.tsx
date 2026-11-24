@@ -13,6 +13,7 @@ import {
 } from "@/features/profile/hooks/queries/useWeeklyRecordQuery";
 import styles from "@/features/profile/styles/ProfilePage.module.css";
 import { PATH } from "@/router/path";
+import { Button } from "@/shared/commons/button/Button";
 import { SelectedCard } from "@/shared/commons/card/SelectedCard";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
@@ -146,9 +147,6 @@ export default function ProfilePage() {
       <main className={`main ${styles.content}`}>
         <section>
           <div className={styles.nicknameRow}>
-            {/* {profile?.is_subscribed && (
-                  <span className={`${styles.subscribeBadge} caption-m-semi`}>구독</span>
-                )} */}
             <p className={`title-l-semi text-primary`}>
               <span className={styles.highlightText}>{nickname}</span> 님
             </p>
@@ -163,23 +161,31 @@ export default function ProfilePage() {
             >
               <SystemIcon name="edit" size={24} className="text-secondary" />
             </button>
+
+            {profile?.is_subscribed && (
+              <span className={`${styles.subscribeBadge} caption-m-semi`}>Pro</span>
+            )}
           </div>
 
-          <p className={`${styles.goalText} title-m-semi text-primary`}>
-            목표 체중까지{" "}
-            <span className={styles.highlightText}>
-              {remainingWeight.toLocaleString("ko-KR")}kg
-            </span>{" "}
-            남았어요
-          </p>
+          {remainingWeight === 0 ? (
+            <p className={`${styles.goalText} title-m-semi text-primary`}>목표 체중에 도달했어요</p>
+          ) : (
+            <p className={`${styles.goalText} title-m-semi text-primary`}>
+              목표 체중까지{" "}
+              <span className={styles.highlightText}>
+                {remainingWeight.toLocaleString("ko-KR")}kg
+              </span>{" "}
+              남았어요
+            </p>
+          )}
 
           <button
             type="button"
             className={styles.goalEditButton}
             onClick={() => navigate(PATH.GOAL_EDIT)}
           >
-            <span className="body-s-medium text-secondary">목표 재설정</span>
-            <SystemIcon name="chevron-right" size={12} />
+            <span className="body-m-medium text-tertiary">목표 재설정</span>
+            <SystemIcon name="chevron-right" size={20} className="text-tertiary" />
           </button>
         </section>
 
@@ -191,9 +197,9 @@ export default function ProfilePage() {
           >
             <p className={`body-l-semi text-primary`}>체중</p>
 
-            <p className={`body-s-medium amp-mask marginLeft`}>
+            <p className={`body-l-medium amp-mask marginLeft`}>
               <span className={styles.highlightText}>{currentWeight.toLocaleString("ko-KR")}</span>
-              <span className={`${styles.amountUnit} body-s-regular`}>kg</span>
+              <span className={`${styles.amountUnit} caption-m-medium text-primary`}>kg</span>
             </p>
           </SelectedCard>
 
@@ -204,12 +210,12 @@ export default function ProfilePage() {
           >
             <p className={`body-l-semi text-primary`}>섭취량</p>
 
-            <p className={`body-s-medium amp-mask marginLeft`}>
+            <p className={`body-l-medium amp-mask marginLeft`}>
               <span className={styles.highlightText}>
                 {/* 하루 총 섭취량은 반올림한 정수로 보여 준다. 소수 1자리는 끼니별 합에만 쓴다 */}
                 {Math.round(dayMeal?.totalCalories ?? 0).toLocaleString("ko-KR")}
               </span>
-              <span className={`${styles.amountUnit} body-s-regular`}>kcal</span>
+              <span className={`${styles.amountUnit} caption-m-medium text-primary`}>kcal</span>
             </p>
           </SelectedCard>
 
@@ -219,9 +225,9 @@ export default function ProfilePage() {
             className={`${styles.activeCard}`}
           >
             <p className={`body-l-semi text-primary`}>걸음 수</p>
-            <p className={`body-s-medium amp-mask marginLeft`}>
+            <p className={`body-l-medium amp-mask marginLeft`}>
               <span className={styles.highlightText}>{todaySteps.toLocaleString("ko-KR")}</span>
-              <span className={`${styles.amountUnit} body-s-regular`}>보</span>
+              <span className={`${styles.amountUnit} caption-m-medium text-primary`}>보</span>
             </p>
           </SelectedCard>
         </section>
@@ -232,12 +238,12 @@ export default function ProfilePage() {
 
             <div className={styles.legendRow}>
               {metricConfig.targetLabel && (
-                <span className={`${styles.legendItem} body-m-regular`}>
+                <span className={`${styles.legendItem} caption-m-medium`}>
                   <span className={`${styles.legendDot} ${styles.legendTarget}`} />
                   {metricConfig.targetLabel}
                 </span>
               )}
-              <span className={`${styles.legendItem} body-m-regular`}>
+              <span className={`${styles.legendItem} caption-m-medium`}>
                 <span className={`${styles.legendDot} ${styles.legendCurrent}`} />
                 {metricConfig.title}
               </span>
@@ -247,9 +253,13 @@ export default function ProfilePage() {
           {weeklyRecordQuery.isPending ? (
             <WeeklyRecordSkeleton />
           ) : weeklyRecordQuery.hasError ? (
-            <p className={`${styles.weeklyStatusText} body-l-semi`}>
-              주간 기록을 불러오지 못했어요. 잠시 뒤 다시 시도해주세요.
-            </p>
+            <div className={styles.weeklyStatusText}>
+              <p className="body-l-semi text-secondary">주간 기록을 불러오지 못했어요</p>
+              <p className="body-s-regular text-tertiary">잠시 후 다시 시도해주세요</p>
+              <Button variant="text" size="xs" onClick={weeklyRecordQuery.retry}>
+                다시 시도
+              </Button>
+            </div>
           ) : (
             <section className={styles.weeklyChart}>
               <span className={`${styles.weeklyYLabel} caption-m-medium`}>
