@@ -159,7 +159,7 @@ export default function MapPage() {
         setMap(
           new kakao.maps.Map(baseMap.current, {
             center: new kakao.maps.LatLng(DEFAULT_CENTER.lat, DEFAULT_CENTER.lng),
-            level: 2,
+            level: 3,
           }),
         );
       })
