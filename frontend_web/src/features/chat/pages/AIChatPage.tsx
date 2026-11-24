@@ -87,6 +87,7 @@ type ChatEntryRequest =
   | { type: "management-pattern-analysis" };
 
 const MAX_AUTO_COMPLETE_COUNT = 3;
+const CHAT_VISIBLE_DAYS = 30;
 
 // screen: CHA-01-001
 export default function AIChatPage() {
@@ -720,7 +721,11 @@ function ChatHistory({
   const [initChatIds] = useState(() => new Set(history.map((chat) => chat.id)));
 
   const pendingMessageKey = sendingMessage[0]?.key;
-  const visibleChatList = sendingMessage[0]?.previousChats ?? history;
+  // 대화는 최근 30일만 보여 준다 (시각을 알 수 없는 대화는 남긴다)
+  const [recentChatStart] = useState(() => Date.now() - CHAT_VISIBLE_DAYS * 24 * 60 * 60 * 1000);
+  const visibleChatList = (sendingMessage[0]?.previousChats ?? history).filter(
+    (chat) => (parseDate(chat.createdAt)?.getTime() ?? recentChatStart) >= recentChatStart,
+  );
   const mealCards = mealRecords.flatMap((date, index) => {
     const dayMeals = mealRecords[index].meals;
     if (!dayMeals) return [];
@@ -777,132 +782,147 @@ function ChatHistory({
       </div>
     );
 
-  return displayTimeline.map((item, index) => {
-    const itemKey =
-      item.messageType === "chat"
-        ? `chat:${item.chat.id}`
-        : item.messageType === "meal"
-          ? `meal:${item.mealDate.date}:${item.time}`
-          : item.key;
-    const prevItem = displayTimeline[index - 1];
-    const isShowDateChip =
-      item.date !== null &&
-      (!prevItem?.date || formatDateKey(item.date) !== formatDateKey(prevItem.date));
+  const recentOnlyNotice = (
+    <p
+      key="recent-only"
+      className={`caption-m-regular text-tertiary textCenter ${styles.recentOnlyNotice}`}
+    >
+      최근 30일 대화만 보여요
+    </p>
+  );
 
-    const messageType = item.messageType;
-    const chat = messageType === "chat" ? item.chat : null;
-    const userSendImage = chat?.image_url;
-    const userSendText = item.messageType === "pending" ? item.inputText : (chat?.input_text ?? "");
-    const messageTime = formatTimeText(item.date);
-    const chatItem = chat?.response_payload;
+  return [
+    recentOnlyNotice,
+    ...displayTimeline.map((item, index) => {
+      const itemKey =
+        item.messageType === "chat"
+          ? `chat:${item.chat.id}`
+          : item.messageType === "meal"
+            ? `meal:${item.mealDate.date}:${item.time}`
+            : item.key;
+      const prevItem = displayTimeline[index - 1];
+      const isShowDateChip =
+        item.date !== null &&
+        (!prevItem?.date || formatDateKey(item.date) !== formatDateKey(prevItem.date));
 
-    return (
-      <section key={itemKey} className={styles.conversation}>
-        {isShowDateChip && item.date && (
-          <time className={styles.dateChip}>
-            <span className="caption-m-medium text-white">{formatDateDividerText(item.date)}</span>
-          </time>
-        )}
+      const messageType = item.messageType;
+      const chat = messageType === "chat" ? item.chat : null;
+      const userSendImage = chat?.image_url;
+      const userSendText =
+        item.messageType === "pending" ? item.inputText : (chat?.input_text ?? "");
+      const messageTime = formatTimeText(item.date);
+      const chatItem = chat?.response_payload;
 
-        {(userSendImage || userSendText) && (
-          <div className={styles.messageArea} data-owner="user">
-            {userSendImage ? (
-              <>
-                <img
-                  src={userSendImage}
-                  onLoad={() => onScrollToBottomAction("auto")}
-                  className={styles.sendImage}
-                  alt="전송된 이미지"
-                />
-                <span
-                  data-owner="user"
-                  data-time={messageTime}
-                  className={`caption-m-regular text-tertiary ${styles.messageTime}`}
-                />
-              </>
-            ) : (
-              <>
-                <div className={styles.textBubble}>
-                  <p className="body-m-regular text-primary">{userSendText}</p>
+      return (
+        <section key={itemKey} className={styles.conversation}>
+          {isShowDateChip && item.date && (
+            <time className={styles.dateChip}>
+              <span className="caption-m-medium text-white">
+                {formatDateDividerText(item.date)}
+              </span>
+            </time>
+          )}
+
+          {(userSendImage || userSendText) && (
+            <div className={styles.messageArea} data-owner="user">
+              {userSendImage ? (
+                <>
+                  <img
+                    src={userSendImage}
+                    onLoad={() => onScrollToBottomAction("auto")}
+                    className={styles.sendImage}
+                    alt="전송된 이미지"
+                  />
                   <span
                     data-owner="user"
                     data-time={messageTime}
                     className={`caption-m-regular text-tertiary ${styles.messageTime}`}
                   />
-                </div>
+                </>
+              ) : (
+                <>
+                  <div className={styles.textBubble}>
+                    <p className="body-m-regular text-primary">{userSendText}</p>
+                    <span
+                      data-owner="user"
+                      data-time={messageTime}
+                      className={`caption-m-regular text-tertiary ${styles.messageTime}`}
+                    />
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+
+          <div className={styles.messageArea} data-owner="ai">
+            {messageType === "meal" && (
+              <>
+                <MealRecordCard date={item.mealDate.date} mealTime={item.time} menus={item.menus} />
+                <span
+                  data-owner="ai"
+                  data-time={messageTime}
+                  className={`caption-m-regular text-tertiary ${styles.messageTime}`}
+                />
               </>
             )}
-          </div>
-        )}
 
-        <div className={styles.messageArea} data-owner="ai">
-          {messageType === "meal" && (
-            <>
-              <MealRecordCard date={item.mealDate.date} mealTime={item.time} menus={item.menus} />
-              <span
-                data-owner="ai"
-                data-time={messageTime}
-                className={`caption-m-regular text-tertiary ${styles.messageTime}`}
-              />
-            </>
-          )}
+            {messageType === "chat" && (
+              <StreamBubble
+                response={item.chat.response_payload}
+                messageTime={messageTime}
+                animate={!initChatIds.has(item.chat.id)}
+                onReveal={onScrollToBottomAction}
+                onComplete={responseWait?.chatId === item.chat.id ? responseWait.finish : undefined}
+              >
+                {chatItem?.chat_category === "feedback" &&
+                  chatItem.recognized_nutrition &&
+                  ("registered_menu" in chatItem && chatItem.registered_menu ? (
+                    <NutritionRegisteredCard
+                      registeredMenu={chatItem.registered_menu}
+                      isRecorded={recordedMenuIds.has(chatItem.registered_menu.menu_id)}
+                      isSavingMeal={isSavingMeal}
+                      onRecord={onRecordRegisteredMenu}
+                      onOpenMenu={(registeredMenu) => {
+                        const { dateKey, mealTime } = getCurrentDateTime();
 
-          {messageType === "chat" && (
-            <StreamBubble
-              response={item.chat.response_payload}
-              messageTime={messageTime}
-              animate={!initChatIds.has(item.chat.id)}
-              onReveal={onScrollToBottomAction}
-              onComplete={responseWait?.chatId === item.chat.id ? responseWait.finish : undefined}
-            >
-              {chatItem?.chat_category === "feedback" &&
-                chatItem.recognized_nutrition &&
-                ("registered_menu" in chatItem && chatItem.registered_menu ? (
-                  <NutritionRegisteredCard
-                    registeredMenu={chatItem.registered_menu}
-                    isRecorded={recordedMenuIds.has(chatItem.registered_menu.menu_id)}
-                    isSavingMeal={isSavingMeal}
-                    onRecord={onRecordRegisteredMenu}
-                    onOpenMenu={(registeredMenu) => {
-                      const { dateKey, mealTime } = getCurrentDateTime();
+                        navigate(
+                          getMenuSelectionMenuDetailPath({
+                            menuId: registeredMenu.menu_id,
+                            dateKey,
+                            mealType: mealTime,
+                            returnPath: PATH.CHAT,
+                          }),
+                        );
+                      }}
+                    />
+                  ) : (
+                    <SubActionCard
+                      text={`영양성분을 인식했어요!\n어떤 브랜드의 음식인가요?`}
+                      action={() => {
+                        navigate(PATH.CHAT_NUTRITION_REGISTER, {
+                          state: chatItem.recognized_nutrition,
+                        });
+                      }}
+                      actionText="음식 입력하기"
+                    />
+                  ))}
 
-                      navigate(
-                        getMenuSelectionMenuDetailPath({
-                          menuId: registeredMenu.menu_id,
-                          dateKey,
-                          mealType: mealTime,
-                          returnPath: PATH.CHAT,
-                        }),
-                      );
-                    }}
-                  />
-                ) : (
+                {chatItem?.chat_category === "inquiry" && (
                   <SubActionCard
-                    text={`영양성분을 인식했어요!\n어떤 브랜드의 음식인가요?`}
-                    action={() => {
-                      navigate(PATH.CHAT_NUTRITION_REGISTER, {
-                        state: chatItem.recognized_nutrition,
-                      });
-                    }}
-                    actionText="음식 입력하기"
+                    text={`더 자세한 도움이 필요하시면\n아래 버튼을 눌러주세요`}
+                    action={() => navigate(PATH.SETTINGS_FEEDBACK)}
+                    actionText="운영진에게 문의하기"
                   />
-                ))}
+                )}
+              </StreamBubble>
+            )}
 
-              {chatItem?.chat_category === "inquiry" && (
-                <SubActionCard
-                  text={`더 자세한 도움이 필요하시면\n아래 버튼을 눌러주세요`}
-                  action={() => navigate(PATH.SETTINGS_FEEDBACK)}
-                  actionText="운영진에게 문의하기"
-                />
-              )}
-            </StreamBubble>
-          )}
-
-          {messageType === "pending" && <AssistantPendingMessage />}
-        </div>
-      </section>
-    );
-  });
+            {messageType === "pending" && <AssistantPendingMessage />}
+          </div>
+        </section>
+      );
+    }),
+  ];
 }
 
 function chatsByDate(chatList: ChatHistoryItemResponseDto[]) {

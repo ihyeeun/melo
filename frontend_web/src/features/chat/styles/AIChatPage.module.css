@@ -81,6 +81,10 @@
   left: calc(100% + 8px);
 }
 
+.recentOnlyNotice {
+  padding: 8px 0;
+}
+
 .emptyHistorySection {
   display: flex;
   flex-direction: column;
