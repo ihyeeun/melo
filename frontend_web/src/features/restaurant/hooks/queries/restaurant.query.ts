@@ -1,10 +1,4 @@
-import {
-  skipToken,
-  useInfiniteQuery,
-  useQueries,
-  useQuery,
-  type UseQueryResult,
-} from "@tanstack/react-query";
+import { skipToken, useInfiniteQuery, useQuery } from "@tanstack/react-query";
 
 import {
   type NearbyCategory,
@@ -43,13 +37,9 @@ export function useNearbyRestaurantsQuery(
   center: LatLng | null,
   keyword: string,
 ) {
-  return useInfiniteQuery({
+  return useQuery({
     queryKey: restaurantKeys.nearby(category, center, keyword),
-    queryFn: center
-      ? ({ pageParam }) => searchNearbyRestaurants(category, center, pageParam, keyword)
-      : skipToken,
-    initialPageParam: 1,
-    getNextPageParam: (lastPage) => lastPage.nextPage,
+    queryFn: center ? () => searchNearbyRestaurants(category, center, keyword) : skipToken,
     // 주변 식당은 금방 바뀌지 않으므로 앱에 돌아올 때마다 카카오를 다시 호출하지 않는다.
     staleTime: 5 * 60 * 1000,
     meta: { refetchOnResume: "stale" },
@@ -59,39 +49,37 @@ export function useNearbyRestaurantsQuery(
 type MeloRestaurant = RestaurantBrandPlaceResponseDto & { restaurant_id: number };
 type BrandEntry = readonly [placeId: string, brand: MeloRestaurant | null];
 
+// 받기 전에도 늘 같은 Map을 돌려줘서, 이 값을 의존성으로 쓰는 effect가 렌더마다 다시 돌지 않게 한다.
+const NO_BRANDS = new Map<string, MeloRestaurant | null>();
+
 // 응답에 있어도 restaurant_id가 없으면 멜로 식당이 아니다.
 // 물어본 장소마다 멜로 식당이 아니면 null을 채워 확인 전과 구분한다.
 // 응답의 place_id는 number, 카카오 장소 id는 string이라 문자열로 맞춘다.
-async function getBrandEntries(placeIds: string[]): Promise<BrandEntry[]> {
+async function getBrandByPlaceId(placeIds: string[]) {
   const { restaurants } = await getRestaurantBrands({ place_ids: placeIds });
-  return placeIds.map((placeId) => [
-    placeId,
-    restaurants.find(
-      (brand): brand is MeloRestaurant =>
-        String(brand.place_id) === placeId && brand.restaurant_id !== null,
-    ) ?? null,
-  ]);
-}
-
-// combine에 넘기는 함수가 매번 새로 만들어지지 않도록 밖에 둔다.
-function combineBrandByPlaceId(results: UseQueryResult<BrandEntry[]>[]) {
-  return new Map(results.flatMap(({ data }) => data ?? []));
+  return new Map(
+    placeIds.map((placeId): BrandEntry => [
+      placeId,
+      restaurants.find(
+        (brand): brand is MeloRestaurant =>
+          String(brand.place_id) === placeId && brand.restaurant_id !== null,
+      ) ?? null,
+    ]),
+  );
 }
 
 // 카카오 장소 id → 멜로 식당. 멜로 식당이 아니면 null, 아직 확인하지 못했으면 값이 없다.
-// 카카오 페이지마다 따로 물어봐서, 앞 페이지는 다시 요청하지 않고 한 페이지가 실패해도 다른 페이지 뱃지는 남는다.
-export function useRestaurantBrandsQuery(placeIdPages: string[][]) {
-  return useQueries({
-    queries: placeIdPages.map((placeIds) => ({
-      queryKey: restaurantKeys.brands(placeIds),
-      queryFn: () => getBrandEntries(placeIds),
-      // 서버는 1개 이상만 받는다.
-      enabled: placeIds.length > 0,
-      staleTime: 5 * 60 * 1000,
-      meta: { refetchOnResume: "stale" },
-    })),
-    combine: combineBrandByPlaceId,
+export function useRestaurantBrandsQuery(placeIds: string[]) {
+  const { data } = useQuery({
+    queryKey: restaurantKeys.brands(placeIds),
+    queryFn: () => getBrandByPlaceId(placeIds),
+    // 서버는 1개 이상만 받는다.
+    enabled: placeIds.length > 0,
+    staleTime: 5 * 60 * 1000,
+    meta: { refetchOnResume: "stale" },
   });
+
+  return data ?? NO_BRANDS;
 }
 
 export function useRestaurantDetailQuery({ restaurant_id, filter }: RestaurantDetailRequestDto) {

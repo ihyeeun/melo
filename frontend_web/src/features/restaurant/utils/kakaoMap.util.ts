@@ -38,7 +38,7 @@ export type KakaoPlace = {
 export type KakaoPlacesCallback = (
   places: KakaoPlace[],
   status: string,
-  pagination: { hasNextPage: boolean },
+  pagination: { last: number },
 ) => void;
 
 type KakaoPlacesOptions = {

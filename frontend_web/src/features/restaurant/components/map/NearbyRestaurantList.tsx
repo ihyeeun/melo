@@ -1,5 +1,3 @@
-import { useEffect, useRef } from "react";
-
 import type { NearbyCategory } from "@/features/restaurant/api/nearbyRestaurant.api";
 import {
   useNearbyRestaurantsQuery,
@@ -34,36 +32,13 @@ export default function NearbyRestaurantList({
   isMapAreaSearch,
   onSelectRestaurant,
 }: NearbyRestaurantListProps) {
-  const loadMoreRef = useRef<HTMLDivElement>(null);
   const {
-    data,
+    data: restaurants = [],
     isPending,
     isLoadingError,
-    isFetchNextPageError,
-    isFetchingNextPage,
-    hasNextPage,
-    fetchNextPage,
   } = useNearbyRestaurantsQuery(category, center, keyword);
-  const restaurants = data?.pages.flatMap((page) => page.restaurants) ?? [];
-  const brandByPlaceId = useRestaurantBrandsQuery(
-    data?.pages.map((page) => page.restaurants.map(({ id }) => id)) ?? [],
-  );
+  const brandByPlaceId = useRestaurantBrandsQuery(restaurants.map(({ id }) => id));
   const meloCount = restaurants.filter(({ id }) => brandByPlaceId.get(id)).length;
-
-  useEffect(() => {
-    const target = loadMoreRef.current;
-    if (!target || !hasNextPage || isFetchNextPageError || isFetchingNextPage) return;
-
-    // 시트가 다 펼쳐져 목록 끝이 화면에 보일 때만 다음 페이지를 요청한다.
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) void fetchNextPage();
-      },
-      { rootMargin: "160px 0px" },
-    );
-    observer.observe(target);
-    return () => observer.disconnect();
-  }, [fetchNextPage, hasNextPage, isFetchNextPageError, isFetchingNextPage, restaurants.length]);
 
   if (isPending) {
     return (
@@ -133,16 +108,6 @@ export default function NearbyRestaurantList({
           })}
         </ul>
       )}
-      <div ref={loadMoreRef} className={styles.loadMore}>
-        {isFetchingNextPage && (
-          <LoadingIndicator iconSize={24} label="식당을 더 불러오는 중입니다." />
-        )}
-        {isFetchNextPageError && (
-          <p className="caption-m-medium text-tertiary" role="alert">
-            식당을 더 불러오지 못했어요
-          </p>
-        )}
-      </div>
     </>
   );
 }

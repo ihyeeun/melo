@@ -57,9 +57,7 @@ export default function NearbyRestaurantMarkers({
 }: NearbyRestaurantMarkersProps) {
   // 목록과 같은 쿼리라 요청은 한 번만 나간다.
   const { data } = useNearbyRestaurantsQuery(category, center, keyword);
-  const brandByPlaceId = useRestaurantBrandsQuery(
-    data?.pages.map((page) => page.restaurants.map(({ id }) => id)) ?? [],
-  );
+  const brandByPlaceId = useRestaurantBrandsQuery(data?.map(({ id }) => id) ?? []);
   // 장소 id별 마커. 멜로 여부나 선택 상태가 바뀌어도 다시 만들지 않고 표시만 바꾼다.
   const markersRef = useRef(
     new Map<string, { overlay: KakaoCustomOverlay; element: HTMLButtonElement }>(),
@@ -73,7 +71,7 @@ export default function NearbyRestaurantMarkers({
     });
   });
 
-  // 다음 페이지가 오면 불러온 식당 전체로 마커를 다시 그린다.
+  // 검색 결과가 바뀌면 그 식당들로 마커를 다시 그린다.
   useEffect(() => {
     if (!data) return;
 
@@ -82,28 +80,26 @@ export default function NearbyRestaurantMarkers({
     // 마커를 지울 때 클릭 리스너도 함께 끊는다.
     const listeners = new AbortController();
 
-    data.pages
-      .flatMap((page) => page.restaurants)
-      .forEach((restaurant) => {
-        // 같은 장소가 여러 페이지에 와도 마커는 하나만 둔다.
-        if (markers.has(restaurant.id)) return;
+    data.forEach((restaurant) => {
+      // 같은 장소가 두 번 와도 마커는 하나만 둔다.
+      if (markers.has(restaurant.id)) return;
 
-        const element = createMarkerElement(restaurant.name);
-        element.addEventListener("click", () => handleMarkerClick(restaurant), {
-          signal: listeners.signal,
-        });
-
-        const overlay = new maps.CustomOverlay({
-          map,
-          position: new maps.LatLng(restaurant.lat, restaurant.lng),
-          content: element,
-          // 상태마다 아이콘의 기준점이 달라서 CSS로 맞춘다. 요소의 왼쪽 위를 식당 좌표에 둔다.
-          xAnchor: 0,
-          yAnchor: 0,
-          clickable: true,
-        });
-        markers.set(restaurant.id, { overlay, element });
+      const element = createMarkerElement(restaurant.name);
+      element.addEventListener("click", () => handleMarkerClick(restaurant), {
+        signal: listeners.signal,
       });
+
+      const overlay = new maps.CustomOverlay({
+        map,
+        position: new maps.LatLng(restaurant.lat, restaurant.lng),
+        content: element,
+        // 상태마다 아이콘의 기준점이 달라서 CSS로 맞춘다. 요소의 왼쪽 위를 식당 좌표에 둔다.
+        xAnchor: 0,
+        yAnchor: 0,
+        clickable: true,
+      });
+      markers.set(restaurant.id, { overlay, element });
+    });
 
     return () => {
       listeners.abort();

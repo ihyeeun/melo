@@ -58,7 +58,7 @@ export default function MapPage() {
   const restaurantSearch = { category: CATEGORY, center: searchCenter, keyword: searchKeyword };
   // 목록과 같은 쿼리라 요청은 한 번만 나간다. 카카오가 거리순으로 주므로 첫 번째가 가장 가깝다.
   const { data: searchResult } = useNearbyRestaurantsQuery(CATEGORY, searchCenter, searchKeyword);
-  const nearestResult = searchKeyword ? searchResult?.pages[0]?.restaurants[0] : undefined;
+  const nearestResult = searchKeyword ? searchResult?.[0] : undefined;
 
   // 검색창과 시트가 가리는 높이. 다 펼친 시트는 지도를 모두 가리므로, 다시 내렸을 때(중간 높이)를 기준으로 한다.
   const getHiddenMapHeight = (sheetSnapPoint: SheetSnapPoint = snapPoint) => ({
@@ -75,7 +75,16 @@ export default function MapPage() {
     if (!value.trim()) setSearchKeyword("");
   };
 
+  // 지도는 옮기지 않는다. 검색하면 시트가 목록 높이로 바뀌므로, 그때 보이는 영역의 가운데를 기준으로 찾는다.
+  const setSearchCenterToMapArea = () => {
+    if (map) {
+      setMapSearchCenter(getVisibleAreaCenter(map, getHiddenMapHeight(SHEET_VIEW_SNAP.list)));
+    }
+  };
+
   const handleSearchSubmit = (value: string) => {
+    // 지도를 끌어 옮긴 뒤 검색하면 옮긴 지도에서 찾는다.
+    if (isMapMoved) setSearchCenterToMapArea();
     setSearchKeyword(value.trim());
     setIsMapMoved(false);
     moveSheet({ type: "submit_search" });
@@ -84,8 +93,7 @@ export default function MapPage() {
   const handleSearchMapArea = () => {
     if (!map) return;
 
-    // 지도는 옮기지 않는다. 검색하면 시트가 목록 높이로 바뀌므로, 그때 보이는 영역의 가운데를 기준으로 찾는다.
-    setMapSearchCenter(getVisibleAreaCenter(map, getHiddenMapHeight(SHEET_VIEW_SNAP.list)));
+    setSearchCenterToMapArea();
     setIsMapMoved(false);
     moveSheet({ type: "search_map_area" });
   };
@@ -135,7 +143,6 @@ export default function MapPage() {
   });
 
   // 검색어로 찾으면 확대 수준은 그대로 두고, 가장 가까운 식당을 보이는 영역 가운데로 옮긴다.
-  // 다음 페이지를 불러와도 첫 페이지는 그대로라 다시 움직이지 않는다.
   useEffect(() => {
     if (nearestResult) moveToNearestResult(nearestResult);
   }, [map, nearestResult]);
