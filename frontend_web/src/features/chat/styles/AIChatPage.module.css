@@ -316,12 +316,6 @@
   margin-bottom: 12px;
 }
 
-.mealRecordActionSection {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 8px;
-}
-
 .menuMeta {
   display: flex;
   align-items: center;

@@ -1114,18 +1114,15 @@ function MealRecordCard({
         )}
       </section>
 
-      {/* 카드는 그 날짜 · 끼니 전체 요약이라 [기록 취소]를 두지 않는다. 지우기는 식사 기록 상세에서 */}
-      <section className={styles.mealRecordActionSection}>
-        <Button
-          onClick={handleToGoMealRecord}
-          size="xs"
-          fullWidth
-          variant="outlined"
-          border="primary"
-        >
-          수정하기
-        </Button>
-      </section>
+      <Button
+        onClick={handleToGoMealRecord}
+        size="xs"
+        fullWidth
+        variant="outlined"
+        border="primary"
+      >
+        수정하기
+      </Button>
     </div>
   );
 }
