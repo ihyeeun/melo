@@ -610,7 +610,7 @@ export default function CameraCaptureScreen() {
   const cameraTopBarHeight = insets.top + CAMERA_TOP_BAR_CONTENT_HEIGHT;
 
   if (isPreparing) {
-    return <LoadingOverlay message="카메라 준비 중..." />;
+    return <LoadingOverlay message="카메라 준비 중…" />;
   }
 
   if (cameraPermissionStatus !== "granted") {
@@ -657,7 +657,7 @@ export default function CameraCaptureScreen() {
   }
 
   if (!device) {
-    return <LoadingOverlay message="연결 가능한 카메라 찾는 중.." />;
+    return <LoadingOverlay message="연결 가능한 카메라 찾는 중…" />;
   }
 
   return (

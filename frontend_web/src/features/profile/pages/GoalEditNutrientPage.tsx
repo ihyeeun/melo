@@ -420,7 +420,7 @@ export default function GoalEditNutrientPage() {
           variant={"default"}
           size="m"
         >
-          {isSubmitting ? "수정 중.." : "완료"}
+          {isSubmitting ? "수정 중…" : "완료"}
         </Button>
       </footer>
 

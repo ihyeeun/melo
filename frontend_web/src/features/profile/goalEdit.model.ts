@@ -121,7 +121,7 @@ export function getTargetCaloriesFeedback(
     targetCalories < GOAL_CALORIES_MIN ||
     targetCalories > GOAL_CALORIES_MAX
   ) {
-    return { isValid: false, message: "목표 칼로리는 1~99999 사이로 입력해주세요" };
+    return { isValid: false, message: "목표 칼로리는 1~99,999 사이로 입력해주세요" };
   }
 
   const estimate = getGoalWeekEstimate(draft, targetCalories);

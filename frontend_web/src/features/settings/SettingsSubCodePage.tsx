@@ -83,7 +83,7 @@ export default function SettingsSubCodePage() {
           fullWidth
           size="m"
         >
-          {isSubmitting ? "등록 중..." : "등록하기"}
+          {isSubmitting ? "등록 중…" : "등록하기"}
         </Button>
       </footer>
     </div>

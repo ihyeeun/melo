@@ -190,7 +190,7 @@ export default function CreateFolderPage() {
           fullWidth
           disabled={!canSubmit || isUpsertFolderPending}
         >
-          {isUpsertFolderPending ? "저장 중" : isEditMode ? "수정하기" : "저장하기"}
+          {isUpsertFolderPending ? "저장 중…" : isEditMode ? "수정하기" : "저장하기"}
         </Button>
       </footer>
     </section>

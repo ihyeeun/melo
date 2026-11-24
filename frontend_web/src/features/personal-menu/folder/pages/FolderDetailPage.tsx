@@ -245,7 +245,7 @@ export default function FolderDetailPage() {
 
   const canUpdateMealRecordDraft = () => {
     if (isDayMealsPending) {
-      toast.warning("식사 기록 정보를 불러오는 중입니다.");
+      toast.warning("식사 기록을 불러오는 중이에요");
       return false;
     }
 

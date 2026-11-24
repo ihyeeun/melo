@@ -122,7 +122,7 @@ export default function AppleLogin() {
         `}
       />
 
-      {(isPageLoading || isCallbackProcessing) && <LoadingOverlay message="로그인 준비 중.." />}
+      {(isPageLoading || isCallbackProcessing) && <LoadingOverlay message="로그인 준비 중…" />}
     </SafeAreaView>
   );
 }

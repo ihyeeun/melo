@@ -197,7 +197,7 @@ export default function AIChatPage() {
               resetSendTextMeal();
               toast.show({
                 type: "warning",
-                title: `방금 보낸 메시지로\n기록할 메뉴를 찾지 못했어요`,
+                title: `방금 보낸 메시지에서\n기록할 음식을 찾지 못했어요`,
                 timeout: 0,
                 priority: "high",
               });

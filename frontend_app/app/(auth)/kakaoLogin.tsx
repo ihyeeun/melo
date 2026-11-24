@@ -119,7 +119,7 @@ export default function KakaoLogin() {
       ) : null}
 
       {(isPageLoading || isCallbackProcessing) && !hasFailed ? (
-        <LoadingOverlay message="로그인 준비 중.." />
+        <LoadingOverlay message="로그인 준비 중…" />
       ) : null}
 
       {hasFailed ? (
