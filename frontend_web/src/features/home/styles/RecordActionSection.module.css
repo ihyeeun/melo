@@ -146,6 +146,16 @@
   align-items: baseline;
   display: flex;
   gap: 2px;
+  position: relative;
+}
+
+/* 값 위에 띄워 카드 높이를 바꾸지 않는다 */
+.bodyLogCaption {
+  bottom: 100%;
+  left: 0;
+  margin-bottom: 4px;
+  position: absolute;
+  white-space: nowrap;
 }
 
 .bodyLogValueWeight {

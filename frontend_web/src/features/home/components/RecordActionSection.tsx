@@ -3,6 +3,7 @@ import { useLayoutEffect, useRef, useState } from "react";
 import { useActivityCalories } from "@/features/health/hooks/useActivityCalories";
 import { useSyncNativeStepCount } from "@/features/health/hooks/useSyncNativeStepCount";
 import Tile from "@/features/home/components/cards/Tile";
+import { useRecentWeightQuery } from "@/features/home/hooks/queries/useRecentWeight.query";
 import { useDayMealsQuery, useGetBodyLog } from "@/features/home/hooks/queries/useTodayRecordQuery";
 import styles from "@/features/home/styles/RecordActionSection.module.css";
 import type { MenuWithQuantity } from "@/features/home/utils/dayMealSummary";
@@ -31,7 +32,14 @@ export default function RecordActionSection() {
   const isToday = selectedDate === getTodayFormatDateKey();
   const isFutureDate = isFutureDateKey(selectedDate);
   const isBodyLogLoaded = bodyLog !== undefined;
-  const displayWeight = bodyLog?.weight ?? (isToday ? (profile?.weight ?? 0) : 0);
+  // 오늘 체중 기록이 없으면 최근 기록(없으면 프로필 체중)을 흐리게 보여 준다. 다른 날은 빈 값
+  const showsRecentWeight = isToday && isBodyLogLoaded && bodyLog.weight === null;
+  const { recentWeight, isPending: isRecentWeightPending } = useRecentWeightQuery(selectedDate, {
+    enabled: showsRecentWeight,
+  });
+  const recentWeightValue = recentWeight?.weight ?? profile?.weight;
+  const weightCaption =
+    recentWeight === undefined ? "최근" : `최근 · ${recentWeight.daysAgo}일 전`;
   const displaySteps = bodyLog?.steps ?? 0;
   const { nativeStepConnectionStatus, requestStepPermissionAndSync } = useSyncNativeStepCount(
     selectedDate,
@@ -151,13 +159,25 @@ export default function RecordActionSection() {
             isPending={isBodyLogPending}
             isHealthConnected={isHealthConnected}
           />
-          <HealthMetricCard
-            title="체중"
-            value={displayWeight}
-            unit="kg"
-            onClick={openWeightEditor}
-            isPending={isBodyLogPending}
-          />
+          {showsRecentWeight ? (
+            <HealthMetricCard
+              title="체중"
+              value={recentWeightValue}
+              unit="kg"
+              caption={recentWeightValue === undefined ? undefined : weightCaption}
+              isDimmed
+              onClick={openWeightEditor}
+              isPending={isRecentWeightPending}
+            />
+          ) : (
+            <HealthMetricCard
+              title="체중"
+              value={bodyLog?.weight ?? undefined}
+              unit="kg"
+              onClick={openWeightEditor}
+              isPending={isBodyLogPending}
+            />
+          )}
         </div>
       </section>
 
@@ -205,13 +225,19 @@ function HealthMetricCard({
   title,
   value,
   unit,
+  caption,
+  isDimmed = false,
   onClick,
   isPending = false,
   isHealthConnected = false,
 }: {
   title: string;
-  value: number;
+  // 기록이 없으면 비워서 "-"로 보여 준다
+  value: number | undefined;
   unit: string;
+  // 값 위 작은 설명 (예: "최근 · 2일 전")
+  caption?: string;
+  isDimmed?: boolean;
   onClick: () => void;
   isPending?: boolean;
   isHealthConnected?: boolean;
@@ -240,8 +266,15 @@ function HealthMetricCard({
         </SkeletonStatus>
       ) : (
         <div className={styles.bodyLogValue}>
-          <span className={`title-l-semi amp-mask ${styles.bodyLogValueWeight}`}>
-            {value.toLocaleString()}
+          {caption ? (
+            <span className={`caption-m-medium text-tertiary ${styles.bodyLogCaption}`}>
+              {caption}
+            </span>
+          ) : null}
+          <span
+            className={`title-l-semi amp-mask ${styles.bodyLogValueWeight} ${isDimmed ? "text-disabled" : ""}`}
+          >
+            {value === undefined ? "-" : value.toLocaleString()}
           </span>
           <span className="body-l-regular text-tertiary">{unit}</span>
         </div>
