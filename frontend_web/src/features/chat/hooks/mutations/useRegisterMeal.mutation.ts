@@ -39,7 +39,7 @@ export function useRegisterChatMealMutation() {
         }
 
         if (menus.some((menu) => !Number.isFinite(menu.quantity) || menu.quantity <= 0)) {
-          throw new Error("메뉴의 섭취량을 확인해 주세요.");
+          throw new Error("음식의 섭취량을 확인해주세요");
         }
 
         // 선택한 시간대에 이미 기록된 메뉴를 가져옵니다.

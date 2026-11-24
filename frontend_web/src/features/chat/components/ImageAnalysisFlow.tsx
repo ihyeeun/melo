@@ -205,7 +205,7 @@ export function ImageAnalysisFlow({
           setHistoryStatus("error");
           setFlowError("분석 결과를 대화에 불러오지 못했어요.");
         } else {
-          setFlowError("식사 기록 처리를 완료하지 못했어요. 기록을 확인해 주세요.");
+          setFlowError("식사 기록 처리를 완료하지 못했어요. 기록을 확인해주세요.");
         }
       }
     }

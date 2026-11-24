@@ -184,7 +184,7 @@ export default function BrandSearch() {
         ) : (
           <div className={styles.placeholderArea}>
             <img src="/icons/characters/search-mono.png" width={200} />
-            <p className={`body-l-medium text-tertiary`}>찾으시는 브랜드를 검색해 주세요</p>
+            <p className={`body-l-medium text-tertiary`}>찾으시는 브랜드를 검색해주세요</p>
           </div>
         )}
       </main>
