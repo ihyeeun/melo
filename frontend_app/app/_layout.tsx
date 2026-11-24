@@ -1,14 +1,18 @@
 import { postHasUserInfo } from "@/features/auth/api/onboardingStatusApi";
 import { loadAccessToken } from "@/features/auth/store/tokenStore";
 import { subscribeAuthExpired } from "@/src/shared/auth/authSessionEvents";
+import { initSentry } from "@/src/shared/monitoring/sentry";
 import { getRootTab, getTabRoute } from "@/src/shared/navigation/appTabNavigation";
 import { loadTabConfig } from "@/src/shared/navigation/tabConfigStore";
 import { semantic } from "@/src/shared/styles";
 import { pretendardFonts } from "@/src/shared/styles/fonts";
+import * as Sentry from "@sentry/react-native";
 import { useFonts } from "expo-font";
 import { router, Stack, useSegments } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
+
+initSentry();
 
 function isRootRoute(segments: string[]) {
   return segments.length === 0 || (segments.length === 1 && segments[0] === "index");
@@ -20,7 +24,7 @@ function isProtectedRoute(segments: string[]) {
   );
 }
 
-export default function RootLayout() {
+function RootLayout() {
   const segments = useSegments();
   const segmentRef = useRef<string[]>([]);
   const [isBootstrapping, setIsBootstrapping] = useState(true);
@@ -124,6 +128,8 @@ export default function RootLayout() {
     </View>
   );
 }
+
+export default Sentry.wrap(RootLayout);
 
 const styles = StyleSheet.create({
   container: {

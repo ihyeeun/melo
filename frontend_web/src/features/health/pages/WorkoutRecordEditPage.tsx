@@ -397,8 +397,9 @@ export default function WorkoutRecordEditPage() {
 
     if (targetRecords.length === 0) {
       return (
-        <section className={styles.emptyState}>
-          <p className="body-l-medium">{emptyMessage}</p>
+        <section className={styles.workoutListEmptyArea}>
+          <img src="/icons/characters/question.png" width={200} />
+          <p className="body-l-medium text-tertiary">{emptyMessage}</p>
         </section>
       );
     }

@@ -18,6 +18,7 @@ import {
   createWebNavigationCommandDispatchSource,
   createWebNavigationCommandScript,
 } from "@/src/shared/navigation/webNavigationCommand";
+import * as Sentry from "@sentry/react-native";
 import { router } from "expo-router";
 import * as Updates from "expo-updates";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -41,6 +42,12 @@ import { LoadingOverlay, Typo } from "@/src/shared/ui";
 import { semantic } from "@/src/shared/styles/color";
 
 const APP_FOREGROUND_EVENT_NAME = "MELO_APP_FOREGROUND";
+const WEBVIEW_PROCESS_RESTART_WINDOW_MS = 10_000;
+const WEBVIEW_PROCESS_TERMINATED_ERROR: WebViewLoadError = {
+  title: "화면을 불러오지 못했어요",
+  description: "문제가 발생했어요. 잠시 후 다시 시도해주세요.",
+  detail: "web content process terminated",
+};
 const APP_UPDATE_READY_SCRIPT = `
   window.__MELO_APP_UPDATE_READY__ = true;
   window.dispatchEvent(new Event("MELO_APP_UPDATE_READY"));
@@ -92,6 +99,9 @@ type WebViewShouldStartLoadEvent = Parameters<
 type WebViewLoadProgressEvent = Parameters<NonNullable<WebViewProps["onLoadProgress"]>>[0];
 type WebViewLoadErrorEvent = Parameters<NonNullable<WebViewProps["onError"]>>[0];
 type WebViewHttpErrorEvent = Parameters<NonNullable<WebViewProps["onHttpError"]>>[0];
+type WebViewProcessTerminatedEvent =
+  | Parameters<NonNullable<WebViewProps["onContentProcessDidTerminate"]>>[0]
+  | Parameters<NonNullable<WebViewProps["onRenderProcessGone"]>>[0];
 type WebViewLoadError = {
   description: string;
   detail: string | null;
@@ -404,6 +414,7 @@ export default function AppWebViewScreen({
   const latestWebPathRef = useRef<string | null>(null);
   const tabBarHiddenByPathRef = useRef(false);
   const tabBarHiddenByWebRef = useRef(false);
+  const lastProcessTerminatedAtRef = useRef<number | null>(null);
   const [webViewKey, setWebViewKey] = useState(0);
   const [isInitialWebViewLoading, setIsInitialWebViewLoading] = useState(true);
   const [webViewLoadError, setWebViewLoadError] = useState<WebViewLoadError | null>(null);
@@ -788,6 +799,14 @@ export default function AppWebViewScreen({
     setIsInitialWebViewLoading(false);
     setWebViewLoadError(error);
     console.warn("[WebView] load failed", event.nativeEvent);
+
+    const { code, description } = event.nativeEvent;
+    Sentry.captureMessage("WebView load failed", {
+      level: "warning",
+      tags: { webview_error_code: String(code) },
+      contexts: { webview: { description } },
+      fingerprint: ["webview-load-failed", Platform.OS, String(code)],
+    });
   }, []);
 
   const onHttpError = useCallback((event: WebViewHttpErrorEvent) => {
@@ -798,6 +817,13 @@ export default function AppWebViewScreen({
     setIsInitialWebViewLoading(false);
     setWebViewLoadError(error);
     console.warn("[WebView] http error", event.nativeEvent);
+
+    const { statusCode } = event.nativeEvent;
+    Sentry.captureMessage("WebView HTTP error", {
+      level: "error",
+      tags: { webview_status: String(statusCode) },
+      fingerprint: ["webview-http-error", String(statusCode)],
+    });
   }, []);
 
   const retryWebViewLoad = useCallback(() => {
@@ -810,6 +836,36 @@ export default function AppWebViewScreen({
     setIsInitialWebViewLoading(true);
     setWebViewKey((key) => key + 1);
   }, [apiRequests, isTabWebView, normalizedTabPath]);
+
+  // 웹 화면 프로세스가 죽은 웹뷰는 흰 화면으로 남고 다시 쓸 수 없어서 새로 띄운다
+  const onWebViewProcessTerminated = useCallback((event: WebViewProcessTerminatedEvent) => {
+    const now = Date.now();
+    const lastTerminatedAt = lastProcessTerminatedAtRef.current;
+    lastProcessTerminatedAtRef.current = now;
+    const isRepeated =
+      lastTerminatedAt !== null && now - lastTerminatedAt < WEBVIEW_PROCESS_RESTART_WINDOW_MS;
+
+    Sentry.captureMessage("WebView content process terminated", {
+      level: "error",
+      tags: { webview_recovery: isRepeated ? "stopped" : "restarted" },
+      contexts: {
+        webview: {
+          didCrash: "didCrash" in event.nativeEvent ? event.nativeEvent.didCrash : undefined,
+        },
+      },
+    });
+
+    // 새로 띄우자마자 또 죽으면 반복되지 않게 오류 화면에서 멈춘다
+    if (isRepeated) {
+      apiRequests.cancelAll();
+      hasWebViewLoadErrorRef.current = true;
+      setIsInitialWebViewLoading(false);
+      setWebViewLoadError(WEBVIEW_PROCESS_TERMINATED_ERROR);
+      return;
+    }
+
+    retryWebViewLoad();
+  }, [apiRequests, retryWebViewLoad]);
 
   const openExternalUrl = useCallback(async (targetUrl: string) => {
     try {
@@ -884,6 +940,8 @@ export default function AppWebViewScreen({
         onLoadEnd={onLoadEnd}
         onError={onLoadError}
         onHttpError={onHttpError}
+        onContentProcessDidTerminate={onWebViewProcessTerminated}
+        onRenderProcessGone={onWebViewProcessTerminated}
         onNavigationStateChange={onNavigationStateChange}
         onShouldStartLoadWithRequest={onShouldStartLoadWithRequest}
         allowsBackForwardNavigationGestures={false}

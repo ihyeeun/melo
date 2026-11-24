@@ -46,7 +46,7 @@ function getUserPropertiesKey(properties: AnalyticsUserProperties) {
   );
 }
 
-function getAnalyticsUserId(userId: number | string) {
+export function getAnalyticsUserId(userId: number | string) {
   const stringUserId = String(userId);
   return stringUserId.startsWith(ANALYTICS_USER_ID_PREFIX)
     ? stringUserId

@@ -665,7 +665,10 @@ export default function MealSearchPage() {
 
   const renderRegisteredPersonalMenuPanel = () => (
     <div className={styles.personalMenuPanelContent}>
-      <div className={`${styles.searchFieldWrap} ${styles.registeredSearchField}`}>
+      <div
+        className={`${styles.searchFieldWrap} ${styles.registeredSearchField}`}
+        data-isShow={registeredMenuIds.length >= 3}
+      >
         <SearchInput
           value={registeredMenuInput}
           onValueChange={(value) => {
@@ -687,6 +690,7 @@ export default function MealSearchPage() {
         onClick={() => {
           setIsDirectInputSheetOpen(true);
         }}
+        data-isShow={registeredMenuIds.length >= 3}
       >
         <SystemIcon name="plus-circle" size={18} />
         <p className="body-m-regular">영양 성분 직접 등록</p>

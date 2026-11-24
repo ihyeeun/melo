@@ -1,3 +1,4 @@
+import { captureException } from "@sentry/react";
 import {
   focusManager,
   MutationCache,
@@ -37,6 +38,12 @@ export const queryClient = new QueryClient({
         error,
         queryKey: query.queryKey,
       });
+      // API 실패는 앱이 기록한다
+      if (error instanceof AppApiError) return;
+      captureException(error, {
+        tags: { source: "react-query" },
+        contexts: { react_query: { queryKey: query.queryKey } },
+      });
     },
   }),
   mutationCache: new MutationCache({
@@ -49,6 +56,11 @@ export const queryClient = new QueryClient({
       console.error("[ReactQuery] mutation failed", {
         error,
         mutationKey: mutation.options.mutationKey,
+      });
+      if (error instanceof AppApiError) return;
+      captureException(error, {
+        tags: { source: "react-query" },
+        contexts: { react_query: { mutationKey: mutation.options.mutationKey } },
       });
     },
   }),

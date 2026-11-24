@@ -8,13 +8,16 @@
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",
-    "lint": "expo lint"
+    "lint": "expo lint",
+    "update:production": "eas update --channel production --environment production",
+    "postupdate:production": "eas env:exec production 'npx sentry-expo-upload-sourcemaps dist'"
   },
   "dependencies": {
     "@kingstinct/react-native-healthkit": "^14.0.2",
     "@react-navigation/bottom-tabs": "^7.4.0",
     "@react-navigation/elements": "^2.6.3",
     "@react-navigation/native": "^7.1.8",
+    "@sentry/react-native": "~7.2.0",
     "axios": "^1.18.0",
     "expo": "~54.0.33",
     "expo-build-properties": "~1.0.10",

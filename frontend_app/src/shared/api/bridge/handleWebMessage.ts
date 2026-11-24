@@ -1,5 +1,6 @@
 import type { RefObject } from "react";
 import type { WebView, WebViewMessageEvent } from "react-native-webview";
+import * as Sentry from "@sentry/react-native";
 import { CanceledError, isAxiosError, isCancel } from "axios";
 import Constants from "expo-constants";
 import { router } from "expo-router";
@@ -677,12 +678,42 @@ function isWebToAppMessage(value: unknown): value is WebToAppMessage {
   return false;
 }
 
+// 숫자 id를 묶어야 같은 API의 실패가 한 이슈로 모인다
+function toEndpointPattern(url: string | undefined) {
+  return url?.split("?")[0].replace(/\/\d+(?=\/|$)/g, "/:id");
+}
+
+// 서버 장애(5xx)와 앱 안의 예상 못 한 오류만 기록한다. 4xx·네트워크 끊김·세션 만료는 정상 흐름이다
+function captureBridgeFailure(error: unknown, messageType: string | null) {
+  if (isBridgeHandledError(error)) return;
+
+  if (isAxiosError(error)) {
+    const status = error.response?.status;
+    if (status === undefined || status < 500) return;
+
+    const method = error.config?.method?.toUpperCase();
+    const endpoint = toEndpointPattern(error.config?.url);
+    Sentry.captureException(error, {
+      tags: { api_method: method, api_endpoint: endpoint, api_status: String(status) },
+      fingerprint: ["api-server-error", method ?? "", endpoint ?? "", String(status)],
+    });
+    return;
+  }
+
+  // apiClient가 세션을 끝내고 로그인 화면으로 보낸 경우다
+  const cause = error instanceof Error ? error.cause : undefined;
+  if (isAxiosError(cause) && cause.response?.status === 401) return;
+
+  Sentry.captureException(error, { tags: { bridge_message_type: messageType ?? undefined } });
+}
+
 export async function handleWebMessage(
   event: WebViewMessageEvent,
   webViewRef: RefObject<WebView | null>,
   apiRequests: BridgeRequestRegistry,
 ) {
   let requestId = "unknown";
+  let messageType: string | null = null;
   let currentEndpoint: string | null = null;
 
   try {
@@ -690,6 +721,7 @@ export async function handleWebMessage(
     if (!isWebToAppMessage(rawMessage)) return;
     const message = rawMessage;
     requestId = message.id;
+    messageType = message.type;
 
     if (message.type === "API_CANCEL") {
       apiRequests.cancel(requestId);
@@ -854,6 +886,7 @@ export async function handleWebMessage(
       return;
     }
   } catch (error) {
+    captureBridgeFailure(error, messageType);
     const shouldClearLocalSession = shouldClearLocalSessionOnFailure(currentEndpoint);
 
     if (isBridgeHandledError(error)) {

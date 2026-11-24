@@ -21,6 +21,7 @@ import {
   type ChartViewport,
   ZoomableChart,
 } from "@/features/personal-analysis/components/ZoomableChart";
+import { useIsMenstrualPhaseVisible } from "@/features/personal-analysis/stores/menstrualPhaseSetting.store";
 import styles from "@/features/personal-analysis/styles/LineChart.module.css";
 import { getAnalysisRange } from "@/features/personal-analysis/utils/analysisRange.util";
 import type { RecentAnalysisMode } from "@/shared/api/types/api.request.dto";
@@ -39,6 +40,8 @@ const formatChartValue = (value: number, fractionDigits: number) =>
   String(Number(value.toFixed(fractionDigits)));
 
 export function LineChart<M extends RecentAnalysisMode>({ chartData, valueKey }: chartProps<M>) {
+  const isMenstrualPhaseVisible = useIsMenstrualPhaseVisible();
+
   if (chartData.length === 0) return <EmptyChartPreview />;
 
   const dataByDate = new Map(chartData.map((item) => [item.date, item]));
@@ -67,7 +70,10 @@ export function LineChart<M extends RecentAnalysisMode>({ chartData, valueKey }:
     >
       {(viewport) => (
         <ResponsiveContainer width="100%" height="100%" className={styles.chartSection}>
-          <RechartsLineChart data={dailyData}>
+          <RechartsLineChart
+            data={dailyData}
+            margin={isMenstrualPhaseVisible ? { top: 18 } : undefined}
+          >
             <MenstrualPhaseBackground data={dailyData} />
             <XAxis
               dataKey="date"

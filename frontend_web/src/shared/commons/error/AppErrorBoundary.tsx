@@ -1,3 +1,4 @@
+import { captureReactException, flush } from "@sentry/react";
 import { Component, type ErrorInfo, type ReactNode } from "react";
 
 import { Button } from "@/shared/commons/button/Button";
@@ -37,10 +38,14 @@ export class AppErrorBoundary extends Component<AppErrorBoundaryProps, AppErrorB
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error("[AppErrorBoundary] Unhandled render error", error, errorInfo);
+    captureReactException(error, errorInfo, { tags: { error_boundary: "app" } });
   }
 
   private reloadPage = () => {
-    window.location.reload();
+    // 새로고침하면 아직 못 보낸 에러가 사라지므로 전송을 기다린다
+    void flush(2000).finally(() => {
+      window.location.reload();
+    });
   };
 
   render() {
