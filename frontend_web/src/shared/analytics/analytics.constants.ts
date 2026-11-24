@@ -27,8 +27,6 @@ export const EVENT_NAME = {
   LABEL_REGISTER_FAIL: "label_register_fail",
 
   AI_COACH_CHAT: "ai_coach_chat",
-  AI_COACH_RESPONSE_SUCCESS: "ai_coach_response_success",
-  AI_COACH_RESPONSE_FAIL: "ai_coach_response_fail",
 
   RECOMMEND_MENU_SAVE: "chat_menu_save",
   CHAT_TEXT_MENU_SAVE: "menu_save_text",

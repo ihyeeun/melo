@@ -45,9 +45,7 @@ export function useSendMessageMutation(options?: UseMutationCallback) {
         previousChats: history?.chat_list ?? [],
       };
     },
-    onSuccess: async (response) => {
-      const res = response.intro_message;
-      track(EVENT_NAME.AI_COACH_RESPONSE_SUCCESS, { message: res });
+    onSuccess: async () => {
       try {
         await queryClient.fetchQuery({
           queryKey: queryKeys.chatHistory,
@@ -61,9 +59,6 @@ export function useSendMessageMutation(options?: UseMutationCallback) {
     },
     onError: (error) => {
       if (isRequestAbortError(error)) return;
-      track(EVENT_NAME.AI_COACH_RESPONSE_FAIL, {
-        reason: getAnalyticsErrorMessage(error, "AI 응답 실패"),
-      });
       if (options?.onError) options.onError(error);
     },
   });
