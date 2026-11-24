@@ -87,17 +87,23 @@
   min-width: 0;
 }
 
-.locationBadgeActions {
-  text-align: center;
+/* 위치 권한 거부 · 위치 확인 실패 안내 카드. 지도 위 가운데쯤에 띄운다 */
+.locationCard {
+  background: var(--background-default);
+  border-radius: 20px;
+  box-shadow: var(--shadow-normal);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  left: 50%;
+  padding: 24px 20px 20px;
+  position: absolute;
+  top: 32%;
+  transform: translateX(-50%);
+  width: min(311px, calc(100% - 64px));
+  z-index: 1;
 }
 
-.retryButton {
-  flex-shrink: 0;
-  pointer-events: auto;
-  color: var(--primary-normal);
-  white-space: nowrap;
-}
-
-.retryButton + .retryButton {
-  margin-left: 12px;
+.locationCard > p {
+  white-space: pre-line;
 }

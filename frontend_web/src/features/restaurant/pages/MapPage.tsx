@@ -32,12 +32,6 @@ import { navigate } from "@/shared/navigation/stackflowNavigation";
 const DEFAULT_CENTER = { lat: 37.5665, lng: 126.978 };
 const CATEGORY = "RESTAURANT" as const;
 
-const LOCATION_MESSAGE = {
-  locating: "현재 위치를 찾는 중이에요",
-  denied: "위치 권한을 허용하면 내 주변을 볼 수 있어요",
-  blocked: "설정에서 위치 권한을 허용하면 내 주변을 볼 수 있어요",
-  unavailable: "현재 위치를 확인하지 못했어요",
-};
 
 // screen: RES-01-001
 export default function MapPage() {
@@ -96,6 +90,16 @@ export default function MapPage() {
     setSearchCenterToMapArea();
     setIsMapMoved(false);
     moveSheet({ type: "search_map_area" });
+  };
+
+  // 다시 물어볼 수 있으면 권한 팝업, 아니면 설정 앱으로. 설정에서 돌아오면 자동으로 다시 확인한다
+  const handleAllowLocation = () => {
+    if (status === "blocked" && canOpenAppSettings) {
+      requestNativeAppSettingsOpen();
+      return;
+    }
+
+    handleMoveToMyLocation();
   };
 
   const handleMoveToMyLocation = () => {
@@ -203,34 +207,32 @@ export default function MapPage() {
             <SystemIcon name="refresh" size={20} className="text-highlight" />현 지도에서 검색
           </button>
         )}
-        {map && status !== "success" && (
+        {map && status === "locating" && (
           <div className={styles.locationBadge}>
             <p className="caption-m-medium text-secondary" role="status">
-              {LOCATION_MESSAGE[status]}
+              현재 위치를 찾는 중이에요
             </p>
-            <div className={styles.locationBadgeActions}>
-              {status === "blocked" && canOpenAppSettings && (
-                <button
-                  type="button"
-                  className={`caption-m-semi ${styles.retryButton}`}
-                  onClick={requestNativeAppSettingsOpen}
-                >
-                  설정으로 이동
-                </button>
-              )}
-              {status !== "locating" && (
-                <button
-                  type="button"
-                  className={`caption-m-semi ${styles.retryButton}`}
-                  onClick={handleMoveToMyLocation}
-                >
-                  다시 찾기
-                </button>
-              )}
-            </div>
           </div>
         )}
       </section>
+
+      {/* 위치 권한 거부 · 위치 확인 실패 (기획 초안 4458:37146 · 4458:37281) */}
+      {map && (status === "denied" || status === "blocked" || status === "unavailable") && (
+        <div className={styles.locationCard} role="status">
+          <p className="body-l-medium text-primary textCenter">
+            {status === "unavailable"
+              ? "현재 위치를 확인하지 못했어요"
+              : "위치 권한을 허용하면\n내 주변 식당을 볼 수 있어요"}
+          </p>
+          <Button
+            size="s"
+            fullWidth
+            onClick={status === "unavailable" ? handleMoveToMyLocation : handleAllowLocation}
+          >
+            {status === "unavailable" ? "다시 찾기" : "위치 권한 허용하기"}
+          </Button>
+        </div>
+      )}
 
       {map && (
         <NearbyRestaurantMarkers

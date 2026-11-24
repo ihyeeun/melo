@@ -45,6 +45,20 @@ function BestMenuList({ restaurantId, filter }: { restaurantId: number; filter: 
 
 // 시트 상세와 식당 상세 페이지에서 같이 쓰는 BEST 탭
 export function BestMenuTabs({ restaurantId }: { restaurantId: number }) {
+  // BEST 기준은 정렬만 다르고 대상 메뉴는 같아서, 첫 탭이 비면 추천할 메뉴가 없는 식당이다
+  const { data: defaultBest } = useRestaurantDetailQuery({
+    restaurant_id: restaurantId,
+    filter: BEST_OPTIONS[0].filter,
+  });
+
+  if (defaultBest && defaultBest.menu_list.length === 0) {
+    return (
+      <div className={styles.noBestMenu} role="status">
+        <p className="body-l-medium text-disabled">추천할 식사 메뉴가 없어요</p>
+      </div>
+    );
+  }
+
   return (
     <Tabs.Root defaultValue={BEST_OPTIONS[0].filter}>
       <Tabs.List className={styles.bestTabList} aria-label="BEST 메뉴 기준">
