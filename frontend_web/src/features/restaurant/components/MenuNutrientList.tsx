@@ -6,6 +6,8 @@ import {
 } from "@/features/restaurant/constants/restaurantBest.constant";
 import { useRestaurantDetailQuery } from "@/features/restaurant/hooks/queries/restaurant.query";
 import styles from "@/features/restaurant/styles/MapSheetView.module.css";
+import { track } from "@/shared/analytics/analytics";
+import { EVENT_NAME } from "@/shared/analytics/analytics.constants";
 import type { RestaurantMenuResponseDto } from "@/shared/api/types/api.response.dto";
 import { InfoPopover } from "@/shared/commons/popover/InfoPopover";
 import { Skeleton, SkeletonStatus } from "@/shared/commons/skeleton/Skeleton";
@@ -18,6 +20,12 @@ const NUTRIENTS = [
 ] as const;
 
 const BEST_MENU_COUNT = 5;
+// restaurant_menu_tab_click의 tab 값
+const BEST_TAB_EVENT_VALUE: Record<BestFilter, string> = {
+  균형: "balance",
+  저칼로리: "low_calorie",
+  단백질: "protein",
+};
 const MISSING_NUTRIENT_MESSAGES = ["일부 영양성분 정보는 판매사에서 제공하고 있지 않아요"] as const;
 
 // 판매사가 공개하지 않은 값(빈 값)인지. 0은 공개한 값이다
@@ -51,6 +59,11 @@ export function BestMenuTabs({ restaurantId }: { restaurantId: number }) {
     filter: BEST_OPTIONS[0].filter,
   });
 
+  // 사용자가 탭을 눌렀을 때만 불린다 (처음 보이는 [균형 BEST]는 세지 않음)
+  const handleTabChange = (value: BestFilter) => {
+    track(EVENT_NAME.RESTAURANT_MENU_TAB_CLICK, { tab: BEST_TAB_EVENT_VALUE[value] });
+  };
+
   if (defaultBest && defaultBest.menu_list.length === 0) {
     return (
       <div className={styles.noBestMenu} role="status">
@@ -60,7 +73,7 @@ export function BestMenuTabs({ restaurantId }: { restaurantId: number }) {
   }
 
   return (
-    <Tabs.Root defaultValue={BEST_OPTIONS[0].filter}>
+    <Tabs.Root defaultValue={BEST_OPTIONS[0].filter} onValueChange={handleTabChange}>
       <Tabs.List className={styles.bestTabList} aria-label="BEST 메뉴 기준">
         {BEST_OPTIONS.map(({ filter }) => (
           <Tabs.Tab key={filter} value={filter} className={`body-s-medium ${styles.bestTab}`}>

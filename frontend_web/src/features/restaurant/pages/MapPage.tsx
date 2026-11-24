@@ -9,9 +9,16 @@ import RestaurantDetailSheet from "@/features/restaurant/components/map/Restaura
 import MyLocationMarker from "@/features/restaurant/components/markers/MyLocationMarker";
 import NearbyRestaurantMarkers from "@/features/restaurant/components/markers/NearbyRestaurantMarkers";
 import { SHEET_VIEW_SNAP } from "@/features/restaurant/constants/mapSheet.policy";
-import { useNearbyRestaurantsQuery } from "@/features/restaurant/hooks/queries/restaurant.query";
+import {
+  useNearbyRestaurantsQuery,
+  useRestaurantBrandsQuery,
+} from "@/features/restaurant/hooks/queries/restaurant.query";
 import { useCurrentLocation } from "@/features/restaurant/hooks/useCurrentLocation";
-import { getSheetHeight, useMapSheet } from "@/features/restaurant/hooks/useMapSheet";
+import {
+  getSheetHeight,
+  type SheetRestaurant,
+  useMapSheet,
+} from "@/features/restaurant/hooks/useMapSheet";
 import styles from "@/features/restaurant/styles/MapPage.module.css";
 import type { LatLng } from "@/features/restaurant/utils/currentLocation.util";
 import {
@@ -21,6 +28,8 @@ import {
   loadKakaoMapSdk,
 } from "@/features/restaurant/utils/kakaoMap.util";
 import { PATH } from "@/router/path";
+import { track } from "@/shared/analytics/analytics";
+import { EVENT_NAME } from "@/shared/analytics/analytics.constants";
 import { requestNativeAppSettingsOpen } from "@/shared/api/bridge/nativeBridge";
 import { useNativeAppFeature } from "@/shared/api/bridge/useNativeAppFeature";
 import { Button } from "@/shared/commons/button/Button";
@@ -32,6 +41,8 @@ import { dismissKeyboard } from "@/shared/utils/keyboard.util";
 const DEFAULT_CENTER = { lat: 37.5665, lng: 126.978 };
 const CATEGORY = "RESTAURANT" as const;
 
+// restaurant_search: 검색을 실행한 방법과 그때의 검색어
+type SearchRequest = { id: number; trigger: "keyboard" | "map_button"; query: string };
 
 // screen: RES-01-001
 export default function MapPage() {
@@ -51,8 +62,16 @@ export default function MapPage() {
   const searchCenter = mapSearchCenter ?? center;
   const restaurantSearch = { category: CATEGORY, center: searchCenter, keyword: searchKeyword };
   // 목록과 같은 쿼리라 요청은 한 번만 나간다. 카카오가 거리순으로 주므로 첫 번째가 가장 가깝다.
-  const { data: searchResult } = useNearbyRestaurantsQuery(CATEGORY, searchCenter, searchKeyword);
+  const { data: searchResult, isFetching: isSearching } = useNearbyRestaurantsQuery(
+    CATEGORY,
+    searchCenter,
+    searchKeyword,
+  );
   const nearestResult = searchKeyword ? searchResult?.[0] : undefined;
+  // 목록 · 마커와 같은 쿼리라 요청은 한 번만 나간다
+  const brandByPlaceId = useRestaurantBrandsQuery(searchResult?.map(({ id }) => id) ?? []);
+  const [searchRequest, setSearchRequest] = useState<SearchRequest | null>(null);
+  const trackedSearchIdRef = useRef<number | null>(null);
 
   // 검색창과 시트가 가리는 높이. 다 펼친 시트는 지도를 모두 가리므로, 다시 내렸을 때(중간 높이)를 기준으로 한다.
   const getHiddenMapHeight = (sheetSnapPoint: SheetSnapPoint = snapPoint) => ({
@@ -81,6 +100,7 @@ export default function MapPage() {
     if (isMapMoved) setSearchCenterToMapArea();
     setSearchKeyword(value.trim());
     setIsMapMoved(false);
+    setSearchRequest({ id: Date.now(), trigger: "keyboard", query: value.trim() });
     moveSheet({ type: "submit_search" });
   };
 
@@ -89,7 +109,33 @@ export default function MapPage() {
 
     setSearchCenterToMapArea();
     setIsMapMoved(false);
+    setSearchRequest({ id: Date.now(), trigger: "map_button", query: searchKeyword });
     moveSheet({ type: "search_map_area" });
+  };
+
+  // 검색 결과와 멜로 등록 여부까지 받은 뒤 한 번 남긴다
+  useEffect(() => {
+    if (!searchRequest || trackedSearchIdRef.current === searchRequest.id) return;
+    if (isSearching || !searchResult) return;
+    if (!searchResult.every(({ id }) => brandByPlaceId.has(id))) return;
+
+    trackedSearchIdRef.current = searchRequest.id;
+    track(EVENT_NAME.RESTAURANT_SEARCH, {
+      trigger: searchRequest.trigger,
+      query: searchRequest.query,
+      result_count: searchResult.length,
+      registered_count: searchResult.filter(({ id }) => brandByPlaceId.get(id)).length,
+    });
+  }, [searchRequest, isSearching, searchResult, brandByPlaceId]);
+
+  const handleSelectRestaurant = (restaurant: SheetRestaurant, target: "card" | "pin") => {
+    track(EVENT_NAME.RESTAURANT_CARD_CLICK, {
+      restaurant_name: restaurant.name,
+      target,
+      // [AI 추정] 식당을 구분하는 값이 응답에 없어 멜로 등록 식당은 모두 franchise로 보낸다
+      data_type: restaurant.restaurantId !== null ? "franchise" : "none",
+    });
+    moveSheet({ type: target === "pin" ? "click_marker" : "click_restaurant", restaurant });
   };
 
   // 다시 물어볼 수 있으면 권한 팝업, 아니면 설정 앱으로. 설정에서 돌아오면 자동으로 다시 확인한다
@@ -239,7 +285,7 @@ export default function MapPage() {
           map={map}
           {...restaurantSearch}
           selectedPlaceId={detailRestaurant?.id ?? null}
-          onSelectRestaurant={(restaurant) => moveSheet({ type: "click_marker", restaurant })}
+          onSelectRestaurant={(restaurant) => handleSelectRestaurant(restaurant, "pin")}
         />
       )}
       {map && myLocation && <MyLocationMarker map={map} position={myLocation} />}
@@ -280,7 +326,7 @@ export default function MapPage() {
           <NearbyRestaurantList
             {...restaurantSearch}
             isMapAreaSearch={mapSearchCenter !== null}
-            onSelectRestaurant={(restaurant) => moveSheet({ type: "click_restaurant", restaurant })}
+            onSelectRestaurant={(restaurant) => handleSelectRestaurant(restaurant, "card")}
           />
         )}
         {currentView.type === "detail" && (

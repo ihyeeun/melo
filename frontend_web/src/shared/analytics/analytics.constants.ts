@@ -5,7 +5,9 @@ export const EVENT_NAME = {
 
   RESTAURANT_TAB_ENTER: "restaurant_tab",
   RESTAURANT_SEARCH_FOCUS: "restaurant_search_focus",
+  RESTAURANT_SEARCH: "restaurant_search",
   RESTAURANT_CARD_CLICK: "restaurant_card_click",
+  RESTAURANT_MENU_TAB_CLICK: "restaurant_menu_tab_click",
 
   CAMERA_FAIL: "camera_fail",
 
@@ -37,9 +39,9 @@ export const EVENT_NAME = {
   WORKOUT_RECORD_COMPLETED: "workout_record_completed",
 
   CLICK_MENSTRUAL_DASHBOARD: "click_menstrual_dashboard",
+  MENSTRUAL_RECORDED: "menstrual_recorded",
 
   CLICK_MY_MANAGEMENT_AI_COACH: "click_my_management_ai_coach",
-  MENSTRUAL_RECORDED: "menstrual_recorded",
   CLICK_MEAL_FEEDBACK_AI_COACH: "click_meal_feedback_ai_coach",
   CLICK_MANAGEMENT_PATTERN_ANALYSIS: "click_management_pattern_analysis",
 
