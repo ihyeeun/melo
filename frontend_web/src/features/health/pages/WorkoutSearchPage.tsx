@@ -260,13 +260,29 @@ export default function WorkoutSearchPage() {
       );
     }
 
+    // 검색어 · 필터 없이 목록이 비는 일은 없으므로 불러오기 실패로 본다
+    if (workouts.length === 0 && !hasSearchCondition) {
+      return (
+        <section className={styles.emptyWorkoutListSection}>
+          <p className="body-l-medium">운동 목록을 불러오지 못했어요</p>
+          <Button
+            variant="text"
+            size="xs"
+            onClick={() => {
+              void refetch();
+            }}
+          >
+            다시 시도
+          </Button>
+        </section>
+      );
+    }
+
     if (workouts.length === 0) {
       return (
         <section className={styles.emptyWorkoutListSection}>
           <img src="/icons/characters/question.png" width={200} />
-          <p className="body-l-medium text-tertiary">
-            {hasSearchCondition ? "검색 결과가 없어요" : "표시할 운동이 없어요"}
-          </p>
+          <p className="body-l-medium text-tertiary">검색 결과가 없어요</p>
         </section>
       );
     }
