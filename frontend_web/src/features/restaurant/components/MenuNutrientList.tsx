@@ -20,6 +20,11 @@ const NUTRIENTS = [
 const BEST_MENU_COUNT = 5;
 const MISSING_NUTRIENT_MESSAGES = ["일부 영양성분 정보는 판매사에서 제공하고 있지 않아요"] as const;
 
+// 판매사가 공개하지 않은 값(빈 값)인지. 0은 공개한 값이다
+function isUndisclosed(value: number | null | undefined): value is null | undefined {
+  return value == null || !Number.isFinite(value);
+}
+
 // 선택한 탭의 패널만 그려지므로, 탭을 눌렀을 때 그 기준으로 처음 요청한다.
 function BestMenuList({ restaurantId, filter }: { restaurantId: number; filter: BestFilter }) {
   const { data, isPending, isError } = useRestaurantDetailQuery({
@@ -110,40 +115,52 @@ export default function MenuNutrientList({
 
   return (
     <ul className={styles.menuList}>
-      {menus.map((menu, index) => (
-        <li key={menu.menu_id} className={styles.menuItem}>
-          {ranked && <span className={`body-s-semi ${styles.rank}`}>{index + 1}</span>}
-          <div className={styles.menuText}>
-            <p className={`body-l-medium text-primary ${styles.menuTitle}`}>
-              {menu.menu_category && (
-                <span className={`caption-m-medium text-tertiary ellipsis ${styles.category}`}>
-                  {menu.menu_category}
-                </span>
+      {menus.map((menu, index) => {
+        // 판매사가 공개하지 않은 영양성분은 빈칸 · 0 · '-'로 두지 않고 숨긴다 (P6)
+        const disclosedNutrients = NUTRIENTS.filter(({ key }) => !isUndisclosed(menu[key]));
+        const hasUndisclosed =
+          isUndisclosed(menu.calories) || disclosedNutrients.length < NUTRIENTS.length;
+
+        return (
+          <li key={menu.menu_id} className={styles.menuItem}>
+            {ranked && <span className={`body-s-semi ${styles.rank}`}>{index + 1}</span>}
+            <div className={styles.menuText}>
+              <p className={`body-l-medium text-primary ${styles.menuTitle}`}>
+                <span className="ellipsis">{menu.menu_name}</span>
+                {/* 메뉴 종류는 이름 바로 옆 작은 회색 글씨. 이름이 길면 이름만 줄인다 */}
+                {menu.menu_category && (
+                  <span className={`body-xs-regular text-tertiary ${styles.category}`}>
+                    {menu.menu_category}
+                  </span>
+                )}
+                {hasUndisclosed && (
+                  <InfoPopover
+                    ariaLabel="영양성분 정보 안내"
+                    messages={MISSING_NUTRIENT_MESSAGES}
+                    iconSize={16}
+                    side="bottom"
+                    align="center"
+                  />
+                )}
+              </p>
+              {disclosedNutrients.length > 0 && (
+                <p className={`body-s-regular text-tertiary ${styles.divided}`}>
+                  {disclosedNutrients.map(({ key, label }) => (
+                    <span key={key}>
+                      {label} {formatDisplayNumber(menu[key] ?? 0)}g
+                    </span>
+                  ))}
+                </p>
               )}
-              {menu.menu_name}
-              {NUTRIENTS.some(({ key }) => menu[key] == null) && (
-                <InfoPopover
-                  ariaLabel="영양성분 정보 안내"
-                  messages={MISSING_NUTRIENT_MESSAGES}
-                  iconSize={16}
-                  side="bottom"
-                  align="center"
-                />
-              )}
-            </p>
-            <p className={`body-s-regular text-tertiary ${styles.divided}`}>
-              {NUTRIENTS.map(({ key, label }) => (
-                <span key={key}>
-                  {label} {menu[key] == null ? "-" : `${formatDisplayNumber(menu[key])}g`}
-                </span>
-              ))}
-            </p>
-          </div>
-          <p className="body-l-medium text-primary textNoWrap">
-            {formatDisplayNumber(menu.calories)} kcal
-          </p>
-        </li>
-      ))}
+            </div>
+            {!isUndisclosed(menu.calories) && (
+              <p className="body-l-medium text-primary textNoWrap">
+                {formatDisplayNumber(menu.calories)} kcal
+              </p>
+            )}
+          </li>
+        );
+      })}
     </ul>
   );
 }

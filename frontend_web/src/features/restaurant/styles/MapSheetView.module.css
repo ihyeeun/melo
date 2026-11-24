@@ -111,15 +111,13 @@
 .menuTitle {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
+  min-width: 0;
 }
 
 .category {
   flex-shrink: 0;
-  max-width: 30%;
-  background-color: var(--background-gray-1);
-  padding: 4px 6px;
-  border-radius: 8px;
+  white-space: nowrap;
 }
 
 .menuText {
