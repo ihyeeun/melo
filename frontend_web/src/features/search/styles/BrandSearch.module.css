@@ -36,21 +36,18 @@
   gap: 10px;
 }
 
-.addButton {
+.registerRow {
+  background-color: var(--background-selected);
+  border-radius: 12px;
+  color: var(--primary-normal);
+  min-height: 58px;
+  padding: 0 17px;
+  text-align: start;
   width: 100%;
-}
-
-.addButton:active {
-  background-color: var(--background-gray-2);
 }
 
 .placeholderArea {
   display: grid;
   place-items: center;
   gap: 8px;
-}
-
-.brandAddSection {
-  padding-bottom: 40px;
-  text-align: center;
 }

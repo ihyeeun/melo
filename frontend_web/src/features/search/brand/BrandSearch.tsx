@@ -6,9 +6,11 @@ import { useSetBrandSearchSelection } from "@/features/search/brand/stores/brand
 import styles from "@/features/search/styles/BrandSearch.module.css";
 import { PATH } from "@/router/path";
 import type { RegisterMenuRequestDto } from "@/shared/api/types/api.dto";
+import { Button } from "@/shared/commons/button/Button";
 import { SearchInputHeader } from "@/shared/commons/header/SearchInputHeader";
 import { LoadingIndicator } from "@/shared/commons/loading/Loading";
 import { navigateBack, useLocation } from "@/shared/navigation/stackflowNavigation";
+import { dismissKeyboard } from "@/shared/utils/keyboard.util";
 
 type BrandSearchResult = {
   id: string;
@@ -70,6 +72,11 @@ export default function BrandSearch() {
   const hasKeyword = normalizedSubmittedKeyword.length > 0;
   const hasResults = brandResults.length > 0;
   const isInitialSearching = isFetching && hasKeyword && !hasResults;
+  const typedKeyword = searchKeyword.trim();
+  // 검색어와 같은 이름의 브랜드가 없으면 그 검색어로 등록하는 길을 보여 준다
+  const hasSameNameBrand = brandResults.some(
+    (brand) => brand.name.toLowerCase() === typedKeyword.toLowerCase(),
+  );
 
   const handleClearKeyword = () => {
     setSearchKeyword("");
@@ -113,8 +120,6 @@ export default function BrandSearch() {
     });
   };
 
-  const isDirectRegisterDisabled = searchKeyword.trim().length === 0;
-
   return (
     <section className={`${styles.page} page`}>
       <SearchInputHeader
@@ -128,10 +133,22 @@ export default function BrandSearch() {
         onBack={handleBack}
       />
 
-      <main className={`main ${styles.searchSection}`}>
+      {/* 목록을 끌어 스크롤하면 키보드를 내린다 (_global 검색 화면 키보드) */}
+      <main className={`main ${styles.searchSection}`} onTouchMove={dismissKeyboard}>
         {hasKeyword ? (
           hasResults ? (
             <ul className={styles.resultList}>
+              {!hasSameNameBrand && typedKeyword ? (
+                <li>
+                  <button
+                    type="button"
+                    className={`${styles.registerRow} body-m-medium`}
+                    onClick={() => handleBrandRegister()}
+                  >
+                    + ‘{typedKeyword}’로 등록하기
+                  </button>
+                </li>
+              ) : null}
               {brandResults.map((brand) => {
                 const isSelected = selectedBrandId === brand.id;
 
@@ -158,20 +175,8 @@ export default function BrandSearch() {
                   <img src="/icons/characters/question.png" alt="" aria-hidden="true" width={200} />
 
                   <p className={`body-l-medium text-tertiary`}>
-                    일치하는 브랜드가 없어요
-                    <br />
-                    검색하신 <span className="text-primary">{searchKeyword}</span>(으)로 브랜드명
-                    등록을 진행할까요?
+                    ‘{normalizedSubmittedKeyword}’ 브랜드가 아직 없어요
                   </p>
-
-                  <button
-                    type="button"
-                    className={styles.addButton}
-                    onClick={() => handleBrandRegister()}
-                    disabled={isDirectRegisterDisabled}
-                  >
-                    <p className="body-m-regular textCenter">브랜드 직접 입력</p>
-                  </button>
                 </>
               )}
             </div>
@@ -182,20 +187,16 @@ export default function BrandSearch() {
             <p className={`body-l-medium text-tertiary`}>찾으시는 브랜드를 검색해 주세요</p>
           </div>
         )}
-
-        {hasKeyword && hasResults && (
-          <section className={styles.brandAddSection}>
-            <button
-              type="button"
-              className={styles.addButton}
-              onClick={() => handleBrandRegister()}
-              disabled={isDirectRegisterDisabled}
-            >
-              <p className="body-m-regular textCenter">브랜드 직접 입력</p>
-            </button>
-          </section>
-        )}
       </main>
+
+      {/* 결과가 없으면 키보드 위에 큰 등록 버튼 (_global 검색 화면 키보드의 예외) */}
+      {hasKeyword && !hasResults && !isInitialSearching && typedKeyword ? (
+        <footer className="footer">
+          <Button onClick={() => handleBrandRegister()} fullWidth size="m">
+            ‘{typedKeyword}’로 등록하기
+          </Button>
+        </footer>
+      ) : null}
     </section>
   );
 }
