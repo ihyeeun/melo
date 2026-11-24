@@ -154,8 +154,9 @@
   border-radius: 16px;
 }
 
+/* [추가하기](보조, 좁게) · [완료하기](주, 넓게) 약 1:2 (_global 하단 버튼) */
 .footer {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: 1fr 2fr;
   gap: 8px;
 }
