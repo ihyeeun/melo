@@ -39,11 +39,13 @@ import { Button } from "@/shared/commons/button/Button";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import { LoadingIndicator, LoadingOverlay } from "@/shared/commons/loading/Loading";
+import { ConfirmModal } from "@/shared/commons/modals/ConfirmModal";
 import { toast } from "@/shared/commons/toast/toast";
 import {
   navigateBack,
   useNavigate,
   useSearchParams,
+  useStackflowBackHandler,
 } from "@/shared/navigation/stackflowNavigation";
 import { getTodayFormatDateKey, isValidDateKey } from "@/shared/utils/dateFormat";
 
@@ -205,9 +207,21 @@ export default function WorkoutRecordEditPage() {
   const activeDragRef = useRef<{ pointerId: number; workoutId: number } | null>(null);
   const [draggingWorkoutId, setDraggingWorkoutId] = useState<number | null>(null);
   const [isSavePending, setIsSavePending] = useState(false);
+  const [isExitConfirmOpen, setIsExitConfirmOpen] = useState(false);
   const serverWorkouts = workoutRecordQuery.data?.workout_list ?? EMPTY_WORKOUT_RECORDS;
   const draftRecords = editDate === dateKey ? editRecords : serverWorkouts;
   const editSummary = useMemo(() => getWorkoutSummary(draftRecords), [draftRecords]);
+  const hasUnsavedChanges = useMemo(
+    () =>
+      hasWorkoutRecordSaveChanges(
+        getWorkoutRecordSavePlan({
+          currentRecords: serverWorkouts,
+          date: dateKey,
+          nextRecords: draftRecords,
+        }),
+      ),
+    [dateKey, draftRecords, serverWorkouts],
+  );
 
   useEffect(() => {
     if (!workoutRecordQuery.data || editDate === dateKey) return;
@@ -228,14 +242,17 @@ export default function WorkoutRecordEditPage() {
     clearEditRecords();
     activeDragRef.current = null;
     setDraggingWorkoutId(null);
-    navigateBack({ fallbackTo: getWorkoutRecordPath(dateKey) });
+    navigateBack({ fallbackTo: getWorkoutRecordPath(dateKey), skipBackHandler: true });
   };
 
-  const closeEditMode = () => {
-    if (isSavePending) return;
+  // 바뀐 내용이 있으면 뒤로가기 전에 이탈 확인 모달을 띄운다
+  useStackflowBackHandler(() => {
+    if (isSavePending) return true;
+    if (!hasUnsavedChanges) return false;
 
-    leaveEditMode();
-  };
+    setIsExitConfirmOpen(true);
+    return true;
+  });
 
   const completeEditMode = async () => {
     if (workoutRecordQuery.isPending || workoutRecordQuery.isError || isSavePending) return;
@@ -278,7 +295,7 @@ export default function WorkoutRecordEditPage() {
     } catch (error) {
       setIsSavePending(false);
       if (isRequestAbortError(error)) return;
-      toast.warning("운동 기록 저장에 실패했어요", "잠시 후 다시 시도해주세요.");
+      toast.error("운동 기록을 저장하지 못했어요", "잠시 후 다시 시도해주세요.");
     } finally {
       await queryClient.invalidateQueries({
         queryKey: calendarKeys.monthly.month({ date: dateKey.slice(0, 7), mode: "workout" }),
@@ -442,19 +459,7 @@ export default function WorkoutRecordEditPage() {
       <header className={styles.header}>
         <PageHeader
           title="운동 수정"
-          onBack={() => {
-            closeEditMode();
-            navigateBack();
-          }}
-          rightSlot={
-            <button
-              type="button"
-              onClick={completeEditMode}
-              className="body-l-medium text-highlight"
-            >
-              완료
-            </button>
-          }
+          onBack={() => navigateBack({ fallbackTo: getWorkoutRecordPath(dateKey) })}
         />
       </header>
 
@@ -495,14 +500,32 @@ export default function WorkoutRecordEditPage() {
         {renderEditContent()}
       </main>
 
-      <button
-        type="button"
-        className={styles.addButton}
-        onClick={handleSearchWorkout}
-        aria-label="운동 추가하기"
-      >
-        <SystemIcon name="plus" size={28} />
-      </button>
+      {/* [추가하기](좁게) · [완료하기](넓게), 헤더 [완료] · 떠 있는 [+] 없음 (_global 하단 버튼) */}
+      <footer className={`footer ${styles.editFooter}`}>
+        <Button variant="outlined" size="m" fullWidth onClick={handleSearchWorkout}>
+          추가하기
+        </Button>
+        <Button
+          size="m"
+          fullWidth
+          disabled={workoutRecordQuery.isPending || workoutRecordQuery.isError || isSavePending}
+          onClick={() => void completeEditMode()}
+        >
+          완료하기
+        </Button>
+      </footer>
+
+      {/* screen: EXR-01-004_modal-exit */}
+      <ConfirmModal
+        open={isExitConfirmOpen}
+        onOpenChange={setIsExitConfirmOpen}
+        title="변경 사항을 저장하지 않고 나갈까요?"
+        confirmText="나가기"
+        cancelText="계속 수정"
+        actionOrder="confirm-cancel"
+        emphasis="cancel"
+        onConfirm={leaveEditMode}
+      />
 
       {isSavePending ? <LoadingOverlay label="운동 기록을 저장하는 중입니다." /> : null}
     </section>
@@ -556,7 +579,7 @@ function WorkoutEditCard({
                 ? `${formatWorkoutDuration(workout.workout_duration)}`
                 : `${workout.set_list?.length ?? 0}세트`}
             </span>
-            <span>{workout.burned_calories.toLocaleString("ko-KR")}kcal</span>
+            <span>{workout.burned_calories.toLocaleString("ko-KR")} kcal</span>
           </p>
         </div>
       </button>
