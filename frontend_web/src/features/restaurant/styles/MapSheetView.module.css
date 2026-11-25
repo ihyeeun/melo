@@ -25,6 +25,18 @@
   vertical-align: -2px;
 }
 
+.aiEstimatedBadge {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 4px 6px;
+  border-radius: 8px;
+  background-color: var(--background-gray-1);
+  color: var(--text-tertiary);
+  white-space: nowrap;
+  /* 바로 앞 체크 뱃지와 가운데를 맞춘다 */
+  vertical-align: 3px;
+}
+
 .description {
   grid-column: 2;
 }

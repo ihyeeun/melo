@@ -481,6 +481,7 @@ export interface RestaurantMenuResponseDto {
   unit: number;
   weight?: number;
   unit_quantity: string;
+  nutrition_source: "official" | "estimated";
 }
 
 export interface RestaurantBrandsResponseDto {
