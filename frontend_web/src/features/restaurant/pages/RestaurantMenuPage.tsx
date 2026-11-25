@@ -1,3 +1,4 @@
+import { MeloVerifiedBadge } from "@/features/restaurant/components/MeloVerifiedBadge";
 import MenuNutrientList, { BestMenuTabs } from "@/features/restaurant/components/MenuNutrientList";
 import { useRestaurantDetailQuery } from "@/features/restaurant/hooks/queries/restaurant.query";
 import type { SheetRestaurant } from "@/features/restaurant/hooks/useMapSheet";
@@ -20,6 +21,10 @@ export default function RestaurantMenuPage() {
   const restaurantId = Number(searchParams.get("restaurantId"));
   const { data, isPending, isError } = useRestaurantDetailQuery({ restaurant_id: restaurantId });
   const isValidId = Number.isSafeInteger(restaurantId) && restaurantId > 0;
+  // 영양성분을 하나도 공개하지 않아 AI가 추정한 값으로 보여 주는 식당 (P6)
+  const isAiEstimated = data?.menu_list.some(
+    ({ nutrition_source }) => nutrition_source === "estimated",
+  );
 
   return (
     <section className={`page ${styles.root}`}>
@@ -32,8 +37,12 @@ export default function RestaurantMenuPage() {
       {isValidId ? (
         <main className={`main ${styles.menuPageMain}`}>
           <div className={styles.menuPageSummary}>
-            <h1 className="title-l-semi text-primary">
+            <h1 className={`title-l-semi text-primary ${styles.menuPageTitle}`}>
               {restaurant?.name ?? data?.restaurant_name}
+              <MeloVerifiedBadge />
+              {isAiEstimated && (
+                <span className={`caption-m-medium ${sheetStyles.aiEstimatedBadge}`}>AI 추정</span>
+              )}
             </h1>
             {restaurant && (
               <p className={`body-s-regular text-tertiary ${sheetStyles.divided}`}>

@@ -1,7 +1,5 @@
+/* 날짜 칸 규칙 (주간 · 월간 공통, COM-00-003 기획 초안 4393:2) */
 .root {
-  --day-muted-color: var(--text-disabled);
-  --record-dot-color: var(--coral-400);
-
   align-items: center;
   border-radius: 16px;
   color: var(--text-secondary);
@@ -10,55 +8,32 @@
   flex-direction: column;
   justify-content: center;
 
-  &[data-month-background="true"] {
-    --day-muted-color: var(--coral-300);
-  }
-
-  &[data-outside="true"] {
-    color: var(--day-muted-color);
-  }
-
-  /* 고를 수 있는 범위(오늘 포함 7일) 밖의 날짜 */
+  /* 월간의 앞 · 뒤 달 날짜와 고를 수 없는 날(오늘+7일부터)은 같은 회색 글자. 주간은 다른 달을 구분하지 않는다 */
+  &[data-view="month"][data-outside="true"],
   &[data-disabled="true"] {
     color: var(--text-disabled);
+  }
+
+  &[data-disabled="true"] {
     cursor: default;
   }
 
-  &:where([data-month-background="true"][data-view="month"][data-outside="false"]) {
-    background-color: rgba(255, 244, 241, 50%);
-  }
-
+  /* 월간은 위 칩의 값이 있는 날만 흰 칸, 기록 없는 날은 칸 없이 글자만 */
   &[data-view="month"][data-has-record="true"][data-outside="false"] {
-    background-color: rgba(255, 255, 255, 90%);
+    background-color: var(--background-default);
+    color: var(--text-primary);
   }
 
-  &[data-view="month"][data-today="true"] {
-    border: 1.5px solid var(--coral-300);
-    background-color: rgba(255, 255, 255, 70%);
+  /* 오늘(선택 안 됨)은 주황 외곽선 */
+  &[data-today="true"] {
+    box-shadow: inset 0 0 0 2px var(--btn-default);
   }
 
+  /* 선택은 주간 · 월간 모두 주황 채움 (오늘이 선택돼도 같음) */
   &[data-selected="true"] {
-    background-color: rgba(255, 255, 255, 70%);
-    color: var(--text-primary);
-  }
-
-  &[data-month-background="true"][data-selected="true"] {
-    border: 1.5px solid var(--coral-300);
-  }
-
-  &[data-month-background="true"][data-view="month"][data-selected="true"] {
-    --record-dot-color: var(--background-default);
-
-    background-color: var(--coral-400);
+    background-color: var(--btn-default);
+    box-shadow: none;
     color: var(--background-default);
-    border: none;
-  }
-
-  &[data-view="month"][data-selected="true"][data-today="true"] {
-    border: 1.5px solid var(--coral-300);
-    background-color: rgba(255, 255, 255, 70%);
-    color: var(--text-primary);
-    --record-dot-color: var(--coral-400);
   }
 }
 

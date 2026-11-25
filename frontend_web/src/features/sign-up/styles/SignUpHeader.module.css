@@ -6,8 +6,11 @@
 }
 
 .backButtonSection {
-  padding: 14px 16px;
+  align-items: center;
   border-bottom: 1px solid var(--border-subtle);
+  display: flex;
+  justify-content: space-between;
+  padding: 14px 16px;
 }
 
 .backButton:disabled {

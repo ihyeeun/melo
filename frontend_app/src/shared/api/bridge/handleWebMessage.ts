@@ -10,6 +10,7 @@ import * as ImagePicker from "expo-image-picker";
 import * as Updates from "expo-updates";
 import * as WebBrowser from "expo-web-browser";
 import { BackHandler, Linking, Platform } from "react-native";
+import { clearLastLoginMethod } from "@/features/auth/store/lastLoginMethodStore";
 import { clearTokens } from "@/features/auth/store/tokenStore";
 import { apiClient } from "@/src/shared/api/apiClient";
 import { emitAuthExpired } from "@/src/shared/auth/authSessionEvents";
@@ -54,7 +55,8 @@ const NORMALIZED_UPLOAD_IMAGE_QUALITY = 0.9;
 const NORMALIZED_UPLOAD_PRIMARY_FORMAT = SaveFormat.WEBP;
 const NORMALIZED_UPLOAD_FALLBACK_FORMAT = SaveFormat.JPEG;
 const DEFAULT_UPLOAD_FIELD_NAME = "file";
-const SESSION_TERMINATION_ENDPOINTS = new Set(["/commonAuth/signout", "/commonAuth/delete"]);
+const WITHDRAW_ENDPOINT = "/commonAuth/delete";
+const SESSION_TERMINATION_ENDPOINTS = new Set(["/commonAuth/signout", WITHDRAW_ENDPOINT]);
 const LOCAL_SESSION_CLEAR_ON_FAILURE_ENDPOINTS = new Set(["/commonAuth/signout"]);
 const CAMERA_CAPTURE_MODES = new Set<BridgeCameraCaptureMode>([
   "NUTRITION_LABEL",
@@ -389,7 +391,14 @@ async function uploadImageToServer(payload: BridgeImageUploadRequestPayload, sig
 
 async function capturePhotoFromCamera(payload?: BridgeCameraCaptureRequestPayload) {
   const captured = await beginCameraCaptureSession(payload);
-  return await normalizeCapturedImageSource(captured);
+  try {
+    return await normalizeCapturedImageSource(captured);
+  } catch (error) {
+    if (isBridgeHandledError(error)) {
+      error.detail = { ...error.detail, mode: captured.mode ?? null, imageFrom: captured.imageFrom };
+    }
+    throw error;
+  }
 }
 
 async function pickPhotoFromGallery(payload?: BridgeGalleryPickRequestPayload) {
@@ -408,7 +417,7 @@ async function pickPhotoFromGallery(payload?: BridgeGalleryPickRequestPayload) {
   });
 
   if (result.canceled) {
-    throw new BridgeHandledError("사진 선택이 취소되었어요.", 499, "GALLERY_PICK_CANCELLED");
+    throw new BridgeHandledError("사진 선택을 취소했어요", 499, "GALLERY_PICK_CANCELLED");
   }
 
   if (result.assets.length !== 1) {
@@ -491,7 +500,12 @@ function resolveAppDeviceInfo(): BridgeAppDeviceInfoPayload {
     appBuild: resolveBuildVersion(),
     osName: Platform.OS === "android" ? "android" : "ios",
     osVersion: resolveOsVersion(),
-    supportedFeatures: ["OPEN_APP_SETTINGS", "SIGN_UP_REDIRECT", "LOCATION_CHECK_WITHOUT_PROMPT"],
+    supportedFeatures: [
+      "OPEN_APP_SETTINGS",
+      "SIGN_UP_REDIRECT",
+      "LOCATION_CHECK_WITHOUT_PROMPT",
+      "SIGN_OUT_FROM_SIGN_UP",
+    ],
   };
 }
 
@@ -809,6 +823,10 @@ export async function handleWebMessage(
 
         if (shouldEndSession) {
           await clearTokens();
+        }
+        // 로그인 화면의 "최근 로그인"은 로그아웃해도 남기고 탈퇴하면 지운다
+        if (currentEndpoint === WITHDRAW_ENDPOINT) {
+          await clearLastLoginMethod();
         }
 
         if (!controller.signal.aborted) {

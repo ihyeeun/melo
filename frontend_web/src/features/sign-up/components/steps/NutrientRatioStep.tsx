@@ -23,7 +23,7 @@ const EMPTY_RATIO: Ratio = [0, 0, 0];
 const NUTRIENT_INPUT_PATTERN = /^(?:100(?:\.0?)?|[0-9]{0,2}(?:\.[0-9]?)?)$/;
 
 function formatRounded(value?: number) {
-  return value === undefined ? "--" : Math.round(value).toString();
+  return value === undefined ? "--" : Math.round(value).toLocaleString("ko-KR");
 }
 
 // screen: ONB-01-009
@@ -57,7 +57,7 @@ export function NutrientRatioStep({ form, onNext, nextLabel }: SignUpStepProps<"
     ? "추천 비율을 계산하고 있어요"
     : recommendation.isError
       ? "추천 비율을 불러오지 못했어요. 직접 입력해주세요"
-      : "원하는대로 비율을 수정할 수 있어요";
+      : "원하는 대로 비율을 수정할 수 있어요";
 
   return (
     <StepLayout
@@ -111,7 +111,7 @@ export function NutrientRatioStep({ form, onNext, nextLabel }: SignUpStepProps<"
 
         <article className={styles.macroTotalCard}>
           <span className="body-l-medium text-tertiary">
-            목표 칼로리 {targetCalories ?? "--"} kcal
+            목표 칼로리 {targetCalories?.toLocaleString("ko-KR") ?? "--"} kcal
           </span>
           <span className="title-s-semi text-primary marginLeft">총 {total}%</span>
         </article>

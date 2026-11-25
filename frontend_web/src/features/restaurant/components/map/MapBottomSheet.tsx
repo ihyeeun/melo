@@ -2,7 +2,7 @@ import { BottomSheet as SeedBottomSheet } from "@seed-design/react";
 import { type ReactNode, type Ref, useState } from "react";
 
 import styles from "@/features/restaurant/styles/MapBottomSheet.module.css";
-import { dismissKeyboard } from "@/features/restaurant/utils/keyboard.util";
+import { dismissKeyboard } from "@/shared/utils/keyboard.util";
 
 const COLLAPSED_SHEET_HEIGHT = 36;
 export const DEFAULT_SNAP_POINT = 0.5;

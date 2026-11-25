@@ -45,9 +45,7 @@ export function useSendMessageMutation(options?: UseMutationCallback) {
         previousChats: history?.chat_list ?? [],
       };
     },
-    onSuccess: async (response) => {
-      const res = response.intro_message;
-      track(EVENT_NAME.AI_COACH_RESPONSE_SUCCESS, { message: res });
+    onSuccess: async () => {
       try {
         await queryClient.fetchQuery({
           queryKey: queryKeys.chatHistory,
@@ -61,9 +59,6 @@ export function useSendMessageMutation(options?: UseMutationCallback) {
     },
     onError: (error) => {
       if (isRequestAbortError(error)) return;
-      track(EVENT_NAME.AI_COACH_RESPONSE_FAIL, {
-        reason: getAnalyticsErrorMessage(error, "AI 응답 실패"),
-      });
       if (options?.onError) options.onError(error);
     },
   });
@@ -73,13 +68,12 @@ export function useRegisterMenuByNutritionLabelImageMutation(options?: UseMutati
   return useMutation({
     mutationFn: registerMenuByNutritionLabelImageFeedback,
     onSuccess: () => {
-      track(EVENT_NAME.LABEL_REGISTER_SUCCESS, { source: "chat_tab" });
       if (options?.onSuccess) options.onSuccess();
     },
     onError: (error) => {
       if (isRequestAbortError(error)) return;
       track(EVENT_NAME.LABEL_REGISTER_FAIL, {
-        source: "chat_tab",
+        source: "chat",
         reason: getAnalyticsErrorMessage(error, "영양성분표 기반 메뉴 등록 실패"),
       });
       if (options?.onError) options.onError(error);

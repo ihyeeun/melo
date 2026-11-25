@@ -67,7 +67,7 @@ export default function GoalEditTargetCaloriesPage() {
       ? "추천 목표 칼로리를 불러오지 못했어요"
       : recommendedCalories === undefined
         ? "추천 목표 칼로리를 계산할 정보가 부족해요"
-        : `추천하는 목표 칼로리는 ${Math.round(recommendedCalories)}kcal 예요`;
+        : `추천하는 목표 칼로리는 ${Math.round(recommendedCalories).toLocaleString("ko-KR")}kcal예요`;
 
   useEffect(() => {
     if (!profile) {
@@ -98,7 +98,7 @@ export default function GoalEditTargetCaloriesPage() {
         if (isRequestAbortError(error)) return;
         if (cancelled) return;
 
-        toast.warning("추천 목표 칼로리를 불러오지 못했어요", "목표 칼로리를 직접 입력해주세요.");
+        toast.error("추천 목표 칼로리를 불러오지 못했어요", "목표 칼로리를 직접 입력해주세요");
       },
     });
 
@@ -137,7 +137,7 @@ export default function GoalEditTargetCaloriesPage() {
 
   return (
     <div className={`${styles.page} page`}>
-      <PageHeader onBack={handleBack} />
+      <PageHeader title="목표 재설정" onBack={handleBack} />
 
       <main className="main">
         {isPending && !visibleDraft && (

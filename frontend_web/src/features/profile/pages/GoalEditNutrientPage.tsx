@@ -38,8 +38,6 @@ import {
 } from "@/features/profile/stores/goalEditFlow.store";
 import styles from "@/features/profile/styles/GoalEditPage.module.css";
 import { PATH } from "@/router/path";
-import { track } from "@/shared/analytics/analytics";
-import { EVENT_NAME } from "@/shared/analytics/analytics.constants";
 import { isRequestAbortError } from "@/shared/api/requestCancellation";
 import type { WeightStepsResponseDto } from "@/shared/api/types/api.response.dto";
 import { Button } from "@/shared/commons/button/Button";
@@ -68,7 +66,7 @@ function roundToPrecision(value: number) {
 
 function formatRoundedValue(value?: number) {
   if (value === undefined || Number.isNaN(value)) return "--";
-  return Math.round(value).toString();
+  return Math.round(value).toLocaleString("ko-KR");
 }
 
 function isAllowedNutrientInput(nextInputValue: string) {
@@ -173,7 +171,7 @@ export default function GoalEditNutrientPage() {
         if (isRequestAbortError(error)) return;
         if (cancelled) return;
 
-        toast.warning("추천 비율을 불러오지 못했어요", "탄단지 비율을 직접 입력해주세요.");
+        toast.error("추천 비율을 불러오지 못했어요", "탄단지 비율을 직접 입력해주세요");
       },
     });
 
@@ -292,7 +290,6 @@ export default function GoalEditNutrientPage() {
         completedTasks.push(task);
       }
 
-      track(EVENT_NAME.USER_PROFILE_UPDATED);
       toast.success("목표를 수정했어요");
       queryClient.invalidateQueries({
         queryKey: queryKeys.profile,
@@ -308,7 +305,7 @@ export default function GoalEditNutrientPage() {
 
       const isRolledBack = await rollbackGoalUpdateTasks(completedTasks);
       if (isRolledBack) {
-        toast.warning("목표 수정에 실패했어요", "잠시 후 다시 시도해주세요.");
+        toast.error("목표를 수정하지 못했어요", "잠시 후 다시 시도해주세요");
         return;
       }
 
@@ -316,7 +313,7 @@ export default function GoalEditNutrientPage() {
       queryClient.invalidateQueries({
         queryKey: queryKeys.profile,
       });
-      toast.warning("목표 수정에 실패했어요", "일부 항목만 저장됐을 수 있어요. 다시 확인해주세요.");
+      toast.error("목표를 수정하지 못했어요", "일부 항목만 저장됐을 수 있어요. 다시 확인해주세요.");
     } finally {
       setIsSubmitting(false);
     }
@@ -324,7 +321,7 @@ export default function GoalEditNutrientPage() {
 
   return (
     <div className={`${styles.page} page`}>
-      <PageHeader onBack={handleBack} />
+      <PageHeader title="목표 재설정" onBack={handleBack} />
 
       <main className="main">
         {isPending && !visibleDraft && <p>프로필 목표 정보를 불러오는 중입니다</p>}
@@ -339,7 +336,7 @@ export default function GoalEditNutrientPage() {
                   ? "추천 비율을 계산하고 있어요"
                   : isRecommendationError
                     ? "추천 비율을 불러오지 못했어요. 직접 입력해주세요"
-                    : "원하는대로 비율을 수정할 수 있어요"}
+                    : "원하는 대로 비율을 수정할 수 있어요"}
               </p>
             </section>
 
@@ -397,7 +394,7 @@ export default function GoalEditNutrientPage() {
 
               <article className={styles.macroTotalCard}>
                 <span className="body-l-medium text-tertiary">
-                  목표 칼로리 {visibleDraft.target_calories ?? "--"} kcal
+                  목표 칼로리 {visibleDraft.target_calories?.toLocaleString("ko-KR") ?? "--"} kcal
                 </span>
                 <span className="title-s-semi text-primary marginLeft">
                   총{" "}
@@ -420,7 +417,7 @@ export default function GoalEditNutrientPage() {
           variant={"default"}
           size="m"
         >
-          {isSubmitting ? "수정 중.." : "완료"}
+          {isSubmitting ? "수정 중…" : "완료"}
         </Button>
       </footer>
 

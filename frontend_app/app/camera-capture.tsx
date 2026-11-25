@@ -273,7 +273,7 @@ export default function CameraCaptureScreen() {
 
     didRequestCloseRef.current = true;
     rejectCameraCaptureSession(
-      new BridgeHandledError("촬영이 취소되었어요.", 499, "CAMERA_CAPTURE_CANCELLED"),
+      new BridgeHandledError("촬영을 취소했어요", 499, "CAMERA_CAPTURE_CANCELLED"),
     );
     if (router.canGoBack()) {
       router.back();
@@ -333,7 +333,7 @@ export default function CameraCaptureScreen() {
       if (!hasPendingCameraCaptureSession()) return;
 
       rejectCameraCaptureSession(
-        new BridgeHandledError("촬영이 취소되었어요.", 499, "CAMERA_CAPTURE_CANCELLED"),
+        new BridgeHandledError("촬영을 취소했어요", 499, "CAMERA_CAPTURE_CANCELLED"),
       );
     };
   }, [getCameraPermissionStatus]);
@@ -479,6 +479,7 @@ export default function CameraCaptureScreen() {
         previewBase64: previewThumbnail?.base64 ?? null,
         previewMimeType: previewThumbnail?.mimeType ?? null,
         mode: captureMode,
+        imageFrom: "camera",
       });
 
       router.back();
@@ -551,7 +552,10 @@ export default function CameraCaptureScreen() {
 
       if (result.assets.length !== 1) {
         rejectCameraCaptureSession(
-          new BridgeHandledError("이미지는 1장만 첨부할 수 있어요.", 400, "IMAGE_COUNT_EXCEEDED"),
+          new BridgeHandledError("이미지는 1장만 첨부할 수 있어요.", 400, "IMAGE_COUNT_EXCEEDED", {
+            mode: captureMode,
+            imageFrom: "gallery",
+          }),
         );
         router.back();
         return;
@@ -560,7 +564,10 @@ export default function CameraCaptureScreen() {
       const asset = result.assets[0];
       if (!asset) {
         rejectCameraCaptureSession(
-          new BridgeHandledError("선택한 사진을 가져오지 못했어요.", 500, "GALLERY_PICK_FAILED"),
+          new BridgeHandledError("선택한 사진을 가져오지 못했어요.", 500, "GALLERY_PICK_FAILED", {
+            mode: captureMode,
+            imageFrom: "gallery",
+          }),
         );
         router.back();
         return;
@@ -578,6 +585,7 @@ export default function CameraCaptureScreen() {
         previewBase64: previewThumbnail?.base64 ?? null,
         previewMimeType: previewThumbnail?.mimeType ?? null,
         mode: captureMode,
+        imageFrom: "gallery",
       });
       router.back();
     } catch {
@@ -608,7 +616,7 @@ export default function CameraCaptureScreen() {
   const cameraTopBarHeight = insets.top + CAMERA_TOP_BAR_CONTENT_HEIGHT;
 
   if (isPreparing) {
-    return <LoadingOverlay message="카메라 준비 중..." />;
+    return <LoadingOverlay message="카메라 준비 중…" />;
   }
 
   if (cameraPermissionStatus !== "granted") {
@@ -655,7 +663,7 @@ export default function CameraCaptureScreen() {
   }
 
   if (!device) {
-    return <LoadingOverlay message="연결 가능한 카메라 찾는 중.." />;
+    return <LoadingOverlay message="연결 가능한 카메라 찾는 중…" />;
   }
 
   return (

@@ -27,7 +27,7 @@ export function ChatCameraUpdateRequiredModal({
       title="앱 업데이트가 필요해요"
       description="최신 카메라 기능을 사용하려면 앱을 업데이트해주세요."
       cancelText="닫기"
-      confirmText="업데이트 하기"
+      confirmText="업데이트"
       confirmDisabled={updateUrl === null}
       onConfirm={handleConfirm}
     />

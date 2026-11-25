@@ -59,7 +59,7 @@ export default function WeightLogBottomSheetActivity() {
   const { mutate: registerWeight, isPending: isWeightPending } = useRegisterWeightMutation({
     onError: (error) => {
       if (isRequestAbortError(error)) return;
-      toast.error("체중 기록에 실패했어요");
+      toast.error("체중을 기록하지 못했어요");
     },
   });
 

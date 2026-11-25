@@ -14,6 +14,9 @@ type Props = {
   normalizeOnBlur?: boolean;
   inputRef?: React.Ref<HTMLInputElement>;
   autoFocus?: boolean;
+  // 자릿수 제한 (예: 정수 3 · 소수 1 → 999.9까지). 범위는 따로 확인한다
+  integerDigits?: number;
+  fractionDigits?: number;
 };
 
 function clamp(n: number, min?: number, max?: number) {
@@ -35,7 +38,14 @@ export function NumberInput({
   normalizeOnBlur = true,
   inputRef,
   autoFocus,
+  integerDigits,
+  fractionDigits,
 }: Props) {
+  const digitPattern =
+    integerDigits === undefined
+      ? undefined
+      : new RegExp(`^\\d{0,${integerDigits}}(\\.\\d{0,${fractionDigits ?? 0}})?$`);
+
   return (
     <div className={`${styles.inputBox} title-xl-medium`}>
       <Input
@@ -53,6 +63,7 @@ export function NumberInput({
           const raw = e.target.value;
 
           if (raw === "") return onChange(undefined);
+          if (digitPattern && !digitPattern.test(raw)) return;
 
           const num = Number(raw);
           if (!Number.isNaN(num)) {

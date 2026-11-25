@@ -77,7 +77,7 @@ function scaleCaloriesByQuantity(menu: MenuSimpleResponseDto, quantity: number) 
   return baseCalories * (quantity / baseWeight);
 }
 
-const DELETED_MENU_MESSAGE = "삭제된 메뉴라 담을 수 없어요";
+const DELETED_MENU_MESSAGE = "삭제된 음식이라 담을 수 없어요";
 
 // 폴더 응답의 음식 타입에는 is_deleted가 없어서, 서버가 내려준 값을 그대로 읽는다(끼니 요약과 같은 방식)
 function isDeletedMenu(folderMenu: FolderDetailMenu) {
@@ -217,11 +217,11 @@ export default function FolderDetailPage() {
     try {
       await deleteFolder({ folder_id: folderId });
       clearFolderDraft();
-      toast.success("삭제되었어요");
+      toast.success("폴더를 삭제했어요");
       navigateBack({ fallbackTo: getMealSearchPath(dateKey, mealType) });
     } catch (error) {
       if (isRequestAbortError(error)) throw error;
-      toast.warning("폴더 삭제에 실패했어요", "잠시 후 다시 시도해주세요.");
+      toast.error("폴더를 삭제하지 못했어요", "잠시 후 다시 시도해주세요");
       throw error;
     }
   };
@@ -245,12 +245,12 @@ export default function FolderDetailPage() {
 
   const canUpdateMealRecordDraft = () => {
     if (isDayMealsPending) {
-      toast.warning("식사 기록 정보를 불러오는 중입니다.");
+      toast.warning("식사 기록을 불러오는 중이에요");
       return false;
     }
 
     if (isDayMealsError || !dayMeals) {
-      toast.warning("식사 기록을 불러오지 못했어요", "잠시 후 다시 시도해주세요.");
+      toast.error("식사 기록을 불러오지 못했어요", "잠시 후 다시 시도해주세요");
       return false;
     }
 
@@ -449,9 +449,10 @@ export default function FolderDetailPage() {
         open={isDeleteConfirmOpen}
         onOpenChange={setIsDeleteConfirmOpen}
         title="폴더 삭제"
-        description="폴더를 삭제할까요?"
+        description={"폴더를 삭제할까요?\n삭제하면 되돌릴 수 없어요"}
         cancelText="취소"
         confirmText="삭제"
+        emphasis="cancel"
         confirmDisabled={isDeleteFolderPending}
         closeOnConfirm={false}
         onConfirm={handleDeleteFolderConfirm}

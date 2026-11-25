@@ -6,6 +6,7 @@ import type { HomeDashboardMode } from "@/features/home/types/homeDashboard.type
 import { getDayNutritionSummary } from "@/features/home/utils/dayMealSummary";
 import MenstruationCardButton from "@/features/menstruation/components/MenstruationCardButton";
 import type { MenstrualPhaseResult } from "@/features/menstruation/hooks/useMenstrualPhase";
+import { GOAL } from "@/features/profile/goalEdit.model";
 import {
   useGetProfileQuery,
   useGoalSnapshotByDateQuery,
@@ -43,10 +44,12 @@ export default function PreviewTodayScoreSection({
   const selectedDate = parseDateKey(selectedDateKey);
   const isChatBlocked = useIsFeatureBlocked(FEATURE_GUARD.CHAT);
   const navigate = useNavigate();
-  const coachingLabel =
+  // 오늘이 아닌 날짜를 고르면 '오늘' 대신 날짜를 쓴다
+  const dateLabel =
     selectedDateKey === getTodayFormatDateKey()
-      ? "오늘의 식사 코칭 받기"
-      : `${selectedDate.getMonth() + 1}월 ${selectedDate.getDate()}일 식사 코칭 받기`;
+      ? null
+      : `${selectedDate.getMonth() + 1}월 ${selectedDate.getDate()}일`;
+  const coachingLabel = dateLabel ? `${dateLabel} 식사 코칭 받기` : "오늘의 식사 코칭 받기";
   const { isWorkoutRecordPending, summary: activitySummary } = useActivityCalories(selectedDateKey);
   const {
     data: dayMeal,
@@ -77,13 +80,22 @@ export default function PreviewTodayScoreSection({
     return <PreviewTodayScoreSkeleton showCoachingButton={showCoachingButton} />;
   }
 
+  const workoutCalories =
+    typeof activitySummary?.calories === "number" &&
+    Number.isFinite(activitySummary.calories) &&
+    activitySummary.calories > 0
+      ? Math.round(activitySummary.calories)
+      : 0;
+  // 오늘의 목표 칼로리: 다이어트는 목표 칼로리 그대로, 체중 유지 · 근육 늘리기는 운동 소모 칼로리를 더한다.
+  // 점수 · 남은 칼로리 · 초과 칼로리가 모두 이 목표를 쓴다
+  const addsWorkoutToTarget = (userGoal?.goal ?? profile?.goal) !== GOAL.LOSE_WEIGHT;
   const nutritionSummary = getDayNutritionSummary(
     dayMeal,
     {
       target_calories: userGoal?.target_calories ?? profile?.target_calories ?? 0,
       target_ratio: userGoal?.target_ratio ?? profile?.target_ratio ?? [0, 0, 0],
     },
-    activitySummary?.calories,
+    addsWorkoutToTarget ? workoutCalories : 0,
   );
   const failedLoad = isProfileError
     ? {
@@ -100,17 +112,10 @@ export default function PreviewTodayScoreSection({
       : null;
   const nutrition = failedLoad ? { message: failedLoad.message, score: null } : nutritionSummary;
   const characterSrc = getScoreCharacterSrc(nutrition.score ?? 0);
-  const activityCalories =
-    typeof nutritionSummary.calories.activity === "number" &&
-    Number.isFinite(nutritionSummary.calories.activity) &&
-    nutritionSummary.calories.activity > 0
-      ? Math.round(nutritionSummary.calories.activity)
-      : 0;
   const { baseTarget, current, target } = nutritionSummary.calories;
-  const showActivityBaseline = activityCalories > 0 && baseTarget > 0 && target > baseTarget;
+  const showActivityBaseline = addsWorkoutToTarget && baseTarget > 0 && target > baseTarget;
   const excessCalories = target > 0 ? Math.max(0, current - target) : 0;
-  // 추가 섭취 안내에는 운동으로 늘어난 목표 칼로리를 포함하지 않는다.
-  const remainingCalories = baseTarget > 0 ? Math.max(0, baseTarget - current) : 0;
+  const remainingCalories = target > 0 ? Math.max(0, target - current) : 0;
   const calorieStatusText =
     excessCalories > 0
       ? `${excessCalories.toLocaleString("ko-KR")}kcal 초과했어요`
@@ -131,7 +136,9 @@ export default function PreviewTodayScoreSection({
           <div className={styles.nutritionBalanceSummary}>
             <div className={styles.summaryArea}>
               <div className={styles.titleArea}>
-                <p className="text-primary title-s-semi">오늘의 영양 밸런스</p>
+                <p className="text-primary title-s-semi">
+                  {dateLabel ? `${dateLabel} 영양 밸런스` : "오늘의 영양 밸런스"}
+                </p>
                 {failedLoad ? (
                   <div className={styles.failedMessage}>
                     <p className="text-tertiary body-s-regular">{failedLoad.message}</p>
@@ -187,9 +194,16 @@ export default function PreviewTodayScoreSection({
         <Tile className={styles.calorieGroup}>
           <div className={styles.calorieTitle}>
             <p className="body-l-medium text-primary">칼로리</p>
-            {activityCalories > 0 && (
-              <InfoPopover ariaLabel="운동 칼로리 안내" align="start" side="bottom">
-                운동으로 {activityCalories.toLocaleString("ko-KR")}kcal 소모했어요
+            {workoutCalories > 0 && (
+              <InfoPopover
+                ariaLabel="운동 칼로리 안내"
+                align="start"
+                side="bottom"
+                className={styles.infoTrigger}
+              >
+                {addsWorkoutToTarget
+                  ? `운동으로 ${workoutCalories.toLocaleString("ko-KR")}kcal 소모했어요`
+                  : "운동으로 소모한 칼로리를 목표에 더하지 않아요"}
               </InfoPopover>
             )}
           </div>
@@ -202,7 +216,7 @@ export default function PreviewTodayScoreSection({
                 {current.toLocaleString("ko-KR")}
               </span>{" "}
               <span className="body-l-regular text-tertiary">
-                / {target.toLocaleString("ko-KR")}kcal
+                / {target.toLocaleString("ko-KR")} kcal
               </span>
             </p>
             {calorieStatusText && (
@@ -232,7 +246,12 @@ export default function PreviewTodayScoreSection({
             <div className={styles.macroTitle}>
               <p className="body-s-medium text-primary">탄수화물</p>
               {nutritionSummary.notices.carbsEstimatedFromSubNutrients && (
-                <InfoPopover ariaLabel="순탄수 기준 안내" align="start" side="bottom">
+                <InfoPopover
+                  ariaLabel="순탄수 기준 안내"
+                  align="start"
+                  side="bottom"
+                  className={styles.infoTrigger}
+                >
                   탄수화물에서 대체당과 식이섬유를 뺀
                   <br />
                   순탄수를 기준으로 탄수화물 정보를
@@ -252,7 +271,7 @@ export default function PreviewTodayScoreSection({
                 {nutritionSummary.nutrients.carbs.current.toLocaleString("ko-KR")}
               </span>{" "}
               <span className="caption-m-regular text-tertiary">
-                / {nutritionSummary.nutrients.carbs.target.toLocaleString("ko-KR")}g
+                / {nutritionSummary.nutrients.carbs.target.toLocaleString("ko-KR")} g
               </span>
             </p>
             <ScoreProgress
@@ -277,7 +296,7 @@ export default function PreviewTodayScoreSection({
                 {nutritionSummary.nutrients.protein.current.toLocaleString("ko-KR")}
               </span>{" "}
               <span className="caption-m-regular text-tertiary">
-                / {nutritionSummary.nutrients.protein.target.toLocaleString("ko-KR")}g
+                / {nutritionSummary.nutrients.protein.target.toLocaleString("ko-KR")} g
               </span>
             </p>
             <ScoreProgress
@@ -301,7 +320,7 @@ export default function PreviewTodayScoreSection({
                 {nutritionSummary.nutrients.fat.current.toLocaleString("ko-KR")}
               </span>{" "}
               <span className="caption-m-regular text-tertiary">
-                / {nutritionSummary.nutrients.fat.target.toLocaleString("ko-KR")}g
+                / {nutritionSummary.nutrients.fat.target.toLocaleString("ko-KR")} g
               </span>
             </p>
             <ScoreProgress

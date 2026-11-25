@@ -96,9 +96,7 @@ type SwipeBackTransitionOptions = {
 type SwipeBackTransitionRequester = (options: SwipeBackTransitionOptions) => boolean;
 
 const HomePage = createLazyActivity(() => import("@/features/home/pages/HomePage"));
-const RestaurantPage = createLazyActivity(
-  () => import("@/features/restaurant/pages/RestaurantTabPage"),
-);
+const MapPage = createLazyActivity(() => import("@/features/restaurant/pages/MapPage"));
 const RestaurantDetailPage = createLazyActivity(
   () => import("@/features/restaurant/pages/RestaurantDetailPage"),
 );
@@ -219,7 +217,7 @@ const ACTIVITIES = {
   BrandSearch,
   Chat: AIChatPage,
   ChatNutritionRegister: ChatNutritionRegisterPage,
-  Restaurant: RestaurantPage,
+  Restaurant: MapPage,
   RestaurantDetail: RestaurantDetailPage,
   RestaurantMenu: RestaurantMenuPage,
   GoalEdit: GoalEditPage,

@@ -30,8 +30,13 @@ import { Button } from "@/shared/commons/button/Button";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import { LoadingOverlay } from "@/shared/commons/loading/Loading";
+import { ConfirmModal } from "@/shared/commons/modals/ConfirmModal";
 import { toast } from "@/shared/commons/toast/toast";
-import { navigateBack, useNavigate } from "@/shared/navigation/stackflowNavigation";
+import {
+  navigateBack,
+  useNavigate,
+  useStackflowBackHandler,
+} from "@/shared/navigation/stackflowNavigation";
 
 export type NutrientRegisterEntrySource = "camera" | "manual" | "chatNutritionLabel";
 
@@ -195,13 +200,33 @@ export function NutrientRegisterFormPage({
       },
       onError: (error) => {
         if (isRequestAbortError(error)) return;
-        toast.warning("등록에 실패했어요");
+        toast.error("음식을 등록하지 못했어요", "잠시 후 다시 시도해주세요");
       },
     });
   };
 
+  // 입력한 값(스캔으로 채운 값 포함)이 있으면 뒤로가기 전에 이탈 확인 모달을 띄운다
+  const [isExitConfirmOpen, setIsExitConfirmOpen] = useState(false);
+  const hasEnteredValues =
+    (formState.name ?? "").trim() !== "" ||
+    brandName !== "" ||
+    formState.weight !== undefined ||
+    formState.calories !== undefined ||
+    Object.values(nutrientForm).some((value) => value !== undefined);
+
+  useStackflowBackHandler(() => {
+    if (!hasEnteredValues) return false;
+
+    setIsExitConfirmOpen(true);
+    return true;
+  });
+
   const handleBack = () => {
     navigateBack({ fallbackTo: backFallbackPath });
+  };
+
+  const handleExit = () => {
+    navigateBack({ fallbackTo: backFallbackPath, skipBackHandler: true });
   };
 
   return (
@@ -277,6 +302,18 @@ export function NutrientRegisterFormPage({
           {submitLabel}
         </Button>
       </footer>
+
+      {/* screen: DIET-02-004 이탈 확인 모달 */}
+      <ConfirmModal
+        open={isExitConfirmOpen}
+        onOpenChange={setIsExitConfirmOpen}
+        title="입력한 내용을 저장하지 않고 나갈까요?"
+        confirmText="나가기"
+        cancelText="계속 입력"
+        actionOrder="confirm-cancel"
+        emphasis="cancel"
+        onConfirm={handleExit}
+      />
 
       {isSubmitting ? <LoadingOverlay label="영양성분을 등록하는 중입니다." /> : null}
     </section>

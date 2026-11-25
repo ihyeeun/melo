@@ -318,10 +318,12 @@ function createNativeBackRequestScript() {
   });
 }
 
-function createAppForegroundEventScript() {
+// fromBackground: 백그라운드에서 돌아왔는지 (iOS 알림 센터 · 권한 팝업 같은 inactive에서 돌아온 것과 구분)
+function createAppForegroundEventScript(fromBackground: boolean) {
   const serializedEventName = JSON.stringify(APP_FOREGROUND_EVENT_NAME);
   const serializedDetail = JSON.stringify({
     foregroundedAt: Date.now(),
+    fromBackground,
   });
 
   return `
@@ -544,11 +546,11 @@ export default function AppWebViewScreen({
     return didLoadOnceRef.current && pendingTabPathRef.current === null;
   }, []);
 
-  const dispatchAppForegroundToWeb = useCallback(() => {
+  const dispatchAppForegroundToWeb = useCallback((fromBackground: boolean) => {
     if (!didLoadOnceRef.current) return;
     if (hasWebViewLoadErrorRef.current) return;
 
-    webViewRef.current?.injectJavaScript(createAppForegroundEventScript());
+    webViewRef.current?.injectJavaScript(createAppForegroundEventScript(fromBackground));
   }, []);
 
   const flushPendingTabPathSync = useCallback(() => {
@@ -588,7 +590,7 @@ export default function AppWebViewScreen({
       const didEnterForeground = previousState !== "active" && nextState === "active";
       if (!didEnterForeground) return;
 
-      dispatchAppForegroundToWeb();
+      dispatchAppForegroundToWeb(previousState === "background");
     });
 
     return () => {

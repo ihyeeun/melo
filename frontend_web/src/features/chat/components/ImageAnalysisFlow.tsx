@@ -4,8 +4,10 @@ import { useEffect, useRef, useState } from "react";
 
 import { MODE } from "@/features/camera/constants/camera.constant";
 import {
-  getAnalyticsErrorMessage,
   getCapturedImagePreviewSrc,
+  getRecognitionErrorFeedback,
+  getRecordFailureReason,
+  getScanKind,
 } from "@/features/camera/utils/cameraCapture";
 import { getChatHistory } from "@/features/chat/api/chat.api";
 import { AssistantPendingMessage } from "@/features/chat/components/AssistantPendingMessage";
@@ -16,10 +18,7 @@ import { MealTimeSelectCard } from "@/features/chat/pages/AIChatPage";
 import { useClearImage, useGetImage } from "@/features/chat/stores/camera.store";
 import styles from "@/features/chat/styles/AIChatPage.module.css";
 import { getCurrentDateTime } from "@/features/chat/utils/date.util";
-import { track } from "@/shared/analytics/analytics";
-import { EVENT_NAME } from "@/shared/analytics/analytics.constants";
-import { trackScanMenuSave } from "@/shared/analytics/menuSaveEvent.util";
-import { AppApiError } from "@/shared/api/apiClient";
+import { trackScanFail, trackScanSuccess } from "@/shared/analytics/scanEvents";
 import { isRequestAbortError } from "@/shared/api/requestCancellation";
 import { captureScreenRequestScope, type ScreenRequestScope } from "@/shared/api/screenRequests";
 import type { MealType } from "@/shared/api/types/api.dto";
@@ -30,31 +29,15 @@ interface MealTimeDecision {
   mealTime?: MealType;
 }
 
-// 화질 낮음 · 흐림 · 조명은 '흐림'으로, 그 밖의 음식 사진 실패는 '음식이 잘 안 보임'으로 안내한다
-const BLURRY_IMAGE_STATUS_CODES = new Set([40052, 40054, 40055]);
-
-const RETRY_MESSAGES = {
-  blurry: {
-    camera: "더 선명하게 다시 촬영해주세요",
-    gallery: "더 선명한 사진으로 다시 골라주세요",
-  },
-  foodNotVisible: {
-    camera: "음식이 잘 보이도록 다시 촬영해주세요",
-    gallery: "음식이 잘 보이는 사진으로 다시 골라주세요",
-  },
-} as const;
-
 // screen: CHA-01-001
 export function ImageAnalysisFlow({
   enabled,
   waitForResponse,
   onAnalysisStart,
-  onNutritionAnalyzed,
 }: {
   enabled?: boolean;
   waitForResponse: (chatId: number) => Promise<void>;
   onAnalysisStart: () => void;
-  onNutritionAnalyzed: (chatId: number) => void;
 }) {
   const { id: screenId, isActive } = useActivity();
   const queryClient = useQueryClient();
@@ -82,12 +65,7 @@ export function ImageAnalysisFlow({
     isSuccess: analysisSuccess,
   } = useImageAnalysisMutation({
     onSuccess: () => {
-      // 분석 성공
-      if (mode === "FOOD") {
-        track(EVENT_NAME.FOOD_SCAN_SUCCESS, { source: "chat_food_camera" });
-      } else if (mode === "NUTRITION_LABEL") {
-        track(EVENT_NAME.LABEL_SCAN_SUCCESS, { source: "chat_nutrition_camera" });
-      }
+      trackScanSuccess(getScanKind(mode), "chat");
     },
     onError: (error) => {
       // 분석 실패
@@ -98,32 +76,15 @@ export function ImageAnalysisFlow({
         return;
       }
 
-      const errorMessage = getAnalyticsErrorMessage(error, "");
+      trackScanFail(getScanKind(mode), { source: "chat", reason: getRecordFailureReason(error) });
 
-      if (mode === "FOOD") {
-        track(EVENT_NAME.FOOD_SCAN_FAIL, {
-          reason: errorMessage || "음식 메뉴 분석 실패",
-          source: "chat_food_camera",
-        });
-      } else if (mode === "NUTRITION_LABEL") {
-        track(EVENT_NAME.LABEL_SCAN_FAIL, {
-          reason: errorMessage || "영양성분표 이미지 분석 실패",
-          source: "chat_nutrition_camera",
-        });
-      }
-
-      // 영양성분표는 글자가 읽히도록 선명하게 다시 찍거나 고르도록 안내한다
-      const statusCode = error instanceof AppApiError ? error.statusCode : undefined;
-      const reason =
-        mode === "FOOD" && !BLURRY_IMAGE_STATUS_CODES.has(statusCode ?? 0)
-          ? "foodNotVisible"
-          : "blurry";
-      const retryMessage = RETRY_MESSAGES[reason][getImage?.source ?? "camera"];
+      // 사진 기록 화면의 실패 모달과 같은 원인별 문구를 채팅 하단 토스트로 보여 준다
+      const feedback = getRecognitionErrorFeedback(error, getImage?.source ?? "camera");
 
       toast.show({
         type: "error",
-        title: errorMessage,
-        description: retryMessage,
+        title: feedback.title,
+        description: feedback.description,
         timeout: 0,
         dismissible: true,
         position: "bottom",
@@ -183,16 +144,6 @@ export function ImageAnalysisFlow({
         const history = await refreshChatHistory(queryClient, screen);
         screen.assertActive();
 
-        if (mode === MODE.NUTRITION) {
-          const chatId = history.chat_list[0]?.id;
-
-          if (chatId === undefined) {
-            throw new Error("분석한 대화를 찾지 못했어요.");
-          }
-
-          onNutritionAnalyzed(chatId);
-        }
-
         setHistoryStatus("success");
 
         if (shouldSaveMeal && selectedMealTime !== undefined) {
@@ -210,19 +161,12 @@ export function ImageAnalysisFlow({
             mealTime: selectedMealTime,
             menus: (result.feedback?.menus ?? []).map((menu) => ({
               id: menu.menu_id,
+              name: menu.menu_name,
               quantity: menu.estimated_quantity ?? menu.weight,
               mode: menu.estimated_quantity != null ? "weight" : "unit",
             })),
             image: result.image_url ?? undefined,
             screen,
-          });
-
-          trackScanMenuSave({
-            menus:
-              result.feedback?.menus.map(({ menu_id, menu_name }) => ({ menu_id, menu_name })) ??
-              [],
-            scanType: "photo",
-            source: "chat_tab",
           });
           screen.assertActive();
         }
@@ -236,7 +180,7 @@ export function ImageAnalysisFlow({
           setHistoryStatus("error");
           setFlowError("분석 결과를 대화에 불러오지 못했어요.");
         } else {
-          setFlowError("식사 기록 처리를 완료하지 못했어요. 기록을 확인해 주세요.");
+          setFlowError("식사 기록 처리를 완료하지 못했어요. 기록을 확인해주세요.");
         }
       }
     }
@@ -255,7 +199,6 @@ export function ImageAnalysisFlow({
     registerChatMeal,
     clearImage,
     waitForResponse,
-    onNutritionAnalyzed,
   ]);
 
   const isHistoryLoading = analysisSuccess && historyStatus === "pending";

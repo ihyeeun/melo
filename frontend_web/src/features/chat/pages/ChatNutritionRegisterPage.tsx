@@ -1,6 +1,5 @@
 import { useQueryClient } from "@tanstack/react-query";
 
-import { getAnalyticsErrorMessage } from "@/features/camera/utils/cameraCapture";
 import { useRegisterMenuByNutritionLabelImageMutation } from "@/features/chat/hooks/mutations/useSendMessageMutation";
 import { queryKeys as chatQueryKeys } from "@/features/chat/hooks/queries/queryKey";
 import { getCurrentDateTime } from "@/features/chat/utils/date.util";
@@ -9,10 +8,7 @@ import {
   type NutrientRegisterSubmitPayload,
 } from "@/features/nutrient-entry/components/NutrientRegisterFormPage";
 import { PATH } from "@/router/path";
-import {
-  trackNutritionLabelRegisterFail,
-  trackNutritionLabelRegisterSuccess,
-} from "@/shared/analytics/nutritionLabelEvents";
+import { trackNutritionLabelRegisterFail } from "@/shared/analytics/nutritionLabelEvents";
 import { isRequestAbortError } from "@/shared/api/requestCancellation";
 import type { NutritionLabelMenuRegisterRequestDto } from "@/shared/api/types/api.request.dto";
 import type { NutritionLabelRecognitionResponseDto } from "@/shared/api/types/api.response.dto";
@@ -40,22 +36,18 @@ export default function ChatNutritionRegisterPage() {
 
     if (!body) {
       trackNutritionLabelRegisterFail("영양성분 정보를 불러오지 못했어요. 다시 시도해주세요.");
-      toast.warning("영양성분 정보를 불러오지 못했어요. 다시 시도해주세요.");
+      toast.error("영양성분 정보를 불러오지 못했어요. 다시 시도해주세요.");
       return;
     }
 
     try {
+      // 실패 이벤트(label_register_fail)는 뮤테이션에서 보낸다
       await registerMenu({ body });
     } catch (error) {
       if (isRequestAbortError(error)) return;
-      trackNutritionLabelRegisterFail(
-        getAnalyticsErrorMessage(error, "등록에 실패했어요. 잠시 후 다시 시도해주세요."),
-      );
-      toast.warning("등록에 실패했어요. 잠시 후 다시 시도해주세요.");
+      toast.error("음식을 등록하지 못했어요", "잠시 후 다시 시도해주세요");
       return;
     }
-
-    trackNutritionLabelRegisterSuccess();
 
     try {
       await queryClient.refetchQueries({
@@ -68,7 +60,7 @@ export default function ChatNutritionRegisterPage() {
     }
 
     toast.success("음식을 등록했어요");
-    navigateBack({ fallbackTo: PATH.CHAT });
+    navigateBack({ fallbackTo: PATH.CHAT, skipBackHandler: true });
   };
 
   return (

@@ -5,8 +5,9 @@ import {
   type SignUpType,
   type UserInfoRequest,
 } from "@/features/sign-up/types/signUp.type";
+import { getSubCodeErrorToast } from "@/features/sub-code/utils/subCodeError.util";
 import { PATH } from "@/router/path";
-import { AppApiError } from "@/shared/api/apiClient";
+import { AppApiError, resolveApiErrorToast } from "@/shared/api/apiClient";
 import { API_ERROR_MESSAGE } from "@/shared/api/apiErrorMessage";
 import { isNativeApp, syncAppTab } from "@/shared/api/bridge/nativeBridge";
 import { toast } from "@/shared/commons/toast/toast";
@@ -104,21 +105,28 @@ export function useSignUpSubmit({ closeStepScreens, onInvalidField }: Options) {
   const { mutate, isPending } = useRegisterUserInfoMutation({
     onSuccess: enterApp,
     onError: (error) => {
-      if (!(error instanceof AppApiError)) {
-        toast.warning(API_ERROR_MESSAGE.DEFAULT);
-        return;
-      }
-
-      toast.warning(error.message);
+      const userMessage = error instanceof AppApiError ? error.userMessage : undefined;
 
       // 이미 프로필이 있으면 가입이 끝난 것으로 보고 들여보낸다
-      if (error.message === API_ERROR_MESSAGE.PROFILE_ALREADY_EXISTS) {
+      if (userMessage === API_ERROR_MESSAGE.PROFILE_ALREADY_EXISTS) {
+        toast.warning(userMessage);
         enterApp();
         return;
       }
 
-      const field = FIELD_TO_FIX[error.message];
-      if (field) onInvalidField(field);
+      const field = userMessage ? FIELD_TO_FIX[userMessage] : undefined;
+      if (userMessage && field) {
+        const subCodeToast = getSubCodeErrorToast(error);
+        toast.warning(subCodeToast?.title ?? userMessage, subCodeToast?.description);
+        onInvalidField(field);
+        return;
+      }
+
+      const { title, description } = resolveApiErrorToast(error, {
+        title: "가입을 완료하지 못했어요",
+        description: "잠시 후 다시 시도해주세요",
+      });
+      toast.error(title, description);
     },
   });
 

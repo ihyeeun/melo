@@ -16,12 +16,16 @@ export interface SignUpType {
   eating_out_freq_weekly: (typeof MEAL_OUTSIDE)[keyof typeof MEAL_OUTSIDE];
   job_type: (typeof JOB_TYPE)[keyof typeof JOB_TYPE];
   lunch_location: (typeof LUNCH_LOCATION)[keyof typeof LUNCH_LOCATION] | null;
+  // 아래 셋은 가입 요청에 아직 보내지 않는다 (서버 필드 미정)
+  exercise_freq_weekly: (typeof EXERCISE)[keyof typeof EXERCISE];
+  glp1_use: (typeof MEDICAL)[keyof typeof MEDICAL];
+  acquisition_channel: (typeof SOCIAL)[keyof typeof SOCIAL];
 }
 
 // 입력 중인 회원가입 값. 아직 고르지 않은 값은 비어 있다
 export type SignUpForm = Partial<SignUpType>;
 
-// 회원가입 단계와 각 단계에서 입력받는 값. 적힌 순서대로 진행하고, 진행 바도 이 순서를 따른다
+// 회원가입 단계와 각 단계에서 입력받는 값. 적힌 순서대로 진행한다
 export const SIGN_UP_STEPS = {
   basicInfo: ["gender", "birthYear"],
   body: ["height", "weight"],
@@ -34,10 +38,33 @@ export const SIGN_UP_STEPS = {
   persona: ["persona_type"],
   eatingOut: ["eating_out_freq_weekly"],
   jobAndLunch: ["job_type", "lunch_location"],
+  exercise: ["exercise_freq_weekly"],
+  glp1: ["glp1_use"],
+  acquisitionChannel: ["acquisition_channel"],
   subCode: ["subCode"],
 } as const satisfies Record<string, readonly (keyof SignUpType)[]>;
 
 export type SignUpStep = keyof typeof SIGN_UP_STEPS;
+
+// 진행 바는 단계를 6칸으로 묶어 보여 준다. 값 = 채워지는 칸 수
+export const SIGN_UP_PROGRESS_TOTAL = 6;
+export const SIGN_UP_PROGRESS = {
+  basicInfo: 1,
+  body: 1,
+  activity: 2,
+  goal: 2,
+  goalWeight: 3,
+  targetCalories: 3,
+  nutrient: 4,
+  dietManagement: 5,
+  persona: 5,
+  eatingOut: 5,
+  jobAndLunch: 6,
+  exercise: 6,
+  glp1: 6,
+  acquisitionChannel: 6,
+  subCode: 6,
+} as const satisfies Record<SignUpStep, number>;
 
 // 단계 컴포넌트가 받는 props. 어떤 단계인지 밝히면 그 단계가 맡은 값만 넘길 수 있다
 export type SignUpStepProps<S extends SignUpStep> = {
@@ -128,4 +155,5 @@ export const SOCIAL = {
   APP_STORE: 1,
   REFERRAL: 2,
   ETC: 3,
+  NAVER_CAFE: 4,
 } as const;

@@ -12,7 +12,12 @@ import React, {
 } from "react";
 
 import { MODE } from "@/features/camera/constants/camera.constant";
-import { getAnalyticsErrorMessage } from "@/features/camera/utils/cameraCapture";
+import {
+  getCameraCaptureErrorFeedback,
+  getRecordFailureReason,
+  getScanKind,
+  trackRejectedImageScan,
+} from "@/features/camera/utils/cameraCapture";
 import { AssistantMessageText } from "@/features/chat/components/AssistantMessageText";
 import { AssistantPendingMessage } from "@/features/chat/components/AssistantPendingMessage";
 import { ImageAnalysisFlow } from "@/features/chat/components/ImageAnalysisFlow";
@@ -39,11 +44,12 @@ import type { ChatGalleryMode } from "@/features/chat/types/camera.type";
 import { getCurrentDateTime } from "@/features/chat/utils/date.util";
 import { textSplitByLines } from "@/features/chat/utils/textdivider.util";
 import type { MenuWithQuantity } from "@/features/home/utils/dayMealSummary";
-import { useTodayMealRecordDeleteMutation } from "@/features/meal-record/hooks/mutations/useTodayMealRecordMutation";
 import { getMenuSelectionMenuDetailPath } from "@/features/menu-selection/utils/menuSelectionRoutes";
 import { PATH } from "@/router/path";
 import { getMealRecordPath } from "@/router/pathHelpers";
-import { trackChatTextMenuSave, trackScanMenuSave } from "@/shared/analytics/menuSaveEvent.util";
+import { track } from "@/shared/analytics/analytics";
+import { EVENT_NAME } from "@/shared/analytics/analytics.constants";
+import { trackScanStart } from "@/shared/analytics/scanEvents";
 import {
   requestNativeAppSettingsOpen,
   requestNativeGalleryPick,
@@ -52,7 +58,7 @@ import { useNativeAppFeature } from "@/shared/api/bridge/useNativeAppFeature";
 import { isRequestAbortError } from "@/shared/api/requestCancellation";
 import { captureScreenRequestScope } from "@/shared/api/screenRequests";
 import type { MealType } from "@/shared/api/types/api.dto";
-import type { MealTime } from "@/shared/api/types/api.request.dto";
+import type { ChatNutritionLabelRegisteredMenuDto } from "@/shared/api/types/api.response.dto";
 import type {
   ChatHistoryItemResponseDto,
   ChatRecommendResponseDto,
@@ -60,7 +66,6 @@ import type {
 import { Button } from "@/shared/commons/button/Button";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
-import { ConfirmModal } from "@/shared/commons/modals/ConfirmModal";
 import { toast } from "@/shared/commons/toast/toast";
 import { MEAL_TIMES } from "@/shared/constants/meal.constants";
 import {
@@ -89,6 +94,7 @@ type ChatEntryRequest =
   | { type: "management-pattern-analysis" };
 
 const MAX_AUTO_COMPLETE_COUNT = 3;
+const CHAT_VISIBLE_DAYS = 30;
 
 // screen: CHA-01-001
 export default function AIChatPage() {
@@ -113,7 +119,6 @@ export default function AIChatPage() {
   const [showScrollToBottomBtn, setShowScrollToBottomBtn] = useState<boolean>(false);
   const [responseWait, setResponseWait] = useState<ResponseWait | null>(null);
   const [typingKeyword, setTypingKeyword] = useState("");
-  const [nutritionMealChatId, setNutritionMealChatId] = useState<number | null>(null);
   const [isPickingImage, setIsPickingImage] = useState(false);
 
   const historyQuery = useGetChatHistoryQuery();
@@ -146,26 +151,12 @@ export default function AIChatPage() {
   const suggestionsMenuNames = canAutoCompleteKeyword
     ? (suggestionsResponse?.name ?? []).slice(0, MAX_AUTO_COMPLETE_COUNT)
     : [];
-  const nutritionResponse = historyQuery.data?.chat_list.find(
-    (chat) => chat.id === nutritionMealChatId,
-  )?.response_payload;
-  const nutritionRegisteredMenu =
-    nutritionResponse && "registered_menu" in nutritionResponse
-      ? nutritionResponse.registered_menu
-      : null;
   const mealTimeCard = textMealData
     ? {
-        source: "text" as const,
         chatId: textMealData.chat_id,
         initMealTime: String(textMealData.time ?? getCurrentDateTime().mealTime) as MealType,
       }
-    : nutritionMealChatId !== null && nutritionRegisteredMenu
-      ? {
-          source: "nutrition" as const,
-          chatId: nutritionMealChatId,
-          initMealTime: getCurrentDateTime().mealTime,
-        }
-      : null;
+    : null;
 
   const handleTextMealRecordAction = () => {
     const nextMode = !isTextMealRecordMode;
@@ -192,7 +183,6 @@ export default function AIChatPage() {
   // 새 흐름이 시작되면 이전 흐름의 식사 시간 카드를 닫습니다.
   const closePendingMealCards = () => {
     resetSendTextMeal();
-    setNutritionMealChatId(null);
   };
   const handleImageAnalysisStart = () => {
     closePendingMealCards();
@@ -211,20 +201,32 @@ export default function AIChatPage() {
         {
           onSuccess: ({ menu_ids }) => {
             if (menu_ids.length === 0) {
+              track(EVENT_NAME.TEXT_RECORD_FAIL, {
+                source: "chat",
+                entry: "record_mode",
+                reason: "no_food",
+              });
               resetSendTextMeal();
               toast.show({
                 type: "warning",
-                title: `방금 보낸 메시지로\n기록할 메뉴를 찾지 못했어요`,
+                title: `방금 보낸 메시지에서\n기록할 음식을 찾지 못했어요`,
                 timeout: 0,
                 priority: "high",
               });
               return;
             }
+            track(EVENT_NAME.TEXT_RECORD_SUCCESS, { source: "chat", entry: "record_mode" });
             setIsTextMealRecordMode(false);
           },
           onError: (error) => {
             setInputMessage(formattedMessage);
             if (isRequestAbortError(error)) return;
+
+            track(EVENT_NAME.TEXT_RECORD_FAIL, {
+              source: "chat",
+              entry: "record_mode",
+              reason: getRecordFailureReason(error),
+            });
 
             toast.error("연결이 일시적으로 불안정해요. 다시 시도해주세요.");
           },
@@ -256,87 +258,71 @@ export default function AIChatPage() {
       });
     });
   }, []);
-  const handleMealRecord = ({
-    mealTime,
-    source,
-  }: {
-    mealTime: MealType;
-    source: "text" | "nutrition";
-  }) => {
-    if (isSavingMeal || !isActive) return;
+  const handleMealRecord = (mealTime: MealType) => {
+    if (isSavingMeal || !isActive || !textMealData) return;
 
     const screen = captureScreenRequestScope(screenId);
     if (!screen.isActive()) return;
 
     const { dateKey: currentDate } = getCurrentDateTime();
 
-    let request: Parameters<typeof registerMeal>[0];
-    let onSaved: () => void;
-
-    if (source === "text") {
-      if (!textMealData) return;
-
-      const parseMenus = textMealData.menu_ids.map((id, index) => ({
-        menu_id: id,
-        menu_name: textMealData.menu_names[index],
-        menu_weight: textMealData.menu_quantities[index],
-      }));
-
-      request = {
+    registerMeal(
+      {
         dateKey: textMealData.date ?? currentDate,
         mealTime,
-        menus: parseMenus.map(({ menu_id, menu_weight }) => ({
-          id: menu_id,
-          quantity: menu_weight,
+        menus: textMealData.menu_ids.map((id, index) => ({
+          id,
+          name: textMealData.menu_names[index],
+          quantity: textMealData.menu_quantities[index],
           mode: "weight" as const,
         })),
         screen,
-      };
-      onSaved = () => {
-        trackChatTextMenuSave(parseMenus);
-        resetSendTextMeal();
-      };
-    } else {
-      if (nutritionMealChatId === null || !nutritionRegisteredMenu) return;
+      },
+      {
+        onSuccess: () => {
+          if (!screen.isActive()) return;
+          resetSendTextMeal();
+        },
+        onError: (error) => {
+          if (isRequestAbortError(error) || !screen.isActive()) return;
 
-      request = {
-        dateKey: currentDate,
+          toast.error("식사 기록을 저장하지 못했어요. 다시 시도해주세요.");
+        },
+      },
+    );
+  };
+  // 영양성분표로 등록한 음식을 오늘 고른 끼니에 1인분(총 내용량)으로 기록한다
+  const handleRecordRegisteredMenu = (
+    registeredMenu: ChatNutritionLabelRegisteredMenuDto,
+    mealTime: MealType,
+  ) => {
+    if (isSavingMeal || !isActive) return;
+
+    const screen = captureScreenRequestScope(screenId);
+    if (!screen.isActive()) return;
+
+    registerMeal(
+      {
+        dateKey: getCurrentDateTime().dateKey,
         mealTime,
         menus: [
           {
-            id: nutritionRegisteredMenu?.menu_id,
-            quantity: nutritionRegisteredMenu?.registered_nutrition.weight,
+            id: registeredMenu.menu_id,
+            name: registeredMenu.menu_name,
+            quantity: registeredMenu.registered_nutrition.weight,
             mode: "weight",
           },
         ],
         screen,
-      };
-      onSaved = () => {
-        trackScanMenuSave({
-          menus: [
-            {
-              menu_id: nutritionRegisteredMenu.menu_id,
-              menu_name: nutritionRegisteredMenu.menu_name,
-            },
-          ],
-          scanType: "photo",
-          source: "chat_tab",
-        });
-        closeMealTimeCard(nutritionMealChatId);
-      };
-    }
-
-    registerMeal(request, {
-      onSuccess: () => {
-        if (!screen.isActive()) return;
-        onSaved();
       },
-      onError: (error) => {
-        if (isRequestAbortError(error) || !screen.isActive()) return;
+      {
+        onError: (error) => {
+          if (isRequestAbortError(error) || !screen.isActive()) return;
 
-        toast.error("식사 기록을 저장하지 못했어요. 다시 시도해주세요.");
+          toast.error("식사 기록을 저장하지 못했어요. 다시 시도해주세요.");
+        },
       },
-    });
+    );
   };
   const handleAutoCompleteKeywords = (suggestionKeyword: string) => {
     const keyword = getTypingKeyword(inputMessage);
@@ -359,9 +345,6 @@ export default function AIChatPage() {
       textareaRef.current?.setSelectionRange(cursorPosition, cursorPosition);
     });
   };
-  const closeMealTimeCard = (chatId: number) => {
-    setNutritionMealChatId((current) => (current === chatId ? null : current));
-  };
   const handlePickGalleryImage = async (mode: ChatGalleryMode) => {
     if (isPickingImage || isChatBusy || !isActive) return;
 
@@ -375,6 +358,7 @@ export default function AIChatPage() {
 
       screen.assertActive();
 
+      trackScanStart(getScanKind(mode), { source: "chat", imageFrom: "gallery" });
       setImage({ image, mode, source: "gallery" });
     } catch (error) {
       if (isRequestAbortError(error) || !screen.isActive()) return;
@@ -383,13 +367,16 @@ export default function AIChatPage() {
         typeof error === "object" && error !== null && "error" in error ? error.error : undefined;
 
       if (errorCode === "GALLERY_PICK_CANCELLED") return;
+      trackRejectedImageScan(error, { source: "chat", mode, imageFrom: "gallery" });
+
+      const feedback = getCameraCaptureErrorFeedback(error);
 
       // 사진 권한을 거부했으면 설정 앱에서 직접 켤 수 있게 버튼을 붙이고, 닫을 때까지 둔다
       if (errorCode === "GALLERY_PERMISSION_DENIED" && canOpenAppSettings) {
         const toastId = toast.show({
           type: "error",
-          title: "사진 접근 권한이 필요해요",
-          description: "설정에서 권한을 허용해주세요.",
+          title: feedback.title,
+          description: feedback.description,
           timeout: 0,
           priority: "high",
           action: {
@@ -403,11 +390,7 @@ export default function AIChatPage() {
         return;
       }
 
-      toast.error(
-        errorCode === "GALLERY_PERMISSION_DENIED"
-          ? "사진 접근 권한이 필요해요. 설정에서 권한을 허용해 주세요."
-          : getAnalyticsErrorMessage(error, "사진을 가져오지 못했어요. 다시 선택해 주세요."),
-      );
+      toast.error(feedback.title, feedback.description);
     } finally {
       setIsPickingImage(false);
     }
@@ -485,6 +468,8 @@ export default function AIChatPage() {
             mealRecords={mealsQuery.data}
             onScrollToBottomAction={handleScrollToBottom}
             responseWait={responseWait}
+            isSavingMeal={isSavingMeal}
+            onRecordRegisteredMenu={handleRecordRegisteredMenu}
           />
         )}
 
@@ -494,32 +479,17 @@ export default function AIChatPage() {
             enabled={historyQuery.isSuccess && !isTimelinePending}
             waitForResponse={waitForResponse}
             onAnalysisStart={handleImageAnalysisStart}
-            onNutritionAnalyzed={setNutritionMealChatId}
           />
         )}
 
         {mealTimeCard && (
-          <section
-            key={`${mealTimeCard.source}-${mealTimeCard.chatId}`}
-            className={styles.conversation}
-          >
+          <section key={`text-${mealTimeCard.chatId}`} className={styles.conversation}>
             <div className={styles.messageArea} data-owner="ai">
               <MealTimeSelectCard
                 initMealTime={mealTimeCard.initMealTime}
                 disabled={isSavingMeal}
-                onConfirm={(mealTime) => {
-                  handleMealRecord({
-                    mealTime,
-                    source: mealTimeCard.source,
-                  });
-                }}
-                onDismiss={() => {
-                  if (mealTimeCard.source === "text") {
-                    resetSendTextMeal();
-                  } else {
-                    closeMealTimeCard(mealTimeCard.chatId);
-                  }
-                }}
+                onConfirm={handleMealRecord}
+                onDismiss={resetSendTextMeal}
               />
             </div>
           </section>
@@ -739,11 +709,18 @@ function ChatHistory({
   mealRecords,
   onScrollToBottomAction,
   responseWait,
+  isSavingMeal,
+  onRecordRegisteredMenu,
 }: {
   history: ChatHistoryItemResponseDto[];
   mealRecords: ReturnType<typeof useRecentDayMealsQuery>["data"];
   onScrollToBottomAction: (behavior?: ScrollBehavior) => void;
   responseWait: ResponseWait | null;
+  isSavingMeal: boolean;
+  onRecordRegisteredMenu: (
+    registeredMenu: ChatNutritionLabelRegisteredMenuDto,
+    mealTime: MealType,
+  ) => void;
 }) {
   const navigate = useNavigate();
   const sendingMessage = usePendingSendMessages();
@@ -751,7 +728,11 @@ function ChatHistory({
   const [initChatIds] = useState(() => new Set(history.map((chat) => chat.id)));
 
   const pendingMessageKey = sendingMessage[0]?.key;
-  const visibleChatList = sendingMessage[0]?.previousChats ?? history;
+  // 대화는 최근 30일만 보여 준다 (시각을 알 수 없는 대화는 남긴다)
+  const [recentChatStart] = useState(() => Date.now() - CHAT_VISIBLE_DAYS * 24 * 60 * 60 * 1000);
+  const visibleChatList = (sendingMessage[0]?.previousChats ?? history).filter(
+    (chat) => (parseDate(chat.createdAt)?.getTime() ?? recentChatStart) >= recentChatStart,
+  );
   const mealCards = mealRecords.flatMap((date, index) => {
     const dayMeals = mealRecords[index].meals;
     if (!dayMeals) return [];
@@ -776,6 +757,14 @@ function ChatHistory({
       ];
     });
   });
+  // 등록한 음식이 최근 식사 기록에 있으면 등록 완료 카드에서 [기록하기]를 거둔다
+  const recordedMenuIds = new Set(
+    mealRecords.flatMap(({ meals }) =>
+      meals
+        ? Object.values(meals.menusByTime).flatMap((menus) => menus.map((menu) => menu.id))
+        : [],
+    ),
+  );
   const timeline = [...chatsByDate(visibleChatList), ...mealCards].sort(
     (a, b) => (a.date?.getTime() ?? 0) - (b.date?.getTime() ?? 0),
   );
@@ -800,133 +789,147 @@ function ChatHistory({
       </div>
     );
 
-  return displayTimeline.map((item, index) => {
-    const itemKey =
-      item.messageType === "chat"
-        ? `chat:${item.chat.id}`
-        : item.messageType === "meal"
-          ? `meal:${item.mealDate.date}:${item.time}`
-          : item.key;
-    const prevItem = displayTimeline[index - 1];
-    const isShowDateChip =
-      item.date !== null &&
-      (!prevItem?.date || formatDateKey(item.date) !== formatDateKey(prevItem.date));
+  const recentOnlyNotice = (
+    <p
+      key="recent-only"
+      className={`caption-m-regular text-tertiary textCenter ${styles.recentOnlyNotice}`}
+    >
+      최근 30일 대화만 보여요
+    </p>
+  );
 
-    const messageType = item.messageType;
-    const chat = messageType === "chat" ? item.chat : null;
-    const userSendImage = chat?.image_url;
-    const userSendText = item.messageType === "pending" ? item.inputText : (chat?.input_text ?? "");
-    const messageTime = formatTimeText(item.date);
-    const chatItem = chat?.response_payload;
+  return [
+    recentOnlyNotice,
+    ...displayTimeline.map((item, index) => {
+      const itemKey =
+        item.messageType === "chat"
+          ? `chat:${item.chat.id}`
+          : item.messageType === "meal"
+            ? `meal:${item.mealDate.date}:${item.time}`
+            : item.key;
+      const prevItem = displayTimeline[index - 1];
+      const isShowDateChip =
+        item.date !== null &&
+        (!prevItem?.date || formatDateKey(item.date) !== formatDateKey(prevItem.date));
 
-    return (
-      <section key={itemKey} className={styles.conversation}>
-        {isShowDateChip && item.date && (
-          <time className={styles.dateChip}>
-            <span className="caption-m-medium text-white">{formatDateDividerText(item.date)}</span>
-          </time>
-        )}
+      const messageType = item.messageType;
+      const chat = messageType === "chat" ? item.chat : null;
+      const userSendImage = chat?.image_url;
+      const userSendText =
+        item.messageType === "pending" ? item.inputText : (chat?.input_text ?? "");
+      const messageTime = formatTimeText(item.date);
+      const chatItem = chat?.response_payload;
 
-        {(userSendImage || userSendText) && (
-          <div className={styles.messageArea} data-owner="user">
-            {userSendImage ? (
-              <>
-                <img
-                  src={userSendImage}
-                  onLoad={() => onScrollToBottomAction("auto")}
-                  className={styles.sendImage}
-                  alt="전송된 이미지"
-                />
-                <span
-                  data-owner="user"
-                  data-time={messageTime}
-                  className={`caption-m-regular text-tertiary ${styles.messageTime}`}
-                />
-              </>
-            ) : (
-              <>
-                <div className={styles.textBubble}>
-                  <p className="body-m-regular text-primary">{userSendText}</p>
+      return (
+        <section key={itemKey} className={styles.conversation}>
+          {isShowDateChip && item.date && (
+            <time className={styles.dateChip}>
+              <span className="caption-m-medium text-white">
+                {formatDateDividerText(item.date)}
+              </span>
+            </time>
+          )}
+
+          {(userSendImage || userSendText) && (
+            <div className={styles.messageArea} data-owner="user">
+              {userSendImage ? (
+                <>
+                  <img
+                    src={userSendImage}
+                    onLoad={() => onScrollToBottomAction("auto")}
+                    className={styles.sendImage}
+                    alt="전송된 이미지"
+                  />
                   <span
                     data-owner="user"
                     data-time={messageTime}
                     className={`caption-m-regular text-tertiary ${styles.messageTime}`}
                   />
-                </div>
+                </>
+              ) : (
+                <>
+                  <div className={styles.textBubble}>
+                    <p className="body-m-regular text-primary">{userSendText}</p>
+                    <span
+                      data-owner="user"
+                      data-time={messageTime}
+                      className={`caption-m-regular text-tertiary ${styles.messageTime}`}
+                    />
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+
+          <div className={styles.messageArea} data-owner="ai">
+            {messageType === "meal" && (
+              <>
+                <MealRecordCard date={item.mealDate.date} mealTime={item.time} menus={item.menus} />
+                <span
+                  data-owner="ai"
+                  data-time={messageTime}
+                  className={`caption-m-regular text-tertiary ${styles.messageTime}`}
+                />
               </>
             )}
+
+            {messageType === "chat" && (
+              <StreamBubble
+                response={item.chat.response_payload}
+                messageTime={messageTime}
+                animate={!initChatIds.has(item.chat.id)}
+                onReveal={onScrollToBottomAction}
+                onComplete={responseWait?.chatId === item.chat.id ? responseWait.finish : undefined}
+              >
+                {chatItem?.chat_category === "feedback" &&
+                  chatItem.recognized_nutrition &&
+                  ("registered_menu" in chatItem && chatItem.registered_menu ? (
+                    <NutritionRegisteredCard
+                      registeredMenu={chatItem.registered_menu}
+                      isRecorded={recordedMenuIds.has(chatItem.registered_menu.menu_id)}
+                      isSavingMeal={isSavingMeal}
+                      onRecord={onRecordRegisteredMenu}
+                      onOpenMenu={(registeredMenu) => {
+                        const { dateKey, mealTime } = getCurrentDateTime();
+
+                        navigate(
+                          getMenuSelectionMenuDetailPath({
+                            menuId: registeredMenu.menu_id,
+                            dateKey,
+                            mealType: mealTime,
+                            returnPath: PATH.CHAT,
+                          }),
+                        );
+                      }}
+                    />
+                  ) : (
+                    <SubActionCard
+                      text={`영양성분을 인식했어요!\n어떤 브랜드의 음식인가요?`}
+                      action={() => {
+                        navigate(PATH.CHAT_NUTRITION_REGISTER, {
+                          state: chatItem.recognized_nutrition,
+                        });
+                      }}
+                      actionText="음식 입력하기"
+                    />
+                  ))}
+
+                {chatItem?.chat_category === "inquiry" && (
+                  <SubActionCard
+                    text={`더 자세한 도움이 필요하시면\n아래 버튼을 눌러주세요`}
+                    action={() => navigate(PATH.SETTINGS_FEEDBACK)}
+                    actionText="운영진에게 문의하기"
+                  />
+                )}
+              </StreamBubble>
+            )}
+
+            {messageType === "pending" && <AssistantPendingMessage />}
           </div>
-        )}
-
-        <div className={styles.messageArea} data-owner="ai">
-          {messageType === "meal" && (
-            <>
-              <MealRecordCard date={item.mealDate.date} mealTime={item.time} menus={item.menus} />
-              <span
-                data-owner="ai"
-                data-time={messageTime}
-                className={`caption-m-regular text-tertiary ${styles.messageTime}`}
-              />
-            </>
-          )}
-
-          {messageType === "chat" && (
-            <StreamBubble
-              response={item.chat.response_payload}
-              messageTime={messageTime}
-              animate={!initChatIds.has(item.chat.id)}
-              onReveal={onScrollToBottomAction}
-              onComplete={responseWait?.chatId === item.chat.id ? responseWait.finish : undefined}
-            >
-              {chatItem?.chat_category === "feedback" &&
-                chatItem.recognized_nutrition &&
-                ("registered_menu" in chatItem && chatItem.registered_menu ? (
-                  <SubActionCard
-                    text={`${chatItem.registered_menu.menu_name} 메뉴 등록 완료!\n등록한 영양정보를 확인해 보세요.`}
-                    action={() => {
-                      const registeredMenu = chatItem.registered_menu;
-                      if (!registeredMenu) return;
-
-                      const { dateKey, mealTime } = getCurrentDateTime();
-
-                      navigate(
-                        getMenuSelectionMenuDetailPath({
-                          menuId: registeredMenu.menu_id,
-                          dateKey,
-                          mealType: mealTime,
-                          returnPath: PATH.CHAT,
-                        }),
-                      );
-                    }}
-                    actionText="등록한 메뉴 보기"
-                  />
-                ) : (
-                  <SubActionCard
-                    text={`영양성분을 인식했어요!\n어느 브랜드의 메뉴인가요?`}
-                    action={() => {
-                      navigate(PATH.CHAT_NUTRITION_REGISTER, {
-                        state: chatItem.recognized_nutrition,
-                      });
-                    }}
-                    actionText="메뉴 입력하기"
-                  />
-                ))}
-
-              {chatItem?.chat_category === "inquiry" && (
-                <SubActionCard
-                  text={`더 자세한 도움이 필요하시면\n아래 버튼을 눌러주세요`}
-                  action={() => navigate(PATH.SETTINGS_FEEDBACK)}
-                  actionText="운영진에게 문의하기"
-                />
-              )}
-            </StreamBubble>
-          )}
-
-          {messageType === "pending" && <AssistantPendingMessage />}
-        </div>
-      </section>
-    );
-  });
+        </section>
+      );
+    }),
+  ];
 }
 
 function chatsByDate(chatList: ChatHistoryItemResponseDto[]) {
@@ -965,6 +968,71 @@ function SubActionCard({
   );
 }
 
+// 영양성분표로 음식을 등록한 뒤의 카드 한 장: 끼니를 골라 바로 기록하거나 등록한 음식을 본다
+function NutritionRegisteredCard({
+  registeredMenu,
+  isRecorded,
+  isSavingMeal,
+  onRecord,
+  onOpenMenu,
+}: {
+  registeredMenu: ChatNutritionLabelRegisteredMenuDto;
+  isRecorded: boolean;
+  isSavingMeal: boolean;
+  onRecord: (registeredMenu: ChatNutritionLabelRegisteredMenuDto, mealTime: MealType) => void;
+  onOpenMenu: (registeredMenu: ChatNutritionLabelRegisteredMenuDto) => void;
+}) {
+  const [mealTime, setMealTime] = useState<MealType>(() => getCurrentDateTime().mealTime);
+
+  return (
+    <div className={styles.card} data-border="primary">
+      <img src="/icons/characters/search.png" width={48} alt="" aria-hidden="true" />
+      <p className={`body-l-regular text-primary ${styles.subCardLabel}`}>
+        {isRecorded ? "등록 완료!" : "등록 완료!\n이 음식을 식사로 기록할까요?"}
+      </p>
+
+      {!isRecorded && (
+        <div className={`${styles.mealTimeChipList} ${styles.registeredMealTimeChipList}`}>
+          {MEAL_TIMES.map(({ type, label, icon }) => (
+            <button
+              type="button"
+              key={label}
+              className={styles.mealTimeChip}
+              data-isSelected={mealTime === type}
+              onClick={() => setMealTime(type)}
+            >
+              <SystemIcon name={icon} size={18} className="text-highlight" />
+              <span className="body-xs-regular text-primary">{label}</span>
+            </button>
+          ))}
+        </div>
+      )}
+
+      <div className={styles.mealTimeActionsSection}>
+        {!isRecorded && (
+          <Button
+            size="xs"
+            fullWidth
+            disabled={isSavingMeal}
+            onClick={() => onRecord(registeredMenu, mealTime)}
+          >
+            기록하기
+          </Button>
+        )}
+        <Button
+          size="xs"
+          fullWidth
+          variant="outlined"
+          border="secondary"
+          onClick={() => onOpenMenu(registeredMenu)}
+        >
+          등록한 음식 보기
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 function MealRecordCard({
   date,
   mealTime,
@@ -978,23 +1046,11 @@ function MealRecordCard({
   const isSingleMenu = menus.length === 1;
   const time = mealTimeNumberToLabel(mealTime);
   const [isMenuExtended, setIsMenuExtended] = useState<boolean>(true);
-  const [isMealDeleteOpen, setIsMealDeleteOpen] = useState<boolean>(false);
   const totalCalories = formatDisplayNumber(menus.reduce((sum, value) => sum + value.calories, 0));
   const navigate = useNavigate();
 
-  const { mutateAsync: deleteMealRecordByTime, isPending: isDeleteMealPending } =
-    useTodayMealRecordDeleteMutation();
-
   const handleToGoMealRecord = () => {
     navigate(getMealRecordPath(date, mealTime));
-  };
-
-  const handleDeleteMealRecord = () => {
-    for (const menu of menus) {
-      deleteMealRecordByTime({ date, time: mealTime as MealTime, menu_id: menu.id });
-    }
-
-    setIsMealDeleteOpen(false);
   };
 
   return (
@@ -1058,37 +1114,15 @@ function MealRecordCard({
         )}
       </section>
 
-      <section className={styles.mealRecordActionSection}>
-        <Button
-          onClick={() => setIsMealDeleteOpen(true)}
-          size="xs"
-          fullWidth
-          variant="outlined"
-          border="secondary"
-        >
-          기록 취소
-        </Button>
-        <Button
-          onClick={handleToGoMealRecord}
-          size="xs"
-          fullWidth
-          variant="outlined"
-          border="primary"
-        >
-          수정하기
-        </Button>
-      </section>
-
-      <ConfirmModal
-        open={isMealDeleteOpen}
-        onOpenChange={setIsMealDeleteOpen}
-        title="기록을 취소할까요?"
-        description="방금 기록한 식사 내용이 삭제돼요"
-        onConfirm={handleDeleteMealRecord}
-        confirmText="취소할래요"
-        cancelText="아니요"
-        confirmDisabled={isDeleteMealPending}
-      />
+      <Button
+        onClick={handleToGoMealRecord}
+        size="xs"
+        fullWidth
+        variant="outlined"
+        border="primary"
+      >
+        수정하기
+      </Button>
     </div>
   );
 }

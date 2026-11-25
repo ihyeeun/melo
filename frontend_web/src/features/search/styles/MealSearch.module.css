@@ -77,13 +77,11 @@
   outline: none;
 }
 
-.registeredSearchField,
-.addButton[data-isShow="false"] {
+.registeredMenuActions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
   margin-top: 15px;
-}
-
-.registeredSearchField[data-isShow="false"] {
-  display: none;
 }
 
 .registeredSearchInput {
@@ -220,27 +218,6 @@
   gap: 10px;
 }
 
-.directRegisterPrompt {
-  align-items: center;
-  background-color: var(--background-default);
-  border: 1px solid var(--border-subtle);
-  border-radius: 8px;
-  color: var(--text-primary);
-  display: flex;
-  gap: 16px;
-  justify-content: space-between;
-  padding: 16px 20px;
-  width: 100%;
-  margin-top: 12px;
-}
-
-.directRegisterPromptAction {
-  color: var(--text-tertiary);
-  margin-left: auto;
-  align-items: center;
-  display: flex;
-}
-
 .compactResultList {
   display: flex;
   flex-direction: column;
@@ -323,16 +300,20 @@
   gap: 30px;
 }
 
-.bottomTextContainer {
-  display: flex;
+.directRegisterLink {
   align-items: center;
+  align-self: center;
+  display: flex;
+  gap: 8px;
   justify-content: center;
-  padding: 14px 0;
+  margin: 0 auto;
+  padding: 12px 0 10px;
 }
 
-.bottomText {
-  color: var(--text-primary);
-  padding-right: 10px;
+.directRegisterLinkAction {
+  align-items: center;
+  display: inline-flex;
+  gap: 2px;
 }
 
 @keyframes personal-menu-panel-enter {

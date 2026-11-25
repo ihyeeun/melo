@@ -9,35 +9,41 @@ import RestaurantDetailSheet from "@/features/restaurant/components/map/Restaura
 import MyLocationMarker from "@/features/restaurant/components/markers/MyLocationMarker";
 import NearbyRestaurantMarkers from "@/features/restaurant/components/markers/NearbyRestaurantMarkers";
 import { SHEET_VIEW_SNAP } from "@/features/restaurant/constants/mapSheet.policy";
-import { useNearbyRestaurantsQuery } from "@/features/restaurant/hooks/queries/restaurant.query";
+import {
+  useNearbyRestaurantsQuery,
+  useRestaurantBrandsQuery,
+} from "@/features/restaurant/hooks/queries/restaurant.query";
 import { useCurrentLocation } from "@/features/restaurant/hooks/useCurrentLocation";
-import { getSheetHeight, useMapSheet } from "@/features/restaurant/hooks/useMapSheet";
+import {
+  getSheetHeight,
+  type SheetRestaurant,
+  useMapSheet,
+} from "@/features/restaurant/hooks/useMapSheet";
 import styles from "@/features/restaurant/styles/MapPage.module.css";
 import type { LatLng } from "@/features/restaurant/utils/currentLocation.util";
+import { getRestaurantDistance } from "@/features/restaurant/utils/distance.util";
 import {
   getMapCenterForVisibleArea,
   getVisibleAreaCenter,
   type KakaoMap,
   loadKakaoMapSdk,
 } from "@/features/restaurant/utils/kakaoMap.util";
-import { dismissKeyboard } from "@/features/restaurant/utils/keyboard.util";
 import { PATH } from "@/router/path";
+import { track } from "@/shared/analytics/analytics";
+import { EVENT_NAME } from "@/shared/analytics/analytics.constants";
 import { requestNativeAppSettingsOpen } from "@/shared/api/bridge/nativeBridge";
 import { useNativeAppFeature } from "@/shared/api/bridge/useNativeAppFeature";
 import { Button } from "@/shared/commons/button/Button";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import { SearchInput } from "@/shared/commons/input/SearchInput";
-import { navigate } from "@/shared/navigation/stackflowNavigation";
+import { navigate, useStackflowBackHandler } from "@/shared/navigation/stackflowNavigation";
+import { dismissKeyboard } from "@/shared/utils/keyboard.util";
 
 const DEFAULT_CENTER = { lat: 37.5665, lng: 126.978 };
 const CATEGORY = "RESTAURANT" as const;
 
-const LOCATION_MESSAGE = {
-  locating: "현재 위치를 찾는 중이에요",
-  denied: "위치 권한을 허용하면 내 주변을 볼 수 있어요",
-  blocked: "설정에서 위치 권한을 허용하면 내 주변을 볼 수 있어요",
-  unavailable: "현재 위치를 확인하지 못했어요",
-};
+// restaurant_search: 검색을 실행한 방법과 그때의 검색어
+type SearchRequest = { id: number; trigger: "keyboard" | "map_button"; query: string };
 
 // screen: RES-01-001
 export default function MapPage() {
@@ -54,11 +60,21 @@ export default function MapPage() {
   const detailRestaurant = currentView.type === "detail" ? currentView.restaurant : null;
   const [isMapMoved, setIsMapMoved] = useState(false);
   const [mapSearchCenter, setMapSearchCenter] = useState<LatLng | null>(null);
-  const searchCenter = mapSearchCenter ?? center;
+  // 검색 중에 [현재 위치]를 누르면 검색한 기준점을 붙잡아 둬서, 지도만 옮기고 검색 결과는 그대로 둔다.
+  const [pinnedSearchCenter, setPinnedSearchCenter] = useState<LatLng | null>(null);
+  const searchCenter = (searchKeyword ? pinnedSearchCenter : null) ?? mapSearchCenter ?? center;
   const restaurantSearch = { category: CATEGORY, center: searchCenter, keyword: searchKeyword };
   // 목록과 같은 쿼리라 요청은 한 번만 나간다. 카카오가 거리순으로 주므로 첫 번째가 가장 가깝다.
-  const { data: searchResult } = useNearbyRestaurantsQuery(CATEGORY, searchCenter, searchKeyword);
+  const { data: searchResult, isFetching: isSearching } = useNearbyRestaurantsQuery(
+    CATEGORY,
+    searchCenter,
+    searchKeyword,
+  );
   const nearestResult = searchKeyword ? searchResult?.[0] : undefined;
+  // 목록 · 마커와 같은 쿼리라 요청은 한 번만 나간다
+  const brandByPlaceId = useRestaurantBrandsQuery(searchResult?.map(({ id }) => id) ?? []);
+  const [searchRequest, setSearchRequest] = useState<SearchRequest | null>(null);
+  const trackedSearchIdRef = useRef<number | null>(null);
 
   // 검색창과 시트가 가리는 높이. 다 펼친 시트는 지도를 모두 가리므로, 다시 내렸을 때(중간 높이)를 기준으로 한다.
   const getHiddenMapHeight = (sheetSnapPoint: SheetSnapPoint = snapPoint) => ({
@@ -70,9 +86,17 @@ export default function MapPage() {
     if (map) map.setCenter(getMapCenterForVisibleArea(map, position, getHiddenMapHeight()));
   };
 
+  // 검색어를 지우면 지도가 검색 전 기준점으로 돌아가 목록과 맞으므로 [현 지도에서 검색]을 내린다.
+  // 결과를 받기 전에 지웠으면 그 검색은 restaurant_search로 남기지 않는다.
+  const clearSearchKeyword = () => {
+    setSearchKeyword("");
+    setIsMapMoved(false);
+    setSearchRequest(null);
+  };
+
   const handleSearchInputChange = (value: string) => {
     setSearchInput(value);
-    if (!value.trim()) setSearchKeyword("");
+    if (!value.trim() && searchKeyword) clearSearchKeyword();
   };
 
   // 지도는 옮기지 않는다. 검색하면 시트가 목록 높이로 바뀌므로, 그때 보이는 영역의 가운데를 기준으로 찾는다.
@@ -85,8 +109,10 @@ export default function MapPage() {
   const handleSearchSubmit = (value: string) => {
     // 지도를 끌어 옮긴 뒤 검색하면 옮긴 지도에서 찾는다.
     if (isMapMoved) setSearchCenterToMapArea();
+    setPinnedSearchCenter(null);
     setSearchKeyword(value.trim());
     setIsMapMoved(false);
+    setSearchRequest({ id: Date.now(), trigger: "keyboard", query: value.trim() });
     moveSheet({ type: "submit_search" });
   };
 
@@ -94,13 +120,70 @@ export default function MapPage() {
     if (!map) return;
 
     setSearchCenterToMapArea();
+    setPinnedSearchCenter(null);
     setIsMapMoved(false);
+    setSearchRequest({ id: Date.now(), trigger: "map_button", query: searchKeyword });
     moveSheet({ type: "search_map_area" });
   };
 
+  useStackflowBackHandler(
+    searchInput.trim()
+      ? () => {
+          if (currentView.type === "detail") return false;
+
+          dismissKeyboard();
+          setSearchInput("");
+          if (searchKeyword) clearSearchKeyword();
+          return true;
+        }
+      : null,
+  );
+
+  // 검색 결과와 멜로 등록 여부까지 받은 뒤 한 번 남긴다
+  useEffect(() => {
+    if (!searchRequest || trackedSearchIdRef.current === searchRequest.id) return;
+    if (isSearching || !searchResult) return;
+    if (!searchResult.every(({ id }) => brandByPlaceId.has(id))) return;
+
+    trackedSearchIdRef.current = searchRequest.id;
+    track(EVENT_NAME.RESTAURANT_SEARCH, {
+      trigger: searchRequest.trigger,
+      query: searchRequest.query,
+      result_count: searchResult.length,
+      registered_count: searchResult.filter(({ id }) => brandByPlaceId.get(id)).length,
+    });
+  }, [searchRequest, isSearching, searchResult, brandByPlaceId]);
+
+  const handleSelectRestaurant = (restaurant: SheetRestaurant, target: "card" | "pin") => {
+    track(EVENT_NAME.RESTAURANT_CARD_CLICK, {
+      restaurant_name: restaurant.name,
+      target,
+      // [AI 추정] 식당을 구분하는 값이 응답에 없어 멜로 등록 식당은 모두 franchise로 보낸다
+      data_type: restaurant.restaurantId !== null ? "franchise" : "none",
+    });
+    // 상세 시트 · 식당 메뉴 전체 화면도 목록처럼 내 위치에서 잰 거리를 보여 준다
+    const distance = getRestaurantDistance(restaurant, myLocation);
+    moveSheet({
+      type: target === "pin" ? "click_marker" : "click_restaurant",
+      restaurant: { ...restaurant, distance },
+    });
+  };
+
+  // 다시 물어볼 수 있으면 권한 팝업, 아니면 설정 앱으로. 설정에서 돌아오면 자동으로 다시 확인한다
+  const handleAllowLocation = () => {
+    if (status === "blocked" && canOpenAppSettings) {
+      requestNativeAppSettingsOpen();
+      return;
+    }
+
+    handleMoveToMyLocation();
+  };
+
+  // 검색 중이면 검색 결과는 그대로 두고 지도만 옮긴다. 지도가 목록과 달라지므로 [현 지도에서 검색]을 띄운다.
   const handleMoveToMyLocation = () => {
+    if (searchKeyword) setPinnedSearchCenter(searchCenter);
     setMapSearchCenter(null);
-    setIsMapMoved(false);
+    setIsMapMoved(searchKeyword !== "");
     // 위치를 다시 받기 전까지는 마지막으로 받은 위치로 먼저 옮긴다.
     if (center) moveMapToVisibleCenter(center);
     retry();
@@ -120,16 +203,22 @@ export default function MapPage() {
     if (!map) return;
 
     const { event } = window.kakao.maps;
-    const handleMapDragEnd = () => setIsMapMoved(true);
+    const handleMapMoved = () => setIsMapMoved(true);
 
-    // 코드로 옮길 때는 발생하지 않아서, 사용자가 지도를 끌었을 때만 버튼이 나타난다.
-    event.addListener(map, "dragend", handleMapDragEnd);
-    return () => event.removeListener(map, "dragend", handleMapDragEnd);
+    // 코드로 옮길 때(setCenter · panTo)는 발생하지 않아서, 사용자가 지도를 끌거나 확대 · 축소했을 때만 버튼이 나타난다.
+    event.addListener(map, "dragend", handleMapMoved);
+    event.addListener(map, "zoom_changed", handleMapMoved);
+    return () => {
+      event.removeListener(map, "dragend", handleMapMoved);
+      event.removeListener(map, "zoom_changed", handleMapMoved);
+    };
   }, [map]);
 
   const moveToSearchCenter = useEffectEvent(() => {
     // 검색어로 찾을 때는 결과가 온 뒤 가장 가까운 식당으로 옮긴다.
-    if (!searchKeyword && searchCenter) moveMapToVisibleCenter(searchCenter);
+    // 검색 중에 [현재 위치]를 눌렀으면 결과는 그대로 두고, 새로 받은 내 위치로 옮긴다.
+    const target = searchKeyword ? pinnedSearchCenter && center : searchCenter;
+    if (target) moveMapToVisibleCenter(target);
   });
 
   // 내 위치를 받았거나 검색어를 지우면 검색 기준점으로 지도를 옮긴다.
@@ -203,41 +292,39 @@ export default function MapPage() {
             <SystemIcon name="refresh" size={20} className="text-highlight" />현 지도에서 검색
           </button>
         )}
-        {map && status !== "success" && (
+        {map && status === "locating" && (
           <div className={styles.locationBadge}>
             <p className="caption-m-medium text-secondary" role="status">
-              {LOCATION_MESSAGE[status]}
+              현재 위치를 찾는 중이에요
             </p>
-            <div className={styles.locationBadgeActions}>
-              {status === "blocked" && canOpenAppSettings && (
-                <button
-                  type="button"
-                  className={`caption-m-semi ${styles.retryButton}`}
-                  onClick={requestNativeAppSettingsOpen}
-                >
-                  설정으로 이동
-                </button>
-              )}
-              {status !== "locating" && (
-                <button
-                  type="button"
-                  className={`caption-m-semi ${styles.retryButton}`}
-                  onClick={handleMoveToMyLocation}
-                >
-                  다시 찾기
-                </button>
-              )}
-            </div>
           </div>
         )}
       </section>
+
+      {/* 위치 권한 거부 · 위치 확인 실패 (기획 초안 4458:37146 · 4458:37281) */}
+      {map && (status === "denied" || status === "blocked" || status === "unavailable") && (
+        <div className={styles.locationCard} role="status">
+          <p className="body-l-medium text-primary textCenter">
+            {status === "unavailable"
+              ? "현재 위치를 확인하지 못했어요"
+              : "위치 권한을 허용하면\n내 주변 식당을 볼 수 있어요"}
+          </p>
+          <Button
+            size="s"
+            fullWidth
+            onClick={status === "unavailable" ? handleMoveToMyLocation : handleAllowLocation}
+          >
+            {status === "unavailable" ? "다시 찾기" : "위치 권한 허용하기"}
+          </Button>
+        </div>
+      )}
 
       {map && (
         <NearbyRestaurantMarkers
           map={map}
           {...restaurantSearch}
           selectedPlaceId={detailRestaurant?.id ?? null}
-          onSelectRestaurant={(restaurant) => moveSheet({ type: "click_marker", restaurant })}
+          onSelectRestaurant={(restaurant) => handleSelectRestaurant(restaurant, "pin")}
         />
       )}
       {map && myLocation && <MyLocationMarker map={map} position={myLocation} />}
@@ -278,7 +365,8 @@ export default function MapPage() {
           <NearbyRestaurantList
             {...restaurantSearch}
             isMapAreaSearch={mapSearchCenter !== null}
-            onSelectRestaurant={(restaurant) => moveSheet({ type: "click_restaurant", restaurant })}
+            myLocation={myLocation}
+            onSelectRestaurant={(restaurant) => handleSelectRestaurant(restaurant, "card")}
           />
         )}
         {currentView.type === "detail" && (

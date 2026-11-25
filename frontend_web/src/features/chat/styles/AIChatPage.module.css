@@ -81,6 +81,10 @@
   left: calc(100% + 8px);
 }
 
+.recentOnlyNotice {
+  padding: 8px 0;
+}
+
 .emptyHistorySection {
   display: flex;
   flex-direction: column;
@@ -312,12 +316,6 @@
   margin-bottom: 12px;
 }
 
-.mealRecordActionSection {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 8px;
-}
-
 .menuMeta {
   display: flex;
   align-items: center;
@@ -415,6 +413,10 @@
 .mealTimeChip[data-isSelected="true"] {
   border-color: var(--border-strong);
   background-color: var(--background-selected);
+}
+
+.registeredMealTimeChipList {
+  margin-top: 0;
 }
 
 .mealTimeActionsSection {

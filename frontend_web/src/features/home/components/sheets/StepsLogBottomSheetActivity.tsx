@@ -82,7 +82,7 @@ export default function StepsLogBottomSheetActivity() {
       },
       onError: (error) => {
         if (isRequestAbortError(error)) return;
-        toast.error("걸음 수 기록에 실패했어요");
+        toast.error("걸음 수를 기록하지 못했어요");
       },
     },
   );
@@ -90,14 +90,11 @@ export default function StepsLogBottomSheetActivity() {
   const handleSubmit = () => {
     const submittedSteps = draftSteps;
 
-    if (submittedSteps === undefined) {
-      toast.warning("걸음 수를 입력해주세요");
-      return;
-    }
+    if (submittedSteps === undefined) return;
 
     const nextSteps = toInteger(submittedSteps);
     if (nextSteps < 0 || nextSteps > MAX_STEPS) {
-      toast.warning("걸음 수는 0 ~ 999,999 사이로 입력해주세요");
+      toast.warning("걸음 수는 0~999,999 사이로 입력해주세요");
       return;
     }
 
@@ -168,7 +165,12 @@ export default function StepsLogBottomSheetActivity() {
           </div>
           {canInputSteps && (
             <div className={styles.sheetActions}>
-              <Button onClick={handleSubmit} fullWidth size="m" disabled={isManualStepsPending}>
+              <Button
+                onClick={handleSubmit}
+                fullWidth
+                size="m"
+                disabled={isManualStepsPending || draftSteps === undefined}
+              >
                 기록하기
               </Button>
               <Button

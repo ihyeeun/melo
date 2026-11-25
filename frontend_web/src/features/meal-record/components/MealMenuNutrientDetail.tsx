@@ -40,6 +40,8 @@ type MealMenuNutrientDetailProps = {
   onSelectionChange?: (selection: MealMenuNutrientSelection | null) => void;
   onEditAndAdd?: () => void;
   showEditSection?: boolean;
+  // AI 채팅 [등록한 음식 보기]로 연 상세는 '먹은 양'을 고르지 않는다
+  showServingInput?: boolean;
   detailListId?: string;
 };
 
@@ -180,6 +182,7 @@ export function MealMenuNutrientDetail({
   onSelectionChange,
   onEditAndAdd,
   showEditSection = true,
+  showServingInput = true,
   detailListId = "meal-record-detail-list",
 }: MealMenuNutrientDetailProps) {
   const servingContext = useMemo(() => parseServingContext(menu), [menu]);
@@ -443,131 +446,133 @@ export function MealMenuNutrientDetail({
         </div>
       </section>
 
-      <section className={styles.servingInputSection}>
-        <p className="title-s-semi text-primary">먹은 양</p>
-        <Tabs.Root
-          className={styles.tabRoot}
-          value={inputMode}
-          onValueChange={(nextValue) => {
-            handleModeChange(nextValue === "weight" ? "weight" : "unit");
-          }}
-        >
-          <Tabs.List className={styles.tabsList}>
-            <Tabs.Tab value="unit" className={`${styles.tab}`}>
-              <span className="body-l-medium">{formatBaseServingUnit(menu.unit_quantity)}</span>
-              <span className="body-l-regular">
-                ({menu.weight}
-                {menu.unit === MENU_UNIT.GRAM ? "g" : "ml"})
-              </span>
-            </Tabs.Tab>
-            <Tabs.Tab value="weight" className={`${styles.tab} body-l-medium`}>
-              {menu.unit === MENU_UNIT.GRAM ? "g" : "ml"}
-            </Tabs.Tab>
+      {showServingInput && (
+        <section className={styles.servingInputSection}>
+          <p className="title-s-semi text-primary">먹은 양</p>
+          <Tabs.Root
+            className={styles.tabRoot}
+            value={inputMode}
+            onValueChange={(nextValue) => {
+              handleModeChange(nextValue === "weight" ? "weight" : "unit");
+            }}
+          >
+            <Tabs.List className={styles.tabsList}>
+              <Tabs.Tab value="unit" className={`${styles.tab}`}>
+                <span className="body-l-medium">{formatBaseServingUnit(menu.unit_quantity)}</span>
+                <span className="body-l-regular">
+                  ({menu.weight}
+                  {menu.unit === MENU_UNIT.GRAM ? "g" : "ml"})
+                </span>
+              </Tabs.Tab>
+              <Tabs.Tab value="weight" className={`${styles.tab} body-l-medium`}>
+                {menu.unit === MENU_UNIT.GRAM ? "g" : "ml"}
+              </Tabs.Tab>
 
-            <Tabs.Indicator className={styles.tabsIndicator} />
-          </Tabs.List>
+              <Tabs.Indicator className={styles.tabsIndicator} />
+            </Tabs.List>
 
-          <Tabs.Panel value="unit" className={styles.TabsPanel}>
-            <div className={styles.FieldGroup}>
-              <button
-                type="button"
-                className={styles.StepButton}
-                aria-label="입력값 감소"
-                onClick={() => handleInputStep(-1)}
-              >
-                <SystemIcon name="minus" size={18} />
-              </button>
-              <NumberField
-                value={quantityInput}
-                onChange={setQuantityInput}
-                min={MIN_QUANTITY}
-                max={MAX_QUANTITY}
-                step={QUANTITY_STEP}
-                showControls={false}
-                allowOutOfRange
-                normalizeValue={(value) => roundDecimal(value, 1)}
-                isInputTextAllowed={isQuantityInputAllowed}
-                unstyled
-                classNames={{
-                  group: styles.FieldInputGroup,
-                  inputWrapper: styles.FieldInputWrapper,
-                  input: `title-m-medium ${styles.FieldInput}`,
-                  unit: `title-s-regular text-primary`,
-                }}
-                format={{
-                  minimumFractionDigits: 0,
-                  maximumFractionDigits: 1,
-                  useGrouping: false,
-                }}
-                inputProps={{
-                  inputMode: "decimal",
-                  "aria-label": "단위량 또는 중량 입력",
-                  onBlur: handleInputBlur,
-                }}
-                unit={getServingUnitLabel(menu.unit_quantity)}
-              />
-              <button
-                type="button"
-                className={styles.StepButton}
-                aria-label="입력값 증가"
-                onClick={() => handleInputStep(1)}
-              >
-                <SystemIcon name="plus" size={18} />
-              </button>
-            </div>
-          </Tabs.Panel>
+            <Tabs.Panel value="unit" className={styles.TabsPanel}>
+              <div className={styles.FieldGroup}>
+                <button
+                  type="button"
+                  className={styles.StepButton}
+                  aria-label="입력값 감소"
+                  onClick={() => handleInputStep(-1)}
+                >
+                  <SystemIcon name="minus" size={18} />
+                </button>
+                <NumberField
+                  value={quantityInput}
+                  onChange={setQuantityInput}
+                  min={MIN_QUANTITY}
+                  max={MAX_QUANTITY}
+                  step={QUANTITY_STEP}
+                  showControls={false}
+                  allowOutOfRange
+                  normalizeValue={(value) => roundDecimal(value, 1)}
+                  isInputTextAllowed={isQuantityInputAllowed}
+                  unstyled
+                  classNames={{
+                    group: styles.FieldInputGroup,
+                    inputWrapper: styles.FieldInputWrapper,
+                    input: `title-m-medium ${styles.FieldInput}`,
+                    unit: `title-s-regular text-primary`,
+                  }}
+                  format={{
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 1,
+                    useGrouping: false,
+                  }}
+                  inputProps={{
+                    inputMode: "decimal",
+                    "aria-label": "단위량 또는 중량 입력",
+                    onBlur: handleInputBlur,
+                  }}
+                  unit={getServingUnitLabel(menu.unit_quantity)}
+                />
+                <button
+                  type="button"
+                  className={styles.StepButton}
+                  aria-label="입력값 증가"
+                  onClick={() => handleInputStep(1)}
+                >
+                  <SystemIcon name="plus" size={18} />
+                </button>
+              </div>
+            </Tabs.Panel>
 
-          <Tabs.Panel value="weight" className={styles.TabsPanel}>
-            <div className={styles.FieldGroup}>
-              <button
-                type="button"
-                className={styles.StepButton}
-                aria-label="입력값 감소"
-                onClick={() => handleInputStep(-1)}
-              >
-                <SystemIcon name="minus" size={18} />
-              </button>
-              <NumberField
-                value={quantityInput}
-                onChange={setQuantityInput}
-                min={MIN_QUANTITY}
-                max={MAX_QUANTITY}
-                step={QUANTITY_STEP}
-                showControls={false}
-                allowOutOfRange
-                normalizeValue={(value) => roundDecimal(value, 1)}
-                isInputTextAllowed={isQuantityInputAllowed}
-                unstyled
-                classNames={{
-                  group: styles.FieldInputGroup,
-                  inputWrapper: styles.FieldInputWrapper,
-                  input: `title-m-medium ${styles.FieldInput} ${styles.FieldInputWeightWidth}`,
-                  unit: `title-s-regular text-primary`,
-                }}
-                format={{
-                  minimumFractionDigits: 0,
-                  maximumFractionDigits: 1,
-                  useGrouping: false,
-                }}
-                inputProps={{
-                  inputMode: "decimal",
-                  "aria-label": "단위량 또는 중량 입력",
-                  onBlur: handleInputBlur,
-                }}
-                unit={menu.unit === MENU_UNIT.GRAM ? "g" : "ml"}
-              />
-              <button
-                type="button"
-                className={styles.StepButton}
-                aria-label="입력값 증가"
-                onClick={() => handleInputStep(1)}
-              >
-                <SystemIcon name="plus" size={18} />
-              </button>
-            </div>
-          </Tabs.Panel>
-        </Tabs.Root>
-      </section>
+            <Tabs.Panel value="weight" className={styles.TabsPanel}>
+              <div className={styles.FieldGroup}>
+                <button
+                  type="button"
+                  className={styles.StepButton}
+                  aria-label="입력값 감소"
+                  onClick={() => handleInputStep(-1)}
+                >
+                  <SystemIcon name="minus" size={18} />
+                </button>
+                <NumberField
+                  value={quantityInput}
+                  onChange={setQuantityInput}
+                  min={MIN_QUANTITY}
+                  max={MAX_QUANTITY}
+                  step={QUANTITY_STEP}
+                  showControls={false}
+                  allowOutOfRange
+                  normalizeValue={(value) => roundDecimal(value, 1)}
+                  isInputTextAllowed={isQuantityInputAllowed}
+                  unstyled
+                  classNames={{
+                    group: styles.FieldInputGroup,
+                    inputWrapper: styles.FieldInputWrapper,
+                    input: `title-m-medium ${styles.FieldInput} ${styles.FieldInputWeightWidth}`,
+                    unit: `title-s-regular text-primary`,
+                  }}
+                  format={{
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 1,
+                    useGrouping: false,
+                  }}
+                  inputProps={{
+                    inputMode: "decimal",
+                    "aria-label": "단위량 또는 중량 입력",
+                    onBlur: handleInputBlur,
+                  }}
+                  unit={menu.unit === MENU_UNIT.GRAM ? "g" : "ml"}
+                />
+                <button
+                  type="button"
+                  className={styles.StepButton}
+                  aria-label="입력값 증가"
+                  onClick={() => handleInputStep(1)}
+                >
+                  <SystemIcon name="plus" size={18} />
+                </button>
+              </div>
+            </Tabs.Panel>
+          </Tabs.Root>
+        </section>
+      )}
 
       <section className={styles.detailSection}>
         <button

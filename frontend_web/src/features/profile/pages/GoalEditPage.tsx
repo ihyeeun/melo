@@ -87,15 +87,15 @@ function getSummaryValue(field: EditableField, draft: GoalEditDraft) {
   }
 
   if (field === "birthYear") {
-    return draft.birthYear !== undefined ? `${draft.birthYear}년` : "-";
+    return draft.birthYear !== undefined ? `${draft.birthYear} 년` : "-";
   }
 
   if (field === "height") {
-    return draft.height !== undefined ? `${formatDecimal(draft.height)}cm` : "-";
+    return draft.height !== undefined ? `${formatDecimal(draft.height)} cm` : "-";
   }
 
   if (field === "weight") {
-    return draft.weight !== undefined ? `${formatDecimal(draft.weight)}kg` : "-";
+    return draft.weight !== undefined ? `${formatDecimal(draft.weight)} kg` : "-";
   }
 
   if (field === "activity") {
@@ -106,7 +106,7 @@ function getSummaryValue(field: EditableField, draft: GoalEditDraft) {
     return GOAL_OPTIONS.find((option) => option.value === draft.goal)?.title ?? "-";
   }
 
-  return draft.target_weight !== undefined ? `${formatDecimal(draft.target_weight)}kg` : "-";
+  return draft.target_weight !== undefined ? `${formatDecimal(draft.target_weight)} kg` : "-";
 }
 
 // screen: PRF-01-003
@@ -150,10 +150,7 @@ export default function GoalEditPage() {
 
     // 체중 유지면 목표 몸무게는 현재 몸무게로 정해져 있어 따로 바꿀 수 없다
     if (field === "goalWeight" && visibleDraft.goal === GOAL.MAINTAIN_WEIGHT) {
-      toast.info(
-        "체중 유지 목표는 현재 몸무게로 맞춰져요",
-        "목표를 바꾸면 목표 몸무게를 수정할 수 있어요.",
-      );
+      toast.info("체중 유지는 지금 몸무게가 목표예요");
       return;
     }
 

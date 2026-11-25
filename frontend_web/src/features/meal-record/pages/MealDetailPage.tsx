@@ -139,7 +139,7 @@ export default function MealDetailPage() {
       if (menuId !== null) removeDeletedMenuFromDraft(menuId);
       void queryClient.invalidateQueries({ queryKey: homeQueryKeys.dayMeals.all });
       void queryClient.invalidateQueries({ queryKey: folderQueryKeys.details() });
-      toast.success("삭제되었어요");
+      toast.success("음식을 삭제했어요");
       handleGoBack();
     },
   });
@@ -149,9 +149,9 @@ export default function MealDetailPage() {
   const backFallbackPath = getBackFallbackPath();
   const failureMessage =
     menuId === null
-      ? "잘못된 접근입니다."
+      ? "음식 정보를 찾지 못했어요"
       : isLoadingError
-        ? "메뉴 정보를 불러오지 못했어요"
+        ? "음식 정보를 불러오지 못했어요"
         : null;
 
   useEffect(() => {
@@ -302,7 +302,7 @@ export default function MealDetailPage() {
     (meal.data_source === MENU_DATA_SOURCE.PUBLIC || mealIsDeleted === 0);
   const addButtonLabel = isPersonalMenuEditMode ? "추가하기" : "담기";
   const footerButtonLabel = mealIsDeleted
-    ? "삭제된 메뉴라 담을 수 없어요"
+    ? "삭제된 음식이라 담을 수 없어요"
     : isAlreadyQueued
       ? "수정하기"
       : addButtonLabel;
@@ -406,12 +406,17 @@ export default function MealDetailPage() {
           onSelectionChange={setSelection}
           onEditAndAdd={handleEditAndAdd}
           showEditSection={showEditSection}
+          showServingInput={!isFromChat}
         />
       </main>
 
-      {/* AI 채팅 [등록한 메뉴 보기]로 연 상세는 확인 · 수정만 한다([담기] · [삭제] 숨김) */}
-      {!isFromChat && (
-        <footer className={`footer`}>
+      <footer className={`footer`}>
+        {/* AI 채팅 [등록한 음식 보기]로 연 상세는 확인 · 수정만 한다([담기] · [삭제] 대신 [확인했어요]) */}
+        {isFromChat ? (
+          <Button variant="default" size="m" fullWidth onClick={handleGoBack}>
+            확인했어요
+          </Button>
+        ) : (
           <Button
             variant="default"
             size="m"
@@ -421,17 +426,18 @@ export default function MealDetailPage() {
           >
             {footerButtonLabel}
           </Button>
-        </footer>
-      )}
+        )}
+      </footer>
 
       {/* screen: DIET-02-001_modal-delete */}
       <ConfirmModal
         open={isDeleteConfirmOpen}
         onOpenChange={setIsDeleteConfirmOpen}
-        title="영양 성분 삭제"
-        description="저장한 영양 성분을 삭제할까요?"
+        title="영양성분 삭제"
+        description={"저장한 영양성분을 삭제할까요?\n삭제하면 되돌릴 수 없어요"}
         cancelText="취소"
         confirmText="삭제"
+        emphasis="cancel"
         confirmDisabled={isDeletePending}
         onConfirm={handleConfirmDelete}
       />

@@ -173,6 +173,10 @@
   gap: 8px;
 }
 
+.nutritionSection .infoTrigger {
+  color: var(--text-disabled);
+}
+
 .macrosGroup {
   display: grid;
   gap: 12px;

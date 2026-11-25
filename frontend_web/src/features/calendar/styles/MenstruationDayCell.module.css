@@ -1,7 +1,7 @@
+/* 날짜 칸 규칙: 기록 탭 달력과 같고(COM-00-003), 생리일 · 예정일 표시를 더한다 (MEN-01-001 · 002 G1) */
 .root {
-  --day-muted-color: var(--text-disabled);
-
   align-items: center;
+  border: 1.5px solid transparent;
   border-radius: 16px;
   color: var(--text-secondary);
   cursor: pointer;
@@ -9,18 +9,42 @@
   flex-direction: column;
   justify-content: center;
 
-  &[data-month-background="true"] {
-    --day-muted-color: var(--coral-300);
-  }
-
-  &[data-outside="true"] {
-    color: var(--day-muted-color);
-  }
-
-  /* 고를 수 있는 범위(오늘 포함 7일) 밖의 날짜 */
+  /* 월간의 앞 · 뒤 달 날짜와 고를 수 없는 날(오늘+7일부터)은 같은 회색 글자 */
+  &[data-view="month"][data-outside="true"],
   &[data-disabled="true"] {
     color: var(--text-disabled);
+  }
+
+  &[data-disabled="true"] {
     cursor: default;
+  }
+
+  /* 생리일(기록)은 연주황 채움, 예정일(다음 생리 예상 시작일)은 연주황 점선 외곽선 */
+  &[data-menstruation="menstrual_recorded"] {
+    background-color: var(--coral-100);
+  }
+
+  &[data-menstruation="next_predicted"] {
+    border: 1.5px dashed var(--coral-300);
+  }
+
+  /* 월간의 앞 · 뒤 달 날짜에는 생리일 · 예정일을 표시하지 않는다 */
+  &[data-view="month"][data-outside="true"] {
+    background-color: transparent;
+    border-color: transparent;
+  }
+
+  /* 오늘(선택 안 됨)은 주황 외곽선 */
+  &[data-today="true"] {
+    box-shadow: inset 0 0 0 2px var(--btn-default);
+  }
+
+  /* 선택은 주황 채움 · 흰 글자 — 생리일 · 예정일과 겹치면 선택이 우선 */
+  &[data-selected="true"] {
+    background-color: var(--btn-default);
+    border-color: transparent;
+    box-shadow: none;
+    color: var(--background-default);
   }
 }
 
@@ -57,84 +81,6 @@
     background-color 160ms ease,
     border-color 160ms ease,
     color 160ms ease;
-}
-
-:where(.root) {
-  &[data-view="month"][data-outside="false"] {
-    background-color: rgba(255, 244, 241, 50%);
-  }
-
-  &[data-view="week"][data-selected="true"],
-  &[data-view="month"][data-selected="true"] {
-    background-color: rgba(255, 255, 255, 70%);
-    color: var(--text-primary);
-  }
-
-  &[data-month-background="true"][data-view="month"][data-selected="true"] {
-    border: none;
-    background-color: var(--coral-400);
-    color: var(--background-default);
-  }
-
-  /* 여러 날짜를 고르는 화면에서는 내부 원형 표시가 오늘 상태도 담당한다. */
-  &[data-view="month"][data-today="true"]:where([data-selection-mode="single"]) {
-    border: 1.5px solid var(--coral-300);
-    background-color: rgba(255, 255, 255, 70%);
-  }
-
-  &[data-view="month"][data-selected="true"] {
-    border: 2px solid var(--coral-400);
-  }
-
-  &[data-view="week"][data-menstruation="menstrual_recorded"],
-  &[data-view="month"][data-menstruation="menstrual_recorded"] {
-    background-color: var(--coral-100);
-    color: var(--text-secondary);
-    mix-blend-mode: multiply;
-  }
-
-  &[data-view="month"][data-menstruation="menstrual_recorded"] {
-    background-color: var(--coral-100);
-  }
-
-  &[data-view="week"][data-menstruation="next_predicted"],
-  &[data-view="month"][data-menstruation="next_predicted"] {
-    border: 1px dashed var(--border-strong);
-    color: var(--text-secondary);
-  }
-
-  &[data-view="week"][data-selected="true"][data-menstruation="next_predicted"],
-  &[data-view="month"][data-selected="true"][data-menstruation="next_predicted"] {
-    background-color: var(--coral-50);
-  }
-
-  &[data-outside="true"][data-menstruation="menstrual_recorded"] {
-    color: var(--coral-400);
-    opacity: 0.4;
-  }
-
-  &[data-view="month"][data-selection-mode="multiple"] {
-    background-color: transparent;
-
-    &[data-today="true"] {
-      background-color: var(--navy-800);
-      color: var(--background-default);
-    }
-
-    &[data-future="true"][data-selected="false"] {
-      color: var(--text-disabled);
-    }
-
-    &[data-selected="true"] {
-      background-color: var(--coral-400);
-      color: var(--background-default);
-    }
-
-    &[data-selected="true"][data-today="true"] {
-      box-shadow: 0 0 0 1.5px var(--navy-800);
-      border: 1.5px solid var(--navy-800);
-    }
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {

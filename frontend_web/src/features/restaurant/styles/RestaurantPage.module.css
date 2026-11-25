@@ -256,6 +256,11 @@
   margin-bottom: 16px;
 }
 
+.menuPageTitle > [data-system-icon] {
+  margin-left: 6px;
+  vertical-align: -2px;
+}
+
 .menuPageAllMenu {
   padding-top: 20px;
   border-top: 1px solid var(--border-subtle);

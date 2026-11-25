@@ -23,11 +23,9 @@
 
 .subscribeBadge {
   background-color: var(--background-selected);
-  border: 1px solid var(--border-strong);
   border-radius: 999px;
   color: var(--primary-normal);
-  margin-right: 2px;
-  padding: 4px 8px;
+  padding: 2px 8px;
 }
 
 .highlightText {
@@ -82,8 +80,8 @@
 
 .weeklySection {
   background-color: var(--background-default);
-  border: 1px solid var(--border-subtle);
-  border-radius: 8px;
+  border: 1px solid var(--border-default);
+  border-radius: 16px;
   display: flex;
   flex-direction: column;
   gap: 18px;
@@ -131,9 +129,12 @@
 }
 
 .weeklyStatusText {
-  color: var(--text-secondary);
-  text-align: center;
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
   padding: 24px 0;
+  text-align: center;
 }
 
 .weeklyChartSkeleton {

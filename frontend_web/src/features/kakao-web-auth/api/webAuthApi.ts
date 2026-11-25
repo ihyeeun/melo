@@ -6,6 +6,10 @@ export function setWebAuthAccessToken(accessToken: string) {
   webAuthAccessToken = accessToken;
 }
 
+export function clearWebAuthAccessToken() {
+  webAuthAccessToken = null;
+}
+
 export function getWebAuthAccessToken() {
   return webAuthAccessToken;
 }

@@ -12,6 +12,8 @@ import {
 } from "@/features/menstruation/utils/menstrualRecordSelection.util";
 import { useGetProfileQuery } from "@/features/profile/hooks/queries/useProfileQuery";
 import { PATH } from "@/router/path";
+import { track } from "@/shared/analytics/analytics";
+import { EVENT_NAME } from "@/shared/analytics/analytics.constants";
 import { isRequestAbortError } from "@/shared/api/requestCancellation";
 import { Button } from "@/shared/commons/button/Button";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
@@ -51,8 +53,9 @@ export default function MenstruationRecordPage() {
     try {
       // mutation의 캐시 갱신이 끝난 뒤 편집 상태를 비운다.
       await saveRecords(updateRequest);
+      track(EVENT_NAME.MENSTRUAL_RECORDED);
       setSelections({});
-      toast.success("저장했어요");
+      toast.success("생리 기록을 저장했어요");
       navigateBack();
     } catch (error) {
       if (isRequestAbortError(error)) return;
@@ -97,19 +100,21 @@ export default function MenstruationRecordPage() {
 
       <footer className="footer">
         {hasRecordError && (
-          <Button
-            fullWidth
-            size="s"
-            variant="text"
-            disabled={isLoadingRecords || isSaving}
-            onClick={() => {
-              yearQueries.forEach((query) => {
-                if (query.isError) void query.refetch();
-              });
-            }}
-          >
-            기록을 불러오지 못했어요. 다시 시도
-          </Button>
+          <div className={styles.loadError}>
+            <p className="body-s-medium text-secondary">기록을 불러오지 못했어요</p>
+            <Button
+              size="xs"
+              variant="text"
+              disabled={isLoadingRecords || isSaving}
+              onClick={() => {
+                yearQueries.forEach((query) => {
+                  if (query.isError) void query.refetch();
+                });
+              }}
+            >
+              다시 시도
+            </Button>
+          </div>
         )}
         <Button
           fullWidth

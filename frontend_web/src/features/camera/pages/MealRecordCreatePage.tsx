@@ -14,8 +14,12 @@ import {
   getAnalyticsErrorMessage,
   getCameraCaptureErrorFeedback,
   getCapturedImagePreviewSrc,
+  getNoFoodDetectedFeedback,
   getRecognitionErrorFeedback,
+  getRecordFailureReason,
+  getScanKind,
   isCameraCaptureCancelled,
+  trackRejectedImageScan,
 } from "@/features/camera/utils/cameraCapture";
 import { getMealDetail } from "@/features/meal-record/api/mealDetail";
 import {
@@ -37,12 +41,7 @@ import { PATH } from "@/router/path";
 import { getMealRecordPath } from "@/router/pathHelpers";
 import { track } from "@/shared/analytics/analytics";
 import { EVENT_NAME } from "@/shared/analytics/analytics.constants";
-import { trackScanMenuSave } from "@/shared/analytics/menuSaveEvent.util";
-import {
-  trackNutritionLabelScanFail,
-  trackNutritionLabelScanStart,
-  trackNutritionLabelScanSuccess,
-} from "@/shared/analytics/nutritionLabelEvents";
+import { trackScanFail, trackScanStart, trackScanSuccess } from "@/shared/analytics/scanEvents";
 import { requestNativeCameraCapture } from "@/shared/api/bridge/nativeBridge";
 import { captureScreenRequestScope, type ScreenRequestScope } from "@/shared/api/screenRequests";
 import type { MenuSimpleResponseDto } from "@/shared/api/types/api.response.dto";
@@ -59,10 +58,8 @@ import type { MealRecordTransferPreview } from "@/shared/types/mealRecordTransfe
 
 const MEAL_RECORD_CAMERA_LOADING_DESCRIPTION = {
   FOOD: "음식을 분석하고 있어요",
-  NUTRITION_LABEL: "영양 성분을 확인하고 있어요",
+  NUTRITION_LABEL: "영양성분을 확인하고 있어요",
 } as const;
-
-const MEAL_RECORD_NUTRITION_LABEL_SCAN_SOURCE = "diary_nutrition_camera";
 
 type CapturedImage = Awaited<ReturnType<typeof requestNativeCameraCapture>>;
 
@@ -135,12 +132,9 @@ export default function MealRecordCreatePage() {
         screen.assertActive();
 
         if (!imageData?.menu_ids?.length) {
-          track(EVENT_NAME.FOOD_SCAN_FAIL, {
-            reason: "사진에서 음식을 찾을 수 없어요.",
-            source: "meal_record_camera",
-          });
+          trackScanFail("food", { source: "diet", reason: "no_food" });
           setCapturedPreviewSrc(null);
-          setCaptureErrorFeedback(getRecognitionErrorFeedback("FOOD"));
+          setCaptureErrorFeedback(getNoFoodDetectedFeedback(capturedImage.imageFrom));
           return;
         }
         const currentDraft = useMenuDraftStore.getState().drafts[draftKey];
@@ -166,9 +160,7 @@ export default function MealRecordCreatePage() {
         }
 
         hasRecognitionSucceeded = true;
-        track(EVENT_NAME.FOOD_SCAN_SUCCESS, {
-          source: "meal_record_camera",
-        });
+        trackScanSuccess("food", "diet");
 
         // 100개를 넘으면 이미 담긴 음식부터, 인식된 순서대로 100개까지만 담는다
         const recognizedMenus = Array.from(menusById.values());
@@ -200,11 +192,6 @@ export default function MealRecordCreatePage() {
           previews: newMenuDetails.map(toMenuPreview),
           image: imageData.image_url,
         });
-        trackScanMenuSave({
-          menus: nextMenus.map((menu) => ({ menu_id: menu.id, menu_name: menu.name })),
-          source: "home_tab",
-          scanType: "photo",
-        });
 
         if (isOverMenuLimit) {
           toast.warning(MEAL_RECORD_MENU_LIMIT_FILLED_MESSAGE);
@@ -216,13 +203,10 @@ export default function MealRecordCreatePage() {
       } catch (error) {
         if (!screen.isActive()) return;
         if (!hasRecognitionSucceeded) {
-          track(EVENT_NAME.FOOD_SCAN_FAIL, {
-            reason: getAnalyticsErrorMessage(error, "음식 메뉴 분석에 실패했어요."),
-            source: "meal_record_camera",
-          });
+          trackScanFail("food", { source: "diet", reason: getRecordFailureReason(error) });
         }
         setCapturedPreviewSrc(null);
-        setCaptureErrorFeedback(getRecognitionErrorFeedback("FOOD", error));
+        setCaptureErrorFeedback(getRecognitionErrorFeedback(error, capturedImage.imageFrom));
       }
     },
     [applyRecognizedMenus, dateKey, draftKey, mealType, queryClient, uploadFoodImage],
@@ -230,24 +214,19 @@ export default function MealRecordCreatePage() {
 
   const handleNutritionLabelImage = useCallback(
     async (capturedImage: CapturedImage, screen: ScreenRequestScope) => {
-      trackNutritionLabelScanStart({ source: MEAL_RECORD_NUTRITION_LABEL_SCAN_SOURCE });
-
       let imageData: Awaited<ReturnType<typeof uploadNutritionLabelImage>>;
       try {
         imageData = await uploadNutritionLabelImage(capturedImage);
         screen.assertActive();
       } catch (error) {
         if (!screen.isActive()) return;
-        trackNutritionLabelScanFail(
-          getAnalyticsErrorMessage(error, "영양성분표 분석에 실패했어요."),
-          { source: MEAL_RECORD_NUTRITION_LABEL_SCAN_SOURCE },
-        );
+        trackScanFail("label", { source: "diet", reason: getRecordFailureReason(error) });
         setCapturedPreviewSrc(null);
-        setCaptureErrorFeedback(getRecognitionErrorFeedback("NUTRITION_LABEL", error));
+        setCaptureErrorFeedback(getRecognitionErrorFeedback(error, capturedImage.imageFrom));
         return;
       }
 
-      trackNutritionLabelScanSuccess({ source: MEAL_RECORD_NUTRITION_LABEL_SCAN_SOURCE });
+      trackScanSuccess("label", "diet");
 
       const rawDateKey = searchParams.get("date");
       const rawMealType = searchParams.get("mealType");
@@ -276,7 +255,6 @@ export default function MealRecordCreatePage() {
     let capturedImage: CapturedImage;
     try {
       setIsOpeningCamera(true);
-      track(EVENT_NAME.CAMERA_START, { source: "home_tab" });
       capturedImage = await requestNativeCameraCapture({
         mode: MODE.FOOD,
         selectableModes: [MODE.FOOD, MODE.NUTRITION],
@@ -287,14 +265,17 @@ export default function MealRecordCreatePage() {
       if (!screen.isActive()) return;
       setIsOpeningCamera(false);
       if (isCameraCaptureCancelled(error)) {
-        track(EVENT_NAME.CAMERA_CANCEL, { source: "home_tab" });
         returnFromCameraPage();
         return;
       }
-      track(EVENT_NAME.FOOD_SCAN_FAIL, {
-        reason: getAnalyticsErrorMessage(error, "카메라를 실행하지 못했어요"),
-        source: "home_tab",
-      });
+      if (
+        !trackRejectedImageScan(error, { source: "diet", mode: MODE.FOOD, imageFrom: "camera" })
+      ) {
+        track(EVENT_NAME.CAMERA_FAIL, {
+          reason: getAnalyticsErrorMessage(error, "카메라를 실행하지 못했어요"),
+          source: "diet",
+        });
+      }
       setCapturedPreviewSrc(null);
       setCaptureErrorFeedback(getCameraCaptureErrorFeedback(error));
       return;
@@ -305,6 +286,10 @@ export default function MealRecordCreatePage() {
     if (selectedMode !== MODE.FOOD && selectedMode !== MODE.NUTRITION) {
       return;
     }
+    trackScanStart(getScanKind(selectedMode), {
+      source: "diet",
+      imageFrom: capturedImage.imageFrom ?? "camera",
+    });
 
     setCapturedPreviewSrc(getCapturedImagePreviewSrc(capturedImage));
     setLoadingDescription(MEAL_RECORD_CAMERA_LOADING_DESCRIPTION[selectedMode]);

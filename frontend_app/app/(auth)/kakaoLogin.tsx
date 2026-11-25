@@ -1,6 +1,7 @@
 import { exchangeKakaoCodeForToken } from "@/features/auth/api/authTokenApi";
 import { postHasUserInfo } from "@/features/auth/api/onboardingStatusApi";
 import { parseKakaoRedirectUrl } from "@/features/auth/hooks/parseKakaoCode";
+import { saveLastLoginMethod } from "@/features/auth/store/lastLoginMethodStore";
 import { LoadingOverlay, Typo } from "@/src/shared/ui";
 import { isAxiosError } from "axios";
 import { router } from "expo-router";
@@ -12,18 +13,6 @@ import { semantic } from "@/src/shared/styles/color";
 
 const restApiKey = process.env.EXPO_PUBLIC_KAKAO_REST_API_KEY;
 const redirectUri = process.env.EXPO_PUBLIC_KAKAO_REDIRECT_URI;
-
-type ApiErrorResponse = {
-  message?: string;
-  error?: string;
-  statusCode?: number;
-  data?: {
-    message?: string;
-    error?: string;
-  };
-};
-
-const DEFAULT_KAKAO_LOGIN_ERROR_MESSAGE = "카카오 로그인 처리 중 오류가 발생했습니다.";
 
 function createKakaoAuthorizeUrl() {
   if (!restApiKey || !redirectUri) {
@@ -37,50 +26,6 @@ function createKakaoAuthorizeUrl() {
   });
 
   return `https://kauth.kakao.com/oauth/authorize?${params.toString()}`;
-}
-
-function readServerMessage(data: unknown) {
-  if (!data || typeof data !== "object") {
-    return null;
-  }
-
-  const response = data as ApiErrorResponse;
-  return (
-    response.message ?? response.error ?? response.data?.message ?? response.data?.error ?? null
-  );
-}
-
-function getKakaoLoginErrorMessage(error: unknown) {
-  if (isAxiosError(error)) {
-    if (!error.response) {
-      return "서버에 연결하지 못했습니다. 네트워크 상태를 확인해주세요.";
-    }
-
-    const serverMessage = readServerMessage(error.response.data);
-    if (serverMessage?.toLowerCase().includes("authorization code is invalid")) {
-      return "카카오 인증 코드가 유효하지 않습니다.\n다시 로그인해주세요.";
-    }
-
-    if (serverMessage) {
-      return serverMessage;
-    }
-
-    if (error.response.status === 400) {
-      return "카카오 로그인 요청이 올바르지 않습니다. 다시 시도해주세요.";
-    }
-
-    if (error.response.status === 401) {
-      return `카카오 인증에 실패했습니다.\n다시 로그인해주세요.`;
-    }
-
-    return DEFAULT_KAKAO_LOGIN_ERROR_MESSAGE;
-  }
-
-  if (error instanceof Error) {
-    return error.message;
-  }
-
-  return DEFAULT_KAKAO_LOGIN_ERROR_MESSAGE;
 }
 
 function getKakaoLoginErrorLog(error: unknown) {
@@ -97,19 +42,22 @@ function getKakaoLoginErrorLog(error: unknown) {
 
 const kakaoAuthorizeUrl = createKakaoAuthorizeUrl();
 
+if (!kakaoAuthorizeUrl) {
+  console.error("카카오 로그인 설정(EXPO_PUBLIC_KAKAO_REST_API_KEY · REDIRECT_URI)이 없습니다.");
+}
+
 // screen: ONB-01-002
 export default function KakaoLogin() {
   const isExchangingRef = useRef(false);
-  const [errorMessage, setErrorMessage] = useState(
-    kakaoAuthorizeUrl ? "" : "카카오 로그인 설정이 없습니다. 앱 설정을 확인해주세요.",
-  );
+  // 실패 원인은 기록에만 남기고, 화면에는 원인과 상관없이 같은 안내를 보여 준다
+  const [hasFailed, setHasFailed] = useState(!kakaoAuthorizeUrl);
   const [isPageLoading, setIsPageLoading] = useState(Boolean(kakaoAuthorizeUrl));
   const [isCallbackProcessing, setIsCallbackProcessing] = useState(false);
   const [webViewKey, setWebViewKey] = useState(0);
 
   const handleRetry = useCallback(() => {
     isExchangingRef.current = false;
-    setErrorMessage("");
+    setHasFailed(false);
     setIsCallbackProcessing(false);
     setIsPageLoading(Boolean(kakaoAuthorizeUrl));
     setWebViewKey((currentKey) => currentKey + 1);
@@ -126,12 +74,13 @@ export default function KakaoLogin() {
     if (redirectResult.type === "code") {
       if (isExchangingRef.current) return false;
       isExchangingRef.current = true;
-      setErrorMessage("");
+      setHasFailed(false);
       setIsCallbackProcessing(true);
 
       (async () => {
         try {
           await exchangeKakaoCodeForToken(redirectResult.code);
+          await saveLastLoginMethod("kakao");
           const hasUserInfo = await postHasUserInfo();
 
           if (!hasUserInfo) {
@@ -141,9 +90,8 @@ export default function KakaoLogin() {
 
           router.replace("/(tabs)/home");
         } catch (error) {
-          const nextErrorMessage = getKakaoLoginErrorMessage(error);
           console.error("카카오 로그인 실패", getKakaoLoginErrorLog(error));
-          setErrorMessage(nextErrorMessage);
+          setHasFailed(true);
           isExchangingRef.current = false;
           setIsCallbackProcessing(false);
         }
@@ -153,7 +101,7 @@ export default function KakaoLogin() {
     }
 
     console.error("Kakao login error:", redirectResult.error);
-    setErrorMessage(redirectResult.error);
+    setHasFailed(true);
     setIsCallbackProcessing(false);
     return false;
   }, []);
@@ -170,18 +118,18 @@ export default function KakaoLogin() {
         />
       ) : null}
 
-      {(isPageLoading || isCallbackProcessing) && !errorMessage ? (
-        <LoadingOverlay message="로그인 준비 중.." />
+      {(isPageLoading || isCallbackProcessing) && !hasFailed ? (
+        <LoadingOverlay message="로그인 준비 중…" />
       ) : null}
 
-      {errorMessage ? (
+      {hasFailed ? (
         <View style={styles.overlay}>
           <View style={styles.errorContent}>
             <Typo allowFontScaling={false} style={styles.errorTitle}>
-              카카오 로그인 실패
+              카카오 로그인을 하지 못했어요
             </Typo>
             <Typo allowFontScaling={false} style={styles.errorMessage}>
-              {errorMessage}
+              다시 시도해주세요
             </Typo>
             <View style={styles.errorActions}>
               {kakaoAuthorizeUrl ? (

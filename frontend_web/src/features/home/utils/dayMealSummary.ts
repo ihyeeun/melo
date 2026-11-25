@@ -360,7 +360,7 @@ export function getDayNutritionSummary(
   if (!hasValidTarget) {
     return createResult({
       status: "missingTarget",
-      message: "목표를 먼저 설정해 주세요",
+      message: "목표를 먼저 설정해주세요",
     });
   }
 

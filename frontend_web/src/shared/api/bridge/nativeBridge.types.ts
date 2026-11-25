@@ -81,7 +81,12 @@ export type WebToAppHapticTriggerRequestMessage = {
 
 // 앱이 지원하는 브리지 기능. OTA는 앱 버전을 바꾸지 않아서 버전 대신 이 목록으로 구분한다
 // (목록이 없는 옛 앱은 아무것도 지원하지 않는 것으로 본다)
-export type AppFeature = "OPEN_APP_SETTINGS" | "SIGN_UP_REDIRECT" | "LOCATION_CHECK_WITHOUT_PROMPT";
+export type AppFeature =
+  | "OPEN_APP_SETTINGS"
+  | "SIGN_UP_REDIRECT"
+  | "LOCATION_CHECK_WITHOUT_PROMPT"
+  // 회원가입 중 로그아웃(signout)하면 앱이 로그인 화면으로 돌아간다
+  | "SIGN_OUT_FROM_SIGN_UP";
 
 export type AppDeviceInfoPayload = {
   appVersion: string;
@@ -245,6 +250,8 @@ export type CameraCaptureResponsePayload = {
   previewBase64: string | null;
   previewMimeType: string | null;
   mode?: CameraCaptureMode | null;
+  // 촬영했는지, 카메라 화면의 갤러리에서 골랐는지. 옛 앱은 보내지 않는다
+  imageFrom?: "camera" | "gallery";
 };
 
 export type AppToWebMessage<T = unknown> = {
@@ -258,6 +265,9 @@ export type AppToWebMessage<T = unknown> = {
         error: string;
         // LOCATION_PERMISSION_DENIED: OS가 권한 팝업을 다시 띄울 수 있는지 (옛 앱은 보내지 않는다)
         canAskAgain?: boolean;
+        // 찍거나 고른 사진이 형식 · 용량 검사에서 막혔을 때: 어떤 모드로, 어디서 가져온 사진인지 (옛 앱은 없음)
+        mode?: string | null;
+        imageFrom?: "camera" | "gallery";
       };
 };
 

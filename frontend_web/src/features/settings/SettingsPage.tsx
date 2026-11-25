@@ -5,6 +5,7 @@ import {
   useWithdrawMutation,
 } from "@/features/settings/hooks/mutations/useAccountMutation";
 import { PATH } from "@/router/path";
+import { resolveApiErrorToast } from "@/shared/api/apiClient";
 import { isNativeApp, openNativeInAppBrowser } from "@/shared/api/bridge/nativeBridge";
 import { isRequestAbortError } from "@/shared/api/requestCancellation";
 import { PageHeader } from "@/shared/commons/header/PageHeader";
@@ -31,14 +32,6 @@ function openExternalDocument(url: string) {
   void openNativeInAppBrowser(url).catch(() => {
     window.open(url, "_blank", "noopener,noreferrer");
   });
-}
-
-function resolveErrorMessage(error: unknown, fallbackMessage: string) {
-  if (error instanceof Error && error.message.trim().length > 0) {
-    return error.message;
-  }
-
-  return fallbackMessage;
 }
 
 // screen: PRF-01-002
@@ -82,7 +75,7 @@ export default function SettingsPage() {
           className={styles.menuItem}
           onClick={() => openExternalDocument(TERMS_AND_PRIVACY_POLICY_URL)}
         >
-          <span className={`body-l-medium text-primary`}>서비스이용약관 / 개인정보처리방침</span>
+          <span className={`body-l-medium text-primary`}>서비스 이용약관 / 개인정보처리방침</span>
           <SystemIcon name="chevron-right" size={16} className={`text-secondary marginLeft`} />
         </button>
 
@@ -118,21 +111,14 @@ export default function SettingsPage() {
       <ConfirmModal
         open={isLogoutModalOpen}
         onOpenChange={setIsLogoutModalOpen}
-        title="로그아웃 하시겠어요?"
+        title="로그아웃하시겠어요?"
         cancelText="취소"
-        confirmText="확인"
-        // actionOrder="confirm-cancel"
+        confirmText="로그아웃"
+        emphasis="cancel"
         confirmDisabled={isLogoutPending}
         closeOnConfirm={false}
-        onConfirm={async () => {
-          try {
-            await requestLogout();
-          } catch (error) {
-            if (isRequestAbortError(error)) throw error;
-            toast.warning(resolveErrorMessage(error, "로그아웃에 실패했어요."));
-            throw error;
-          }
-        }}
+        // 서버 요청이 실패해도 기기의 로그인 정보를 지우고 로그인 화면으로 가므로 실패 안내가 없다
+        onConfirm={requestLogout}
       />
 
       {/* screen: PRF-01-002_modal-withdraw */}
@@ -142,8 +128,9 @@ export default function SettingsPage() {
         title="정말 탈퇴하시겠어요?"
         description={"기록한 데이터가 완전히 삭제되며\n복구할 수 없어요"}
         cancelText="취소"
-        confirmText="확인"
-        // actionOrder="confirm-cancel"
+        confirmText="탈퇴하기"
+        actionOrder="confirm-cancel"
+        emphasis="cancel"
         confirmDisabled={isWithdrawPending}
         closeOnConfirm={false}
         onConfirm={async () => {
@@ -151,7 +138,11 @@ export default function SettingsPage() {
             await requestWithdraw();
           } catch (error) {
             if (isRequestAbortError(error)) throw error;
-            toast.warning(resolveErrorMessage(error, "탈퇴 처리에 실패했어요."));
+            const { title, description } = resolveApiErrorToast(error, {
+              title: "탈퇴하지 못했어요",
+              description: "잠시 후 다시 시도해주세요",
+            });
+            toast.error(title, description);
             throw error;
           }
         }}

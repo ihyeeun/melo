@@ -21,7 +21,7 @@ export function VitePreloadErrorToastBridge() {
     add({
       id: VITE_PRELOAD_ERROR_TOAST_ID,
       title: "새로고침이 필요해요",
-      description: "최신 화면을 불러오려면 새로고침해 주세요.",
+      description: "최신 화면을 불러오려면 새로고침해주세요",
       priority: "high",
       timeout: 0,
       actionProps: {

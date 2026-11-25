@@ -137,9 +137,23 @@ export function useWeeklyRecordQuery({
     };
   });
 
+  // 이 지표에 쓰는 요청 중 실패한 것만 다시 부른다
+  const retry = () => {
+    const queries =
+      metric === "weight"
+        ? [...bodyLogQueries, ...goalSnapshotQueries]
+        : metric === "calories"
+          ? [...dayMealQueries, ...goalSnapshotQueries]
+          : bodyLogQueries;
+    queries.forEach((query) => {
+      if (query.isError) void query.refetch();
+    });
+  };
+
   return {
     records,
     isPending,
     hasError,
+    retry,
   };
 }

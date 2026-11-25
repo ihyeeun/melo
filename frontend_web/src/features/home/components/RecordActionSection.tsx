@@ -3,6 +3,7 @@ import { useLayoutEffect, useRef, useState } from "react";
 import { useActivityCalories } from "@/features/health/hooks/useActivityCalories";
 import { useSyncNativeStepCount } from "@/features/health/hooks/useSyncNativeStepCount";
 import Tile from "@/features/home/components/cards/Tile";
+import { useRecentWeightQuery } from "@/features/home/hooks/queries/useRecentWeight.query";
 import { useDayMealsQuery, useGetBodyLog } from "@/features/home/hooks/queries/useTodayRecordQuery";
 import styles from "@/features/home/styles/RecordActionSection.module.css";
 import type { MenuWithQuantity } from "@/features/home/utils/dayMealSummary";
@@ -18,7 +19,7 @@ import { Skeleton, SkeletonStatus } from "@/shared/commons/skeleton/Skeleton";
 import { MEAL_TIMES } from "@/shared/constants/meal.constants";
 import { useNavigate } from "@/shared/navigation/stackflowNavigation";
 import { useSelectedDateKey } from "@/shared/stores/selectedDate.store";
-import { getTodayFormatDateKey, isFutureDateKey } from "@/shared/utils/dateFormat";
+import { getTodayFormatDateKey, isFutureDateKey, parseDateKey } from "@/shared/utils/dateFormat";
 import { formatDisplayNumber } from "@/shared/utils/numberFormat";
 
 // screen: REC-01-001
@@ -29,9 +30,18 @@ export default function RecordActionSection() {
   const { data: dayMeals, isPending: isDayMealsPending } = useDayMealsQuery(selectedDate);
   const { data: bodyLog, isPending: isBodyLogPending } = useGetBodyLog(selectedDate);
   const isToday = selectedDate === getTodayFormatDateKey();
+  const selectedDay = parseDateKey(selectedDate);
+  const selectedDayLabel = `${selectedDay.getMonth() + 1}월 ${selectedDay.getDate()}일`;
   const isFutureDate = isFutureDateKey(selectedDate);
   const isBodyLogLoaded = bodyLog !== undefined;
-  const displayWeight = bodyLog?.weight ?? (isToday ? (profile?.weight ?? 0) : 0);
+  // 오늘 체중 기록이 없으면 최근 기록(없으면 프로필 체중)을 흐리게 보여 준다. 다른 날은 빈 값
+  const showsRecentWeight = isToday && isBodyLogLoaded && bodyLog.weight === null;
+  const { recentWeight, isPending: isRecentWeightPending } = useRecentWeightQuery(selectedDate, {
+    enabled: showsRecentWeight,
+  });
+  const recentWeightValue = recentWeight?.weight ?? profile?.weight;
+  const weightCaption =
+    recentWeight === undefined ? "최근" : `최근 · ${recentWeight.daysAgo}일 전`;
   const displaySteps = bodyLog?.steps ?? 0;
   const { nativeStepConnectionStatus, requestStepPermissionAndSync } = useSyncNativeStepCount(
     selectedDate,
@@ -46,6 +56,10 @@ export default function RecordActionSection() {
     isWorkoutRecordPending,
   } = useActivityCalories(selectedDate);
   const isHealthConnected = nativeStepConnectionStatus === "connected";
+  // [+]는 직접 입력할 수 있을 때만(미연동 · 권한 거부 · 그날 건강 앱 데이터 없음)
+  const canInputSteps =
+    !isFutureDate &&
+    (nativeStepConnectionStatus === "disconnected" || nativeStepConnectionStatus === "no_data");
 
   const hasWorkoutRecords = workoutRecords.length > 0;
   const totalWorkoutDuration = workoutRecords.reduce(
@@ -72,10 +86,16 @@ export default function RecordActionSection() {
   };
 
   // 건강 앱 미연동(권한 거부 포함)이거나 그날 데이터가 없으면 직접 입력한다.
-  // 미연동이면 먼저 권한을 다시 요청해 보고, 그래도 걸음 수가 없으면 입력 시트를 연다
+  // 미연동이면 먼저 권한을 다시 요청해 보고, 그래도 걸음 수가 없으면 입력 시트를 연다.
+  // 미래 날짜는 "이 날은 아직 기록할 수 없어요" 시트를 연다
   const openStepsEditor = async () => {
+    if (isFutureDate) {
+      navigate(getBodyLogSheetPath(PATH.HOME_STEPS_LOG_SHEET));
+      return;
+    }
+
     let status = nativeStepConnectionStatus;
-    if (status === "disconnected" && isNativeApp() && !isFutureDate) {
+    if (status === "disconnected" && isNativeApp()) {
       status = await requestStepPermissionAndSync();
     }
     if (status !== "disconnected" && status !== "no_data") return;
@@ -112,7 +132,7 @@ export default function RecordActionSection() {
                     onClick={() => handleMoveMealRecord(type, hasMenus)}
                   >
                     <div className={styles.mealTitleArea}>
-                      <div className={styles.mealIcon} data-selected={hasMenus}>
+                      <div className={styles.mealIcon} data-meal={type} data-selected={hasMenus}>
                         <SystemIcon size={18} name={icon} />
                       </div>
 
@@ -150,14 +170,27 @@ export default function RecordActionSection() {
             onClick={() => void openStepsEditor()}
             isPending={isBodyLogPending}
             isHealthConnected={isHealthConnected}
+            canAdd={canInputSteps}
           />
-          <HealthMetricCard
-            title="체중"
-            value={displayWeight}
-            unit="kg"
-            onClick={openWeightEditor}
-            isPending={isBodyLogPending}
-          />
+          {showsRecentWeight ? (
+            <HealthMetricCard
+              title="체중"
+              value={recentWeightValue}
+              unit="kg"
+              caption={recentWeightValue === undefined ? undefined : weightCaption}
+              isDimmed
+              onClick={openWeightEditor}
+              isPending={isRecentWeightPending}
+            />
+          ) : (
+            <HealthMetricCard
+              title="체중"
+              value={bodyLog?.weight ?? undefined}
+              unit="kg"
+              onClick={openWeightEditor}
+              isPending={isBodyLogPending}
+            />
+          )}
         </div>
       </section>
 
@@ -178,7 +211,9 @@ export default function RecordActionSection() {
             <WorkoutRecordSkeleton />
           ) : hasWorkoutRecords ? (
             <div className={styles.workoutTitleGroup}>
-              <p className="body-l-medium text-primary">오늘 운동</p>
+              <p className="body-l-medium text-primary">
+                {isToday ? "오늘 운동" : `${selectedDayLabel} 운동`}
+              </p>
               <p className="body-s-regular text-tertiary">
                 총 {totalWorkoutDuration}분,{" "}
                 {activitySummary?.calories.toLocaleString("ko-KR") ?? 0}
@@ -187,7 +222,9 @@ export default function RecordActionSection() {
             </div>
           ) : (
             <div className={styles.workoutTitleGroup}>
-              <p className="body-l-medium text-primary">아직 오늘의 운동 기록이 없어요</p>
+              <p className="body-l-medium text-primary">
+                {isToday ? "아직 오늘의 운동 기록이 없어요" : "아직 운동 기록이 없어요"}
+              </p>
               <p className="body-s-regular text-tertiary">지금 바로 기록하러 갈까요?</p>
             </div>
           )}
@@ -205,19 +242,25 @@ function HealthMetricCard({
   title,
   value,
   unit,
+  caption,
+  isDimmed = false,
   onClick,
   isPending = false,
   isHealthConnected = false,
+  canAdd = true,
 }: {
   title: string;
-  value: number;
+  // 기록이 없으면 비워서 "-"로 보여 준다
+  value: number | undefined;
   unit: string;
+  // 값 위 작은 설명 (예: "최근 · 2일 전")
+  caption?: string;
+  isDimmed?: boolean;
   onClick: () => void;
   isPending?: boolean;
   isHealthConnected?: boolean;
+  canAdd?: boolean;
 }) {
-  const isNotShowIcon = isHealthConnected && title === "걸음 수";
-
   return (
     <Tile
       onClick={isPending ? undefined : onClick}
@@ -226,7 +269,7 @@ function HealthMetricCard({
     >
       <div className={styles.bodyLogTitle}>
         <p className="body-l-medium text-primary">{title}</p>
-        {!isNotShowIcon && (
+        {canAdd && (
           <SystemIcon name="plus-circle" size={18} className="text-secondary marginLeft" />
         )}
       </div>
@@ -240,8 +283,15 @@ function HealthMetricCard({
         </SkeletonStatus>
       ) : (
         <div className={styles.bodyLogValue}>
-          <span className={`title-l-semi amp-mask ${styles.bodyLogValueWeight}`}>
-            {value.toLocaleString()}
+          {caption ? (
+            <span className={`caption-m-medium text-tertiary ${styles.bodyLogCaption}`}>
+              {caption}
+            </span>
+          ) : null}
+          <span
+            className={`title-l-semi amp-mask ${styles.bodyLogValueWeight} ${isDimmed ? "text-disabled" : ""}`}
+          >
+            {value === undefined ? "-" : value.toLocaleString()}
           </span>
           <span className="body-l-regular text-tertiary">{unit}</span>
         </div>

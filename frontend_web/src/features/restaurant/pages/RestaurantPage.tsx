@@ -92,8 +92,11 @@ export default function RestaurantPage() {
                       type="button"
                       className={styles.restaurantCard}
                       onClick={() => {
+                        // 목록형은 멜로 등록 식당만 나온다
                         track(EVENT_NAME.RESTAURANT_CARD_CLICK, {
                           restaurant_name: restaurant.restaurant_name,
+                          target: "card",
+                          data_type: "franchise",
                         });
                         navigate(
                           `${PATH.RESTAURANT_DETAIL}?restaurantId=${restaurant.restaurant_id}`,

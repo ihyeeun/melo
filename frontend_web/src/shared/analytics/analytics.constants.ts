@@ -5,10 +5,10 @@ export const EVENT_NAME = {
 
   RESTAURANT_TAB_ENTER: "restaurant_tab",
   RESTAURANT_SEARCH_FOCUS: "restaurant_search_focus",
+  RESTAURANT_SEARCH: "restaurant_search",
   RESTAURANT_CARD_CLICK: "restaurant_card_click",
+  RESTAURANT_MENU_TAB_CLICK: "restaurant_menu_tab_click",
 
-  CAMERA_START: "camera_start",
-  CAMERA_CANCEL: "camera_cancel",
   CAMERA_FAIL: "camera_fail",
 
   OCR_SCAN_START: "ocr_scan_start",
@@ -23,27 +23,23 @@ export const EVENT_NAME = {
   LABEL_SCAN_SUCCESS: "label_scan_success",
   LABEL_SCAN_FAIL: "label_scan_fail",
 
-  LABEL_REGISTER_SUCCESS: "label_register_success",
   LABEL_REGISTER_FAIL: "label_register_fail",
 
+  TEXT_RECORD_SUCCESS: "text_record_success",
+  TEXT_RECORD_FAIL: "text_record_fail",
+
   AI_COACH_CHAT: "ai_coach_chat",
-  AI_COACH_RESPONSE_SUCCESS: "ai_coach_response_success",
-  AI_COACH_RESPONSE_FAIL: "ai_coach_response_fail",
 
   RECOMMEND_MENU_SAVE: "chat_menu_save",
-  CHAT_TEXT_MENU_SAVE: "menu_save_text",
-  DIARY_MENU_SAVE: "menu_save_manual",
-  MENU_SAVE_BY_SCAN: "menu_save_scan",
-
-  USER_PROFILE_UPDATED: "user_profile_updated",
-
-  CLICK_FEEDBACK_BUTTON: "click_feedback_button",
+  // 서버 저장이 성공한 순간에 한 번 (식사 기록 상세 [완료하기] · AI 코치 시간대 카드 · 등록 완료 카드)
+  MENU_SAVE: "menu_save",
 
   BODY_WEIGHT_RECORDED: "body_weight_recorded",
 
   WORKOUT_RECORD_COMPLETED: "workout_record_completed",
 
   CLICK_MENSTRUAL_DASHBOARD: "click_menstrual_dashboard",
+  MENSTRUAL_RECORDED: "menstrual_recorded",
 
   CLICK_MY_MANAGEMENT_AI_COACH: "click_my_management_ai_coach",
   CLICK_MEAL_FEEDBACK_AI_COACH: "click_meal_feedback_ai_coach",

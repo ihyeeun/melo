@@ -19,6 +19,24 @@
   overflow-wrap: anywhere;
 }
 
+/* 식당 이름 오른쪽 뱃지는 이름이 길어도 줄 끝에 붙는다 */
+.title > [data-system-icon] {
+  margin-left: 6px;
+  vertical-align: -2px;
+}
+
+.aiEstimatedBadge {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 4px 6px;
+  border-radius: 8px;
+  background-color: var(--background-gray-1);
+  color: var(--text-tertiary);
+  white-space: nowrap;
+  /* 바로 앞 체크 뱃지와 가운데를 맞춘다 */
+  vertical-align: 3px;
+}
+
 .description {
   grid-column: 2;
 }
@@ -105,15 +123,13 @@
 .menuTitle {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
+  min-width: 0;
 }
 
 .category {
   flex-shrink: 0;
-  max-width: 30%;
-  background-color: var(--background-gray-1);
-  padding: 4px 6px;
-  border-radius: 8px;
+  white-space: nowrap;
 }
 
 .menuText {
@@ -137,4 +153,14 @@
   padding-block: 24px;
   border-radius: 12px;
   background-color: var(--background-gray-1);
+}
+
+/* BEST 대상 메뉴가 없는 식당 (기획 초안 4458:37757) */
+.noBestMenu {
+  align-items: center;
+  background-color: var(--background-gray-1);
+  border-radius: 16px;
+  display: flex;
+  justify-content: center;
+  min-height: 108px;
 }

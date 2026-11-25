@@ -40,6 +40,24 @@
   margin-left: 8px;
 }
 
+.labelEnd {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.manualBadge {
+  background-color: var(--background-gray-2);
+  border-radius: 6px;
+  padding: 2px 6px;
+}
+
+.autoCalculateButton {
+  color: var(--primary-normal);
+  font-weight: var(--fw-semibold);
+}
+
 .timeInputGroup {
   padding: 0 20.5px;
 }

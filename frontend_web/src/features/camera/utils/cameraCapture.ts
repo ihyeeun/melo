@@ -1,22 +1,30 @@
+import { MODE } from "@/features/camera/constants/camera.constant";
+import {
+  type ScanKind,
+  type ScanSource,
+  trackScanFail,
+  trackScanStart,
+} from "@/shared/analytics/scanEvents";
+import { AppApiError } from "@/shared/api/apiClient";
+import { API_ERROR_MESSAGE } from "@/shared/api/apiErrorMessage";
+
 const CAMERA_CAPTURE_CANCELLED_CODE = "CAMERA_CAPTURE_CANCELLED";
-const CAMERA_PERMISSION_DENIED_CODES = new Set(["CAMERA_PERMISSION_DENIED"]);
 
 type BridgeCameraError = Error & {
   error?: string;
   statusCode?: number;
+  // 앱의 사진 검사에서 막혔을 때 앱이 붙여 주는 값 (옛 앱은 없음)
+  mode?: string | null;
+  imageFrom?: ImageFrom;
 };
 
 export type CameraCaptureErrorFeedback = {
   title: string;
-  description: string;
+  description?: string;
 };
-type RecognitionDomain = "NUTRITION_LABEL" | "FOOD" | "MENU_BOARD";
 
-type RecognitionErrorCopy = {
-  title: string;
-  fallbackMessage: string;
-  retryGuide: string;
-};
+// 사진을 어디서 가져왔는지. 갤러리 사진이면 '다시 촬영' 대신 '다시 고르기'로 안내한다
+export type ImageFrom = "camera" | "gallery";
 
 type CapturedImagePreviewSource = {
   uri: string;
@@ -28,26 +36,77 @@ type CapturedImagePreviewSource = {
 
 const WEBVIEW_PREVIEW_MIME_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 
-const RECOGNITION_ERROR_COPY: Record<RecognitionDomain, RecognitionErrorCopy> = {
-  NUTRITION_LABEL: {
-    title: "영양성분을 인식하기 어려웠어요",
-    fallbackMessage: "선명하게 다시 촬영해 주세요",
-    retryGuide: "선명하게 다시 촬영해 주세요",
-  },
-  FOOD: {
-    title: "음식을 인식하기 어려웠어요",
-    fallbackMessage: "음식이 잘 보이도록 다시 촬영해 주세요",
-    retryGuide: "음식이 잘 보이도록 다시 촬영해 주세요",
-  },
-  MENU_BOARD: {
-    title: "메뉴판을 인식하기 어려웠어요",
-    fallbackMessage: "선명하게 다시 촬영해 주세요",
-    retryGuide: "선명하게 다시 촬영해 주세요",
-  },
+const CAPTURE_FAILED: CameraCaptureErrorFeedback = {
+  title: "촬영하지 못했어요",
+  description: "다시 시도해주세요",
 };
+const IMAGE_LOAD_FAILED: CameraCaptureErrorFeedback = {
+  title: "사진을 불러오지 못했어요",
+  description: "다른 사진으로 다시 시도해주세요",
+};
+
+// 사진 실패 원인별 문구: 제목 = 무슨 일, 설명 = 할 일 (E3)
+// 촬영 · 고르기 · 보내기 전 — 앱(카메라 · 갤러리 · 파일 검사)이 보낸 오류 코드
+const CAPTURE_FAILURE_BY_CODE: Record<string, CameraCaptureErrorFeedback> = {
+  CAMERA_PERMISSION_DENIED: {
+    title: "카메라 권한이 필요해요",
+    description: "설정에서 카메라 권한을 허용해주세요",
+  },
+  CAMERA_PREPARE_FAILED: CAPTURE_FAILED,
+  CAMERA_DEVICE_UNAVAILABLE: CAPTURE_FAILED,
+  CAMERA_CAPTURE_FAILED: CAPTURE_FAILED,
+  CAMERA_CAPTURE_IN_PROGRESS: CAPTURE_FAILED,
+  GALLERY_PERMISSION_DENIED: {
+    title: "사진 접근 권한이 필요해요",
+    description: "설정에서 사진 접근 권한을 허용해주세요",
+  },
+  IMAGE_COUNT_EXCEEDED: { title: "사진은 1장만 고를 수 있어요" },
+  IMAGE_FORMAT_NOT_ALLOWED: {
+    title: "지원하지 않는 사진 형식이에요",
+    description: "JPG · PNG · HEIC · WEBP 사진을 골라주세요",
+  },
+  IMAGE_FORMAT_UNKNOWN: {
+    title: "지원하지 않는 사진 형식이에요",
+    description: "JPG · PNG · HEIC · WEBP 사진을 골라주세요",
+  },
+  IMAGE_SIZE_EXCEEDED: {
+    title: "사진 용량이 너무 커요",
+    description: "10MB 이하 사진을 골라주세요",
+  },
+  IMAGE_SIZE_UNAVAILABLE: IMAGE_LOAD_FAILED,
+  IMAGE_PROCESSING_FAILED: IMAGE_LOAD_FAILED,
+  GALLERY_PICK_FAILED: IMAGE_LOAD_FAILED,
+  GALLERY_ACCESS_FAILED: IMAGE_LOAD_FAILED,
+};
+
+// 분석 — 서버가 알려 준 원인. 제목은 오류 문구 표(API_ERROR_MESSAGE)와 같고 여기서는 할 일만 붙인다
+const RETAKE_GUIDE_BY_ANALYSIS_MESSAGE: Partial<Record<string, string>> = {
+  [API_ERROR_MESSAGE.FOOD_IMAGE_QUALITY_LOW]: "더 선명하게 다시 촬영해주세요",
+  [API_ERROR_MESSAGE.FOOD_IMAGE_TOO_SMALL]: "음식을 가까이에서 다시 촬영해주세요",
+  [API_ERROR_MESSAGE.FOOD_IMAGE_BLURRY]: "더 선명하게 다시 촬영해주세요",
+  [API_ERROR_MESSAGE.FOOD_IMAGE_LIGHTING_POOR]: "밝은 곳에서 다시 촬영해주세요",
+  [API_ERROR_MESSAGE.FOOD_OCCLUDED_OR_CUT_OFF]: "음식 전체가 보이게 다시 촬영해주세요",
+  [API_ERROR_MESSAGE.FOOD_NOT_DETECTED]: "음식이 잘 보이게 다시 촬영해주세요",
+  [API_ERROR_MESSAGE.FOOD_NOT_MATCHED]: "다른 각도에서 다시 촬영해주세요",
+};
+const IMAGE_MISSING_MESSAGES = new Set<string>([
+  API_ERROR_MESSAGE.IMAGE_REQUIRED,
+  API_ERROR_MESSAGE.IMAGE_TYPE_INVALID,
+]);
+const GALLERY_RETRY_GUIDE = "다른 사진으로 다시 골라주세요";
+
+const TIMEOUT_ERROR_CODES = new Set(["BRIDGE_TIMEOUT", "REQUEST_TIMEOUT"]);
+const TIMEOUT_STATUS_CODES = new Set([408, 504]);
 
 export function isCameraCaptureCancelled(error: unknown) {
   return (error as BridgeCameraError)?.error === CAMERA_CAPTURE_CANCELLED_CODE;
+}
+
+// 앱 · 서버가 보낸 오류 코드. 이벤트의 실패 이유로도 쓴다
+export function getPhotoErrorCode(error: unknown) {
+  const { error: errorCode, statusCode } = (error ?? {}) as BridgeCameraError;
+  if (typeof errorCode === "string" && errorCode) return errorCode;
+  return typeof statusCode === "number" ? String(statusCode) : "unknown";
 }
 
 function getRawErrorMessage(error: unknown) {
@@ -59,125 +118,149 @@ function getRawErrorMessage(error: unknown) {
   return typeof message === "string" ? message.trim() : "";
 }
 
-function getErrorMessage(error: unknown, fallback: string) {
-  const message = getRawErrorMessage(error);
-
-  if (message.length > 0) return message;
-
-  return fallback;
-}
-
 export function getAnalyticsErrorMessage(error: unknown, fallback = "unknown") {
-  return getErrorMessage(error, fallback);
+  const message = getRawErrorMessage(error);
+  return message.length > 0 ? message : fallback;
 }
 
-function isCameraPermissionDenied(error: unknown) {
-  return CAMERA_PERMISSION_DENIED_CODES.has((error as BridgeCameraError)?.error ?? "");
+// 이벤트(*_scan_fail · text_record_fail)의 실패 이유. 원인 구분은 위 안내 문구 표와 같다
+const FAILURE_REASON_BY_CODE: Record<string, string> = {
+  CAMERA_PERMISSION_DENIED: "permission_denied",
+  GALLERY_PERMISSION_DENIED: "permission_denied",
+  CAMERA_PREPARE_FAILED: "capture_failed",
+  CAMERA_DEVICE_UNAVAILABLE: "capture_failed",
+  CAMERA_CAPTURE_FAILED: "capture_failed",
+  CAMERA_CAPTURE_IN_PROGRESS: "capture_failed",
+  IMAGE_COUNT_EXCEEDED: "invalid_image",
+  IMAGE_FORMAT_NOT_ALLOWED: "invalid_image",
+  IMAGE_FORMAT_UNKNOWN: "invalid_image",
+  IMAGE_SIZE_EXCEEDED: "invalid_image",
+  IMAGE_SIZE_UNAVAILABLE: "invalid_image",
+  IMAGE_PROCESSING_FAILED: "invalid_image",
+  GALLERY_PICK_FAILED: "invalid_image",
+  GALLERY_ACCESS_FAILED: "invalid_image",
+  NETWORK_ERROR: "network",
+};
+const FAILURE_REASON_BY_ANALYSIS_MESSAGE: Partial<Record<string, string>> = {
+  [API_ERROR_MESSAGE.FOOD_IMAGE_QUALITY_LOW]: "low_quality",
+  [API_ERROR_MESSAGE.FOOD_IMAGE_TOO_SMALL]: "too_small",
+  [API_ERROR_MESSAGE.FOOD_IMAGE_BLURRY]: "blurry",
+  [API_ERROR_MESSAGE.FOOD_IMAGE_LIGHTING_POOR]: "dark",
+  [API_ERROR_MESSAGE.FOOD_OCCLUDED_OR_CUT_OFF]: "occluded",
+  [API_ERROR_MESSAGE.FOOD_NOT_DETECTED]: "no_food",
+  [API_ERROR_MESSAGE.FOOD_NOT_MATCHED]: "not_recognized",
+};
+
+export function getRecordFailureReason(error: unknown) {
+  const bridgeError = (error ?? {}) as BridgeCameraError;
+  const reasonByCode = bridgeError.error ? FAILURE_REASON_BY_CODE[bridgeError.error] : undefined;
+  if (reasonByCode) return reasonByCode;
+
+  if (
+    TIMEOUT_ERROR_CODES.has(bridgeError.error ?? "") ||
+    TIMEOUT_STATUS_CODES.has(bridgeError.statusCode ?? 0)
+  ) {
+    return "timeout";
+  }
+
+  const userMessage = error instanceof AppApiError ? error.userMessage : undefined;
+  if (userMessage && IMAGE_MISSING_MESSAGES.has(userMessage)) return "image_missing";
+  return (userMessage && FAILURE_REASON_BY_ANALYSIS_MESSAGE[userMessage]) || "server_error";
 }
 
-export function getCameraCaptureErrorMessage(error: unknown) {
-  return getErrorMessage(error, "카메라를 실행하지 못했어요");
+export function getScanKind(mode: string | null | undefined): ScanKind {
+  return mode === MODE.NUTRITION ? "label" : "food";
+}
+
+// 사진은 찍거나 골랐지만 앱의 형식 · 용량 검사에서 막힌 오류
+const REJECTED_IMAGE_CODES = new Set([
+  "IMAGE_COUNT_EXCEEDED",
+  "IMAGE_FORMAT_NOT_ALLOWED",
+  "IMAGE_FORMAT_UNKNOWN",
+  "IMAGE_SIZE_EXCEEDED",
+  "IMAGE_SIZE_UNAVAILABLE",
+  "IMAGE_PROCESSING_FAILED",
+  "GALLERY_PICK_FAILED",
+]);
+
+// 촬영 · 고르기 단계 실패 중 사진이 있었던 경우만 시작과 실패를 함께 보낸다(true).
+// 카메라를 열지 못한 것처럼 사진이 없으면 시작으로 세지 않는다(false)
+export function trackRejectedImageScan(
+  error: unknown,
+  fallback: { source: ScanSource; mode: string | null | undefined; imageFrom: ImageFrom },
+) {
+  const bridgeError = (error ?? {}) as BridgeCameraError;
+  if (!bridgeError.error || !REJECTED_IMAGE_CODES.has(bridgeError.error)) return false;
+
+  const kind = getScanKind(bridgeError.mode ?? fallback.mode);
+  trackScanStart(kind, {
+    source: fallback.source,
+    imageFrom: bridgeError.imageFrom ?? fallback.imageFrom,
+  });
+  trackScanFail(kind, { source: fallback.source, reason: getRecordFailureReason(error) });
+  return true;
 }
 
 // screen: DIET-02-008_modal-invalid-image
+// 촬영 · 고르기 · 보내기 전 실패. 기기 원문은 내지 않는다
 export function getCameraCaptureErrorFeedback(error: unknown): CameraCaptureErrorFeedback {
-  if (isCameraPermissionDenied(error)) {
-    return {
-      title: "카메라 권한이 필요해요",
-      description: "설정에서 카메라 권한을 허용한 뒤 다시 촬영해주세요.",
-    };
-  }
+  const errorCode = (error as BridgeCameraError)?.error;
+  return (errorCode && CAPTURE_FAILURE_BY_CODE[errorCode]) || CAPTURE_FAILED;
+}
 
-  const message = getCameraCaptureErrorMessage(error);
-
+// 분석은 됐지만 사진에서 음식을 하나도 찾지 못했을 때 (서버 40057과 같은 안내)
+export function getNoFoodDetectedFeedback(imageFrom: ImageFrom = "camera") {
   return {
-    title: "촬영에 실패했어요",
-    description: `${message}`,
+    title: API_ERROR_MESSAGE.FOOD_NOT_DETECTED,
+    description:
+      imageFrom === "gallery" ? GALLERY_RETRY_GUIDE : "음식이 잘 보이게 다시 촬영해주세요",
   };
-}
-
-const BRIDGE_TIMEOUT_CODE = "BRIDGE_TIMEOUT";
-const TIMEOUT_STATUS_CODES = new Set([408, 504]);
-
-function isBridgeTimeout(error: unknown) {
-  const bridgeError = error as BridgeCameraError;
-  return (
-    bridgeError?.error === BRIDGE_TIMEOUT_CODE ||
-    TIMEOUT_STATUS_CODES.has(bridgeError?.statusCode ?? 0)
-  );
-}
-
-function isServiceUnavailable(error: unknown) {
-  return (error as BridgeCameraError)?.statusCode === 503;
-}
-
-const CLIENT_VISIBLE_RECOGNITION_ERROR_CODES = new Set([
-  "IMAGE_FORMAT_NOT_ALLOWED",
-  "IMAGE_SIZE_UNAVAILABLE",
-  "IMAGE_SIZE_EXCEEDED",
-  "IMAGE_FORMAT_UNKNOWN",
-  "IMAGE_COUNT_EXCEEDED",
-]);
-
-function shouldUseRecognitionFallbackMessage(error: unknown) {
-  const bridgeError = error as BridgeCameraError;
-
-  if (!bridgeError) return false;
-  if (
-    bridgeError.error &&
-    CLIENT_VISIBLE_RECOGNITION_ERROR_CODES.has(bridgeError.error)
-  ) {
-    return false;
-  }
-
-  return (
-    bridgeError.name === "AppApiError" ||
-    typeof bridgeError.statusCode === "number" ||
-    typeof bridgeError.error === "string"
-  );
 }
 
 // screen: DIET-02-008_modal-analysis-failed
+// 분석 실패. 보내기 전 검사(형식 · 용량)에서 막힌 것도 여기로 와서 원인별 문구를 쓴다
 export function getRecognitionErrorFeedback(
-  domain: RecognitionDomain,
-  error?: unknown,
+  error: unknown,
+  imageFrom: ImageFrom = "camera",
 ): CameraCaptureErrorFeedback {
-  if (isBridgeTimeout(error)) {
+  const bridgeError = (error ?? {}) as BridgeCameraError;
+
+  if (bridgeError.error && CAPTURE_FAILURE_BY_CODE[bridgeError.error]) {
+    return CAPTURE_FAILURE_BY_CODE[bridgeError.error];
+  }
+
+  if (bridgeError.error === "NETWORK_ERROR") {
+    return { title: "네트워크 상태를 확인해주세요" };
+  }
+
+  if (
+    TIMEOUT_ERROR_CODES.has(bridgeError.error ?? "") ||
+    TIMEOUT_STATUS_CODES.has(bridgeError.statusCode ?? 0)
+  ) {
+    return { title: "분석 시간이 오래 걸리고 있어요", description: "잠시 후 다시 시도해주세요" };
+  }
+
+  const userMessage = error instanceof AppApiError ? error.userMessage : undefined;
+  if (userMessage && IMAGE_MISSING_MESSAGES.has(userMessage)) {
+    return { title: "사진을 불러오지 못했어요", description: "다시 시도해주세요" };
+  }
+
+  const retakeGuide = userMessage ? RETAKE_GUIDE_BY_ANALYSIS_MESSAGE[userMessage] : undefined;
+  if (userMessage && retakeGuide) {
     return {
-      title: "분석 시간이 오래 걸리고 있어요",
-      description: "요청 대기 시간이 초과됐어요",
+      title: userMessage,
+      description: imageFrom === "gallery" ? GALLERY_RETRY_GUIDE : retakeGuide,
     };
   }
 
-  if (isServiceUnavailable(error)) {
-    return {
-      title: "서버가 일시적으로 불안정해요",
-      description: "잠시 후 다시 시도해주세요",
-    };
-  }
-
-  const copy = RECOGNITION_ERROR_COPY[domain];
-  const message = shouldUseRecognitionFallbackMessage(error)
-    ? copy.fallbackMessage
-    : getErrorMessage(error, copy.fallbackMessage);
-
-  return {
-    title: copy.title,
-    // description: `${message}\n${copy.retryGuide} `,
-    // description: `${copy.retryGuide}`,
-    description: `${message}`,
-  };
+  return { title: "사진을 분석하지 못했어요", description: "잠시 후 다시 시도해주세요" };
 }
 
 export function getCapturedImagePreviewSrc(source: CapturedImagePreviewSource) {
   const previewBase64 = source.previewBase64?.trim();
   const previewMimeType = source.previewMimeType?.toLowerCase().trim();
 
-  if (
-    previewBase64 &&
-    previewMimeType &&
-    WEBVIEW_PREVIEW_MIME_TYPES.has(previewMimeType)
-  ) {
+  if (previewBase64 && previewMimeType && WEBVIEW_PREVIEW_MIME_TYPES.has(previewMimeType)) {
     return `data:${previewMimeType};base64,${previewBase64}`;
   }
 

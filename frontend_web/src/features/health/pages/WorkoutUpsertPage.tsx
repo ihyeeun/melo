@@ -56,6 +56,8 @@ type WorkoutDraft = Partial<
   Omit<UpsertWorkoutRecordRequestDto, "burned_calories" | "date" | "set_list">
 > & {
   burned_calories?: number | null;
+  // 소모 칼로리를 직접 고쳤는지. 비어 있으면 처음 연 기록의 값으로 판단한다
+  calories_mode?: "auto" | "manual";
   set_list: Array<Partial<WorkoutSetRequestDto>>;
 };
 
@@ -74,10 +76,10 @@ const WORKOUT_NUMBER_FORMAT = {
 } satisfies Intl.NumberFormatOptions;
 
 const CARDIO_CALORIE_INFO_MESSAGES = [
-  "MET(대사당량) 지수를 기반으로, 체중과 운동 강도를 반영해 계산한 추정치입니다. 개인의 근육량이나 실제 심박수 등에 따라 소모량은 조금 다를 수 있어요.",
+  "MET(대사당량) 지수를 기반으로, 체중과 운동 강도를 반영해 계산한 추정치예요. 개인의 근육량이나 실제 심박수 등에 따라 소모량은 조금 다를 수 있어요.",
 ] as const;
 const WEIGHT_CALORIE_INFO_MESSAGES = [
-  "MET 지수를 기반으로, 체중과 운동 강도를 반영해 계산한 추정치입니다. 개인의 근육량이나 실제 심박수 등에 따라 소모량은 조금 다를 수 있어요.",
+  "MET 지수를 기반으로, 체중과 운동 강도를 반영해 계산한 추정치예요. 개인의 근육량이나 실제 심박수 등에 따라 소모량은 조금 다를 수 있어요.",
 ] as const;
 const WEIGHT_DURATION_INFO_MESSAGES = [
   "1회당 평균 수행 시간(3초)과 표준 휴식 시간(90초)을 고려해 자동 계산된 시간이에요.",
@@ -243,10 +245,21 @@ export default function WorkoutUpsertPage() {
 
     return burnedCalories ? Math.round(burnedCalories) : undefined;
   }, [draft, profile, workout]);
-  const burnedCaloriesValue =
-    draft.burned_calories === undefined
-      ? calculatedBurnedCalories
-      : (draft.burned_calories ?? undefined);
+  // 저장된 기록을 고칠 때는 저장된 칼로리가 지금 입력값으로 계산한 값과 다르면 직접 입력한 값으로 본다
+  // (서버에 직접 입력 여부가 없어서)
+  const isBaselineCaloriesManual = useMemo(() => {
+    if (!targetWorkoutRecord || !workout || !profile) return false;
+
+    const baselineCalories = calculateWorkoutCalories({ draft: baselineDraft, workout, profile });
+    return Math.round(baselineCalories ?? 0) !== targetWorkoutRecord.burned_calories;
+  }, [baselineDraft, profile, targetWorkoutRecord, workout]);
+  const isManualCalories = draft.calories_mode
+    ? draft.calories_mode === "manual"
+    : isBaselineCaloriesManual;
+  // 직접 입력 상태에서는 시간 · 강도 · 세트를 바꿔도 칼로리를 유지한다
+  const burnedCaloriesValue = isManualCalories
+    ? (draft.burned_calories ?? undefined)
+    : calculatedBurnedCalories;
 
   const requestBody = useMemo<UpsertWorkoutRecordRequestDto | null>(() => {
     if (!workout || workoutId === null) return null;
@@ -311,15 +324,28 @@ export default function WorkoutUpsertPage() {
   useEffect(() => {
     if (!isWorkoutUnavailable) return;
 
-    toast.warning("운동 정보를 불러오지 못했어요", "잠시 후 다시 시도해주세요.");
+    toast.error("운동 정보를 불러오지 못했어요", "잠시 후 다시 시도해주세요");
     navigateBack({ fallbackTo: backFallbackPath });
   }, [backFallbackPath, isWorkoutUnavailable]);
 
   const updateDraft = (field: "burned_calories" | "workout_duration", value?: number) => {
+    updateCurrentDraft((current) =>
+      field === "burned_calories"
+        ? { ...current, burned_calories: value ?? null, calories_mode: "manual" }
+        : {
+            ...current,
+            workout_duration: value,
+            calories_mode: isManualCalories ? "manual" : "auto",
+          },
+    );
+  };
+
+  // [자동 계산]: 직접 입력한 칼로리를 버리고 다시 계산한 값을 쓴다
+  const resetToAutoCalories = () => {
     updateCurrentDraft((current) => ({
       ...current,
-      [field]: field === "burned_calories" && value === undefined ? null : value,
-      ...(field === "workout_duration" ? { burned_calories: undefined } : {}),
+      burned_calories: undefined,
+      calories_mode: "auto",
     }));
   };
 
@@ -327,7 +353,7 @@ export default function WorkoutUpsertPage() {
     updateCurrentDraft((current) => ({
       ...current,
       intensity,
-      ...(current.intensity === intensity ? {} : { burned_calories: undefined }),
+      calories_mode: isManualCalories ? "manual" : "auto",
     }));
   };
 
@@ -342,7 +368,7 @@ export default function WorkoutUpsertPage() {
             }
           : set,
       ),
-      burned_calories: undefined,
+      calories_mode: isManualCalories ? "manual" : "auto",
     }));
   };
 
@@ -363,7 +389,7 @@ export default function WorkoutUpsertPage() {
       return {
         ...current,
         set_list: [...current.set_list, { set_order: nextSetOrder }],
-        burned_calories: undefined,
+        calories_mode: isManualCalories ? "manual" : "auto",
       };
     });
   };
@@ -375,7 +401,7 @@ export default function WorkoutUpsertPage() {
       return {
         ...current,
         set_list: current.set_list.filter((set) => set.set_order !== setOrder),
-        burned_calories: undefined,
+        calories_mode: isManualCalories ? "manual" : "auto",
       };
     });
   };
@@ -473,6 +499,9 @@ export default function WorkoutUpsertPage() {
             }
             unit="kcal"
             required
+            endSlot={
+              isManualCalories ? <ManualCaloriesActions onReset={resetToAutoCalories} /> : null
+            }
           />
         </>
       );
@@ -584,6 +613,9 @@ export default function WorkoutUpsertPage() {
           }
           unit="kcal"
           required
+          endSlot={
+            isManualCalories ? <ManualCaloriesActions onReset={resetToAutoCalories} /> : null
+          }
         />
 
         <Field
@@ -666,11 +698,14 @@ function Field({
   label,
   required = false,
   rightSlot,
+  endSlot,
 }: {
   children: ReactNode;
   label: string;
   required?: boolean;
   rightSlot?: ReactNode;
+  // 라벨 줄 오른쪽 끝에 붙는 것
+  endSlot?: ReactNode;
 }) {
   return (
     <section className={styles.field}>
@@ -678,9 +713,26 @@ function Field({
         <p className={`title-s-semi text-primary`}>{label}</p>
         {rightSlot}
         {required && <p className={`${styles.required} caption-m-medium`}>*필수</p>}
+        {endSlot ? <div className={styles.labelEnd}>{endSlot}</div> : null}
       </div>
       {children}
     </section>
+  );
+}
+
+// 소모 칼로리를 직접 고친 상태 표시 + 다시 자동 계산으로 되돌리는 버튼
+function ManualCaloriesActions({ onReset }: { onReset: () => void }) {
+  return (
+    <>
+      <span className={`${styles.manualBadge} caption-s-medium text-tertiary`}>직접 입력</span>
+      <button
+        type="button"
+        className={`${styles.autoCalculateButton} body-xs-regular`}
+        onClick={onReset}
+      >
+        자동 계산
+      </button>
+    </>
   );
 }
 
@@ -690,6 +742,7 @@ function LabeledNumberField({
   placeholder,
   required = false,
   rightSlot,
+  endSlot,
   unit,
   value,
 }: {
@@ -698,11 +751,12 @@ function LabeledNumberField({
   placeholder: string;
   required?: boolean;
   rightSlot?: ReactNode;
+  endSlot?: ReactNode;
   unit: string;
   value?: number;
 }) {
   return (
-    <Field label={label} required={required} rightSlot={rightSlot}>
+    <Field label={label} required={required} rightSlot={rightSlot} endSlot={endSlot}>
       <NumberField
         value={value}
         onChange={onChange}

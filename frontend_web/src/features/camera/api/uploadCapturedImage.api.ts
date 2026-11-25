@@ -60,7 +60,7 @@ export async function uploadCapturedImageToServer(capturedImage: CapturedImage) 
       fieldName: "image",
       method: "POST",
     },
-    "음식 이미지 분석 실패",
+    "사진을 분석하지 못했어요",
   );
 }
 
@@ -76,7 +76,7 @@ export async function uploadNutritionLabelImage(capturedImage: CapturedImage) {
       fieldName: "image",
       method: "POST",
     },
-    "영양성분표 이미지 분석 실패",
+    "영양성분표를 분석하지 못했어요",
   );
 }
 
@@ -92,7 +92,7 @@ export async function uploadChatFoodImageFeedback(image: CapturedImage) {
       fieldName: "image",
       method: "POST",
     },
-    "음식 분석 실패",
+    "사진을 분석하지 못했어요",
   );
 }
 
@@ -108,6 +108,6 @@ export async function uploadChatNutritionLabelImageFeedback(image: CapturedImage
       fieldName: "image",
       method: "POST",
     },
-    "영양성분표 분석 실패",
+    "영양성분표를 분석하지 못했어요",
   );
 }

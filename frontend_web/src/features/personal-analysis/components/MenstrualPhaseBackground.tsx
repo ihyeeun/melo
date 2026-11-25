@@ -15,11 +15,15 @@ const PHASE_VIEW = {
   follicular: { label: "난포기", fill: "var(--coral-100)" },
   ovulatory: { label: "배란기", fill: "var(--coral-50)" },
   luteal: { label: "황체기", fill: "var(--coral-100)" },
-  next_predicted: { label: "월경 예상", fill: "var(--coral-200)" },
-} satisfies Record<NonNullable<MenstrualStatus>, { label: string; fill: string }>;
+} satisfies Record<
+  Exclude<NonNullable<MenstrualStatus>, "next_predicted">,
+  { label: string; fill: string }
+>;
+
+type PhaseStatus = keyof typeof PHASE_VIEW;
 
 type PhaseRange = {
-  status: NonNullable<MenstrualStatus>;
+  status: PhaseStatus;
   startIndex: number;
   endIndex: number;
 };
@@ -42,11 +46,14 @@ export function MenstrualPhaseBackground({ data }: { data: readonly { date: stri
   data.forEach(({ date }, index) => {
     const context = selectMenstrualCycleContext({ cycles, targetDate: date });
     const phaseDate = context ? calculateMenstrualPhaseDates(context, date) : null;
-    const status = getMenstrualTypeFromPhase({
+    const menstrualStatus = getMenstrualTypeFromPhase({
       targetDate: date,
       phaseDate: phaseDate ?? undefined,
     });
-    if (!status) return;
+    if (!menstrualStatus) return;
+    // 기록 없이 예상만 있는 월경 구간도 월경기로 칠한다 (월경 홈 진행 바와 같게)
+    const status: PhaseStatus =
+      menstrualStatus === "next_predicted" ? "menstrual_recorded" : menstrualStatus;
 
     const previous = ranges.at(-1);
     if (previous?.status === status && previous.endIndex === index - 1) {
@@ -86,7 +93,7 @@ export function MenstrualPhaseBackground({ data }: { data: readonly { date: stri
                   x={(left + right) / 2}
                   y={plot.y - 4}
                   textAnchor="middle"
-                  className="caption-m-medium text-secondary"
+                  className="caption-m-medium text-tertiary"
                   fill="currentColor"
                 >
                   {label}

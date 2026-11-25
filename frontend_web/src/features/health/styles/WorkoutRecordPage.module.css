@@ -121,6 +121,12 @@
 }
 
 /* 운동 기록 수정 페이지 */
+.editFooter {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: 1fr 2fr;
+}
+
 .header {
   background-color: var(--background-default);
   border-bottom: 1px solid var(--border-subtle);

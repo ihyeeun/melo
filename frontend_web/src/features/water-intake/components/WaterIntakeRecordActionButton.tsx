@@ -5,6 +5,7 @@ import { PATH } from "@/router/path";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import { useNavigate } from "@/shared/navigation/stackflowNavigation";
 import { useSelectedDateKey } from "@/shared/stores/selectedDate.store";
+import { getTodayFormatDateKey } from "@/shared/utils/dateFormat";
 
 export function WaterIntakeRecordActionButton() {
   const selectdate = useSelectedDateKey();
@@ -18,7 +19,9 @@ export function WaterIntakeRecordActionButton() {
       }}
       className={styles.root}
     >
-      <p className="body-l-medium text-primary">오늘 섭취한 물</p>
+      <p className="body-l-medium text-primary">
+        {selectdate === getTodayFormatDateKey() ? "오늘 섭취한 물" : "섭취한 물"}
+      </p>
 
       <div className="marginLeft">
         <span className="title-l-medium text-primary">

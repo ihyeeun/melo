@@ -13,8 +13,8 @@ export const APP_TABS = {
     { tab: "profile", label: "프로필" },
   ],
   free: [
-    { tab: "home", label: "기록" },
     { tab: "restaurant", label: "식당" },
+    { tab: "home", label: "기록" },
     { tab: "analysis", label: "분석" },
     { tab: "profile", label: "프로필" },
   ],

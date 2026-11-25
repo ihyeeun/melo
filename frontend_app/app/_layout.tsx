@@ -36,8 +36,9 @@ function RootLayout() {
 
   useEffect(() => {
     const unsubscribe = subscribeAuthExpired(() => {
-      const isAuthRoute = segmentRef.current[0] === "(auth)";
-      if (isAuthRoute) return;
+      // 로그인 화면들에서는 그대로 두고, 회원가입 중 로그아웃하면 로그인 화면으로 돌아간다
+      const [group, screen] = segmentRef.current;
+      if (group === "(auth)" && screen !== "onboarding") return;
       router.replace("/(auth)/login");
     });
 

@@ -43,10 +43,7 @@ import {
 } from "@/features/meal-record/utils/menuDraftSync";
 import { PATH } from "@/router/path";
 import { getMealDetailPath, getMealRecordPath, getMealSearchPath } from "@/router/pathHelpers";
-import {
-  type MenuSaveAnalyticsItem,
-  trackDiaryMenuSave,
-} from "@/shared/analytics/menuSaveEvent.util";
+import { type MenuSaveAnalyticsItem, trackMenuSave } from "@/shared/analytics/menuSaveEvent.util";
 import { isRequestAbortError } from "@/shared/api/requestCancellation";
 import {
   MEAL_TYPE_OPTIONS,
@@ -498,7 +495,7 @@ export default function MealRecordPage() {
           });
 
           if (deleteResult === DELETE_MEAL_RECORD_RESULT.FAILED_RECOVERED) {
-            toast.warning("식사 기록 저장에 실패했어요. 잠시 후 다시 시도해주세요.");
+            toast.error("식사 기록을 저장하지 못했어요", "잠시 후 다시 시도해주세요");
             return;
           }
 
@@ -514,7 +511,11 @@ export default function MealRecordPage() {
 
         await registerMealAsync(request, {
           onSuccess: () => {
-            trackDiaryMenuSave(getSavedMenusFromRequest(request));
+            trackMenuSave({
+              source: "diet",
+              menus: getSavedMenusFromRequest(request),
+              isEdit: currentMenus.menusByTime[request.time].length > 0,
+            });
           },
         });
       }
@@ -528,7 +529,7 @@ export default function MealRecordPage() {
       toast.success("식사를 기록했어요");
     } catch (error) {
       if (isRequestAbortError(error)) return;
-      toast.warning("식사 기록 저장에 실패했어요", "잠시 후 다시 시도해주세요.");
+      toast.error("식사 기록을 저장하지 못했어요", "잠시 후 다시 시도해주세요");
     }
   };
 
@@ -689,11 +690,12 @@ export default function MealRecordPage() {
       <ConfirmModal
         open={isExitConfirmOpen}
         onOpenChange={setIsExitConfirmOpen}
-        title="변경사항을 저장하지 않고 나갈까요?"
-        cancelText="나가기"
-        confirmText="계속 수정"
-        onCancel={handleExit}
-        onConfirm={() => {}}
+        title="변경 사항을 저장하지 않고 나갈까요?"
+        confirmText="나가기"
+        cancelText="계속 수정"
+        actionOrder="confirm-cancel"
+        emphasis="cancel"
+        onConfirm={handleExit}
       />
 
       {/* screen: DIET-04-001_modal-time */}

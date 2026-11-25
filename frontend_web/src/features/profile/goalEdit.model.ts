@@ -121,12 +121,19 @@ export function getTargetCaloriesFeedback(
     targetCalories < GOAL_CALORIES_MIN ||
     targetCalories > GOAL_CALORIES_MAX
   ) {
-    return { isValid: false, message: "목표 칼로리는 1~99999 사이로 입력해주세요" };
+    return { isValid: false, message: "목표 칼로리는 1~99,999 사이로 입력해주세요" };
   }
 
   const estimate = getGoalWeekEstimate(draft, targetCalories);
 
   if (estimate.status === "ok") {
+    // 체중 유지는 목표 칼로리를 고쳐도 기간 대신 같은 문구를 보여 준다
+    if (draft.goal === GOAL.MAINTAIN_WEIGHT) {
+      return { isValid: true, message: "지금 체중을 유지하는 목표예요" };
+    }
+    if (estimate.weeks === 0) {
+      return { isValid: true, message: "체중은 유지하면서 목표를 이어가요" };
+    }
     return { isValid: true, message: `목표 달성까지 약 ${estimate.weeks}주 걸려요` };
   }
 
@@ -145,7 +152,7 @@ export function getTargetCaloriesFeedback(
       detail:
         estimate.tdee === undefined
           ? undefined
-          : `${Math.floor(estimate.tdee) + 1}kcal 이상 입력해주세요`,
+          : `${(Math.floor(estimate.tdee) + 1).toLocaleString("ko-KR")}kcal 이상으로 입력해주세요`,
     };
   }
 
@@ -156,7 +163,7 @@ export function getTargetCaloriesFeedback(
       detail:
         estimate.tdee === undefined
           ? undefined
-          : `${Math.ceil(estimate.tdee) - 1}kcal 이하로 입력해주세요`,
+          : `${(Math.ceil(estimate.tdee) - 1).toLocaleString("ko-KR")}kcal 이하로 입력해주세요`,
     };
   }
 

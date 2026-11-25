@@ -1,4 +1,5 @@
 import type { NearbyCategory } from "@/features/restaurant/api/nearbyRestaurant.api";
+import { MeloVerifiedBadge } from "@/features/restaurant/components/MeloVerifiedBadge";
 import {
   useNearbyRestaurantsQuery,
   useRestaurantBrandsQuery,
@@ -7,7 +8,7 @@ import type { SheetRestaurant } from "@/features/restaurant/hooks/useMapSheet";
 import sheetStyles from "@/features/restaurant/styles/MapSheetView.module.css";
 import styles from "@/features/restaurant/styles/NearbyRestaurantList.module.css";
 import type { LatLng } from "@/features/restaurant/utils/currentLocation.util";
-import { formatDistance } from "@/features/restaurant/utils/distance.util";
+import { formatDistance, getRestaurantDistance } from "@/features/restaurant/utils/distance.util";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import { LoadingIndicator } from "@/shared/commons/loading/Loading";
 
@@ -16,6 +17,7 @@ type NearbyRestaurantListProps = {
   center: LatLng | null;
   keyword: string;
   isMapAreaSearch: boolean;
+  myLocation: LatLng | null;
   onSelectRestaurant: (restaurant: SheetRestaurant) => void;
 };
 
@@ -30,6 +32,7 @@ export default function NearbyRestaurantList({
   center,
   keyword,
   isMapAreaSearch,
+  myLocation,
   onSelectRestaurant,
 }: NearbyRestaurantListProps) {
   const {
@@ -63,7 +66,10 @@ export default function NearbyRestaurantList({
           {getListTitle(keyword, isMapAreaSearch, restaurants.length)}
         </h2>
         {restaurants.length > 0 && brandByPlaceId.size > 0 && (
-          <p className="body-s-regular text-tertiary">멜로 등록 식당 {meloCount}곳</p>
+          <p className={`body-s-regular text-tertiary ${styles.meloCount}`}>
+            <MeloVerifiedBadge size={14} />
+            멜로 등록 식당 {meloCount}곳
+          </p>
         )}
       </header>
       {restaurants.length === 0 ? (
@@ -91,14 +97,12 @@ export default function NearbyRestaurantList({
                   <span className={styles.itemText}>
                     <span className={styles.nameRow}>
                       <span className="body-l-semi text-primary">{restaurant.name}</span>
-                      {brand && (
-                        <span className={`caption-m-medium ${styles.meloBadge}`}>멜로 등록</span>
-                      )}
+                      {brand && <MeloVerifiedBadge />}
                     </span>
                     <span className={`body-s-regular text-tertiary ${sheetStyles.divided}`}>
                       <span>{restaurant.category}</span>
-                      <span>{formatDistance(restaurant.distance)}</span>
-                      {brand === null && <span>메뉴를 준비중이에요</span>}
+                      <span>{formatDistance(getRestaurantDistance(restaurant, myLocation))}</span>
+                      {brand === null && <span>메뉴를 준비 중이에요</span>}
                     </span>
                   </span>
                   <SystemIcon name="chevron-right" size={20} className="text-tertiary" />
