@@ -3,6 +3,10 @@ export const EVENT_NAME = {
   VITE_PRELOAD_ERROR: "vite_preload_error",
   SCREEN_VIEW: "screen_view",
 
+  // 단계별 진입은 screen_view의 path(/onboarding?step=...)로 본다
+  SIGN_UP_COMPLETE: "sign_up_complete",
+  SIGN_UP_FAIL: "sign_up_fail",
+
   RESTAURANT_TAB_ENTER: "restaurant_tab",
   RESTAURANT_SEARCH_FOCUS: "restaurant_search_focus",
   RESTAURANT_SEARCH: "restaurant_search",

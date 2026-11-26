@@ -7,6 +7,8 @@ import {
 } from "@/features/sign-up/types/signUp.type";
 import { getSubCodeErrorToast } from "@/features/sub-code/utils/subCodeError.util";
 import { PATH } from "@/router/path";
+import { track } from "@/shared/analytics/analytics";
+import { EVENT_NAME } from "@/shared/analytics/analytics.constants";
 import { AppApiError, resolveApiErrorToast } from "@/shared/api/apiClient";
 import { API_ERROR_MESSAGE } from "@/shared/api/apiErrorMessage";
 import { isNativeApp, syncAppTab } from "@/shared/api/bridge/nativeBridge";
@@ -103,16 +105,25 @@ export function useSignUpSubmit({ closeStepScreens, onInvalidField }: Options) {
   };
 
   const { mutate, isPending } = useRegisterUserInfoMutation({
-    onSuccess: enterApp,
+    onSuccess: () => {
+      track(EVENT_NAME.SIGN_UP_COMPLETE);
+      enterApp();
+    },
     onError: (error) => {
       const userMessage = error instanceof AppApiError ? error.userMessage : undefined;
 
       // 이미 프로필이 있으면 가입이 끝난 것으로 보고 들여보낸다
       if (userMessage === API_ERROR_MESSAGE.PROFILE_ALREADY_EXISTS) {
+        track(EVENT_NAME.SIGN_UP_COMPLETE);
         toast.warning(userMessage);
         enterApp();
         return;
       }
+
+      // reason은 서버 오류 코드(40010 등). 서버 응답이 아니면 unknown
+      track(EVENT_NAME.SIGN_UP_FAIL, {
+        reason: error instanceof AppApiError ? String(error.statusCode) : "unknown",
+      });
 
       const field = userMessage ? FIELD_TO_FIX[userMessage] : undefined;
       if (userMessage && field) {

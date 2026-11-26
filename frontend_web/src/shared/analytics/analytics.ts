@@ -31,6 +31,7 @@ const SESSION_TIMEOUT_MS = 5 * 60 * 1000;
 const APP_FOREGROUND_EVENT_NAME = "MELO_APP_FOREGROUND";
 
 let initialized = false;
+let initializing = false;
 let analyticsUnavailable = false;
 let analyticsInitRequested = false;
 let appDeviceInfoReady = false;
@@ -39,6 +40,8 @@ let currentUserRole: ProfileResponseDto["role"] | undefined;
 let identifiedUserPropertiesKey: string | null = null;
 let currentUserId: string | null = null;
 let currentUserProperties: AnalyticsUserProperties = {};
+// 가입 중처럼 사용자가 아직 없는 화면. 사용자를 기다리지 않고 기기 기준으로 보낸다
+let isAnonymousSession = false;
 const pendingEvents: PendingEvent[] = [];
 const trackedOnceKeys = new Set<string>();
 
@@ -64,6 +67,13 @@ function getAmplitudeApiKey(userRole: ProfileResponseDto["role"]) {
   }
 
   return import.meta.env.VITE_PROD_AMPLITUDE_API_KEY;
+}
+
+// 가입 중에는 역할을 알 수 없어 새 계정을 일반 사용자로 보고 운영 키로 보낸다. 로컬 개발에서 하는 가입은 개발 키로
+function getAnonymousAmplitudeApiKey() {
+  return import.meta.env.DEV
+    ? import.meta.env.VITE_DEV_AMPLITUDE_API_KEY
+    : import.meta.env.VITE_PROD_AMPLITUDE_API_KEY;
 }
 
 function disableAnalytics() {
@@ -131,33 +141,45 @@ function startNewSessionOnAppReturn() {
 }
 
 function initializeAnalyticsIfReady() {
-  if (initialized || analyticsUnavailable || !analyticsInitRequested) return;
-  if (currentUserRole === undefined || !appDeviceInfoReady) return;
+  if (initialized || initializing || analyticsUnavailable || !analyticsInitRequested) return;
+  if (!appDeviceInfoReady) return;
+  if (currentUserRole === undefined && !isAnonymousSession) return;
 
-  const apiKey = getAmplitudeApiKey(currentUserRole);
+  const apiKey =
+    currentUserRole === undefined
+      ? getAnonymousAmplitudeApiKey()
+      : getAmplitudeApiKey(currentUserRole);
   if (!apiKey) {
     disableAnalytics();
     return;
   }
 
+  initializing = true;
   amplitude.add(sessionReplayTracking);
-  amplitude.init(apiKey, {
-    autocapture: false,
-    sessionTimeout: SESSION_TIMEOUT_MS,
-  });
+  // 저장해 둔 기기 · 사용자를 불러온 뒤에 보낸다. 그 전에는 getUserId가 비어 있다
+  void amplitude
+    .init(apiKey, {
+      autocapture: false,
+      sessionTimeout: SESSION_TIMEOUT_MS,
+    })
+    .promise.then(() => {
+      initializing = false;
+      initialized = true;
+      startNewSessionOnAppReturn();
 
-  initialized = true;
-  startNewSessionOnAppReturn();
+      if (currentUserId) {
+        amplitude.setUserId(currentUserId);
+      } else if (amplitude.getUserId()) {
+        // 지난 계정이 남아 있으면 사용자 없이 보낸 이벤트가 그 계정으로 들어가서, 새 기기로 시작한다
+        amplitude.reset();
+      }
 
-  if (currentUserId) {
-    amplitude.setUserId(currentUserId);
-  }
+      if (Object.keys(currentUserProperties).length > 0) {
+        syncUserPropertiesWithAmplitude();
+      }
 
-  if (Object.keys(currentUserProperties).length > 0) {
-    syncUserPropertiesWithAmplitude();
-  }
-
-  flushPendingEvents();
+      flushPendingEvents();
+    });
 }
 
 export function initAnalytics() {
@@ -182,6 +204,16 @@ export function initAnalytics() {
       appDeviceInfoReady = true;
       initializeAnalyticsIfReady();
     });
+}
+
+// 가입 화면처럼 프로필이 없는 곳에서 부른다. 가입 뒤 프로필을 받아 사용자 id를 붙이면
+// 앰플리튜드가 같은 기기에서 사용자 없이 보낸 이벤트를 그 사용자로 합친다
+export function startAnonymousAnalytics() {
+  if (isAnonymousSession) return;
+
+  isAnonymousSession = true;
+  initializeAnalyticsIfReady();
+  if (initialized) flushPendingEvents();
 }
 
 export function identifyAnalyticsUser(source: ProfileResponseDto) {
@@ -229,8 +261,8 @@ export function track(eventName: AnalyticsEventName, properties?: AnalyticsPrope
   if (analyticsUnavailable) return;
 
   // 초기화 전이거나, 로그아웃해서 사용자를 모르는 동안은 모아 두었다가 사용자를 안 뒤 보낸다
-  // (사용자 id 없이 새 기기로 잡히지 않게)
-  if (!initialized || currentUserId === null) {
+  // (사용자 id 없이 새 기기로 잡히지 않게). 가입 중에는 사용자가 아직 없으니 바로 보낸다
+  if (!initialized || (currentUserId === null && !isAnonymousSession)) {
     pendingEvents.push({ eventName, properties });
     return;
   }

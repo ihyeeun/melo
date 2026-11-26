@@ -33,6 +33,7 @@ import {
   type SignUpStep,
 } from "@/features/sign-up/types/signUp.type";
 import { PATH } from "@/router/path";
+import { startAnonymousAnalytics } from "@/shared/analytics/analytics";
 import { isNativeApp } from "@/shared/api/bridge/nativeBridge";
 import { useNativeAppFeature } from "@/shared/api/bridge/useNativeAppFeature";
 import { LoadingOverlay } from "@/shared/commons/loading/Loading";
@@ -92,6 +93,11 @@ export default function SignUpPage() {
   const hasPreviousValues = steps
     .slice(0, stepIndex)
     .every((previous) => SIGN_UP_STEPS[previous].every((field) => form[field] !== undefined));
+
+  // 가입 중에는 프로필이 없어 사용자를 알 수 없다. 기다리지 않고 기기 기준으로 기록한다
+  useEffect(() => {
+    startAnonymousAnalytics();
+  }, []);
 
   // 웹에서는 토큰이 메모리에만 있어서, 새로고침하면 다시 로그인해야 한다
   useEffect(() => {
