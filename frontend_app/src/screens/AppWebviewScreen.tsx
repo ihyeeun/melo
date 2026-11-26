@@ -53,6 +53,10 @@ const APP_UPDATE_READY_SCRIPT = `
   window.dispatchEvent(new Event("MELO_APP_UPDATE_READY"));
   true;
 `;
+// 웹은 이 표시가 있을 때만 시작 탭으로 연다
+const APP_ENTRY_SCRIPT = `
+  window.__MELO_APP_ENTRY__ = true;
+`;
 
 function isAllowedWebProtocol(protocol: string) {
   return protocol === "https:" || (__DEV__ && protocol === "http:");
@@ -418,6 +422,9 @@ export default function AppWebViewScreen({
   const tabBarHiddenByWebRef = useRef(false);
   const lastProcessTerminatedAtRef = useRef<number | null>(null);
   const [webViewKey, setWebViewKey] = useState(0);
+  // 탭 화면에 들어온 뒤 첫 웹 문서가 다 뜰 때까지만 앱 진입으로 알린다.
+  // 웹뷰 프로세스가 죽어 다시 띄울 때 진입으로 보면 보던 탭에서 시작 탭으로 넘어가 버린다
+  const [isEntryLoadPending, setIsEntryLoadPending] = useState(true);
   const [isInitialWebViewLoading, setIsInitialWebViewLoading] = useState(true);
   const [webViewLoadError, setWebViewLoadError] = useState<WebViewLoadError | null>(null);
   const insets = useSafeAreaInsets();
@@ -439,8 +446,11 @@ export default function AppWebViewScreen({
     [insets.bottom, insets.top, tabBarInset],
   );
   const injectedScriptBeforeContentLoaded = useMemo(
-    () => `${safeAreaSyncScript}${isTabWebView ? pathChangeBridgeScript : ""}true;`,
-    [isTabWebView, safeAreaSyncScript],
+    () =>
+      `${safeAreaSyncScript}${isTabWebView ? pathChangeBridgeScript : ""}${
+        isTabWebView && isEntryLoadPending ? APP_ENTRY_SCRIPT : ""
+      }true;`,
+    [isEntryLoadPending, isTabWebView, safeAreaSyncScript],
   );
 
   const applyTabBarVisibility = useCallback(
@@ -783,6 +793,7 @@ export default function AppWebViewScreen({
     }
 
     didLoadOnceRef.current = true;
+    setIsEntryLoadPending(false);
     webViewRef.current?.injectJavaScript(`${safeAreaSyncScript}true;`);
 
     // 다운로드가 웹 로드보다 먼저 끝난 경우에도 웹이 알 수 있도록 다시 전달한다

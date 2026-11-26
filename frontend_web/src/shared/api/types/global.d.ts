@@ -12,5 +12,6 @@ declare global {
       postMessage: (message: string) => void;
     };
     __MELO_APP_UPDATE_READY__?: boolean;
+    __MELO_APP_ENTRY__?: boolean;
   }
 }

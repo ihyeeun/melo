@@ -11,14 +11,21 @@ import { AppApiError } from "@/shared/api/apiClient";
 import {
   isNativeApp,
   requestNativeSignUpRedirect,
+  syncAppTab,
   syncAppTabConfig,
 } from "@/shared/api/bridge/nativeBridge";
+import type { AppTabName } from "@/shared/api/bridge/nativeBridge.types";
 import { useNativeAppFeature } from "@/shared/api/bridge/useNativeAppFeature";
 import { Button } from "@/shared/commons/button/Button";
 import { SystemIcon } from "@/shared/commons/icon/SystemIcon";
 import { LoadingScreen } from "@/shared/commons/loading/Loading";
 import { setFreeUserGuardEnabled } from "@/shared/guards/featureGuard";
-import { APP_OPTIONAL_TABS, APP_TABS } from "@/shared/navigation/appTabConfig";
+import {
+  APP_OPTIONAL_TABS,
+  APP_TAB_PATHS,
+  APP_TABS,
+  getAppStartTab,
+} from "@/shared/navigation/appTabConfig";
 
 import {
   consumeExpectedStackflowPopState,
@@ -36,6 +43,10 @@ const StackComponent = getStackflowStackComponent();
 const PROFILE_SYNC_EXCLUDED_PATHS = new Set([PATH.ONBOARDING, PATH.APP_INFO]);
 const USER_INFO_NOT_FOUND_STATUS_CODE = 40411;
 const STACKFLOW_HISTORY_STATE_TAG = "@stackflow/plugin-history-sync";
+// 앱이 이 문서를 앱 진입(실행 · 로그인 · 가입 완료)으로 띄웠는지. 웹뷰를 다시 띄운 경우에는 표시하지 않는다
+const isAppEntryDocument = typeof window !== "undefined" && window.__MELO_APP_ENTRY__ === true;
+
+type EntryStartTab = { tab: AppTabName; path: string };
 
 function isStackflowHistoryState(state: unknown) {
   if (typeof state !== "object" || state === null) {
@@ -92,16 +103,31 @@ function useSyncFeatureGuardFromProfile() {
   }, [isSubscribed]);
 
   if (!shouldFetchProfile || typeof isSubscribed === "boolean") {
-    return { status: "ready", isSignUpRequired, retryProfile: refetch } as const;
+    return { status: "ready", isSubscribed, isSignUpRequired, retryProfile: refetch } as const;
   }
 
   // 프로필 없이 홈을 띄우면 홈의 프로필 조회가 재요청을 일으키고, 데이터가 없는 쿼리는 재요청 때
   // pending으로 돌아가 이 로딩과 홈이 끝없이 번갈아 뜬다(탈퇴 계정 무한로딩). 그래서 실패는 여기서 멈춘다
   if (isError || isSuccess) {
-    return { status: "failed", isSignUpRequired, retryProfile: refetch } as const;
+    return { status: "failed", isSubscribed, isSignUpRequired, retryProfile: refetch } as const;
   }
 
-  return { status: "loading", isSignUpRequired, retryProfile: refetch } as const;
+  return { status: "loading", isSubscribed, isSignUpRequired, retryProfile: refetch } as const;
+}
+
+// 앱에 들어오자마자 시작 탭이 아닌 탭의 첫 화면이 열렸으면 시작 탭을 돌려준다.
+// 앱은 지난번에 받은 탭 구성으로 시작하고 로그인 직후에는 기록 탭으로 들어오므로, 구독 여부를 아는 여기서 맞춘다
+function resolveEntryStartTab(isSubscribed: boolean | undefined): EntryStartTab | null {
+  if (!isAppEntryDocument || typeof isSubscribed !== "boolean") return null;
+
+  const currentPath = normalizePathname(window.location.pathname);
+  if (!Object.values(APP_TAB_PATHS).includes(currentPath)) return null;
+
+  const tab = getAppStartTab(isSubscribed);
+  const path = APP_TAB_PATHS[tab];
+  if (!path || path === currentPath) return null;
+
+  return { tab, path };
 }
 
 // 회원가입으로 보낼 수 있는지. 앱은 이 기능을 지원해야 회원가입 화면을 띄우고, 확인 중이면 undefined다
@@ -168,18 +194,29 @@ function ProfileLoadFailedScreen({ onRetry }: { onRetry: () => void }) {
 export function StackflowRuntime() {
   const {
     status: featureGuardStatus,
+    isSubscribed,
     isSignUpRequired,
     retryProfile,
   } = useSyncFeatureGuardFromProfile();
   const canRedirectToSignUp = useCanRedirectToSignUp();
   // 이 기능이 없는 옛 앱에서는 지금처럼 홈 문구나 불러오기 실패 화면을 보여 준다
   const shouldRedirectToSignUp = isSignUpRequired && canRedirectToSignUp !== false;
+  const canRenderStack = featureGuardStatus === "ready" && !shouldRedirectToSignUp;
+  // 화면을 처음 그리기 직전에 한 번만 정한다(undefined = 아직 안 정함). Stack은 첫 화면을 처음 그릴 때만 읽는다
+  const [entryStartTab, setEntryStartTab] = useState<EntryStartTab | null>();
+  if (canRenderStack && entryStartTab === undefined) {
+    setEntryStartTab(resolveEntryStartTab(isSubscribed));
+  }
 
   useEffect(() => {
     if (isSignUpRequired && canRedirectToSignUp) {
       redirectToSignUp();
     }
   }, [isSignUpRequired, canRedirectToSignUp]);
+
+  useEffect(() => {
+    if (entryStartTab) syncAppTab(entryStartTab.tab);
+  }, [entryStartTab]);
 
   useEffect(() => {
     const handleWebNavigationCommand = (event: Event) => {
@@ -238,5 +275,10 @@ export function StackflowRuntime() {
     return <ProfileLoadFailedScreen onRetry={() => void retryProfile()} />;
   }
 
-  return <StackComponent />;
+  // 시작 탭으로 바꿀 때는 기록 탭을 그렸다 옮기지 않고 처음부터 시작 탭 화면으로 만든다
+  return (
+    <StackComponent
+      initialContext={entryStartTab ? { req: { path: entryStartTab.path } } : undefined}
+    />
+  );
 }
