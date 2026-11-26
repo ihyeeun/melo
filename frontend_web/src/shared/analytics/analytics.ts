@@ -15,6 +15,8 @@ type AnalyticsProperties = Record<string, unknown>;
 type PendingEvent = {
   eventName: AnalyticsEventName;
   properties?: AnalyticsProperties;
+  // 모아 두었다 보내는 이벤트도 보낸 때가 아니라 일어난 때로 기록한다
+  time: number;
 };
 
 const ANALYTICS_USER_ID_PREFIX = "melo_user_";
@@ -108,26 +110,24 @@ function syncUserProperties(properties: AnalyticsUserProperties) {
   syncUserPropertiesWithAmplitude();
 }
 
-function sendTrack(eventName: AnalyticsEventName, properties?: AnalyticsProperties) {
+function sendTrack(eventName: AnalyticsEventName, properties?: AnalyticsProperties, time?: number) {
   const nickname = currentUserProperties.nickname;
   const eventProperties = nickname ? { ...(properties ?? {}), nickname } : properties;
 
-  amplitude.track(
-    eventName,
-    eventProperties,
-    appDeviceInfo
-      ? {
-          app_version: appDeviceInfo.appVersion,
-          os_name: appDeviceInfo.osName === "ios" ? "iOS" : "Android",
-          os_version: appDeviceInfo.osVersion ?? undefined,
-        }
-      : undefined,
-  );
+  amplitude.track(eventName, eventProperties, {
+    ...(appDeviceInfo && {
+      app_version: appDeviceInfo.appVersion,
+      os_name: appDeviceInfo.osName === "ios" ? "iOS" : "Android",
+      os_version: appDeviceInfo.osVersion ?? undefined,
+    }),
+    // time 키가 있으면 undefined여도 SDK가 넣는 현재 시각을 덮어써서, 값이 있을 때만 넣는다
+    ...(time !== undefined && { time }),
+  });
 }
 
 function flushPendingEvents() {
-  pendingEvents.splice(0).forEach(({ eventName, properties }) => {
-    sendTrack(eventName, properties);
+  pendingEvents.splice(0).forEach(({ eventName, properties, time }) => {
+    sendTrack(eventName, properties, time);
   });
 }
 
@@ -263,7 +263,7 @@ export function track(eventName: AnalyticsEventName, properties?: AnalyticsPrope
   // 초기화 전이거나, 로그아웃해서 사용자를 모르는 동안은 모아 두었다가 사용자를 안 뒤 보낸다
   // (사용자 id 없이 새 기기로 잡히지 않게). 가입 중에는 사용자가 아직 없으니 바로 보낸다
   if (!initialized || (currentUserId === null && !isAnonymousSession)) {
-    pendingEvents.push({ eventName, properties });
+    pendingEvents.push({ eventName, properties, time: Date.now() });
     return;
   }
 
